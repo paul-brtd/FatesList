@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    {% block head %}
+      
+    {% endblock %}
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Fates List</title>
+    <link rel="stylesheet" href="http://127.0.0.1:8000/static/assets/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.12.0/css/all.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="http://127.0.0.1:8000/static/assets/fonts/fontawesome5-overrides.min.css">
+    <link rel="stylesheet" href="http://127.0.0.1:8000/static/assets/css/front-head.css">
+    <link rel="stylesheet" href="http://127.0.0.1:8000/static/assets/css/Growing-Search-Bar-Animated-Text-Input.css">
+    <link rel="stylesheet" href="http://127.0.0.1:8000/static/assets/css/Navigation-with-Button.css">
+    <link rel="stylesheet" href="http://127.0.0.1:8000/static/assets/css/Search-Input-Responsive-with-Icon.css">
+    <link rel="stylesheet" href="http://127.0.0.1:8000/static/assets/css/styles.css">
+</head>
+<body style="background: #1D1E23;">
+    <nav class="navbar navbar-light navbar-expand-md navigation-clean-button" style="background: #17171A;color: rgb(255,255,255);">
+        <div class="container"><a class="navbar-brand" href="#"><img src="http://127.0.0.1:8000/static/assets/img/b7e5d6e0a9f6fddb68ea920a07546e6a%20(1).png"></a><button data-toggle="collapse" class="navbar-toggler" data-target="#navcol-1"><span class="sr-only">Toggle navigation</span><span class="navbar-toggler-icon"></span></button>
+            <div class="collapse navbar-collapse" id="navcol-1">
+                <ul class="nav navbar-nav mr-auto">
+                    <li class="nav-item"><a class="nav-link active" href="#" style="color: rgb(255,255,255);">Support</a></li>
+                </ul><span class="navbar-text actions"> <a class="btn btn-light action-button" role="button" href="#" style="background: #7289DA;">Login</a></span>
+            </div>
+        </div>
+    </nav>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.3/js/bootstrap.bundle.min.js"></script>
+    <div id="content" style="margin-top: 100px;">{% block content %}{% endblock %}</div>
+    <div id="footer">
+      {% block footer %}
+
+      {% endblock %}
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <script src="/static/bulma.js"></script>
+</body>
+</html>
