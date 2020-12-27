@@ -53,6 +53,9 @@
 
 .search_wrap.search_wrap_3 .search_box .input {
   border-radius: 50px;
+  border: none;
+  outline: none;
+  box-shadow: none;
 }
 
 .search_wrap.search_wrap_3 .search_box .btn {

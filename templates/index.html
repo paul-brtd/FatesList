@@ -1,25 +1,30 @@
-{% extends "basse/base.html" %}
+{% extends "base/base.html" %}
 
 {% block head %}
 
 {% endblock %}
 
+{% block content %}
     <div style="margin-top: 200px;">
         <div class="text-center" id="header_text" style="width: 90%;max-width: 600px;margin-right: auto;margin-left: auto;margin-top: 100px;">
             <h2 style="font-weight: bold;font-size: 67px;color: rgba(255,255,255,0.87);">Fates List</h2>
             <h6 style="font-weight: bold;opacity: 0.82;font-size: 20px;color: rgba(255,255,255,0.87);">Find the best bots for your servers.</h6>
         </div><div class="search_wrap search_wrap_3">
     <div class="search_box is-mobile is-centered">
-      <input type="text" class="input" placeholder="search..." id="search_input">
-      <div class="btn btn_common" id="search">
-        <i class="fas fa-search"></i>
-      </div>
+      <form method="GET" action="/search">
+        <input type="text" class="input" placeholder="Search for bots related to your term." name="q">
+        <button class="btn btn_common" type="submit">
+            <i class="fas fa-search"></i>
+        </button>
+     </form>
     </div>
   </div>
-        <div class="d-xl-flex flex-wrap justify-content-xl-center align-items-xl-center" style="width: 80%;margin: 0 auto;;">
-            <div class="text-nowrap d-flex justify-content-xl-center align-items-xl-center" style="line-height: 2;border-radius: 25px;background: #7289DA;width: auto;margin: 10px;">
-                <p style="color: rgba(255,255,255,0.87);font-size: 20px;font-weight: bold;margin: 2px 10px;line-height: 2;">Economy</p>
-            </div>
+        <div class="d-flex flex-wrap justify-content-center align-items-center" style="width: 80%;margin: 0 auto;">
+            {% for tag,new_tag in tags_fixed.items() %}
+                <div class="text-nowrap d-flex justify-content-center align-items-center" style="line-height: 2;border-radius: 25px;background: #7289DA;width: auto;margin: 10px; cursor:pointer;" onclick="location.href='/tags/{{tag}}'">
+                    <p style="color: rgba(255,255,255,0.87);font-size: 15px;font-weight: bold;margin: 2px 10px;line-height: 2;">{{new_tag}}</p>
+                </div>
+            {% endfor %}
         </div>
     </div>
     <hr style="font-size: 20px;border-top-width: 1px;border-top-color: #eee;width: 90%;">
@@ -27,74 +32,81 @@
         <h4 style="color: rgba(255,255,255,0.87);margin-left: 15px;">Top Voted</h4>
     </div>
     <div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center" id="tt-1" style="width: 90%;margin: 30px 5%;">
-        <div style="width: 300px;height: 450px;background: #111112;box-shadow: 0px 0px 20px 5px;border-top-style: none;margin: 25px 25px;">
-            <div style="width: 100%;height: 30%;background: url(&quot;http://127.0.0.1:8000/static/assets/img/banner.png&quot;) center / cover no-repeat;"><i class="fas fa-certificate fa-3x" style="color:#7289DA; position: absoulute; margin-top: -15px; margin-left: 90%"></i><img style="border-radius: 50%;width: 30%;margin: 5% auto;margin-top: 17%;margin-right: 35%;margin-left: 35%;" src="assets/img/Tempclipboard-image.png"></div>
-            <div>
-                <div style="margin-right: auto;margin-left: auto;margin-top: 30px;width: 200px;">
-                    <h4 class="text-nowrap text-break text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;white-space: nowrap;text-overflow: ellipsis;overflow: hidden;">Bearssssssssssssssssssssss</h4>
+        {% for bot in top_voted %}
+            <div style="width: 300px;height: 450px;background: #111112;box-shadow: 0px 0px 20px 5px;border-top-style: none;margin: 25px 25px;">
+                {% if bot.banner %}<div style="width: 100%;height: 30%;background: url(&quot;{{bot.banner}}&quot;) center / cover no-repeat;"></div>{% else %}<div style="width: 100%;height: 30%;background: url(&quot;http://836378c982a2.ngrok.io/static/assets/img/banner.png&quot;) center / cover no-repeat;">{% endif %}{% if bot.bot.certified == True == True %}<i class="fas fa-certificate fa-3x" style="color:#7289DA; position: absoulute; margin-top: -15px; margin-left: 90%"></i>{% endif %}<img style="border-radius: 50%;width: 30%;margin: 5% auto;margin-top: 17%;margin-right: 35%;margin-left: 35%;" src="{{bot.avatar}}"></div>
+                <div>
+                    <div style="margin-right: auto;margin-left: auto;margin-top: 30px;width: 200px;">
+                        <h4 class="text-nowrap text-break text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;white-space: nowrap;text-overflow: ellipsis;overflow: hidden;">{{bot.username}}</h4>
+                    </div>
                 </div>
+                <h6 style="font-size: 16px;font-weight: bold;color: rgba(255,255,255,0.87);opacity: 0.63;width: 90%;margin: 0 5%;"><strong>{{bot.description}}</strong></h6>
+                <div class="d-flex" style="width: 80%;margin: 0 10%;height: 10%;margin-top: 20px;margin-bottom: 20px;">
+                    <div style="height: 30px;width: 101px;margin-right: 10px;">
+                        <p class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;">{{bot.servers}} Servers</p>
+                    </div>
+                    <div style="height: 30px;width: 101px;margin-left: 28px;">
+                        <p class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;">{{bot.votes}} Votes</p>
+                    </div>
+                </div>
+                <div style="width: 80%;margin: 0 10%;"><button class="btn btn-primary" type="button" style="width: 45%;margin-right: 5%;background: #7289DA;border-radius: 25px;font-weight: bold;">View</button><button class="btn btn-primary" type="button" style="width: 45%;margin-left: 5%;background: #7289DA;border-radius: 25px;font-weight: bold;">Invite</button></div>
             </div>
-            <h6 style="font-size: 16px;font-weight: bold;color: rgba(255,255,255,0.87);opacity: 0.63;width: 90%;margin: 0 5%;"><strong>This bot is amazing it works like a charm and does everything thats needed invite him now...........</strong></h6>
-            <div class="d-flex" style="width: 80%;margin: 0 10%;height: 10%;margin-top: 20px;margin-bottom: 20px;">
-                <div style="height: 30px;width: 101px;margin-right: 10px;">
-                    <p class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;">29K Servers</p>
-                </div>
-                <div style="height: 30px;width: 101px;margin-left: 28px;">
-                    <p class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;">29K Votes</p>
-                </div>
-            </div>
-            <div style="width: 80%;margin: 0 10%;"><button class="btn btn-primary" type="button" style="width: 45%;margin-right: 5%;background: #7289DA;border-radius: 25px;font-weight: bold;">View</button><button class="btn btn-primary" type="button" style="width: 45%;margin-left: 5%;background: #7289DA;border-radius: 25px;font-weight: bold;">Invite</button></div>
-        </div>
+        {% endfor %}
     </div>
     <hr style="font-size: 20px;border-top-width: 1px;border-top-color: #eee;width: 90%;">
     <div class="d-flex" style="margin-left: 5%;"><i class="fas fa-certificate fa-3x" style="color:white;"></i>
         <h4 style="color: rgba(255,255,255,0.87);margin-left: 15px;">Certified Bots</h4>
     </div>
     <div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center" id="tt-2" style="width: 90%;margin: 30px 5%;">
+        {% for bot in certified_bots %}
         <div style="width: 300px;height: 450px;background: #111112;box-shadow: 0px 0px 20px 5px;border-top-style: none;margin: 25px 25px;">
-            <div style="width: 100%;height: 30%;background: url(&quot;http://127.0.0.1:8000/static/assets/img/banner.png&quot;) center / cover no-repeat;"><i class="fas fa-certificate fa-3x" style="color:#7289DA; position: absoulute; margin-top: -15px; margin-left: 90%"></i><img style="border-radius: 50%;width: 30%;margin: 5% auto;margin-top: 17%;margin-right: 35%;margin-left: 35%;" src="assets/img/Tempclipboard-image.png"></div>
+            {% if bot.banner %}<div style="width: 100%;height: 30%;background: url(&quot;{{bot.banner}}&quot;) center / cover no-repeat;"></div>{% else %}<div style="width: 100%;height: 30%;background: url(&quot;http://836378c982a2.ngrok.io/static/assets/img/banner.png&quot;) center / cover no-repeat;">{% endif %}{% if bot.bot.certified == True == True %}<i class="fas fa-certificate fa-3x" style="color:#7289DA; position: absoulute; margin-top: -15px; margin-left: 90%"></i>{% endif %}<img style="border-radius: 50%;width: 30%;margin: 5% auto;margin-top: 17%;margin-right: 35%;margin-left: 35%;" src="{{bot.avatar}}"></div>
             <div>
                 <div style="margin-right: auto;margin-left: auto;margin-top: 30px;width: 200px;">
-                    <h4 class="text-nowrap text-break text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;white-space: nowrap;text-overflow: ellipsis;overflow: hidden;">Bearssssssssssssssssssssss</h4>
+                    <h4 class="text-nowrap text-break text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;white-space: nowrap;text-overflow: ellipsis;overflow: hidden;">{{bot.username}}</h4>
                 </div>
             </div>
-            <h6 style="font-size: 16px;font-weight: bold;color: rgba(255,255,255,0.87);opacity: 0.63;width: 90%;margin: 0 5%;"><strong>This bot is amazing it works like a charm and does everything thats needed invite him now...........</strong></h6>
+            <h6 style="font-size: 16px;font-weight: bold;color: rgba(255,255,255,0.87);opacity: 0.63;width: 90%;margin: 0 5%;"><strong>{{bot.description}}</strong></h6>
             <div class="d-flex" style="width: 80%;margin: 0 10%;height: 10%;margin-top: 20px;margin-bottom: 20px;">
                 <div style="height: 30px;width: 101px;margin-right: 10px;">
-                    <p class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;">29K Servers</p>
+                    <p class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;">{{bot.servers}} Servers</p>
                 </div>
                 <div style="height: 30px;width: 101px;margin-left: 28px;">
-                    <p class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;">29K Votes</p>
+                    <p class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;">{{bot.votes}} Votes</p>
                 </div>
             </div>
             <div style="width: 80%;margin: 0 10%;"><button class="btn btn-primary" type="button" style="width: 45%;margin-right: 5%;background: #7289DA;border-radius: 25px;font-weight: bold;">View</button><button class="btn btn-primary" type="button" style="width: 45%;margin-left: 5%;background: #7289DA;border-radius: 25px;font-weight: bold;">Invite</button></div>
         </div>
+    {% endfor %}
     </div>
     <hr style="font-size: 20px;border-top-width: 1px;border-top-color: #eee;width: 90%;">
     <div class="d-flex" style="margin-left: 5%;"><i class="fas fa-plus-square fa-3x" style="color:white;"></i>
         <h4 style="color: rgba(255,255,255,0.87);margin-left: 15px;">New Bots</h4>
     </div>
     <div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center" id="tt" style="width: 90%;margin: 30px 5%;">
+        {% for bot in new_bots %}
         <div style="width: 300px;height: 450px;background: #111112;box-shadow: 0px 0px 20px 5px;border-top-style: none;margin: 25px 25px;">
-            <div style="width: 100%;height: 30%;background: url(&quot;http://127.0.0.1:8000/static/assets/img/banner.png&quot;) center / cover no-repeat;"><i class="fas fa-certificate fa-3x" style="color:#7289DA; position: absoulute; margin-top: -15px; margin-left: 90%"></i><img style="border-radius: 50%;width: 30%;margin: 5% auto;margin-top: 17%;margin-right: 35%;margin-left: 35%;" src="assets/img/Tempclipboard-image.png"></div>
+            {% if bot.banner %}<div style="width: 100%;height: 30%;background: url(&quot;{{bot.banner}}&quot;) center / cover no-repeat;"></div>{% else %}<div style="width: 100%;height: 30%;background: url(&quot;http://836378c982a2.ngrok.io/static/assets/img/banner.png&quot;) center / cover no-repeat;">{% endif %}{% if bot.bot.certified == True == True == True %}<i class="fas fa-certificate fa-3x" style="color:#7289DA; position: absoulute; margin-top: -15px; margin-left: 90%"></i>{% endif %}<img style="border-radius: 50%;width: 30%;margin: 5% auto;margin-top: 17%;margin-right: 35%;margin-left: 35%;" src="{{bot.avatar}}"></div>
             <div>
                 <div style="margin-right: auto;margin-left: auto;margin-top: 30px;width: 200px;">
-                    <h4 class="text-nowrap text-break text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;white-space: nowrap;text-overflow: ellipsis;overflow: hidden;">Bearssssssssssssssssssssss</h4>
+                    <h4 class="text-nowrap text-break text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;white-space: nowrap;text-overflow: ellipsis;overflow: hidden;">{{bot.username}}</h4>
                 </div>
             </div>
-            <h6 style="font-size: 16px;font-weight: bold;color: rgba(255,255,255,0.87);opacity: 0.63;width: 90%;margin: 0 5%;"><strong>This bot is amazing it works like a charm and does everything thats needed invite him now...........</strong></h6>
+            <h6 style="font-size: 16px;font-weight: bold;color: rgba(255,255,255,0.87);opacity: 0.63;width: 90%;margin: 0 5%;"><strong>{{bot.description}}</strong></h6>
             <div class="d-flex" style="width: 80%;margin: 0 10%;height: 10%;margin-top: 20px;margin-bottom: 20px;">
                 <div style="height: 30px;width: 101px;margin-right: 10px;">
-                    <p class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;">29K Servers</p>
+                    <p class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;">{{bot.servers}} Servers</p>
                 </div>
                 <div style="height: 30px;width: 101px;margin-left: 28px;">
-                    <p class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;">29K Votes</p>
+                    <p class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;">{{bot.votes}} Votes</p>
                 </div>
             </div>
             <div style="width: 80%;margin: 0 10%;"><button class="btn btn-primary" type="button" style="width: 45%;margin-right: 5%;background: #7289DA;border-radius: 25px;font-weight: bold;">View</button><button class="btn btn-primary" type="button" style="width: 45%;margin-left: 5%;background: #7289DA;border-radius: 25px;font-weight: bold;">Invite</button></div>
         </div>
+    {% endfor %}
     </div>
-
+    <script src="http://836378c982a2.ngrok.io/static/assets/js/main.js"></script>
+{% endblock %}
 {% block footer %}
 
 {% endblock %}
