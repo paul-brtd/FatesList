@@ -225,6 +225,12 @@ async def add_bot(request:Request):
                 return templates.TemplateResponse("message.html",{"request":request,"message":"This bot doesn't exist"})
             if not bot_object.bot:
                 return templates.TemplateResponse("message.html",{"request":request,"message":"This bot doesn't exist"})
+            if form["tags"] == "":
+                return templates.TemplateResponse("message.html",{"request":request,"message":"You need to select tags for your bot"})
+            selected_tags = form["tags"].split(",")
+            if form["banner"]:
+                #fill this db execute and add neccesary updates to the bot add page.
+                db.execute("INSERT INTO bots(bot_id,prefix,bot_library,invite,website,banner,discord,long_description,description,tags,owner,extra_owner) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)",int(form["bot_id"]), form["prefix"],form["library"],form["invite"],form["website"],form["banner"],form["support"])
     else:
         return RedirectResponse("/")
 @app.api_route("/logout")
