@@ -210,9 +210,6 @@ async def add_bot(request:Request):
                 new_tag = tag.replace("_"," ")
                 tags_fixed.update({tag:new_tag.capitalize()})
 
-            tags_select_items = []
-            for tag,new_tag in tags_fixed.items():
-                tags_select_items.append({"label":new_tag,"value":tag})
             return templates.TemplateResponse("add.html",{"request":request,"tags_fixed":tags_fixed})
     else:
         return RedirectResponse("/")
