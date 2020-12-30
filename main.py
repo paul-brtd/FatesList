@@ -213,7 +213,11 @@ async def add_bot(request:Request):
             return templates.TemplateResponse("add.html",{"request":request,"tags_fixed":tags_fixed})
         else:
             data = await request.json()
-            print(data)
+            fetch = await db.fetchone("SELECT bot_id FROM bots WHERE bot_id = $1",int(data["bot_id"]))
+            if fetch:
+                return templates.TemplateResponse("message.html",{"request":request,"message":"Bot already exists."})
+            if len(data["form"]["description"]) > 101:
+                return templates.TemplateResponse("message.html",{"request":request,"message":"Short description is too long."})
     else:
         return RedirectResponse("/")
 @app.api_route("/logout")
