@@ -200,7 +200,7 @@ async def login_confirm(request:Request,code=None):
             return RedirectResponse(request.session["RedirectResponse"])
         return RedirectResponse("/")
 
-@app.api_route("/bot/add")
+@app.api_route("/bot/add", methods=["GET","POST"])
 async def add_bot(request:Request):
     if "userid" in request.session.keys():
         if request.method == "GET":
@@ -211,6 +211,9 @@ async def add_bot(request:Request):
                 tags_fixed.update({tag:new_tag.capitalize()})
 
             return templates.TemplateResponse("add.html",{"request":request,"tags_fixed":tags_fixed})
+        else:
+            data = await request.json()
+            print(data)
     else:
         return RedirectResponse("/")
 @app.api_route("/logout")
