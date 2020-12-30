@@ -24,7 +24,7 @@ document.location.href = "/search/" + encodeURIComponent(query)
 })
 
 function submit_bot(){
-
+    var form=$("#bot_form")
     var unindexed_array = $("#bot_form").serializeArray();
     var indexed_array = {};
 
@@ -47,4 +47,11 @@ function submit_bot(){
 
         }
     });
+
 }
+
+$("#bot_form").submit( function(eventObj) {
+    var input = $("<input>").attr({"type":"hidden","name":"tags"}).val(instance.value());
+    $('#bot_form').append(input);
+    return true;
+});

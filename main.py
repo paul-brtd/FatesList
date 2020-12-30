@@ -212,12 +212,19 @@ async def add_bot(request:Request):
 
             return templates.TemplateResponse("add.html",{"request":request,"tags_fixed":tags_fixed})
         else:
-            data = await request.json()
-            fetch = await db.fetchone("SELECT bot_id FROM bots WHERE bot_id = $1",int(data["bot_id"]))
+            data = await request.form()
+            form = data
+            fetch = await db.fetch("SELECT bot_id FROM bots WHERE bot_id = $1",int(form["bot_id"]))
             if fetch:
                 return templates.TemplateResponse("message.html",{"request":request,"message":"Bot already exists."})
-            if len(data["form"]["description"]) > 101:
+            if len(form["description"]) > 101:
                 return templates.TemplateResponse("message.html",{"request":request,"message":"Short description is too long."})
+            try:
+                bot_object = await client.fetch_user(int(form["bot_id"]))
+            except:
+                return templates.TemplateResponse("message.html",{"request":request,"message":"This bot doesn't exist"})
+            if not bot_object.bot:
+                return templates.TemplateResponse("message.html",{"request":request,"message":"This bot doesn't exist"})
     else:
         return RedirectResponse("/")
 @app.api_route("/logout")
