@@ -52,17 +52,23 @@ async def human_format(num):
         num /= 1000.0
     return '{}{}'.format('{:f}'.format(num).rstrip('0').rstrip('.'), ['', 'K', 'M', 'B', 'T'][magnitude])
 async def get_bot(userid):
-    bot = client.get_user(int(userid))
-    if bot:
-        return {"username":str(bot.name), "avatar":str(bot.avatar_url)}
-    else:
+    try:
+        bot = client.get_user(int(userid))
+        if bot:
+            return {"username":str(bot.name), "avatar":str(bot.avatar_url)}
+        else:
+            return None
+    except:
         return None
 
 async def get_user(userid):
-    user = client.get_user(int(userid))
-    if user:
-        return {"username":str(user), "avatar":str(user.avatar_url)}
-    else:
+    try:
+        user = client.get_user(int(userid))
+        if user:
+            return {"username":str(user), "avatar":str(user.avatar_url)}
+        else:
+            return None
+    except:
         return None
 @app.on_event("startup")
 async def startup():
@@ -72,7 +78,6 @@ async def startup():
 
 @app.get("/")
 async def home(request:Request):
-    start = time.time()
     fetch = await db.fetch("SELECT description, banner,certified,votes,servers,bot_id FROM bots WHERE queue = false ORDER BY votes DESC LIMIT 12")
     top_voted = []
     #TOP VOTED BOTS
@@ -100,9 +105,6 @@ async def home(request:Request):
         new_tag = tag.replace("_"," ")
         tags_fixed.update({tag:new_tag.capitalize()})
 
-    print(tags_fixed)
-    end = time.time()
-    print(end - start)
     return templates.TemplateResponse("index.html", {"request":request, "username":request.session.get("username",False),"top_voted":top_voted,"new_bots":new_bots,"certified_bots":certified_bots,"tags_fixed":tags_fixed})
 @app.get("/search")
 async def search(request:Request,q):
@@ -228,9 +230,15 @@ async def add_bot(request:Request):
             if form["tags"] == "":
                 return templates.TemplateResponse("message.html",{"request":request,"message":"You need to select tags for your bot"})
             selected_tags = form["tags"].split(",")
-            if form["banner"]:
-                #fill this db execute and add neccesary updates to the bot add page.
-                db.execute("INSERT INTO bots(bot_id,prefix,bot_library,invite,website,banner,discord,long_description,description,tags,owner,extra_owner) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)",int(form["bot_id"]), form["prefix"],form["library"],form["invite"],form["website"],form["banner"],form["support"])
+            header_list = ["image/gif","image/png","image/jpeg","image/jpg"]
+            try:
+                async with aiohttp.ClientSession() as sess:
+                    async with sess.get(form["banner"]) as response:
+                        if response.headers['Content-Type'] in header_list:
+                            banner = form["banner"]
+            except:
+                banner = "none"
+            await db.execute("INSERT INTO bots(bot_id,prefix,bot_library,invite,website,banner,discord,long_description,description,tags,owner,extra_owners,votes,servers,shard_count) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)",int(form["bot_id"]), form["prefix"],form["library"],form["invite"],form["website"],banner,form["support"],form["long_description"],form["description"],selected_tags,int(request.session["userid"]),form["extra_owners"],0,0,0)
     else:
         return RedirectResponse("/")
 @app.api_route("/logout")
