@@ -4,8 +4,8 @@ class Oauth(object):
     client_id = "791398044037152778"
     client_secret = "dcZgnBbjwhSSJawUXx4aX5MYS9xGO3oA"
     scope = "guilds%20identify"
-    redirect_uri = "http://127.0.0.1:8000/login/confirm"
-    discord_login_url = "https://discord.com/api/oauth2/authorize?client_id=791398044037152778&redirect_uri=http%3A%2F%2F127.0.0.1%3A8000%2Flogin%2Fconfirm&response_type=code&scope=guilds%20identify"
+    redirect_uri = "https://3bbcb246b7da.ngrok.io/login/confirm"
+    discord_login_url = "https://discord.com/api/oauth2/authorize?client_id=791398044037152778&redirect_uri=https%3A%2F%2F3bbcb246b7da.ngrok.io%2Flogin%2Fconfirm&response_type=code&scope=guilds%20identify"
     discord_token_url = "https://discord.com/api/oauth2/token"
     discord_api_url = "https://discordapp.com/api"
     @staticmethod

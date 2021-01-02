@@ -1,0 +1,374 @@
+{% extends "base/base.html" %} {% block head %} {% endblock %} {% block content
+%}
+
+<div
+  style="
+    width: 80%;
+    margin: 50px auto;
+    background: #7289da;
+    border-radius: 15px;
+  "
+>
+  <div
+    class="d-flex d-sm-flex d-md-flex d-lg-flex d-xl-flex flex-column justify-content-center align-items-center flex-sm-column justify-content-sm-center align-items-sm-center flex-md-column justify-content-md-center align-items-md-center flex-lg-column justify-content-lg-center align-items-lg-center flex-xl-column justify-content-xl-center align-items-xl-center"
+  >
+    <h2
+      style="
+        color: rgba(255, 255, 255, 0.87);
+        font-weight: bold;
+        margin-top: 40px;
+      "
+    >
+      Fates List
+    </h2>
+    <p
+      style="
+        color: rgba(255, 255, 255, 0.87);
+        font-weight: bold;
+        opacity: 0.78;
+        font-size: 21px;
+      "
+    >
+      Add your bot by filling this form.
+    </p>
+  </div>
+  <hr
+    style="
+      font-size: 20px;
+      border-top-width: 1px;
+      border-top-color: #eee;
+      width: 90%;
+    "
+  />
+  <form
+    style="height: auto; margin-top: 30px; color: rgba(255, 255, 255, 0.87)"
+    id="bot_form"
+    method="POST"
+  >
+    <div class="form-group" style="width: 80%; margin: 0 auto">
+      <label
+        style="
+          color: white;
+          font-weight: bold;
+          font-size: 16px;
+          margin-top: 30px;
+        "
+        for="bot_id"
+        >Bot id</label
+      ><input
+        required
+        class="form-control"
+        type="number"
+        style="
+          background: #ffffff;
+          border: grey;
+          border-radius: 5px;
+          max-width: 400px;
+        "
+        name="bot_id"
+        placeholder="12345678998764"
+        value="{{fetch.bot_id}}"
+      /><label
+        style="
+          color: white;
+          font-weight: bold;
+          font-size: 16px;
+          margin-top: 30px;
+        "
+        for="prefix"
+        >Prefix</label
+      ><input
+        required
+        class="form-control"
+        type="text"
+        style="
+          background: #ffffff;
+          border: grey;
+          border-radius: 5px;
+          max-width: 100px;
+        "
+        name="prefix"
+        placeholder="!"
+        value="{{fetch.prefix}}"
+      /><label
+        style="
+          color: white;
+          font-weight: bold;
+          font-size: 16px;
+          margin-top: 30px;
+        "
+        for="library"
+        >Library</label
+      ><input
+        required
+        class="form-control"
+        type="text"
+        style="
+          background: #ffffff;
+          border: grey;
+          border-radius: 5px;
+          max-width: 150px;
+        "
+        name="library"
+        placeholder="Discord.py"
+        value="{{fetch.bot_library}}"
+      /><label
+        style="
+          color: white;
+          font-weight: bold;
+          font-size: 16px;
+          margin-top: 30px;
+        "
+        for="description"
+        >Short Description</label
+      ><input
+        required
+        class="form-control"
+        type="text"
+        style="
+          background: #ffffff;
+          border: grey;
+          border-radius: 5px;
+          max-width: 1000px;
+        "
+        name="description"
+        placeholder="Fates list is a good bot that does everything you need"
+        minlength="10"
+        maxlength="100"
+        value="{{fetch.description}}"
+      /><label
+        style="
+          color: white;
+          font-weight: bold;
+          font-size: 16px;
+          margin-top: 30px;
+        "
+        for="extra_owners"
+        >Extra owners(Seperate ids by comas,Not required)</label
+      ><input
+        class="form-control"
+        type="text"
+        style="
+          background: #ffffff;
+          border: grey;
+          border-radius: 5px;
+          max-width: 1000px;
+        "
+        name="extra_owners"
+        value="{{fetch.extra_owners}}"
+        placeholder="1234567899876,1234567865432"
+        minlength="10"
+      /><label
+        style="
+          color: white;
+          font-weight: bold;
+          font-size: 16px;
+          margin-top: 30px;
+        "
+        for="invite"
+        >Invite URL</label
+      ><input
+        required
+        class="form-control"
+        type="text"
+        style="
+          background: #ffffff;
+          border: grey;
+          border-radius: 5px;
+          max-width: 1000px;
+        "
+        name="invite"
+        placeholder="https://discord.com/oauth2/authorize?client_id=12345637172158464&amp;permissions=314432&amp;scope=bot"
+        minlength="10"
+        value="{{fetch.invite}}"
+      /><label
+        style="
+          color: white;
+          font-weight: bold;
+          font-size: 16px;
+          margin-top: 30px;
+        "
+        for="website"
+        >Website URL</label
+      ><input
+        required
+        class="form-control"
+        type="text"
+        style="
+          background: #ffffff;
+          border: grey;
+          border-radius: 5px;
+          max-width: 1000px;
+        "
+        name="website"
+        placeholder="https://support.com"
+        minlength="10"
+        value="{{fetch.website}}"
+      /><label
+        style="
+          color: white;
+          font-weight: bold;
+          font-size: 16px;
+          margin-top: 30px;
+        "
+        for="website"
+        >Banner URL(Not required)</label
+      ><input
+        class="form-control"
+        type="text"
+        style="
+          background: #ffffff;
+          border: grey;
+          border-radius: 5px;
+          max-width: 1000px;
+        "
+        name="banner"
+        placeholder="https://cdn.discordapp.com/MySecretBanner.com"
+        minlength="10"
+        value="{{fetch.banner}}"
+      /><label
+        style="
+          color: white;
+          font-weight: bold;
+          font-size: 16px;
+          margin-top: 30px;
+        "
+        for="support"
+        >Support server</label
+      ><input
+        required
+        class="form-control"
+        type="text"
+        style="
+          background: #ffffff;
+          border: grey;
+          border-radius: 5px;
+          max-width: 1000px;
+        "
+        name="support"
+        placeholder="https://discord.gg/738Hs"
+        minlength="10"
+        value="{{fetch.discord}}"
+      /><label
+      style="
+        color: white;
+        font-weight: bold;
+        font-size: 16px;
+        margin-top: 30px;
+      "
+      for="webhook"
+      >Webhook(Not required)</label
+    ><input
+      class="form-control"
+      type="text"
+      style="
+        background: #ffffff;
+        border: grey;
+        border-radius: 5px;
+        max-width: 1000px;
+      "
+      name="webhook"
+      placeholder="http://129.332.123:5000/webhook"
+      minlength="10"
+      value="{{fetch.webhook}}"
+    /><label
+    style="
+      color: white;
+      font-weight: bold;
+      font-size: 16px;
+      margin-top: 30px;
+    "
+    for="token"
+    >Api token</label
+  ><input
+    disabled
+    class="form-control"
+    type="text"
+    style="
+      background: #ffffff;
+      border: grey;
+      border-radius: 5px;
+      max-width: 1000px;
+    "
+    name="token"
+    minlength="10"
+    value="{{fetch.api_token}}"
+  /><label
+        style="
+          color: white;
+          font-weight: bold;
+          font-size: 16px;
+          margin-top: 30px;
+        "
+        for="long_description"
+        >Long description(Allows html and markdown)</label
+      ><textarea
+        class="form-control"
+        style="
+          background: #ffffff;
+          border-radius: 5px;
+          height: 150px;
+          max-width: 1000px; /*border-color: grey!important;*/
+        "
+        name="long_description"
+        placeholder="Write about your bot using html or markdown"
+        minlength="300"
+        id="long_description"
+      ></textarea
+      ><label
+        style="
+          color: white;
+          font-weight: bold;
+          font-size: 16px;
+          margin-top: 30px;
+        "
+        for="long_description"
+        >Select tags for your bot.</label
+      ><span class="select_tags"></span>
+      <div class="d-flex justify-content-center">
+        <button
+          class="btn btn-primary"
+          type="submit"
+          style="background: #1d1e23; margin-top: 50px; margin-bottom: 30px"
+        >
+          Submit
+        </button>
+      </div>
+    </div>
+  </form>
+</div>
+<span hidden id="long_description_value">{{fetch.long_description}}</span>
+<script src="https://3bbcb246b7da.ngrok.io/static/assets/js/bundle.min.js"></script>
+<script src="https://3bbcb246b7da.ngrok.io/static/assets/js/main.js"></script>
+<script>
+  document.getElementById("long_description").value = $("#long_description_value").text()
+  const selected_tags = [
+      {% for tag in fetch['tags'] %}
+        "{{tag}}",
+      {% endfor %}
+  ]
+  const myOptions = [
+      {% for tag, new_tag in tags_fixed.items() %}
+
+    {
+      label: '{{new_tag}}',
+          value: '{{tag}}',
+        },
+        {% endfor %}
+      ]
+  var instance = new SelectPure(".select_tags", {
+      options: myOptions,
+      autocomplete: true, // default: false
+      multiple: true,
+      icon: "fa fa-times",
+      value: selected_tags
+  });
+
+  $("#bot_form").submit(function (eventObj) {
+      var input = $("<input>").attr({ "type": "hidden", "name": "tags" }).val(instance.value());
+      $('#bot_form').append(input);
+      return true;
+  });
+</script>
+
+{% endblock %} {% block footer %} {% endblock %}

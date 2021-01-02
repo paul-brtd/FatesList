@@ -34,13 +34,13 @@
     <div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center" id="tt-1" style="width: 90%;margin: 30px 5%;">
         {% for bot in top_voted %}
             <div style="width: 300px;height: 450px;background: #111112;box-shadow: 0px 0px 20px 5px;border-top-style: none;margin: 25px 25px;">
-                {% if bot.bot.banner == "none" %}<div style="width: 100%;height: 30%;background: url(&quot;http://127.0.0.1:8000/static/assets/img/banner.png&quot;) center / cover no-repeat;">{% else %}<div style="width: 100%;height: 30%;background: url(&quot;{{bot.bot.banner}}&quot;) center / cover no-repeat;">{% endif %}{% if bot.bot.certified == True %}<i class="fas fa-certificate fa-3x" style="color:#7289DA; position: absoulute; margin-top: -15px; margin-left: 90%"></i>{% endif %}<img style="border-radius: 50%;width: 30%;margin: 5% auto;margin-top: 17%;margin-right: 35%;margin-left: 35%;" src="{{bot.avatar}}"></div>
+                {% if bot.bot.banner == "none" %}<div style="width: 100%;height: 30%;background: url(&quot;https://3bbcb246b7da.ngrok.io/static/assets/img/banner.png&quot;) center / cover no-repeat;">{% else %}<div style="width: 100%;height: 30%;background: url(&quot;{{bot.bot.banner}}&quot;) center / cover no-repeat;">{% endif %}{% if bot.bot.certified == True %}<i class="fas fa-certificate fa-3x" style="color:#7289DA; position: absoulute; margin-top: -15px; margin-left: 90%"></i>{% endif %}<img style="border-radius: 50%;width: 30%;margin: 5% auto;margin-top: 17%;margin-right: 35%;margin-left: 35%;" src="{{bot.avatar}}"></div>
                 <div>
                     <div style="margin-right: auto;margin-left: auto;margin-top: 30px;width: 200px;">
                         <h4 class="text-nowrap text-break text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;white-space: nowrap;text-overflow: ellipsis;overflow: hidden;">{{bot.username}}</h4>
                     </div>
                 </div>
-                <h6 style="font-size: 16px;font-weight: bold;color: rgba(255,255,255,0.87);opacity: 0.63;width: 90%;margin: 0 5%;"><strong style="overflow-wrap: anywhere;">{{bot.description}}</strong></h6>
+                <h6 style="font-size: 16px;font-weight: bold;color: rgba(255,255,255,0.87);opacity: 0.63;width: 90%;margin: 0 5%;height:105px"><strong style="overflow-wrap: anywhere;">{{bot.description}}</strong></h6>
                 <div class="d-flex" style="width: 80%;margin: 0 10%;height: 10%;margin-top: 20px;margin-bottom: 20px;">
                     <div style="height: 30px;width: 101px;margin-right: 10px;">
                         <p class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;">{{bot.servers}} Servers</p>
@@ -49,7 +49,7 @@
                         <p class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;">{{bot.votes}} Votes</p>
                     </div>
                 </div>
-                <div style="width: 80%;margin: 0 10%;"><button class="btn btn-primary" type="button" style="width: 45%;margin-right: 5%;background: #7289DA;border-radius: 25px;font-weight: bold;">View</button><button class="btn btn-primary" type="button" style="width: 45%;margin-left: 5%;background: #7289DA;border-radius: 25px;font-weight: bold;">Invite</button></div>
+                <div style="width: 80%;margin: 0 10%;"><a href="/bot/{{bot.bot.bot_id}}" class="btn btn-primary" style="width: 45%;margin-right: 5%;background: #7289DA;border-radius: 25px;font-weight: bold;">View</a><a href="{{bot.bot.invite}}" class="btn btn-primary" style="width: 45%;margin-left: 5%;background: #7289DA;border-radius: 25px;font-weight: bold;" target="_blank">Invite</a></div>
             </div>
         {% endfor %}
     </div>
@@ -60,13 +60,13 @@
     <div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center" id="tt-2" style="width: 90%;margin: 30px 5%;">
         {% for bot in certified_bots %}
         <div style="width: 300px;height: 450px;background: #111112;box-shadow: 0px 0px 20px 5px;border-top-style: none;margin: 25px 25px;">
-            {% if bot.bot.banner == "none" %}<div style="width: 100%;height: 30%;background: url(&quot;http://127.0.0.1:8000/static/assets/img/banner.png&quot;) center / cover no-repeat;">{% else %}<div style="width: 100%;height: 30%;background: url(&quot;{{bot.bot.banner}}&quot;) center / cover no-repeat;">{% endif %}{% if bot.bot.certified == True %}<i class="fas fa-certificate fa-3x" style="color:#7289DA; position: absoulute; margin-top: -15px; margin-left: 90%"></i>{% endif %}<img style="border-radius: 50%;width: 30%;margin: 5% auto;margin-top: 17%;margin-right: 35%;margin-left: 35%;" src="{{bot.avatar}}"></div>
+            {% if bot.bot.banner == "none" %}<div style="width: 100%;height: 30%;background: url(&quot;https://3bbcb246b7da.ngrok.io/static/assets/img/banner.png&quot;) center / cover no-repeat;">{% else %}<div style="width: 100%;height: 30%;background: url(&quot;{{bot.bot.banner}}&quot;) center / cover no-repeat;">{% endif %}{% if bot.bot.certified == True %}<i class="fas fa-certificate fa-3x" style="color:#7289DA; position: absoulute; margin-top: -15px; margin-left: 90%"></i>{% endif %}<img style="border-radius: 50%;width: 30%;margin: 5% auto;margin-top: 17%;margin-right: 35%;margin-left: 35%;" src="{{bot.avatar}}"></div>
             <div>
                 <div style="margin-right: auto;margin-left: auto;margin-top: 30px;width: 200px;">
                     <h4 class="text-nowrap text-break text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;white-space: nowrap;text-overflow: ellipsis;overflow: hidden;">{{bot.username}}</h4>
                 </div>
             </div>
-            <h6 style="font-size: 16px;font-weight: bold;color: rgba(255,255,255,0.87);opacity: 0.63;width: 90%;margin: 0 5%;"><strong style="overflow-wrap: anywhere;">{{bot.description}}</strong></h6>
+            <h6 style="font-size: 16px;font-weight: bold;color: rgba(255,255,255,0.87);opacity: 0.63;width: 90%;margin: 0 5%;height:105px"><strong style="overflow-wrap: anywhere;">{{bot.description}}</strong></h6>
             <div class="d-flex" style="width: 80%;margin: 0 10%;height: 10%;margin-top: 20px;margin-bottom: 20px;">
                 <div style="height: 30px;width: 101px;margin-right: 10px;">
                     <p class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;">{{bot.servers}} Servers</p>
@@ -75,7 +75,7 @@
                     <p class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;">{{bot.votes}} Votes</p>
                 </div>
             </div>
-            <div style="width: 80%;margin: 0 10%;"><button class="btn btn-primary" type="button" style="width: 45%;margin-right: 5%;background: #7289DA;border-radius: 25px;font-weight: bold;">View</button><button class="btn btn-primary" type="button" style="width: 45%;margin-left: 5%;background: #7289DA;border-radius: 25px;font-weight: bold;">Invite</button></div>
+            <div style="width: 80%;margin: 0 10%;"><a href="/bot/{{bot.bot.bot_id}}" class="btn btn-primary" style="width: 45%;margin-right: 5%;background: #7289DA;border-radius: 25px;font-weight: bold;">View</a><a href="{{bot.bot.invite}}" class="btn btn-primary" style="width: 45%;margin-left: 5%;background: #7289DA;border-radius: 25px;font-weight: bold;" target="_blank">Invite</a></div>
         </div>
     {% endfor %}
     </div>
@@ -86,13 +86,13 @@
     <div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center" id="tt" style="width: 90%;margin: 30px 5%;">
         {% for bot in new_bots %}
         <div style="width: 300px;height: 450px;background: #111112;box-shadow: 0px 0px 20px 5px;border-top-style: none;margin: 25px 25px;">
-            {% if bot.bot.banner == "none" %}<div style="width: 100%;height: 30%;background: url(&quot;http://127.0.0.1:8000/static/assets/img/banner.png&quot;) center / cover no-repeat;">{% else %}<div style="width: 100%;height: 30%;background: url(&quot;{{bot.bot.banner}}&quot;) center / cover no-repeat;">{% endif %}{% if bot.bot.certified == True %}<i class="fas fa-certificate fa-3x" style="color:#7289DA; position: absoulute; margin-top: -15px; margin-left: 90%"></i>{% endif %}<img style="border-radius: 50%;width: 30%;margin: 5% auto;margin-top: 17%;margin-right: 35%;margin-left: 35%;" src="{{bot.avatar}}"></div>
+            {% if bot.bot.banner == "none" %}<div style="width: 100%;height: 30%;background: url(&quot;https://3bbcb246b7da.ngrok.io/static/assets/img/banner.png&quot;) center / cover no-repeat;">{% else %}<div style="width: 100%;height: 30%;background: url(&quot;{{bot.bot.banner}}&quot;) center / cover no-repeat;">{% endif %}{% if bot.bot.certified == True %}<i class="fas fa-certificate fa-3x" style="color:#7289DA; position: absoulute; margin-top: -15px; margin-left: 90%"></i>{% endif %}<img style="border-radius: 50%;width: 30%;margin: 5% auto;margin-top: 17%;margin-right: 35%;margin-left: 35%;" src="{{bot.avatar}}"></div>
             <div>
                 <div style="margin-right: auto;margin-left: auto;margin-top: 30px;width: 200px;">
                     <h4 class="text-nowrap text-break text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;white-space: nowrap;text-overflow: ellipsis;overflow: hidden;">{{bot.username}}</h4>
                 </div>
             </div>
-            <h6 style="font-size: 16px;font-weight: bold;color: rgba(255,255,255,0.87);opacity: 0.63;width: 90%;margin: 0 5%;"><strong style="overflow-wrap: anywhere;">{{bot.description}}</strong></h6>
+            <h6 style="font-size: 16px;font-weight: bold;color: rgba(255,255,255,0.87);opacity: 0.63;width: 90%;margin: 0 5%;height:105px"><strong style="overflow-wrap: anywhere;">{{bot.description}}</strong></h6>
             <div class="d-flex" style="width: 80%;margin: 0 10%;height: 10%;margin-top: 20px;margin-bottom: 20px;">
                 <div style="height: 30px;width: 101px;margin-right: 10px;">
                     <p class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;">{{bot.servers}} Servers</p>
@@ -101,11 +101,11 @@
                     <p class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;">{{bot.votes}} Votes</p>
                 </div>
             </div>
-            <div style="width: 80%;margin: 0 10%;"><button class="btn btn-primary" type="button" style="width: 45%;margin-right: 5%;background: #7289DA;border-radius: 25px;font-weight: bold;">View</button><button class="btn btn-primary" type="button" style="width: 45%;margin-left: 5%;background: #7289DA;border-radius: 25px;font-weight: bold;">Invite</button></div>
+            <div style="width: 80%;margin: 0 10%;"><a href="/bot/{{bot.bot.bot_id}}" class="btn btn-primary" style="width: 45%;margin-right: 5%;background: #7289DA;border-radius: 25px;font-weight: bold;">View</a><a href="{{bot.bot.invite}}" class="btn btn-primary" style="width: 45%;margin-left: 5%;background: #7289DA;border-radius: 25px;font-weight: bold;" target="_blank">Invite</a></div>
         </div>
     {% endfor %}
     </div>
-    <script src="http://127.0.0.1:8000/static/assets/js/main.js"></script>
+    <script src="https://3bbcb246b7da.ngrok.io/static/assets/js/main.js"></script>
 {% endblock %}
 {% block footer %}
 
