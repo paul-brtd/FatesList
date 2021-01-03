@@ -23,6 +23,7 @@ import asyncio
 from discord.ext import commands, tasks
 import time
 import re
+from starlette_wtf import CSRFProtectMiddleware, csrf_protect,StarletteForm
 # CONFIG
 support_url = "https://discord.gg/Ynbf3qqxHV"
 TOKEN = "NzkxMzk4MDQ0MDM3MTUyNzc4.X-Ok3Q.6uc4aIzt_HW2ZsW9uNe5C9uAXC8"
@@ -35,6 +36,7 @@ app = FastAPI()
 app.add_middleware(SessionMiddleware, secret_key="E@Dycude3u8z382")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
+app.add_middleware(CSRFProtectMiddleware, csrf_secret="ADDE-OS39-MA2K-lS09-3K9soI-Iskmd-93829-()(()-2937()K")
 # Secret creator
 
 
@@ -101,6 +103,7 @@ async def approve(ctx, bot_id: int):
 
 
 @app.get("/")
+@csrf_protect
 async def home(request: Request):
     fetch = await db.fetch("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE queue = false ORDER BY votes DESC LIMIT 12")
     top_voted = []
@@ -133,9 +136,10 @@ async def home(request: Request):
 
 
 @app.get("/search")
+@csrf_protect
 async def search(request: Request, q):
     start = time.time()
-    fetch = await db.fetch("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE description ~* $1 ORDER BY votes", re.sub(r"\W+|_", " ", q))
+    fetch = await db.fetch("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE queue = false and description ~* $1 ORDER BY votes", re.sub(r"\W+|_", " ", q))
     search_bots = []
     # TOP VOTED BOTS
     for bot in fetch:
@@ -156,6 +160,7 @@ async def search(request: Request, q):
 
 
 @app.get("/tags/{tag_search}")
+@csrf_protect
 async def tags(request: Request, tag_search):
     if tag_search not in TAGS:
         return RedirectResponse("/")
@@ -178,11 +183,12 @@ async def tags(request: Request, tag_search):
 
 
 @app.get("/user/{userid}")
+@csrf_protect
 async def user(request: Request, userid):
     user = await get_user(int(userid))
     if not user:
         return RedirectResponse("/")
-    fetch = await db.fetch("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE owner = $1 ORDER BY votes", int(userid))
+    fetch = await db.fetch("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE owner = $1 and queue = false ORDER BY votes", int(userid))
     user_bots = []
     # TOP VOTED BOTS
     for bot in fetch:
@@ -193,11 +199,13 @@ async def user(request: Request, userid):
 
 
 @app.get("/support")
+@csrf_protect
 async def support(request: Request):
     return RedirectResponse(support_url)
 
 
 @app.get("/login")
+@csrf_protect
 async def login(request: Request):
     if "userid" in request.session.keys():
         return RedirectResponse("/", status_code=HTTP_303_SEE_OTHER)
@@ -206,6 +214,7 @@ async def login(request: Request):
 
 
 @app.api_route("/login/confirm")
+@csrf_protect
 async def login_confirm(request: Request, code=None):
     if "userid" in request.session.keys():
         return RedirectResponse("/")
@@ -227,12 +236,15 @@ async def login_confirm(request: Request, code=None):
         else:
             # No avatar in user
             request.session["avatar"] = "https://s3.us-east-1.amazonaws.com/files.tvisha.aws/posts/crm/panel/attachments/1580985653/discord-logo.jpg"
+        await Oauth.Oauth.join_user(access_code,userjson["id"])
         if "RedirectResponse" in request.session.keys():
             return RedirectResponse(request.session["RedirectResponse"])
         return RedirectResponse("/")
 
-
+class Form(StarletteForm):
+    pass
 @app.api_route("/bot/add", methods=["GET", "POST"])
+@csrf_protect
 async def add_bot(request: Request):
     if "userid" in request.session.keys():
         if request.method == "GET":
@@ -241,9 +253,14 @@ async def add_bot(request: Request):
             for tag in TAGS:
                 new_tag = tag.replace("_", " ")
                 tags_fixed.update({tag: new_tag.capitalize()})
-
-            return templates.TemplateResponse("add.html", {"request": request, "tags_fixed": tags_fixed, "username": request.session.get("username", False)})
+            form = await Form.from_formdata(request)
+            return templates.TemplateResponse("add.html", {"request": request, "tags_fixed": tags_fixed, "username": request.session.get("username", False),"form":form})
         else:
+            owner_check = await get_user(request.session["userid"])
+            if owner_check:
+                pass
+            else:
+                return templates.TemplateResponse("message.html", {"request": request, "message": "You are not in the support server", "username": request.session.get("username", False)})
             data = await request.form()
             form = data
             fetch = await db.fetch("SELECT bot_id FROM bots WHERE bot_id = $1", int(form["bot_id"]))
@@ -274,11 +291,17 @@ async def add_bot(request: Request):
             except:
                 banner = "none"
             creation = time.time()
-            await db.execute("INSERT INTO bots(bot_id,prefix,bot_library,invite,website,banner,discord,long_description,description,tags,owner,extra_owners,votes,servers,shard_count,created_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$15)", int(form["bot_id"]), form["prefix"], form["library"], form["invite"], form["website"], banner, form["support"], form["long_description"], form["description"], selected_tags, int(request.session["userid"]), form["extra_owners"], 0, 0, int(creation))
+            await db.execute("INSERT INTO bots(bot_id,prefix,bot_library,invite,website,banner,discord,long_description,description,tags,owner,extra_owners,votes,servers,shard_count,created_at,queue_username,queue_avatar) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$15,$16,$17)", int(form["bot_id"]), form["prefix"], form["library"], form["invite"], form["website"], banner, form["support"], form["long_description"], form["description"], selected_tags, int(request.session["userid"]), form["extra_owners"], 0, 0, int(creation),bot_object.name,str(bot_object.avatar_url))
+            channel = client.get_channel(789946587203764224)
+            owner=str(request.session["userid"])
+            bot_id = form["bot_id"]
+            bot_name = str(bot_object)
+            await channel.send(f"<@{owner}> added the bot <@{bot_id}>({bot_name}) to queue")
             return templates.TemplateResponse("message.html", {"request": request, "message": "Bot has been added.", "username": request.session.get("username", False)})
     else:
         return RedirectResponse("/")
 @app.api_route("/bot/edit/{bot_id}", methods=["GET", "POST"])
+@csrf_protect
 async def edit(request: Request,bot_id:int):
     if "userid" in request.session.keys():
         check = await db.fetchrow("SELECT owner,extra_owners FROM bots WHERE bot_id = $1", int(bot_id))
@@ -294,9 +317,14 @@ async def edit(request: Request,bot_id:int):
             for tag in TAGS:
                 new_tag = tag.replace("_", " ")
                 tags_fixed.update({tag: new_tag.capitalize()})
-
-            return templates.TemplateResponse("edit.html", {"request": request, "tags_fixed": tags_fixed, "username": request.session.get("username", False),"fetch":fetch})
+            form = await Form.from_formdata(request)
+            return templates.TemplateResponse("edit.html", {"request": request, "tags_fixed": tags_fixed, "username": request.session.get("username", False),"fetch":fetch,"form":form})
         else:
+            owner_check = await get_user(request.session["userid"])
+            if owner_check:
+                pass
+            else:
+                return templates.TemplateResponse("message.html", {"request": request, "message": "You are not in the support server", "username": request.session.get("username", False)})
             data = await request.form()
             form = data
             fetch = await db.fetch("SELECT bot_id FROM bots WHERE bot_id = $1", int(form["bot_id"]))
@@ -322,13 +350,39 @@ async def edit(request: Request,bot_id:int):
                 banner = "none"
             creation = time.time()
             await db.execute("UPDATE bots SET bot_id=$1, bot_library=$2, webhook=$3, description=$4, long_description=$5, prefix=$6, website=$7, discord=$8, tags=$9, banner=$10, owner=$11, extra_owners=$12, invite=$13 WHERE bot_id = $14", int(form["bot_id"]),form["library"],form["webhook"],form["description"],form["long_description"],form["prefix"],form["website"],form["support"],selected_tags,banner,int(request.session["userid"]),str(form["extra_owners"]),form["invite"],int(bot_id))
+            channel = client.get_channel(789946587203764224)
+            owner=str(request.session["userid"])
+            bot_id = form["bot_id"]
+            await channel.send(f"<@{owner}> edited the bot <@{bot_id}>")
             return templates.TemplateResponse("message.html", {"request": request, "message": "Bot has been edited.", "username": request.session.get("username", False)})
 
 @app.get("/profile")
+@csrf_protect
 async def profile(request:Request):
     if "userid" in request.session.keys():
-        return RedirectResponse("/user/")
+        user = await get_user(int(request.session["userid"]))
+        if not user:
+            return RedirectResponse("/")
+        userid = request.session["userid"]
+        fetch = await db.fetch("SELECT description,banner,certified,votes,servers,bot_id,invite FROM bots WHERE owner = $1 and queue = false ORDER BY votes", int(userid))
+        user_bots = []
+        # TOP VOTED BOTS
+        for bot in fetch:
+            bot_info = await get_bot(bot["bot_id"])
+            if bot_info:
+                user_bots.append({"bot": bot, "avatar": bot_info["avatar"], "username": bot_info["username"], "votes": await human_format(bot["votes"]), "servers": await human_format(bot["servers"]), "description": bot["description"]})
+        fetch = await db.fetch("SELECT description,banner,certified,votes,servers,bot_id,invite,queue_avatar,queue_username FROM bots WHERE owner = $1 and queue = true", int(userid)) 
+        queue_bots = []
+        # TOP VOTED BOTS
+        for bot in fetch:
+            bot_info = {"username":bot["queue_username"],"avatar":bot["queue_avatar"]}
+            if bot_info:
+                queue_bots.append({"bot": bot, "avatar": bot_info["avatar"], "username": bot_info["username"], "votes": await human_format(bot["votes"]), "servers": await human_format(bot["servers"]), "description": bot["description"],"queue_bots":queue_bots})
+        return templates.TemplateResponse("profile_personal.html", {"request": request, "username": request.session.get("username", False), "user_bots": user_bots, "user": user,"queue_bots":queue_bots})
+    else:
+        return RedirectResponse("/")
 @app.api_route("/logout")
+@csrf_protect
 def logout(request: Request):
     session = request.session
     session.clear()
