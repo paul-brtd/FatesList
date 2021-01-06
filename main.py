@@ -447,6 +447,44 @@ async def admin(request:Request,admin=None):
     else:
         request.session["RedirectResponse"] = "/admin"
         return RedirectResponse("/login")
+
+    
+@app.api_route("/admin/review/{bot_id}")
+async def review(request:Request,bot_id):
+    if "userid" in request.session.keys():
+        if request.method == "GET":
+            guild = client.get_guild(admin_roles["guild"])
+            user = guild.get_member(int(request.session["userid"]))
+            users_roles = user.roles#That is a list of ids IHOPE
+            user_roles = []
+            for role in users_roles:
+                user_roles.append(role.id)
+            admin = False
+            owner=False
+            review=False
+            mod=False
+            print(user_roles)
+            if admin_roles["bot_review"] in user_roles:
+                review=True
+            if admin_roles["mod"] in user_roles:
+                mod = True
+            if admin_roles["admin"] in user_roles:
+                admin = True
+            if admin_roles["owner"] in user_roles:
+                owner = True
+            if mod == False and admin == False and owner == False and review==False:
+                return RedirectResponse("/")
+            else:
+                bot = await db.fetch("SELECT * FROM bots WHERE bot_id = $1",int(bot_id))
+                if bot == None:
+                    return templates.TemplateResponse("message.html",{"request":request,"message":"Bot does not exist! Idk how"})
+                    # TOP VOTED BOTS
+                return templates.TemplateResponse("review.html",{"request":request,"bot":bot})
+    
+    else:
+        request.session["RedirectResponse"] = "/admin"
+        return RedirectResponse("/login")
+
 @app.api_route("/logout")
 @csrf_protect
 async def logout(request: Request):
