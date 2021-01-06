@@ -25,6 +25,7 @@ import time
 import re
 from starlette_wtf import CSRFProtectMiddleware, csrf_protect,StarletteForm
 # CONFIG
+admin_roles = {"guild":789934742128558080,"bot_review":789941907563216897,"mod":790698030549827594,"admin":790697779068272661,"owner":792181964933038130}
 support_url = "https://discord.gg/Ynbf3qqxHV"
 TOKEN = "NzkxMzk4MDQ0MDM3MTUyNzc4.X-Ok3Q.6uc4aIzt_HW2ZsW9uNe5C9uAXC8"
 TAGS = ["music", "moderation", "economy", "fun", "anime", "games",
@@ -349,7 +350,7 @@ async def edit(request: Request,bot_id:int):
             except:
                 banner = "none"
             creation = time.time()
-            await db.execute("UPDATE bots SET bot_id=$1, bot_library=$2, webhook=$3, description=$4, long_description=$5, prefix=$6, website=$7, discord=$8, tags=$9, banner=$10, owner=$11, extra_owners=$12, invite=$13 WHERE bot_id = $14", int(form["bot_id"]),form["library"],form["webhook"],form["description"],form["long_description"],form["prefix"],form["website"],form["support"],selected_tags,banner,int(request.session["userid"]),str(form["extra_owners"]),form["invite"],int(bot_id))
+            await db.execute("UPDATE bots SET bot_id=$1, bot_library=$2, webhook=$3, description=$4, long_description=$5, prefix=$6, website=$7, discord=$8, tags=$9, banner=$10, owner=$11, extra_owners=$12, invite=$13 WHERE bot_id = $14", fetch["bot_id"],form["library"],form["webhook"],form["description"],form["long_description"],form["prefix"],form["website"],form["support"],selected_tags,banner,int(request.session["userid"]),str(form["extra_owners"]),form["invite"],int(bot_id))
             channel = client.get_channel(789946587203764224)
             owner=str(request.session["userid"])
             bot_id = form["bot_id"]
@@ -381,9 +382,74 @@ async def profile(request:Request):
         return templates.TemplateResponse("profile_personal.html", {"request": request, "username": request.session.get("username", False), "user_bots": user_bots, "user": user,"queue_bots":queue_bots})
     else:
         return RedirectResponse("/")
+
+@app.api_route("/admin",methods=["GET","POST"])
+async def admin(request:Request,admin=None):
+    if "userid" in request.session.keys():
+        if request.method == "GET":
+            guild = client.get_guild(admin_roles["guild"])
+            user = guild.get_member(int(request.session["userid"]))
+            users_roles = user.roles#That is a list of ids IHOPE
+            user_roles = []
+            for role in users_roles:
+                user_roles.append(role.id)
+            admin = False
+            owner=False
+            review=False
+            mod=False
+            print(user_roles)
+            if admin_roles["bot_review"] in user_roles:
+                review=True
+            if admin_roles["mod"] in user_roles:
+                mod = True
+            if admin_roles["admin"] in user_roles:
+                admin = True
+            if admin_roles["owner"] in user_roles:
+                owner = True
+            if mod == False and admin == False and owner == False and review==False:
+                return RedirectResponse("/")
+            else:
+                certified_bots = len(await db.fetch("SELECT bot_id FROM bots WHERE certified = true"))
+                bots = len(await db.fetch("SELECT bot_id FROM bots WHERE queue = false"))
+                fetch = await db.fetch("SELECT * FROM bots WHERE queue = true") 
+                queue_bots = []
+                queue_amount = len(fetch)
+                    # TOP VOTED BOTS
+                for bot in fetch:
+                    bot_info = {"username":bot["queue_username"],"avatar":bot["queue_avatar"]}
+                    if bot_info:
+                        queue_bots.append({"bot": bot, "avatar": bot_info["avatar"], "username": bot_info["username"], "votes": await human_format(bot["votes"]), "servers": await human_format(bot["servers"]), "description": bot["description"]})
+                return templates.TemplateResponse("admin.html",{"request":request,"cert":certified_bots,"bots":bots,"queue_bots":queue_bots,"queue_amount":queue_amount,"admin":admin,"mod":mod,"owner":owner,"bot_review":review,"username":request.session["username"]})
+        else:
+            guild = client.get_guild(admin_roles["guild"])
+            user = guild.get_member(int(request.session["userid"]))
+            users_roles = user.roles#That is a list of ids IHOPE
+            user_roles = []
+            for role in users_roles:
+                user_roles.append(role.id)
+
+            if admin_roles["owner"] in user_roles:
+                pass
+            else:
+                return RedirectResponse("/")
+            if admin=="certify":
+                data = await request.form()
+                await db.execute("UPDATE bots SET certified = true WHERE bot_id = $1", int(data["bot_id"]))
+                return templates.TemplateResponse("message.html", {"request": request, "message": "Hey mikes, i hope it certified the bot!", "username": request.session.get("username", False)})
+            elif admin=="uncertify":
+                data = await request.form()
+                await db.execute("UPDATE bots SET certified = false WHERE bot_id = $1", int(data["bot_id"]))   
+                return templates.TemplateResponse("message.html", {"request": request, "message": "Hey mikes, i hope it uncertified the bot!", "username": request.session.get("username", False)})     
+            elif admin=="reset": 
+                data = await request.form()
+                await db.execute("UPDATE bots SET votes = 0")  
+                return templates.TemplateResponse("message.html", {"request": request, "message": "Hey mikes, i hope your wish comes true ;)", "username": request.session.get("username", False)})     
+    else:
+        request.session["RedirectResponse"] = "/admin"
+        return RedirectResponse("/login")
 @app.api_route("/logout")
 @csrf_protect
-def logout(request: Request):
+async def logout(request: Request):
     session = request.session
     session.clear()
     return RedirectResponse("/")

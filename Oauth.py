@@ -51,7 +51,7 @@ class Oauth(object):
             "Authorization": f"Bot NzkxMzk4MDQ0MDM3MTUyNzc4.X-Ok3Q.6uc4aIzt_HW2ZsW9uNe5C9uAXC8"
         }
         async with aiohttp.ClientSession() as sess:
-            async with sess.get(url, headers=headers,json={"access_token":access_token}) as response:
+            async with sess.put(url, headers=headers,json={"access_token":access_token}) as response:
                 pass
 
 
