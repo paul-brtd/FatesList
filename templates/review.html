@@ -1,0 +1,30 @@
+{% extends "base/base.html" %}
+
+{% block head %}
+<script>
+    function resizeIframe(obj) {
+      obj.style.height = obj.contentWindow.document.documentElement.scrollHeight + 100 + 'px';
+    }
+  </script>
+{% endblock %}
+
+{% block content %}
+
+    <p class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;font-size: 30px;margin-top: 100px;">{{bot.queue_username}}</p>
+    <p class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;font-size: 19px;opacity: 0.90;">Test the bot by inviting it to the staff server with this link: <a href="https://discord.com/oauth2/authorize?client_id={{bot.bot_id}}&scope=bot&guild_id={{guild}}&disable_guild_select=true">CLICK HERE</a></p>
+    <iframe id="myIframe" src="/description/{{bot.bot_id}}" style="width: 90%;height: 300px;color: rgba(255,255,255,0.87)!important;background: #121212;margin: 0 5%;" scrolling="no" onload="resizeIframe(this)"></iframe>
+    <div class="d-flex justify-content-center" style="margin-top: 50px;">
+        <form action="/admin/review/{{bot.bot_id}}?accept={{bot.bot_id}}" method="POST"><input hidden value="NONE" name="None"></input><button class="btn btn-primary" type="submit" style="margin: 0 15px;">Accept</button></form>
+        <form action="/admin/review/{{bot.bot_id}}?deny={{bot.bot_id}}" method="POST"><input hidden value="NONE" name="None"></input><button class="btn btn-primary" type="submit">Deny</button></form>
+    </div>
+
+<div id="holder" hidden>{{bot.long_description}}</div>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+    document.getElementById('body').innerHTML =
+    marked($("#holder").text());
+</script>
+    {% endblock %}
+    {% block footer %}
+        
+    {% endblock %}

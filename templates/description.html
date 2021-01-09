@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <base target="_parent">
+    <style>* {
+    color: rgba(255,255,255,0.87)!important;
+    font-size: 110%;}
+    </style>
+</head>
+<body>
+    <div id="body"></div>
+</body>
+<div id="holder" hidden>{{bot.long_description}}</div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+    document.getElementById('body').innerHTML =
+    marked($("#holder").text());
+</script>
+</html>

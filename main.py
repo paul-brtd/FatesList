@@ -25,6 +25,8 @@ import time
 import re
 from starlette_wtf import CSRFProtectMiddleware, csrf_protect,StarletteForm
 # CONFIG
+bot_logs=789946587203764224
+reviewing_server=791403194710360064
 admin_roles = {"guild":789934742128558080,"bot_review":789941907563216897,"mod":790698030549827594,"admin":790697779068272661,"owner":792181964933038130}
 support_url = "https://discord.gg/Ynbf3qqxHV"
 TOKEN = "NzkxMzk4MDQ0MDM3MTUyNzc4.X-Ok3Q.6uc4aIzt_HW2ZsW9uNe5C9uAXC8"
@@ -293,7 +295,7 @@ async def add_bot(request: Request):
                 banner = "none"
             creation = time.time()
             await db.execute("INSERT INTO bots(bot_id,prefix,bot_library,invite,website,banner,discord,long_description,description,tags,owner,extra_owners,votes,servers,shard_count,created_at,queue_username,queue_avatar) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$15,$16,$17)", int(form["bot_id"]), form["prefix"], form["library"], form["invite"], form["website"], banner, form["support"], form["long_description"], form["description"], selected_tags, int(request.session["userid"]), form["extra_owners"], 0, 0, int(creation),bot_object.name,str(bot_object.avatar_url))
-            channel = client.get_channel(789946587203764224)
+            channel = client.get_channel(bot_logs)
             owner=str(request.session["userid"])
             bot_id = form["bot_id"]
             bot_name = str(bot_object)
@@ -351,7 +353,7 @@ async def edit(request: Request,bot_id:int):
                 banner = "none"
             creation = time.time()
             await db.execute("UPDATE bots SET bot_id=$1, bot_library=$2, webhook=$3, description=$4, long_description=$5, prefix=$6, website=$7, discord=$8, tags=$9, banner=$10, owner=$11, extra_owners=$12, invite=$13 WHERE bot_id = $14", fetch["bot_id"],form["library"],form["webhook"],form["description"],form["long_description"],form["prefix"],form["website"],form["support"],selected_tags,banner,int(request.session["userid"]),str(form["extra_owners"]),form["invite"],int(bot_id))
-            channel = client.get_channel(789946587203764224)
+            channel = client.get_channel(bot_logs)
             owner=str(request.session["userid"])
             bot_id = form["bot_id"]
             await channel.send(f"<@{owner}> edited the bot <@{bot_id}>")
@@ -435,10 +437,18 @@ async def admin(request:Request,admin=None):
             if admin=="certify":
                 data = await request.form()
                 await db.execute("UPDATE bots SET certified = true WHERE bot_id = $1", int(data["bot_id"]))
+                channel = client.get_channel(bot_logs)
+                bot_id = data["bot_id"]
+                owner=str(request.session["userid"])
+                await channel.send(f"<@{owner}> certified the bot <@{bot_id}>")
                 return templates.TemplateResponse("message.html", {"request": request, "message": "Hey mikes, i hope it certified the bot!", "username": request.session.get("username", False)})
             elif admin=="uncertify":
                 data = await request.form()
                 await db.execute("UPDATE bots SET certified = false WHERE bot_id = $1", int(data["bot_id"]))   
+                channel = client.get_channel(bot_logs)
+                bot_id = data["bot_id"]
+                owner=str(request.session["userid"])
+                await channel.send(f"<@{owner}> uncertified the bot <@{bot_id}>")
                 return templates.TemplateResponse("message.html", {"request": request, "message": "Hey mikes, i hope it uncertified the bot!", "username": request.session.get("username", False)})     
             elif admin=="reset": 
                 data = await request.form()
@@ -448,9 +458,15 @@ async def admin(request:Request,admin=None):
         request.session["RedirectResponse"] = "/admin"
         return RedirectResponse("/login")
 
-    
-@app.api_route("/admin/review/{bot_id}")
-async def review(request:Request,bot_id):
+@app.get("/description/{bot_id}")
+async def bot_desc(request:Request,bot_id):
+    bot = await db.fetchrow("SELECT long_description FROM bots WHERE bot_id = $1",int(bot_id))
+    if bot:
+        return templates.TemplateResponse("description.html",{"request":request,"bot":bot})
+    else:
+        return "Bot not found! :( Try refreshing. After that either report it on the support server or just continue your day!"
+@app.api_route("/admin/review/{bot_id}",methods=["GET","POST"])
+async def review(request:Request,bot_id,accept=None,deny=None):
     if "userid" in request.session.keys():
         if request.method == "GET":
             guild = client.get_guild(admin_roles["guild"])
@@ -475,16 +491,58 @@ async def review(request:Request,bot_id):
             if mod == False and admin == False and owner == False and review==False:
                 return RedirectResponse("/")
             else:
-                bot = await db.fetch("SELECT * FROM bots WHERE bot_id = $1",int(bot_id))
-                if bot == None:
+                bot = await db.fetchrow("SELECT * FROM bots WHERE bot_id = $1 and queue=true",int(bot_id))
+                if not bot:
                     return templates.TemplateResponse("message.html",{"request":request,"message":"Bot does not exist! Idk how"})
                     # TOP VOTED BOTS
-                return templates.TemplateResponse("review.html",{"request":request,"bot":bot})
-    
+                return templates.TemplateResponse("review.html",{"request":request,"bot":bot,"guild":reviewing_server})
+        else:
+            guild = client.get_guild(admin_roles["guild"])
+            user = guild.get_member(int(request.session["userid"]))
+            users_roles = user.roles#That is a list of ids IHOPE
+            user_roles = []
+            for role in users_roles:
+                user_roles.append(role.id)
+            admin = False
+            owner=False
+            review=False
+            mod=False
+            if admin_roles["bot_review"] in user_roles:
+                review=True
+            if admin_roles["mod"] in user_roles:
+                mod = True
+            if admin_roles["admin"] in user_roles:
+                admin = True
+            if admin_roles["owner"] in user_roles:
+                owner = True
+            if mod == False and admin == False and owner == False and review==False:
+                return RedirectResponse("/", status_code=HTTP_303_SEE_OTHER)
+            else:
+                if accept:
+                    check = await db.fetchrow("SELECT * FROM bots WHERE bot_id=$1 and queue=true",int(bot_id))
+                    if not check:
+                        return RedirectResponse("/", status_code=HTTP_303_SEE_OTHER)
+                    api_token = get_token(64)
+                    await db.execute("UPDATE bots SET queue=false,api_token=$1 WHERE bot_id = $2", api_token, int(bot_id))
+                    guild=admin_roles["guild"]
+                    return templates.TemplateResponse("last.html",{"request":request,"message":"Bot accepted; You MUST Invite it by this url","username":request.session["username"],"url":f"https://discord.com/oauth2/authorize?client_id={bot_id}&scope=bot&guild_id={guild}&disable_guild_select=true&permissions=0"})
+                elif deny:
+                    #check = await db.fetchrow("SELECT * FROM bots WHERE bot_id=$1 and queue=true",int(bot_id))
+                    #if not check:
+                        return RedirectResponse("/", status_code=HTTP_303_SEE_OTHER)
+                    #channel = client.get_channel(bot_logs)
+                    #deny = await db.execute("DELETE FROM bots WHERE bot_id = $1", int(bot_id))
+                    #channel = client.get_channel(bot_logs)
+                    #bot_id = request.form()["bot_id"]
+                    #owner=str(request.session["userid"])
+                    #await channel.send(f"<@{owner}> denied the bot <@{bot_id}>")
+                    #return templates.TemplateResponse("message.html",{"request":request,"message":"I hope it DENIED the bot review GUY","username":request.session["username"]})
     else:
         request.session["RedirectResponse"] = "/admin"
         return RedirectResponse("/login")
-
+@app.api_route("/admin/review/{bot_id}/deny",methods=["GET","POST"])
+async def review_deny(request:Request,bot_id,reason=None):
+    pass
 @app.api_route("/logout")
 @csrf_protect
 async def logout(request: Request):
