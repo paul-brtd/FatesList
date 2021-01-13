@@ -73,7 +73,10 @@ async def get_bot(userid):
     try:
         bot = client.get_user(int(userid))
         if bot:
-            return {"username": str(bot.name), "avatar": str(bot.avatar_url)}
+            if bot.bot:
+                return {"username": str(bot.name), "avatar": str(bot.avatar_url)}
+            else:
+                return None
         else:
             return None
     except:
@@ -90,12 +93,25 @@ async def get_user(userid):
     except:
         return None
 
+@client.event
+async def on_member_remove(member):
+    if member.guild.id == admin_roles["guild"]:
+        if member.bot:
+            bot = await db.fetchone("SELECT * FROM bots WHERE bot_id = $1",member.id)
+            if bot:
+                await db.execute("DELETE FROM bots WHERE bot_id = $1",member.id)
+        else:
+            bot = await db.fetch("SELECT * FROM bots WHERE owner = $1",member.id)
+            if len(bot) >=1:
+                for m in bot:
+                    await db.execute("DELETE FROM bots WHERE bot_id = $1",m["bot_id"])
 
 @app.on_event("startup")
 async def startup():
     global db
     db = await setup_db()
     asyncio.create_task(client.start(TOKEN))
+    #Verify users and bots!!!
 
 
 @client.command()
@@ -433,7 +449,7 @@ async def admin(request:Request,admin=None):
             if admin_roles["owner"] in user_roles:
                 pass
             else:
-                return RedirectResponse("/")
+                return RedirectResponse("/",status_code=HTTP_303_SEE_OTHER)
             if admin=="certify":
                 data = await request.form()
                 await db.execute("UPDATE bots SET certified = true WHERE bot_id = $1", int(data["bot_id"]))
@@ -493,7 +509,7 @@ async def review(request:Request,bot_id,accept=None,deny=None):
             else:
                 bot = await db.fetchrow("SELECT * FROM bots WHERE bot_id = $1 and queue=true",int(bot_id))
                 if not bot:
-                    return templates.TemplateResponse("message.html",{"request":request,"message":"Bot does not exist! Idk how"})
+                    return templates.TemplateResponse("message.html",{"request":request,"message":"Bot does not exist! Idk how","username":request.session["username"]})
                     # TOP VOTED BOTS
                 return templates.TemplateResponse("review.html",{"request":request,"bot":bot,"guild":reviewing_server})
         else:
@@ -527,22 +543,75 @@ async def review(request:Request,bot_id,accept=None,deny=None):
                     guild=admin_roles["guild"]
                     return templates.TemplateResponse("last.html",{"request":request,"message":"Bot accepted; You MUST Invite it by this url","username":request.session["username"],"url":f"https://discord.com/oauth2/authorize?client_id={bot_id}&scope=bot&guild_id={guild}&disable_guild_select=true&permissions=0"})
                 elif deny:
-                    #check = await db.fetchrow("SELECT * FROM bots WHERE bot_id=$1 and queue=true",int(bot_id))
-                    #if not check:
-                        return RedirectResponse("/", status_code=HTTP_303_SEE_OTHER)
-                    #channel = client.get_channel(bot_logs)
-                    #deny = await db.execute("DELETE FROM bots WHERE bot_id = $1", int(bot_id))
-                    #channel = client.get_channel(bot_logs)
-                    #bot_id = request.form()["bot_id"]
-                    #owner=str(request.session["userid"])
-                    #await channel.send(f"<@{owner}> denied the bot <@{bot_id}>")
-                    #return templates.TemplateResponse("message.html",{"request":request,"message":"I hope it DENIED the bot review GUY","username":request.session["username"]})
+                    return RedirectResponse("/admin/review/"+bot_id+"/deny", status_code=HTTP_303_SEE_OTHER)
     else:
         request.session["RedirectResponse"] = "/admin"
         return RedirectResponse("/login")
 @app.api_route("/admin/review/{bot_id}/deny",methods=["GET","POST"])
-async def review_deny(request:Request,bot_id,reason=None):
-    pass
+async def review_deny(request:Request,bot_id):
+    if "userid" in request.session.keys():
+        if request.method == "GET":
+            guild = client.get_guild(admin_roles["guild"])
+            user = guild.get_member(int(request.session["userid"]))
+            users_roles = user.roles#That is a list of ids IHOPE
+            user_roles = []
+            for role in users_roles:
+                user_roles.append(role.id)
+            admin = False
+            owner=False
+            review=False
+            mod=False
+            print(user_roles)
+            if admin_roles["bot_review"] in user_roles:
+                review=True
+            if admin_roles["mod"] in user_roles:
+                mod = True
+            if admin_roles["admin"] in user_roles:
+                admin = True
+            if admin_roles["owner"] in user_roles:
+                owner = True
+            if mod == False and admin == False and owner == False and review==False:
+                return RedirectResponse("/")
+            else:
+                bot = await db.fetchrow("SELECT * FROM bots WHERE bot_id = $1 and queue=true",int(bot_id))
+                if not bot:
+                    return templates.TemplateResponse("message.html",{"request":request,"message":"Bot does not exist! Idk how"})
+                    # TOP VOTED BOTS
+                return templates.TemplateResponse("last_deny.html",{"request":request,"bot":bot,"username":request.session["username"]})
+        else:
+            guild = client.get_guild(admin_roles["guild"])
+            user = guild.get_member(int(request.session["userid"]))
+            users_roles = user.roles#That is a list of ids IHOPE
+            user_roles = []
+            for role in users_roles:
+                user_roles.append(role.id)
+            admin = False
+            owner=False
+            review=False
+            mod=False
+            if admin_roles["bot_review"] in user_roles:
+                review=True
+            if admin_roles["mod"] in user_roles:
+                mod = True
+            if admin_roles["admin"] in user_roles:
+                admin = True
+            if admin_roles["owner"] in user_roles:
+                owner = True
+            if mod == False and admin == False and owner == False and review==False:
+                return RedirectResponse("/", status_code=HTTP_303_SEE_OTHER)
+            else:
+                check = await db.fetchrow("SELECT * FROM bots WHERE bot_id=$1 and queue=true",int(bot_id))
+                if not check:
+                    return RedirectResponse("/", status_code=HTTP_303_SEE_OTHER)
+                channel = client.get_channel(bot_logs)
+                deny = await db.execute("DELETE FROM bots WHERE bot_id = $1", int(bot_id))
+                channel = client.get_channel(bot_logs)
+                data = await request.form()
+                bot_id = bot_id
+                reason = data["reason"]
+                owner=str(request.session["userid"])
+                await channel.send(f"<@{owner}> denied the bot <@{bot_id}> with the reason: {reason}")
+                return templates.TemplateResponse("message.html",{"request":request,"message":"I hope it DENIED the bot review GUY","username":request.session["username"]})
 @app.api_route("/logout")
 @csrf_protect
 async def logout(request: Request):
