@@ -1,12 +1,13 @@
 from ..deps import *
 
 router = APIRouter(
+    prefix = "/search",
     tags = ["Search"]
 )
 
-@router.get("/search")
+@router.get("/")
 @csrf_protect
-async def search(request: Request, q):
+async def search(request: Request, q: str):
     start = time.time()
     fetch = await db.fetch("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE queue = false and description ~* $1 ORDER BY votes", re.sub(r"\W+|_", " ", q))
     search_bots = []

@@ -12,7 +12,7 @@
 
     <p class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;font-size: 30px;margin-top: 100px;">{{bot.queue_username}}</p>
     <p class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;font-size: 19px;opacity: 0.90;">Test the bot by inviting it to the staff server with this link: <a href="https://discord.com/oauth2/authorize?client_id={{bot.bot_id}}&scope=bot&guild_id={{guild}}&disable_guild_select=true">CLICK HERE</a></p>
-    <iframe id="myIframe" src="/description/{{bot.bot_id}}" style="width: 90%;height: 300px;color: rgba(255,255,255,0.87)!important;background: #121212;margin: 0 5%;" scrolling="no" onload="resizeIframe(this)"></iframe>
+    <iframe id="myIframe" src="/bot/description/{{bot.bot_id}}" style="width: 90%;height: 300px;color: rgba(255,255,255,0.87)!important;background: #121212;margin: 0 5%;" scrolling="no" onload="resizeIframe(this)"></iframe>
     <div class="d-flex justify-content-center" style="margin-top: 50px;">
         <form method="POST">
             {{ form.csrf_token }}
