@@ -16,16 +16,16 @@ async def admin(request:Request):
             return RedirectResponse("/")
         certified_bots = len(await db.fetch("SELECT bot_id FROM bots WHERE certified = true"))
         bots = len(await db.fetch("SELECT bot_id FROM bots WHERE queue = false"))
-        fetch = await db.fetch("SELECT queue_username, queue_avatar, votes, servers, description FROM bots WHERE queue = true")
+        fetch = await db.fetch("SELECT bot_id, queue_username, queue_avatar, votes, servers, description FROM bots WHERE queue = true")
         print(staff[1])
         queue_bots = []
         queue_amount = len(fetch)
         form = await Form.from_formdata(request)
         # TOP VOTED BOTS
         for bot in fetch:
-            bot_info = {"username": bot["queue_username"], "avatar": bot["queue_avatar"], "form": form}
+            bot_info = {"username": bot["queue_username"], "id": bot["bot_id"], "avatar": bot["queue_avatar"], "form": form}
             if bot_info:
-                queue_bots.append({"bot": bot, "avatar": bot_info["avatar"], "username": bot_info["username"], "votes": await human_format(bot["votes"]), "servers": await human_format(bot["servers"]), "description": bot["description"], "form": form})
+                queue_bots.append({"bot": bot, "id": bot["bot_id"], "avatar": bot_info["avatar"], "username": bot_info["username"], "votes": await human_format(bot["votes"]), "servers": await human_format(bot["servers"]), "description": bot["description"], "form": form})
         return templates.TemplateResponse("admin.html",{"request": request, "cert": certified_bots,"bots": bots, "queue_bots": queue_bots, "queue_amount": queue_amount, "admin": staff[1] == 4, "mod": staff[1] == 3, "owner": staff[1] == 5, "bot_review": staff[1] == 2, "username": request.session["username"], "form": form})
     else:
         return RedirectResponse("/")
