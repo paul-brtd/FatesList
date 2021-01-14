@@ -11,10 +11,10 @@ async def bot_rdir(request: Request):
 
 @router.get("/{bot_id}")
 async def bot_index(request: Request, bot_id: int):
-    bot = await db.fetchrow("SELECT description, banner, website, certified, votes, servers, bot_id, invite, discord FROM bots WHERE bot_id = $1 ORDER BY votes", bot_id)
+    bot = await db.fetchrow("SELECT description, tags, banner, website, certified, votes, servers, bot_id, invite, discord FROM bots WHERE bot_id = $1 ORDER BY votes", bot_id)
     bot_info = await get_bot(bot["bot_id"])
     if bot_info:
-        bot_obj = {"bot": bot, "bot_id": bot["bot_id"], "avatar": bot_info["avatar"], "website": bot["website"], "username": bot_info["username"], "votes": await human_format(bot["votes"]), "servers": await human_format(bot["servers"]), "description": bot["description"], "support": bot['discord'], "invite": bot["invite"]}
+        bot_obj = {"bot": bot, "bot_id": bot["bot_id"], "avatar": bot_info["avatar"], "website": bot["website"], "username": bot_info["username"], "votes": await human_format(bot["votes"]), "servers": await human_format(bot["servers"]), "description": bot["description"], "support": bot['discord'], "invite": bot["invite"], "tags": bot["tags"]}
     else:
         return abort(404)
     # TAGS
