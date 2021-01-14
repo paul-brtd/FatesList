@@ -23,6 +23,15 @@ from starlette_wtf import CSRFProtectMiddleware, csrf_protect,StarletteForm
 import builtins
 from typing import Optional, List, Union
 from aiohttp_requests import requests
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
+def redirect(path):
+    return RedirectResponse(path, status_code=HTTP_303_SEE_OTHER)
+
+
+def abort(code):
+    raise StarletteHTTPException(status_code=code)
+
 
 # Secret creator
 

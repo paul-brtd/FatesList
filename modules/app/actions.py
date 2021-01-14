@@ -22,7 +22,7 @@ async def add_bot(request: Request):
             if owner_check:
                 pass
             else:
-                return templates.TemplateResponse("message.html", {"request": request, "message": "You are not in the support server", "username": request.session.get("username", False)})
+                return templates.TemplateResponse("message.html", {"request": request, "message": "You are not in the support server", "username": request.session.get("username", False), "avatar": request.session.get("avatar")})
     else:
         return RedirectResponse("/")
 
@@ -89,7 +89,7 @@ async def bot_edit(request: Request, bid: int):
         if check["owner"] == int(request.session["userid"]) or str(request.session["userid"]) in check["extra_owners"]:
             pass
         else:
-            return templates.TemplateResponse("message.html", {"request": request, "message": "You aren't the owner of this bot.", "username": request.session.get("username", False)})
+            return templates.TemplateResponse("message.html", {"request": request, "message": "You aren't the owner of this bot.", "username": request.session.get("username", False), "avatar": request.session.get("avatar")})
         tags_fixed = {}
         for tag in TAGS:
             new_tag = tag.replace("_", " ")

@@ -8,8 +8,7 @@ router = APIRouter(
 @router.get("/")
 @csrf_protect
 async def search(request: Request, q: str):
-    start = time.time()
-    fetch = await db.fetch("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE queue = false and description ~* $1 ORDER BY votes", re.sub(r"\W+|_", " ", q))
+    fetch = await db.fetch("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE queue = false and (description ~* $1) ORDER BY votes", re.sub(r"\W+|_", " ", q))
     search_bots = []
     # TOP VOTED BOTS
     for bot in fetch:
@@ -23,10 +22,7 @@ async def search(request: Request, q: str):
         new_tag = tag.replace("_", " ")
         tags_fixed.update({tag: new_tag.capitalize()})
 
-    end = time.time()
-    print(end - start)
-
-    return templates.TemplateResponse("search.html", {"request": request, "username": request.session.get("username", False), "search_bots": search_bots, "tags_fixed": tags_fixed})
+    return templates.TemplateResponse("search.html", {"request": request, "username": request.session.get("username", False), "search_bots": search_bots, "tags_fixed": tags_fixed, "avatar": request.session.get("avatar")})
 
 @router.get("/tags/{tag_search}")
 @csrf_protect
@@ -40,7 +36,7 @@ async def tags(request: Request, tag_search):
     for bot in fetch:
         bot_info = await get_bot(bot["bot_id"])
         if bot_info:
-            search_bots.append({"bot": bot, "avatar": bot_info["avatar"], "username": bot_info["username"], "votes": await human_format(bot["votes"]), "servers": await human_format(bot["servers"]), "description": bot["description"]})
+            search_bots.append({"bot": bot, "avatar": bot_info["avatar"], "username": bot_info["username"], "votes": await human_format(bot["votes"]), "servers": await human_format(bot["servers"]), "description": bot["description"], "avatar": request.session.get("avatar")})
 
         # TAGS
     tags_fixed = {}
@@ -48,4 +44,4 @@ async def tags(request: Request, tag_search):
         new_tag = tag.replace("_", " ")
         tags_fixed.update({tag: new_tag.capitalize()})
 
-    return templates.TemplateResponse("search.html", {"request": request, "username": request.session.get("username", False), "search_bots": search_bots, "tags_fixed": tags_fixed})
+    return templates.TemplateResponse("search.html", {"request": request, "username": request.session.get("username", False), "search_bots": search_bots, "tags_fixed": tags_fixed, "avatar": request.session.get("avatar")})

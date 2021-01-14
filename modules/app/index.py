@@ -35,7 +35,7 @@ async def home(request: Request):
         new_tag = tag.replace("_", " ")
         tags_fixed.update({tag: new_tag.capitalize()})
 
-    return templates.TemplateResponse("index.html", {"request": request, "username": request.session.get("username", False), "top_voted": top_voted, "new_bots": new_bots, "certified_bots": certified_bots, "tags_fixed": tags_fixed})
+    return templates.TemplateResponse("index.html", {"request": request, "username": request.session.get("username", False), "top_voted": top_voted, "new_bots": new_bots, "certified_bots": certified_bots, "tags_fixed": tags_fixed, "avatar": request.session.get("avatar")})
 
 @router.get("/support")
 @csrf_protect
