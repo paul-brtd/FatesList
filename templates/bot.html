@@ -17,12 +17,17 @@
         <div class="text-nowrap d-flex justify-content-xl-center align-items-xl-center" style="line-height: 2;border-radius: 25px;background: #7289DA;width: auto;margin: 10px;font-size: 11px;">
         <form method = "POST" action = "/bot/{{bot.bot_id}}/vote">
             {{form.csrf_token}}
-            <button type="submit" class="btn btn-primary"><i class="fas fa-thumbs-up"></i>{{bot.votes}}</button>
+            <button type="submit" class="btn btn-outline-dark" style="background-color: white;"><i class="fas fa-thumbs-up"></i>{{bot.votes}}</button>
         </form>
         </div>
+        {% if not bot.support or bot.support == "" or bot.support == "None" %}
+        {% else %}
         <div class="text-nowrap d-flex justify-content-xl-center align-items-xl-center" style="line-height: 2;border-radius: 25px;background: #7289DA;width: auto;margin: 10px;font-size: 11px;">
-            <p style="color: rgba(255,255,255,0.87);font-size: 16px;font-weight: bold;margin: 2px 10px;line-height: 2;">Support</p>
+        <button onclick="window.location.replace('{{bot.support}}')" type="submit" class="btn btn-outline-dark" style="background-color: white;"><i class="fas"></i>Support</button>
         </div>
+       {% endif %}
+
+
         <div class="text-nowrap d-flex justify-content-xl-center align-items-xl-center" style="line-height: 2;border-radius: 25px;background: #7289DA;width: auto;margin: 10px;font-size: 11px;">
             <p style="color: rgba(255,255,255,0.87);font-size: 16px;font-weight: bold;margin: 2px 10px;line-height: 2;">Website</p>
         </div>
