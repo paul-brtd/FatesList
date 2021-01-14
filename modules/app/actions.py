@@ -50,6 +50,12 @@ async def add_bot_api(
     fetch = await db.fetch("SELECT bot_id FROM bots WHERE bot_id = $1", bot_id)
     if fetch:
         return templates.TemplateResponse("message.html", {"request": request, "message": "Bot already exists.", "username": request.session.get("username", False)})
+
+    if invite.startswith("https://discord.com/api/oauth2"):
+        pass
+    else:
+        return templates.TemplateResponse("message.html", {"request": request, "message": "Invalid Bot Invite", "username": request.session.get("username", False)})
+
     if len(description) > 101:
         return templates.TemplateResponse("message.html", {"request": request, "message": "Short description is too long.", "username": request.session.get("username", False)})
     try:
@@ -133,6 +139,10 @@ async def bot_edit_api(
         pass
     else:
         return templates.TemplateResponse("message.html", {"request": request, "message": "You are either not in the support server or you do not exist on the Discord API", "username": request.session.get("username", False)})
+    if invite.startswith("https://discord.com/api/oauth2"):
+        pass
+    else:
+        return templates.TemplateResponse("message.html", {"request": request, "message": "Invalid Bot Invite", "username": request.session.get("username", False)})
     if len(description) > 101:
         return templates.TemplateResponse("message.html", {"request": request, "message": "Short description is too long.", "username": request.session.get("username", False)})
     if tags == "":
@@ -145,7 +155,7 @@ async def bot_edit_api(
             return templates.TemplateResponse("message.html", {"request": request, "message": "One of your bot tags didn't exist internally", "username": request.session.get("username", False)})
     creation = time.time()
     bt.add_task(edit_bot_bt, request, bid, prefix, library, website, banner, support, long_description, description, selected_tags, extra_owners, creation, invite, webhook)
-    return templates.TemplateResponse("message.html", {"request": request, "message": "Bot has been edited.", "username": request.session.get("username", False)}) 
+    return templates.TemplateResponse("message.html", {"request": request, "message": "Bot has been edited.", "username": request.session.get("username", False), "avatar": request.session.get('avatar')}) 
 
 async def edit_bot_bt(request, botid, prefix, library, website, banner, support, long_description, description, selected_tags, extra_owners, creation, invite, webhook):
     await db.execute("UPDATE bots SET bot_library=$2, webhook=$3, description=$4, long_description=$5, prefix=$6, website=$7, discord=$8, tags=$9, banner=$10, owner=$11, extra_owners=$12, invite=$13 WHERE bot_id = $1", botid, library, webhook, description, long_description, prefix, website, support, selected_tags, banner, int(request.session["userid"]), extra_owners, invite)
