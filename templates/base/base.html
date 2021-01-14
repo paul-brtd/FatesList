@@ -29,10 +29,10 @@
                       {{username}}<i class="fas fa-caret-down" style="margin-left: 5px;"></i>
                     </a>
                     <div class="dropdown-menu">
-                        <a class="dropdown-item" href="/profile">Profile</a>
-                        <a class="dropdown-item" href="/bot/add">Add Bot</a>
+                        <a class="dropdown-item" style="color: black !important;" href="/profile">Profile</a>
+                        <a class="dropdown-item"  style="color: black !important;" href="/bot/add">Add Bot</a>
                         <div class="dropdown-divider"></div>
-                        <a class="dropdown-item" href="/logout">Logout</a>
+                        <a class="dropdown-item" style="color: black !important;" href="/logout">Logout</a>
                     </div>
                 {% endif %}
             </div>
@@ -48,4 +48,35 @@
       {% endblock %}
 
 </body>
+<script>
+    function getFormData($form){
+        var unindexed_array = $form.serializeArray();
+        var indexed_array = {};
+
+        $.map(unindexed_array, function(n, i){
+            indexed_array[n['name']] = n['value'];
+        });
+
+        return indexed_array;
+    }
+
+    function postjson(post_url, post_data) {
+                var xhr = new XMLHttpRequest();
+                xhr.open("POST", post_url, true);
+                xhr.setRequestHeader("Content-Type", "application/json");
+                xhr.onreadystatechange = function () {
+                    if(xhr.readyState === XMLHttpRequest.DONE) {
+                        var json = JSON.parse(xhr.responseText);
+                        alert(json.error);
+                    }
+                };
+                var data = JSON.stringify(post_data);
+                xhr.send(data);
+        };
+
+    function sendForm(server_url) {
+        var formData = getFormData( $("#Sform") );
+        postjson(server_url, formData);
+    }
+</script>
 </html>

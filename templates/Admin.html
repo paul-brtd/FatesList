@@ -77,28 +77,37 @@
                 </div>
             </div>
         </div>
-        {% if owner %}
+        {% if bot_review or mod or admin or owner %}
         <div style="width: 80%;margin: 0 auto;;">
             <h3 class="text-center" style="color: rgba(241,241,241,0.87);">Admin Functions</h3>
-            <form method="POST" action="?admin=certify">
+            <form method="POST">
+                {{form.csrf_token}}
+                <input type="hidden" name="admin" value="certify"></input>
                 <div class="input-group">
                     <div class="input-group-prepend"><span class="input-group-text" style="background: #00000000;color: rgba(255,255,255,0.87);">Certify a bot</span></div><input class="form-control" type="number" style="background: #ffffff;" name="bot_id">
                     <div class="input-group-append"><button class="btn btn-primary" type="submit">Submit</button></div>
                 </div>
             </form>
 
-            <form method="POST" action="?admin=uncertify">
-            <div class="input-group" style="margin: 50px 0;">
-                <div class="input-group-prepend"><span class="input-group-text" style="background: #00000000;color: rgba(255,255,255,0.87);">Uncertify a bot</span></div><input class="form-control" type="number" style="background: #ffffff;" name="bot_id">
-                <div class="input-group-append"><button class="btn btn-primary" type="submit">Submit</button></div>
-            </div>
-        </form>
-        <form method="POST" action="?admin=reset">
+            <form method="POST">
+                {{form.csrf_token}}
+                <input type="hidden" name="admin" value="uncertify"></input>
+                <div class="input-group" style="margin: 50px 0;">
+                    <div class="input-group-prepend"><span class="input-group-text" style="background: #00000000;color: rgba(255,255,255,0.87);">Uncertify a bot</span></div><input class="form-control" type="number" style="background: #ffffff;" name="bot_id">
+                    <div class="input-group-append"><button class="btn btn-primary" type="submit">Submit</button></div>
+                </div>
+            </form>
+        
+        {% if owner %}
+        <form method="POST">
+            {{form.csrf_token}}
+            <input type="hidden" name="admin" value="reset"></input>
             <div class="input-group" style="margin: 50px 0;">
                 <div class="input-group-prepend"><span class="input-group-text" style="background: #00000000;color: rgba(255,255,255,0.87);">Reset Votes(Also add a wish to the box ;))</span></div><input class="form-control" type="text" required style="background: #ffffff;" name="nn">
                 <div class="input-group-append"><button class="btn btn-primary" type="submit">Submit</button></div>
             </div>
         </form>
+        {% endif %}
         </div>
         {% endif %}
     </div>

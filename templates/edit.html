@@ -192,7 +192,6 @@
         for="website"
         >Website URL</label
       ><input
-        required
         class="form-control"
         type="text"
         style="
@@ -226,7 +225,7 @@
         name="banner"
         placeholder="https://cdn.discordapp.com/MySecretBanner.com"
         minlength="10"
-        value="{{fetch.banner}}"
+        value="{% if fetch.banner == "none" or fetch.banner == "" %}{%else%}{{fetch.banner}}{%endif%}"
       /><label
         style="
           color: white;
@@ -237,7 +236,6 @@
         for="support"
         >Support server</label
       ><input
-        required
         class="form-control"
         type="text"
         style="
@@ -270,7 +268,7 @@
       "
       name="webhook"
       placeholder="http://129.332.123:5000/webhook"
-      minlength="10"
+      minlength="3"
       value="{{fetch.webhook}}"
     /><label
     style="

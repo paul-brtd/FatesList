@@ -14,7 +14,7 @@
             filling this form.</p>
     </div>
     <hr style="font-size: 20px;border-top-width: 1px;border-top-color: #eee;width: 90%;">
-    <form style="height: auto;margin-top: 30px;color: rgba(255,255,255,0.87);" id="bot_form" method="POST">
+    <form style="height: auto;margin-top: 30px;color: rgba(255,255,255,0.87);" id="bot_form" method="POST" onsubmit="abc()">
         <div class="form-group" style="width: 80%;margin: 0 auto;"><label
                 style="color: white;font-weight: bold;font-size: 16px;margin-top: 30px;" for="bot_id">Bot
                 id</label><input required class="form-control" type="number"
@@ -24,7 +24,7 @@
                 for="prefix">Prefix</label><input required class="form-control" type="text"
                 style="background: #ffffff;border: grey;border-radius: 5px;max-width: 100px;" name="prefix"
                 placeholder="!"><label style="color: white;font-weight: bold;font-size: 16px;margin-top: 30px;"
-                for="library">Library</label><input required class="form-control" type="text"
+                for="library">Library</label><input class="form-control" type="text"
                 style="background: #ffffff;border: grey;border-radius: 5px;max-width: 150px;" name="library"
                 placeholder="Discord.py"><label style="color: white;font-weight: bold;font-size: 16px;margin-top: 30px;"
                 for="description">Short Description</label><input required class="form-control" type="text"
@@ -39,18 +39,18 @@
                 style="background: #ffffff;border: grey;border-radius: 5px;max-width: 1000px;" name="invite"
                 placeholder="https://discord.com/oauth2/authorize?client_id=12345637172158464&amp;permissions=314432&amp;scope=bot"
                 minlength="10"><label style="color: white;font-weight: bold;font-size: 16px;margin-top: 30px;"
-                for="website">Website URL</label><input required class="form-control" type="text"
+                for="website">Website URL</label><input class="form-control" type="text"
                 style="background: #ffffff;border: grey;border-radius: 5px;max-width: 1000px;" name="website"
-                placeholder="https://support.com" minlength="10"><label style="color: white;font-weight: bold;font-size: 16px;margin-top: 30px;"
+                placeholder="https://support.com" minlength="3"><label style="color: white;font-weight: bold;font-size: 16px;margin-top: 30px;"
                 for="website">Banner URL</label><input class="form-control" type="text"
                 style="background: #ffffff;border: grey;border-radius: 5px;max-width: 1000px;" name="banner"
                 placeholder="https://cdn.discordapp.com/MySecretBanner.com" minlength="10"><label
                 style="color: white;font-weight: bold;font-size: 16px;margin-top: 30px;" for="support">Support
-                server</label><input required class="form-control" type="text"
+                server</label><input class="form-control" type="text"
                 style="background: #ffffff;border: grey;border-radius: 5px;max-width: 1000px;" name="support"
                 placeholder="https://discord.gg/738Hs" minlength="10"><label
                 style="color: white;font-weight: bold;font-size: 16px;margin-top: 30px;" for="long_description">Long
-                description(Allows html and markdown)</label><textarea class="form-control"
+                description(Allows html and markdown)</label><textarea required class="form-control"
                 style="background: #ffffff;border-radius: 5px;height: 150px;max-width: 1000px;/*border-color: grey!important;*/"
                 name="long_description" placeholder="Write about your bot using html or markdown"
                 minlength="300"></textarea><label
@@ -88,6 +88,12 @@
         $('#bot_form').append(input);
         return true;
     });
+
+    function abc(eventObj) {
+        var input = $("<input>").attr({ "type": "hidden", "name": "tags" }).val(instance.value());
+        $('#bot_form').append(input);
+        return true;
+    }
 </script>
 
 
