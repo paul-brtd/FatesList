@@ -5,7 +5,7 @@ class OauthConfig:
     client_id = "798951566634778641"
     client_secret = "lGXEWjGcuoom0KCCkPjFg6nPFvudwSTd"
     scope = ["identify", "guilds.join"]
-    redirect_uri = "https://3ef5d5528300.ngrok.io/login/confirm"
+    redirect_uri = "https://85fe1d797659.ngrok.io/login/confirm"
 
 class Oauth():
     def __init__(self):

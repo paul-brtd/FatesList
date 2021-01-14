@@ -86,7 +86,7 @@ async def review_api(request:Request, bot_id: int, accept: str = FForm("")):
         await db.execute("UPDATE bots SET queue=false,api_token=$1 WHERE bot_id = $2", api_token, bot_id)
         channel = guild.get_channel(bot_logs)
         await channel.send(f"<@{bot_id}> has been approved")
-        return templates.TemplateResponse("last.html",{"request":request,"message":"Bot accepted; You MUST Invite it by this url","username":request.session["username"],"url":f"https://discord.com/oauth2/authorize?client_id={str(bot_id)}&scope=bot&guild_id={guild}&disable_guild_select=true&permissions=0"})
+        return templates.TemplateResponse("last.html",{"request":request,"message":"Bot accepted; You MUST Invite it by this url","username":request.session["username"],"url":f"https://discord.com/oauth2/authorize?client_id={str(bot_id)}&scope=bot&guild_id={guild.id}&disable_guild_select=true&permissions=0"})
     elif accept == "false":
         return RedirectResponse("/admin/review/"+str(bot_id)+"/deny", status_code=HTTP_303_SEE_OTHER)
     else:
