@@ -51,30 +51,58 @@ async def human_format(num: int) -> str:
         num /= 1000.0
     return '{}{}'.format('{:f}'.format(num).rstrip('0').rstrip('.'), ['', 'K', 'M', 'B', 'T'][magnitude])
 
+async def internal_get_bot(userid: int, bot_only: bool) -> Optional[dict]:
+    # Check if a suitable version is in the bot_cache first before querying Discord
+    cache = await db.fetchrow("SELECT username, avatar, valid, valid_for, epoch FROM bot_cache WHERE bot_id = $1", userid)
+    if cache is None or time.time() - cache['epoch'] > 300: # 300 sec cacher
+        # The cache is invalid, pass
+        pass
+    else:
+        if cache["valid"] and "bot" in cache["valid_for"].split("|"):
+            return {"username": str(cache['username']), "avatar": str(cache['avatar'])}
+        elif cache["valid"] and not bot_only:
+            return {"username": str(cache['username']), "avatar": str(cache['avatar'])}
+        return None
 
-async def get_bot(userid: int) -> Optional[dict]:
+    # If all else fails, add to cache, then recall ourselves
+    invalid = False
+    
     try:
         bot = client.get_user(int(userid))
-        if bot:
-            if bot.bot:
-                return {"username": str(bot.name), "avatar": str(bot.avatar_url)}
-            else:
-                return None
-        else:
-            return None
     except:
-        return None
+        invalid = True
+        valid_for = None
 
+    if bot:
+        invalid = False
+        valid_for = "user"
+    else:
+        invalid = True
+        valid_for = None
+
+    if bot and bot.bot:
+        invalid = False
+        valid_for+="|bot"
+
+    if invalid:
+        username = None
+        avatar = None
+    else:
+        username = str(bot.name)
+        avatar = str(bot.avatar_url)
+ 
+    cache = await db.fetchrow("SELECT epoch FROM bot_cache WHERE bot_id = $1", userid)
+    if cache is None:
+        await db.execute("INSERT INTO bot_cache (bot_id, username, avatar, epoch, valid, valid_for) VALUES ($1, $2, $3, $4, $5, $6)", userid, username, avatar, time.time(), (not invalid), valid_for)
+    else:
+        await db.execute("UPDATE bot_cache SET username = $1, avatar = $2, epoch = $3, valid = $4, valid_for = $6 WHERE bot_id = $5", username, avatar, time.time(), (not invalid), userid, valid_for)
+    return await internal_get_bot(userid, bot_only)
 
 async def get_user(userid: int) -> Optional[dict]:
-    try:
-        user = client.get_user(int(userid))
-        if user:
-            return {"username": str(user), "avatar": str(user.avatar_url)}
-        else:
-            return None
-    except:
-        return None
+    return await internal_get_bot(userid, False)
+
+async def get_bot(userid: int) -> Optional[dict]:
+    return await internal_get_bot(userid, True)
 
 # Internal backend entry to check if one role is in staff and return a dict of that entry if so
 def is_staff_internal(staff_json: dict, role: int) -> dict:

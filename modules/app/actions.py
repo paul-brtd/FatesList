@@ -55,7 +55,7 @@ async def add_bot_api(
         pass
     else:
         return templates.TemplateResponse("message.html", {"request": request, "message": "Invalid Bot Invite", "username": request.session.get("username", False)})
-
+    description = description.replace("\n", " ").replace("\t", " ")
     if len(description) > 101:
         return templates.TemplateResponse("message.html", {"request": request, "message": "Short description is too long.", "username": request.session.get("username", False)})
     try:
@@ -143,6 +143,8 @@ async def bot_edit_api(
         pass
     else:
         return templates.TemplateResponse("message.html", {"request": request, "message": "Invalid Bot Invite", "username": request.session.get("username", False)})
+
+    description = description.replace("\n", " ").replace("\t", " ")
     if len(description) > 101:
         return templates.TemplateResponse("message.html", {"request": request, "message": "Short description is too long.", "username": request.session.get("username", False)})
     if tags == "":
@@ -162,3 +164,10 @@ async def edit_bot_bt(request, botid, prefix, library, website, banner, support,
     channel = client.get_channel(bot_logs)
     owner=str(request.session["userid"])
     await channel.send(f"<@{owner}> edited the bot <@{botid}>")
+
+@router.post("/{bot_id}/vote")
+async def vote_bot(
+        request: Request,
+        bot_id: int
+    ):
+    pass

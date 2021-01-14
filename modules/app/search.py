@@ -36,7 +36,7 @@ async def tags(request: Request, tag_search):
     for bot in fetch:
         bot_info = await get_bot(bot["bot_id"])
         if bot_info:
-            search_bots.append({"bot": bot, "avatar": bot_info["avatar"], "username": bot_info["username"], "votes": await human_format(bot["votes"]), "servers": await human_format(bot["servers"]), "description": bot["description"], "avatar": request.session.get("avatar")})
+            search_bots.append({"bot": bot, "avatar": bot_info["avatar"], "username": bot_info["username"], "votes": await human_format(bot["votes"]), "servers": await human_format(bot["servers"]), "description": bot["description"]})
 
         # TAGS
     tags_fixed = {}
