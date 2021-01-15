@@ -109,13 +109,25 @@ async def startup():
 
 @client.command()
 async def approve(ctx, bot_id: int):
-    api_token = get_token(64)
     if not ctx.guild:
         return await ctx.send("You must run this command in a guild")
     elif is_staff(builtins.staff_roles, ctx.author.roles, 2)[0]:
-        await db.execute("UPDATE bots SET queue=$3, api_token=$1 WHERE bot_id = $2", api_token, bot_id, False)
+        await db.execute("UPDATE bots SET queue=$2 WHERE bot_id = $1", bot_id, False)
         channel = client.get_channel(bot_logs)
         await channel.send(f"<@{bot_id}> has been approved")
         await ctx.send("Approved this bot :)")
+    else:
+        await ctx.send("You don't have the permission to do this")
+
+@client.command()
+async def deny(ctx, bot_id: int, reason: Optional[str] = "There was no reason specified"):
+    if not ctx.guild:
+        return await ctx.send("You must run this command in a guild")
+    elif is_staff(builtins.staff_roles, ctx.author.roles, 2)[0]:
+        channel = client.get_channel(bot_logs)
+        deny = await db.execute("DELETE FROM bots WHERE bot_id = $1", int(bot_id))
+        channel = client.get_channel(bot_logs)
+        await channel.send(f"<@{str(ctx.author.id)}> denied the bot <@{bot_id}> with the reason: {reason}")
+        await ctx.send("MAGA'd this bot :)")
     else:
         await ctx.send("You don't have the permission to do this")

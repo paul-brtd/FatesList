@@ -19,8 +19,6 @@ CREATE TABLE bots (
     owner bigint,
     extra_owners text,
     invite text,
-    queue_username text,
-    queue_avatar text
 );
 
 CREATE TABLE users (
@@ -38,6 +36,10 @@ CREATE TABLE bot_cache (
     valid_for text
 );
 
-CREATE TABLE api (
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+CREATE TABLE api_event (
+    id uuid primary key DEFAULT uuid_generate_v4(),
+    bot_id bigint,
     events text
 );

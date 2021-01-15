@@ -24,6 +24,8 @@ async def bot_index(request: Request, bot_id: int):
         banner = "none"
 
     bot_info = await get_bot(bot["bot_id"])
+    guild = client.get_guild(reviewing_server)
+    
     if bot_info:
         bot_obj = {"bot": bot, "bot_id": bot["bot_id"], "avatar": bot_info["avatar"], "website": bot["website"], "username": bot_info["username"], "votes": await human_format(bot["votes"]), "servers": await human_format(bot["servers"]), "description": bot["description"], "support": bot['discord'], "invite": bot["invite"], "tags": bot["tags"], "library": bot['library'], "banner": banner, "token": bot["api_token"]}
     else:

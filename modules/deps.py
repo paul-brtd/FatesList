@@ -52,6 +52,7 @@ async def human_format(num: int) -> str:
     return '{}{}'.format('{:f}'.format(num).rstrip('0').rstrip('.'), ['', 'K', 'M', 'B', 'T'][magnitude])
 
 async def internal_get_bot(userid: int, bot_only: bool) -> Optional[dict]:
+    userid = int(userid)
     # Check if a suitable version is in the bot_cache first before querying Discord
 
     if len(str(userid)) not in [17, 18]:
@@ -99,7 +100,7 @@ async def internal_get_bot(userid: int, bot_only: bool) -> Optional[dict]:
         username = str(bot.name)
         avatar = str(bot.avatar_url)
  
-    cache = await db.fetchrow("SELECT epoch FROM bot_cache WHERE bot_id = $1", userid)
+    cache = await db.fetchrow("SELECT epoch FROM bot_cache WHERE bot_id = $1", int(userid))
     if cache is None:
         await db.execute("INSERT INTO bot_cache (bot_id, username, avatar, epoch, valid, valid_for) VALUES ($1, $2, $3, $4, $5, $6)", userid, username, avatar, time.time(), (not invalid), valid_for)
     else:
@@ -138,5 +139,28 @@ def is_staff(staff_json: dict, roles: Union[list, int], base_perm: int) -> Union
         return False, tmp["perm"]
     return False, tmp["perm"]
 
+#await add_event(bot_id, "add_bot", "NULL")
+async def add_event(bot_id: int, event: str, context: str):
+    new_event_data = "|".join((event, str(time.time()), context))
+    await db.execute("INSERT INTO api_event (bot_id, events) VALUES ($1, $2)", bot_id, new_event_data)
+    return
+
 class Form(StarletteForm):
     pass
+
+async def in_maint(bot_id: str) -> Union[bool, Optional[dict]]:
+    api_data = await db.fetch("SELECT events FROM api_event WHERE bot_id = $1 AND events ilike '%maint%'", bot_id)
+    if api_data == []:
+        return False, None
+    curr_maint = None
+    for _event in api_data:
+        event = _event["events"]
+        if event.split("|")[0] == "begin_maint":
+            curr_maint = event
+        elif event.split("|")[0] == "end_maint" and curr_maint is not None:
+            curr_maint = None
+    if curr_maint is not None:
+        return True, {"reason": curr_maint.split("|")[2], "epoch": curr_maint.split("|")[1]}
+    else:
+        return False, None
+

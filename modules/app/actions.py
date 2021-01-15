@@ -78,7 +78,8 @@ async def add_bot_api(
 
 
 async def add_bot_bt(request, bot_id, prefix, library, website, banner, support, long_description, description, selected_tags, extra_owners, creation, bot_object, invite):
-    await db.execute("INSERT INTO bots(bot_id,prefix,bot_library,invite,website,banner,discord,long_description,description,tags,owner,extra_owners,votes,servers,shard_count,created_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$15)", bot_id, prefix, library, invite, website, banner, support, long_description, description, selected_tags, int(request.session["userid"]), extra_owners, 0, 0, int(creation))
+    await db.execute("INSERT INTO bots(bot_id,prefix,bot_library,invite,website,banner,discord,long_description,description,tags,owner,extra_owners,votes,servers,shard_count,created_at,api_token) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)", bot_id, prefix, library, invite, website, banner, support, long_description, description, selected_tags, int(request.session["userid"]), extra_owners, 0, 0, 0, int(creation), get_token(101))
+    await add_event(bot_id, "add_bot", "NULL")
     channel = client.get_channel(bot_logs)
     owner=str(request.session["userid"])
     bot_name = bot_object["username"]
@@ -161,6 +162,7 @@ async def bot_edit_api(
 
 async def edit_bot_bt(request, botid, prefix, library, website, banner, support, long_description, description, selected_tags, extra_owners, creation, invite, webhook):
     await db.execute("UPDATE bots SET bot_library=$2, webhook=$3, description=$4, long_description=$5, prefix=$6, website=$7, discord=$8, tags=$9, banner=$10, owner=$11, extra_owners=$12, invite=$13 WHERE bot_id = $1", botid, library, webhook, description, long_description, prefix, website, support, selected_tags, banner, int(request.session["userid"]), extra_owners, invite)
+    await add_event(botid, "edit_bot", f"user:{str(request.session['userid'])}")
     channel = client.get_channel(bot_logs)
     owner=str(request.session["userid"])
     await channel.send(f"<@{owner}> edited the bot <@{botid}>")

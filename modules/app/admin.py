@@ -38,8 +38,10 @@ async def admin_api(request:Request, admin: str = FForm(""), bot_id: int = FForm
     print(bot_id)
     guild = client.get_guild(reviewing_server)
     user = guild.get_member(int(request.session["userid"]))
-    if not is_staff(staff_roles, user.roles, 5):
-        return RedirectResponse("/admin/console") 
+    if user is None:
+        return RedirectResponse("/")
+    if not is_staff(staff_roles, user.roles, 5)[0]:
+        return RedirectResponse("/admin/console", status_code = 303) 
     if admin=="certify":
         await db.execute("UPDATE bots SET certified = true WHERE bot_id = $1", bot_id)
         channel = client.get_channel(bot_logs)
@@ -86,8 +88,7 @@ async def review_api(request:Request, bot_id: int, accept: str = FForm("")):
     if not s[0]:
         return RedirectResponse("/")                
     elif accept == "true":
-        api_token = get_token(64)
-        await db.execute("UPDATE bots SET queue=false,api_token=$1 WHERE bot_id = $2", api_token, bot_id)
+        await db.execute("UPDATE bots SET queue=false WHERE bot_id = $1", bot_id)
         channel = guild.get_channel(bot_logs)
         await channel.send(f"<@{bot_id}> has been approved")
         return templates.TemplateResponse("last.html",{"request":request,"message":"Bot accepted; You MUST Invite it by this url","username":request.session["username"],"url":f"https://discord.com/oauth2/authorize?client_id={str(bot_id)}&scope=bot&guild_id={guild.id}&disable_guild_select=true&permissions=0"})
