@@ -1,4 +1,5 @@
 from ..deps import *
+from uuid import UUID
 
 router = APIRouter(
     prefix = "/api",
@@ -7,7 +8,7 @@ router = APIRouter(
 
 @router.get("/events")
 async def get_api_events(api_token: str):
-    bid = await db.fetchrow("SELECT bot_id FROM bots WHERE api_token = $1", api_token)
+    bid = await db.fetchrow("SELECT bot_id, servers FROM bots WHERE api_token = $1", api_token)
     if bid is None:
         return {"events": []}
     uid = bid["bot_id"]
@@ -20,15 +21,15 @@ async def get_api_events(api_token: str):
         event = _event["events"]
         uid = _event["id"]
         events.append({"id": uid,  "event": event.split("|")[0], "epoch": event.split("|")[1], "context": event.split("|")[2]})
-    return {"events": events, "maint": (await in_maint(bid["bot_id"]))}
+    return {"events": events, "maint": (await in_maint(bid["bot_id"])), "guild_count": bid["servers"]}
 
 @router.delete("/events")
-async def delete_api_events(api_token: str):
+async def delete_api_events(api_token: str, event_id: uuid.UUID):
     id = await db.fetchrow("SELECT bot_id FROM bots WHERE api_token = $1", api_token)
     if id is None:
         return {"done":  False, "reason": "NO_AUTH"}
     id = id["bot_id"]
-    await db.execute("DELETE FROM api_event WHERE bot_id = $1", id)
+    await db.execute("DELETE FROM api_event WHERE bot_id = $1 AND id = $2", id, event_id)
     return {"done":  True, "reason": None}
 
 @router.put("/events")

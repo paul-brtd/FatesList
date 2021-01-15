@@ -141,6 +141,11 @@ def is_staff(staff_json: dict, roles: Union[list, int], base_perm: int) -> Union
 
 #await add_event(bot_id, "add_bot", "NULL")
 async def add_event(bot_id: int, event: str, context: str):
+    # Special Events
+    if event == "guild_count":
+        print("Updating Guild Count")
+        await db.execute("UPDATE bots SET servers = $1 WHERE bot_id = $2", int(context), int(bot_id))
+        return
     new_event_data = "|".join((event, str(time.time()), context))
     await db.execute("INSERT INTO api_event (bot_id, events) VALUES ($1, $2)", bot_id, new_event_data)
     return
@@ -155,12 +160,32 @@ async def in_maint(bot_id: str) -> Union[bool, Optional[dict]]:
     curr_maint = None
     for _event in api_data:
         event = _event["events"]
-        if event.split("|")[0] == "begin_maint":
+        if event.split("|")[0].replace(" ", "") == "begin_maint":
             curr_maint = event
-        elif event.split("|")[0] == "end_maint" and curr_maint is not None:
+        elif event.split("|")[0].replace(" ", "") == "end_maint" and curr_maint is not None:
             curr_maint = None
     if curr_maint is not None:
         return True, {"reason": curr_maint.split("|")[2], "epoch": curr_maint.split("|")[1]}
     else:
         return False, None
 
+
+# events = await get_normal_events(bot["bot_id"])
+async def get_normal_events(bot_id: int) -> list:
+    api_data = await db.fetch("SELECT events FROM api_event WHERE bot_id = $1", bot_id)
+    if api_data == []:
+        return []
+    special_events = ["add_bot", "edit_bot", "guild_count", "shard_count", "begin_maint", "end_maint"]
+    events = []
+    for _event in api_data:
+        event = _event["events"]
+        if event.split("|")[0].replace(" ", "") in special_events:
+            print("Ignoring event: ", event.split("|")[0].replace(" ", ""))
+        else:
+            try:
+                css = event.split("|")[2].split("::css=")[1]
+            except:
+                css = ""
+            events.append({"event": event.split("|")[0], "context": event.split("|")[2].split("::css=")[0].replace("onload", "").replace("<script", "").replace("</script>", "").replace("<iframe", ""), "css": css, "time": datetime.datetime.fromtimestamp(float(event.split("|")[1]))})
+    print(events)
+    return events

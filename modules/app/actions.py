@@ -40,7 +40,7 @@ async def add_bot_api(
         website: Optional[str] = FForm(""),
         description: str = FForm(""),
         tags: str = FForm(""),
-        banner: str = FForm(""),
+        banner: str = FForm("none"),
         extra_owners: str = FForm(""),
         support: Optional[str] = FForm(""),
         long_description: str = FForm("")
