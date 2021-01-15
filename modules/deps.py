@@ -53,11 +53,18 @@ async def human_format(num: int) -> str:
 
 async def internal_get_bot(userid: int, bot_only: bool) -> Optional[dict]:
     # Check if a suitable version is in the bot_cache first before querying Discord
-    cache = await db.fetchrow("SELECT username, avatar, valid, valid_for, epoch FROM bot_cache WHERE bot_id = $1", userid)
-    if cache is None or time.time() - cache['epoch'] > 300: # 300 sec cacher
+
+    if len(str(userid)) not in [17, 18]:
+        print("Ignoring blatantly wrong User ID")
+        return None # This is impossible to actually exist on the discord API
+
+    cache = await db.fetchrow("SELECT username, avatar, valid, valid_for, epoch FROM bot_cache WHERE bot_id = $1 AND username IS NOT NULL AND avatar IS NOT NULL", int(userid))
+    if cache is None or time.time() - cache['epoch'] > 60 * 60 * 2: # 300 sec cacher
         # The cache is invalid, pass
+        print("Not using cache for id ", str(userid))
         pass
     else:
+        print("Using cache for id ", str(userid))
         if cache["valid"] and "bot" in cache["valid_for"].split("|"):
             return {"username": str(cache['username']), "avatar": str(cache['avatar'])}
         elif cache["valid"] and not bot_only:
@@ -68,7 +75,8 @@ async def internal_get_bot(userid: int, bot_only: bool) -> Optional[dict]:
     invalid = False
     
     try:
-        bot = client.get_user(int(userid))
+        print("Making API call to get user", str(userid))
+        bot = await client.fetch_user(int(userid))
     except:
         invalid = True
         valid_for = None

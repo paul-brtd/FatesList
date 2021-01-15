@@ -37,3 +37,7 @@ CREATE TABLE bot_cache (
     valid boolean,
     valid_for text
 );
+
+CREATE TABLE api (
+    events text
+);

@@ -59,10 +59,10 @@ async def add_bot_api(
     if len(description) > 101:
         return templates.TemplateResponse("message.html", {"request": request, "message": "Short description is too long.", "username": request.session.get("username", False)})
     try:
-        bot_object = await client.fetch_user(bot_id)
+        bot_object = await get_bot(bot_id)
     except:
         return templates.TemplateResponse("message.html", {"request": request, "message": "This bot doesn't exist", "username": request.session.get("username", False)})
-    if not bot_object.bot:
+    if not bot_object:
         return templates.TemplateResponse("message.html", {"request": request, "message": "This bot doesn't exist", "username": request.session.get("username", False)})
     if tags == "":
         return templates.TemplateResponse("message.html", {"request": request, "message": "You need to select tags for your bot", "username": request.session.get("username", False)})
@@ -78,10 +78,10 @@ async def add_bot_api(
 
 
 async def add_bot_bt(request, bot_id, prefix, library, website, banner, support, long_description, description, selected_tags, extra_owners, creation, bot_object, invite):
-    await db.execute("INSERT INTO bots(bot_id,prefix,bot_library,invite,website,banner,discord,long_description,description,tags,owner,extra_owners,votes,servers,shard_count,created_at,queue_username,queue_avatar) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$15,$16,$17)", bot_id, prefix, library, invite, website, banner, support, long_description, description, selected_tags, int(request.session["userid"]), extra_owners, 0, 0, int(creation),bot_object.name,str(bot_object.avatar_url))
+    await db.execute("INSERT INTO bots(bot_id,prefix,bot_library,invite,website,banner,discord,long_description,description,tags,owner,extra_owners,votes,servers,shard_count,created_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$15)", bot_id, prefix, library, invite, website, banner, support, long_description, description, selected_tags, int(request.session["userid"]), extra_owners, 0, 0, int(creation))
     channel = client.get_channel(bot_logs)
     owner=str(request.session["userid"])
-    bot_name = str(bot_object)
+    bot_name = bot_object["username"]
     await channel.send(f"<@{owner}> added the bot <@{bot_id}>({bot_name}) to queue")
 
 

@@ -47,6 +47,8 @@ async def login_confirm(request: Request, code: str):
                 if tcheck is None:
                     flag = False
             await db.execute("INSERT INTO users (userid, token, vote_epoch) VALUES ($1, $2, $3)", int(userjson["id"]), token, 0)
+        else:
+            token = token["token"]
         request.session["token"] = token
         if "RedirectResponse" in request.session.keys():
             return RedirectResponse(request.session["RedirectResponse"])
