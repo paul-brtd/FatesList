@@ -35,7 +35,7 @@ async def get_api_events(request: Request, api_token: str, human: Optional[int] 
     if id is not None:
         api_data = await db.fetchrow("SELECT id, events FROM api_event WHERE bot_id = $1 AND id = $2", uid, id)
         if api_data is None:
-            return {"events": []}
+            return "There are no events available right now for you."
         event = api_data["events"]
         return {"id": uid,  "event": event.split("|")[0], "epoch": event.split("|")[1], "context": event.split("|")[2]}
 
@@ -114,7 +114,7 @@ async def create_api_event(event: EventNew):
 class EventPatch(BaseModel):
     event_id: uuid.UUID
 
-@router.patch("/test_webhook")
+@router.patch("/test_webhook_broken")
 async def test_webhook(request: Request, event: EventPatch):
     print("Event ID = " + str(event.event_id))
     event = await requests.get("http://127.0.0.1:1000/api/events?api_token=DCUaswGL6wmGskYFlVpLbIX6RcjPvnlCkzCkTPI0WiQZoqLGLjDdETA1U6gsS6tK&id=" + str(event.event_id))
