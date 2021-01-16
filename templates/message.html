@@ -5,7 +5,8 @@
 {% endblock %}
 
 {% block content %}
-   <h2 style="text-align:center; color:white; font-weight:bold;margin-top:25%;">{{message}}</h2>
+   <h2 style="text-align:center; color:white; font-weight:bold;margin-top:10%">{{message|safe}}</h2>
+   <h3 style="text-align:center; color:white;">{{context|safe}}</h3>
 {% endblock %}
 {% block footer %}
 

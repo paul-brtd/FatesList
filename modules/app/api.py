@@ -4,7 +4,8 @@ from fastapi.responses import HTMLResponse
 
 router = APIRouter(
     prefix = "/api",
-    tags = ["API"]
+    tags = ["API"],
+    include_in_schema = True
 )
 
 class EventDelete(BaseModel):

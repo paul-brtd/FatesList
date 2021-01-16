@@ -211,18 +211,19 @@ async def get_user_token(uid: int) -> str:
         else:
             token = token["token"]
 
-async def vote_bot(uid: int, bot_id: int) -> Optional[str]:
+async def vote_bot(uid: int, bot_id: int) -> Optional[list]:
     await get_user_token(uid) # Make sure we have a user profile first
     epoch = await db.fetchrow("SELECT vote_epoch FROM users WHERE userid = $1", int(uid))
     if epoch is None:
-        return "Internal Server Error"
+        return [500]
     epoch = epoch["vote_epoch"]
-    if time.time() - epoch < 60*60*12:
-        return "WAIT:" + str(time.time() - epoch)
+    WT = 60*60*12 # Wait Time
+    if time.time() - epoch < WT:
+        return [401, str(WT - (time.time() - epoch))]
     b = await db.fetchrow("SELECT webhook, votes FROM bots WHERE bot_id = $1", int(bot_id))
     if b is None:
-        return "No Bots Found"
+        return [404]
     await db.execute("UPDATE bots SET votes = votes + 1 WHERE bot_id = $1", int(bot_id))
     await db.execute("UPDATE users SET vote_epoch = $1 WHERE userid = $2", time.time(), int(uid))
     event_id = await add_event(bot_id, "vote", "user=" + str(uid) + "::votes=" + str(b['votes'] + 1))
-    return
+    return []

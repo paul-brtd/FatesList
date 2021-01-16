@@ -2,7 +2,8 @@ from ..deps import *
 
 router = APIRouter(
     prefix = "/bot",
-    tags = ["Bots"]
+    tags = ["Bots"],
+    include_in_schema = False
 )
 
 @router.get("/")

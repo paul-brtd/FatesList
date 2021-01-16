@@ -2,7 +2,8 @@ from ..deps import *
 
 router = APIRouter(
     prefix = "/bot",
-    tags = ["Actions"]
+    tags = ["Actions"],
+    include_in_schema = False
 )
 
 @router.get("/admin/add")
@@ -176,7 +177,31 @@ async def vote_for_bot(
         return RedirectResponse("/login")
     uid = request.session.get("userid")
     ret = await vote_bot(uid, bot_id)
-    if ret == None:
+    if ret == []:
         return RedirectResponse("/bot/" + str(bot_id), status_code = 303)
+    elif ret[0] in [404, 500]:
+        return abort(ret[0])
+    elif ret[0] == 401:
+        wait_time = int(float(ret[1]))
+        wait_time_hr = wait_time//(60*60)
+        wait_time_mp = (wait_time - (wait_time_hr*60*60)) # Minutes
+        wait_time_min = wait_time_mp//60
+        wait_time_sec = (wait_time_mp - wait_time_min*60)
+        if wait_time_min < 1:
+            wait_time_min = 1
+        if wait_time_hr == 1:
+            hr = "hour"
+        else:
+            hr = "hours"
+        if wait_time_min == 1:
+            min = "minute"
+        else:
+            min = "minutes"
+        if wait_time_sec == 1:
+            sec = "second"
+        else:
+            sec = "seconds"
+        wait_time_human = " ".join((str(wait_time_hr), hr, str(wait_time_min), min, str(wait_time_sec), sec))
+        return templates.TemplateResponse("message.html", {"request": request, "username": request.session.get("username"), "avatar": request.session.get("avatar"), "message": "Vote Error", "context": "Please wait " + wait_time_human + " before voting for this bot"})
     else:
         return ret

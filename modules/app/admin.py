@@ -2,7 +2,8 @@ from ..deps import *
 
 router = APIRouter(
     prefix = "/admin",
-    tags = ["Admin"]
+    tags = ["Admin"],
+    include_in_schema = False
 )
 
 @router.get("/console")

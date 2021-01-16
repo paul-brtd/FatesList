@@ -2,7 +2,8 @@ from ..deps import *
 
 router = APIRouter(
     prefix = "/search",
-    tags = ["Search"]
+    tags = ["Search"],
+    include_in_schema = False
 )
 
 @router.get("/t")

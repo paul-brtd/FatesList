@@ -1,7 +1,8 @@
 from ..deps import *
 
 router = APIRouter(
-    tags = ["Auth"]
+    tags = ["Auth"],
+    include_in_schema = False
 )
 
 @router.get("/login")

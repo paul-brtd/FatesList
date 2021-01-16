@@ -3,7 +3,8 @@ from uuid import UUID
 
 router = APIRouter(
     prefix = "/apiweb",
-    tags = ["API Web GUI"]
+    tags = ["API Web GUI"],
+    include_in_schema = False
 )
 
 @router.get("/{api_token}")

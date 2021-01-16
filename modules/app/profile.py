@@ -2,8 +2,10 @@ from ..deps import *
 
 router = APIRouter(
     prefix = "/profile",
-    tags = ["Profile"]
+    tags = ["Profile"],
+    include_in_schema = False
 )
+
 @router.get("/me")
 @csrf_protect
 async def profile(request: Request):

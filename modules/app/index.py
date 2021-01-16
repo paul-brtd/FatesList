@@ -1,7 +1,8 @@
 from ..deps import *
 
 router = APIRouter(
-    tags = ["Index"]
+    tags = ["Index"],
+    include_in_schema = False
 )
 
 
