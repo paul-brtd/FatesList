@@ -7,10 +7,9 @@ router = APIRouter(
 
 @router.get("/t")
 async def search(request: Request, q: str):
-    #fetch = await db.fetch("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE queue = false and (description ~* $1) ORDER BY votes", re.sub(r"\W+|_", " ", q))
     desc = await db.fetch("SELECT bot_id FROM bots WHERE queue = false and (description ilike '%" + re.sub(r'\W+|_', ' ', q) + "%')")
     userc = await db.fetch("SELECT bot_id FROM bot_cache WHERE username ilike '%" + re.sub(r'\W+|_', ' ', q) + "%' and valid_for ilike '%bot%'")
-    bids = list(set([id["bot_id"] for id in desc]).union([id["bot_id"] for id in userc]))
+    bids = list(set([id["bot_id"] for id in desc]).union(set([id["bot_id"] for id in userc])))
     print(bids, desc, userc)
     abc = ("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE queue = false and bot_id IN " + str(tuple([int(bid) for bid in bids])))
     print(abc)

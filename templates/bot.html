@@ -66,7 +66,9 @@
     {% for event in events %}
         <div class="alert alert-primary" role="alert" style='width: 90%; font-weight: bold; margin: 0 auto; height: 86%; padding: 5px; {% if event["css"] == "" %}background-color: #111112; {%endif%} {{event["css"]|safe}} margin-bottom: 3px;'>
         <p style="color: white; margin-bottom: 3px; margin-left: 2px; {{event["css"]|safe}}">{{event["event"]}}</p>
+        {% if event["context"].replace(" ", "") != "NONE" and event["context"].replace(" ", "") != "" %}
         <p style="color: white; {{event["css"]|safe}}">{{event["context"]|safe}}</p>
+        {% endif %}
         </div>
     {% endfor %}
     <hr style="font-size: 20px;border-top-width: 1px;border-top-color: #eee;width: 90%;">

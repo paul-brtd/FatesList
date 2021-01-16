@@ -143,12 +143,18 @@ def is_staff(staff_json: dict, roles: Union[list, int], base_perm: int) -> Union
 async def add_event(bot_id: int, event: str, context: str):
     # Special Events
     if event == "guild_count":
-        print("Updating Guild Count")
         await db.execute("UPDATE bots SET servers = $1 WHERE bot_id = $2", int(context), int(bot_id))
         return
+    elif event == "shard_count":
+        await db.execute("UPDATE bots SET shard_count = $1 WHERE bot_id = $2", int(context), int(bot_id))
+
     new_event_data = "|".join((event, str(time.time()), context))
-    await db.execute("INSERT INTO api_event (bot_id, events) VALUES ($1, $2)", bot_id, new_event_data)
-    return
+    id = uuid.uuid4()
+    await db.execute("INSERT INTO api_event (id, bot_id, events) VALUES ($1, $2, $3)", id, bot_id, new_event_data)
+    webh = await db.fetchrow("SELECT webhook FROM bots WHERE bot_id = $1", int(bot_id))
+    if webh is not None and webh["webhook"] not in ["", None] and webh["webhook"].startswith("http"):
+        await requests.patch(webh["webhook"], json = {"event_id": str(id), "event": event, "context": context})
+    return id
 
 class Form(StarletteForm):
     pass
@@ -175,11 +181,13 @@ async def get_normal_events(bot_id: int) -> list:
     api_data = await db.fetch("SELECT events FROM api_event WHERE bot_id = $1", bot_id)
     if api_data == []:
         return []
-    special_events = ["add_bot", "edit_bot", "guild_count", "shard_count", "begin_maint", "end_maint"]
+    special_events = ["add_bot", "edit_bot", "guild_count", "shard_count", "begin_maint", "end_maint", "vote"]
     events = []
     for _event in api_data:
         event = _event["events"]
-        if event.split("|")[0].replace(" ", "") in special_events:
+        if len(event.split("|")[0]) < 3:
+            continue
+        elif event.split("|")[0].replace(" ", "") in special_events:
             print("Ignoring event: ", event.split("|")[0].replace(" ", ""))
         else:
             try:
@@ -189,3 +197,32 @@ async def get_normal_events(bot_id: int) -> list:
             events.append({"event": event.split("|")[0], "context": event.split("|")[2].split("::css=")[0].replace("onload", "").replace("<script", "").replace("</script>", "").replace("<iframe", ""), "css": css, "time": datetime.datetime.fromtimestamp(float(event.split("|")[1]))})
     print(events)
     return events
+
+async def get_user_token(uid: int) -> str:
+        token = await db.fetchrow("SELECT token FROM users WHERE userid = $1", int(uid))
+        if token is None:
+            flag = True
+            while flag:
+                token = get_token(101)
+                tcheck = await db.fetchrow("SELECT token FROM users WHERE token = $1", token)
+                if tcheck is None:
+                    flag = False
+            await db.execute("INSERT INTO users (userid, token, vote_epoch) VALUES ($1, $2, $3)", int(uid), token, 0)
+        else:
+            token = token["token"]
+
+async def vote_bot(uid: int, bot_id: int) -> Optional[str]:
+    await get_user_token(uid) # Make sure we have a user profile first
+    epoch = await db.fetchrow("SELECT vote_epoch FROM users WHERE userid = $1", int(uid))
+    if epoch is None:
+        return "Internal Server Error"
+    epoch = epoch["vote_epoch"]
+    if time.time() - epoch < 60*60*12:
+        return "WAIT:" + str(time.time() - epoch)
+    b = await db.fetchrow("SELECT webhook, votes FROM bots WHERE bot_id = $1", int(bot_id))
+    if b is None:
+        return "No Bots Found"
+    await db.execute("UPDATE bots SET votes = votes + 1 WHERE bot_id = $1", int(bot_id))
+    await db.execute("UPDATE users SET vote_epoch = $1 WHERE userid = $2", time.time(), int(uid))
+    event_id = await add_event(bot_id, "vote", "user=" + str(uid) + "::votes=" + str(b['votes'] + 1))
+    return

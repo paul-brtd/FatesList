@@ -1,0 +1,26 @@
+{% extends "base/base.html" %}
+
+{% block head %}
+
+{% endblock %}
+
+{% block content %}
+<div style="text-align: center; color: white">
+    <h3>Fates List API</h3>
+    <h5><a href="/api/events?api_token={{api_token}}">Raw API Response</a></h5>
+    <h4>Events</h4>
+    {%for key in api_response["events"] %}
+        {% if key["event"] == "vote" %}
+        {%else%}
+        <div style="margin-bottom: 7px;">
+        <h5>Event ID: {{key["id"] }}</h5>
+        <h6>Event Start Time (in seconds/epoch): {{key["epoch"]}}</h6>
+        <h6>Event Name: {% if key["event"] == "edit_bot" %}Edit Bot{% elif key["event"] == "add_bot" %}Add Bot{% elif key["event"] == "begin_maint" %}Start Maintenance{%elif key["event"] == "end_maint"%}End Maintenance{%else%}{{key["event"]}}{%endif%}</h6>
+        </div>
+    {%endif%}
+    {%endfor%}
+</div>
+{% endblock %}
+{% block footer %}
+
+{% endblock %}

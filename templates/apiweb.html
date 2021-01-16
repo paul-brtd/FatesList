@@ -1,0 +1,124 @@
+{% extends "base/base.html" %}
+
+{% block head %}
+
+{% endblock %}
+
+{% block content %}
+<div style="text-align: center; color: white">
+<h3>APIWeb</h3>
+<h4>Configure events and more upcoming features here using APIWeb</h4>
+    <h5>Bot ID: {{bot_id}}</h5>
+    <h5>API Token: {{api_token}}</h5>
+    <div style="border-style: solid;">
+        <h5>Get Events</h5>
+        <form method="GET" action="/api/events">
+            <input type="hidden" name="api_token" value="{{api_token}}"/>
+            <input type="hidden" name="human" value="1"/>
+            <button class="btn btn-primary">Get Events</button>
+        </form>
+        <h5>Add Event</h5>
+            <form method="PATCH" action="/api/events">
+                <input type="hidden" name="api_token" value="{{api_token}}"/>
+                <label for="event" style="color: white;">Event Name</label><br/>
+                <input required="true" type="text" name="event"></input><br/>
+                <label for="event" style="color: white;">Event Data/Context</label><br/>
+                <input type="text" name="context"></input><br/>
+                <button name="update_data" class="btn btn-primary">Add Event</button>
+            </form>
+    </div>
+</div>
+
+<script>
+   var body;
+   var putMethod = ( event ) => {
+     // Prevent redirection of Form Click
+     event.preventDefault();
+     var target = event.target;
+     while ( target.tagName != "FORM" ) {
+       target = target.parentElement;
+     } // While the target is not te FORM tag, it looks for the parent element
+     // The action attribute provides the request URL
+     var url = target.getAttribute( "action" );
+
+     // Collect Form Data by prefix "put_" on name attribute
+     body = {}
+     var bodyForm = target.querySelectorAll( "[name]");
+     e = false
+     bodyForm.forEach( element => {
+       if(element.getAttribute( "required" ) == "true" && element.value === "") {
+            alert("You must specify a " + element.getAttribute( "name" ))
+            e = true
+            return false
+       }
+       var name = element.getAttribute( "name" );
+       var value = element.value;
+       body[name] = value;
+       }
+     );
+     if(e == true) {return}
+     var xhr = new XMLHttpRequest();
+     xhr.open( "PATCH", url );
+     xhr.setRequestHeader("accept", "application/json");
+     xhr.setRequestHeader( "Content-Type", "application/json" );
+     xhr.onload = () => {
+       if ( xhr.status === 200 ) {
+       // reload() uses cache, reload( true ) force no-cache. I reload the page to make "redirects normal effect" of HTML form when submit. You can manipulate DOM instead.
+         location.reload( true );
+       } else {
+         console.log( xhr.status, xhr.responseText );
+       }
+     }
+     xhr.send(JSON.stringify(body));
+   }
+
+   var deleteMethod = ( event ) => {
+     event.preventDefault();
+     var confirm = window.confirm( "This will permanently remove this event. Are you sure you want to do this?" );
+     if ( confirm ) {
+       var target = event.target;
+       while ( target.tagName != "FORM" ) {
+         target = target.parentElement;
+       }
+       var url = target.getAttribute( "action" );
+       var xhr = new XMLHttpRequest();
+       xhr.open( "DELETE", url );
+       xhr.setRequestHeader( "Content-Type", "application/json" );
+       xhr.onload = () => {
+         if ( xhr.status === 200 ) {
+           location.reload( true );
+           console.log( xhr.responseText );
+         } else {
+           console.log( xhr.status, xhr.responseText );
+         }
+       }
+       xhr.send();
+     }
+   }
+</script>
+<script>
+  document.querySelectorAll( "[name=update_data], [name=delete_data]" ).forEach( element => {
+    var button = element;
+    var form = element;
+    while ( form.tagName != "FORM" ) {
+      form = form.parentElement;
+    }
+    var method = form.getAttribute( "method" );
+    if ( method == "PATCH" ) {
+      button.addEventListener( "click", putMethod );
+    }
+    if ( method == "DELETE" ) {
+      button.addEventListener( "click", deleteMethod );
+    }
+  } );
+</script>
+<script>
+  document.querySelectorAll( "[name=remove_data]" ).forEach( element => {
+    var button = element;
+    button.addEventListener( "click", deleteMethod );
+  });
+</script>
+{% endblock %}
+{% block footer %}
+
+{% endblock %}

@@ -168,8 +168,15 @@ async def edit_bot_bt(request, botid, prefix, library, website, banner, support,
     await channel.send(f"<@{owner}> edited the bot <@{botid}>")
 
 @router.post("/{bot_id}/vote")
-async def vote_bot(
+async def vote_for_bot(
         request: Request,
         bot_id: int
     ):
-    pass
+    if request.session.get("userid") is None:
+        return RedirectResponse("/login")
+    uid = request.session.get("userid")
+    ret = await vote_bot(uid, bot_id)
+    if ret == None:
+        return RedirectResponse("/bot/" + str(bot_id), status_code = 303)
+    else:
+        return ret
