@@ -36,7 +36,7 @@ async def get_api_events(request: Request, api_token: str, human: Optional[int] 
     if id is not None:
         api_data = await db.fetchrow("SELECT id, events FROM api_event WHERE bot_id = $1 AND id = $2", uid, id)
         if api_data is None:
-            return "There are no events available right now for you."
+            return {"events": []}
         event = api_data["events"]
         return {"id": uid,  "event": event.split("|")[0], "epoch": event.split("|")[1], "context": event.split("|")[2]}
 
@@ -69,8 +69,14 @@ async def delete_api_events(event: EventDelete):
     id = id["bot_id"]
     if event.event_id is not None:
         await db.execute("DELETE FROM api_event WHERE bot_id = $1 AND id = $2", id, event.event_id)
+        webh_data = event.event_id
     else:
         await db.execute("DELETE FROM api_event WHERE bot_id = $1", id)
+        webh_data = "ALL"
+
+    webh = await db.fetchrow("SELECT webhook FROM bots WHERE bot_id = $1", int(id))
+    if webh is not None and webh["webhook"] not in ["", None] and webh["webhook"].startswith("http"):
+        await requests.patch(webh["webhook"], json = {"type": "delete", "events": webh_data})
     return {"done":  True, "reason": None}
 
 @router.patch("/events")
@@ -102,7 +108,8 @@ async def create_api_event(event: EventNew):
 
     if len(event.event) < 3:
         return {"done":  False, "reason": "TEXT_TOO_SMALL"}
-
+    if event.event.replace(" ", "") in ["guild_count", "shard_count"] and event.context is None:
+        return {"done":  False, "reason": "NO_GUILDS_OR_SHARDS"}
     if event.event.replace(" ", "") in ["add_bot", "edit_bot", "vote"]:
         return {"done":  False, "reason": "INVALID_EVENT_NAME"}
     id = await db.fetchrow("SELECT bot_id FROM bots WHERE api_token = $1", event.api_token)
@@ -118,9 +125,13 @@ class EventPatch(BaseModel):
 @router.patch("/test_webhook_broken")
 async def test_webhook(request: Request, event: EventPatch):
     print("Event ID = " + str(event.event_id))
-    event = await requests.get("http://127.0.0.1:1000/api/events?api_token=DCUaswGL6wmGskYFlVpLbIX6RcjPvnlCkzCkTPI0WiQZoqLGLjDdETA1U6gsS6tK&id=" + str(event.event_id))
+    apitok = "nZRaztiR7G1WqkvQzGmyhizqFsjWq8gEB7jzYwKk9tAzdOsb8F5RngYp9yUoqa0Z26iVaMtfEaWYXSRofitlzYX7jSVbF1Y1mYfs2"
+    event = await requests.get("http://127.0.0.1:1000/api/events?api_token=" + apitok + "&id=" + str(event.event_id))
     event = await event.json()
+    print(event)
     print('Event Type = ' + event['event']) # Vote in most cases
-    print('Voter: ' + event['context'].split('::')[0].split("=")[1])
-    print('Votes: ' + event['context'].split('::')[1].split("=")[1])
+    print('Raw Context = ' + event['context'])
+    if event['event'] == 'vote':
+        print('Voter: ' + event['context'].split('::')[0].split("=")[1])
+        print('Votes: ' + event['context'].split('::')[1].split("=")[1])
 

@@ -30,24 +30,25 @@
         {% if not bot.support or bot.support == "" or bot.support == "None" %}
         {% else %}
         <div class="text-nowrap d-flex justify-content-xl-center align-items-xl-center" style="line-height: 2;border-radius: 25px;background: #7289DA;width: auto;margin: 10px;font-size: 11px;">
-        <button onclick="window.location.replace('{{bot.support}}')" type="submit" class="btn btn-outline-dark" style="background-color: #7289DA; color: white !important;"><i class="fas"></i>Support</button>
+        <a href="{{bot.support}}"><button class="btn btn-outline-dark" style="background-color: #7289DA; color: white !important;"><i class="fas"></i>Support</button></a>
         </div>
        {% endif %}
         {% if not bot.website or bot.website == "" or bot.website == "None" %}
         {% else %}
         <div class="text-nowrap d-flex justify-content-xl-center align-items-xl-center" style="line-height: 2;border-radius: 25px;background: #7289DA;width: auto;margin: 10px;font-size: 11px;">
-        <button onclick="window.location.replace('{{bot.website}}')" type="submit" class="btn btn-outline-dark" style="background-color: #7289DA; color: white !important;"><i class="fas"></i>Website</button>
+        <a href="{{bot.website}}"<button class="btn btn-outline-dark" style="background-color: #7289DA; color: white !important;"><i class="fas"></i>Website</button></a>
         </div>
        {% endif %}
         <div class="text-nowrap d-flex justify-content-xl-center align-items-xl-center" style="line-height: 2;border-radius: 25px;background: #7289DA;width: auto;margin: 10px;font-size: 11px;">
-        <button onclick="window.location.replace('{{bot.invite}}')" type="submit" class="btn btn-outline-dark" style="background-color: #7289DA; color: white !important;"><i class="fas"></i>Invite</button>
+        <a href="{{bot.invite}}"><button class="btn btn-outline-dark" style="background-color: #7289DA; color: white !important;"><i class="fas"></i>Invite</button></a>
         </div>
-
+        {% if bot_admin %}
         <div class="text-nowrap d-flex justify-content-xl-center align-items-xl-center" style="line-height: 2;border-radius: 25px;background: #7289DA;width: auto;margin: 10px;font-size: 11px;">
-            <p style="color: rgba(255,255,255,0.87);font-size: 16px;font-weight: bold;margin: 2px 10px;line-height: 2;">Edit(if mod)</p>
+        <a href="/bot/edit/{{bot.bot_id}}"><button class="btn btn-outline-dark" style="background-color: #7289DA; color: white !important;"><i class="fas"></i>Edit</button></a>
         </div>
+        {% endif %}
         <div class="text-nowrap d-flex justify-content-xl-center align-items-xl-center" style="line-height: 2;border-radius: 25px;background: #7289DA;width: auto;margin: 10px;font-size: 11px;">
-            <p style="color: rgba(255,255,255,0.87);font-size: 16px;font-weight: bold;margin: 2px 10px;line-height: 2;">Shards: 15</p>
+            <p style="background: #7289DA;" class="btn btn-primary" >Shards: {{bot.shards}}</p>
         </div>
         <div class="text-nowrap d-flex justify-content-xl-center align-items-xl-center" style="line-height: 2;border-radius: 25px;background: #7289DA;width: auto;margin: 10px;font-size: 11px;">
             <p style="background: #7289DA;" class="btn btn-primary" >Servers: {{bot.servers}}</p>

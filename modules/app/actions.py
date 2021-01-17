@@ -17,7 +17,7 @@ async def add_bot(request: Request):
                 new_tag = tag.replace("_", " ")
                 tags_fixed.update({tag: new_tag.capitalize()})
             form = await Form.from_formdata(request)
-            return templates.TemplateResponse("add.html", {"request": request, "tags_fixed": tags_fixed, "username": request.session.get("username", False),"form":form})
+            return templates.TemplateResponse("add.html", {"request": request, "tags_fixed": tags_fixed, "username": request.session.get("username", False),"form":form, "avatar": request.session.get("avatar")})
         else:
             owner_check = await get_user(request.session["userid"])
             if owner_check:
@@ -52,7 +52,7 @@ async def add_bot_api(
     if fetch:
         return templates.TemplateResponse("message.html", {"request": request, "message": "Bot already exists.", "username": request.session.get("username", False)})
 
-    if invite.startswith("https://discord.com/api/oauth2"):
+    if invite.startswith("https://discord.com") and "oauth" in invite:
         pass
     else:
         return templates.TemplateResponse("message.html", {"request": request, "message": "Invalid Bot Invite", "username": request.session.get("username", False)})
@@ -104,7 +104,7 @@ async def bot_edit(request: Request, bid: int):
             tags_fixed.update({tag: new_tag.capitalize()})
         form = await Form.from_formdata(request)
         fetch = await db.fetchrow("SELECT bot_id, prefix, bot_library, invite, website, banner, discord, long_description, description, tags, owner, extra_owners, servers, created_at, webhook, discord, api_token, banner FROM bots WHERE bot_id = $1", bid)
-        return templates.TemplateResponse("edit.html", {"request": request, "tags_fixed": tags_fixed, "username": request.session.get("username", False),"fetch":fetch,"form":form})
+        return templates.TemplateResponse("edit.html", {"request": request, "tags_fixed": tags_fixed, "username": request.session.get("username", False),"fetch":fetch,"form":form, "avatar": request.session.get("avatar")})
     else:
         return RedirectResponse("/")
 

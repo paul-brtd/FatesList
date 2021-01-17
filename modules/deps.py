@@ -153,7 +153,7 @@ async def add_event(bot_id: int, event: str, context: str):
     await db.execute("INSERT INTO api_event (id, bot_id, events) VALUES ($1, $2, $3)", id, bot_id, new_event_data)
     webh = await db.fetchrow("SELECT webhook FROM bots WHERE bot_id = $1", int(bot_id))
     if webh is not None and webh["webhook"] not in ["", None] and webh["webhook"].startswith("http"):
-        await requests.patch(webh["webhook"], json = {"event_id": str(id), "event": event, "context": context})
+        await requests.patch(webh["webhook"], json = {"type": "add", "event_id": str(id), "event": event, "context": context})
     return id
 
 class Form(StarletteForm):
