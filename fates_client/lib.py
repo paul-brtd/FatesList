@@ -1,6 +1,5 @@
 import aiohttp
 from aiohttp_requests import requests
-from discord import Client
 try:
     import fastapi
     ws = True
@@ -40,9 +39,8 @@ class Event():
         self.query_args = context.split("::") # These are the context arguments in a list
 
 class FatesClient():
-    def __init__(self, *, api_token: str, client: Client):
+    def __init__(self, *, api_token: str):
         self.api_token = api_token
-        self.client = client
 
     async def create_event(self, *, event: str, context: str = "NONE", css: str = None):
         if event.replace(" ", "") in ["add_bot", "edit_bot", "vote"]:
@@ -62,15 +60,11 @@ class FatesClient():
             raise AuthFailure()
         return res
 
-    async def set_guild_count(self):
-        return await self.create_event(event = "guild_count", context = len(self.client.guilds))
+    async def set_guild_count(self, count):
+        return await self.create_event(event = "guild_count", context = count)
 
-    async def set_shard_count(self):
-        if self.client.shard_count is None:
-            sc = 0
-        else:
-            sc = self.client.shard_count
-        return await self.create_event(event = "shard_count", context = sc)
+    async def set_shard_count(self, count):
+        return await self.create_event(event = "shard_count", context = count)
 
-    async def set_guild_shard_count(self):
-        return (await self.set_guild_count(), await self.set_shard_count())
+    async def set_guild_shard_count(self, guild_count, shard_count):
+        return (await self.set_guild_count(guild_count), await self.set_shard_count(shard_count))
