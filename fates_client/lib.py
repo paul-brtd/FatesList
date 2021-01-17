@@ -21,6 +21,11 @@ class NetworkError(Exception):
     def __init__(self):
         super().__init__(f"Network Error Or An Internal Server Error Has Occurred")
 
+class AuthFailure(Exception):
+    def __init__(self):
+        super().__init__(f"Invalid API Token")
+
+
 class Event():
     def __init__(self, *, id: uuid.UUID, event: str, context: Optional[str] = None):
         self.id = id
@@ -53,6 +58,8 @@ class FatesClient():
             res = await res.json()
         except:
             raise NetworkError()
+        if res["done"] == False and res["reason"] == "NO_AUTH":
+            raise AuthFailure()
         return res
 
     async def set_guild_count(self):
