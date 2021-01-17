@@ -67,8 +67,10 @@ class FatesClient():
 
     async def set_shard_count(self):
         if self.client.shard_count is None:
-            return {"done": False, "reason": "NO_SHARDS"}
-        return await self.create_event(event = "guild_count", context = self.client.shard_count)
+            sc = 0
+        else:
+            sc = self.client.shard_count
+        return await self.create_event(event = "shard_count", context = sc)
 
     async def set_guild_shard_count(self):
         return (await self.set_guild_count(), await self.set_shard_count())
