@@ -11,6 +11,8 @@ async def admin(request:Request):
     if "userid" in request.session.keys():
         guild = client.get_guild(reviewing_server)
         user = guild.get_member(int(request.session["userid"]))
+        if user is None:
+            return RedirectResponse("/")
         staff = is_staff(staff_roles, user.roles, 2)
         if not staff[0]:
             return RedirectResponse("/")
@@ -29,7 +31,7 @@ async def admin(request:Request):
             bot_info = {"username": bot_info["username"], "id": bot["bot_id"], "avatar": bot_info["avatar"], "form": form}
             if bot_info:
                 queue_bots.append({"bot": bot, "id": bot["bot_id"], "avatar": bot_info["avatar"], "username": bot_info["username"], "votes": await human_format(bot["votes"]), "servers": await human_format(bot["servers"]), "description": bot["description"], "form": form})
-        return templates.TemplateResponse("admin.html",{"request": request, "cert": certified_bots,"bots": bots, "queue_bots": queue_bots, "queue_amount": queue_amount, "admin": staff[1] == 4, "mod": staff[1] == 3, "owner": staff[1] == 5, "bot_review": staff[1] == 2, "username": request.session["username"], "form": form})
+        return templates.TemplateResponse("admin.html",{"request": request, "cert": certified_bots,"bots": bots, "queue_bots": queue_bots, "queue_amount": queue_amount, "admin": staff[1] == 4, "mod": staff[1] == 3, "owner": staff[1] == 5, "bot_review": staff[1] == 2, "username": request.session["username"], "form": form, "avatar": request.session["avatar"]})
     else:
         return RedirectResponse("/")
 
