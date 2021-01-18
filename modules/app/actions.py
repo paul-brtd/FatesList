@@ -94,7 +94,9 @@ async def bot_edit(request: Request, bid: int):
         check = await db.fetchrow("SELECT owner,extra_owners FROM bots WHERE bot_id = $1", bid)
         if not check:
             return templates.TemplateResponse("message.html", {"request": request, "message": "This bot doesn't exist in our database.", "username": request.session.get("username", False)})
-        if check["owner"] == int(request.session["userid"]) or str(request.session["userid"]) in check["extra_owners"]:
+        guild = client.get_guild(builtins.reviewing_server)
+        user = guild.get_member(int(request.session.get("userid")))
+        if check["owner"] == int(request.session["userid"]) or str(request.session["userid"]) in check["extra_owners"] or (user is not None and is_staff(staff_roles, user.roles, 4)[0]):
             pass
         else:
             return templates.TemplateResponse("message.html", {"request": request, "message": "You aren't the owner of this bot.", "username": request.session.get("username", False), "avatar": request.session.get("avatar")})
@@ -130,7 +132,9 @@ async def bot_edit_api(
         check = await db.fetchrow("SELECT owner, extra_owners FROM bots WHERE bot_id = $1", bid)
         if not check:
             return templates.TemplateResponse("message.html", {"request": request, "message": "This bot doesn't exist in our database.", "username": request.session.get("username", False)})
-        if check["owner"] == int(request.session["userid"]) or str(request.session["userid"]) in check["extra_owners"]:
+        guild = client.get_guild(builtins.reviewing_server)
+        user = guild.get_member(int(request.session.get("userid")))
+        if check["owner"] == int(request.session["userid"]) or str(request.session["userid"]) in check["extra_owners"] or is_staff(staff_roles, user.roles, 4)[0]:
             pass
         else:
             return templates.TemplateResponse("message.html", {"request": request, "message": "You aren't the owner of this bot.", "username": request.session.get("username", False)})

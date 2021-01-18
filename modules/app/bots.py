@@ -16,7 +16,9 @@ async def bot_index(request: Request, bot_id: int):
     if bot is None:
         return abort(404)
     if "userid" in request.session.keys():
-        if bot["owner"] == int(request.session["userid"]) or str(request.session["userid"]) in bot["extra_owners"]:
+        guild = client.get_guild(builtins.reviewing_server)
+        user = guild.get_member(int(request.session.get("userid")))
+        if bot["owner"] == int(request.session["userid"]) or str(request.session["userid"]) in bot["extra_owners"] or (user is not None and is_staff(staff_roles, user.roles, 4)[0]):
             bot_admin = True
         else:
             bot_admin = False
