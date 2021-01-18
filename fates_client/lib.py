@@ -3,7 +3,19 @@ features = []
 import aiohttp
 from aiohttp_requests import requests
 try:
-    import fastapi
+    import time
+    import threading
+    from fastapi import FastAPI, APIRouter
+    #    import hypercorn
+    #    from hypercorn.asyncio import serve
+    #    from hypercorn.config import Config
+    import uvicorn
+    from ws import router
+    import asyncio
+    import uvloop
+    import os
+    uvloop.install()
+    app = FastAPI()
     features.append("ws")
 except:
     pass
@@ -35,6 +47,10 @@ class AuthFailure(Exception):
 class NoGSSource(Exception):
     def __init__(self):
         super().__init__(f"There is no source for guild/shard count. Please either pass in client to FatesClient class or pass in the guild/shard count manually")
+
+class MissingDep(Exception):
+    def __init__(self, dep):
+        super().__init__(f"Could not start webserver as dependency {dep} is missing")
 
 class FatesClient():
     def __init__(self, *, api_token: str, client: Optional[object] = None):
@@ -151,3 +167,26 @@ class Vote(Event):
         return self.context.split("::")[1].split("=")[1]
     def get_voter_votes(self):
         return self.get_voter(), self.get_votes()
+
+# Web Server for webhook
+#class FatesHook():
+#    def __init__(self, fc: FatesClient):
+#        if "ws" not in fc.features:
+#            raise MissingDep("FastAPI")
+
+class WsSettings:
+    pass
+
+async def start_ws(route, port = 8012):
+    print("Here")
+    app.include_router(
+        router,
+        prefix=route,
+    )
+
+    server = uvicorn.Server(uvicorn.Config(app, host = "0.0.0.0", port = port))
+    await server.serve()
+    try:
+        os._exit()
+    except:
+        os._exit(0)
