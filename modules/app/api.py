@@ -122,7 +122,7 @@ async def create_api_event(event: EventNew):
 class EventPatch(BaseModel):
     event_id: uuid.UUID
 
-@router.patch("/test_webhook_broken")
+@router.patch("/test_webhook")
 async def test_webhook(request: Request, event: EventPatch):
     print("Event ID = " + str(event.event_id))
     apitok = "nZRaztiR7G1WqkvQzGmyhizqFsjWq8gEB7jzYwKk9tAzdOsb8F5RngYp9yUoqa0Z26iVaMtfEaWYXSRofitlzYX7jSVbF1Y1mYfs2"

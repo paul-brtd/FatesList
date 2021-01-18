@@ -6,7 +6,7 @@ client = Client()
 a = lib.FatesClient(api_token = "nZRaztiR7G1WqkvQzGmyhizqFsjWq8gEB7jzYwKk9tAzdOsb8F5RngYp9yUoqa0Z26iVaMtfEaWYXSRofitlzYX7jSVbF1Y1mYfs2")
 print(lib.features)
 
-def my_f(e):
+async def my_f(e):
     print(e)
 
 @client.event
