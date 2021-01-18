@@ -26,8 +26,13 @@ import re
 from starlette_wtf import CSRFProtectMiddleware, csrf_protect,StarletteForm
 import builtins
 import importlib
+from typing import Tuple
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 from modules.deps import *
-
+from ratelimit import RateLimitMiddleware, Rule
+from ratelimit.auths import EmptyInformation
+from ratelimit.backends.redis import RedisBackend
+from ratelimit.auths.ip import client_ip
 # CONFIG
 builtins.bot_logs=798954080604520509
 builtins.reviewing_server=794834630942654546 # Bit of a misnomer, but this is the actual main server
@@ -65,10 +70,24 @@ builtins.intent = discord.Intents.all()
 builtins.client = commands.AutoShardedBot(command_prefix='!', intents=intent)
 builtins.app = FastAPI(default_response_class = ORJSONResponse)
 app.add_middleware(SessionMiddleware, secret_key="E@Dycude3u8z382")
-app.mount("/static", StaticFiles(directory="static"), name="static")
+builtins.app.mount("/static", StaticFiles(directory="static"), name="static")
 builtins.templates = Jinja2Templates(directory="templates")
 app.add_middleware(CSRFProtectMiddleware, csrf_secret="ADDE-OS39-MA2K-lS09-3K9soI-Iskmd-93829-()(()-2937()K")
+rb = RedisBackend()
+print(rb, type(rb))
+app.add_middleware(ProxyHeadersMiddleware)
+app.add_middleware(
+    RateLimitMiddleware,
+    authenticate=client_ip,
+    backend=rb,
+    config={
+        "/api/events": [Rule(minute=6), Rule(group="admin")],
+        r"^/": [Rule(minute=12), Rule(group="admin")],
+    },
+)
+
 app = builtins.app # As much as i hate it, patch uvicorns stupidity
+
 builtins.discord_o = Oauth.Oauth()
 
 print("FATES LIST: Loading Modules")
@@ -105,7 +124,8 @@ async def startup():
     builtins.db = await setup_db()
     asyncio.create_task(builtins.client.start(TOKEN))
     #Verify users and bots!!!
-
+    rb = RedisBackend()
+    print(rb._redis)
 
 @client.command()
 async def approve(ctx, bot_id: int):

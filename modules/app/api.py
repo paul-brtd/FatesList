@@ -56,7 +56,7 @@ async def get_api_events(request: Request, api_token: str, human: Optional[int] 
     return templates.TemplateResponse("api_event.html", {"request": request, "username": request.session.get("username", False), "avatar": request.session.get("avatar"), "api_token": api_token, "bot_id": bid["bot_id"], "api_response": ret}) 
 
 @router.delete("/events")
-async def delete_api_events(event: EventDelete):
+async def delete_api_events(request: Request, event: EventDelete):
     """Deletes an event for a bot or deletes all events from a bot (WARNING: DO NOT DO THIS UNLESS YOU KNOW WHAT YOU ARE DOING). Events can be used to set guild/shard counts, enter maintenance mode or to show promotions
 
     **API Token**: You can get this by clicking your bot and clicking edit and scrolling down to API Token or clicking APIWeb
@@ -80,7 +80,7 @@ async def delete_api_events(event: EventDelete):
     return {"done":  True, "reason": None}
 
 @router.patch("/events")
-async def create_api_event(event: EventNew):
+async def create_api_event(request: Request, event: EventNew):
     """Creates an event for a bot. Events can be used to set guild/shard counts, enter maintenance mode or to show promotions
 
     **API Token**: You can get this by clicking your bot and clicking edit and scrolling down to API Token or clicking APIWeb
