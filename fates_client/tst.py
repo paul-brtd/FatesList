@@ -1,15 +1,19 @@
 import asyncio
-import lib
+import fates_client as lib
 from discord import Client
 client = Client()
 
 a = lib.FatesClient(api_token = "nZRaztiR7G1WqkvQzGmyhizqFsjWq8gEB7jzYwKk9tAzdOsb8F5RngYp9yUoqa0Z26iVaMtfEaWYXSRofitlzYX7jSVbF1Y1mYfs2")
 print(lib.features)
 
+def my_f(e):
+    print(e)
+
 @client.event
 async def on_ready():
     print("Connected to discord")
-    await lib.start_ws("/tw")
+    fh = lib.FatesHook(a)
+    await fh.start_ws("/tw", port = 8010, func = my_f) # THIS IS BLOCKING BLOCKING BLOCKING
     print("Done2")
 
 @client.event

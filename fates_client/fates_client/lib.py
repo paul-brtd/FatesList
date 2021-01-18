@@ -2,22 +2,21 @@ features = []
 
 import aiohttp
 from aiohttp_requests import requests
+
 try:
     import time
     import threading
     from fastapi import FastAPI, APIRouter
-    #    import hypercorn
-    #    from hypercorn.asyncio import serve
-    #    from hypercorn.config import Config
     import uvicorn
-    from ws import router
     import asyncio
     import uvloop
+    import importlib
+    from fates_client import ws
     import os
     uvloop.install()
     app = FastAPI()
     features.append("ws")
-except:
+except FileNotFoundError:
     pass
 try:
     from discord import Client
@@ -169,24 +168,22 @@ class Vote(Event):
         return self.get_voter(), self.get_votes()
 
 # Web Server for webhook
-#class FatesHook():
-#    def __init__(self, fc: FatesClient):
-#        if "ws" not in fc.features:
-#            raise MissingDep("FastAPI")
+class FatesHook():
+    def __init__(self, fc: FatesClient):
+        if "ws" not in fc.features:
+            raise MissingDep("FastAPI")
 
-class WsSettings:
-    pass
+    async def start_ws(self, route, port = 8012, func = None):
+        print("Here")
+        ws.fh_func = func
+        app.include_router(
+            router = ws.router,
+            prefix=route,
+        )
 
-async def start_ws(route, port = 8012):
-    print("Here")
-    app.include_router(
-        router,
-        prefix=route,
-    )
-
-    server = uvicorn.Server(uvicorn.Config(app, host = "0.0.0.0", port = port))
-    await server.serve()
-    try:
-        os._exit()
-    except:
-        os._exit(0)
+        server = uvicorn.Server(uvicorn.Config(app, host = "0.0.0.0", port = port))
+        await server.serve()
+        try:
+            os._exit()
+        except:
+            os._exit(0)
