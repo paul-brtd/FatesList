@@ -139,6 +139,7 @@ class Event():
         else:
             self.query_args = None
         self.fc = fc
+        self.raw = {"event_id": self.id, "event": self.event, "context": self.context, "css": self.css}
 
     # Simple wrapper for FatesClient.delete_event
     async def delete(self):
@@ -154,18 +155,35 @@ class Event():
         """Length of an event is how long self.event is"""
         return len(self.event)
 
-    def __eq__(self, other):
-        """Two events are equal if their .event property is equal"""
-        return (type(other) == Event and self.id == other.id and self.event == other.event and self.context == other.context and self.css == other.css and self.query_args == other.query_args)
+    def __iter__(self):
+        for key, value in self.raw.items():
+            yield (key, value)
+
+    def items(self):
+        for key, value in self.raw.items():
+            yield (key, value)
 
 class Vote(Event):
     """Vote's Context is a bit special being user=UID::votes=NEW_VOTE_AMOUNT"""
     def get_voter(self):
-        return self.context.split("::")[0].split("=")[1]
+        try:
+            return int(self.context.split("::")[0].split("=")[1])
+        except:
+            return None
+
     def get_votes(self):
-        return self.context.split("::")[1].split("=")[1]
+        try:
+            return int(self.context.split("::")[1].split("=")[1])
+        except:
+            return None
+
     def get_voter_votes(self):
         return self.get_voter(), self.get_votes()
+
+    def __len__(self):
+        votes = self.get_votes()
+        if votes is not None:
+            return votes
 
 # Web Server for webhook
 class FatesHook():
@@ -174,7 +192,10 @@ class FatesHook():
             raise MissingDep("FastAPI")
         self.fc = fc
 
-    async def start_ws(self, route, port = 8012, func = None, cond = "vote"):
+    def start_ws_task(self, route, port = 8012, func = None, cond = ["vote"]):
+        asyncio.create_task(self.start_ws(route, port = port, func = func, cond = cond))
+
+    async def start_ws(self, route, port = 8012, func = None, cond = ["vote"]):
         print("Here")
         ws.fh_func = func
         ws.fh_cond = cond

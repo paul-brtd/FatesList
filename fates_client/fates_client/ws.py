@@ -14,7 +14,7 @@ class EventPatch(BaseModel):
 
 @router.patch("/")
 async def fates_hook_webhook(event: EventPatch):
-    if event.type != "add" or event.event != fh_cond:
+    if event.type != "add" or event.event not in fh_cond:
         print("DEBUG: Invalid event gotten")
         return
     if event.event == "vote":
