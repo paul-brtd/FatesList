@@ -135,7 +135,7 @@ async def on_member_remove(member):
             if bot:
                 await db.execute("DELETE FROM bots WHERE bot_id = $1",member.id)
         else:
-            bot = await db.fetch("SELECT * FROM bots WHERE owner = $1",member.id)
+            bot = await db.fetch("SELECT bot_id FROM bots WHERE owner = $1",member.id)
             if len(bot) >=1:
                 for m in bot:
                     await db.execute("DELETE FROM bots WHERE bot_id = $1",m["bot_id"])

@@ -11,7 +11,8 @@
 {% block content %}
     <div class="d-flex d-xl-flex flex-column justify-content-center align-items-center justify-content-xl-center align-items-xl-center"><img style="border-radius: 50%; width: 128px;" src="{{bot.avatar}}">
         <h3 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;">{{bot.username}}</h3>
-        {% if maint[0] %}
+        <p style="font-weight: bold; color: rgba(255,255,255,0.87);">This bot is owned by <a href="/profile/{{bot.owner}}">{{bot.owner_pretty.username}}</a></p>
+	{% if maint[0] %}
         <div style="text-align: center;">
         <p style="margin-bottom: 3px; color: red; font-size: 18px; font-weight: bold;">Maintenance in progress</p>
         <p style="color: red; font-size: 18px; font-weight: bold;">{{maint[1]["reason"]}}</p>

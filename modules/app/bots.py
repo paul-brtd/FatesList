@@ -38,7 +38,7 @@ async def bot_index(request: Request, bot_id: int):
     events = await get_normal_events(bot["bot_id"])
     maint = await in_maint(bot["bot_id"])
     if bot_info:
-        bot_obj = {"bot": bot, "bot_id": bot["bot_id"], "avatar": bot_info["avatar"], "website": bot["website"], "username": bot_info["username"], "votes": await human_format(bot["votes"]), "servers": await human_format(bot["servers"]), "description": bot["description"], "support": bot['discord'], "invite": bot["invite"], "tags": bot["tags"], "library": bot['library'], "banner": banner, "token": bot["api_token"], "shards": await human_format(bot["shard_count"])}
+        bot_obj = {"bot": bot, "bot_id": bot["bot_id"], "avatar": bot_info["avatar"], "website": bot["website"], "username": bot_info["username"], "votes": await human_format(bot["votes"]), "servers": await human_format(bot["servers"]), "description": bot["description"], "support": bot['discord'], "invite": bot["invite"], "tags": bot["tags"], "library": bot['library'], "banner": banner, "token": bot["api_token"], "shards": await human_format(bot["shard_count"]), "owner": bot["owner"], "owner_pretty": await get_user(bot["owner"])}
     else:
         return abort(404)
     # TAGS
