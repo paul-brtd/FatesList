@@ -1,1 +1,1 @@
-sudo uvicorn main:app --port 1000
+uvicorn main:app --port 9999

@@ -21,7 +21,7 @@ async def profile(request: Request):
             bot_info = await get_bot(bot["bot_id"])
             if bot_info:
                 user_bots.append({"bot": bot, "avatar": bot_info["avatar"], "username": bot_info["username"], "votes": await human_format(bot["votes"]), "servers": await human_format(bot["servers"]), "description": bot["description"]})
-        fetch = await db.fetch("SELECT description,banner,certified,votes,servers,bot_id,invite,queue_avatar,queue_username FROM bots WHERE owner = $1 and queue = true", int(userid))
+        fetch = await db.fetch("SELECT description,banner,certified,votes,servers,bot_id,invite FROM bots WHERE owner = $1 and queue = true", int(userid))
         queue_bots = []
         # TOP VOTED BOTS
         for bot in fetch:

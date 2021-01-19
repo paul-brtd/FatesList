@@ -1,3 +1,6 @@
+CREATE DATABASE fateslist;
+\c fateslist
+
 CREATE TABLE bots (
     bot_id bigint,
     votes bigint,
@@ -18,7 +21,7 @@ CREATE TABLE bots (
     created_at bigint,
     owner bigint,
     extra_owners text,
-    invite text,
+    invite text
 );
 
 CREATE TABLE users (

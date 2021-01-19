@@ -34,30 +34,30 @@ from ratelimit.auths import EmptyInformation
 from ratelimit.backends.redis import RedisBackend
 from ratelimit.auths.ip import client_ip
 # CONFIG
-builtins.bot_logs=798954080604520509
-builtins.reviewing_server=794834630942654546 # Bit of a misnomer, but this is the actual main server
+builtins.bot_logs=789946587203764224
+builtins.reviewing_server=789934742128558080 # Bit of a misnomer, but this is the actual main server
 builtins.test_server = 794834630942654546 # And THIS is the test server for reviewing bots
 # Confusing right? Sorry, i already did 50% using reviewing server so meow ig
 builtins.staff_roles = {
     "guild": {
-        "id": 798954276348362782,
+        "id": 00000000000000000,
         "perm": 1
     }, 
     "bot_review": {
-        "id": 798954440132526120,
+        "id": 789941907563216897,
         "perm": 2
     }, 
     "mod": {
-        "id": 798954778042433576, 
+        "id": 789935016690843708, 
         "perm": 3
     },
     "admin": {
-        "id": 798954635234508820, 
+        "id": 789935015131742228, 
         "perm": 4,
     },
     "owner": { 
-        "id": 798956804511629312,
-        "perm": 5
+        "id": 789935014275317780,
+        "perm": 5,
     }
 }
 
@@ -100,7 +100,7 @@ for f in os.listdir("modules/app"):
 
 async def setup_db():
 
-    db = await asyncpg.create_pool(host="127.0.0.1", port=5432, user="rootspring", password="Rootspring11,", database="fateslist")
+    db = await asyncpg.create_pool(host="127.0.0.1", port=5432, user="postgres", password="Bristlefrost11,", database="fateslist")
 
     # some table creation here meow
 

@@ -27,7 +27,6 @@ async def add_bot(request: Request):
     else:
         return RedirectResponse("/")
 
-#     await db.execute("INSERT INTO bots(bot_id,prefix,bot_library,invite,website,banner,discord,long_description,description,tags,owner,extra_owners,votes,servers,shard_count,created_at,queue_username,queue_avatar) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$15,$16,$17)", int(form["bot_id"]), form["prefix"], form["library"], form["invite"], form["website"], banner, form["support"], form["long_description"], form.description, selected_tags, int(request.session["userid"]), form.extra_owners, 0, 0, int(creation),bot_object.name,str(bot_object.avatar_url))
 
 @router.post("/admin/add")
 @csrf_protect
