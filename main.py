@@ -71,7 +71,28 @@ builtins.client = commands.AutoShardedBot(command_prefix='!', intents=intent)
 builtins.app = FastAPI(default_response_class = ORJSONResponse)
 app.add_middleware(SessionMiddleware, secret_key="E@Dycude3u8z382")
 builtins.app.mount("/static", StaticFiles(directory="static"), name="static")
-builtins.templates = Jinja2Templates(directory="templates")
+builtins._templates = Jinja2Templates(directory="templates")
+class templates():
+    @staticmethod
+    def TemplateResponse(f, arg_dict):
+        try:
+            request = arg_dict["request"]
+        except:
+            raise KeyError
+        if "userid" in request.session.keys():
+            if "staff" not in arg_dict.keys():
+                guild = client.get_guild(reviewing_server)
+                user = guild.get_member(int(request.session["userid"]))
+                if user is not None:
+                    arg_dict["staff"] = is_staff(staff_roles, user.roles, 2)
+                else:
+                    staff = [False]
+                arg_dict["avatar"] = request.session.get("avatar")
+                arg_dict["username"] = request.session.get("username")
+        else:
+            staff = [False]
+        return _templates.TemplateResponse(f, arg_dict)
+builtins.templates = templates
 app.add_middleware(CSRFProtectMiddleware, csrf_secret="ADDE-OS39-MA2K-lS09-3K9soI-Iskmd-93829-()(()-2937()K")
 rb = RedisBackend()
 print(rb, type(rb))
@@ -127,19 +148,20 @@ async def startup():
     rb = RedisBackend()
     print(rb._redis)
 
-@client.command()
+#@client.command()
 async def approve(ctx, bot_id: int):
     if not ctx.guild:
         return await ctx.send("You must run this command in a guild")
     elif is_staff(builtins.staff_roles, ctx.author.roles, 2)[0]:
         await db.execute("UPDATE bots SET queue=$2 WHERE bot_id = $1", bot_id, False)
         channel = client.get_channel(bot_logs)
+        await add_event(int(bot_id), "approve", f"user={str(ctx.author.id)}")
         await channel.send(f"<@{bot_id}> has been approved")
         await ctx.send("Approved this bot :)")
     else:
         await ctx.send("You don't have the permission to do this")
 
-@client.command()
+#@client.command()
 async def deny(ctx, bot_id: int, reason: Optional[str] = "There was no reason specified"):
     if not ctx.guild:
         return await ctx.send("You must run this command in a guild")
@@ -147,6 +169,7 @@ async def deny(ctx, bot_id: int, reason: Optional[str] = "There was no reason sp
         channel = client.get_channel(bot_logs)
         deny = await db.execute("DELETE FROM bots WHERE bot_id = $1", int(bot_id))
         channel = client.get_channel(bot_logs)
+        await add_event(int(bot_id), "deny", f"user={str(ctx.author.id)}")
         await channel.send(f"<@{str(ctx.author.id)}> denied the bot <@{bot_id}> with the reason: {reason}")
         await ctx.send("MAGA'd this bot :)")
     else:

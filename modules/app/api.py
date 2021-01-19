@@ -102,9 +102,9 @@ async def create_api_event(request: Request, event: EventNew):
 
     **Event**: This is the name of the event in question. There are a few special events as well:
 
-        - add_bot - This is an Add Bot Event. These cannot be created using the API
+        - add_bot - This is an Add Bot Event. These cannot be created normally using the API
 
-        - edit_bot - This is an Edit Bot Event. These cannot be created using the API
+        - edit_bot - This is an Edit Bot Event. These cannot be created normally using the API
 
         - guild_count - Sets the guild count, put the number of guilds in the context field
 
@@ -116,6 +116,12 @@ async def create_api_event(request: Request, event: EventNew):
 
         - end_maint - End Maintenance. Context field is optional here and doesn't matter
 
+        - delete_bot - This is an Delete Bot Event. These cannot be created normally using the API
+
+        - approve - This is an Approve Bot Event. These cannot be created normally using the API
+
+        - deny - This is an Deny Bot Event. These cannot be created normally using the API
+
     **Note**: All other event names will be shown on the bot's page. You can add css by adding ::css=<YOUR CSS HERE> to the context field but this is not recommended unless you know what you are doing
 
     **Context**: In a normal event, the context is what will displayed on the body of the event on the bot's page. In a special event, the context usually contains special information about the event in question.
@@ -125,7 +131,7 @@ async def create_api_event(request: Request, event: EventNew):
         return {"done":  False, "reason": "TEXT_TOO_SMALL"}
     if event.event.replace(" ", "") in ["guild_count", "shard_count"] and event.context is None:
         return {"done":  False, "reason": "NO_GUILDS_OR_SHARDS"}
-    if event.event.replace(" ", "") in ["add_bot", "edit_bot", "vote"]:
+    if event.event.replace(" ", "") in ["add_bot", "edit_bot", "vote", "delete_bot", "approve", "deny"]:
         return {"done":  False, "reason": "INVALID_EVENT_NAME"}
     id = await db.fetchrow("SELECT bot_id FROM bots WHERE api_token = $1", event.api_token)
     if id is None:
@@ -144,21 +150,21 @@ async def edit_event(request: Request, event: EventUpdate):
 
     **Event**: This is the new name of the event in question. There are a few special events as well. None of these special events are allowed to be editted or editted to:
 
-        - add_bot - This is an Add Bot Event. These cannot be created using the API
+        - add_bot
 
-        - edit_bot - This is an Edit Bot Event. These cannot be created using the API
+        - edit_bot
 
-        - guild_count - Sets the guild count, put the number of guilds in the context field
+        - vote
 
-        - shard_count - Sets the shard count, put the number of shards in the context field
+        - begin_maint
 
-        - vote - This is a vote. These cannot be manually created using the API
+        - end_maint
 
-        - begin_maint - Enter maintenance mode. Put the reason in the context field.
+        - delete_bot
 
-        - end_maint - End Maintenance. Context field is optional here and doesn't matter
+        - approve
 
-    **Note**: All other event names will be shown on the bot's page. You can add css by adding ::css=<YOUR CSS HERE> to the context field but this is not recommended unless you know what you are doing
+        - deny
 
     **Context**: In a normal event, the context is what will displayed on the body of the event on the bot's page. In a special event, the context usually contains special information about the event in question. You cannot edit the context (or anything for that matter) of a special event
     """
@@ -166,7 +172,7 @@ async def edit_event(request: Request, event: EventUpdate):
         return {"done":  False, "reason": "TEXT_TOO_SMALL"}
     if event.event.replace(" ", "") in ["guild_count", "shard_count"] and event.context is None:
         return {"done":  False, "reason": "NO_GUILDS_OR_SHARDS"}
-    if event.event.replace(" ", "") in ["add_bot", "edit_bot", "vote", "guild_count", "shard_count", "begin_maint", "end_maint"]:
+    if event.event.replace(" ", "") in ["add_bot", "edit_bot", "vote", "guild_count", "shard_count", "begin_maint", "end_maint", "delete_bot", "approve", "deny"]:
         return {"done":  False, "reason": "INVALID_EVENT_NAME"}
     id = await db.fetchrow("SELECT bot_id FROM bots WHERE api_token = $1", event.api_token)
     if id is None:
@@ -175,7 +181,7 @@ async def edit_event(request: Request, event: EventUpdate):
     eid = await db.fetchrow("SELECT id, events FROM api_event WHERE id = $1", event.event_id)
     if eid is None:
         return {"done":  False, "reason": "NO_MESSAGE_FOUND"}
-    if eid["events"].split("|")[0].replace(" ", "") in ["add_bot", "edit_bot", "vote", "guild_count", "shard_count", "begin_maint", "end_maint"]:
+    if eid["events"].split("|")[0].replace(" ", "") in ["add_bot", "edit_bot", "vote", "guild_count", "shard_count", "begin_maint", "end_maint", "delete_bot", "approve", "deny"]:
         return {"done":  False, "reason": "INVALID_EVENT_NAME"}
     new_event_data = "|".join((event.event, str(time.time()), event.context))
     await db.execute("UPDATE api_event SET events = $1 WHERE id = $2", new_event_data, event.event_id)

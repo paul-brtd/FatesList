@@ -105,7 +105,7 @@ async def bot_edit(request: Request, bid: int):
             tags_fixed.update({tag: new_tag.capitalize()})
         form = await Form.from_formdata(request)
         fetch = await db.fetchrow("SELECT bot_id, prefix, bot_library, invite, website, banner, discord, long_description, description, tags, owner, extra_owners, servers, created_at, webhook, discord, api_token, banner FROM bots WHERE bot_id = $1", bid)
-        return templates.TemplateResponse("edit.html", {"request": request, "tags_fixed": tags_fixed, "username": request.session.get("username", False),"fetch":fetch,"form":form, "avatar": request.session.get("avatar")})
+        return templates.TemplateResponse("edit.html", {"request": request, "tags_fixed": tags_fixed, "username": request.session.get("username", False),"fetch":fetch,"form":form, "avatar": request.session.get("avatar"), "epoch": time.time()})
     else:
         return RedirectResponse("/")
 
@@ -172,6 +172,7 @@ async def edit_bot_bt(request, botid, prefix, library, website, banner, support,
     await channel.send(f"<@{owner}> edited the bot <@{botid}>")
 
 @router.post("/{bot_id}/vote")
+@csrf_protect
 async def vote_for_bot(
         request: Request,
         bot_id: int
@@ -208,3 +209,31 @@ async def vote_for_bot(
         return templates.TemplateResponse("message.html", {"request": request, "username": request.session.get("username"), "avatar": request.session.get("avatar"), "message": "Vote Error", "context": "Please wait " + wait_time_human + " before voting for this bot"})
     else:
         return ret
+
+@router.post("/{bot_id}/delete")
+@csrf_protect
+async def delete_bot(request: Request, bot_id: int, confirmer: str = FForm("1")):
+    print(confirmer)
+    if "userid" in request.session.keys():
+        check = await db.fetchrow("SELECT owner, extra_owners FROM bots WHERE bot_id = $1", bot_id)
+        if not check:
+            return templates.TemplateResponse("message.html", {"request": request, "message": "This bot doesn't exist in our database.", "username": request.session.get("username", False)})
+        guild = client.get_guild(builtins.reviewing_server)
+        user = guild.get_member(int(request.session.get("userid")))
+        if check["owner"] == int(request.session["userid"]) or str(request.session["userid"]) in check["extra_owners"] or is_staff(staff_roles, user.roles, 4)[0]:
+            pass
+        else:
+            return templates.TemplateResponse("message.html", {"request": request, "message": "You aren't the owner of this bot.", "username": request.session.get("username", False)})
+    else:
+        return RedirectResponse("/", status_code = 303)
+    try:
+        if time.time() - int(float(confirmer)) > 30:
+            return templates.TemplateResponse("message.html", {"request": request, "username": request.session.get("username"), "avatar": request.session.get("avatar"), "message": "Forbidden", "context": "You have taken too long to click the Delete Bot button and for your security, you will need to go back, refresh the page and try again"})
+    except:
+        return templates.TemplateResponse("message.html", {"request": request, "username": request.session.get("username"), "avatar": request.session.get("avatar"), "message": "Forbidden", "context": "Invalid Confirm Code. Please go back and reload the page and if the problem still persists, please report it in the support server"})
+    await add_event(bot_id, "delete_bot", f"user={str(request.session.get('userid'))}")
+    await db.execute("DELETE FROM bots WHERE bot_id = $1", bot_id)
+    channel = client.get_channel(bot_logs)
+    owner=str(request.session["userid"])
+    await channel.send(f"<@{owner}> deleted the bot <@{str(bot_id)}>.\nWe are sad to see you go...::sad::")
+    return RedirectResponse("/", status_code = 303)

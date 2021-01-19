@@ -91,9 +91,13 @@ async def review_api(request:Request, bot_id: int, accept: str = FForm("")):
     if not s[0]:
         return RedirectResponse("/")                
     elif accept == "true":
+        b = await db.fetchrow("SELECT owner FROM bots WHERE bot_id = $1", bot_id)
+        if b is None:
+            return RedirectResponse("/admin/console")
         await db.execute("UPDATE bots SET queue=false WHERE bot_id = $1", bot_id)
         channel = guild.get_channel(bot_logs)
-        await channel.send(f"<@{bot_id}> has been approved")
+        await add_event(bot_id, "approve", f"user={str(request.session.get('userid'))}")
+        await channel.send(f"<@{bot_id}> by <@{str(b['owner'])}> has been approved")
         return templates.TemplateResponse("last.html",{"request":request,"message":"Bot accepted; You MUST Invite it by this url","username":request.session["username"],"url":f"https://discord.com/oauth2/authorize?client_id={str(bot_id)}&scope=bot&guild_id={guild.id}&disable_guild_select=true&permissions=0"})
     elif accept == "false":
         return RedirectResponse("/admin/review/"+str(bot_id)+"/deny", status_code=HTTP_303_SEE_OTHER)
@@ -110,7 +114,7 @@ async def review_deny(request:Request, bot_id: int):
         if not s[0]:
             return RedirectResponse("/")            
         else:    
-            bot = await db.fetchrow("SELECT * FROM bots WHERE bot_id = $1 and queue=true",int(bot_id))
+            bot = await db.fetchrow("SELECT * FROM bots WHERE bot_id = $1 AND queue = true",int(bot_id))
             if not bot:
                 return templates.TemplateResponse("message.html",{"request":request,"message":"Bot does not exist! Idk how"})
             return templates.TemplateResponse("last_deny.html",{"request":request,"bot":bot,"username":request.session["username"], "form": form})
@@ -123,12 +127,13 @@ async def review_deny_api(request:Request, bot_id: str, reason: str = FForm("The
     if not s[0]:
         return RedirectResponse("/")
     else:
-        check = await db.fetchrow("SELECT * FROM bots WHERE bot_id=$1 and queue=true",int(bot_id))
+        check = await db.fetchrow("SELECT owner FROM bots WHERE bot_id=$1 and queue=true",int(bot_id))
         if not check:
-                return templates.TemplateResponse("message.html",{"request":request,"message":"Bot does not exist! Idk how"})
+            return templates.TemplateResponse("message.html",{"request":request,"message":"Bot does not exist! Idk how"})
         channel = client.get_channel(bot_logs)
         deny = await db.execute("DELETE FROM bots WHERE bot_id = $1", int(bot_id))
         channel = client.get_channel(bot_logs)
         owner=str(request.session["userid"])
-        await channel.send(f"<@{owner}> denied the bot <@{bot_id}> with the reason: {reason}")
+        await add_event(bot_id, "deny", f"user={str(request.session.get('userid'))}")
+        await channel.send(f"<@{owner}> by <@{str(check['owner'])}> has been denied the bot <@{bot_id}> with the reason: {reason}")
         return templates.TemplateResponse("message.html",{"request":request,"message":"I hope it DENIED the bot review GUY","username":request.session["username"]})

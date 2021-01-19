@@ -35,7 +35,7 @@ async def search(request: Request, q: str):
 async def tags(request: Request, tag_search):
     if tag_search not in TAGS:
         return RedirectResponse("/")
-    fetch = await db.fetch(f"SELECT description, banner,certified,votes,servers,bot_id,tags,invite FROM bots, unnest(tags) a WHERE  lower(a) = '{tag_search}' ORDER BY votes")
+    fetch = await db.fetch(f"SELECT description, banner,certified,votes,servers,bot_id,tags,invite FROM bots, unnest(tags) a WHERE  lower(a) = '{tag_search}' AND queue = false ORDER BY votes")
     print(fetch)
     search_bots = []
     # TOP VOTED BOTS

@@ -185,7 +185,7 @@ async def get_normal_events(bot_id: int) -> list:
     api_data = await db.fetch("SELECT events FROM api_event WHERE bot_id = $1", bot_id)
     if api_data == []:
         return []
-    special_events = ["add_bot", "edit_bot", "guild_count", "shard_count", "begin_maint", "end_maint", "vote"]
+    special_events = ["add_bot", "edit_bot", "guild_count", "shard_count", "begin_maint", "end_maint", "vote", "delete_bot"]
     events = []
     for _event in api_data:
         event = _event["events"]

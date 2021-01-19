@@ -22,6 +22,7 @@ CREATE TABLE bots (
     owner bigint,
     extra_owners text,
     invite text
+    deleted boolean DEFAULT false;
 );
 
 CREATE TABLE users (

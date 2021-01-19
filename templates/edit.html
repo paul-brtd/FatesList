@@ -350,7 +350,7 @@
           type="submit"
           style="background: #1d1e23; margin-top: 50px; margin-bottom: 30px"
         >
-          Submit
+          Edit Bot
         </button>
       </div>
     </div>
@@ -360,6 +360,35 @@
 <span hidden id="long_description_value">{{fetch.long_description}}</span>
 <script src="/static/assets/js/bundle.min.js"></script>
 <script src="/static/assets/js/main.js"></script>
+  <hr
+    style="
+      font-size: 20px;
+      border-top-width: 1px;
+      border-top-color: #eee;
+      width: 90%;
+    "
+  />
+  <div>
+	      <div class="form-group" style="width: 80%; margin: 0 auto; height: auto; margin-top: 30px; color: rgba(255, 255, 255, 0.87)">
+		              <div class="form-group" class="d-flex justify-content-center" style="margin: 15px auto; width: 85%;text-align: center; color: white; font-weight: bold; overflow-wrap: anywhere;">
+				          <div style="margin 15px auto">
+    <h3>Delete Bot</h5>
+    <h4 style="margin-bottom: 3px;">Warning: This cannot be undone</h4>
+    <form method="POST" action="/bot/{{fetch.bot_id}}/delete">
+	{{form.csrf_token}}
+        <button
+          class="btn btn-danger"
+	  type="submit" 
+          style="margin-top: 20px; margin-bottom: 30px"
+        >
+          Delete Bot
+        </button>
+    	<input type="hidden" name="confirmer" value="{{epoch}}"/>
+    </form>
+    </div>
+			      </div>
+	      </div>
+  </div>
 <script>
   document.getElementById("long_description").value = $("#long_description_value").text()
   const selected_tags = [
