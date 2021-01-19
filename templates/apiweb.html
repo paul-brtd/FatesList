@@ -32,7 +32,7 @@
     <hr style="font-size: 20px;border-top-width: 1px;border-top-color: #eee;width: 90%;">
         <div class="form-group" style="width: 80%;margin: 0 auto;">
         <h5 style="font-weight: bold;">Add Event</h5>
-            <form method="PATCH" action="/api/events" style="height: auto;margin-top: 30px;color: rgba(255,255,255,0.87);" id="bot_form">
+            <form method="PUT" action="/api/events" style="height: auto;margin-top: 30px;color: rgba(255,255,255,0.87);" id="bot_form">
                 <input type="hidden" name="api_token" value="{{api_token}}"/>
                 <label for="event" style="color: white;font-weight: bold;font-size: 16px;margin-top: 3px;">Event Name</label><br/>
                 <input required="true" class="form-control" placeholder="Event Name" style="background: #ffffff;border: grey;border-radius: 5px;max-width: 400px;" type="text" name="event"></input><br/>
@@ -87,7 +87,7 @@
      );
      if(e == true) {return}
      var xhr = new XMLHttpRequest();
-     xhr.open( "PATCH", url );
+     xhr.open( "PUT", url );
      xhr.setRequestHeader("accept", "application/json");
      xhr.setRequestHeader( "Content-Type", "application/json" );
      xhr.onload = () => {
@@ -152,7 +152,7 @@
       form = form.parentElement;
     }
     var method = form.getAttribute( "method" );
-    if ( method == "PATCH" ) {
+    if ( method == "PUT" ) {
       button.addEventListener( "click", putMethod );
     }
     if ( method == "DELETE" ) {

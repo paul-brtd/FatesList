@@ -81,8 +81,8 @@ app.add_middleware(
     authenticate=client_ip,
     backend=rb,
     config={
-        "/api/events": [Rule(minute=6), Rule(group="admin")],
-        r"^/": [Rule(minute=12), Rule(group="admin")],
+        "/api/events": [Rule(minute=60), Rule(group="admin")],
+        r"^/": [Rule(minute=120), Rule(group="admin")],
     },
 )
 

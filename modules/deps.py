@@ -140,20 +140,24 @@ def is_staff(staff_json: dict, roles: Union[list, int], base_perm: int) -> Union
     return False, tmp["perm"]
 
 #await add_event(bot_id, "add_bot", "NULL")
-async def add_event(bot_id: int, event: str, context: str):
+async def add_event(bot_id: int, event: str, context: str, *, send_event = True):
     # Special Events
     if event == "guild_count":
         await db.execute("UPDATE bots SET servers = $1 WHERE bot_id = $2", int(context), int(bot_id))
         return
     elif event == "shard_count":
         await db.execute("UPDATE bots SET shard_count = $1 WHERE bot_id = $2", int(context), int(bot_id))
+        return
 
     new_event_data = "|".join((event, str(time.time()), context))
     id = uuid.uuid4()
     await db.execute("INSERT INTO api_event (id, bot_id, events) VALUES ($1, $2, $3)", id, bot_id, new_event_data)
     webh = await db.fetchrow("SELECT webhook FROM bots WHERE bot_id = $1", int(bot_id))
-    if webh is not None and webh["webhook"] not in ["", None] and webh["webhook"].startswith("http"):
-        await requests.patch(webh["webhook"], json = {"type": "add", "event_id": str(id), "event": event, "context": context})
+    if webh is not None and webh["webhook"] not in ["", None] and webh["webhook"].startswith("http") and send_event:
+        try:
+            asyncio.create_task(requests.patch(webh["webhook"], json = {"type": "add", "event_id": str(id), "event": event, "context": context}))
+        except:
+            pass
     return id
 
 class Form(StarletteForm):

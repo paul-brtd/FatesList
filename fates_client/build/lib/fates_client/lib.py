@@ -72,7 +72,7 @@ class FatesClient():
             pcontext = context
         else:
             pcontext = context + "::css=" + css
-        res = await requests.patch(events_api, json = {"api_token": self.api_token, "event": event, "context": pcontext})
+        res = await requests.put(events_api, json = {"api_token": self.api_token, "event": event, "context": pcontext})
         try:
             res = await res.json()
         except:

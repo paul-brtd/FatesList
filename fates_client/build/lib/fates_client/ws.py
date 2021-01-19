@@ -21,4 +21,5 @@ async def fates_hook_webhook(event: EventPatch):
         event = Vote(fc = fc, id = event.event_id, event = event.event, context = event.context)
     else:
         event = Event(fc = fc, id = event.event_id, event = event.event, context = event.context)
-    return await fh_func(event)
+    await fh_func(event)
+    return None
