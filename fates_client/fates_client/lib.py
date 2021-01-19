@@ -27,7 +27,7 @@ except:
 import uuid
 from typing import Optional
 
-URL = "https://rootspring.loca.lt" # The base fates list site
+URL = "https://bristlefrost.loca.lt" # The base fates list site
 
 events_api = URL + "/api/events" 
 

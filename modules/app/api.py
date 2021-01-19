@@ -193,7 +193,7 @@ async def regenerate_token(request: Request, token: TokenRegen):
 
     **API Token**: You can get this by clicking your bot and clicking edit and scrolling down to API Token or clicking APIWeb
     """
-    id = await db.fetchrow("SELECT bot_id FROM bots WHERE api_token = $1", event.api_token)
+    id = await db.fetchrow("SELECT bot_id FROM bots WHERE api_token = $1", token.api_token)
     if id is None:
         return {"done":  False, "reason": "NO_AUTH"}
     await db.execute("UPDATE bots SET api_token = $1 WHERE bot_id = $2", get_token(101), id["bot_id"])
