@@ -33,6 +33,9 @@ from ratelimit import RateLimitMiddleware, Rule
 from ratelimit.auths import EmptyInformation
 from ratelimit.backends.redis import RedisBackend
 from ratelimit.auths.ip import client_ip
+from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
+
+
 # CONFIG
 builtins.bot_logs=789946587203764224
 builtins.reviewing_server=789934742128558080 # Bit of a misnomer, but this is the actual main server
@@ -70,7 +73,19 @@ builtins.intent = discord.Intents.all()
 builtins.client = commands.AutoShardedBot(command_prefix='!', intents=intent)
 builtins.app = FastAPI(default_response_class = ORJSONResponse)
 app.add_middleware(SessionMiddleware, secret_key="E@Dycude3u8z382")
-builtins.app.mount("/static", StaticFiles(directory="static"), name="static")
+
+@app.middleware("http")
+async def cf_http_redir(request: Request, call_next):
+    if request.headers["cf-visitor"].__contains__("https"):
+        pass
+    elif not request.headers["cf-visitor"].__contains__("http"):
+        pass
+    else:
+        print("Redirecting Insecure HTTP to HTTPS")
+        return RedirectResponse(str(request.url).replace("http", "https"))
+    response = await call_next(request)
+    return response
+
 builtins._templates = Jinja2Templates(directory="templates")
 class templates():
     @staticmethod
