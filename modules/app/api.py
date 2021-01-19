@@ -23,6 +23,9 @@ class EventUpdate(BaseModel):
     event: str
     context: Optional[str] = "NONE"
 
+class TokenRegen(BaseModel):
+    api_token: str
+
 @router.get("/events")
 async def get_api_events(request: Request, api_token: str, human: Optional[int] = 0, id: Optional[uuid.UUID] = None):
     """
@@ -183,3 +186,16 @@ async def edit_event(request: Request, event: EventUpdate):
         except:
             pass
     return {"done": True, "reason": None}
+
+@router.patch("/token")
+async def regenerate_token(request: Request, token: TokenRegen):
+    """Regenerate the API token
+
+    **API Token**: You can get this by clicking your bot and clicking edit and scrolling down to API Token or clicking APIWeb
+    """
+    id = await db.fetchrow("SELECT bot_id FROM bots WHERE api_token = $1", event.api_token)
+    if id is None:
+        return {"done":  False, "reason": "NO_AUTH"}
+    await db.execute("UPDATE bots SET api_token = $1 WHERE bot_id = $2", get_token(101), id["bot_id"])
+    return {"done": True, "reason": None}
+

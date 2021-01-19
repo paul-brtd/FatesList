@@ -8,7 +8,7 @@ CREATE TABLE bots (
     description text,
     long_description text,
     prefix text,
-    api_token text,
+    api_token text unique,
     website text,
     discord text,
     tags text[],

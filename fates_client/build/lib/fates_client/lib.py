@@ -94,6 +94,21 @@ class FatesClient():
             raise AuthFailure()
         return res
 
+    # self.fc.edit_event
+    async def edit_event(self, id: uuid.UUID, event: Optional[str] = None, context: Optional[str] = None):
+        if event is None:
+            event = self.event
+        if context is None:
+            context = self.context
+        res = await requests.patch(events_api, json = {"api_token": self.api_token, "event_id": id, "event": event, "context": context})
+        try:
+            res = await res.json()
+        except:
+            raise NetworkError()
+        if res["done"] == False and res["reason"] == "NO_AUTH":
+            raise AuthFailure() 
+        return res
+
     async def enter_maint_mode(self, reason: Optional[str] = "We are currently undergoing maintenance"):
         return await self.create_event(event = "begin_maint", context = reason)
 
@@ -144,6 +159,9 @@ class Event():
     # Simple wrapper for FatesClient.delete_event
     async def delete(self):
        return await self.fc.delete_event(id = self.id) 
+
+    async def edit(self, event: str = None, context: Optional[str] = None):
+        return await self.fc.edit_event(id = self.id, event = event, context = context)
 
     def __repr__(self):
        return f"<APIEvent {str(self.id)}: Event={self.event}, Context={str(self.context)}, CSS={str(self.css)}, Query={str(self.query_args)}>"
