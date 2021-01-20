@@ -12,11 +12,16 @@ async def search(request: Request, q: str):
     userc = await db.fetch("SELECT bot_id FROM bot_cache WHERE username ilike '%" + re.sub(r'\W+|_', ' ', q) + "%' and valid_for ilike '%bot%'")
     bids = list(set([id["bot_id"] for id in desc]).union(set([id["bot_id"] for id in userc])))
     print(bids, desc, userc)
-    data = str(tuple([int(bid) for bid in bids])).replace("(", "").replace(")", "").replace(",", "")
+    data = str(tuple([int(bid) for bid in bids])).replace("(", "").replace(")", "")
     print("data is " + data)
-    if data in ["()", None]:
+    if data.replace(" ", "") in ["()", None, ",", ""]:
         fetch = []
+    elif data.split(",")[-1].replace(" ", "") == "":
+        data = data.replace(",", "")
+        fetch = None
     else:
+        fetch = None
+    if fetch is None:
         abc = ("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE queue = false and bot_id IN (" + data + ")")
         fetch = await db.fetch(abc)
     search_bots = []

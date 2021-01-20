@@ -64,7 +64,7 @@ builtins.staff_roles = {
     }
 }
 
-builtins.support_url = "https://discord.gg/pUcTnHMSvC"
+builtins.support_url = "https://discord.gg/PA5vjCRc5H"
 builtins.TOKEN = "Nzk4OTUxNTY2NjM0Nzc4NjQx.X_8foQ.r3oWyE87FQAXx-Kf5ueyGfzDui4"
 builtins.TAGS = ["music", "moderation", "economy", "fun", "anime", "games",
         "web_dashboard", "logging", "streams", "game_stats", "leveling", "roleplay"]
