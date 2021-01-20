@@ -54,7 +54,7 @@ async def add_bot_api(
     if invite.startswith("https://discord.com") and "oauth" in invite:
         pass
     else:
-        return templates.TemplateResponse("message.html", {"request": request, "message": "Invalid Bot Invite", "username": request.session.get("username", False)})
+        return templates.TemplateResponse("message.html", {"request": request, "message": "Invalid Bot Invite", "context": "Your bot invite must be in the format of https://discord.com/api/oauth2/... or https://discord.com/oauth2/...", "username": request.session.get("username", False)})
     description = description.replace("\n", " ").replace("\t", " ")
     if len(description) > 101:
         return templates.TemplateResponse("message.html", {"request": request, "message": "Short description is too long.", "username": request.session.get("username", False)})
@@ -147,8 +147,7 @@ async def bot_edit_api(
     if invite.startswith("https://discord.com/api/oauth2"):
         pass
     else:
-        return templates.TemplateResponse("message.html", {"request": request, "message": "Invalid Bot Invite", "username": request.session.get("username", False)})
-
+        return templates.TemplateResponse("message.html", {"request": request, "message": "Invalid Bot Invite", "context": "Your bot invite must be in the format of https://discord.com/api/oauth2/... or https://discord.com/oauth2/...", "username": request.session.get("username", False)})
     description = description.replace("\n", " ").replace("\t", " ")
     if len(description) > 101:
         return templates.TemplateResponse("message.html", {"request": request, "message": "Short description is too long.", "username": request.session.get("username", False)})
@@ -165,7 +164,7 @@ async def bot_edit_api(
     return templates.TemplateResponse("message.html", {"request": request, "message": "Bot has been edited.", "username": request.session.get("username", False), "avatar": request.session.get('avatar')}) 
 
 async def edit_bot_bt(request, botid, prefix, library, website, banner, support, long_description, description, selected_tags, extra_owners, creation, invite, webhook):
-    await db.execute("UPDATE bots SET bot_library=$2, webhook=$3, description=$4, long_description=$5, prefix=$6, website=$7, discord=$8, tags=$9, banner=$10, invite=$11 WHERE bot_id = $1", botid, library, webhook, description, long_description, prefix, website, support, selected_tags, banner, invite)
+    await db.execute("UPDATE bots SET bot_library=$2, webhook=$3, description=$4, long_description=$5, prefix=$6, website=$7, discord=$8, tags=$9, banner=$10, invite=$11, extra_owners = $12 WHERE bot_id = $1", botid, library, webhook, description, long_description, prefix, website, support, selected_tags, banner, invite, extra_owners)
     await add_event(botid, "edit_bot", f"user:{str(request.session['userid'])}")
     channel = client.get_channel(bot_logs)
     owner=str(request.session["userid"])
