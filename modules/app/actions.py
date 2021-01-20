@@ -104,7 +104,7 @@ async def bot_edit(request: Request, bid: int):
             new_tag = tag.replace("_", " ")
             tags_fixed.update({tag: new_tag.capitalize()})
         form = await Form.from_formdata(request)
-        fetch = await db.fetchrow("SELECT bot_id, prefix, bot_library, invite, website, banner, discord, long_description, description, tags, owner, extra_owners, servers, created_at, webhook, discord, api_token, banner, banned FROM bots WHERE bot_id = $1", bid)
+        fetch = await db.fetchrow("SELECT bot_id, prefix, bot_library, invite, website, banner, discord, long_description, description, tags, owner, extra_owners, servers, created_at, webhook, discord, api_token, banner, banned, vanity, github FROM bots WHERE bot_id = $1", bid)
         return templates.TemplateResponse("edit.html", {"request": request, "tags_fixed": tags_fixed, "username": request.session.get("username", False),"fetch":fetch,"form":form, "avatar": request.session.get("avatar"), "epoch": time.time()})
     else:
         return RedirectResponse("/")
@@ -125,7 +125,9 @@ async def bot_edit_api(
         extra_owners: str = FForm(""),
         support: Optional[str] = FForm(""),
         long_description: str = FForm(""),
-        webhook: str = FForm("")
+        webhook: str = FForm(""),
+        vanity: str = FForm(""),
+        github: str = FForm("")
     ):
     if "userid" in request.session.keys():
         check = await db.fetchrow("SELECT owner, extra_owners FROM bots WHERE bot_id = $1", bid)
@@ -159,12 +161,20 @@ async def bot_edit_api(
             pass
         else:
             return templates.TemplateResponse("message.html", {"request": request, "message": "One of your bot tags didn't exist internally", "username": request.session.get("username", False)})
+    if vanity == "":
+        pass
+    else:
+        vanity_check = await db.fetchrow("SELECT bot_id FROM bots WHERE vanity = $1 AND bot_id != $2", vanity.replace(" ", ""), bid)
+        if vanity_check is not None:
+            return templates.TemplateResponse("message.html", {"request": request, "message": "Your custom vanity URL is already in use", "username": request.session.get("username", False)})
+    if github != "" and not github.startswith("https://www.github.com"):
+        return templates.TemplateResponse("message.html", {"request": request, "message": "Your github link must start with https://www.github.com", "username": request.session.get("username", False)})
     creation = time.time()
-    bt.add_task(edit_bot_bt, request, bid, prefix, library, website, banner, support, long_description, description, selected_tags, extra_owners, creation, invite, webhook)
+    bt.add_task(edit_bot_bt, request, bid, prefix, library, website, banner, support, long_description, description, selected_tags, extra_owners, creation, invite, webhook, vanity, github)
     return templates.TemplateResponse("message.html", {"request": request, "message": "Bot has been edited.", "username": request.session.get("username", False), "avatar": request.session.get('avatar')}) 
 
-async def edit_bot_bt(request, botid, prefix, library, website, banner, support, long_description, description, selected_tags, extra_owners, creation, invite, webhook):
-    await db.execute("UPDATE bots SET bot_library=$2, webhook=$3, description=$4, long_description=$5, prefix=$6, website=$7, discord=$8, tags=$9, banner=$10, invite=$11, extra_owners = $12 WHERE bot_id = $1", botid, library, webhook, description, long_description, prefix, website, support, selected_tags, banner, invite, extra_owners)
+async def edit_bot_bt(request, botid, prefix, library, website, banner, support, long_description, description, selected_tags, extra_owners, creation, invite, webhook, vanity, github):
+    await db.execute("UPDATE bots SET bot_library=$2, webhook=$3, description=$4, long_description=$5, prefix=$6, website=$7, discord=$8, tags=$9, banner=$10, invite=$11, extra_owners = $12, vanity = $13, github = $14 WHERE bot_id = $1", botid, library, webhook, description, long_description, prefix, website, support, selected_tags, banner, invite, extra_owners, vanity, github)
     await add_event(botid, "edit_bot", f"user:{str(request.session['userid'])}")
     channel = client.get_channel(bot_logs)
     owner=str(request.session["userid"])

@@ -46,6 +46,9 @@
         <div class="form-group" class="d-flex justify-content-center" style="margin: 15px auto; width: 85%;text-align: center; color: white; font-weight: bold; overflow-wrap: anywhere;">
     <div style="margin 15px auto">
     <h6 style="color: white; margin-top: 1px !important;">API Token: <span style="font-size: 14px; opacity: 0.9">{{fetch.api_token}}</span></h6>
+    {% if fetch.vanity != "" %}
+    <h6 style="color: white; margin-top: 1px !important;">Vanity URL: <span style="font-size: 14px; opacity: 0.9">https://fateslist.xyz/v/{{fetch.vanity}}</span></h6>
+    {% endif %}
     </div>
     <div>
     <h3>Events</h5>
@@ -289,30 +292,55 @@
       name="webhook"
       placeholder="http://129.332.123:5000/webhook"
       minlength="3"
-      value="{{fetch.webhook}}"
-    /><label
-    style="
-      color: white;
-      font-weight: bold;
-      font-size: 16px;
-      margin-top: 30px;
-    "
-    for="token"
-    >Api token</label
-  ><input
-    disabled
-    class="form-control"
-    type="text"
-    style="
-      background: #ffffff;
-      border: grey;
-      border-radius: 5px;
-      max-width: 1000px;
-    "
-    name="token"
-    minlength="10"
-    value="{{fetch.api_token}}"
-  /><label
+      {% if fetch.webhook != None %}value="{{fetch.webhook}}" {%endif%}
+    />
+    <label
+      style="
+        color: white;
+        font-weight: bold;
+        font-size: 16px;
+        margin-top: 30px;
+      "
+      for="vanity"
+      >Vanity (https://fateslist.xyz/v/VANITY_URL)</label
+    ><input
+      class="form-control"
+      type="text"
+      style="
+        background: #ffffff;
+        border: grey;
+        border-radius: 5px;
+        max-width: 1000px;
+      "
+      name="vanity"
+      placeholder="cats"
+      minlength="3"
+      {% if fetch.vanity != None %}value="{{fetch.vanity}}"{%endif%}
+    />
+<label
+      style="
+        color: white;
+        font-weight: bold;
+        font-size: 16px;
+        margin-top: 30px;
+      "
+      for="github"
+      >Github (https://www.github.com/XYZ/XYZ)</label
+    ><input
+      class="form-control"
+      type="text"
+      style="
+        background: #ffffff;
+        border: grey;
+        border-radius: 5px;
+        max-width: 1000px;
+      "
+      name="github"
+      placeholder="https://www.github.com/XYZ/XYZ"
+      minlength="3"
+      {% if fetch.github != None %}value="{{fetch.github}}"{%endif%}
+    />
+  <label
         style="
           color: white;
           font-weight: bold;

@@ -9,10 +9,10 @@
 {% endblock %}
 
 {% block content %}
-    <div class="d-flex d-xl-flex flex-column justify-content-center align-items-center justify-content-xl-center align-items-xl-center"><img style="border-radius: 50%; width: 128px;" src="{{bot.avatar}}">
+    <div style="margin 0 auto;" class="d-flex d-xl-flex flex-column justify-content-center align-items-center justify-content-xl-center align-items-xl-center"><img style="border-radius: 50%; width: 125px;" src="{{bot.avatar}}">
         <h3 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;">{{bot.username}}</h3>
 	{% if bot.banned %}
-        <p style="color: red; font-size: 18px; font-weight: bold;">This bot has been BANNED from this bot list for violating our rules or being a low-quality bot. Please do not invite it.</p>
+        <p style="color: red; font-size: 18px; font-weight: bold;">This bot has been BANNED or DENIED from this bot list for violating our rules or being a low-quality bot. Please do not invite it.</p>
 	{% endif %}
         <p style="font-weight: bold; color: rgba(255,255,255,0.87);">This bot is owned by <a href="/profile/{{bot.owner}}">{{bot.owner_pretty.username}}</a></p>
         <p style="font-weight: bold; color: rgba(255,255,255,0.87);">Prefix: {{bot.prefix}}</p>
@@ -23,7 +23,7 @@
         </div>
         {% endif %}
         <p style="font-weight: bold; color: rgba(255,255,255,0.87);">This bot has been coded using the {{bot.library}} library</p>
-        <p style="color: rgba(255,255,255,0.87);font-weight: bold;opacity: 0.93;">{{bot.description}}</p>
+        <p style="margin 0 auto; color: rgba(255,255,255,0.87);font-weight: bold;opacity: 0.93;">{{bot.description}}</p>
     </div>
     <div class="d-flex justify-content-center align-items-center flex-wrap" style="width: 80%;margin: 0 auto;max-width: 1000px;">
         <div class="text-nowrap d-flex justify-content-xl-center align-items-xl-center" style="line-height: 2;border-radius: 25px;background: #7289DA;width: auto;margin: 10px;font-size: 11px;">
@@ -38,6 +38,12 @@
         {% else %}
         <div class="text-nowrap d-flex justify-content-xl-center align-items-xl-center" style="line-height: 2;border-radius: 25px;background: #7289DA;width: auto;margin: 10px;font-size: 11px;">
         <a target=”_blank” href="{{bot.support}}"><button class="btn btn-outline-dark" style="background-color: #7289DA; color: white !important;"><i class="fas"></i>Support</button></a>
+        </div>
+       {% endif %}
+        {% if not bot.github or bot.github == "" or bot.github == "None" %}
+        {% else %}
+        <div class="text-nowrap d-flex justify-content-xl-center align-items-xl-center" style="line-height: 2;border-radius: 25px;background: #7289DA;width: auto;margin: 10px;font-size: 11px;">
+        <a target=”_blank” href="{{bot.github}}"><button class="btn btn-outline-dark" style="background-color: #7289DA; color: white !important;"><i class="fas"></i>Github</button></a>
         </div>
        {% endif %}
         {% if not bot.website or bot.website == "" or bot.website == "None" %}

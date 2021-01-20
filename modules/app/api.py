@@ -205,3 +205,30 @@ async def regenerate_token(request: Request, token: TokenRegen):
     await db.execute("UPDATE bots SET api_token = $1 WHERE bot_id = $2", get_token(101), id["bot_id"])
     return {"done": True, "reason": None}
 
+
+@router.get("/bots")
+async def api_get_bots(request: Request, bot_id: int):
+    """Gets bot information given a bot ID. If not found, 404 will be returned"""
+    api_ret = await db.fetchrow("SELECT bot_id AS id, description, long_description, servers AS server_count, shard_count, prefix, invite, owner, extra_owners, bot_library AS library, queue, banned, website, discord AS support FROM bots WHERE queue = false AND banned = false AND bot_id = $1", bot_id)
+    if api_ret is None:
+        return abort(404)
+    api_ret = dict(api_ret)
+    bot_obj = await get_bot(bot_id)
+    api_ret["username"] = bot_obj["username"]
+    return api_ret
+
+class BBGC(BaseModel):
+    api_token: str
+    count: int
+
+@router.post("/bb/guildcount")
+async def guild_count_shortcut(request: Request, api: BBGC):
+    """This is just a shortcut to /api/events for BOTBLOCKS only. This will be heavily ratelimited to discourage use and it may be unstable as it is not mantained. Please use the proper API and do not report bugs"""
+    event = EventNew(api_token = api.api_token, event = "guild_count", context = str(api.count))
+    return await create_api_event(request, event)
+
+@router.post("/bb/shardcount")
+async def shard_count_shortcut(request: Request, api: BBGC):
+    """This is just a shortcut to /api/events for BOTBLOCKS only. This will be heavily ratelimited to discourage use and it may be unstable as it is not mantained. Please use the proper API and do not report bugs"""
+    event = EventNew(api_token = api.api_token, event = "shard_count", context = str(api.count))
+    return await create_api_event(request, event)

@@ -50,17 +50,6 @@ class Oauth():
         avatar = user_json.get("avatar")
         return {"id":id, "name":name, "dash":dash, "avatar":avatar, "real": user_json}
     
-    async def join_user(self, bot_token, guild_id, access_token, userid):
-        url = self.discord_api_url+f"/guilds/{guild_id}/members/{userid}"
-
-        headers = {
-            "Authorization": f"Bot " + bot_token
-        }
-        async with aiohttp.ClientSession() as sess:
-            async with sess.put(url, headers=headers,json={"access_token":access_token}) as response:
-                pass
-
-
     async def check(self, access_token):
       url = self.discord_api_url+"/users/@me/guilds"
       headers = {'Content-Type': 'application/x-www-form-urlencoded',

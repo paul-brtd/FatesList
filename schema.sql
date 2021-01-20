@@ -22,7 +22,9 @@ CREATE TABLE bots (
     owner bigint,
     extra_owners text,
     invite text,
-    banned BOOLEAN DEFAULT false
+    banned BOOLEAN DEFAULT false,
+    vanity TEXT,
+    github TEXT
 );
 
 CREATE TABLE users (
