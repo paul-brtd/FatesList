@@ -41,7 +41,7 @@ async def profile_of_user(request: Request, userid: int):
     user = await get_user(int(userid))
     if not user:
         return RedirectResponse("/")
-    fetch = await db.fetch("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE owner = $1 and queue = false ORDER BY votes", int(userid))
+    fetch = await db.fetch("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE owner = $1 and queue = false and banned = false and disabled = false ORDER BY votes", int(userid))
     user_bots = []
     for bot in fetch:
         bot_info = await get_bot(bot["bot_id"])

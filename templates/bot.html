@@ -11,7 +11,11 @@
 {% block content %}
     <div class="d-flex d-xl-flex flex-column justify-content-center align-items-center justify-content-xl-center align-items-xl-center"><img style="border-radius: 50%; width: 128px;" src="{{bot.avatar}}">
         <h3 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;">{{bot.username}}</h3>
+	{% if bot.banned %}
+        <p style="color: red; font-size: 18px; font-weight: bold;">This bot has been BANNED from this bot list for violating our rules or being a low-quality bot. Please do not invite it.</p>
+	{% endif %}
         <p style="font-weight: bold; color: rgba(255,255,255,0.87);">This bot is owned by <a href="/profile/{{bot.owner}}">{{bot.owner_pretty.username}}</a></p>
+        <p style="font-weight: bold; color: rgba(255,255,255,0.87);">Prefix: {{bot.prefix}}</p>
 	{% if maint[0] %}
         <div style="text-align: center;">
         <p style="margin-bottom: 3px; color: red; font-size: 18px; font-weight: bold;">Maintenance in progress</p>
@@ -23,10 +27,12 @@
     </div>
     <div class="d-flex justify-content-center align-items-center flex-wrap" style="width: 80%;margin: 0 auto;max-width: 1000px;">
         <div class="text-nowrap d-flex justify-content-xl-center align-items-xl-center" style="line-height: 2;border-radius: 25px;background: #7289DA;width: auto;margin: 10px;font-size: 11px;">
+	{% if not bot.banned %}
         <form method = "POST" action = "/bot/{{bot.bot_id}}/vote">
             {{form.csrf_token}}
             <button type="submit" class="btn btn-outline-dark" style="background-color: #7289DA; color: white !important;"><i class="fas fa-thumbs-up"></i>{{bot.votes}}</button>
         </form>
+	{% endif %}
         </div>
         {% if not bot.support or bot.support == "" or bot.support == "None" %}
         {% else %}
@@ -40,9 +46,11 @@
         <a target=”_blank” href="{{bot.website}}"<button class="btn btn-outline-dark" style="background-color: #7289DA; color: white !important;"><i class="fas"></i>Website</button></a>
         </div>
        {% endif %}
+       {% if not bot.banned %}
         <div class="text-nowrap d-flex justify-content-xl-center align-items-xl-center" style="line-height: 2;border-radius: 25px;background: #7289DA;width: auto;margin: 10px;font-size: 11px;">
         <a target=”_blank” href="{{bot.invite}}"><button class="btn btn-outline-dark" style="background-color: #7289DA; color: white !important;"><i class="fas"></i>Invite</button></a>
         </div>
+	{% endif %}
         {% if bot_admin %}
         <div class="text-nowrap d-flex justify-content-xl-center align-items-xl-center" style="line-height: 2;border-radius: 25px;background: #7289DA;width: auto;margin: 10px;font-size: 11px;">
         <a href="/bot/edit/{{bot.bot_id}}"><button class="btn btn-outline-dark" style="background-color: #7289DA; color: white !important;"><i class="fas"></i>Edit</button></a>

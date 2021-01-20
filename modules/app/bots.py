@@ -12,7 +12,7 @@ async def bot_rdir(request: Request):
 
 @router.get("/{bot_id}")
 async def bot_index(request: Request, bot_id: int):
-    bot = await db.fetchrow("SELECT shard_count, description, bot_library AS library, tags, banner, website, certified, votes, servers, bot_id, invite, discord, owner, extra_owners, banner, api_token FROM bots WHERE bot_id = $1 ORDER BY votes", bot_id)
+    bot = await db.fetchrow("SELECT prefix, shard_count, description, bot_library AS library, tags, banner, website, certified, votes, servers, bot_id, invite, discord, owner, extra_owners, banner, api_token, banned, disabled FROM bots WHERE bot_id = $1 ORDER BY votes", bot_id)
     if bot is None:
         return abort(404)
     if "userid" in request.session.keys():
@@ -38,7 +38,7 @@ async def bot_index(request: Request, bot_id: int):
     events = await get_normal_events(bot["bot_id"])
     maint = await in_maint(bot["bot_id"])
     if bot_info:
-        bot_obj = {"bot": bot, "bot_id": bot["bot_id"], "avatar": bot_info["avatar"], "website": bot["website"], "username": bot_info["username"], "votes": await human_format(bot["votes"]), "servers": await human_format(bot["servers"]), "description": bot["description"], "support": bot['discord'], "invite": bot["invite"], "tags": bot["tags"], "library": bot['library'], "banner": banner, "token": bot["api_token"], "shards": await human_format(bot["shard_count"]), "owner": bot["owner"], "owner_pretty": await get_user(bot["owner"])}
+        bot_obj = {"bot": bot, "bot_id": bot["bot_id"], "avatar": bot_info["avatar"], "website": bot["website"], "username": bot_info["username"], "votes": await human_format(bot["votes"]), "servers": await human_format(bot["servers"]), "description": bot["description"], "support": bot['discord'], "invite": bot["invite"], "tags": bot["tags"], "library": bot['library'], "banner": banner, "token": bot["api_token"], "shards": await human_format(bot["shard_count"]), "owner": bot["owner"], "owner_pretty": await get_user(bot["owner"]), "banned": bot['banned'], "disabled": bot['disabled'], "prefix": bot["prefix"]}
     else:
         return abort(404)
     # TAGS

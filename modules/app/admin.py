@@ -19,6 +19,7 @@ async def admin(request:Request):
         certified_bots = len(await db.fetch("SELECT bot_id FROM bots WHERE certified = true"))
         bots = len(await db.fetch("SELECT bot_id FROM bots WHERE queue = false"))
         fetch = await db.fetch("SELECT bot_id, votes, servers, description FROM bots WHERE queue = true")
+        banned = await db.fetch("SELECT bot_id FROM bots WHERE banned = true")
         print(staff[1])
         queue_bots = []
         queue_amount = len(fetch)
@@ -31,7 +32,7 @@ async def admin(request:Request):
             bot_info = {"username": bot_info["username"], "id": bot["bot_id"], "avatar": bot_info["avatar"], "form": form}
             if bot_info:
                 queue_bots.append({"bot": bot, "id": bot["bot_id"], "avatar": bot_info["avatar"], "username": bot_info["username"], "votes": await human_format(bot["votes"]), "servers": await human_format(bot["servers"]), "description": bot["description"], "form": form})
-        return templates.TemplateResponse("admin.html",{"request": request, "cert": certified_bots,"bots": bots, "queue_bots": queue_bots, "queue_amount": queue_amount, "admin": staff[1] == 4, "mod": staff[1] == 3, "owner": staff[1] == 5, "bot_review": staff[1] == 2, "username": request.session["username"], "form": form, "avatar": request.session["avatar"]})
+        return templates.TemplateResponse("admin.html",{"request": request, "cert": certified_bots,"bots": bots, "queue_bots": queue_bots, "queue_amount": queue_amount, "admin": staff[1] == 4, "mod": staff[1] == 3, "owner": staff[1] == 5, "bot_review": staff[1] == 2, "username": request.session["username"], "form": form, "avatar": request.session["avatar"], "banned": banned})
     else:
         return RedirectResponse("/")
 

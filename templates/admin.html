@@ -69,8 +69,26 @@
                                             </div>
                                         </li>
                                     {% endfor %}
-
-                                </ul>
+				   </ul>
+			    </div>
+			    <div class="row">
+	                           <div class="col-lg-6 mb-4">
+				       <div class="card shadow mb-4">
+		                                <div class="card-header py-3">
+					           <h6 class="text-primary font-weight-bold m-0">Banned Bots</h6>
+						</div>
+						{% for bot in banned %}
+                                        		<li class="list-group-item">
+						        <div class="row align-items-center no-gutters">
+								<div class="col mr-2">
+									<a href="/bot/{{bot['bot_id']}}">{{bot['bot_id']}}</a>
+																										                                                </div>
+																																                                            </div>
+																																					                                            </li>
+						{% endfor %}
+					</div>
+				   </div>
+				  </div>
                             </div>
                         </div>
                     </div>

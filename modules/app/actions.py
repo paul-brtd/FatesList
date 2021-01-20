@@ -144,7 +144,7 @@ async def bot_edit_api(
         pass
     else:
         return templates.TemplateResponse("message.html", {"request": request, "message": "You are either not in the support server or you do not exist on the Discord API", "username": request.session.get("username", False)})
-    if invite.startswith("https://discord.com/api/oauth2"):
+    if invite.startswith("https://discord.com") and "oauth" in invite:
         pass
     else:
         return templates.TemplateResponse("message.html", {"request": request, "message": "Invalid Bot Invite", "context": "Your bot invite must be in the format of https://discord.com/api/oauth2... or https://discord.com/oauth2...", "username": request.session.get("username", False)})

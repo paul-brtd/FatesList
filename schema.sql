@@ -21,8 +21,8 @@ CREATE TABLE bots (
     created_at bigint,
     owner bigint,
     extra_owners text,
-    invite text
-    deleted boolean DEFAULT false;
+    invite text,
+    banned BOOLEAN DEFAULT false
 );
 
 CREATE TABLE users (
