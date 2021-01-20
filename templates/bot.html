@@ -81,6 +81,23 @@
         {% endif %}
         </div>
     {% endfor %}
+        {% if staff[0] and not bot.banned %}
+        <form style="text-align: center; margin: 10px;" method="POST" action="/bot/ban/{{bot.bot_id}}">
+                {{form.csrf_token}}
+		<input type="hidden" name="ban" value="1"/>
+		<p style="font-weight: bold;color: rgba(255,255,255,0.87); text-align: center;">If this bot is misbehaving...</p>
+                <input type="text" name="reason" placeholder="Enter ban reason" required/>
+                <button type="submit" class="btn btn-outline-dark" style="background-color: red; color: white !important;"><i class="fas"></i>Ban</button>
+        </form>
+        {% endif %}
+        {% if staff[0] and bot.banned %}
+        <form style="text-align: center; margin: 10px;" method="POST" action="/bot/ban/{{bot.bot_id}}">
+                {{form.csrf_token}}
+                <p style="font-weight: bold;color: rgba(255,255,255,0.87); text-align: center;">If this bot has learnt its lesson...</p>
+                <input type="hidden" name="ban" value="0"/>
+                <button type="submit" class="btn btn-outline-dark" style="background-color: red; color: white !important;"><i class="fas"></i>Unban</button>
+        </form>
+        {% endif %}
     <hr style="font-size: 20px;border-top-width: 1px;border-top-color: #eee;width: 90%;">
     <h5 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;margin-top: -13px;margin-bottom: 30px;">Description</h5><iframe id="myIframe" src="/bot/description/{{bot.bot_id}}" style="width: 90%;height: 300px;color: rgba(255,255,255,0.87)!important;background: #121212;margin: 0 5%;" scrolling="no" onload="resizeIframe(this)"></iframe>
     

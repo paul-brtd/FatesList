@@ -14,14 +14,14 @@ async def profile(request: Request):
         if not user:
             return RedirectResponse("/")
         userid = request.session["userid"]
-        fetch = await db.fetch("SELECT description,banner,certified,votes,servers,bot_id,invite FROM bots WHERE owner = $1 and queue = false ORDER BY votes", int(userid))
+        fetch = await db.fetch("SELECT banned,description,banner,certified,votes,servers,bot_id,invite FROM bots WHERE owner = $1 and queue = false ORDER BY votes", int(userid))
         user_bots = []
         # TOP VOTED BOTS
         for bot in fetch:
             bot_info = await get_bot(bot["bot_id"])
             if bot_info:
-                user_bots.append({"bot": bot, "avatar": bot_info["avatar"], "username": bot_info["username"], "votes": await human_format(bot["votes"]), "servers": await human_format(bot["servers"]), "description": bot["description"]})
-        fetch = await db.fetch("SELECT description,banner,certified,votes,servers,bot_id,invite FROM bots WHERE owner = $1 and queue = true", int(userid))
+                user_bots.append({"bot": bot, "avatar": bot_info["avatar"], "username": bot_info["username"], "votes": await human_format(bot["votes"]), "servers": await human_format(bot["servers"]), "description": bot["description"], "banned": bot['banned']})
+        fetch = await db.fetch("SELECT banned,description,banner,certified,votes,servers,bot_id,invite FROM bots WHERE owner = $1 and queue = true", int(userid))
         queue_bots = []
         # TOP VOTED BOTS
         for bot in fetch:
@@ -30,7 +30,7 @@ async def profile(request: Request):
                 continue
             bot_info = {"username":bot_info["username"],"avatar":bot_info["avatar"]}
             if bot_info:
-                queue_bots.append({"bot": bot, "avatar": bot_info["avatar"], "username": bot_info["username"], "votes": await human_format(bot["votes"]), "servers": await human_format(bot["servers"]), "description": bot["description"],"queue_bots":queue_bots})
+                queue_bots.append({"bot": bot, "avatar": bot_info["avatar"], "username": bot_info["username"], "votes": await human_format(bot["votes"]), "servers": await human_format(bot["servers"]), "description": bot["description"],"banned": bot['banned']})
         return templates.TemplateResponse("profile_personal.html", {"request": request, "username": request.session.get("username", False), "user_bots": user_bots, "user": user,"queue_bots":queue_bots, "avatar": request.session.get("avatar")})
     else:
         return RedirectResponse("/")

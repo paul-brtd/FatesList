@@ -374,6 +374,9 @@
 				          <div style="margin 15px auto">
     <h3>Delete Bot</h5>
     <h4 style="margin-bottom: 3px;">Warning: This cannot be undone</h4>
+    {% if fetch.banned and not staff[0] %}
+    <h5>You may not delete your bot as it has been banned</h5>
+    {% else %}
     <form method="POST" action="/bot/{{fetch.bot_id}}/delete">
 	{{form.csrf_token}}
         <button
@@ -385,6 +388,7 @@
         </button>
     	<input type="hidden" name="confirmer" value="{{epoch}}"/>
     </form>
+    {% endif%}
     </div>
 			      </div>
 	      </div>

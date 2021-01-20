@@ -65,7 +65,7 @@ builtins.staff_roles = {
 }
 
 builtins.support_url = "https://discord.gg/PA5vjCRc5H"
-builtins.TOKEN = "Nzk4OTUxNTY2NjM0Nzc4NjQx.X_8foQ.r3oWyE87FQAXx-Kf5ueyGfzDui4"
+builtins.TOKEN = "Nzk4OTUxNTY2NjM0Nzc4NjQx.X_8foQ.sPMObwyhrglpLZS-nJDx2yoMkVA"
 builtins.TAGS = ["music", "moderation", "economy", "fun", "anime", "games",
         "web_dashboard", "logging", "streams", "game_stats", "leveling", "roleplay"]
 # Setup
@@ -99,13 +99,14 @@ class templates():
                 guild = client.get_guild(reviewing_server)
                 user = guild.get_member(int(request.session["userid"]))
                 if user is not None:
-                    arg_dict["staff"] = is_staff(staff_roles, user.roles, 2)
+                    staff = is_staff(staff_roles, user.roles, 2)
                 else:
                     staff = [False]
                 arg_dict["avatar"] = request.session.get("avatar")
                 arg_dict["username"] = request.session.get("username")
         else:
             staff = [False]
+        arg_dict["staff"] = staff
         return _templates.TemplateResponse(f, arg_dict)
 builtins.templates = templates
 app.add_middleware(CSRFProtectMiddleware, csrf_secret="ADDE-OS39-MA2K-lS09-3K9soI-Iskmd-93829-()(()-2937()K")
