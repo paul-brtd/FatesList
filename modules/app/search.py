@@ -37,7 +37,7 @@ async def search(request: Request, q: str):
         new_tag = tag.replace("_", " ")
         tags_fixed.update({tag: new_tag.capitalize()})
 
-    return templates.TemplateResponse("search.html", {"request": request, "username": request.session.get("username", False), "search_bots": search_bots, "tags_fixed": tags_fixed, "avatar": request.session.get("avatar")})
+    return templates.TemplateResponse("search.html", {"request": request, "username": request.session.get("username", False), "search_bots": search_bots, "tags_fixed": tags_fixed, "avatar": request.session.get("avatar"), "query": q})
 
 @router.get("/tags/{tag_search}")
 @csrf_protect

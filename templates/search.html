@@ -13,7 +13,7 @@
         </div><div class="search_wrap search_wrap_3">
     <div class="search_box is-mobile is-centered">
         <form method="GET" action="/search/t">
-            <input type="text" class="input" placeholder="Search for bots related to your term." name="q">
+		<input type="text" class="input" placeholder="Search for bots related to your term." name="q" value="{{query}}">
             <button class="btn btn_common" type="submit">
                 <i class="fas fa-search"></i>
             </button>
@@ -33,6 +33,9 @@
         <h4 style="color: rgba(255,255,255,0.87);margin-left: 15px;">Search Results</h4>
     </div>
     <div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center" id="tt-1" style="width: 90%;margin: 30px 5%;">
+	{% if search_bots == [] %}
+		<h4 class="text-nowrap text-break text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;white-space: nowrap;text-overflow: ellipsis;overflow: hidden;">No bots found for this search query....</h4>
+	{% endif %}
         {% for bot in search_bots %}
         <div style="width: 300px;height: 450px;background: #111112;box-shadow: 0px 0px 20px 5px;border-top-style: none;margin: 25px 25px;">
             {% if bot.bot.banner == "none" %}<div style="width: 100%;height: 30%;background: url(&quot;https://3bbcb246b7da.ngrok.io/static/assets/img/banner.png&quot;) center / cover no-repeat;">{% else %}<div style="width: 100%;height: 30%;background: url(&quot;{{bot.bot.banner}}&quot;) center / cover no-repeat;">{% endif %}{% if bot.bot.certified == True %}<i class="fas fa-certificate fa-3x" style="color:#7289DA; position: absoulute; margin-top: -15px; margin-left: 90%"></i>{% endif %}<img style="border-radius: 50%;width: 30%;margin: 5% auto;margin-top: 17%;margin-right: 35%;margin-left: 35%;" src="{{bot.avatar}}"></div>
