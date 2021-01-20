@@ -54,7 +54,7 @@ async def add_bot_api(
     if invite.startswith("https://discord.com") and "oauth" in invite:
         pass
     else:
-        return templates.TemplateResponse("message.html", {"request": request, "message": "Invalid Bot Invite", "context": "Your bot invite must be in the format of https://discord.com/api/oauth2/... or https://discord.com/oauth2/...", "username": request.session.get("username", False)})
+        return templates.TemplateResponse("message.html", {"request": request, "message": "Invalid Bot Invite", "context": "Your bot invite must be in the format of https://discord.com/api/oauth2... or https://discord.com/oauth2...", "username": request.session.get("username", False)})
     description = description.replace("\n", " ").replace("\t", " ")
     if len(description) > 101:
         return templates.TemplateResponse("message.html", {"request": request, "message": "Short description is too long.", "username": request.session.get("username", False)})
@@ -147,7 +147,7 @@ async def bot_edit_api(
     if invite.startswith("https://discord.com/api/oauth2"):
         pass
     else:
-        return templates.TemplateResponse("message.html", {"request": request, "message": "Invalid Bot Invite", "context": "Your bot invite must be in the format of https://discord.com/api/oauth2/... or https://discord.com/oauth2/...", "username": request.session.get("username", False)})
+        return templates.TemplateResponse("message.html", {"request": request, "message": "Invalid Bot Invite", "context": "Your bot invite must be in the format of https://discord.com/api/oauth2... or https://discord.com/oauth2...", "username": request.session.get("username", False)})
     description = description.replace("\n", " ").replace("\t", " ")
     if len(description) > 101:
         return templates.TemplateResponse("message.html", {"request": request, "message": "Short description is too long.", "username": request.session.get("username", False)})
@@ -177,7 +177,8 @@ async def vote_for_bot(
         bot_id: int
     ):
     if request.session.get("userid") is None:
-        return RedirectResponse("/login")
+        request.session["RedirectResponse"] = "/bot/" + str(bot_id)
+        return RedirectResponse("/login", status_code = 303)
     uid = request.session.get("userid")
     ret = await vote_bot(uid, bot_id)
     if ret == []:
