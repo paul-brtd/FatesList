@@ -250,6 +250,10 @@ class ConnectionManager:
         self.active_connections.append(websocket)
 
     def disconnect(self, websocket: WebSocket):
+        try:
+            await websocket.close(code=4005)
+        except:
+            pass
         self.active_connections.remove(websocket)
         websocket.api_token = []
         websocket.bot_id = []
