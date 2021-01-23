@@ -47,6 +47,7 @@ async def bot_index(request: Request, bot_id: int):
         new_tag = tag.replace("_", " ")
         tags_fixed.update({tag: new_tag.capitalize()})
     form = await Form.from_formdata(request)
+    ws_events.append((bot_id, {"type": "view", "event_id": None, "event": "view", "context": "user=0::hidden=1"}))
     return templates.TemplateResponse("bot.html", {"request": request, "username": request.session.get("username", False), "bot": bot_obj, "tags_fixed": tags_fixed, "form": form, "avatar": request.session.get("avatar"), "events": events, "maint": maint, "bot_admin": bot_admin})
 
 

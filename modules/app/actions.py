@@ -95,7 +95,7 @@ async def bot_edit(request: Request, bid: int):
             return templates.TemplateResponse("message.html", {"request": request, "message": "This bot doesn't exist in our database.", "username": request.session.get("username", False)})
         guild = client.get_guild(builtins.reviewing_server)
         user = guild.get_member(int(request.session.get("userid")))
-        if check["owner"] == int(request.session["userid"]) or str(request.session["userid"]) in check["extra_owners"] or (user is not None and is_staff(staff_roles, user.roles, 4)[0]):
+        if check["owner"] == int(request.session["userid"]) or str(request.session["userid"]) in check["extra_owners"].split(",") or (user is not None and is_staff(staff_roles, user.roles, 4)[0]):
             pass
         else:
             return templates.TemplateResponse("message.html", {"request": request, "message": "You aren't the owner of this bot.", "username": request.session.get("username", False), "avatar": request.session.get("avatar")})
@@ -135,7 +135,7 @@ async def bot_edit_api(
             return templates.TemplateResponse("message.html", {"request": request, "message": "This bot doesn't exist in our database.", "username": request.session.get("username", False)})
         guild = client.get_guild(builtins.reviewing_server)
         user = guild.get_member(int(request.session.get("userid")))
-        if check["owner"] == int(request.session["userid"]) or str(request.session["userid"]) in check["extra_owners"] or is_staff(staff_roles, user.roles, 4)[0]:
+        if check["owner"] == int(request.session["userid"]) or str(request.session["userid"]) in check["extra_owners"].split(",") or is_staff(staff_roles, user.roles, 4)[0]:
             pass
         else:
             return templates.TemplateResponse("message.html", {"request": request, "message": "You aren't the owner of this bot.", "username": request.session.get("username", False)})
@@ -275,7 +275,9 @@ async def ban_bot(request: Request, bot_id: int, ban: int = FForm(1), reason: st
         except:
             pass
         await db.execute("UPDATE bots SET banned = true WHERE bot_id = $1", bot_id)
+        await add_event(bot_id, "ban", f"user={str(request.session.get('userid'))}")
     else:
         await channel.send("<@" + str(bot_id) + "> has been unbanned")
         await db.execute("UPDATE bots SET banned = false WHERE bot_id = $1", bot_id)
+        await add_event(bot_id, "unban", f"user={str(request.session.get('userid'))}")
     return RedirectResponse("/", status_code = 303)

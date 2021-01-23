@@ -12,7 +12,7 @@ class EventPatch(BaseModel):
     events: Optional[str] = None
     context: Optional[Union[int, str]] = None
 
-@router.patch("/")
+@router.put("/")
 async def fates_hook_webhook(event: EventPatch):
     if event.type != "add" or event.event not in fh_cond:
         print("DEBUG: Invalid event gotten")

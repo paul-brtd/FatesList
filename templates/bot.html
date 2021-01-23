@@ -72,7 +72,7 @@
     <h6 style="font-weight: bold;color: rgba(255,255,255,0.87); text-align: center;">Tags:</h6>
     <div style="text-align: center;">
     {% for tag in bot.tags %}
-        <button onclick="window.location.replace('/search/tags/{{tag}}')" class="btn btn-outline-dark" style="background-color: #7289DA; color: white !important;"> <i class="fas"></i>{{tag.capitalize()}}</button>
+        <button onclick="window.location.replace('/search/tags/{{tag}}')" class="btn btn-outline-dark" style="background-color: #7289DA; color: white !important;"> <i class="fas"></i>{{tag.replace("_", " ")}}</button>
     {% endfor %}
     </div>
     {% if events != [] %}

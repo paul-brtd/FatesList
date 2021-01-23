@@ -61,6 +61,8 @@
                                 </div>
                                 <ul class="list-group list-group-flush">
                                     {% for bot in queue_bots %}
+				    	{% if bot.banned %}
+					{% else %}
                                         <li class="list-group-item">
                                             <div class="row align-items-center no-gutters">
                                                 <div class="col mr-2">
@@ -68,6 +70,7 @@
                                                 </div>
                                             </div>
                                         </li>
+					{% endif %}
                                     {% endfor %}
 				   </ul>
 			    </div>

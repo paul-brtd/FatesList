@@ -18,7 +18,7 @@ async def admin(request:Request):
             return RedirectResponse("/")
         certified_bots = len(await db.fetch("SELECT bot_id FROM bots WHERE certified = true"))
         bots = len(await db.fetch("SELECT bot_id FROM bots WHERE queue = false"))
-        fetch = await db.fetch("SELECT bot_id, votes, servers, description FROM bots WHERE queue = true")
+        fetch = await db.fetch("SELECT bot_id, votes, servers, description, banned FROM bots WHERE queue = true")
         banned = await db.fetch("SELECT bot_id FROM bots WHERE banned = true")
         print(staff[1])
         queue_bots = []
@@ -29,9 +29,9 @@ async def admin(request:Request):
             bot_info = await get_bot(bot["bot_id"])
             if bot_info is None:
                 continue
-            bot_info = {"username": bot_info["username"], "id": bot["bot_id"], "avatar": bot_info["avatar"], "form": form}
+            bot_info = {"username": bot_info["username"], "id": bot["bot_id"], "avatar": bot_info["avatar"], "form": form, "banned": bot["banned"]}
             if bot_info:
-                queue_bots.append({"bot": bot, "id": bot["bot_id"], "avatar": bot_info["avatar"], "username": bot_info["username"], "votes": await human_format(bot["votes"]), "servers": await human_format(bot["servers"]), "description": bot["description"], "form": form})
+                queue_bots.append({"bot": bot, "id": bot["bot_id"], "avatar": bot_info["avatar"], "username": bot_info["username"], "votes": await human_format(bot["votes"]), "servers": await human_format(bot["servers"]), "description": bot["description"], "form": form, "banned": bot_info["banned"]})
         return templates.TemplateResponse("admin.html",{"request": request, "cert": certified_bots,"bots": bots, "queue_bots": queue_bots, "queue_amount": queue_amount, "admin": staff[1] == 4, "mod": staff[1] == 3, "owner": staff[1] == 5, "bot_review": staff[1] == 2, "username": request.session["username"], "form": form, "avatar": request.session["avatar"], "banned": banned})
     else:
         return RedirectResponse("/")
@@ -135,6 +135,6 @@ async def review_deny_api(request:Request, bot_id: int, reason: str = FForm("The
         await db.execute("UPDATE bots SET banned = true WHERE bot_id = $1", bot_id)
         channel = client.get_channel(bot_logs)
         owner=str(request.session["userid"])
-        await add_event(bot_id, "deny", f"user={str(request.session.get('userid'))}")
+        await add_event(bot_id, "deny_ban", f"user={str(request.session.get('userid'))}")
         await channel.send(f"<@{owner}> by <@{str(check['owner'])}> has been denied the bot <@{bot_id}> with the reason: {reason}")
         return templates.TemplateResponse("message.html",{"request":request,"message":"I hope it DENIED the bot review GUY","username":request.session["username"]})

@@ -89,7 +89,7 @@ async def delete_api_events(request: Request, event: EventDelete):
     webh = await db.fetchrow("SELECT webhook FROM bots WHERE bot_id = $1", int(id))
     if webh is not None and webh["webhook"] not in ["", None] and webh["webhook"].startswith("http"):
         try:
-            asyncio.create_task(requests.patch(webh["webhook"], json = {"type": "delete", "events": webh_data}))
+            asyncio.create_task(requests.put(webh["webhook"], json = {"type": "delete", "events": webh_data}))
         except:
             pass
     return {"done":  True, "reason": None}
@@ -188,7 +188,7 @@ async def edit_event(request: Request, event: EventUpdate):
     webh = await db.fetchrow("SELECT webhook FROM bots WHERE bot_id = $1", int(id))
     if webh is not None and webh["webhook"] not in ["", None] and webh["webhook"].startswith("http"):
         try:
-            asyncio.create_task(requests.patch(webh["webhook"], json = {"type": "update", "event_id": str(event.event_id), "event": event.event, "context": event.context}))
+            asyncio.create_task(requests.put(webh["webhook"], json = {"type": "update", "event_id": str(event.event_id), "event": event.event, "context": event.context}))
         except:
             pass
     return {"done": True, "reason": None}
@@ -206,29 +206,123 @@ async def regenerate_token(request: Request, token: TokenRegen):
     return {"done": True, "reason": None}
 
 
-@router.get("/bots")
+@router.get("/bots/{bot_id}")
 async def api_get_bots(request: Request, bot_id: int):
     """Gets bot information given a bot ID. If not found, 404 will be returned"""
-    api_ret = await db.fetchrow("SELECT bot_id AS id, description, long_description, servers AS server_count, shard_count, prefix, invite, owner, extra_owners, bot_library AS library, queue, banned, website, discord AS support FROM bots WHERE queue = false AND banned = false AND bot_id = $1", bot_id)
+    api_ret = await db.fetchrow("SELECT bot_id AS id, description, tags, long_description, servers AS server_count, shard_count, prefix, invite, owner, extra_owners, bot_library AS library, queue, banned, website, discord AS support, github FROM bots WHERE bot_id = $1", bot_id)
     if api_ret is None:
         return abort(404)
     api_ret = dict(api_ret)
     bot_obj = await get_bot(bot_id)
     api_ret["username"] = bot_obj["username"]
+    api_ret["owners"] = [api_ret["owner"]] + api_ret["extra_owners"].split(",")
+    api_ret["id"] = str(api_ret["id"])
     return api_ret
 
 class BBGC(BaseModel):
-    api_token: str
-    count: int
+    guild_count: int
+    shard_count: int
 
-@router.post("/bb/guildcount")
-async def guild_count_shortcut(request: Request, api: BBGC):
-    """This is just a shortcut to /api/events for BOTBLOCKS only. This will be heavily ratelimited to discourage use and it may be unstable as it is not mantained. Please use the proper API and do not report bugs"""
-    event = EventNew(api_token = api.api_token, event = "guild_count", context = str(api.count))
-    return await create_api_event(request, event)
+@router.post("/gsp")
+async def guild_shard_count_shortcut(request: Request, api: BBGC, Authorization: str = FHeader("")):
+    """This is just a shortcut to /api/events for guild/shard posting primarily for BotsBlock but can be used by others. The Swagger Try It Out does not work right now"""
+    event = EventNew(api_token = Authorization, event = "guild_count", context = str(api.guild_count))
+    await create_api_event(request, event)
+    event = EventNew(api_token = Authorization, event = "shard_count", context = str(api.shard_count))
+    eve = await create_api_event(request, event)
+    if eve["done"] == False:
+        return abort(401)
+    return eve
 
-@router.post("/bb/shardcount")
-async def shard_count_shortcut(request: Request, api: BBGC):
-    """This is just a shortcut to /api/events for BOTBLOCKS only. This will be heavily ratelimited to discourage use and it may be unstable as it is not mantained. Please use the proper API and do not report bugs"""
-    event = EventNew(api_token = api.api_token, event = "shard_count", context = str(api.count))
-    return await create_api_event(request, event)
+# API Gateway Connection Manager
+
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: List[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        try:
+            print(websocket.api_token)
+        except:
+            websocket.api_token = []
+            websocket.bot_id = []
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket):
+        websocket.api_token = []
+        websocket.bot_id = []
+        websocket = None
+        self.active_connections.remove(websocket)
+
+    async def send_personal_message(self, message, websocket: WebSocket):
+        try:
+            await websocket.send_json(message)
+        except:
+            try:
+                await websocket.close(code=4000)
+            except:
+                pass
+
+    async def broadcast(self, message: str):
+        for connection in self.active_connections:
+            await connection.send_text(message)
+
+manager = ConnectionManager()
+
+@router.websocket("/api/ws")
+async def websocker_real_time_api(websocket: WebSocket):
+    await manager.connect(websocket)
+    if websocket.api_token == []:
+        await manager.send_personal_message({"msg": "IDENTITY", "reason": None}, websocket)
+        try:
+            api_token = await websocket.receive_json()
+        except:
+            await manager.send_personal_message({"msg": "KILL_CONN", "reason": "NO_AUTH"}, websocket)
+            try:
+                return await websocket.close(code=4004)
+            except:
+                return
+        api_token = api_token.get("api_token")
+        if api_token is None or type(api_token) == int:
+            await manager.send_personal_message({"msg": "KILL_CONN", "reason": "NO_AUTH"}, websocket)
+            try:
+                return await websocket.close(code=4004)
+            except:
+                return
+        for bot in api_token:
+            bid = await db.fetchrow("SELECT bot_id, servers FROM bots WHERE api_token = $1", str(bot))
+            if bid is None:
+                pass
+            else:
+                websocket.api_token.append(api_token)
+                websocket.bot_id.append(bid)
+        if websocket.api_token == []:
+            await manager.send_personal_message({"msg": "KILL_CONN", "reason": "NO_AUTH"}, websocket)
+            return await websocket.close(code=4004)
+    await manager.send_personal_message({"msg": "READY", "reason": "AUTH_DONE"}, websocket)
+    for event_i in range(0, len(ws_events)):
+        event = ws_events[event_i]
+        for ws in manager.active_connections:
+            if int(event[0]) in [int(bot_id["bot_id"]) for bot_id in ws.bot_id]:
+                await manager.send_personal_message({"msg": "EVENT", "data": event[1], "reason": event[0]}, ws)
+                try:
+                    ws_events[event_i] = [-1, -2]
+                except:
+                    pass
+    try:
+        while True:
+            for event_i in range(0, len(ws_events)):
+                event = ws_events[event_i]
+                for ws in manager.active_connections:
+                    if int(event[0]) in [int(bot_id["bot_id"]) for bot_id in ws.bot_id]:
+                        await manager.send_personal_message({"msg": "EVENT", "data": event[1], "reason": event[0]}, ws)
+                        try:
+                            print(ws_events)
+                            ws_events[event_i] = [-1, -2]
+                        except:
+                            pass
+            data = await asyncio.sleep(0.1)
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
+

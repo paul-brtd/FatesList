@@ -1,6 +1,7 @@
 import string
 import secrets
-from fastapi import Request, APIRouter, BackgroundTasks, Form as FForm
+from fastapi import Request, APIRouter, BackgroundTasks, Form as FForm, Header as FHeader, WebSocket, WebSocketDisconnect
+from starlette.websockets import WebSocketDisconnect
 import aiohttp
 import asyncpg
 import json
@@ -19,6 +20,7 @@ import discord
 import asyncio
 import time
 import re
+import orjson
 from starlette_wtf import CSRFProtectMiddleware, csrf_protect,StarletteForm
 import builtins
 from typing import Optional, List, Union
@@ -48,8 +50,10 @@ async def human_format(num: int) -> str:
     magnitude = 0
     while abs(num) >= 1000:
         magnitude += 1
+        if magnitude == 31:
+            num /= 10
         num /= 1000.0
-    return '{}{}'.format('{:f}'.format(num).rstrip('0').rstrip('.'), ['', 'K', 'M', 'B', 'T'][magnitude])
+    return '{} {}'.format('{:f}'.format(num).rstrip('0').rstrip('.'), ['', 'K', 'M', 'B', 'T', "Quad.", "Quint.", "Sext.", "Sept.", "Oct.", "Non.", "Dec.", "Tre.", "Quat.", "quindec.", "Sexdec.", "Octodec.", "Novemdec.", "Vigint.", "Duovig.", "Trevig.", "Quattuorvig.", "Quinvig.", "Sexvig.", "Septenvig.", "Octovig.", "Nonvig.", "Trigin.", "Untrig.", "Duotrig.", "Googol."][magnitude])
 
 async def internal_get_bot(userid: int, bot_only: bool) -> Optional[dict]:
     userid = int(userid)
@@ -155,9 +159,10 @@ async def add_event(bot_id: int, event: str, context: str, *, send_event = True)
     webh = await db.fetchrow("SELECT webhook FROM bots WHERE bot_id = $1", int(bot_id))
     if webh is not None and webh["webhook"] not in ["", None] and webh["webhook"].startswith("http") and send_event:
         try:
-            asyncio.create_task(requests.patch(webh["webhook"], json = {"type": "add", "event_id": str(id), "event": event, "context": context}))
+            asyncio.create_task(requeses.put(webh["webhook"], json = {"type": "add", "event_id": str(id), "event": event, "context": context}))
         except:
             pass
+    ws_events.append((bot_id, {"type": "add", "event_id": str(id), "event": event, "context": context}))
     return id
 
 class Form(StarletteForm):

@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, Form as FForm
+from fastapi import FastAPI, Request, Form as FForm, WebSocket, WebSocketDisconnect
 from starlette.middleware.sessions import SessionMiddleware
 from fastapi.responses import HTMLResponse, RedirectResponse, ORJSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -67,26 +67,14 @@ builtins.staff_roles = {
 builtins.support_url = "https://discord.gg/PA5vjCRc5H"
 builtins.TOKEN = "Nzk4OTUxNTY2NjM0Nzc4NjQx.X_8foQ.sPMObwyhrglpLZS-nJDx2yoMkVA"
 builtins.TAGS = ["music", "moderation", "economy", "fun", "anime", "games",
-        "web_dashboard", "logging", "streams", "game_stats", "leveling", "roleplay"]
+        "web_dashboard", "logging", "streams", "game_stats", "leveling", "roleplay", "utility", "social"]
 # Setup
 builtins.intent = discord.Intents.all()
 builtins.client = commands.AutoShardedBot(command_prefix='!', intents=intent)
 builtins.app = FastAPI(default_response_class = ORJSONResponse)
 app.add_middleware(SessionMiddleware, secret_key="E@Dycude3u8z382")
-
-@app.middleware("http")
-async def cf_http_redir(request: Request, call_next):
-    if request.headers["cf-visitor"].__contains__("https"):
-        pass
-    elif not request.headers["cf-visitor"].__contains__("http"):
-        pass
-    else:
-        print("Redirecting Insecure HTTP to HTTPS")
-        return RedirectResponse(str(request.url).replace("http", "https"))
-    response = await call_next(request)
-    return response
-
 builtins._templates = Jinja2Templates(directory="templates")
+builtins.ws_events = [] # events that need to be dispatched
 class templates():
     @staticmethod
     def TemplateResponse(f, arg_dict):
@@ -119,7 +107,7 @@ app.add_middleware(
     backend=rb,
     config={
         "/api/events": [Rule(minute=60), Rule(group="admin")],
-        "/api/bb": [Rule(minute=15), Rule(group="admin")],
+        "/api/bb": [Rule(second=300), Rule(group="admin")],
         r"^/": [Rule(minute=120), Rule(group="admin")],
     },
 )
@@ -169,8 +157,9 @@ async def startup():
     rb = RedisBackend()
     print(rb._redis)
 
-#@client.command()
-async def approve(ctx, bot_id: int):
+@client.command()
+async def approve(ctx, bot: discord.Member):
+    bot_id = bot.id
     if not ctx.guild:
         return await ctx.send("You must run this command in a guild")
     elif is_staff(builtins.staff_roles, ctx.author.roles, 2)[0]:
@@ -182,8 +171,9 @@ async def approve(ctx, bot_id: int):
     else:
         await ctx.send("You don't have the permission to do this")
 
-#@client.command()
-async def deny(ctx, bot_id: int, reason: Optional[str] = "There was no reason specified"):
+@client.command()
+async def deny(ctx, bot: discord.Member, reason: Optional[str] = "There was no reason specified"):
+    bot_id = bot.id
     if not ctx.guild:
         return await ctx.send("You must run this command in a guild")
     elif is_staff(builtins.staff_roles, ctx.author.roles, 2)[0]:
