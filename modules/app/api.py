@@ -256,11 +256,17 @@ class ConnectionManager:
         print(self.active_connections)
 
     async def send_personal_message(self, message, websocket: WebSocket):
-        try:
-            await websocket.send_json(message)
-        except ConnectionClosedOK:
-            manager.disconnect(websocket)
-            return False
+        i = 0
+        while i < 6:
+            try:
+                await websocket.send_json(message)
+                i = 6
+            except:
+                if i == 5:
+                    manager.disconnect(websocket)
+                    return False
+                else:
+                    i+=1
 
     async def broadcast(self, message: str):
         for connection in self.active_connections:
