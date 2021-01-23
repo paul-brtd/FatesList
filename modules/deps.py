@@ -1,7 +1,6 @@
 import string
 import secrets
 from fastapi import Request, APIRouter, BackgroundTasks, Form as FForm, Header as FHeader, WebSocket, WebSocketDisconnect
-from starlette.websockets import WebSocketDisconnect
 import aiohttp
 import asyncpg
 import json
@@ -26,7 +25,7 @@ import builtins
 from typing import Optional, List, Union
 from aiohttp_requests import requests
 from starlette.exceptions import HTTPException as StarletteHTTPException
-
+from websockets.exceptions import ConnectionClosedOK
 def redirect(path: str) -> RedirectResponse:
     return RedirectResponse(path, status_code=HTTP_303_SEE_OTHER)
 

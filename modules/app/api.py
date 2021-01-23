@@ -250,19 +250,17 @@ class ConnectionManager:
         self.active_connections.append(websocket)
 
     def disconnect(self, websocket: WebSocket):
+        self.active_connections.remove(websocket)
         websocket.api_token = []
         websocket.bot_id = []
-        websocket = None
-        self.active_connections.remove(websocket)
+        print(self.active_connections)
 
     async def send_personal_message(self, message, websocket: WebSocket):
         try:
             await websocket.send_json(message)
-        except:
-            try:
-                await websocket.close(code=4000)
-            except:
-                pass
+        except ConnectionClosedOK:
+            manager.disconnect(websocket)
+            return False
 
     async def broadcast(self, message: str):
         for connection in self.active_connections:
@@ -305,9 +303,10 @@ async def websocker_real_time_api(websocket: WebSocket):
         event = ws_events[event_i]
         for ws in manager.active_connections:
             if int(event[0]) in [int(bot_id["bot_id"]) for bot_id in ws.bot_id]:
-                await manager.send_personal_message({"msg": "EVENT", "data": event[1], "reason": event[0]}, ws)
+                rc = await manager.send_personal_message({"msg": "EVENT", "data": event[1], "reason": event[0]}, ws)
                 try:
-                    ws_events[event_i] = [-1, -2]
+                    if rc != False:
+                        ws_events[event_i] = [-1, -2]
                 except:
                     pass
     try:
@@ -316,10 +315,10 @@ async def websocker_real_time_api(websocket: WebSocket):
                 event = ws_events[event_i]
                 for ws in manager.active_connections:
                     if int(event[0]) in [int(bot_id["bot_id"]) for bot_id in ws.bot_id]:
-                        await manager.send_personal_message({"msg": "EVENT", "data": event[1], "reason": event[0]}, ws)
+                        rc = await manager.send_personal_message({"msg": "EVENT", "data": event[1], "reason": event[0]}, ws)
                         try:
-                            print(ws_events)
-                            ws_events[event_i] = [-1, -2]
+                            if rc != False:
+                                ws_events[event_i] = [-1, -2]
                         except:
                             pass
             data = await asyncio.sleep(0.1)
