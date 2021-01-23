@@ -249,7 +249,7 @@ class ConnectionManager:
             websocket.bot_id = []
         self.active_connections.append(websocket)
 
-    def disconnect(self, websocket: WebSocket):
+    async def disconnect(self, websocket: WebSocket):
         try:
             await websocket.close(code=4005)
         except:
@@ -267,7 +267,7 @@ class ConnectionManager:
                 i = 6
             except:
                 if i == 5:
-                    manager.disconnect(websocket)
+                    await manager.disconnect(websocket)
                     return False
                 else:
                     i+=1
@@ -333,5 +333,5 @@ async def websocker_real_time_api(websocket: WebSocket):
                             pass
             data = await asyncio.sleep(0.1)
     except WebSocketDisconnect:
-        manager.disconnect(websocket)
+        await manager.disconnect(websocket)
 
