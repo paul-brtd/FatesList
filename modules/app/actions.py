@@ -178,10 +178,13 @@ async def bot_edit_api(
     if github != "" and not github.startswith("https://www.github.com"):
         return templates.TemplateResponse("message.html", {"request": request, "message": "Your github link must start with https://www.github.com", "username": request.session.get("username", False)})
     creation = time.time()
-    try:
-        extra_owners = [int(id) for id in extra_owners.split(",")]
-    except:
-        return templates.TemplateResponse("message.html", {"request": request, "message": "One of your extra owners is invalid"})
+    if extra_owners == "":
+        extra_owners = None
+    else:
+        try:
+            extra_owners = [int(id) for id in extra_owners.split(",")]
+        except:
+            return templates.TemplateResponse("message.html", {"request": request, "message": "One of your extra owners is invalid"})
     bt.add_task(edit_bot_bt, request, bid, prefix, library, website, banner, support, long_description, description, selected_tags, extra_owners, creation, invite, webhook, vanity, github)
     return templates.TemplateResponse("message.html", {"request": request, "message": "Bot has been edited.", "username": request.session.get("username", False), "avatar": request.session.get('avatar')}) 
 
