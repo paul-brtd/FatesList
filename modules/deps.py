@@ -84,6 +84,7 @@ async def internal_get_bot(userid: int, bot_only: bool) -> Optional[dict]:
     except:
         invalid = True
         valid_for = None
+        return None
 
     if bot:
         invalid = False

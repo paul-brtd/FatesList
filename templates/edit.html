@@ -179,7 +179,7 @@
           max-width: 1000px;
         "
         name="extra_owners"
-        value="{{fetch.extra_owners}}"
+	value="{% if fetch.extra_owners == [] or not fetch.extra_owners or fetch.extra_owners == "None" %}{% else %}{{fetch.extra_owners.__str__().replace("[", "").replace("]", "").replace(" ", "")}} {% endif %}"
         placeholder="1234567899876,1234567865432"
         minlength="10"
       /><label

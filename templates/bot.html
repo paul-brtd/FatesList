@@ -14,7 +14,7 @@
 	{% if bot.banned %}
         <p style="color: red; font-size: 18px; font-weight: bold;">This bot has been BANNED or DENIED from this bot list for violating our rules or being a low-quality bot. Please do not invite it.</p>
 	{% endif %}
-        <p style="font-weight: bold; color: rgba(255,255,255,0.87);">This bot is owned by <a href="/profile/{{bot.owner}}">{{bot.owner_pretty.username}}</a></p>
+	<p style="font-weight: bold; color: rgba(255,255,255,0.87);">This bot is owned by: <a href="/profile/{{bot.owner}}">{{bot.owner_pretty.username}}</a>{% if bot.extra_owners == "None" or not bot.extra_owners or bot.extra_owners == [] %}{%else%}{%for bobj in bot.extra_owners %}{% if loop.index == bot.leo %} and {% else%}, {%endif%}<a href="/profile/{{bobj[1]}}">{{bobj[0]["username"]}}</a>{%endfor%}{%endif%}</p>
         <p style="font-weight: bold; color: rgba(255,255,255,0.87);">Prefix: {{bot.prefix}}</p>
 	{% if maint[0] %}
         <div style="text-align: center;">

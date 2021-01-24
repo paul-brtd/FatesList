@@ -95,7 +95,11 @@ async def bot_edit(request: Request, bid: int):
             return templates.TemplateResponse("message.html", {"request": request, "message": "This bot doesn't exist in our database.", "username": request.session.get("username", False)})
         guild = client.get_guild(builtins.reviewing_server)
         user = guild.get_member(int(request.session.get("userid")))
-        if check["owner"] == int(request.session["userid"]) or str(request.session["userid"]) in check["extra_owners"].split(",") or (user is not None and is_staff(staff_roles, user.roles, 4)[0]):
+        if check["extra_owners"] is None:
+            eo = []
+        else:
+            eo = check["extra_owners"]
+        if check["owner"] == int(request.session["userid"]) or str(request.session["userid"]) in eo or (user is not None and is_staff(staff_roles, user.roles, 4)[0]):
             pass
         else:
             return templates.TemplateResponse("message.html", {"request": request, "message": "You aren't the owner of this bot.", "username": request.session.get("username", False), "avatar": request.session.get("avatar")})
@@ -135,7 +139,11 @@ async def bot_edit_api(
             return templates.TemplateResponse("message.html", {"request": request, "message": "This bot doesn't exist in our database.", "username": request.session.get("username", False)})
         guild = client.get_guild(builtins.reviewing_server)
         user = guild.get_member(int(request.session.get("userid")))
-        if check["owner"] == int(request.session["userid"]) or str(request.session["userid"]) in check["extra_owners"].split(",") or is_staff(staff_roles, user.roles, 4)[0]:
+        if check["extra_owners"] is None:
+            eo = []
+        else:
+            eo = check["extra_owners"]
+        if check["owner"] == int(request.session["userid"]) or str(request.session["userid"]) in eo or is_staff(staff_roles, user.roles, 4)[0]:
             pass
         else:
             return templates.TemplateResponse("message.html", {"request": request, "message": "You aren't the owner of this bot.", "username": request.session.get("username", False)})
@@ -164,12 +172,16 @@ async def bot_edit_api(
     if vanity == "":
         pass
     else:
-        vanity_check = await db.fetchrow("SELECT bot_id FROM bots WHERE vanity = $1 AND bot_id != $2", vanity.replace(" ", ""), bid)
+        vanity_check = await db.fetchrow("SELECT bot_id FROM bots FULL OUTER JOIN users ON bots.vanity = users.vanity WHERE (bots.vanity = $1 OR users.vanity = $1) AND bot_id != $2", vanity.replace(" ", ""), bid)
         if vanity_check is not None:
-            return templates.TemplateResponse("message.html", {"request": request, "message": "Your custom vanity URL is already in use", "username": request.session.get("username", False)})
+            return templates.TemplateResponse("message.html", {"request": request, "message": "Your custom vanity URL is already in use"})
     if github != "" and not github.startswith("https://www.github.com"):
         return templates.TemplateResponse("message.html", {"request": request, "message": "Your github link must start with https://www.github.com", "username": request.session.get("username", False)})
     creation = time.time()
+    try:
+        extra_owners = [int(id) for id in extra_owners.split(",")]
+    except:
+        return templates.TemplateResponse("message.html", {"request": request, "message": "One of your extra owners is invalid"})
     bt.add_task(edit_bot_bt, request, bid, prefix, library, website, banner, support, long_description, description, selected_tags, extra_owners, creation, invite, webhook, vanity, github)
     return templates.TemplateResponse("message.html", {"request": request, "message": "Bot has been edited.", "username": request.session.get("username", False), "avatar": request.session.get('avatar')}) 
 

@@ -20,7 +20,7 @@ CREATE TABLE bots (
     banner text DEFAULT 'none'::text,
     created_at bigint,
     owner bigint,
-    extra_owners text,
+    extra_owners bigint[],
     invite text,
     banned BOOLEAN DEFAULT false,
     vanity TEXT,
