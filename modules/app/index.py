@@ -48,3 +48,7 @@ async def vanity_bot(request: Request, vanity: str):
     if t is None:
         return abort(404)
     return RedirectResponse("/bot/" + str(t["bot_id"]))
+
+@router.get("/none")
+async def nonerouter():
+    return RedirectResponse("/static/assets/img/banner.webp", status_code = 301)

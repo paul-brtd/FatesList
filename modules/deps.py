@@ -189,20 +189,25 @@ async def get_normal_events(bot_id: int) -> list:
     api_data = await db.fetch("SELECT events FROM api_event WHERE bot_id = $1", bot_id)
     if api_data == []:
         return []
-    special_events = ["add_bot", "edit_bot", "guild_count", "shard_count", "begin_maint", "end_maint", "vote", "delete_bot", "approve", "deny", "deleted"]
+    special_events = ["add_bot", "edit_bot", "guild_count", "shard_count", "begin_maint", "end_maint", "vote", "delete_bot", "approve", "deny", "deleted", "ban", "unban"]
     events = []
+    ie = False
     for _event in api_data:
         event = _event["events"]
         if len(event.split("|")[0]) < 3:
             continue
         elif event.split("|")[0].replace(" ", "") in special_events:
-            print("Ignoring event: ", event.split("|")[0].replace(" ", ""))
+            if ie == False:
+                print("Ignoring event: ", end = "")
+                ie = True
+            print(event.split("|")[0].replace(" ", "") + ", ", end = "")
         else:
             try:
                 css = event.split("|")[2].split("::css=")[1]
             except:
                 css = ""
             events.append({"event": event.split("|")[0], "context": event.split("|")[2].split("::css=")[0].replace("onload", "").replace("<script", "").replace("</script>", "").replace("<iframe", ""), "css": css, "time": datetime.datetime.fromtimestamp(float(event.split("|")[1]))})
+    print("")
     print(events)
     return events
 

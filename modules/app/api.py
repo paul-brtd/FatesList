@@ -305,7 +305,7 @@ async def websocker_real_time_api(websocket: WebSocket):
             else:
                 websocket.api_token.append(api_token)
                 websocket.bot_id.append(bid)
-        if websocket.api_token == []:
+        if websocket.api_token == [] or websocket.bot_id == []:
             await manager.send_personal_message({"msg": "KILL_CONN", "reason": "NO_AUTH"}, websocket)
             return await websocket.close(code=4004)
     await manager.send_personal_message({"msg": "READY", "reason": "AUTH_DONE"}, websocket)

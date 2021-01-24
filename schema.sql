@@ -30,7 +30,11 @@ CREATE TABLE bots (
 CREATE TABLE users (
     userid bigint,
     token text,
-    vote_epoch bigint
+    vote_epoch bigint,
+    description text,
+    certified boolean,
+    vanity text,
+    badges text[]
 );
 
 CREATE TABLE bot_cache (

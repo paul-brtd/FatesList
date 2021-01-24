@@ -135,6 +135,6 @@ async def review_deny_api(request:Request, bot_id: int, reason: str = FForm("The
         await db.execute("UPDATE bots SET banned = true WHERE bot_id = $1", bot_id)
         channel = client.get_channel(bot_logs)
         owner=str(request.session["userid"])
-        await add_event(bot_id, "deny_ban", f"user={str(request.session.get('userid'))}")
+        await add_event(bot_id, "deny", f"user={str(request.session.get('userid'))}")
         await channel.send(f"<@{owner}> by <@{str(check['owner'])}> has been denied the bot <@{bot_id}> with the reason: {reason}")
         return templates.TemplateResponse("message.html",{"request":request,"message":"I hope it DENIED the bot review GUY","username":request.session["username"]})
