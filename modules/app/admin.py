@@ -47,8 +47,17 @@ async def admin_api(request:Request, admin: str = FForm(""), bot_id: int = FForm
     if not is_staff(staff_roles, user.roles, 5)[0]:
         return RedirectResponse("/admin/console", status_code = 303) 
     if admin=="certify":
-        users = await db.fetch("SELECT owner, extra_owners FROM bots WHERE bot_id = $1", bot_id)
+        users = await db.fetchrow("SELECT owner, extra_owners FROM bots WHERE bot_id = $1", bot_id)
+        if users is None:
+            return RedirectResponse("/admin/console")
         await db.execute("UPDATE bots SET certified = true WHERE bot_id = $1", bot_id)
+        await db.execute("UPDATE users SET certified = true WHERE userid = $1", int(users["owner"]))
+        if users["extra_owners"] is None:
+            eo = []
+        else:
+            eo = users["extra_owners"]
+        for user in eo:
+            await db.execute("UPDATE users SET certified = true WHERE userid = $1", int(user))
         channel = client.get_channel(bot_logs)
         owner=str(request.session["userid"])
         await channel.send(f"<@{owner}> certified the bot <@{bot_id}>")
