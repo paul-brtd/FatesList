@@ -5,7 +5,7 @@ class OauthConfig:
     client_id = "798951566634778641"
     client_secret = "lGXEWjGcuoom0KCCkPjFg6nPFvudwSTd"
     scope = ["identify", "guilds.join"]
-    redirect_uri = "https://fateslist.xyz/login/confirm"
+    redirect_uri = "https://fateslist.xyz/auth/login/confirm"
 
 class Oauth():
     def __init__(self):

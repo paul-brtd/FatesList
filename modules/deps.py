@@ -147,9 +147,13 @@ def is_staff(staff_json: dict, roles: Union[list, int], base_perm: int) -> Union
 async def add_event(bot_id: int, event: str, context: str, *, send_event = True):
     # Special Events
     if event == "guild_count":
+        if int(context) > 300000000000:
+            return
         await db.execute("UPDATE bots SET servers = $1 WHERE bot_id = $2", int(context), int(bot_id))
         return
     elif event == "shard_count":
+        if int(context) > 300000000000:
+            return
         await db.execute("UPDATE bots SET shard_count = $1 WHERE bot_id = $2", int(context), int(bot_id))
         return
 

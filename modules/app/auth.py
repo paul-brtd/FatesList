@@ -1,6 +1,7 @@
 from ..deps import *
 
 router = APIRouter(
+    prefix = "/auth",
     tags = ["Auth"],
     include_in_schema = False
 )

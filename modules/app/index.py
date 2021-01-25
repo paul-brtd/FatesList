@@ -43,6 +43,7 @@ async def support(request: Request):
     return RedirectResponse(support_url)
 
 @router.get("/v/{vanity}")
+@router.get("/{vanity}")
 async def vanity_bot(request: Request, vanity: str):
     t = await db.fetchrow("SELECT bot_id FROM bots WHERE vanity = $1", vanity)
     if t is None:

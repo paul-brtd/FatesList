@@ -35,7 +35,7 @@ async def profile(request: Request):
             bot_info = {"username":bot_info["username"],"avatar":bot_info["avatar"]}
             if bot_info:
                 queue_bots.append({"bot": bot, "avatar": bot_info["avatar"], "username": bot_info["username"], "votes": await human_format(bot["votes"]), "servers": await human_format(bot["servers"]), "description": bot["description"],"banned": bot['banned']})
-        return templates.TemplateResponse("profile_personal.html", {"request": request, "username": request.session.get("username", False), "user_bots": user_bots, "user": user,"queue_bots":queue_bots, "avatar": request.session.get("avatar")})
+        return templates.TemplateResponse("profile_personal.html", {"request": request, "username": request.session.get("username", False), "user_bots": user_bots, "user": user,"queue_bots":queue_bots, "avatar": request.session.get("avatar"), "userid": request.session.get("userid")})
     else:
         return RedirectResponse("/")
 
@@ -50,10 +50,16 @@ async def profile_of_user(request: Request, userid: int):
     if "userid" in request.session.keys():
         guild = client.get_guild(builtins.reviewing_server)
         userobj = guild.get_member(int(request.session.get("userid")))
-        if userid == int(request.session["userid"]) or (userobj is not None and is_staff(staff_roles, userobj.roles, 4)[0]):
-            bot_admin = True
-        else:
-            bot_admin = False
+        try:
+            if userid == int(request.session["userid"]) or (userobj is not None and is_staff(staff_roles, userobj.roles, 4)[0]):
+                bot_admin = True
+            else:
+                bot_admin = False
+        except:
+            if userid == int(request.session["userid"]):
+                bot_admin = True
+            else:
+                bot_admin = False
     else:
         bot_admin = False
     user_bots = []
@@ -63,9 +69,22 @@ async def profile_of_user(request: Request, userid: int):
             user_bots.append({"bot": bot, "avatar": bot_info["avatar"], "username": bot_info["username"], "votes": await human_format(bot["votes"]), "servers": await human_format(bot["servers"]), "description": bot["description"]})
     return templates.TemplateResponse("profile.html", {"request": request, "username": request.session.get("username", False), "user_bots": user_bots, "user": user, "avatar": request.session.get("avatar"), "admin": bot_admin, "userid": userid})
 
-@router.get("/me/edit")
-async def profile_editor(request: Request):
+@router.get("/{userid}/edit")
+async def profile_editor(request: Request, userid: int):
     if request.session.get("userid") is None:
         return RedirectResponse("/")
-    data = await db.fetchrow("SELECT token, description, certified, vanity, badges FROM users WHERE userid = $1", int(request.session.get("userid")))
+    guild = client.get_guild(builtins.reviewing_server)
+    userobj = guild.get_member(int(request.session.get("userid")))
+    if userobj is None:
+        if userid == int(request.session.get("userid")):
+            admin = True
+        else:
+            admin = False
+    else:
+        admin = False # Initially
+    if admin or (is_staff(staff_roles, userobj.roles, 4)[0] or userid == int(request.session.get("userid"))):
+        admin = True
+    if not admin:
+        return RedirectResponse("/")
+    data = await db.fetchrow("SELECT token, description, certified, vanity, badges FROM users WHERE userid = $1", userid)
     return templates.TemplateResponse("profile_edit.html", {"request": request, "token": data["token"], "certified": data["certified"] == True})

@@ -223,7 +223,7 @@ class BBGC(BaseModel):
     guild_count: int
     shard_count: int
 
-@router.post("/bot/stats")
+@router.post("/bots/stats")
 async def guild_shard_count_shortcut(request: Request, api: BBGC, Authorization: str = FHeader("")):
     """This is just a shortcut to /api/events for guild/shard posting primarily for BotsBlock but can be used by others. The Swagger Try It Out does not work right now"""
     event = EventNew(api_token = Authorization, event = "guild_count", context = str(api.guild_count))

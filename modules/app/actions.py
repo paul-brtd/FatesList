@@ -99,7 +99,7 @@ async def bot_edit(request: Request, bid: int):
             eo = []
         else:
             eo = check["extra_owners"]
-        if check["owner"] == int(request.session["userid"]) or str(request.session["userid"]) in eo or (user is not None and is_staff(staff_roles, user.roles, 4)[0]):
+        if check["owner"] == int(request.session["userid"]) or int(request.session["userid"]) in eo or (user is not None and is_staff(staff_roles, user.roles, 4)[0]):
             pass
         else:
             return templates.TemplateResponse("message.html", {"request": request, "message": "You aren't the owner of this bot.", "username": request.session.get("username", False), "avatar": request.session.get("avatar")})
@@ -143,7 +143,7 @@ async def bot_edit_api(
             eo = []
         else:
             eo = check["extra_owners"]
-        if check["owner"] == int(request.session["userid"]) or str(request.session["userid"]) in eo or is_staff(staff_roles, user.roles, 4)[0]:
+        if check["owner"] == int(request.session["userid"]) or int(request.session["userid"]) in eo or is_staff(staff_roles, user.roles, 4)[0]:
             pass
         else:
             return templates.TemplateResponse("message.html", {"request": request, "message": "You aren't the owner of this bot.", "username": request.session.get("username", False)})
@@ -172,9 +172,9 @@ async def bot_edit_api(
     if vanity == "":
         pass
     else:
-        vanity_check = await db.fetchrow("SELECT bot_id FROM bots FULL OUTER JOIN users ON bots.vanity = users.vanity WHERE (bots.vanity = $1 OR users.vanity = $1) AND bot_id != $2", vanity.replace(" ", ""), bid)
-        if vanity_check is not None:
-            return templates.TemplateResponse("message.html", {"request": request, "message": "Your custom vanity URL is already in use"})
+        vanity_check = await db.fetchrow("SELECT bot_id FROM bots FULL OUTER JOIN users ON bots.vanity = users.vanity WHERE (bots.vanity = $1 OR users.vanity = $1) AND bot_id != $2", vanity.replace(" ", "").lower(), bid)
+        if vanity_check is not None or vanity.replace("", "").lower() in ["bot", "docs", "redoc", "doc", "profile", "server", "bots", "servers", "search", "invite", "discord", "login", "logout", "register", "admin"] or vanity.replace("", "").lower().__contains__("/"):
+            return templates.TemplateResponse("message.html", {"request": request, "message": "Your custom vanity URL is already in use or is reserved"})
     if github != "" and not github.startswith("https://www.github.com"):
         return templates.TemplateResponse("message.html", {"request": request, "message": "Your github link must start with https://www.github.com", "username": request.session.get("username", False)})
     creation = time.time()
