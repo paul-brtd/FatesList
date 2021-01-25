@@ -164,7 +164,7 @@ async def add_event(bot_id: int, event: str, context: str, *, send_event = True)
     webh = await db.fetchrow("SELECT webhook FROM bots WHERE bot_id = $1", int(bot_id))
     if webh is not None and webh["webhook"] not in ["", None] and webh["webhook"].startswith("http") and send_event:
         try:
-            asyncio.create_task(requeses.put(webh["webhook"], json = {"type": "add", "event_id": str(id), "event": event, "context": context}))
+            asyncio.create_task(requests.put(webh["webhook"], json = {"type": "add", "event_id": str(id), "event": event, "context": context}))
         except:
             pass
     ws_events.append((bot_id, {"type": "add", "event_id": str(id), "event": event, "context": context}))
