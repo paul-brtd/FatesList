@@ -44,6 +44,7 @@ async def profile_of_user(request: Request, userid: int):
                 bot_admin = False
     else:
         bot_admin = False
+        personal = False
     user_bots = []
     for bot in fetch:
         bot_info = await get_bot(bot["bot_id"])
