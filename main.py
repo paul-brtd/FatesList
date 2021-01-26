@@ -1,13 +1,10 @@
 from fastapi import FastAPI, Request, Form as FForm, WebSocket, WebSocketDisconnect
 from starlette.middleware.sessions import SessionMiddleware
 from fastapi.responses import HTMLResponse, RedirectResponse, ORJSONResponse
-from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import Oauth
 import aiohttp
 import asyncpg
-import json
-import os
 import datetime
 import random
 import math
