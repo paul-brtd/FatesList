@@ -2,6 +2,7 @@ import orjson
 from .deps import *
 
 # Builtin Badge Info
+# TODO: Add Timed Badges
 SPECIAL_BADGES = {
     "STAFF": {
         "name": "Staff",
@@ -24,6 +25,8 @@ def get_badges(user_dpy, blist, certified):
         blobj = []
     else:
         blobj = blist
+    if user_dpy is None:
+        return {}
     all_badges = {}
     for badge in blobj: # Add in user created badges from blist
         try:
