@@ -30,7 +30,6 @@ from ratelimit import RateLimitMiddleware, Rule
 from ratelimit.auths import EmptyInformation
 from ratelimit.backends.redis import RedisBackend
 from ratelimit.auths.ip import client_ip
-from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 from config import *
 
 # Setup
