@@ -42,6 +42,10 @@ async def home(request: Request):
 async def support(request: Request):
     return RedirectResponse(support_url)
 
+@router.get("/none")
+async def nonerouter():
+    return RedirectResponse("/static/assets/img/banner.webp", status_code = 301)
+
 @router.get("/v/{vanity}")
 @router.get("/{vanity}")
 async def vanity_bot(request: Request, vanity: str):
@@ -50,6 +54,3 @@ async def vanity_bot(request: Request, vanity: str):
         return abort(404)
     return RedirectResponse("/bot/" + str(t["bot_id"]))
 
-@router.get("/none")
-async def nonerouter():
-    return RedirectResponse("/static/assets/img/banner.webp", status_code = 301)

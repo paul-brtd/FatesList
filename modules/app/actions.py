@@ -205,7 +205,7 @@ async def vote_for_bot(
         request.session["RedirectResponse"] = "/bot/" + str(bot_id)
         return RedirectResponse("/auth/login", status_code = 303)
     uid = request.session.get("userid")
-    ret = await vote_bot(uid, bot_id)
+    ret = await vote_bot(uid, request.session.get("username"), bot_id)
     if ret == []:
         return RedirectResponse("/bot/" + str(bot_id), status_code = 303)
     elif ret[0] in [404, 500]:

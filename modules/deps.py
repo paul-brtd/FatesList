@@ -217,8 +217,8 @@ async def get_normal_events(bot_id: int) -> list:
     print(events)
     return events
 
-async def get_user_token(uid: int) -> str:
-        token = await db.fetchrow("SELECT token FROM users WHERE userid = $1", int(uid))
+async def get_user_token(uid: int, username: str) -> str:
+        token = await db.fetchrow("SELECT username, token FROM users WHERE userid = $1", int(uid))
         if token is None:
             flag = True
             while flag:
@@ -226,12 +226,15 @@ async def get_user_token(uid: int) -> str:
                 tcheck = await db.fetchrow("SELECT token FROM users WHERE token = $1", token)
                 if tcheck is None:
                     flag = False
-            await db.execute("INSERT INTO users (userid, token, vote_epoch) VALUES ($1, $2, $3)", int(uid), token, 0)
+            await db.execute("INSERT INTO users (userid, token, vote_epoch, username) VALUES ($1, $2, $3, $4)", int(uid), token, 0, username)
         else:
+            # Update their username if needed
+            if token["username"] != username:
+                await db.execute("UPDATE users SET username = $1 WHERE userid = $2", username, uid)
             token = token["token"]
 
-async def vote_bot(uid: int, bot_id: int) -> Optional[list]:
-    await get_user_token(uid) # Make sure we have a user profile first
+async def vote_bot(uid: int, username: str, bot_id: int) -> Optional[list]:
+    await get_user_token(uid, username) # Make sure we have a user profile first
     epoch = await db.fetchrow("SELECT vote_epoch FROM users WHERE userid = $1", int(uid))
     if epoch is None:
         return [500]
