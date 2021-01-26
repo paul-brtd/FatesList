@@ -11,13 +11,11 @@ import math
 import time
 import uuid
 from pydantic import BaseModel
-from starlette.status import HTTP_302_FOUND, HTTP_303_SEE_OTHER
 import secrets
 import string
 import discord
 import asyncio
 from discord.ext import commands, tasks
-from discord.utils import get
 import time
 import re
 from starlette_wtf import CSRFProtectMiddleware, csrf_protect,StarletteForm
