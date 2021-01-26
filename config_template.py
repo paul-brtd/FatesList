@@ -31,7 +31,9 @@ builtins.support_url = "https://discord.gg/PA5vjCRc5H"
 builtins.TOKEN = "TOKEN HERE"
 builtins.TAGS = ["music", "moderation", "economy", "fun", "anime", "games",
         "web_dashboard", "logging", "streams", "game_stats", "leveling", "roleplay", "utility", "social"]
-
+builtins.pg_pwd = "" # Postgres Database Password
+builtins.csrf_secret = ""
+builtins.session_key = ""
 class OauthConfig:
     client_id = "798951566634778641"
     client_secret = "CLIENT SECRET HERE"

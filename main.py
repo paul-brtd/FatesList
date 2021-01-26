@@ -40,7 +40,7 @@ from config import *
 builtins.intent = discord.Intents.all()
 builtins.client = commands.AutoShardedBot(command_prefix='!', intents=intent)
 builtins.app = FastAPI(default_response_class = ORJSONResponse)
-app.add_middleware(SessionMiddleware, secret_key="E@Dycude3u8z382")
+app.add_middleware(SessionMiddleware, secret_key=session_key)
 builtins._templates = Jinja2Templates(directory="templates")
 builtins.ws_events = [] # events that need to be dispatched
 class templates():
@@ -65,7 +65,7 @@ class templates():
         arg_dict["staff"] = staff
         return _templates.TemplateResponse(f, arg_dict)
 builtins.templates = templates
-app.add_middleware(CSRFProtectMiddleware, csrf_secret="ADDE-OS39-MA2K-lS09-3K9soI-Iskmd-93829-()(()-2937()K")
+app.add_middleware(CSRFProtectMiddleware, csrf_secret=csrf_secret)
 rb = RedisBackend()
 print(rb, type(rb))
 app.add_middleware(ProxyHeadersMiddleware)
@@ -94,7 +94,7 @@ for f in os.listdir("modules/app"):
 
 async def setup_db():
 
-    db = await asyncpg.create_pool(host="127.0.0.1", port=5432, user="postgres", password="Bristlefrost11,", database="fateslist")
+    db = await asyncpg.create_pool(host="127.0.0.1", port=5432, user="postgres", password=pg_pwd, database="fateslist")
 
     # some table creation here meow
 
