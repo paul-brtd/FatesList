@@ -261,6 +261,9 @@ class ConnectionManager:
 
     async def send_personal_message(self, message, websocket: WebSocket):
         i = 0
+        if websocket not in self.active_connections:
+            await manager.disconnect(websocket)
+            return False
         while i < 6:
             try:
                 await websocket.send_json(message)
@@ -277,6 +280,35 @@ class ConnectionManager:
             await connection.send_text(message)
 
 manager = ConnectionManager()
+
+async def ws_send_events(websocket):
+    for event_i in range(0, len(ws_events)):
+        event = ws_events[event_i]
+        for ws in manager.active_connections:
+            if int(event[0]) in [int(bot_id["bot_id"]) for bot_id in ws.bot_id]:
+                rc = await manager.send_personal_message({"msg": "EVENT", "data": event[1], "reason": event[0]}, ws)
+                try:
+                    if rc != False:
+                        ws_events[event_i] = [-1, -2]
+                except:
+                    pass
+
+async def recv_ws(websocket):
+    print("Getting things")
+    while True:
+        if websocket not in manager.active_connections:
+            print("Not connected to websocket")
+            return
+        print("Waiting for websocket")
+        try:
+            data = await websocket.receive_json()
+            await manager.send_personal_message(data, websocket)
+        except WebSocketDisconnect:
+            print("Disconnect")
+            return
+        except:
+            continue
+        print(data)
 
 @router.websocket("/api/ws")
 async def websocker_real_time_api(websocket: WebSocket):
@@ -309,29 +341,12 @@ async def websocker_real_time_api(websocket: WebSocket):
             await manager.send_personal_message({"msg": "KILL_CONN", "reason": "NO_AUTH"}, websocket)
             return await websocket.close(code=4004)
     await manager.send_personal_message({"msg": "READY", "reason": "AUTH_DONE"}, websocket)
-    for event_i in range(0, len(ws_events)):
-        event = ws_events[event_i]
-        for ws in manager.active_connections:
-            if int(event[0]) in [int(bot_id["bot_id"]) for bot_id in ws.bot_id]:
-                rc = await manager.send_personal_message({"msg": "EVENT", "data": event[1], "reason": event[0]}, ws)
-                try:
-                    if rc != False:
-                        ws_events[event_i] = [-1, -2]
-                except:
-                    pass
+    await ws_send_events(websocket)
+    asyncio.create_task(recv_ws(websocket))
     try:
         while True:
-            for event_i in range(0, len(ws_events)):
-                event = ws_events[event_i]
-                for ws in manager.active_connections:
-                    if int(event[0]) in [int(bot_id["bot_id"]) for bot_id in ws.bot_id]:
-                        rc = await manager.send_personal_message({"msg": "EVENT", "data": event[1], "reason": event[0]}, ws)
-                        try:
-                            if rc != False:
-                                ws_events[event_i] = [-1, -2]
-                        except:
-                            pass
-            data = await asyncio.sleep(0.1)
+            await ws_send_events(websocket)
+            await asyncio.sleep(0.1)
     except WebSocketDisconnect:
         await manager.disconnect(websocket)
 
