@@ -9,20 +9,20 @@
 {% endblock %}
 
 {% block content %}
-    <div style="margin 0 auto;" class="d-flex d-xl-flex flex-column justify-content-center align-items-center justify-content-xl-center align-items-xl-center"><img style="border-radius: 50%; width: 125px;" src="{{bot.avatar}}">
+    <div class="d-flex d-xl-flex flex-column justify-content-center align-items-center justify-content-xl-center align-items-xl-center">
+
+	<a href="javascript:void(0)"><img style="border-radius: 50%; width: 120px;" src="{{bot.avatar}}" onclick="modalShow('#botInfo')"></a>
         <h3 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;">{{bot.username}}</h3>
 	{% if bot.banned %}
         <p style="color: red; font-size: 18px; font-weight: bold;">This bot has been BANNED or DENIED from this bot list for violating our rules or being a low-quality bot. Please do not invite it.</p>
 	{% endif %}
-	<p style="font-weight: bold; color: rgba(255,255,255,0.87);">This bot is owned by: <a href="/profile/{{bot.owner}}">{{bot.owner_pretty.username}}</a>{% if bot.extra_owners == "None" or not bot.extra_owners or bot.extra_owners == [] %}{%else%}{%for bobj in bot.extra_owners %}{% if loop.index == bot.leo %} and {% else%}, {%endif%}<a href="/profile/{{bobj[1]}}">{{bobj[0]["username"]}}</a>{%endfor%}{%endif%}</p>
-        <p style="font-weight: bold; color: rgba(255,255,255,0.87);">Prefix: {{bot.prefix}}</p>
+	<p style="color: rgba(255,255,255,0.87);">Click the bots icon for more information</p>
 	{% if maint[0] %}
         <div style="text-align: center;">
         <p style="margin-bottom: 3px; color: red; font-size: 18px; font-weight: bold;">Maintenance in progress</p>
         <p style="color: red; font-size: 18px; font-weight: bold;">{{maint[1]["reason"]}}</p>
         </div>
         {% endif %}
-        <p style="font-weight: bold; color: rgba(255,255,255,0.87);">This bot has been coded using the {{bot.library}} library</p>
         <p style="margin 0 auto; color: rgba(255,255,255,0.87);font-weight: bold;opacity: 0.93;">{{bot.description}}</p>
     </div>
     <div class="d-flex justify-content-center align-items-center flex-wrap" style="width: 80%;margin: 0 auto;max-width: 1000px;">
@@ -62,17 +62,11 @@
         <a href="/bot/edit/{{bot.bot_id}}"><button class="btn btn-outline-dark" style="background-color: #7289DA; color: white !important;"><i class="fas"></i>Edit</button></a>
         </div>
         {% endif %}
-        <div class="text-nowrap d-flex justify-content-xl-center align-items-xl-center" style="line-height: 2;border-radius: 25px;background: #7289DA;width: auto;margin: 10px;font-size: 11px;">
-            <p style="background: #7289DA;" class="btn btn-primary" >Shards: {{bot.shards}}</p>
-        </div>
-        <div class="text-nowrap d-flex justify-content-xl-center align-items-xl-center" style="line-height: 2;border-radius: 25px;background: #7289DA;width: auto;margin: 10px;font-size: 11px;">
-            <p style="background: #7289DA;" class="btn btn-primary" >Servers: {{bot.servers}}</p>
-        </div>
     </div>
     <h6 style="font-weight: bold;color: rgba(255,255,255,0.87); text-align: center;">Tags:</h6>
     <div style="text-align: center;">
     {% for tag in bot.tags %}
-        <button onclick="window.location.replace('/search/tags/{{tag}}')" class="btn btn-outline-dark" style="background-color: #7289DA; color: white !important;"> <i class="fas"></i>{{tag.replace("_", " ")}}</button>
+        <button onclick="window.location.replace('/search/tags/{{tag}}')" class="btn btn-outline-dark" style="background-color: #7289DA; color: white !important; margin-right: 9px;"> <i class="fas"></i>{{tag.replace("_", " ")}}</button>
     {% endfor %}
     </div>
     {% if events != [] %}
@@ -106,7 +100,29 @@
         {% endif %}
     <hr style="font-size: 20px;border-top-width: 1px;border-top-color: #eee;width: 90%;">
     <h5 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;margin-top: -13px;margin-bottom: 30px;">Description</h5><iframe id="myIframe" src="/bot/description/{{bot.bot_id}}" style="width: 90%;height: 300px;color: rgba(255,255,255,0.87)!important;background: #121212;margin: 0 5%;" scrolling="no" onload="resizeIframe(this)"></iframe>
-    
+
+<div class="modal fade" id="botInfo" tabindex="-1"  aria-labelledby="{{badge_id}}Label" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                        <div class="modal-header">
+						<h5 style="color: black;" class="modal-title" id="bInfolabel">{{bot.username}}</h5>
+                                        </div>
+                                        <div class="modal-body">
+						<strong>Owners: </strong><a href="/profile/{{bot.owner}}">{{bot.owner_pretty.username}}</a>{% if bot.extra_owners == "None" or not bot.extra_owners or bot.extra_owners == [] %}{%else%}{%for bobj in bot.extra_owners %}{% if loop.index == bot.leo %} and {% else%}, {%endif%}<a href="/profile/{{bobj[1]}}">{{bobj[0]["username"]}}</a>{%endfor%}{%endif%}<br/>
+
+						<strong>Prefix:</strong> {{bot.prefix}}<br/>
+						<strong>Library:</strong> {{bot.library}}<br/>
+                                                <strong>Servers:</strong> {{bot.servers}}<br/>
+						<strong>Shards:</strong> {{bot.shards}}
+					</div>
+                                </div>
+                        </div>
+                </div>
+<script>
+        function modalShow(id) {
+                        $(id).modal()
+        }
+</script>
 {% endblock %} 
 {% block footer %} 
 {% endblock %}
