@@ -1,31 +1,19 @@
-from fastapi import FastAPI, Request, Form as FForm, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, Request, Form as FForm
 from starlette.middleware.sessions import SessionMiddleware
-from fastapi.responses import HTMLResponse, RedirectResponse, ORJSONResponse
+from fastapi.responses import ORJSONResponse
 from fastapi.templating import Jinja2Templates
 import Oauth
-import aiohttp
 import asyncpg
-import datetime
-import random
-import math
-import time
-import uuid
 from pydantic import BaseModel
-import secrets
-import string
 import discord
 import asyncio
 from discord.ext import commands, tasks
-import time
-import re
-from starlette_wtf import CSRFProtectMiddleware, csrf_protect,StarletteForm
+from starlette_wtf import CSRFProtectMiddleware
 import builtins
 import importlib
-from typing import Tuple
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 from modules.deps import *
 from ratelimit import RateLimitMiddleware, Rule
-from ratelimit.auths import EmptyInformation
 from ratelimit.backends.redis import RedisBackend
 from ratelimit.auths.ip import client_ip
 from config import *
