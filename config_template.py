@@ -1,3 +1,4 @@
+# Copy this to config.py when deploying
 import builtins
 builtins.bot_logs=789946587203764224
 builtins.reviewing_server=789934742128558080 # Bit of a misnomer, but this is the actual main server
