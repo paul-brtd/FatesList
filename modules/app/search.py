@@ -8,7 +8,15 @@ router = APIRouter(
 
 @router.get("/t")
 async def search(request: Request, q: str):
-    desc = await db.fetch("SELECT bot_id FROM bots WHERE queue = false and banned = false and disabled = false and (description ilike '%" + re.sub(r'\W+|_', ' ', q) + "%')")
+    if q == "":
+        return RedirectResponse("/")
+    try:
+        es = " OR owner = " + str(int(q)) + f" OR {str(q)} = ANY(extra_owners)"
+    except:
+        es = ""
+    desc = ("SELECT bot_id FROM bots WHERE queue = false and banned = false and disabled = false and (description ilike '%" + re.sub(r'\W+|_', ' ', q) + "%'" + es + ")")
+    print(desc)
+    desc = await db.fetch(desc)
     userc = await db.fetch("SELECT bot_id FROM bot_cache WHERE username ilike '%" + re.sub(r'\W+|_', ' ', q) + "%' and valid_for ilike '%bot%'")
     bids = list(set([id["bot_id"] for id in desc]).union(set([id["bot_id"] for id in userc])))
     print(bids, desc, userc)

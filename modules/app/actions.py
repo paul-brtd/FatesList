@@ -203,7 +203,7 @@ async def vote_for_bot(
     ):
     if request.session.get("userid") is None:
         request.session["RedirectResponse"] = "/bot/" + str(bot_id)
-        return RedirectResponse("/login", status_code = 303)
+        return RedirectResponse("/auth/login", status_code = 303)
     uid = request.session.get("userid")
     ret = await vote_bot(uid, bot_id)
     if ret == []:

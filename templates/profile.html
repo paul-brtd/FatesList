@@ -47,7 +47,7 @@
             {% if bot.bot.banner == "none" %}<div style="width: 100%;height: 30%;background: url(&quot;/static/assets/img/banner.png&quot;) center / cover no-repeat;">{% else %}<div style="width: 100%;height: 30%;background: url(&quot;{{bot.bot.banner}}&quot;) center / cover no-repeat;">{% endif %}{% if bot.bot.certified == True %}<i class="fas fa-certificate fa-3x" style="color:#7289DA; position: absoulute; margin-top: -15px; margin-left: 90%"></i>{% endif %}<img style="border-radius: 50%;width: 30%;margin: 5% auto;margin-top: 17%;margin-right: 35%;margin-left: 35%;" src="{{bot.avatar}}"></div>
             <div>
                 <div style="margin-right: auto;margin-left: auto;margin-top: 30px;width: 200px;">
-			<h4 class="text-nowrap text-break text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;white-space: nowrap;text-overflow: ellipsis;overflow: hidden;">{{bot.username}}</h4>
+			<h4 class="text-nowrap text-break text-center" style="margin-top: 35px; font-size: 21px !important; color: rgba(255,255,255,0.87);font-weight: bold;white-space: nowrap;text-overflow: ellipsis;overflow: hidden;">{{bot.username}}</h4>
                 </div>
             </div>
 	    <h6 style="font-size: 16px;font-weight: bold;color: rgba(255,255,255,0.87);opacity: 0.63;width: 90%;margin: 0 5%;height:105px"><strong style="overflow-wrap: anywhere;">{% if bot.banned %} Banned Bot {% else %}{{bot.description}}{%endif%}</strong></h6>

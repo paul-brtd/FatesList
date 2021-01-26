@@ -34,40 +34,8 @@ from ratelimit.auths import EmptyInformation
 from ratelimit.backends.redis import RedisBackend
 from ratelimit.auths.ip import client_ip
 from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
+from config import *
 
-
-# CONFIG
-builtins.bot_logs=789946587203764224
-builtins.reviewing_server=789934742128558080 # Bit of a misnomer, but this is the actual main server
-builtins.test_server = 794834630942654546 # And THIS is the test server for reviewing bots
-# Confusing right? Sorry, i already did 50% using reviewing server so meow ig
-builtins.staff_roles = {
-    "guild": {
-        "id": 00000000000000000,
-        "perm": 1
-    }, 
-    "bot_review": {
-        "id": 789941907563216897,
-        "perm": 2
-    }, 
-    "mod": {
-        "id": 789935016690843708, 
-        "perm": 3
-    },
-    "admin": {
-        "id": 789935015131742228, 
-        "perm": 4,
-    },
-    "owner": { 
-        "id": 789935014275317780,
-        "perm": 5,
-    }
-}
-
-builtins.support_url = "https://discord.gg/PA5vjCRc5H"
-builtins.TOKEN = "Nzk4OTUxNTY2NjM0Nzc4NjQx.X_8foQ.sPMObwyhrglpLZS-nJDx2yoMkVA"
-builtins.TAGS = ["music", "moderation", "economy", "fun", "anime", "games",
-        "web_dashboard", "logging", "streams", "game_stats", "leveling", "roleplay", "utility", "social"]
 # Setup
 builtins.intent = discord.Intents.all()
 builtins.client = commands.AutoShardedBot(command_prefix='!', intents=intent)
