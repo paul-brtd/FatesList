@@ -83,7 +83,7 @@ async def profile_search(request: Request, q: Optional[str] = None):
         es = " OR userid = " + str(int(query))
     except:
         es = ""
-    debug = True
+    debug = False
     if query != "" or debug:
         profiles = "SELECT userid, description, certified FROM users" # Base profile
         if query != "":

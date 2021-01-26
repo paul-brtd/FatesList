@@ -64,7 +64,7 @@ async def internal_get_bot(userid: int, bot_only: bool) -> Optional[dict]:
         return None # This is impossible to actually exist on the discord API
 
     cache = await db.fetchrow("SELECT username, avatar, valid, valid_for, epoch FROM bot_cache WHERE bot_id = $1 AND username IS NOT NULL AND avatar IS NOT NULL", int(userid))
-    if cache is None or time.time() - cache['epoch'] > 60 * 60 * 2: # 300 sec cacher
+    if cache is None or time.time() - cache['epoch'] > 60 * 60 * 4: # 4 Hour cacher
         # The cache is invalid, pass
         print("Not using cache for id ", str(userid))
         pass
@@ -230,7 +230,8 @@ async def get_user_token(uid: int, username: str) -> str:
         else:
             # Update their username if needed
             if token["username"] != username:
-                await db.execute("UPDATE users SET username = $1 WHERE userid = $2", username, uid)
+                print("Updating profile")
+                await db.execute("UPDATE users SET username = $1 WHERE userid = $2", username, int(uid))
             token = token["token"]
 
 async def vote_bot(uid: int, username: str, bot_id: int) -> Optional[list]:
