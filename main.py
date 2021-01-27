@@ -3,6 +3,10 @@ from fastapi.exceptions import RequestValidationError
 from starlette.middleware.sessions import SessionMiddleware
 from fastapi.responses import ORJSONResponse
 from fastapi.templating import Jinja2Templates
+from fastapi.exception_handlers import (
+    http_exception_handler,
+    request_validation_exception_handler,
+)
 import Oauth
 import asyncpg
 from pydantic import BaseModel
@@ -57,11 +61,8 @@ class templates():
         return templates.TemplateResponse(f, arg_dict)
 
     @staticmethod
-    def e(request, reason: str, status_code: str = 404, json: bool = False):
-        if json:
-            return ORJSONResponse({"detail": "Not Found"}, status_code = status_code)
-        else:
-            return templates.error("message.html", {"request": request, "context": reason}, status_code)
+    def e(request, reason: str, status_code: str = 404):
+        return templates.error("message.html", {"request": request, "context": reason}, status_code)
 
 builtins.templates = templates
 builtins.app.add_middleware(CSRFProtectMiddleware, csrf_secret=csrf_secret)
@@ -100,7 +101,14 @@ async def validation_exception_handler(request, exc):
             code = 422
 
     json = str(request.url).startswith("https://fateslist.xyz/api/")
-    return templates.e(request, msg, code, json)
+    if json:
+        if exc.status_code == 404:
+            return await http_exception_handler(request, exc)
+        elif exc.status_code == 422:
+            return await request_validation_exception_handler(request, exc)
+        else:
+            pass
+    return templates.e(request, msg, code)
 
 
 @builtins.app.exception_handler(404)
