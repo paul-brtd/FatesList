@@ -215,7 +215,7 @@ async def api_get_bots(request: Request, bot_id: int):
     api_ret = dict(api_ret)
     bot_obj = await get_bot(bot_id)
     api_ret["username"] = bot_obj["username"]
-    api_ret["owners"] = [api_ret["owner"]] + api_ret["extra_owners"].split(",")
+    api_ret["owners"] = [api_ret["owner"]] + api_ret["extra_owners"]
     api_ret["id"] = str(api_ret["id"])
     return api_ret
 
