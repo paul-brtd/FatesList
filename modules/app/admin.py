@@ -21,7 +21,7 @@ async def admin(request:Request):
         banned = await db.fetch("SELECT bot_id FROM bots WHERE banned = true")
         print(staff[1])
         queue_bots = []
-        queue_amount = len(fetch)
+        queue_amount = len([i for i in fetch if not i["banned"]])
         form = await Form.from_formdata(request)
         # TOP VOTED BOTS
         for bot in fetch:
@@ -102,7 +102,7 @@ async def review_api(request:Request, bot_id: int, accept: str = FForm("")):
         b = await db.fetchrow("SELECT owner FROM bots WHERE bot_id = $1", bot_id)
         if b is None:
             return RedirectResponse("/admin/console")
-        await db.execute("UPDATE bots SET queue=true WHERE bot_id = $1", bot_id)
+        await db.execute("UPDATE bots SET queue=true, banned = false WHERE bot_id = $1", bot_id)
         await add_event(bot_id, "approve", f"user={str(request.session.get('userid'))}")
         await channel.send(f"<@{bot_id}> by <@{str(b['owner'])}> has been unverified")
         return templates.TemplateResponse("message.html",{"request":request,"message":"Bot unverified. Please carry on with your day"})

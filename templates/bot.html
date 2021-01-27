@@ -133,7 +133,7 @@
                                         <input hidden name="accept" value="false"></input>
                                         <button class="btn btn-primary" type="submit" style="margin: 0 15px;">Deny</button>
                                 </form>
-				{% else %}
+				{% elif not bot.queue %}
                                 <form method="POST" action="/admin/review/{{bot.bot_id}}">
                                         {{ form.csrf_token }}
                                         <input hidden name="accept" value="unverify"></input>
