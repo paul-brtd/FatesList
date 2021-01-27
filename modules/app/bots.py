@@ -12,9 +12,9 @@ async def bot_rdir(request: Request):
 
 @router.get("/{bot_id}")
 async def bot_index(request: Request, bot_id: int):
-    bot = await db.fetchrow("SELECT prefix, shard_count, description, bot_library AS library, tags, banner, website, certified, votes, servers, bot_id, invite, discord, owner, extra_owners, banner, api_token, banned, disabled, github FROM bots WHERE bot_id = $1 ORDER BY votes", bot_id)
+    bot = await db.fetchrow("SELECT prefix, shard_count, queue, description, bot_library AS library, tags, banner, website, certified, votes, servers, bot_id, invite, discord, owner, extra_owners, banner, api_token, banned, disabled, github FROM bots WHERE bot_id = $1 ORDER BY votes", bot_id)
     if bot is None:
-        return abort(404)
+        return templates.e(request, "Bot Not Found")
     if bot["extra_owners"] is None:
         eo = []
     else:
@@ -43,9 +43,9 @@ async def bot_index(request: Request, bot_id: int):
     maint = await in_maint(bot["bot_id"])
     ed = [((await get_user(id)), id) for id in eo]
     if bot_info:
-        bot_obj = {"bot": bot, "bot_id": bot["bot_id"], "avatar": bot_info["avatar"], "website": bot["website"], "username": bot_info["username"], "votes": await human_format(bot["votes"]), "servers": await human_format(bot["servers"]), "description": bot["description"], "support": bot['discord'], "invite": bot["invite"], "tags": bot["tags"], "library": bot['library'], "banner": banner, "token": bot["api_token"], "shards": await human_format(bot["shard_count"]), "owner": bot["owner"], "owner_pretty": await get_user(bot["owner"]), "banned": bot['banned'], "disabled": bot['disabled'], "prefix": bot["prefix"], "github": bot['github'], "extra_owners": ed, "leo": len(ed)}
+        bot_obj = {"bot": bot, "bot_id": bot["bot_id"], "avatar": bot_info["avatar"], "website": bot["website"], "username": bot_info["username"], "votes": await human_format(bot["votes"]), "servers": await human_format(bot["servers"]), "description": bot["description"], "support": bot['discord'], "invite": bot["invite"], "tags": bot["tags"], "library": bot['library'], "banner": banner, "token": bot["api_token"], "shards": await human_format(bot["shard_count"]), "owner": bot["owner"], "owner_pretty": await get_user(bot["owner"]), "banned": bot['banned'], "disabled": bot['disabled'], "prefix": bot["prefix"], "github": bot['github'], "extra_owners": ed, "leo": len(ed), "queue": bot["queue"]}
     else:
-        return abort(404)
+        return templates.e(request, "Bot Not Found")
     # TAGS
     tags_fixed = {}
     for tag in TAGS:

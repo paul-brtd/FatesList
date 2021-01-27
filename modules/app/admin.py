@@ -12,10 +12,10 @@ async def admin(request:Request):
         guild = client.get_guild(reviewing_server)
         user = guild.get_member(int(request.session["userid"]))
         if user is None:
-            return RedirectResponse("/")
+            return RedirectResponse("/", status_code = 303)
         staff = is_staff(staff_roles, user.roles, 2)
         if not staff[0]:
-            return RedirectResponse("/")
+            return RedirectResponse("/", status_code = 303)
         certified_bots = len(await db.fetch("SELECT bot_id FROM bots WHERE certified = true"))
         bots = len(await db.fetch("SELECT bot_id FROM bots WHERE queue = false"))
         fetch = await db.fetch("SELECT bot_id, votes, servers, description, banned FROM bots WHERE queue = true")
@@ -34,7 +34,7 @@ async def admin(request:Request):
                 queue_bots.append({"bot": bot, "id": bot["bot_id"], "avatar": bot_info["avatar"], "username": bot_info["username"], "votes": await human_format(bot["votes"]), "servers": await human_format(bot["servers"]), "description": bot["description"], "form": form, "banned": bot_info["banned"]})
         return templates.TemplateResponse("admin.html",{"request": request, "cert": certified_bots,"bots": bots, "queue_bots": queue_bots, "queue_amount": queue_amount, "admin": staff[1] == 4, "mod": staff[1] == 3, "owner": staff[1] == 5, "bot_review": staff[1] == 2, "username": request.session["username"], "form": form, "avatar": request.session["avatar"], "banned": banned})
     else:
-        return RedirectResponse("/")
+        return RedirectResponse("/", status_code = 303)
 
 @router.post("/console")
 @csrf_protect
@@ -49,7 +49,7 @@ async def admin_api(request:Request, admin: str = FForm(""), bot_id: int = FForm
     if admin=="certify":
         users = await db.fetchrow("SELECT owner, extra_owners FROM bots WHERE bot_id = $1", bot_id)
         if users is None:
-            return RedirectResponse("/admin/console")
+            return RedirectResponse("/admin/console", status_code = 303)
         await db.execute("UPDATE bots SET certified = true WHERE bot_id = $1", bot_id)
         await db.execute("UPDATE users SET certified = true WHERE userid = $1", int(users["owner"]))
         if users["extra_owners"] is None:
@@ -72,7 +72,7 @@ async def admin_api(request:Request, admin: str = FForm(""), bot_id: int = FForm
         await db.execute("UPDATE bots SET votes = 0")
         return templates.TemplateResponse("message.html", {"request": request, "message": "Hey mikes, i hope your wish comes true ;)", "username": request.session.get("username", False)})
     else:
-        return RedirectResponse("/admin/console")
+        return RedirectResponse("/admin/console", status_code = 303)
 
 @router.get("/review/{bot_id}")
 async def review(request:Request, bot_id: int):
@@ -111,7 +111,7 @@ async def review_api(request:Request, bot_id: int, accept: str = FForm("")):
         await channel.send(f"<@{bot_id}> by <@{str(b['owner'])}> has been approved")
         return templates.TemplateResponse("last.html",{"request":request,"message":"Bot accepted; You MUST Invite it by this url","username":request.session["username"],"url":f"https://discord.com/oauth2/authorize?client_id={str(bot_id)}&scope=bot&guild_id={guild.id}&disable_guild_select=true&permissions=0"})
     elif accept == "false":
-        return RedirectResponse("/admin/review/"+str(bot_id)+"/deny", status_code=HTTP_303_SEE_OTHER)
+        return RedirectResponse("/admin/review/"+str(bot_id)+"/deny", status_code=303)
     else:
         return RedirectResponse("/")
 

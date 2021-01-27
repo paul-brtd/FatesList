@@ -51,6 +51,6 @@ async def nonerouter():
 async def vanity_bot(request: Request, vanity: str):
     t = await db.fetchrow("SELECT bot_id FROM bots WHERE vanity = $1", vanity)
     if t is None:
-        return abort(404)
+        return templates.e(request, "Invalid Vanity")
     return RedirectResponse("/bot/" + str(t["bot_id"]))
 

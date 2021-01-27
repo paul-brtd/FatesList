@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Request, Form as FForm
+from fastapi.exceptions import RequestValidationError
 from starlette.middleware.sessions import SessionMiddleware
 from fastapi.responses import ORJSONResponse
 from fastapi.templating import Jinja2Templates
@@ -32,6 +33,7 @@ class templates():
             request = arg_dict["request"]
         except:
             raise KeyError
+        status = arg_dict.get("status_code")
         if "userid" in request.session.keys():
             if "staff" not in arg_dict.keys():
                 guild = client.get_guild(reviewing_server)
@@ -45,13 +47,28 @@ class templates():
         else:
             staff = [False]
         arg_dict["staff"] = staff
-        return _templates.TemplateResponse(f, arg_dict)
+        if status is None:
+            return _templates.TemplateResponse(f, arg_dict)
+        return _templates.TemplateResponse(f, arg_dict, status_code = status)
+
+    @staticmethod
+    def error(f, arg_dict, status_code):
+        arg_dict["status_code"] = status_code
+        return templates.TemplateResponse(f, arg_dict)
+
+    @staticmethod
+    def e(request, reason: str, status_code: str = 404, json: bool = False):
+        if json:
+            return ORJSONResponse({"detail": "Not Found"}, status_code = status_code)
+        else:
+            return templates.error("message.html", {"request": request, "context": reason}, status_code)
+
 builtins.templates = templates
-app.add_middleware(CSRFProtectMiddleware, csrf_secret=csrf_secret)
+builtins.app.add_middleware(CSRFProtectMiddleware, csrf_secret=csrf_secret)
 rb = RedisBackend()
 print(rb, type(rb))
-app.add_middleware(ProxyHeadersMiddleware)
-app.add_middleware(
+builtins.app.add_middleware(ProxyHeadersMiddleware)
+builtins.app.add_middleware(
     RateLimitMiddleware,
     authenticate=client_ip,
     backend=rb,
@@ -61,6 +78,32 @@ app.add_middleware(
         r"^/": [Rule(minute=120), Rule(group="admin")],
     },
 )
+
+@builtins.app.exception_handler(404)
+@builtins.app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request, exc):
+    print(request.url)
+    if type(exc) == RequestValidationError:
+        exc.status_code = 422
+    if exc.status_code == 404:
+        msg = "404\nNot Found"
+        code = 404
+    elif exc.status_code == 422:
+        if str(request.url).startswith("https://fateslist.xyz/bot/"):
+            msg = "Bot Not Found"
+            code = 404
+        else:
+            msg = "Invalid Data Provided\n" + str(exc)
+            code = 422
+
+    json = str(request.url).startswith("https://fateslist.xyz/api/")
+    return templates.e(request, msg, code, json)
+
+
+@builtins.app.exception_handler(404)
+async def e404(request, exc):
+    return await validation_exception_handler(request, exc)
+
 
 app = builtins.app # As much as i hate it, patch uvicorns stupidity
 
