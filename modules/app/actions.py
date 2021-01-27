@@ -55,9 +55,9 @@ async def add_bot_api(
         pass
     else:
         return templates.TemplateResponse("message.html", {"request": request, "message": "Invalid Bot Invite", "context": "Your bot invite must be in the format of https://discord.com/api/oauth2... or https://discord.com/oauth2...", "username": request.session.get("username", False)})
-    description = description.replace("\n", " ").replace("\t", " ")
     if len(description) > 101:
         return templates.TemplateResponse("message.html", {"request": request, "message": "Short description is too long.", "username": request.session.get("username", False)})
+    description = description.replace("\n", " ").replace("\t", " ")
     try:
         bot_object = await get_bot(bot_id)
     except:
