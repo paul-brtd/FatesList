@@ -110,12 +110,6 @@ async def validation_exception_handler(request, exc):
             pass
     return templates.e(request, msg, code)
 
-
-@builtins.app.exception_handler(404)
-async def e404(request, exc):
-    return await validation_exception_handler(request, exc)
-
-
 app = builtins.app # As much as i hate it, patch uvicorns stupidity
 
 builtins.discord_o = Oauth.Oauth()
