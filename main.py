@@ -7,6 +7,7 @@ from fastapi.exception_handlers import (
     http_exception_handler,
     request_validation_exception_handler,
 )
+from prometheusrock import PrometheusMiddleware, metrics_route
 import Oauth
 import asyncpg
 from pydantic import BaseModel
@@ -27,7 +28,10 @@ from config import *
 builtins.intent = discord.Intents.all()
 builtins.client = commands.AutoShardedBot(command_prefix='!', intents=intent)
 builtins.app = FastAPI(default_response_class = ORJSONResponse)
-app.add_middleware(SessionMiddleware, secret_key=session_key)
+builtins.app.add_middleware(SessionMiddleware, secret_key=session_key)
+builtins.app.add_middleware(PrometheusMiddleware)
+builtins.metrics_key = get_token(128)
+builtins.app.add_route("/admin/metrics/" + builtins.metrics_key, metrics_route)
 builtins._templates = Jinja2Templates(directory="templates")
 builtins.ws_events = [] # events that need to be dispatched
 class templates():
@@ -40,7 +44,6 @@ class templates():
         status = arg_dict.get("status_code")
         if "userid" in request.session.keys():
             if "staff" not in arg_dict.keys():
-                guild = client.get_guild(reviewing_server)
                 user = guild.get_member(int(request.session["userid"]))
                 if user is not None:
                     staff = is_staff(staff_roles, user.roles, 2)
@@ -51,6 +54,7 @@ class templates():
         else:
             staff = [False]
         arg_dict["staff"] = staff
+        arg_dict["mkey"] = builtins.metrics_key
         if status is None:
             return _templates.TemplateResponse(f, arg_dict)
         return _templates.TemplateResponse(f, arg_dict, status_code = status)
@@ -154,6 +158,12 @@ async def startup():
     #Verify users and bots!!!
     rb = RedisBackend()
     print(rb._redis)
+
+@client.event
+async def on_ready():
+    print("UP ON DISCORD")
+    builtins.guild = client.get_guild(reviewing_server)
+    builtins.channel = guild.get_channel(bot_logs)
 
 @client.command()
 async def approve(ctx, bot: discord.Member):

@@ -15,8 +15,11 @@
         <h3 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;">{{bot.username}}</h3>
 	{% if bot.banned %}
         <p style="color: red; font-size: 18px; font-weight: bold;">This bot has been BANNED or DENIED from this bot list for violating our rules or being a low-quality bot. Please do not invite it.</p>
-	{% elif bot.queue %}
+	{% elif bot.queue and not review%}
         <p style="color: red; font-size: 18px; font-weight: bold;">This bot has not yet been verified/approved on this bot list and it may violate our rules or be a low-quality bot. Please do not invite it yet</p>
+	{% endif %}
+	{% if review %}
+	<p style="color: rgba(255,255,255,0.87);">You are in review mode. Test the bot by inviting it to the staff server by clicking <a href="https://discord.com/oauth2/authorize?client_id={{bot.bot_id}}&scope=bot&guild_id={{guild}}&disable_guild_select=true" target=”_blank”>here</a>. Once you are done reviewing the bot, click the bots icon to approve/deny it</p>
 	{% endif %}
 	<p style="color: rgba(255,255,255,0.87);">Click the bots icon for more information</p>
 	{% if maint[0] %}
@@ -104,22 +107,44 @@
     <h5 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;margin-top: -13px;margin-bottom: 30px;">Description</h5><iframe id="myIframe" src="/bot/description/{{bot.bot_id}}" style="width: 90%;height: 300px;color: rgba(255,255,255,0.87)!important;background: #121212;margin: 0 5%;" scrolling="no" onload="resizeIframe(this)"></iframe>
 
 <div class="modal fade" id="botInfo" tabindex="-1"  aria-labelledby="{{badge_id}}Label" aria-hidden="true">
-                        <div class="modal-dialog modal-dialog-centered">
-                                <div class="modal-content">
-                                        <div class="modal-header">
-						<h5 style="color: black;" class="modal-title" id="bInfolabel">{{bot.username}}</h5>
-                                        </div>
-                                        <div class="modal-body">
-						<strong>Owners: </strong><a href="/profile/{{bot.owner}}">{{bot.owner_pretty.username}}</a>{% if bot.extra_owners == "None" or not bot.extra_owners or bot.extra_owners == [] %}{%else%}{%for bobj in bot.extra_owners %}{% if loop.index == bot.leo %} and {% else%}, {%endif%}<a href="/profile/{{bobj[1]}}">{{bobj[0]["username"]}}</a>{%endfor%}{%endif%}<br/>
+	<div class="modal-dialog modal-dialog-centered">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 style="color: black;" class="modal-title" id="bInfolabel">{{bot.username}}</h5>
+			</div>
+                        <div class="modal-body">
+				<strong>Owners: </strong><a href="/profile/{{bot.owner}}">{{bot.owner_pretty.username}}</a>{% if bot.extra_owners == "None" or not bot.extra_owners or bot.extra_owners == [] %}{%else%}{%for bobj in bot.extra_owners %}{% if loop.index == bot.leo %} and {% else%}, {%endif%}<a href="/profile/{{bobj[1]}}">{{bobj[0]["username"]}}</a>{%endfor%}{%endif%}<br/>
 
-						<strong>Prefix:</strong> {{bot.prefix}}<br/>
-						<strong>Library:</strong> {{bot.library}}<br/>
-                                                <strong>Servers:</strong> {{bot.servers}}<br/>
-						<strong>Shards:</strong> {{bot.shards}}
-					</div>
-                                </div>
-                        </div>
-                </div>
+				<strong>Prefix:</strong> {{bot.prefix}}<br/>
+				<strong>Library:</strong> {{bot.library}}<br/>
+				<strong>Servers:</strong> {{bot.servers}}<br/>
+				<strong>Shards:</strong> {{bot.shards}}
+			</div>
+			{% if staff[0] %}
+			<div class="modal-footer">
+				{% if review %}
+				<form method="POST" action="/admin/review/{{bot.bot_id}}">
+					{{ form.csrf_token }}
+					<input hidden name="accept" value="true"></input>
+					<button class="btn btn-primary" type="submit" style="margin: 0 15px;">Accept</button>
+				</form>
+                                <form method="POST" action="/admin/review/{{bot.bot_id}}">
+                                        {{ form.csrf_token }}
+                                        <input hidden name="accept" value="false"></input>
+                                        <button class="btn btn-primary" type="submit" style="margin: 0 15px;">Deny</button>
+                                </form>
+				{% else %}
+                                <form method="POST" action="/admin/review/{{bot.bot_id}}">
+                                        {{ form.csrf_token }}
+                                        <input hidden name="accept" value="unverify"></input>
+                                        <button class="btn btn-primary" type="submit" style="margin: 0 15px;">Unverify</button>
+                                </form>
+				{% endif %}
+			</div>
+			{% endif %}
+		</div>
+	</div>
+</div>
 <script>
         function modalShow(id) {
                         $(id).modal()

@@ -9,7 +9,6 @@ router = APIRouter(
 @router.get("/console")
 async def admin(request:Request):
     if "userid" in request.session.keys():
-        guild = client.get_guild(reviewing_server)
         user = guild.get_member(int(request.session["userid"]))
         if user is None:
             return RedirectResponse("/", status_code = 303)
@@ -40,7 +39,6 @@ async def admin(request:Request):
 @csrf_protect
 async def admin_api(request:Request, admin: str = FForm(""), bot_id: int = FForm(0)):
     print(bot_id)
-    guild = client.get_guild(reviewing_server)
     user = guild.get_member(int(request.session["userid"]))
     if user is None:
         return RedirectResponse("/")
@@ -75,28 +73,19 @@ async def admin_api(request:Request, admin: str = FForm(""), bot_id: int = FForm
         return RedirectResponse("/admin/console", status_code = 303)
 
 @router.get("/review/{bot_id}")
-async def review(request:Request, bot_id: int):
+async def review(request: Request, bot_id: int):
     if "userid" in request.session.keys():
-        guild = client.get_guild(reviewing_server)
         user = guild.get_member(int(request.session["userid"]))
         s = is_staff(staff_roles, user.roles, 2)
         if not s[0]:
             return RedirectResponse("/")
-        bot = await db.fetchrow("SELECT bot_id, description FROM bots WHERE bot_id = $1 and queue=true", bot_id)
-        if not bot:
-            return templates.TemplateResponse("message.html",{"request":request,"message":"Bot does not exist! Idk how","username":request.session["username"]})
-        bot_object = await get_bot(bot_id)
-        if not bot_object:
-            return templates.TemplateResponse("message.html",{"request":request,"message":"Bot does not exist! Idk how","username":request.session["username"]})
-        bot = {"bot_id": bot["bot_id"], "username": bot_object["username"], "avatar": bot_object["avatar"], "description": bot["description"]}
-        form = await Form.from_formdata(request)
-        return templates.TemplateResponse("review.html",{"request": request, "bot": bot, "guild": test_server, "form": form})
+        # async def _get_bot(bot_id: int, review: bool):
+        return await render_bot(request, bot_id, True)
     else:
         return RedirectResponse("/") 
 
 @router.post("/review/{bot_id}")
 async def review_api(request:Request, bot_id: int, accept: str = FForm("")):
-    guild = client.get_guild(reviewing_server)
     user = guild.get_member(int(request.session["userid"]))
     s = is_staff(staff_roles, user.roles, 2)
     if not s[0]:
@@ -106,10 +95,17 @@ async def review_api(request:Request, bot_id: int, accept: str = FForm("")):
         if b is None:
             return RedirectResponse("/admin/console")
         await db.execute("UPDATE bots SET queue=false WHERE bot_id = $1", bot_id)
-        channel = guild.get_channel(bot_logs)
         await add_event(bot_id, "approve", f"user={str(request.session.get('userid'))}")
         await channel.send(f"<@{bot_id}> by <@{str(b['owner'])}> has been approved")
         return templates.TemplateResponse("last.html",{"request":request,"message":"Bot accepted; You MUST Invite it by this url","username":request.session["username"],"url":f"https://discord.com/oauth2/authorize?client_id={str(bot_id)}&scope=bot&guild_id={guild.id}&disable_guild_select=true&permissions=0"})
+    elif accept == "unverify":
+        b = await db.fetchrow("SELECT owner FROM bots WHERE bot_id = $1", bot_id)
+        if b is None:
+            return RedirectResponse("/admin/console")
+        await db.execute("UPDATE bots SET queue=true WHERE bot_id = $1", bot_id)
+        await add_event(bot_id, "approve", f"user={str(request.session.get('userid'))}")
+        await channel.send(f"<@{bot_id}> by <@{str(b['owner'])}> has been unverified")
+        return templates.TemplateResponse("message.html",{"request":request,"message":"Bot unverified. Please carry on with your day"})
     elif accept == "false":
         return RedirectResponse("/admin/review/"+str(bot_id)+"/deny", status_code=303)
     else:
@@ -119,7 +115,6 @@ async def review_api(request:Request, bot_id: int, accept: str = FForm("")):
 async def review_deny(request:Request, bot_id: int):
     if "userid" in request.session.keys():
         form = await Form.from_formdata(request)
-        guild = client.get_guild(reviewing_server)
         user = guild.get_member(int(request.session["userid"]))
         s = is_staff(staff_roles, user.roles, 2)
         if not s[0]:
@@ -132,7 +127,6 @@ async def review_deny(request:Request, bot_id: int):
 
 @router.post("/review/{bot_id}/deny")
 async def review_deny_api(request:Request, bot_id: int, reason: str = FForm("There was no reason specified")):
-    guild = client.get_guild(reviewing_server)
     user = guild.get_member(int(request.session["userid"]))
     s = is_staff(staff_roles, user.roles, 2)
     if not s[0]:
@@ -141,9 +135,7 @@ async def review_deny_api(request:Request, bot_id: int, reason: str = FForm("The
         check = await db.fetchrow("SELECT owner FROM bots WHERE bot_id=$1 and queue=true", bot_id)
         if not check:
             return templates.TemplateResponse("message.html",{"request":request,"message":"Bot does not exist! Idk how"})
-        channel = client.get_channel(bot_logs)
         await db.execute("UPDATE bots SET banned = true WHERE bot_id = $1", bot_id)
-        channel = client.get_channel(bot_logs)
         owner=str(request.session["userid"])
         await add_event(bot_id, "deny", f"user={str(request.session.get('userid'))}")
         await channel.send(f"<@{owner}> has denied the bot <@{bot_id}> by <@{str(check['owner'])}> with the reason: {reason}")
