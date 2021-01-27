@@ -57,7 +57,7 @@
         <a target=”_blank” href="{{bot.website}}"<button class="btn btn-outline-dark" style="background-color: #7289DA; color: white !important;"><i class="fas"></i>Website</button></a>
         </div>
        {% endif %}
-       {% if not bot.banned %}
+       {% if not bot.banned and not review%}
         <div class="text-nowrap d-flex justify-content-xl-center align-items-xl-center" style="line-height: 2;border-radius: 25px;background: #7289DA;width: auto;margin: 10px;font-size: 11px;">
         <a target=”_blank” href="{{bot.invite}}"><button class="btn btn-outline-dark" style="background-color: #7289DA; color: white !important;"><i class="fas"></i>Invite</button></a>
         </div>
