@@ -84,7 +84,7 @@ async def profile_search(request: Request, q: Optional[str] = None):
     except:
         es = ""
     debug = False
-    if query != "" or debug:
+    if query.replace(" ", "") != "" or debug:
         profiles = "SELECT userid, description, certified FROM users" # Base profile
         if query != "":
             profiles = profiles + (" WHERE (username ilike '%" + re.sub(r'\W+|_', ' ', query) + "%'" + es + ")")

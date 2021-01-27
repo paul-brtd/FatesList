@@ -73,6 +73,13 @@ async def add_bot_api(
         else:
             return templates.TemplateResponse("message.html", {"request": request, "message": "One of your bot tags didn't exist internally", "username": request.session.get("username", False)})
     creation = time.time()
+    if extra_owners == "":
+        extra_owners = None
+    else:
+        try:
+            extra_owners = [int(id) for id in extra_owners.split(",")]
+        except:
+            return templates.TemplateResponse("message.html", {"request": request, "message": "One of your extra owners is invalid"})
     bt.add_task(add_bot_bt, request, bot_id, prefix, library, website, banner, support, long_description, description, selected_tags, extra_owners, creation, bot_object, invite)
     return templates.TemplateResponse("message.html", {"request": request, "message": "Bot has been added.", "username": request.session.get("username", False)})
 
