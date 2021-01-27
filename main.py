@@ -92,6 +92,9 @@ async def validation_exception_handler(request, exc):
         if str(request.url).startswith("https://fateslist.xyz/bot/"):
             msg = "Bot Not Found"
             code = 404
+        elif str(request.url).startswith("https://fateslist.xyz/profile/"):
+            msg = "Profile Not Found"
+            code = 404
         else:
             msg = "Invalid Data Provided\n" + str(exc)
             code = 422

@@ -23,7 +23,7 @@ async def profile(request: Request):
 async def profile_of_user(request: Request, userid: int):
     user = await get_user(int(userid))
     if not user:
-        return RedirectResponse("/")
+        return templates.e(request, "Profile Not Found", 404)
     a = (f"SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE (owner = {str(userid)} OR {str(userid)} = ANY(extra_owners)) and queue = false and banned = false and disabled = false ORDER BY votes;")
     fetch = await db.fetch(a)
     if "userid" in request.session.keys():
