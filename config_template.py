@@ -47,4 +47,4 @@ class OauthConfig:
     scope = ["identify"]
     redirect_uri = "https://" + site + "/auth/login/confirm"
 
-builtins.hubspot_track_code = ""
+builtins.hubspot_track_code = ''
