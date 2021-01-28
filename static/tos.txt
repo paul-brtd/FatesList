@@ -32,4 +32,4 @@ We update sporadically, and changes are made often. By joining the support serve
 
 We are not affiliated with Discord Inc. or any of its partners or affiliates.
 
-Please read our source code for proof and more information: https://github.com/Fates-List/FatesList
+
