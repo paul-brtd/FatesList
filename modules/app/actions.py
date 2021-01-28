@@ -261,6 +261,7 @@ async def delete_bot(request: Request, bot_id: int, confirmer: str = FForm("1"))
     except:
         return templates.TemplateResponse("message.html", {"request": request, "username": request.session.get("username"), "avatar": request.session.get("avatar"), "message": "Forbidden", "context": "Invalid Confirm Code. Please go back and reload the page and if the problem still persists, please report it in the support server"})
     await add_event(bot_id, "delete_bot", f"user={str(request.session.get('userid'))}")
+    owner = request.session.get("userid")
     await db.execute("DELETE FROM bots WHERE bot_id = $1", bot_id)
     await channel.send(f"<@{owner}> deleted the bot <@{str(bot_id)}>.\nWe are sad to see you go...::sad::")
     return RedirectResponse("/", status_code = 303)
