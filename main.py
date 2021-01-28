@@ -84,6 +84,7 @@ builtins.app.add_middleware(
     },
 )
 
+@builtins.app.exception_handler(401)
 @builtins.app.exception_handler(404)
 @builtins.app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):
@@ -93,6 +94,9 @@ async def validation_exception_handler(request, exc):
     if exc.status_code == 404:
         msg = "404\nNot Found"
         code = 404
+    elif exc.status_code == 401:
+        msg = "401\nNot Authorized"
+        code = 401
     elif exc.status_code == 422:
         if str(request.url).startswith("https://fateslist.xyz/bot/"):
             msg = "Bot Not Found"
@@ -106,7 +110,7 @@ async def validation_exception_handler(request, exc):
 
     json = str(request.url).startswith("https://fateslist.xyz/api/")
     if json:
-        if exc.status_code == 404:
+        if exc.status_code == 404 or exc.status_code == 401:
             return await http_exception_handler(request, exc)
         elif exc.status_code == 422:
             return await request_validation_exception_handler(request, exc)

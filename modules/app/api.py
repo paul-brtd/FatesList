@@ -219,18 +219,52 @@ async def api_get_bots(request: Request, bot_id: int):
     api_ret["id"] = str(api_ret["id"])
     return api_ret
 
-class BBGC(BaseModel):
+class APISGC(BaseModel):
+    api_token: Optional[str] = None
     guild_count: int
     shard_count: int
 
-@router.post("/bots/stats")
-async def guild_shard_count_shortcut(request: Request, api: BBGC, Authorization: str = FHeader("")):
-    """This is just a shortcut to /api/events for guild/shard posting primarily for BotsBlock but can be used by others. The Swagger Try It Out does not work right now"""
-    event = EventNew(api_token = Authorization, event = "guild_count", context = str(api.guild_count))
-    await create_api_event(request, event)
-    event = EventNew(api_token = Authorization, event = "shard_count", context = str(api.shard_count))
+@router.post("/bots/stats", tags = ["Shortcuts"])
+async def guild_shard_count_shortcut(request: Request, api: APISGC, Authorization: Optional[str] = FHeader(None)):
+    """This is just a shortcut to /api/events for guild/shard posting primarily for BotsBlock but can be used by others. The Swagger Try It Out does not work right now if you use the authorization header but the other api_token in JSON can and should be used instead for ease of use.
+    """
+    if api.api_token is None and Authorization is None:
+        return abort(401)
+    elif api.api_token is None:
+        atoken = Authorization
+    else:
+        atoken = api.api_token 
+    event = EventNew(api_token = atoken, event = "guild_count", context = str(api.guild_count))
     eve = await create_api_event(request, event)
-    if eve["done"] == False:
+    if eve["done"] == False and eve["reason"] == "NO_AUTH":
+        return abort(401)
+    event = EventNew(api_token = atoken, event = "shard_count", context = str(api.shard_count))
+    eve = await create_api_event(request, event)
+    if eve["done"] == False and eve["reason"] == "NO_AUTH":
+        return abort(401)
+    return eve
+
+class APISMaint(BaseModel):
+    api_token: str
+    mode: bool
+    reason: Optional[str] = "There was no reason specified"
+
+@router.post("/bots/maint", tags = ["Shortcuts"])
+async def maint_mode_shortcut(request: Request, api: APISMaint):
+    """This is just a shortcut to /api/events for enabling or disabling maintenance mode
+
+    **API Token**: You can get this by clicking your bot and clicking edit and scrolling down to API Token or clicking APIWeb
+
+    **Mode**: Whether you went to enter or exit maintenance mode. Setting this to true will enable maintenance and setting this to false will disable maintenance
+    """
+    if api.mode:
+        event_name = "begin_maint"
+    else:
+        event_name = "end_maint"
+
+    event = EventNew(api_token = api.api_token, event = event_name, context = api.reason)
+    eve = await create_api_event(request, event)
+    if eve["done"] == False and eve["reason"] == "NO_AUTH":
         return abort(401)
     return eve
 
