@@ -4,7 +4,6 @@ from fastapi.responses import HTMLResponse
 
 router = APIRouter(
     prefix = "/api",
-    tags = ["API"],
     include_in_schema = True
 )
 
@@ -26,7 +25,7 @@ class EventUpdate(BaseModel):
 class TokenRegen(BaseModel):
     api_token: str
 
-@router.get("/events")
+@router.get("/events", tags = ["Events API"])
 async def get_api_events(request: Request, api_token: str, human: Optional[int] = 0, id: Optional[uuid.UUID] = None):
     """
        Gets a list of all events (or just a single event if id is specified. Events can be used to set guild/shard counts, enter maintenance mode or to show promotions
@@ -64,7 +63,7 @@ async def get_api_events(request: Request, api_token: str, human: Optional[int] 
         return ret
     return templates.TemplateResponse("api_event.html", {"request": request, "username": request.session.get("username", False), "avatar": request.session.get("avatar"), "api_token": api_token, "bot_id": bid["bot_id"], "api_response": ret}) 
 
-@router.delete("/events")
+@router.delete("/events", tags = ["Events API"])
 async def delete_api_events(request: Request, event: EventDelete):
     """Deletes an event for a bot or deletes all events from a bot (WARNING: DO NOT DO THIS UNLESS YOU KNOW WHAT YOU ARE DOING). Events can be used to set guild/shard counts, enter maintenance mode or to show promotions
 
@@ -94,7 +93,7 @@ async def delete_api_events(request: Request, event: EventDelete):
             pass
     return {"done":  True, "reason": None}
 
-@router.put("/events")
+@router.put("/events", tags = ["Events API"])
 async def create_api_event(request: Request, event: EventNew):
     """Creates an event for a bot. Events can be used to set guild/shard counts, enter maintenance mode or to show promotions
 
@@ -140,8 +139,8 @@ async def create_api_event(request: Request, event: EventNew):
     await add_event(id, event.event, event.context)
     return {"done":  True, "reason": None}
 
-@router.patch("/events")
-async def edit_event(request: Request, event: EventUpdate):
+@router.patch("/events", tags = ["Events API"])
+async def edit_api_event(request: Request, event: EventUpdate):
     """Edits an event for a bot given its event ID. Events can be used to set guild/shard counts, enter maintenance mode or to show promotions.
 
     **API Token**: You can get this by clicking your bot and clicking edit and scrolling down to API Token or clicking APIWeb
@@ -193,7 +192,7 @@ async def edit_event(request: Request, event: EventUpdate):
             pass
     return {"done": True, "reason": None}
 
-@router.patch("/token")
+@router.patch("/token", tags = ["Core API"])
 async def regenerate_token(request: Request, token: TokenRegen):
     """Regenerate the API token
 
@@ -206,8 +205,8 @@ async def regenerate_token(request: Request, token: TokenRegen):
     return {"done": True, "reason": None}
 
 
-@router.get("/bots/{bot_id}")
-async def api_get_bots(request: Request, bot_id: int):
+@router.get("/bots/{bot_id}", tags = ["Core API"])
+async def get_bots_api(request: Request, bot_id: int):
     """Gets bot information given a bot ID. If not found, 404 will be returned"""
     api_ret = await db.fetchrow("SELECT bot_id AS id, description, tags, long_description, servers AS server_count, shard_count, prefix, invite, owner, extra_owners, bot_library AS library, queue, banned, website, discord AS support, github FROM bots WHERE bot_id = $1", bot_id)
     if api_ret is None:
@@ -224,7 +223,7 @@ class APISGC(BaseModel):
     guild_count: int
     shard_count: int
 
-@router.post("/bots/stats", tags = ["Shortcuts"])
+@router.post("/bots/stats", tags = ["API Shortcuts"])
 async def guild_shard_count_shortcut(request: Request, api: APISGC, Authorization: Optional[str] = FHeader(None)):
     """This is just a shortcut to /api/events for guild/shard posting primarily for BotsBlock but can be used by others. The Swagger Try It Out does not work right now if you use the authorization header but the other api_token in JSON can and should be used instead for ease of use.
     """
@@ -249,7 +248,7 @@ class APISMaint(BaseModel):
     mode: bool
     reason: Optional[str] = "There was no reason specified"
 
-@router.post("/bots/maint", tags = ["Shortcuts"])
+@router.post("/bots/maint", tags = ["API Shortcuts"])
 async def maint_mode_shortcut(request: Request, api: APISMaint):
     """This is just a shortcut to /api/events for enabling or disabling maintenance mode
 
