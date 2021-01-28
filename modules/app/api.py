@@ -267,53 +267,6 @@ async def maint_mode_shortcut(request: Request, api: APISMaint):
         return abort(401)
     return eve
 
-# API Gateway Connection Manager
-
-class ConnectionManager:
-    def __init__(self):
-        self.active_connections: List[WebSocket] = []
-
-    async def connect(self, websocket: WebSocket):
-        await websocket.accept()
-        try:
-            print(websocket.api_token)
-        except:
-            websocket.api_token = []
-            websocket.bot_id = []
-        self.active_connections.append(websocket)
-
-    async def disconnect(self, websocket: WebSocket):
-        try:
-            await websocket.close(code=4005)
-        except:
-            pass
-        self.active_connections.remove(websocket)
-        websocket.api_token = []
-        websocket.bot_id = []
-        print(self.active_connections)
-
-    async def send_personal_message(self, message, websocket: WebSocket):
-        i = 0
-        if websocket not in self.active_connections:
-            await manager.disconnect(websocket)
-            return False
-        while i < 6:
-            try:
-                await websocket.send_json(message)
-                i = 6
-            except:
-                if i == 5:
-                    await manager.disconnect(websocket)
-                    return False
-                else:
-                    i+=1
-
-    async def broadcast(self, message: str):
-        for connection in self.active_connections:
-            await connection.send_text(message)
-
-manager = ConnectionManager()
-
 async def ws_send_events(websocket):
     for event_i in range(0, len(ws_events)):
         event = ws_events[event_i]

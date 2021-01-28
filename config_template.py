@@ -46,3 +46,5 @@ class OauthConfig:
     client_secret = "CLIENT SECRET HERE"
     scope = ["identify"]
     redirect_uri = "https://" + site + "/auth/login/confirm"
+
+builtins.hubspot_track_code = ""

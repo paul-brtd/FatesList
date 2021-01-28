@@ -23,6 +23,7 @@ from ratelimit import RateLimitMiddleware, Rule
 from ratelimit.backends.redis import RedisBackend
 from ratelimit.auths.ip import client_ip
 from config import *
+import os
 
 # Setup
 builtins.intent = discord.Intents.all()
@@ -56,6 +57,7 @@ class templates():
         arg_dict["staff"] = staff
         arg_dict["mkey"] = builtins.metrics_key
         arg_dict["mobile"] = str(request.url).startswith(mobile_site_url)
+        arg_dict["hsc"] = hubspot_track_code
         print(arg_dict["mobile"])
         if status is None:
             return _templates.TemplateResponse(f, arg_dict)

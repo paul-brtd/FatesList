@@ -3,8 +3,6 @@ import secrets
 from fastapi import Request, APIRouter, BackgroundTasks, Form as FForm, Header as FHeader, WebSocket, WebSocketDisconnect
 import aiohttp
 import asyncpg
-import json
-import os
 import datetime
 import random
 import math
@@ -26,6 +24,16 @@ from typing import Optional, List, Union
 from aiohttp_requests import requests
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from websockets.exceptions import ConnectionClosedOK
+import aioredis
+import uvloop
+import socket
+import uuid
+import contextvars
+from fastapi import FastAPI, Depends, Request
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.websockets import WebSocket, WebSocketDisconnect
+from websockets.exceptions import ConnectionClosedError, ConnectionClosedOK
+from aioredis.errors import ConnectionClosedError as ServerConnectionClosedError
 
 def redirect(path: str) -> RedirectResponse:
     return RedirectResponse(path, status_code=HTTP_303_SEE_OTHER)
@@ -291,3 +299,56 @@ async def render_bot(request: Request, bot_id: int, review: bool):
     form = await Form.from_formdata(request)
     ws_events.append((bot_id, {"type": "view", "event_id": None, "event": "view", "context": "user=0::hidden=1"}))
     return templates.TemplateResponse("bot.html", {"request": request, "username": request.session.get("username", False), "bot": bot_obj, "tags_fixed": tags_fixed, "form": form, "avatar": request.session.get("avatar"), "events": events, "maint": maint, "bot_admin": bot_admin, "review": review, "review_guild": reviewing_server})
+
+# WebSocket Base Code
+
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: List[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket, api: bool = True):
+        await websocket.accept()
+        if api:
+            try:
+                print(websocket.api_token)
+            except:
+                websocket.api_token = []
+                websocket.bot_id = []
+        else:
+            websocket.api_token = []
+            websocket.bot_id = []
+        self.active_connections.append(websocket)
+
+    async def disconnect(self, websocket: WebSocket):
+        try:
+            await websocket.close(code=4005)
+        except:
+            pass
+        self.active_connections.remove(websocket)
+        websocket.api_token = []
+        websocket.bot_id = []
+        print(self.active_connections)
+
+    async def send_personal_message(self, message, websocket: WebSocket):
+        i = 0
+        if websocket not in self.active_connections:
+            await manager.disconnect(websocket)
+            return False
+        while i < 6:
+            try:
+                await websocket.send_json(message)
+                i = 6
+            except:
+                if i == 5:
+                    await manager.disconnect(websocket)
+                    return False
+                else:
+                    i+=1
+
+    async def broadcast(self, message: str):
+        for connection in self.active_connections:
+            await connection.send_json(message)
+try:
+    a = builtins.manager
+except:
+    builtins.manager = ConnectionManager()
