@@ -98,17 +98,17 @@ async def validation_exception_handler(request, exc):
         msg = "401\nNot Authorized"
         code = 401
     elif exc.status_code == 422:
-        if str(request.url).startswith("https://fateslist.xyz/bot/"):
+        if str(request.url).startswith("https://fateslist.xyz/bot/") or str(request.url).startswith("https://m.fateslist.xyz/bot/"):
             msg = "Bot Not Found"
             code = 404
-        elif str(request.url).startswith("https://fateslist.xyz/profile/"):
+        elif str(request.url).startswith("https://fateslist.xyz/profile/") or str(request.url).startswith("https://m.fateslist.xyz/profile/"):
             msg = "Profile Not Found"
             code = 404
         else:
             msg = "Invalid Data Provided\n" + str(exc)
             code = 422
 
-    json = str(request.url).startswith("https://fateslist.xyz/api/")
+    json = str(request.url).startswith("https://fateslist.xyz/api/") or str(request.url).startswith("https://m.fateslist.xyz/api/")
     if json:
         if exc.status_code == 404 or exc.status_code == 401:
             return await http_exception_handler(request, exc)
