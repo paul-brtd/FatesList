@@ -90,7 +90,7 @@ def url_startswith(url, begin, slash = True):
     # Slash indicates whether to check /route or /route/
     if slash:
        begin = begin + "/"
-    return startswith(site_url + begin) or str(url).startswith(mobile_site_url + begin)
+    return str(url).startswith(site_url + begin) or str(url).startswith(mobile_site_url + begin)
 
 @builtins.app.exception_handler(401)
 @builtins.app.exception_handler(404)
@@ -106,10 +106,10 @@ async def validation_exception_handler(request, exc):
         msg = "401\nNot Authorized"
         code = 401
     elif exc.status_code == 422:
-        if url_startswith(request.url, "/bot")
+        if url_startswith(request.url, "/bot"):
             msg = "Bot Not Found"
             code = 404
-        elif url_startswith(request.url, "/bot")
+        elif url_startswith(request.url, "/bot"):
             msg = "Profile Not Found"
             code = 404
         else:
