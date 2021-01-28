@@ -27,6 +27,13 @@ builtins.staff_roles = {
     }
 }
 
+builtins.site = "fateslist.xyz" # Replace this with your main site
+builtins.mobile_site = "m.fateslist.xyz" # Replace this with your mobile site
+
+# These two values below dont need to be changed
+builtins.site_url = "https://" + site
+builtins.mobile_site_url = "https://" + mobile_site
+
 builtins.support_url = "https://discord.gg/PA5vjCRc5H"
 builtins.TOKEN = "TOKEN HERE"
 builtins.TAGS = ["music", "moderation", "economy", "fun", "anime", "games",
@@ -35,7 +42,7 @@ builtins.pg_pwd = "" # Postgres Database Password
 builtins.csrf_secret = ""
 builtins.session_key = ""
 class OauthConfig:
-    client_id = "798951566634778641"
+    client_id = "CLIENT ID HERE"
     client_secret = "CLIENT SECRET HERE"
     scope = ["identify"]
-    redirect_uri = "https://fateslist.xyz/auth/login/confirm"
+    redirect_uri = "https://" + site + "/auth/login/confirm"

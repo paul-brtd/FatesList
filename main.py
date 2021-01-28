@@ -55,7 +55,7 @@ class templates():
             staff = [False]
         arg_dict["staff"] = staff
         arg_dict["mkey"] = builtins.metrics_key
-        arg_dict["mobile"] = str(request.url).startswith("https://m.fateslist.xyz")
+        arg_dict["mobile"] = str(request.url).startswith(mobile_site_url)
         print(arg_dict["mobile"])
         if status is None:
             return _templates.TemplateResponse(f, arg_dict)
@@ -86,6 +86,12 @@ builtins.app.add_middleware(
     },
 )
 
+def url_startswith(url, begin, slash = True):
+    # Slash indicates whether to check /route or /route/
+    if slash:
+       begin = begin + "/"
+    return startswith(site_url + begin) or str(url).startswith(mobile_site_url + begin)
+
 @builtins.app.exception_handler(401)
 @builtins.app.exception_handler(404)
 @builtins.app.exception_handler(RequestValidationError)
@@ -100,17 +106,17 @@ async def validation_exception_handler(request, exc):
         msg = "401\nNot Authorized"
         code = 401
     elif exc.status_code == 422:
-        if str(request.url).startswith("https://fateslist.xyz/bot/") or str(request.url).startswith("https://m.fateslist.xyz/bot/"):
+        if url_startswith(request.url, "/bot")
             msg = "Bot Not Found"
             code = 404
-        elif str(request.url).startswith("https://fateslist.xyz/profile/") or str(request.url).startswith("https://m.fateslist.xyz/profile/"):
+        elif url_startswith(request.url, "/bot")
             msg = "Profile Not Found"
             code = 404
         else:
             msg = "Invalid Data Provided\n" + str(exc)
             code = 422
 
-    json = str(request.url).startswith("https://fateslist.xyz/api/") or str(request.url).startswith("https://m.fateslist.xyz/api/")
+    json = url_startswith(request.url, "/api")
     if json:
         if exc.status_code == 404 or exc.status_code == 401:
             return await http_exception_handler(request, exc)
