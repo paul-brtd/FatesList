@@ -19,7 +19,7 @@
         </button>
      </form>
     </div>
-     <small style="font-size: 14.5px; display: block; font-weight: bold; text-align: center; color: white;">Want to search by profile? Try <a href="/search/profile">Profile Search</a></small>
+     <small style="font-size: 14.5px; display: block; font-weight: bold; text-align: center; color: white;">Want to search by profile? Try <a href="/search/profile" style="color: white; opacity: 0.9">Profile Search</a></small>
   </div>
         <div class="d-flex flex-wrap justify-content-center align-items-center" style="width: 80%;margin: 0 auto;">
             {% for tag,new_tag in tags_fixed.items() %}
@@ -36,7 +36,7 @@
     <div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center" id="tt-2" style="width: 90%;margin: 30px 5%;">
         {% for bot in certified_bots %}
         <div style="width: 300px;height: 450px;background: #111112;box-shadow: 0px 0px 20px 5px;border-top-style: none;margin: 25px 25px;">
-                {% if bot.bot.banner == "" %}<div style="width: 100%;height: 30%;background: url(&quot;/static/assets/img/banner.webp&quot;) center / cover no-repeat;">{% else %}<div style="width: 100%;height: 30%;background: url(&quot;{{bot.bot.banner}}&quot;) center / cover no-repeat;">{% endif %}{% if bot.bot.certified == True %}<i class="fas fa-certificate fa-3x" style="color:#7289DA; position: absoulute; margin-top: -15px; margin-left: 90%"></i>{% endif %}<img alt="Bot avatar" style="border-radius: 50%;width: 30%;margin: 5% auto;margin-top: 17%;margin-right: 35%;margin-left: 35%;" src="{{bot.avatar}}"></div>
+                {% if bot.bot.banner == "" %}<div class="lozad" data-background-image="/static/assets/img/banner.webp" style="width: 100%;height: 30%;background: center / cover no-repeat;">{% else %}<div class="lozad" data-background-image="{{bot.bot.banner}}" style="width: 100%;height: 30%; background: center / cover no-repeat;">{% endif %}{% if bot.bot.certified == True %}<i class="fas fa-certificate fa-3x" style="color:#7289DA; position: absoulute; margin-top: -15px; margin-left: 90%"></i>{% endif %}<img alt="Bot avatar" style="border-radius: 50%;width: 30%;margin: 5% auto;margin-top: 17%;margin-right: 35%;margin-left: 35%;" src="{{bot.avatar}}" loading="lazy"></div>
             <div>
                 <div style="margin-right: auto;margin-left: auto;margin-top: 30px;width: 200px;">
                     <h4 class="text-nowrap text-break text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;white-space: nowrap;text-overflow: ellipsis;overflow: hidden; font-size: 21px; margin-top: 35px">{{bot.username}}</h4>
@@ -62,7 +62,10 @@
     <div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center" id="tt-1" style="width: 90%;margin: 30px 5%;">
         {% for bot in top_voted %}
             <div style="width: 300px;height: 450px;background: #111112;box-shadow: 0px 0px 20px 5px;border-top-style: none;margin: 25px 25px;">
-                {% if bot.bot.banner == "" %}<div style="width: 100%;height: 30%;background: url(&quot;/static/assets/img/banner.webp&quot;) center / cover no-repeat;">{% else %}<div style="width: 100%;height: 30%;background: url(&quot;{{bot.bot.banner}}&quot;) center / cover no-repeat;">{% endif %}{% if bot.bot.certified == True %}<i class="fas fa-certificate fa-3x" style="color:#7289DA; position: absoulute; margin-top: -15px; margin-left: 90%"></i>{% endif %}<img alt="bot avatar" style="border-radius: 50%;width: 30%;margin: 5% auto;margin-top: 17%;margin-right: 35%;margin-left: 35%;" src="{{bot.avatar}}"></div>
+                {% if bot.bot.banner == "" %}
+			<div class="lozad" data-background-image="{{bot.bot.banner}}" style="width: 100%;height: 30%;background: center / cover no-repeat;">
+		{% else %}
+			<div class="lozad" data-background-image="{{bot.bot.banner}}" style="width: 100%;height: 30%; background: center / cover no-repeat;">{% endif %}{% if bot.bot.certified == True %}<i class="fas fa-certificate fa-3x" style="color:#7289DA; position: absoulute; margin-top: -15px; margin-left: 90%"></i>{% endif %}<img alt="bot avatar" style="border-radius: 50%;width: 30%;margin: 5% auto;margin-top: 17%;margin-right: 35%;margin-left: 35%;" src="{{bot.avatar}}" loading="lazy"></div>
                 <div>
                     <div style="margin-right: auto;margin-left: auto;margin-top: 30px;width: 200px;">
                         <h4 class="text-nowrap text-break text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;white-space: nowrap;text-overflow: ellipsis;overflow: hidden; font-size: 21px; margin-top: 35px">{{bot.username}}</h4>
@@ -88,7 +91,7 @@
     <div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center" id="tt" style="width: 90%;margin: 30px 5%;">
         {% for bot in new_bots %}
         <div style="width: 300px;height: 450px;background: #111112;box-shadow: 0px 0px 20px 5px;border-top-style: none;margin: 25px 25px;">
-		{% if bot.bot.banner == "" %}<div style="width: 100%;height: 30%;background: url(&quot;/static/assets/img/banner.webp&quot;) center / cover no-repeat;">{% else %}<div style="width: 100%;height: 30%;background: url('{{ bot.bot.banner }}') center / cover no-repeat;">{% endif %}{% if bot.bot.certified == True %}<i class="fas fa-certificate fa-3x" style="color:#7289DA; position: absoulute; margin-top: -15px; margin-left: 90%"></i>{% endif %}<img alt="Bot avatar" style="border-radius: 50%;width: 30%;margin: 5% auto;margin-top: 17%;margin-right: 35%;margin-left: 35%;" src="{{bot.avatar.split("?size=")[0].replace(".png", "webp")}}"></div>
+		{% if bot.bot.banner == "" %}<div class="lozad" data-background-image="/static/assets/img/banner.webp" style="width: 100%;height: 30%;background: center / cover no-repeat;">{% else %}<div class="lozad" data-background-image="{{bot.bot.banner}}" style="width: 100%;height: 30%;background: center / cover no-repeat;">{% endif %}{% if bot.bot.certified == True %}<i class="fas fa-certificate fa-3x" style="color:#7289DA; position: absoulute; margin-top: -15px; margin-left: 90%"></i>{% endif %}<img alt="Bot avatar" style="border-radius: 50%;width: 30%;margin: 5% auto;margin-top: 17%;margin-right: 35%;margin-left: 35%;" src="{{bot.avatar}}" loading="lazy"></div>
             <div>
                 <div style="margin-right: auto;margin-left: auto;margin-top: 30px;width: 200px;">
                     <h4 class="text-nowrap text-break text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;white-space: nowrap;text-overflow: ellipsis;overflow: hidden; font-size: 21px; margin-top: 35px">{{bot.username}}</h4>
@@ -108,7 +111,13 @@
     {% endfor %}
     </div>
     <script src="/static/assets/js/main.js"></script>
+<script>
+  var observer = lozad()
+  observer.observe()
+</script>
+
 {% endblock %}
 {% block footer %}
 
 {% endblock %}
+
