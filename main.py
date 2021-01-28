@@ -55,6 +55,8 @@ class templates():
             staff = [False]
         arg_dict["staff"] = staff
         arg_dict["mkey"] = builtins.metrics_key
+        arg_dict["mobile"] = str(request.url).startswith("https://m.fateslist.xyz")
+        print(arg_dict["mobile"])
         if status is None:
             return _templates.TemplateResponse(f, arg_dict)
         return _templates.TemplateResponse(f, arg_dict, status_code = status)
