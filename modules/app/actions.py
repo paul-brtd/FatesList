@@ -25,7 +25,8 @@ async def add_bot(request: Request):
             else:
                 return templates.TemplateResponse("message.html", {"request": request, "message": "You are not in the support server", "username": request.session.get("username", False), "avatar": request.session.get("avatar")})
     else:
-        return RedirectResponse("/")
+        request.session["RedirectResponse"] = "/bot/admin/add"
+        return RedirectResponse("/auth/login")
 
 
 @router.post("/admin/add")
