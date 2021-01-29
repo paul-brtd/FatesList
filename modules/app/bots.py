@@ -22,6 +22,6 @@ async def bot_desc(request: Request, bot_id: int):
     else:
         return "Bot not found! :( Try refreshing. After that either report it on the support server or just continue your day!"
 
-@router.get("/widget/{bot_id}")
+@router.get("/{bot_id}/widget")
 async def bot_widget(request: Request, bot_id: int):
     return await render_bot(request, bot_id, review = False, widget = True)
