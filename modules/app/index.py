@@ -49,8 +49,12 @@ async def nonerouter():
 @router.get("/v/{vanity}")
 @router.get("/{vanity}")
 async def vanity_bot(request: Request, vanity: str):
-    t = await db.fetchrow("SELECT bot_id FROM bots WHERE vanity = $1", vanity)
+    t = await db.fetchrow("SELECT type, redirect FROM vanity WHERE vanity_url = $1", vanity)
     if t is None:
         return templates.e(request, "Invalid Vanity")
-    return RedirectResponse("/bot/" + str(t["bot_id"]))
+    if t["type"] == 1:
+        pre = "/bot/"
+    else:
+        pre = "/profile/"
+    return RedirectResponse(pre + str(t["redirect"]))
 

@@ -46,8 +46,8 @@
         <div class="form-group" class="d-flex justify-content-center" style="margin: 15px auto; width: 85%;text-align: center; color: white; font-weight: bold; overflow-wrap: anywhere;">
     <div style="margin 15px auto">
     <h6 style="color: white; margin-top: 1px !important;">API Token: <span style="font-size: 14px; opacity: 0.9">{{fetch.api_token}}</span></h6>
-    {% if fetch.vanity != "" %}
-    <h6 style="color: white; margin-top: 1px !important;">Vanity URL: <span style="font-size: 14px; opacity: 0.9">https://fateslist.xyz/{{fetch.vanity}}</span></h6>
+   {% if vanity != None %}
+    <h6 style="color: white; margin-top: 1px !important;">Vanity URL: <span style="font-size: 14px; opacity: 0.9">https://fateslist.xyz/{{vanity}}</span></h6>
     {% endif %}
     </div>
     <div>
@@ -315,7 +315,7 @@
       name="vanity"
       placeholder="cats"
       minlength="3"
-      {% if fetch.vanity != None %}value="{{fetch.vanity}}"{%endif%}
+      {% if vanity != None %}value="{{vanity}}"{%endif%}
     />
 <label
       style="

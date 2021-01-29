@@ -12,7 +12,7 @@ Privacy Policy Info
 
 Data Collection
 
-We collect permanent cookies in order to keep you signed in and to improve your experience on the website, and store data through PostgreSQL and Redis (ratelimits). Information you give us, such as bot application forms, badges your bots earn in the future, and your user info and biography, is all stored privately.
+We collect permanent clearable (session) cookies in order to keep you signed in and to improve your experience on the website, and store data through PostgreSQL and Redis (ratelimits). Information you give us, such as bot application forms, badges your bots earn in the future, and your profile information is all stored privately.
 
 Data Deletion
 

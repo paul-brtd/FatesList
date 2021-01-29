@@ -114,8 +114,11 @@ async def bot_edit(request: Request, bid: int):
             new_tag = tag.replace("_", " ")
             tags_fixed.update({tag: new_tag.capitalize()})
         form = await Form.from_formdata(request)
-        fetch = await db.fetchrow("SELECT bot_id, prefix, bot_library, invite, website, banner, discord, long_description, description, tags, owner, extra_owners, servers, created_at, webhook, discord, api_token, banner, banned, vanity, github FROM bots WHERE bot_id = $1", bid)
-        return templates.TemplateResponse("edit.html", {"request": request, "tags_fixed": tags_fixed, "username": request.session.get("username", False),"fetch":fetch,"form":form, "avatar": request.session.get("avatar"), "epoch": time.time()})
+        fetch = await db.fetchrow("SELECT bot_id, prefix, bot_library, invite, website, banner, discord, long_description, description, tags, owner, extra_owners, servers, created_at, webhook, discord, api_token, banner, banned, github FROM bots WHERE bot_id = $1", bid)
+        vanity = await db.fetchrow("SELECT vanity_url AS vanity FROM vanity WHERE redirect = $1", bid)
+        if vanity is None:
+            vanity = {"vanity": None}
+        return templates.TemplateResponse("edit.html", {"request": request, "tags_fixed": tags_fixed, "username": request.session.get("username", False),"fetch":fetch,"form":form, "avatar": request.session.get("avatar"), "epoch": time.time(), "vanity": vanity["vanity"]})
     else:
         return RedirectResponse("/")
 
@@ -177,7 +180,7 @@ async def bot_edit_api(
     if vanity == "":
         pass
     else:
-        vanity_check = await db.fetchrow("SELECT bot_id FROM bots FULL OUTER JOIN users ON bots.vanity = users.vanity WHERE (bots.vanity = $1 OR users.vanity = $1) AND bot_id != $2", vanity.replace(" ", "").lower(), bid)
+        vanity_check = await db.fetchrow("SELECT type FROM vanity WHERE vanity_url = $1 AND redirect != $2", vanity.replace(" ", "").lower(), bid)
         if vanity_check is not None or vanity.replace("", "").lower() in ["bot", "docs", "redoc", "doc", "profile", "server", "bots", "servers", "search", "invite", "discord", "login", "logout", "register", "admin"] or vanity.replace("", "").lower().__contains__("/"):
             return templates.TemplateResponse("message.html", {"request": request, "message": "Your custom vanity URL is already in use or is reserved"})
     if github != "" and not github.startswith("https://www.github.com"):
@@ -194,7 +197,13 @@ async def bot_edit_api(
     return templates.TemplateResponse("message.html", {"request": request, "message": "Bot has been edited.", "username": request.session.get("username", False), "avatar": request.session.get('avatar')}) 
 
 async def edit_bot_bt(request, botid, prefix, library, website, banner, support, long_description, description, selected_tags, extra_owners, creation, invite, webhook, vanity, github):
-    await db.execute("UPDATE bots SET bot_library=$2, webhook=$3, description=$4, long_description=$5, prefix=$6, website=$7, discord=$8, tags=$9, banner=$10, invite=$11, extra_owners = $12, vanity = $13, github = $14 WHERE bot_id = $1", botid, library, webhook, description, long_description, prefix, website, support, selected_tags, banner, invite, extra_owners, vanity, github)
+    await db.execute("UPDATE bots SET bot_library=$2, webhook=$3, description=$4, long_description=$5, prefix=$6, website=$7, discord=$8, tags=$9, banner=$10, invite=$11, extra_owners = $12, github = $13 WHERE bot_id = $1", botid, library, webhook, description, long_description, prefix, website, support, selected_tags, banner, invite, extra_owners, github)
+    check = await db.fetchrow("SELECT vanity FROM vanity WHERE redirect = $1", botid)
+    if check is None:
+        print("am here")
+        await db.execute("INSERT INTO vanity (type, vanity_url, redirect) VALUES ($1, $2, $3)", 1, vanity, botid)
+    else:
+        await db.execute("UPDATE vanity SET vanity_url = $1 WHERE redirect = $2", vanity, botid)
     await add_event(botid, "edit_bot", f"user:{str(request.session['userid'])}")
     owner=str(request.session["userid"])
     await channel.send(f"<@{owner}> edited the bot <@{botid}>")

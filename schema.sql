@@ -56,7 +56,7 @@ CREATE TABLE api_event (
 
 CREATE TABLE vanity (
     type integer, -- 1 = bot, 2 = profile, 3 =  nothing right now but may be used
-    vanity text, -- This is the text I wish to match
-    redirect bigint, -- What does this vanity resolve to
-    redirect_text text -- For the future
+    vanity_url text, -- This is the text I wish to match
+    redirect bigint unique, -- What does this vanity resolve to
+    redirect_text text unique-- For the future
 );
