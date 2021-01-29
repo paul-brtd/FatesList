@@ -6,9 +6,9 @@
 
 {% block content %}
 <div style="width: 300px;height: 450px;background: #111112;box-shadow: 0px 0px 20px 5px;border-top-style: none;margin: 25px 25px;">
-                <div>
                 <div style="margin-right: auto;margin-left: auto;margin-top: 30px;width: 200px;">
-		{% if bot.bot.certified == True %}<i class="fas fa-certificate fa-3x" style="color:#7289DA; position: absoulute; margin-top: -15px; margin-left: 90%"></i>{% endif %}<img alt="Bot avatar" style="border-radius: 50%;width: 30%;margin: 5% auto;margin-top: 17%;margin-right: 35%;margin-left: 35%;" src="{{bot.avatar}}" loading="lazy">
+		{% if bot.bot.certified == True %}<i class="fas fa-certificate fa-3x" style="color:#7289DA; position: absoulute; margin-top: -15px; margin-left: 90%"></i>{% endif %}
+		    <img alt="Bot avatar" style="border-radius: 50%;width: 30%;margin: 5% auto;margin-top: 17%;margin-right: 35%;margin-left: 35%;" src="{{bot.avatar}}" loading="lazy">
                     <h4 class="text-nowrap text-break text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;white-space: nowrap;text-overflow: ellipsis;overflow: hidden; font-size: 21px; margin-top: 35px">{{bot.username}}</h4>
                 </div>
             </div>
@@ -25,6 +25,7 @@
 		<a role="button" aria-label="View" href="https://fateslist.xyz/bot/{{bot.bot.bot_id}}" class="btn btn-primary" style="width: 45%;margin-right: 5%;background: #7289DA;border-radius: 25px;font-weight: bold;">View On Fates List</a>
 	    </div>
 	</div>
+</div>
 {%endblock%}
 {% block footer %}
 
