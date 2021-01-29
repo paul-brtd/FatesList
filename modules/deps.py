@@ -300,9 +300,11 @@ async def render_bot(request: Request, bot_id: int, review: bool, widget: bool):
     ws_events.append((bot_id, {"type": "view", "event_id": None, "event": "view", "context": "user=0::hidden=1:widget=" + str(widget)}))
     if widget:
         f = "widget.html"
+        widget = True
     else:
         f = "bot.html"
-    return templates.TemplateResponse(f, {"request": request, "username": request.session.get("username", False), "bot": bot_obj, "tags_fixed": tags_fixed, "form": form, "avatar": request.session.get("avatar"), "events": events, "maint": maint, "bot_admin": bot_admin, "review": review, "review_guild": reviewing_server})
+        widget = False
+    return templates.TemplateResponse(f, {"request": request, "username": request.session.get("username", False), "bot": bot_obj, "tags_fixed": tags_fixed, "form": form, "avatar": request.session.get("avatar"), "events": events, "maint": maint, "bot_admin": bot_admin, "review": review, "guild": reviewing_server, "widget": widget})
 
 # WebSocket Base Code
 
