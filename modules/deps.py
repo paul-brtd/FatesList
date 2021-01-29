@@ -260,7 +260,7 @@ async def vote_bot(uid: int, username: str, bot_id: int) -> Optional[list]:
     return []
 
 # Get Bots Helper
-async def render_bot(request: Request, bot_id: int, review: bool):
+async def render_bot(request: Request, bot_id: int, review: bool, widget: bool):
     print("Begin rendering bots")
     bot = await db.fetchrow("SELECT prefix, shard_count, queue, description, bot_library AS library, tags, banner, website, certified, votes, servers, bot_id, invite, discord, owner, extra_owners, banner, banned, disabled, github FROM bots WHERE bot_id = $1 ORDER BY votes", bot_id)
     if bot is None:
@@ -297,8 +297,12 @@ async def render_bot(request: Request, bot_id: int, review: bool):
         new_tag = tag.replace("_", " ")
         tags_fixed.update({tag: new_tag.capitalize()})
     form = await Form.from_formdata(request)
-    ws_events.append((bot_id, {"type": "view", "event_id": None, "event": "view", "context": "user=0::hidden=1"}))
-    return templates.TemplateResponse("bot.html", {"request": request, "username": request.session.get("username", False), "bot": bot_obj, "tags_fixed": tags_fixed, "form": form, "avatar": request.session.get("avatar"), "events": events, "maint": maint, "bot_admin": bot_admin, "review": review, "review_guild": reviewing_server})
+    ws_events.append((bot_id, {"type": "view", "event_id": None, "event": "view", "context": "user=0::hidden=1:widget=" + str(widget)}))
+    if widget:
+        f = "widget.html"
+    else:
+        f = "bot.html"
+    return templates.TemplateResponse(f, {"request": request, "username": request.session.get("username", False), "bot": bot_obj, "tags_fixed": tags_fixed, "form": form, "avatar": request.session.get("avatar"), "events": events, "maint": maint, "bot_admin": bot_admin, "review": review, "review_guild": reviewing_server})
 
 # WebSocket Base Code
 
