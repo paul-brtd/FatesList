@@ -1,3 +1,10 @@
+{% extends "base/base.html" %}
+
+{% block head %}
+
+{% endblock %}
+
+{% block content %}
         <div style="width: 300px;height: 450px;background: #111112;box-shadow: 0px 0px 20px 5px;border-top-style: none;margin: 25px 25px;">
                 {% if bot.bot.banner == "" %}<div class="lozad" data-background-image="/static/assets/img/banner.webp" style="width: 100%;height: 30%;background: center / cover no-repeat;">{% else %}<div class="lozad" data-background-image="{{bot.bot.banner}}" style="width: 100%;height: 30%; background: center / cover no-repeat;">{% endif %}{% if bot.bot.certified == True %}<i class="fas fa-certificate fa-3x" style="color:#7289DA; position: absoulute; margin-top: -15px; margin-left: 90%"></i>{% endif %}<img alt="Bot avatar" style="border-radius: 50%;width: 30%;margin: 5% auto;margin-top: 17%;margin-right: 35%;margin-left: 35%;" src="{{bot.avatar}}" loading="lazy"></div>
             <div>
@@ -16,3 +23,4 @@
             </div>
             <div style="width: 80%;margin: 0 10%;"><a role="button" aria-label="View" href="/bot/{{bot.bot.bot_id}}" class="btn btn-primary" style="width: 45%;margin-right: 5%;background: #7289DA;border-radius: 25px;font-weight: bold;">View</a><a href="{{bot.bot.invite}}" class="btn btn-primary" style="width: 45%;margin-left: 5%;background: #7289DA;border-radius: 25px;font-weight: bold;" target="_blank" rel="noreferrer" role="button" aria-label="Invite">Invite</a></div>
         </div>
+{%endblock%}
