@@ -80,7 +80,7 @@ async def review(request: Request, bot_id: int):
         if not s[0]:
             return RedirectResponse("/")
         # async def _get_bot(bot_id: int, review: bool):
-        return await render_bot(request, bot_id, True)
+        return await render_bot(request, bot_id, review = True, widget = False)
     else:
         return RedirectResponse("/") 
 
