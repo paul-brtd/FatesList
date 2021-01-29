@@ -37,16 +37,19 @@
 
   </style>
 </head>
+{% if not widget %}
 <body style="background: #1D1E23;">
 <header role="navigation" style="background: #221d26; color: white;" class="navbar fixed-top navbar-full navbar-light navigation-clean-button" aria-label="Site Navigation Menu">
   <div class="navbar-brand">
      <a href="/" class="navbar-brand"><img alt="" style="margin-right: 5px;" width="30px" src="/static/assets/img/b7e5d6e0a9f6fddb68ea920a07546e6a%20(1).png"><span class="sr-only">Toggle navigation</span>Fates List</a>
    </div>
+   {% if not mobile %}
    <div class="navbar-nav" style="margin-top: 1px;">
     <li class="nav-item">
 	  <a class="nav-link" href="/bot/admin/add" style="float: left; text-align: center; margin-top: 2px;">Add Bot</a>
    </li>
    </div>
+   {% endif %}
    <ul class="navbar-nav ml-auto">
       <li class="nav-item dropdown">
         <span class="nav-link dropdown-toggle" id="navbarDropdownMenuLink-333" data-toggle="dropdown"
@@ -77,19 +80,24 @@
       </li>
   </ul>
 </header>
+{% else %}
+<body>
+{%endif%}
     <!-- jQuery, Bootstrap Bundle (includes Popper) and Material -->
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js" crossorigin></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js" integrity="sha256-jXCJJT3KKcnNjZ3rfsabCj1EX4j2omR4xxm+H5CtywE=" crossorigin></script>
     <script src="/static/core/material.min.js" async></script>
 
-    <div id="content" style="margin-top: 100px;">{% block content %}{% endblock %}</div>
+    <div id="content" {% if not widget %}style="margin-top: 100px;" {% endif %}>{% block content %}{% endblock %}</div>
     <div id="footer">
       {% block footer %}
 
       {% endblock %}
+{% if not widget %}	    
 <!-- Start of HubSpot Embed Code -->
 {{hsc|safe}}
 <!-- End of HubSpot Embed Code -->
+{% endif %}
 </body>
 <script>
     function getFormData($form){
@@ -120,5 +128,9 @@
         var formData = getFormData( $("#Sform") );
         postjson(server_url, formData);
     }
+</script>
+<script>
+  var observer = lozad()
+  observer.observe()
 </script>
 </html>
