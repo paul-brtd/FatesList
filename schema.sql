@@ -23,7 +23,6 @@ CREATE TABLE bots (
     extra_owners bigint[],
     invite text,
     banned BOOLEAN DEFAULT false,
-    vanity TEXT,
     github TEXT
 );
 
@@ -33,7 +32,6 @@ CREATE TABLE users (
     vote_epoch bigint,
     description text,
     certified boolean,
-    vanity text,
     badges text[],
     username text
 );
@@ -53,4 +51,12 @@ CREATE TABLE api_event (
     id uuid primary key DEFAULT uuid_generate_v4(),
     bot_id bigint,
     events text
+);
+
+
+CREATE TABLE vanity (
+    type integer; -- 1 = bot, 2 = profile, 3 =  nothing right now but may be used
+    vanity text; -- This is the text I wish to match
+    redirect bigint; -- What does this vanity resolve to
+    redirect_text text; -- For the future
 );
