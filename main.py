@@ -168,7 +168,8 @@ async def on_member_remove(member):
 @app.on_event("startup")
 async def startup():
     builtins.db = await setup_db()
-    asyncio.create_task(builtins.client.start(TOKEN))
+    print("Discord")
+    asyncio.create_task(client.start(TOKEN))
     #Verify users and bots!!!
     rb = RedisBackend()
     print(rb._redis)
