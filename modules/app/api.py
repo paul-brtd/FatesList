@@ -1,6 +1,7 @@
 from ..deps import *
 from uuid import UUID
 from fastapi.responses import HTMLResponse
+from typing import List
 
 router = APIRouter(
     prefix = "/api",
@@ -25,7 +26,12 @@ class EventUpdate(BaseModel):
 class TokenRegen(BaseModel):
     api_token: str
 
-@router.get("/events", tags = ["Events API"])
+class Events(BaseModel):
+    events: List[Optional[dict]] = []
+    maint: Optional[list] = None
+    guild_count: Optional[int] = None
+
+@router.get("/events", tags = ["Events API"], response_model = Events)
 async def get_api_events(request: Request, api_token: str, human: Optional[int] = 0, id: Optional[uuid.UUID] = None):
     """
        Gets a list of all events (or just a single event if id is specified. Events can be used to set guild/shard counts, enter maintenance mode or to show promotions
@@ -36,29 +42,7 @@ async def get_api_events(request: Request, api_token: str, human: Optional[int] 
 
         **ID**: The Event UUID if you want to just return a specific event
     """
-    bid = await db.fetchrow("SELECT bot_id, servers FROM bots WHERE api_token = $1", api_token)
-    if bid is None:
-        return {"events": []}
-    uid = bid["bot_id"]
-    # As a replacement/addition to webhooks, we have API events as well to allow you to quickly get old and new events with their epoch
-    if id is not None:
-        api_data = await db.fetchrow("SELECT id, events FROM api_event WHERE bot_id = $1 AND id = $2", uid, id)
-        if api_data is None:
-            return {"events": []}
-        event = api_data["events"]
-        return {"id": uid,  "event": event.split("|")[0], "epoch": event.split("|")[1], "context": event.split("|")[2]}
-
-    api_data = await db.fetch("SELECT id, events FROM api_event WHERE bot_id = $1 ORDER BY id", uid)
-    if api_data == []:
-        return {"events": []}
-    events = []
-    for _event in api_data:
-        event = _event["events"]
-        uid = _event["id"]
-        if len(event.split("|")[0]) < 3:
-            continue # Event name size is too small
-        events.append({"id": uid,  "event": event.split("|")[0], "epoch": event.split("|")[1], "context": event.split("|")[2]})
-    ret = {"events": events, "maint": (await in_maint(bid["bot_id"])), "guild_count": bid["servers"]}
+    ret = await get_events(api_token = api_token, event_id = id)
     if human == 0:
         return ret
     return templates.TemplateResponse("api_event.html", {"request": request, "username": request.session.get("username", False), "avatar": request.session.get("avatar"), "api_token": api_token, "bot_id": bid["bot_id"], "api_response": ret}) 
@@ -214,8 +198,11 @@ async def get_bots_api(request: Request, bot_id: int):
     api_ret = dict(api_ret)
     bot_obj = await get_bot(bot_id)
     api_ret["username"] = bot_obj["username"]
+    api_ret["avatar"] = bot_obj["avatar"]
     api_ret["owners"] = [api_ret["owner"]] + api_ret["extra_owners"]
     api_ret["id"] = str(api_ret["id"])
+    api_ret["events"] = await get_normal_events(bot_id = bot_id)
+    api_ret["maint"] = await in_maint(bot_id = bot_id)
     return api_ret
 
 class APISGC(BaseModel):

@@ -77,5 +77,8 @@ async def profile_editor(request: Request, userid: int):
         pass
     if not admin:
         return RedirectResponse("/")
-    data = await db.fetchrow("SELECT token, description, certified, vanity, badges FROM users WHERE userid = $1", userid)
-    return templates.TemplateResponse("profile_edit.html", {"request": request, "token": data["token"], "certified": data["certified"] == True, "fstaff": staff})
+    data = await db.fetchrow("SELECT token, description, certified, badges FROM users WHERE userid = $1", userid)
+    vanity = await db.fetchrow("SELECT vanity_url AS vanity FROM vanity WHERE redirect = $1", userid)
+    if vanity is None:
+        vanity = {"vanity": None}
+    return templates.TemplateResponse("profile_edit.html", {"request": request, "token": data["token"], "certified": data["certified"] == True, "fstaff": staff, "vanity": vanity["vanity"]})

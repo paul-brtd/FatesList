@@ -354,7 +354,39 @@ class ConnectionManager:
     async def broadcast(self, message: str):
         for connection in self.active_connections:
             await connection.send_json(message)
+
 try:
     a = builtins.manager
 except:
     builtins.manager = ConnectionManager()
+
+async def get_events(api_token: Optional[str] = None, bot_id: Optional[str] = None, event_id: Optional[uuid.UUID] = None):
+    if api_token is None and bot_id is None:
+        return {"events": []}
+    if api_token is None:
+        bid = await db.fetchrow("SELECT bot_id, servers FROM bots WHERE bot_id = $1", bot_id)
+    else:
+        bid = await db.fetchrow("SELECT bot_id, servers FROM bots WHERE api_token = $1", api_token)
+    if bid is None:
+        return {"events": []}
+    uid = bid["bot_id"]
+    # As a replacement/addition to webhooks, we have API events as well to allow you to quickly get old and new events with their epoch
+    if event_id is not None:
+        api_data = await db.fetchrow("SELECT id, events FROM api_event WHERE bot_id = $1 AND id = $2", uid, event_id)
+        if api_data is None:
+            return {"events": []}
+        event = api_data["events"]
+        return {"events": [{"id": uid,  "event": event.split("|")[0], "epoch": event.split("|")[1], "context": event.split("|")[2]}]}
+
+    api_data = await db.fetch("SELECT id, events FROM api_event WHERE bot_id = $1 ORDER BY id", uid)
+    if api_data == []:
+        return {"events": []}
+    events = []
+    for _event in api_data:
+        event = _event["events"]
+        uid = _event["id"]
+        if len(event.split("|")[0]) < 3:
+            continue # Event name size is too small
+        events.append({"id": uid,  "event": event.split("|")[0], "epoch": event.split("|")[1], "context": event.split("|")[2]})
+    ret = {"events": events, "maint": (await in_maint(bid["bot_id"])), "guild_count": bid["servers"]}
+    return ret
