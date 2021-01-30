@@ -47,12 +47,12 @@ async def search(request: Request, q: str):
 
     return templates.TemplateResponse("search.html", {"request": request, "username": request.session.get("username", False), "search_bots": search_bots, "tags_fixed": tags_fixed, "avatar": request.session.get("avatar"), "query": q, "profile_search": False})
 
-@router.get("/tags/{tag_search}")
+@router.get("/tags")
 @csrf_protect
-async def tags(request: Request, tag_search):
-    if tag_search not in TAGS:
+async def tags(request: Request, tag: str):
+    if tag not in TAGS:
         return RedirectResponse("/")
-    fetch = await db.fetch(f"SELECT description, banner,certified,votes,servers,bot_id,tags,invite FROM bots, unnest(tags) a WHERE  lower(a) = '{tag_search}' AND queue = false and banned = false and disabled = false ORDER BY votes")
+    fetch = await db.fetch(f"SELECT description, banner,certified,votes,servers,bot_id,tags,invite FROM bots, unnest(tags) a WHERE  lower(a) = '{tag}' AND queue = false and banned = false and disabled = false ORDER BY votes")
     print(fetch)
     search_bots = []
     # TOP VOTED BOTS

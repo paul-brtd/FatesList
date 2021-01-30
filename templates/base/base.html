@@ -34,10 +34,11 @@
 ::-moz-selection {
   background: #ffb7b7 !important; /* Gecko Browsers */
 }
-#content-nomobile {display: block;}
+@media screen and (min-width: 768px) {
+.content-mobileonly {display: none;}
+}
 @media screen and (max-width: 768px) {
-#content-nomobile {display: none;}
-
+.content-nomobile {display: none;}
 }
 </style>
 </head>
@@ -47,7 +48,7 @@
   <div class="navbar-brand">
      <a href="/" class="navbar-brand"><img alt="" style="margin-right: 5px;" width="30px" src="/static/assets/img/b7e5d6e0a9f6fddb68ea920a07546e6a%20(1).png"><span class="sr-only">Toggle navigation</span>Fates List</a>
    </div>
-   <div id="content-nomobile" class="navbar-nav" style="margin-top: 1px;">
+   <div class="content-nomobile navbar-nav" style="margin-top: 1px;">
     <li class="nav-item">
 	  <a class="nav-link" href="/bot/admin/add" style="float: left; text-align: center; margin-top: 2px;">Add Bot</a>
    </li>
