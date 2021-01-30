@@ -11,9 +11,10 @@ HubSport Track Code can be gotten by signing up for HubSpot at https://app.hubsp
 
 1. Buy a domain (You will need a domain that can be added to Cloudflare in order to use Fates List. We use namecheap for this)
 
-2. Add the domain to Cloudflare (see [this](https://support.cloudflare.com/hc/en-us/articles/201720164-Creating-a-Cloudflare-account-and-adding-a-website)). Our whole website requires Cloudflare as the DNS in order to work
+2. Add the domain to Cloudflare (see [this](https://support.cloudflare.com/hc/en-us/articles/201720164-Creating-a-Cloudflare-account-and-adding-a-website)). Our whole website requires Cloudflare as the DNS in order to work.
 
 3. Buy a Linux VPS (You need a Linux VPS or a Linux home server with a public ip with port 443 open)
 
 4. Download this repo on the VPS using "git clone https://github.com/Fates-List/FatesList/edit/main/README.md"
 
+5. Enter Fates List directory, copy config_template.py to config.py and fill in the required information there
