@@ -51,7 +51,6 @@ class templates():
         else:
             staff = [False]
         arg_dict["staff"] = staff
-        arg_dict["mkey"] = builtins.metrics_key
         arg_dict["mobile"] = str(request.url).startswith(mobile_site_url)
         arg_dict["hsc"] = hubspot_track_code
         print(arg_dict["mobile"])
