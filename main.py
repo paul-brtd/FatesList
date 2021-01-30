@@ -7,7 +7,6 @@ from fastapi.exception_handlers import (
     http_exception_handler,
     request_validation_exception_handler,
 )
-from prometheusrock import PrometheusMiddleware, metrics_route
 import Oauth
 import asyncpg
 from pydantic import BaseModel
@@ -30,9 +29,6 @@ builtins.intent = discord.Intents.all()
 builtins.client = commands.AutoShardedBot(command_prefix='!', intents=intent)
 builtins.app = FastAPI(default_response_class = ORJSONResponse)
 builtins.app.add_middleware(SessionMiddleware, secret_key=session_key)
-builtins.app.add_middleware(PrometheusMiddleware)
-builtins.metrics_key = get_token(128)
-builtins.app.add_route("/admin/metrics/" + builtins.metrics_key, metrics_route)
 builtins._templates = Jinja2Templates(directory="templates")
 builtins.ws_events = [] # events that need to be dispatched
 class templates():
