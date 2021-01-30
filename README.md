@@ -23,8 +23,12 @@ HubSport Track Code can be gotten by signing up for HubSpot at https://app.hubsp
  
  4d) In Cloudflare, go to SSL/TLS, set the mode to Full (strict), enable Authenticated Origin Pull, make an origin certificate (in Origin Server) and save the private key as /key.pem on your VPS and the certificate as /cert.pem on your VPS
  
- 4e) In Vloudflare, go to SSL/TLS, 
+ 4e) Download https://support.cloudflare.com/hc/en-us/article_attachments/360044928032/origin-pull-ca.pem and save it on the VPS as /origin-pull-ca.pem.
 
 5. Download this repo on the VPS using "git clone https://github.com/Fates-List/FatesList/edit/main/README.md"
 
-6. Enter Fates List directory, copy config_template.py to config.py and fill in the required information on there. You do not need to change site_url or mobile_site_url fields (site and mobile_site do need to be filled in without the https://)
+6. Enter Fates List directory, copy config_template.py to config.py and fill in the required information on there. You do not need to change site_url or mobile_site_url fields (site and mobile_site do need to be filled in without the https://).
+
+7. Download and install nginx, redis, python3 and PostgreSQL.
+
+8. Remove the /etc/nginx folder, then copy the nginx_conf/nginx folder from this repo to /etc. Change /etc/nginx/conf.d/
