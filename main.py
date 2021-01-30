@@ -51,9 +51,7 @@ class templates():
         else:
             staff = [False]
         arg_dict["staff"] = staff
-        arg_dict["mobile"] = str(request.url).startswith(mobile_site_url)
         arg_dict["hsc"] = hubspot_track_code
-        print(arg_dict["mobile"])
         if status is None:
             return _templates.TemplateResponse(f, arg_dict)
         return _templates.TemplateResponse(f, arg_dict, status_code = status)
@@ -87,7 +85,7 @@ def url_startswith(url, begin, slash = True):
     # Slash indicates whether to check /route or /route/
     if slash:
        begin = begin + "/"
-    return str(url).startswith(site_url + begin) or str(url).startswith(mobile_site_url + begin)
+    return str(url).startswith(site_url + begin)
 
 @builtins.app.exception_handler(401)
 @builtins.app.exception_handler(404)

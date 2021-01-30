@@ -28,11 +28,9 @@ builtins.staff_roles = {
 }
 
 builtins.site = "fateslist.xyz" # Replace this with your main site
-builtins.mobile_site = "m.fateslist.xyz" # Replace this with your mobile site
 
-# These two values below dont need to be changed
+# This value below dont need to be changed
 builtins.site_url = "https://" + site
-builtins.mobile_site_url = "https://" + mobile_site
 
 builtins.support_url = "https://discord.gg/PA5vjCRc5H"
 builtins.TOKEN = "TOKEN HERE"

@@ -34,8 +34,12 @@
 ::-moz-selection {
   background: #ffb7b7 !important; /* Gecko Browsers */
 }
+#content-nomobile {display: block;}
+@media screen and (max-width: 768px) {
+#content-nomobile {display: none;}
 
-  </style>
+}
+</style>
 </head>
 {% if not widget %}
 <body style="background: #1D1E23;">
@@ -43,13 +47,11 @@
   <div class="navbar-brand">
      <a href="/" class="navbar-brand"><img alt="" style="margin-right: 5px;" width="30px" src="/static/assets/img/b7e5d6e0a9f6fddb68ea920a07546e6a%20(1).png"><span class="sr-only">Toggle navigation</span>Fates List</a>
    </div>
-   {% if not mobile %}
-   <div class="navbar-nav" style="margin-top: 1px;">
+   <div id="content-nomobile" class="navbar-nav" style="margin-top: 1px;">
     <li class="nav-item">
 	  <a class="nav-link" href="/bot/admin/add" style="float: left; text-align: center; margin-top: 2px;">Add Bot</a>
    </li>
    </div>
-   {% endif %}
    <ul class="navbar-nav ml-auto">
       <li class="nav-item dropdown">
         <span class="nav-link dropdown-toggle" id="navbarDropdownMenuLink-333" data-toggle="dropdown"
