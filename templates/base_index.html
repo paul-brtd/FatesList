@@ -14,15 +14,16 @@
     <div class="search_box is-mobile is-centered">
         {% if not profile_search %}
         <form method="GET" action="/search/t">
-                <input type="text" class="input" placeholder="Search for bots related to your term." name="q" value="{{query}}">
-            <button class="btn btn_common" type="submit">
+                <input type="text" class="input" placeholder="Search for bots related to your term." name="q" value="{{query}}" aria-label="Search for s│·
+		omething..">
+            <button aria-label="Search" class="btn btn_common" type="submit">
                 <i class="fas fa-search"></i>
             </button>
         </form>
         {% else %}
         <form method="GET" action="/search/profile">
-                <input type="text" class="input" placeholder="Search for profiles related to your term." name="q" value="{{query}}">
-            <button class="btn btn_common" type="submit">
+                <input type="text" class="input" placeholder="Search for profiles related to your term." name="q" value="{{query}}" aria-label="Search for something..">
+            <button class="btn btn_common" type="submit" aria-label="Search">
                 <i class="fas fa-search"></i>
             </button>
         </form>
