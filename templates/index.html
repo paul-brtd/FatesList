@@ -1,46 +1,10 @@
-{% extends "base/base.html" %}
+{% extends "base/base_index.html" %}
 
 {% block head %}
 
 {% endblock %}
 
 {% block content %}
-    <div style="margin-top: 200px;">
-        <div class="text-center" id="header_text" style="width: 90%;max-width: 600px;margin-right: auto;margin-left: auto;margin-top: 100px;">
-            <h2 style="font-weight: bold;font-size: 67px;color: rgba(255,255,255,0.87);">Fates List</h2>
-            <h6 style="font-weight: bold;opacity: 0.82;font-size: 20px;color: rgba(255,255,255,0.87);">Find the best bots for your servers.</h6>
-        </div><div class="search_wrap search_wrap_3">
-    <div class="search_box is-mobile is-centered">
-      <form method="GET" action="/search/t">
-	<label for="q">Search</label>
-        <input id="q" type="text" class="input" placeholder="Search for bots related to your term." name="q" id="search_input">
-        <button aria-label="Search" class="btn btn_common" type="submit">
-            <i class="fas fa-search"></i>
-        </button>
-     </form>
-    </div>
-     <small style="font-size: 14.5px; display: block; font-weight: bold; text-align: center; color: white;">Want to search by profile? Try <a href="/search/profile" style="color: white; opacity: 0.8">Profile Search</a></small>
-  </div>
-        <div class="d-flex flex-wrap justify-content-center align-items-center" style="width: 80%;margin: 0 auto;">
-            {% for tag,new_tag in tags_fixed.items() %}
-               <div class="content-nomobile">
-	    	<div class="text-nowrap d-flex justify-content-center align-items-center" style="line-height: 2;border-radius: 25px;background: #7289DA;width: auto;margin: 10px; cursor:pointer;" onclick="location.href='/search/tags?tag={{tag}}'">
-                    <p style="color: rgba(255,255,255,0.87);font-size: 15px;font-weight: bold;margin: 2px 10px;line-height: 2;">{{new_tag}}</p>
-                </div>
-	       </div>
-            {% endfor %}
-	    <div class="content-mobileonly">
-		    <form method="GET" action="/search/tags">
-			    <label for="tag" style="color: rgba(255, 255, 255, 0.87);">Choose A Tag</label>
-			    <select name="tag">
-				    {% for tag, new_tag in tags_fixed.items() %}
-				    <option value="{{tag}}">{{new_tag}}</option>
-				    {%endfor%}
-			    </select>
-			    <button class="btn btn-primary" style="background: #7289DA;" type="submit">Search</button>
-		    </form>
-	    </div>
-    </div>
     <hr style="font-size: 20px;border-top-width: 1px;border-top-color: #eee;width: 90%;">
     <div class="d-flex" style="margin-left: 5%;"><i class="fas fa-certificate fa-3x" style="color:white;"></i>
         <h4 style="color: rgba(255,255,255,0.87);margin-left: 15px;">Certified Bots</h4>
