@@ -15,11 +15,11 @@ HubSport Track Code can be gotten by signing up for HubSpot at https://app.hubsp
 
 3. Buy a Linux VPS (You need a Linux VPS or a Linux home server with a public ip with port 443 open)
 
-4a) In Cloudflare, create a record (A/CNAME) called @ that points to your VPS ip/hostname
+ 4a) In Cloudflare, create a record (A/CNAME) called @ that points to your VPS ip/hostname
 
-4b) In Cloudflare, create a record (A/CNAME) called m that points to your VPS ip/hostname
+ 4b) In Cloudflare, create a record (A/CNAME) called m that points to your VPS ip/hostname
 
-4c) In Cloudflare, go to Speed > Optimization. Enable AMP Real URL and enable Mobile Redirect to m.YOURDOMAIN with Keep Path ON
+ 4c) In Cloudflare, go to Speed > Optimization. Enable AMP Real URL and enable Mobile Redirect to m.YOURDOMAIN with Keep Path ON
 
 5. Download this repo on the VPS using "git clone https://github.com/Fates-List/FatesList/edit/main/README.md"
 
