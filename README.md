@@ -21,7 +21,9 @@ HubSport Track Code can be gotten by signing up for HubSpot at https://app.hubsp
 
  4c) In Cloudflare, go to Speed > Optimization. Enable AMP Real URL and enable Mobile Redirect to m.YOURDOMAIN with Keep Path ON
  
- 4d) In Cloudflare, go to SSL/TLS, make an origin certificate and save the private key as /privkey.pem on your VPS and the certificate as /cert.pem on your VPS
+ 4d) In Cloudflare, go to SSL/TLS, set the mode to Full (strict), enable Authenticated Origin Pull, make an origin certificate (in Origin Server) and save the private key as /key.pem on your VPS and the certificate as /cert.pem on your VPS
+ 
+ 4e) In Vloudflare, go to SSL/TLS, 
 
 5. Download this repo on the VPS using "git clone https://github.com/Fates-List/FatesList/edit/main/README.md"
 
