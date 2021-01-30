@@ -17,13 +17,11 @@ HubSport Track Code can be gotten by signing up for HubSpot at https://app.hubsp
 
  4a) In Cloudflare, create a record (A/CNAME) called @ that points to your VPS ip/hostname
 
- 4b) In Cloudflare, create a record (A/CNAME) called m that points to your VPS ip/hostname
-
- 4c) In Cloudflare, go to Speed > Optimization. Enable AMP Real URL and enable Mobile Redirect to m.YOURDOMAIN with Keep Path ON
+ 4b) In Cloudflare, go to Speed > Optimization. Enable AMP Real URL
  
- 4d) In Cloudflare, go to SSL/TLS, set the mode to Full (strict), enable Authenticated Origin Pull, make an origin certificate (in Origin Server) and save the private key as /key.pem on your VPS and the certificate as /cert.pem on your VPS
+ 4c) In Cloudflare, go to SSL/TLS, set the mode to Full (strict), enable Authenticated Origin Pull, make an origin certificate (in Origin Server) and save the private key as /key.pem on your VPS and the certificate as /cert.pem on your VPS
  
- 4e) Download https://support.cloudflare.com/hc/en-us/article_attachments/360044928032/origin-pull-ca.pem and save it on the VPS as /origin-pull-ca.pem.
+ 4d) Download https://support.cloudflare.com/hc/en-us/article_attachments/360044928032/origin-pull-ca.pem and save it on the VPS as /origin-pull-ca.pem.
 
 5. Download this repo on the VPS using "git clone https://github.com/Fates-List/FatesList"
 
@@ -31,7 +29,7 @@ HubSport Track Code can be gotten by signing up for HubSpot at https://app.hubsp
 
 7. Download and install nginx, redis, python3 and PostgreSQL (using the pg_user and pg_pwd you setup in config.py)
 
-8. Remove the /etc/nginx folder, then copy the nginx folder from this repo to /etc. Change the server_name values /etc/nginx/conf.d/default.conf to reflect your domain (m.fateslist.xyz would become m.example.com if example.com is the domain)
+8. Remove the /etc/nginx folder, then copy the nginx folder from this repo to /etc. Change the server_name values /etc/nginx/conf.d/default.conf to reflect your domain
 
 9. Restart nginx
 
