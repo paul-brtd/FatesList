@@ -30,6 +30,15 @@
 	       </div>
             {% endfor %}
 	    <div class="content-mobileonly">
+		    <form method="GET" action="/search/tags">
+			    <label for="tag" style="color: rgba(255, 255, 255, 0.87);">Choose A Tag</label>
+			    <select name="tag">
+				    {% for tag, new_tag in tags_fixed.items() %}
+				    <option value="{{tag}}">{{new_tag}}</option>
+				    {%endfor%}
+			    </select>
+			    <button class="btn btn-primary" style="background: #7289DA;" type="submit">Search</button>
+		    </form>
 	    </div>
     </div>
     <hr style="font-size: 20px;border-top-width: 1px;border-top-color: #eee;width: 90%;">
