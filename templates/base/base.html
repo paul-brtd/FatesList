@@ -35,11 +35,22 @@
   background: #ffb7b7 !important; /* Gecko Browsers */
 }
 @media screen and (min-width: 768px) {
-.content-mobileonly {display: none;}
+.index-fl {justify-content: center; text-align: center;}
+.content-mobileonly {display: none !important;}
 }
 @media screen and (max-width: 768px) {
-.content-nomobile {display: none;}
+.index-fl {justify-content: center; text-align: center; margin-left: 15% !important;}
+.content-nomobile {display: none !important;}
 }
+
+  .form {
+    display: inline-block;
+    background-color: white;
+    padding: 15px;
+    border-radius: 50px 50px 50px 50px !important;
+    text-align: center;
+    justify-content: center;
+  }
 </style>
 </head>
 {% if not widget %}

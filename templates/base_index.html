@@ -42,14 +42,16 @@
                 </div>
 	       </div>
             {% endfor %}
-	    <div class="content-mobileonly">
+	    <div class="content-mobileonly form">
 		    <form method="GET" action="/search/tags">
-			    <label for="tag" style="color: rgba(255, 255, 255, 0.87);">Choose A Tag</label>
-			    <select name="tag">
+			    <div class="form-group">
+			    <label for="tag">Choose A Tag</label>
+			    <select class="form-control" name="tag">
 				    {% for tag, new_tag in tags_fixed.items() %}
 				    <option value="{{tag}}">{{new_tag}}</option>
 				    {%endfor%}
 			    </select>
+			    </div>
 			    <button class="btn btn-primary" style="background: #7289DA;" type="submit">Search</button>
 		    </form>
 	    </div>

@@ -9,6 +9,11 @@
     <div class="d-flex" style="margin-left: 5%;"><i class="fas fa fa-search fa-3x" style="color:white;"></i>
         <h4 style="color: rgba(255,255,255,0.87);margin-left: 15px;">Search Results</h4>
     </div>
+    {% if search_bots == [] %}
+    <div>
+    {% else %}
+    <div class="index-fl">
+    {% endif %}
     <div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center" id="tt-1" style="width: 90%;margin: 30px 5%;">
 	{% if not profile_search %}
 	{% if search_bots == [] %}
@@ -49,6 +54,7 @@
 	   </div>
     {% endfor %}
     {% endif %}
+    </div>
     </div>
     <script src="/static/assets/js/main.js"></script>
 {% endblock %}
