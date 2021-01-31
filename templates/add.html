@@ -1,7 +1,7 @@
 {% extends "base/base.html" %}
 
 {% block head %}
-
+<script src="/static/core/codemirror.js"></script>
 {% endblock %}
 
 {% block content %}
@@ -49,8 +49,8 @@
                 style="background: #ffffff;border: grey;border-radius: 5px;max-width: 1000px;" name="support"
                 placeholder="https://discord.gg/738Hs" minlength="10"><label
                 style="color: white;font-weight: bold;font-size: 16px;margin-top: 30px;" for="long_description">Long
-                description(Allows html and markdown)</label><textarea required class="form-control"
-                style="background: #ffffff;border-radius: 5px;height: 150px;max-width: 1000px;/*border-color: grey!important;*/"
+                description(Allows html and markdown)</label><textarea class="form-control"
+                style="background: #ffffff;border-radius: 5px;"
                 name="long_description" placeholder="Write about your bot using html or markdown"
                 minlength="300"></textarea><label
                 style="color: white;font-weight: bold;font-size: 16px;margin-top: 30px;" for="long_description">Select
@@ -66,7 +66,32 @@
 <script src="/static/assets/js/bundle.min.js"></script>
 <script src="/static/assets/js/main.js"></script>
 <script>
-    const myOptions = [
+(function() {
+    'use strict';
+    const {EditorState} = CM["@codemirror/state"];
+    const {EditorView, drawSelection, keymap} = CM["@codemirror/view"];
+    const {history, historyKeymap} = CM["@codemirror/history"];
+
+    const {defaultKeymap} = CM["@codemirror/commands"];
+    const {defaultHighlightStyle} = CM["@codemirror/highlight"];
+    const {lineNumbers} = CM["@codemirror/gutter"];
+    const {Text} = CM["@codemirror/text"];
+    const {html} = CM["@codemirror/lang-html"];
+    const {markdown} = CM["@codemirror/lang-markdown"];
+
+    let lines = [`<!doctype html>`, `<meta charset="utf8">`, `<body>`];
+    window.view = new EditorView({
+        state: EditorState.create({
+            doc: Text.of(lines),
+            extensions: [keymap.of([...defaultKeymap, ...historyKeymap]), history(), drawSelection(), defaultHighlightStyle, lineNumbers(), html(), markdown()]
+        }),
+        parent: document.querySelector("#long_desc")
+    });
+})();
+
+
+
+const myOptions = [
         {% for tag, new_tag in tags_fixed.items() %}
 
     {
@@ -79,7 +104,8 @@
         options: myOptions,
         autocomplete: true, // default: false
         multiple: true,
-        icon: "fa fa-times"
+        icon: "fa fa-times",
+	placeholder: "Select your tags..."
     });
 
     $("#bot_form").submit(function (eventObj) {
