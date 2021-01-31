@@ -133,7 +133,7 @@
                         <p class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;"><i class="fas fa-thumbs-up" style="margin-right: 3px"></i>` + data.votes + `</p>
                     </div>
                 </div>
-                <div style="width: 80%;margin: 0 10%;"><a role="button" aria-label="View" href="/bot/{bot.bot.bot_id}" class="btn btn-primary" style="width: 45%;margin-right: 5%;background: #7289DA;border-radius: 25px;font-weight: bold;">View</a><a role="button" aria-label="Invite" href="{bot.bot.invite}" class="btn btn-primary" style="width: 45%;margin-left: 5%;background: #7289DA;border-radius: 25px;font-weight: bold;" target="_blank" rel="noreferrer">Invite</a></div>
+                <div style="width: 80%;margin: 0 10%;"><a role="button" aria-label="View" href="/bot/` + data.bot_id + `" class="btn btn-primary" style="width: 45%;margin-right: 5%;background: #7289DA;border-radius: 25px;font-weight: bold;">View</a><a role="button" aria-label="Invite" href=` + data.invite + `" class="btn btn-primary" style="width: 45%;margin-left: 5%;background: #7289DA;border-radius: 25px;font-weight: bold;" target="_blank" rel="noreferrer">Invite</a></div>
             </div>
 	`; random_bots.innerHTML = d;
 			})

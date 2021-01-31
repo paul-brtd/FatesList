@@ -131,9 +131,9 @@ async def setup_db():
 async def on_member_remove(member):
     if member.guild.id == reviewing_server:
         if member.bot:
+            channel = client.get_channel(bot_logs)
             bot = await db.fetchrow("SELECT bot_id FROM bots WHERE bot_id = $1",member.id)
             if bot is not None:
-                channel = client.get_channel(bot_logs)
                 await db.execute("UPDATE bots SET banned = true WHERE bot_id = $1",member.id)
                 await channel.send(f"Bot <@{str(member.id)}> {str(member)} has been removed from the server and hence has been banned from the bot list. Contact an admin for more info")
         else:
