@@ -43,9 +43,7 @@ async def get_api_events(request: Request, api_token: str, human: Optional[int] 
         **ID**: The Event UUID if you want to just return a specific event
     """
     ret = await get_events(api_token = api_token, event_id = id)
-    if human == 0:
-        return ret
-    return templates.TemplateResponse("api_event.html", {"request": request, "username": request.session.get("username", False), "avatar": request.session.get("avatar"), "api_token": api_token, "bot_id": bid["bot_id"], "api_response": ret}) 
+    return ret
 
 @router.delete("/events", tags = ["Events API"])
 async def delete_api_events(request: Request, event: EventDelete):
