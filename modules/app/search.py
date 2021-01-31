@@ -41,10 +41,10 @@ async def search(request: Request, q: str):
 
         # TAGS
     tags_fixed = {}
-    for tag in TAGS:
+    for tag in TAGS.keys():
+        tag_icon = TAGS[tag]
         new_tag = tag.replace("_", " ")
-        tags_fixed.update({tag: new_tag.capitalize()})
-
+        tags_fixed.update({tag: [new_tag.capitalize(), tag_icon]})
     return templates.TemplateResponse("search.html", {"request": request, "username": request.session.get("username", False), "search_bots": search_bots, "tags_fixed": tags_fixed, "avatar": request.session.get("avatar"), "query": q, "profile_search": False})
 
 @router.get("/tags")

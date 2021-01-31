@@ -32,9 +32,10 @@ async def home(request: Request):
             certified_bots.append({"bot": bot, "avatar": bot_info["avatar"], "username": bot_info["username"], "votes": await human_format(bot["votes"]), "servers": await human_format(bot["servers"]), "description": bot["description"]})
         # TAGS
     tags_fixed = {}
-    for tag in TAGS:
+    for tag in TAGS.keys():
+        tag_icon = TAGS[tag]
         new_tag = tag.replace("_", " ")
-        tags_fixed.update({tag: new_tag.capitalize()})
+        tags_fixed.update({tag: [new_tag.capitalize(), tag_icon]})
     return templates.TemplateResponse("index.html", {"request": request, "username": request.session.get("username", False), "top_voted": top_voted, "new_bots": new_bots, "certified_bots": certified_bots, "tags_fixed": tags_fixed})
 
 @router.get("/support")
