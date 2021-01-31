@@ -48,7 +48,6 @@ class templates():
         else:
             staff = [False]
         arg_dict["staff"] = staff
-        arg_dict["hsc"] = hubspot_track_code
         arg_dict["site_url"] = site_url
         if status is None:
             return _templates.TemplateResponse(f, arg_dict)
