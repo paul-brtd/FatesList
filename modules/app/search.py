@@ -11,10 +11,10 @@ async def search(request: Request, q: str):
     if q == "":
         return RedirectResponse("/")
     try:
-        es = " OR owner = " + str(int(q)) + f" OR {str(q)} = ANY(extra_owners)"
+        es = " OR owner = " + str(int(q)) + f" OR {str(q)} = ANY(extra_owners) OR bot_id = " + str(int(q))
     except:
         es = ""
-    desc = ("SELECT bot_id FROM bots WHERE queue = false and banned = false and disabled = false and (description ilike '%" + re.sub(r'\W+|_', ' ', q) + "%'" + es + ")")
+    desc = ("SELECT bot_id FROM bots WHERE (queue = false and banned = false and disabled = false) and (description ilike '%" + re.sub(r'\W+|_', ' ', q) + "%'" + es + ")")
     print(desc)
     desc = await db.fetch(desc)
     userc = await db.fetch("SELECT bot_id FROM bot_cache WHERE username ilike '%" + re.sub(r'\W+|_', ' ', q) + "%' and valid_for ilike '%bot%'")

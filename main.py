@@ -18,9 +18,6 @@ import builtins
 import importlib
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 from modules.deps import *
-from ratelimit import RateLimitMiddleware, Rule
-from ratelimit.backends.redis import RedisBackend
-from ratelimit.auths.ip import client_ip
 from config import *
 import os
 
@@ -52,6 +49,7 @@ class templates():
             staff = [False]
         arg_dict["staff"] = staff
         arg_dict["hsc"] = hubspot_track_code
+        arg_dict["site_url"] = site_url
         if status is None:
             return _templates.TemplateResponse(f, arg_dict)
         return _templates.TemplateResponse(f, arg_dict, status_code = status)
@@ -67,19 +65,7 @@ class templates():
 
 builtins.templates = templates
 builtins.app.add_middleware(CSRFProtectMiddleware, csrf_secret=csrf_secret)
-rb = RedisBackend()
-print(rb, type(rb))
 builtins.app.add_middleware(ProxyHeadersMiddleware)
-builtins.app.add_middleware(
-    RateLimitMiddleware,
-    authenticate=client_ip,
-    backend=rb,
-    config={
-        "/api/events": [Rule(minute=60), Rule(group="admin")],
-        "/api/bb": [Rule(second=300), Rule(group="admin")],
-        r"^/": [Rule(minute=120), Rule(group="admin")],
-    },
-)
 
 def url_startswith(url, begin, slash = True):
     # Slash indicates whether to check /route or /route/
@@ -164,8 +150,6 @@ async def startup():
     print("Discord")
     asyncio.create_task(client.start(TOKEN))
     #Verify users and bots!!!
-    rb = RedisBackend()
-    print(rb._redis)
 
 @client.event
 async def on_ready():

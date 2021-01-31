@@ -210,6 +210,13 @@ class APISGC(BaseModel):
     guild_count: int
     shard_count: int
 
+@router.get("/roll", tags = ["Core API"])
+async def roll_bots_api(request: Request):
+    random_unp = await db.fetchrow("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE queue = false AND banned = false AND disabled = false ORDER BY RANDOM() LIMIT 1") # Unprocessed
+    bot = (await get_bot(random_unp["bot_id"])) | dict(random_unp)
+    bot["bot_id"] = str(bot["bot_id"])
+    return bot
+
 @router.post("/bots/stats", tags = ["API Shortcuts"])
 async def guild_shard_count_shortcut(request: Request, api: APISGC, Authorization: Optional[str] = FHeader(None)):
     """This is just a shortcut to /api/events for guild/shard posting primarily for BotsBlock but can be used by others. The Swagger Try It Out does not work right now if you use the authorization header but the other api_token in JSON can and should be used instead for ease of use.

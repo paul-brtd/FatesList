@@ -1,4 +1,4 @@
-uvicorn
+uvicorn[standard]
 fastapi[all]
 aioredis
 redis
@@ -14,3 +14,4 @@ asgi-ratelimit
 prometheusrock
 orjson
 websockets
+aredis
