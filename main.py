@@ -31,6 +31,7 @@ builtins.ws_events = [] # events that need to be dispatched
 class templates():
     @staticmethod
     def TemplateResponse(f, arg_dict):
+        guild = client.get_guild(reviewing_server)
         try:
             request = arg_dict["request"]
         except:
@@ -153,8 +154,6 @@ async def startup():
 @client.event
 async def on_ready():
     print("UP ON DISCORD")
-    builtins.guild = client.get_guild(reviewing_server)
-    builtins.channel = guild.get_channel(bot_logs)
 
 @client.command()
 async def approve(ctx, bot: discord.Member):

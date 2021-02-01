@@ -9,6 +9,7 @@ router = APIRouter(
 @router.get("/console")
 async def admin(request:Request):
     if "userid" in request.session.keys():
+        guild = client.get_guild(reviewing_server)
         user = guild.get_member(int(request.session["userid"]))
         if user is None:
             return RedirectResponse("/", status_code = 303)
@@ -39,6 +40,7 @@ async def admin(request:Request):
 @csrf_protect
 async def admin_api(request:Request, admin: str = FForm(""), bot_id: int = FForm(0)):
     print(bot_id)
+    guild = client.get_guild(reviewing_server)
     user = guild.get_member(int(request.session["userid"]))
     if user is None:
         return RedirectResponse("/")
@@ -75,6 +77,7 @@ async def admin_api(request:Request, admin: str = FForm(""), bot_id: int = FForm
 @router.get("/review/{bot_id}")
 async def review(request: Request, bot_id: int):
     if "userid" in request.session.keys():
+        guild = client.get_guild(reviewing_server)
         user = guild.get_member(int(request.session["userid"]))
         s = is_staff(staff_roles, user.roles, 2)
         if not s[0]:
@@ -86,6 +89,7 @@ async def review(request: Request, bot_id: int):
 
 @router.post("/review/{bot_id}")
 async def review_api(request:Request, bot_id: int, accept: str = FForm("")):
+    guild = client.get_guild(reviewing_server)
     user = guild.get_member(int(request.session["userid"]))
     s = is_staff(staff_roles, user.roles, 2)
     if not s[0]:
@@ -96,6 +100,7 @@ async def review_api(request:Request, bot_id: int, accept: str = FForm("")):
             return RedirectResponse("/admin/console")
         await db.execute("UPDATE bots SET queue=false WHERE bot_id = $1", bot_id)
         await add_event(bot_id, "approve", f"user={str(request.session.get('userid'))}")
+        channel = client.get_channel(bot_logs)
         await channel.send(f"<@{bot_id}> by <@{str(b['owner'])}> has been approved")
         return templates.TemplateResponse("last.html",{"request":request,"message":"Bot accepted; You MUST Invite it by this url","username":request.session["username"],"url":f"https://discord.com/oauth2/authorize?client_id={str(bot_id)}&scope=bot&guild_id={guild.id}&disable_guild_select=true&permissions=0"})
     elif accept == "unverify":
@@ -104,6 +109,7 @@ async def review_api(request:Request, bot_id: int, accept: str = FForm("")):
             return RedirectResponse("/admin/console")
         await db.execute("UPDATE bots SET queue=true, banned = false WHERE bot_id = $1", bot_id)
         await add_event(bot_id, "approve", f"user={str(request.session.get('userid'))}")
+        channel = client.get_channel(bot_logs)
         await channel.send(f"<@{bot_id}> by <@{str(b['owner'])}> has been unverified")
         return templates.TemplateResponse("message.html",{"request":request,"message":"Bot unverified. Please carry on with your day"})
     elif accept == "false":
@@ -115,6 +121,7 @@ async def review_api(request:Request, bot_id: int, accept: str = FForm("")):
 async def review_deny(request:Request, bot_id: int):
     if "userid" in request.session.keys():
         form = await Form.from_formdata(request)
+        guild = client.get_guild(reviewing_server)
         user = guild.get_member(int(request.session["userid"]))
         s = is_staff(staff_roles, user.roles, 2)
         if not s[0]:
@@ -127,6 +134,7 @@ async def review_deny(request:Request, bot_id: int):
 
 @router.post("/review/{bot_id}/deny")
 async def review_deny_api(request:Request, bot_id: int, reason: str = FForm("There was no reason specified")):
+    guild = client.get_guild(reviewing_server)
     user = guild.get_member(int(request.session["userid"]))
     s = is_staff(staff_roles, user.roles, 2)
     if not s[0]:
@@ -138,5 +146,6 @@ async def review_deny_api(request:Request, bot_id: int, reason: str = FForm("The
         await db.execute("UPDATE bots SET banned = true WHERE bot_id = $1", bot_id)
         owner=str(request.session["userid"])
         await add_event(bot_id, "deny", f"user={str(request.session.get('userid'))}")
+        channel = client.get_channel(bot_log)
         await channel.send(f"<@{owner}> has denied the bot <@{bot_id}> by <@{str(check['owner'])}> with the reason: {reason}")
         return templates.TemplateResponse("message.html",{"request":request,"message":"I hope it DENIED the bot review GUY","username":request.session["username"]})

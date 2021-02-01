@@ -261,19 +261,26 @@ async def vote_bot(uid: int, username: str, bot_id: int) -> Optional[list]:
 
 # Get Bots Helper
 async def render_bot(request: Request, bot_id: int, review: bool, widget: bool):
+    guild = client.get_guild(reviewing_server)
     print("Begin rendering bots")
     bot = await db.fetchrow("SELECT prefix, shard_count, queue, description, bot_library AS library, tags, banner, website, certified, votes, servers, bot_id, invite, discord, owner, extra_owners, banner, banned, disabled, github FROM bots WHERE bot_id = $1 ORDER BY votes", bot_id)
+    print("Got here")
     if bot is None:
         return templates.e(request, "Bot Not Found")
-    if bot["extra_owners"] is None:
+    if widget:
         eo = []
-    else:
-        eo = bot["extra_owners"]
-    if "userid" in request.session.keys():
-        user = guild.get_member(int(request.session.get("userid")))
-        bot_admin = bot["owner"] == int(request.session["userid"]) or int(request.session["userid"]) in eo or (user is not None and is_staff(staff_roles, user.roles, 4)[0])
-    else:
         bot_admin = False
+    else:
+        if bot["extra_owners"] is None:
+            eo = []
+        else:
+            eo = bot["extra_owners"]
+        if "userid" in request.session.keys():
+            user = guild.get_member(int(request.session.get("userid")))
+            bot_admin = bot["owner"] == int(request.session["userid"]) or int(request.session["userid"]) in eo or (user is not None and is_staff(staff_roles, user.roles, 4)[0])
+        else:
+            bot_admin = False
+    print("Here")
     img_header_list = ["image/gif", "image/png", "image/jpeg", "image/jpg"]
     banner = bot["banner"].replace(" ", "%20").replace("\n", "")
     try:

@@ -46,6 +46,7 @@ async def add_bot_api(
         support: Optional[str] = FForm(""),
         long_description: str = FForm("")
     ):
+    guild = client.get_guild(reviewing_server)
     bot_dict = locals()
     bot_dict["request"] = None
     bot_dict["bt"] = None
@@ -103,6 +104,7 @@ async def add_bot_bt(request, bot_id, prefix, library, website, banner, support,
 @router.get("/edit/{bid}")
 @csrf_protect
 async def bot_edit(request: Request, bid: int):
+    guild = client.get_guild(reviewing_server)
     if "userid" in request.session.keys():
         check = await db.fetchrow("SELECT owner,extra_owners FROM bots WHERE bot_id = $1", bid)
         if not check:
@@ -151,6 +153,7 @@ async def bot_edit_api(
         vanity: str = FForm(""),
         github: str = FForm("")
     ):
+    guild = client.get_guild(reviewing_server)
     if "userid" in request.session.keys():
         check = await db.fetchrow("SELECT owner, extra_owners FROM bots WHERE bot_id = $1", bid)
         if not check:
@@ -267,6 +270,7 @@ async def vote_for_bot(
 @csrf_protect
 async def delete_bot(request: Request, bot_id: int, confirmer: str = FForm("1")):
     print(confirmer)
+    guild = client.get_guild(reviewing_server)
     if "userid" in request.session.keys():
         check = await db.fetchrow("SELECT owner, extra_owners, banned FROM bots WHERE bot_id = $1", bot_id)
         if not check:
@@ -293,6 +297,7 @@ async def delete_bot(request: Request, bot_id: int, confirmer: str = FForm("1"))
 
 @router.post("/ban/{bot_id}")
 async def ban_bot(request: Request, bot_id: int, ban: int = FForm(1), reason: str = FForm('There was no reason specified')):
+    guild = client.get_guild(reviewing_server)
     if ban not in [0, 1]:
         return RedirectResponse("/bot/" + str(bot_id), status_code = 303)
     if reason == "":

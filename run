@@ -1,1 +1,1 @@
-python3.9 -m uvicorn main:app --port 9999 --timeout-keep-alive 60
+gunicorn -k uvicorn.workers.UvicornWorker main:app -b 0.0.0.0:9999 -w 6

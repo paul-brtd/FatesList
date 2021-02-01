@@ -52,7 +52,7 @@ async def profile_of_user(request: Request, userid: int):
             user_bots.append({"bot": bot, "avatar": bot_info["avatar"], "username": bot_info["username"], "votes": await human_format(bot["votes"]), "servers": await human_format(bot["servers"]), "description": bot["description"]})
     user_info = await db.fetchrow("SELECT badges, description, certified FROM users WHERE userid = $1", userid)
     if user_info is None:
-        return RedirectResponse("/profile/" + str(userid))
+        return RedirectResponse("/profile/404")
     guild = client.get_guild(reviewing_server)
     user_dpy = guild.get_member(userid)
     return templates.TemplateResponse("profile.html", {"request": request, "username": request.session.get("username", False), "user_bots": user_bots, "user": user, "avatar": request.session.get("avatar"), "admin": bot_admin, "userid": userid, "personal": personal, "badges": get_badges(user_dpy, user_info["badges"], user_info["certified"] == True)})
