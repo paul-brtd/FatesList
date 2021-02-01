@@ -121,7 +121,7 @@ async def bot_edit(request: Request, bid: int):
             new_tag = tag.replace("_", " ")
             tags_fixed.update({tag: new_tag.capitalize()})
         form = await Form.from_formdata(request)
-        fetch = await db.fetchrow("SELECT bot_id, prefix, bot_library, invite, website, banner, long_description, description, tags, owner, extra_owners,  webhook, discord AS support, api_token, banner, banned, github FROM bots WHERE bot_id = $1", bid)
+        fetch = await db.fetchrow("SELECT bot_id, prefix, bot_library AS library, invite, website, banner, long_description, description, tags, owner, extra_owners,  webhook, discord AS support, api_token, banner, banned, github FROM bots WHERE bot_id = $1", bid)
         vanity = await db.fetchrow("SELECT vanity_url AS vanity FROM vanity WHERE redirect = $1", bid)
         if vanity is None:
             vanity = {"vanity": None}

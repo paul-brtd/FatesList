@@ -160,7 +160,7 @@
         placeholder="Discord.py"
         value="{{bot.library}}"
       />
-     <h5 style="font-weight: bold; margin-bottom: 15px;">Main Bot Settings</h5>
+     <h5 style="font-weight: bold; margin-bottom: 15px;">Bot Settings</h5>
      <label
         style="
           color: white;
@@ -261,7 +261,6 @@
         color: white;
         font-weight: bold;
         font-size: 16px;
-        margin-top: 30px;
       "
       for="webhook"
       >Webhook(Not required)</label
@@ -273,6 +272,8 @@
         border: grey;
         border-radius: 5px;
         max-width: 1000px;
+        margin-top: 7px;
+        margin-bottom: 30px;
       "
       name="webhook"
       placeholder="http://129.332.123:5000/webhook"
@@ -284,7 +285,6 @@
         color: white;
         font-weight: bold;
         font-size: 16px;
-        margin-top: 30px;
       "
       for="vanity"
       >Vanity (https://fateslist.xyz/v/VANITY_URL)</label
@@ -296,6 +296,8 @@
         border: grey;
         border-radius: 5px;
         max-width: 1000px;
+        margin-top: 7px;
+        margin-bottom: 30px;
       "
       name="vanity"
       placeholder="cats"
@@ -307,7 +309,6 @@
         color: white;
         font-weight: bold;
         font-size: 16px;
-        margin-top: 30px;
       "
       for="github"
       >Github (https://www.github.com/XYZ/XYZ)</label
@@ -319,6 +320,8 @@
         border: grey;
         border-radius: 5px;
         max-width: 1000px;
+        margin-top: 7px;
+        margin-bottom: 30px;
       "
       name="github"
       placeholder="https://www.github.com/XYZ/XYZ"
@@ -326,7 +329,7 @@
       {% if bot.github != None %}value="{{bot.github}}"{%endif%}
     />
     {% endif %}
-     <h5 style="font-weight: bold; margin-bottom: 15px;">Purpose</h5>
+     <h5 style="font-weight: bold; margin-bottom: 15px;">Bot Purpose</h5>
       <label
         style="
           color: white;
