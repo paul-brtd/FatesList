@@ -5,8 +5,6 @@
 
 <div
   style="
-    width: 80%;
-    margin: 50px auto;
     border-radius: 15px;
   "
 >
@@ -30,35 +28,41 @@
         font-size: 21px;
       "
     >
-      Edit your bot here.
+    {%if mode == "edit" %}Edit your bot here.{%else%}Add your bot here!{%endif%}
     </p>
+    {% if not error %}
+    {% else %}
+    <div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
+            <strong>{{error}}</strong>
+    </div>
+    {% endif %}
   </div>
   <hr
     style="
       font-size: 20px;
       border-top-width: 1px;
       border-top-color: #eee;
-      width: 90%;
+      width: 70%;
     "
   />
     <div class="form-group" style="color: blue; width: 80%; margin: 0 auto; height: auto; margin-top: 30px; color: rgba(255, 255, 255, 0.87)">
         <div class="form-group" class="d-flex" style="margin: 15px auto; width: 85%;color: white; font-weight: bold; overflow-wrap: anywhere;">
+   {% if mode == "edit" %}
    <section style="border-style: solid; padding-left: 30px; padding-right: 30px;">
     <div style="margin 15px auto">
-   {% if vanity != None %}
-    <h6 style="color: white; margin-top: 1px !important;">Vanity URL: <span style="font-size: 14px; opacity: 0.9">https://fateslist.xyz/{{vanity}}</span></h6>
+   {% if bot.vanity != None %}
+    <h6 style="color: white; margin-top: 1px !important;">Vanity URL: <span style="font-size: 14px; opacity: 0.9">https://fateslist.xyz/{{bot.vanity}}</span></h6>
     {% endif %}
     </div>
-    <h6 style="color: white; margin-top: 1px !important; font-size: 12.5px;">API Token: <span style="font-size: 11.5px; opacity: 0.9">{{fetch.api_token}}</span></h6>
-      </div>
-    </div>
+    <h6 style="color: white; margin-top: 1px !important; font-size: 12.5px;">API Token: <span style="font-size: 11.5px; opacity: 0.9">{{bot.api_token}}</span></h6>
    </section>
+   {% endif %}
   <form
     style="height: auto; margin-top: 30px; color: rgba(255, 255, 255, 0.87)"
     id="bot_form"
     method="POST"
   >
-    <div class="form-group" style="width: 80%; margin: 0 auto">
+    <div class="form-group">
       <label
         style="
           color: white;
@@ -69,7 +73,7 @@
         for="bot_id"
         >Bot id</label
       ><input
-        disabled
+	{% if mode == "edit" %}disabled{% endif %}
         required
         class="form-control"
         type="number"
@@ -78,17 +82,43 @@
           border: grey;
           border-radius: 5px;
           max-width: 400px;
+	  margin-top: 7px;
+	  margin-bottom: 30px;
         "
         name="bot_id"
         placeholder="12345678998764"
-        value="{{fetch.bot_id}}"
-      /><label
+        value="{{bot.bot_id}}"
+      />
+      <label
         style="
           color: white;
           font-weight: bold;
           font-size: 16px;
-          margin-top: 30px;
         "
+        for="extra_owners"
+        >Extra owners(Seperate ids by comas,Not required)</label
+      ><input
+        class="form-control"
+        type="text"
+        style="
+          background: #ffffff;
+          border: grey;
+          border-radius: 5px;
+          max-width: 400px;
+          margin-top: 7px;
+          margin-bottom: 30px;
+        "
+        name="extra_owners"
+        value="{% if bot.extra_owners == [] or not bot.extra_owners or bot.extra_owners == "None" or bot.extra_owners == ""%}{% else %}{{bot.extra_owners.__str__().replace("[", "").replace("]", "").replace(" ", "")}} {% endif %}"
+        placeholder="1234567899876,1234567865432"
+        minlength="10"
+      />
+      <label
+        style="
+          color: white;
+          font-weight: bold;
+          font-size: 16px;
+	"
         for="prefix"
         >Prefix</label
       ><input
@@ -99,17 +129,18 @@
           background: #ffffff;
           border: grey;
           border-radius: 5px;
-          max-width: 100px;
+          max-width: 200px;
+	  margin-top: 7px; 
+	  margin-bottom: 30px;
         "
         name="prefix"
         placeholder="!"
-        value="{{fetch.prefix}}"
+        value="{{bot.prefix}}"
       /><label
         style="
           color: white;
           font-weight: bold;
           font-size: 16px;
-          margin-top: 30px;
         "
         for="library"
         >Library</label
@@ -122,62 +153,19 @@
           border: grey;
           border-radius: 5px;
           max-width: 150px;
+	  margin-top: 7px; 
+	  margin-bottom: 30px;
         "
         name="library"
         placeholder="Discord.py"
-        value="{{fetch.bot_library}}"
-      /><label
+        value="{{bot.library}}"
+      />
+     <h5 style="font-weight: bold; margin-bottom: 15px;">Main Bot Settings</h5>
+     <label
         style="
           color: white;
           font-weight: bold;
           font-size: 16px;
-          margin-top: 30px;
-        "
-        for="description"
-        >Short Description</label
-      ><input
-        required
-        class="form-control"
-        type="text"
-        style="
-          background: #ffffff;
-          border: grey;
-          border-radius: 5px;
-          max-width: 1000px;
-        "
-        name="description"
-        placeholder="Fates list is a good bot that does everything you need"
-        minlength="10"
-        maxlength="100"
-        value="{{fetch.description}}"
-      /><label
-        style="
-          color: white;
-          font-weight: bold;
-          font-size: 16px;
-          margin-top: 30px;
-        "
-        for="extra_owners"
-        >Extra owners(Seperate ids by comas,Not required)</label
-      ><input
-        class="form-control"
-        type="text"
-        style="
-          background: #ffffff;
-          border: grey;
-          border-radius: 5px;
-          max-width: 1000px;
-        "
-        name="extra_owners"
-	value="{% if fetch.extra_owners == [] or not fetch.extra_owners or fetch.extra_owners == "None" %}{% else %}{{fetch.extra_owners.__str__().replace("[", "").replace("]", "").replace(" ", "")}} {% endif %}"
-        placeholder="1234567899876,1234567865432"
-        minlength="10"
-      /><label
-        style="
-          color: white;
-          font-weight: bold;
-          font-size: 16px;
-          margin-top: 30px;
         "
         for="invite"
         >Invite URL</label
@@ -190,17 +178,18 @@
           border: grey;
           border-radius: 5px;
           max-width: 1000px;
+	  margin-top: 7px;
+          margin-bottom: 30px;
         "
         name="invite"
         placeholder="https://discord.com/oauth2/authorize?client_id=12345637172158464&amp;permissions=314432&amp;scope=bot"
         minlength="10"
-        value="{{fetch.invite}}"
+        value="{{bot.invite}}"
       /><label
         style="
           color: white;
           font-weight: bold;
           font-size: 16px;
-          margin-top: 30px;
         "
         for="website"
         >Website URL</label
@@ -212,17 +201,18 @@
           border: grey;
           border-radius: 5px;
           max-width: 1000px;
+          margin-top: 7px;
+          margin-bottom: 30px;
         "
         name="website"
         placeholder="https://support.com"
         minlength="10"
-        value="{{fetch.website}}"
+        value="{{bot.website}}"
       /><label
         style="
           color: white;
           font-weight: bold;
           font-size: 16px;
-          margin-top: 30px;
         "
         for="website"
         >Banner URL(Not required) (255x143px recommended)</label
@@ -234,17 +224,18 @@
           border: grey;
           border-radius: 5px;
           max-width: 1000px;
+          margin-top: 7px;
+          margin-bottom: 30px;
         "
         name="banner"
         placeholder="https://cdn.discordapp.com/MySecretBanner.com"
         minlength="10"
-        value="{% if fetch.banner == "none" or fetch.banner == "" %}{%else%}{{fetch.banner}}{%endif%}"
+        value="{% if bot.banner == "none" or bot.banner == "" %}{%else%}{{bot.banner}}{%endif%}"
       /><label
         style="
           color: white;
           font-weight: bold;
           font-size: 16px;
-          margin-top: 30px;
         "
         for="support"
         >Support server</label
@@ -256,12 +247,16 @@
           border: grey;
           border-radius: 5px;
           max-width: 1000px;
+          margin-top: 7px;
+          margin-bottom: 30px;
         "
         name="support"
         placeholder="https://discord.gg/738Hs"
         minlength="10"
-        value="{{fetch.discord}}"
-      /><label
+        value="{{bot.support}}"
+      />
+      {% if mode == "edit" %}
+      <label
       style="
         color: white;
         font-weight: bold;
@@ -282,7 +277,7 @@
       name="webhook"
       placeholder="http://129.332.123:5000/webhook"
       minlength="3"
-      {% if fetch.webhook != None %}value="{{fetch.webhook}}" {%endif%}
+      {% if bot.webhook != None %}value="{{bot.webhook}}" {%endif%}
     />
     <label
       style="
@@ -305,7 +300,7 @@
       name="vanity"
       placeholder="cats"
       minlength="3"
-      {% if vanity != None %}value="{{vanity}}"{%endif%}
+      {% if bot.vanity != None %}value="{{bot.vanity}}"{%endif%}
     />
 <label
       style="
@@ -328,14 +323,42 @@
       name="github"
       placeholder="https://www.github.com/XYZ/XYZ"
       minlength="3"
-      {% if fetch.github != None %}value="{{fetch.github}}"{%endif%}
+      {% if bot.github != None %}value="{{bot.github}}"{%endif%}
     />
+    {% endif %}
+     <h5 style="font-weight: bold; margin-bottom: 15px;">Purpose</h5>
+      <label
+        style="
+          color: white;
+          font-weight: bold;
+          font-size: 16px;
+        "
+        for="description"
+        >Short Description</label
+      >
+      <input
+        required
+        class="form-control"
+        type="text"
+        style="
+          background: #ffffff;
+          border: grey;
+          border-radius: 5px;
+          max-width: 1000px;
+          margin-top: 7px;
+          margin-bottom: 30px;
+        "
+        name="description"
+        placeholder="Fates list is a good bot that does everything you need"
+        minlength="10"
+        maxlength="100"
+        value="{{bot.description}}"
+      />
   <label
         style="
           color: white;
           font-weight: bold;
           font-size: 16px;
-          margin-top: 30px;
         "
         for="long_description"
         >Long description(Allows html and markdown)</label
@@ -345,14 +368,16 @@
           background: #ffffff;
           border-radius: 5px;
           height: 150px;
-          max-width: 1000px; /*border-color: grey!important;*/
+          max-width: 1000px;
+          margin-top: 7px;
+          margin-bottom: 30px;
         "
         name="long_description"
         placeholder="Write about your bot using html or markdown"
         minlength="300"
         id="long_description"
-      ></textarea
-      ><label
+	>{{bot.long_description}}</textarea>
+      <label
         style="
           color: white;
           font-weight: bold;
@@ -368,16 +393,16 @@
           type="submit"
           style="margin-top: 50px; margin-bottom: 30px"
         >
-          Edit Bot
+	{% if mode == "edit" %}Edit Bot{%else%}Add Bot{%endif%}
         </button>
       </div>
     </div>
-    {{form.csrf_token}}
+    {{bot.form.csrf_token}}
   </form>
 </div>
-<span hidden id="long_description_value">{{fetch.long_description}}</span>
 <script src="/static/assets/js/bundle.min.js"></script>
 <script src="/static/assets/js/main.js"></script>
+{% if mode == "edit" %}
   <hr
     style="
       font-size: 20px;
@@ -391,18 +416,18 @@
 		              <div class="form-group" class="d-flex justify-content-center" style="margin: 15px auto; width: 85%;text-align: center; color: white; font-weight: bold; overflow-wrap: anywhere;">
 				          <div style="margin 15px auto">
     <h6 style="margin-bottom: 4.5px;">Events are a great way to deliver important updates for your bot!</h6>
-            <a href="/apiweb/{{fetch.api_token}}">
+            <a href="/apiweb/{{bot.api_token}}">
 		<button class="btn btn-outline-light" style="margin-top: 20px; margin-bottom: 35px">
 				              Configure Events (APIWeb)
 					              </button>
 	   </a>
     <h6 style="margin-top: 30px;">Delete Bot</h6>
     <p style="margin-bottom: 3px;">Warning: This cannot be undone</p>
-    {% if fetch.banned and not staff[0] %}
+    {% if bot.banned and not staff[0] %}
     <h5>You may not delete your bot as it has been banned</h5>
     {% else %}
-    <form method="POST" action="/bot/{{fetch.bot_id}}/delete">
-	{{form.csrf_token}}
+    <form method="POST" action="/bot/{{bot.bot_id}}/delete">
+	{{bot.form.csrf_token}}
         <button
           class="btn btn-danger"
 	  type="submit" 
@@ -417,13 +442,17 @@
 			      </div>
 	      </div>
   </div>
+  {% endif %}
 <script>
-  document.getElementById("long_description").value = $("#long_description_value").text()
+  {% if mode == "edit" %}
   const selected_tags = [
-      {% for tag in fetch['tags'] %}
+      {% for tag in bot.tags %}
         "{{tag}}",
       {% endfor %}
   ]
+  {% else %} 
+  const selected_tags = []
+  {% endif %}
   const myOptions = [
       {% for tag, new_tag in tags_fixed.items() %}
 
