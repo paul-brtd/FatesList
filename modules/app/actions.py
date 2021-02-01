@@ -10,20 +10,20 @@ router = APIRouter(
 @csrf_protect
 async def add_bot(request: Request):
     if "userid" in request.session.keys():
+        form = await Form.from_formdata(request)
         if request.method == "GET":
             # TAGS
             tags_fixed = {}
             for tag in TAGS:
                 new_tag = tag.replace("_", " ")
                 tags_fixed.update({tag: new_tag.capitalize()})
-            form = await Form.from_formdata(request)
-            return templates.TemplateResponse("add.html", {"request": request, "tags_fixed": tags_fixed, "username": request.session.get("username", False),"form":form, "avatar": request.session.get("avatar")})
+            return templates.TemplateResponse("add.html", {"request": request, "tags_fixed": tags_fixed, "bot": {"form": form}, "error": None})
         else:
             owner_check = await get_user(request.session["userid"])
             if owner_check:
                 pass
             else:
-                return templates.TemplateResponse("message.html", {"request": request, "message": "You are not in the support server", "username": request.session.get("username", False), "avatar": request.session.get("avatar")})
+                return templates.TemplateResponse("message.html", {"request": request, "message": "Something has went wrong getting your account. Please join our support server and contact us there"})
     else:
         request.session["RedirectResponse"] = "/bot/admin/add"
         return RedirectResponse("/auth/login")
@@ -46,33 +46,41 @@ async def add_bot_api(
         support: Optional[str] = FForm(""),
         long_description: str = FForm("")
     ):
+    bot_dict = locals()
+    bot_dict["request"] = None
+    bot_dict["bt"] = None
+    bot_dict["form"] = await Form.from_formdata(request)
+    # TAGS
+    tags_fixed = {}
+    for tag in TAGS:
+        new_tag = tag.replace("_", " ")
+        tags_fixed.update({tag: new_tag.capitalize()})
     if bot_id == "" or prefix == "" or invite == "" or description == "" or long_description == "":
-        return {"error": "Invalid Arguments"}
+        return templates.TemplateResponse("add.html", {"request": request, "tags_fixed": tags_fixed, "bot": bot_dict, "error": "Please ensure you have filled out all the required fields."})
     fetch = await db.fetch("SELECT bot_id FROM bots WHERE bot_id = $1", bot_id)
     if fetch:
-        return templates.TemplateResponse("message.html", {"request": request, "message": "Bot already exists.", "username": request.session.get("username", False)})
-
+        return templates.TemplateResponse("add.html", {"request": request, "tags_fixed": tags_fixed, "bot": bot_dict, "error": "This bot already exists on Fates List"})
     if invite.startswith("https://discord.com") and "oauth" in invite:
         pass
     else:
-        return templates.TemplateResponse("message.html", {"request": request, "message": "Invalid Bot Invite", "context": "Your bot invite must be in the format of https://discord.com/api/oauth2... or https://discord.com/oauth2...", "username": request.session.get("username", False)})
+        return templates.TemplateResponse("add.html", {"request": request, "tags_fixed": tags_fixed, "bot": bot_dict, "error": "Invalid Bot Invite: Your bot invite must be in the format of https://discord.com/api/oauth2... or https://discord.com/oauth2..."})
     if len(description) > 101:
-        return templates.TemplateResponse("message.html", {"request": request, "message": "Short description is too long.", "username": request.session.get("username", False)})
+        return templates.TemplateResponse("add.html", {"request": request, "tags_fixed": tags_fixed, "bot": bot_dict, "error": "Your short description must be shorter than 100 characters"})
     description = description.replace("\n", " ").replace("\t", " ")
     try:
         bot_object = await get_bot(bot_id)
     except:
-        return templates.TemplateResponse("message.html", {"request": request, "message": "This bot doesn't exist", "username": request.session.get("username", False)})
+        return templates.TemplateResponse("add.html", {"request": request, "tags_fixed": tags_fixed, "bot": bot_dict, "error": "According to Discord's API and our cache, your bot does not exist. Please try again after 2 hours."})
     if not bot_object:
-        return templates.TemplateResponse("message.html", {"request": request, "message": "This bot doesn't exist", "username": request.session.get("username", False)})
+        return templates.TemplateResponse("add.html", {"request": request, "tags_fixed": tags_fixed, "bot": bot_dict, "error": "According to Discord's API and our cache, your bot does not exist. Please try again after 2 hours."})
     if tags == "":
-        return templates.TemplateResponse("message.html", {"request": request, "message": "You need to select tags for your bot", "username": request.session.get("username", False)})
+        return templates.TemplateResponse("add.html", {"request": request, "tags_fixed": tags_fixed, "bot": bot_dict, "error": "You must select tags for your bot"})
     selected_tags = tags.split(",")
     for test in selected_tags:
         if test in TAGS:
             pass
         else:
-            return templates.TemplateResponse("message.html", {"request": request, "message": "One of your bot tags didn't exist internally", "username": request.session.get("username", False)})
+            return templates.TemplateResponse("add.html", {"request": request, "tags_fixed": tags_fixed, "bot": bot_dict, "error": "One of your tags doesn't exist internally. Please choose a different tags"})
     creation = time.time()
     if extra_owners == "":
         extra_owners = None
@@ -80,7 +88,7 @@ async def add_bot_api(
         try:
             extra_owners = [int(id) for id in extra_owners.split(",")]
         except:
-            return templates.TemplateResponse("message.html", {"request": request, "message": "One of your extra owners is invalid"})
+            return templates.TemplateResponse("add.html", {"request": request, "tags_fixed": tags_fixed, "bot": bot_dict, "error": "One of your extra owners doesn't exist or you haven't comma-seperated them."})
     bt.add_task(add_bot_bt, request, bot_id, prefix, library, website, banner, support, long_description, description, selected_tags, extra_owners, creation, bot_object, invite)
     return RedirectResponse("/bot/" + str(bot_id), status_code = 303)
 
