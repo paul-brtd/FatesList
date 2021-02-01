@@ -34,7 +34,7 @@ builtins.site_url = "https://" + site
 
 builtins.support_url = "https://discord.gg/PA5vjCRc5H"
 builtins.TOKEN = "TOKEN HERE"
-builtins.TAGS = {"music": "fa-music", "moderation": "", "economy": "", "fun": "", "anime": "", "games": "", "web_dashboard": "", "logging": "", "streams": "", "game_stats": "", "leveling": "", "roleplay": "", "utility": "", "social": ""}
+builtins.TAGS = {"music": "fa-music", "moderation": "fa-hammer", "economy": "", "fun": "", "anime": "", "games": "", "web_dashboard": "", "logging": "", "streams": "", "game_stats": "", "leveling": "", "roleplay": "", "utility": "", "social": ""}
 builtins.pg_user = "postgres" # Postgres Database Username
 builtins.pg_pwd = "" # Postgres Database Password
 builtins.csrf_secret = ""
