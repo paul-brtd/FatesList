@@ -97,6 +97,7 @@ async def add_bot_bt(request, bot_id, prefix, library, website, banner, support,
     await db.execute("INSERT INTO bots(bot_id,prefix,bot_library,invite,website,banner,discord,long_description,description,tags,owner,extra_owners,votes,servers,shard_count,created_at,api_token) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)", bot_id, prefix, library, invite, website, banner, support, long_description, description, selected_tags, int(request.session["userid"]), extra_owners, 0, 0, 0, int(creation), get_token(101))
     await add_event(bot_id, "add_bot", "NULL")
     owner=str(request.session["userid"])
+    channel = client.get_channel(bot_logs)
     bot_name = bot_object["username"]
     await channel.send(f"<@{owner}> added the bot <@{bot_id}>({bot_name}) to queue")
 
@@ -223,6 +224,7 @@ async def edit_bot_bt(request, botid, prefix, library, website, banner, support,
     else:
         await db.execute("UPDATE vanity SET vanity_url = $1 WHERE redirect = $2", vanity, botid)
     await add_event(botid, "edit_bot", f"user:{str(request.session['userid'])}")
+    channel = client.get_channel(bot_logs)
     owner=str(request.session["userid"])
     await channel.send(f"<@{owner}> edited the bot <@{botid}>")
 
@@ -271,6 +273,7 @@ async def vote_for_bot(
 async def delete_bot(request: Request, bot_id: int, confirmer: str = FForm("1")):
     print(confirmer)
     guild = client.get_guild(reviewing_server)
+    channel = client.get_channel(bot_logs)
     if "userid" in request.session.keys():
         check = await db.fetchrow("SELECT owner, extra_owners, banned FROM bots WHERE bot_id = $1", bot_id)
         if not check:
@@ -298,6 +301,7 @@ async def delete_bot(request: Request, bot_id: int, confirmer: str = FForm("1"))
 @router.post("/ban/{bot_id}")
 async def ban_bot(request: Request, bot_id: int, ban: int = FForm(1), reason: str = FForm('There was no reason specified')):
     guild = client.get_guild(reviewing_server)
+    channel = client.get_channel(bot_logs)
     if ban not in [0, 1]:
         return RedirectResponse("/bot/" + str(bot_id), status_code = 303)
     if reason == "":
