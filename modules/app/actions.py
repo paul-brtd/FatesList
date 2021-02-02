@@ -279,7 +279,15 @@ async def delete_bot(request: Request, bot_id: int, confirmer: str = FForm("1"))
         if not check:
             return templates.TemplateResponse("message.html", {"request": request, "message": "This bot doesn't exist in our database.", "username": request.session.get("username", False)})
         user = guild.get_member(int(request.session.get("userid")))
-        if check["owner"] == int(request.session["userid"]) or str(request.session["userid"]) in check["extra_owners"] or is_staff(staff_roles, user.roles, 4)[0]:
+        if user is None:
+            roles = []
+        else:
+            roles = user.roles
+        if check["extra_owners"] is None:
+            eo = []
+        else:
+            eo = check["extra_owners"]
+        if check["owner"] == int(request.session["userid"]) or str(request.session["userid"]) in eo  or is_staff(staff_roles, roles, 4)[0]:
             pass
         else:
             return templates.TemplateResponse("message.html", {"request": request, "message": "You aren't the owner of this bot.", "context": "Only owners and admins can delete bots", "username": request.session.get("username", False)})
