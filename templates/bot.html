@@ -72,11 +72,13 @@
         </div>
         {% endif %}
     </div>
-    <h6 style="font-weight: bold;color: rgba(255,255,255,0.87); text-align: center;">Tags:</h6>
+    <div style="inline-block">
+    <h6 style="font-weight: bold;color: rgba(255,255,255,0.87); text-align: center;">Tags</h6>
     <div style="text-align: center;">
     {% for tag in bot.tags %}
         <button onclick="window.location.replace('/search/tags/{{tag}}')" class="btn btn-outline-dark" style="background-color: #7289DA; color: white !important; margin-right: 9px;"> <i class="fas"></i>{{tag.replace("_", " ")}}</button>
     {% endfor %}
+    </div>
     </div>
     {% if events != [] %}
     <hr style="margin-top: 20px; font-size: 20px;border-top-width: 1px;border-top-color: #eee;width: 90%;">
@@ -108,7 +110,7 @@
         </form>
         {% endif %}
     <hr style="font-size: 20px;border-top-width: 1px;border-top-color: #eee;width: 90%;">
-    <h5 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;margin-top: -13px;margin-bottom: 30px;">Description</h5><iframe id="myIframe" src="/bot/description/{{bot.bot_id}}" style="width: 90%;height: 300px;color: rgba(255,255,255,0.87)!important;background: #121212;margin: 0 5%;" scrolling="no" onload="resizeIframe(this)"></iframe>
+    <iframe id="myIframe" src="/bot/{{bot.bot_id}}/description" style="width: 90%;height: 300px;color: rgba(255,255,255,0.87)!important;margin: 0 5%; border: none" scrolling="no" onload="resizeIframe(this)"></iframe>
 
 <div class="modal fade" id="botInfo" tabindex="-1"  aria-labelledby="{{badge_id}}Label" aria-hidden="true">
 	<div class="modal-dialog modal-dialog-centered">

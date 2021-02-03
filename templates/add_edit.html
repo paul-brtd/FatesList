@@ -1,5 +1,7 @@
 {% extends "base/base.html" %} 
-{% block head %} 
+{% block head %}
+<style>
+</style>
 {% endblock %} 
 {% block content %}
 
@@ -28,7 +30,7 @@
         font-size: 21px;
       "
     >
-    {%if mode == "edit" %}Edit your bot here.{%else%}Add your bot here!{%endif%}
+    {%if mode == "edit" %}Edit your bot here.{%elif mode == "add"%}Add your bot here!{% elif mode == "templ_add" %}Add your server templates here (COMING SOON)!{%endif%}
     </p>
     {% if not error %}
     {% else %}
@@ -48,13 +50,14 @@
     <div class="form-group" style="color: blue; width: 80%; margin: 0 auto; height: auto; margin-top: 30px; color: rgba(255, 255, 255, 0.87)">
         <div class="form-group" class="d-flex" style="margin: 15px auto; width: 85%;color: white; font-weight: bold; overflow-wrap: anywhere;">
    {% if mode == "edit" %}
-   <section style="border-style: solid; border-radius: 50px 50px 50px 50px; padding-left: 30px; padding-right: 30px;">
+   <section style="border-style: solid; border-radius: 50px 50px 50px 50px; padding-left: 30px; padding: 5px;">
     <div style="margin 15px auto">
    {% if bot.vanity != None %}
     <h6 style="color: white; margin-top: 1px !important;">Vanity URL: <span style="font-size: 14px; opacity: 0.9">https://fateslist.xyz/{{bot.vanity}}</span></h6>
     {% endif %}
     </div>
-    <h6 style="color: white; margin-top: 1px !important; font-size: 12.5px;">API Token: <span style="font-size: 11.5px; opacity: 0.9">{{bot.api_token}}</span></h6>
+    <h6 style="color: white; margin-top: 1px !important; font-size: 12.5px; overflow-wrap: break-word;">API Token <span id="hidden_token">(Hidden)</span><span id="apitok" style="display: none; overflow-wrap: break-word !important; font-size: 11.5px; opacity: 0.9">{{bot.api_token}}</span></h6>
+   <button onclick='showToken(this)' class="btn btn-outline-light">Show API Token</button>
    </section>
    {% endif %}
   <form
@@ -73,11 +76,11 @@
           font-weight: bold;
           font-size: 16px;
         "
-        for="bot_id"
-	>Bot ID <span style="color: red; font-weight: bold" aria-hidden="true">*</span>
+	for="{% if mode == 'templ_add' or mode == 'templ_edit' %}template_code{% else %}bot_id{% endif %}"
+	>{% if mode == 'templ_add' or mode == 'templ_edit' %}Template Code{%else%}Bot ID{% endif %} <span style="color: red; font-weight: bold" aria-hidden="true">*</span>
       </label>
       <input
-	{% if mode == "edit" %}disabled{% endif %}
+	{% if mode == "edit" or mode == "templ_edit"%}disabled{% endif %}
         required
         class="form-control"
         type="number"
@@ -90,10 +93,39 @@
 	  margin-top: 7px;
 	  margin-bottom: 30px;
         "
-        name="bot_id"
+        name="{% if mode == 'templ_add' or mode == 'templ_edit' %}template_code{% else %}bot_id{% endif %}"
         placeholder="12345678998764"
-        value="{{bot.bot_id}}"
+	value="{% if mode == "templ_edit" %}{{templ.code}}{% elif mode == "templ_add" %}{% else %}{{bot.bot_id}}{% endif %}"
       />
+      {% if mode == "templ_add" or mode == "templ_edit"%}
+      <label
+        style="
+          color: white;
+          font-weight: bold;
+          font-size: 16px;
+        "
+        for="template_name"
+        >Template Name <span style="color: red; font-weight: bold" aria-hidden="true">*</span>
+      </label>
+      <input
+        required
+        class="form-control"
+        type="text"
+        style="
+          margin: auto;
+          background: #ffffff;
+          border: grey;
+          border-radius: 5px;
+          max-width: 400px;
+          margin-top: 7px;
+          margin-bottom: 30px;
+        "
+        maxlength=30
+        name="template_code"
+        placeholder="!"
+        value="{{templ.name}}"
+      />
+      {% else %}
       <label
         style="
           color: white;
@@ -171,9 +203,12 @@
         placeholder="Discord.py"
         value="{{bot.library}}"
       />
+      {% endif %}
   </div>
   <div class="col-lg">
      <h5 style="font-weight: bold; margin-bottom: 15px;">Bot Settings</h5>
+     {% if mode == "templ_add" or mode == "templ_edit"%}
+     {% else %}
      <label
         style="
           color: white;
@@ -252,7 +287,8 @@
         "
         for="support"
         >Support server</label
-      ><input
+      >
+      <input
         class="form-control"
         type="text"
         style="
@@ -293,6 +329,7 @@
       minlength="3"
       {% if bot.webhook != None %}value="{{bot.webhook}}" {%endif%}
     />
+    {% endif %}
     <label
       style="
         color: white;
@@ -344,16 +381,16 @@
     {% endif %}
   </div>
   </div>
-<h5 style="font-weight: bold; margin-bottom: 15px;">Bot Features</h5>
+	    <h5 style="font-weight: bold; margin-bottom: 15px;">{% if mode == "templ_add" or mode == "templ_edit" %}Server Template Features{% else %}Bot Features{% endif %}</h5>
 <div class="container">
 <div class="row">
 <div class-"col">
 <div class="custom-control custom-switch" style="text-align: center; float: left;; display: block; margin-bottom: 3px;">
-	<input type="checkbox" class="custom-control-input" id="custom_prefix" style="margin: auto !important;" name="custom_prefix" {%if bot.features and "custom_prefix" in bot.features %}checked{% endif %}/>
+	<input type="checkbox" class="custom-control-input" tabindex="0" id="custom_prefix" style="margin: auto !important;" name="custom_prefix" {% if mode == "templ_add" or mode == "templ_edit" %}{% else %}{%if bot.features and "custom_prefix" in bot.features %}checked aria-label="Custom Prefix Enabled"{% else %}aria-label="Custom Prefix Disabled"{% endif %}{% endif%}/>
 	<label class="custom-control-label" for="custom_prefix">Custom Prefix -> Can your prefix be customized/changed?</label>
 </div><br/>
 <div class="custom-control custom-switch" style="text-align: center; float: left;; display: block; margin-top: 15px;">
-        <input type="checkbox" class="custom-control-input" id="open_source" style="margin: auto !important;" name="open_source" {%if bot.features and "open_source" in bot.features %}checked{% endif %}/>
+	<input type="checkbox" class="custom-control-input" tabindex="0" id="open_source" style="margin: auto !important;" name="open_source" {% if mode == "templ_add" or mode == "templ_edit" %}{% else %}{%if bot.features and "open_source" in bot.features %}checked aria-label="Open Source Enabled"{% else %}aria-label="Open Source Disabled"{% endif %}{% endif %}/>
 	<label class="custom-control-label" for="open_source">Open Source -> Does your bot have it's code open to the public, preferrably on a git repository?</label>
 </div>
 </div></div><br/>
@@ -395,6 +432,7 @@
         >Long description(Allows html and markdown) <span style="color: red; font-weight: bold" aria-hidden="true">*</span></label
       ><textarea
         class="form-control"
+	required
         style="
           background: #ffffff;
           border-radius: 5px;
@@ -502,7 +540,20 @@
       icon: "fa fa-times",
       value: selected_tags,
   });
-
+  function showToken(but) {
+	
+	token = document.querySelector("#apitok")
+	if(token.style.display == "none") {
+		document.querySelector("#hidden_token").style.display = "none";
+		document.querySelector("#apitok").style.display = "block";
+		but.innerHTML = "Hide API Token"
+	}
+	else {
+                document.querySelector("#hidden_token").style.display = "inline-block";
+                document.querySelector("#apitok").style.display = "none";
+		but.innerHTML = "Show API Token"
+	}
+  }
   $("#bot_form").submit(function (eventObj) {
       var input = $("<input>").attr({ "type": "hidden", "name": "tags" }).val(instance.value());
       $('#bot_form').append(input);
