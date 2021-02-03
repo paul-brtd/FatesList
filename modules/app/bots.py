@@ -1,5 +1,5 @@
 from ..deps import *
-
+import markdown2
 router = APIRouter(
     prefix = "/bot",
     tags = ["Bots"],
@@ -18,7 +18,7 @@ async def bot_index(request: Request, bot_id: int):
 async def bot_desc(request: Request, bot_id: int):
     bot = await db.fetchrow("SELECT long_description FROM bots WHERE bot_id = $1",int(bot_id))
     if bot:
-        return templates.TemplateResponse("description.html",{"request":request,"bot":bot})
+        return templates.TemplateResponse("description.html",{"request":request,"long_description": markdown2.markdown(bot['long_description'])})
     else:
         return "Bot not found! :( Try refreshing. After that either report it on the support server or just continue your day!"
 
