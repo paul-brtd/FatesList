@@ -263,7 +263,7 @@ async def vote_bot(uid: int, username: str, bot_id: int) -> Optional[list]:
 async def render_bot(request: Request, bot_id: int, review: bool, widget: bool):
     guild = client.get_guild(reviewing_server)
     print("Begin rendering bots")
-    bot = await db.fetchrow("SELECT prefix, shard_count, queue, description, bot_library AS library, tags, banner, website, certified, votes, servers, bot_id, invite, discord, owner, extra_owners, banner, banned, disabled, github FROM bots WHERE bot_id = $1 ORDER BY votes", bot_id)
+    bot = await db.fetchrow("SELECT prefix, shard_count, queue, description, bot_library AS library, tags, banner, website, certified, votes, servers, bot_id, invite, discord, owner, extra_owners, banner, banned, disabled, github, features FROM bots WHERE bot_id = $1 ORDER BY votes", bot_id)
     print("Got here")
     if bot is None:
         return templates.e(request, "Bot Not Found")
@@ -295,7 +295,7 @@ async def render_bot(request: Request, bot_id: int, review: bool, widget: bool):
     maint = await in_maint(bot["bot_id"])
     ed = [((await get_user(id)), id) for id in eo]
     if bot_info:
-        bot_obj = {"bot": bot, "bot_id": bot["bot_id"], "avatar": bot_info["avatar"], "website": bot["website"], "username": bot_info["username"], "votes": await human_format(bot["votes"]), "servers": await human_format(bot["servers"]), "description": bot["description"], "support": bot['discord'], "invite": bot["invite"], "tags": bot["tags"], "library": bot['library'], "banner": banner, "shards": await human_format(bot["shard_count"]), "owner": bot["owner"], "owner_pretty": await get_user(bot["owner"]), "banned": bot['banned'], "disabled": bot['disabled'], "prefix": bot["prefix"], "github": bot['github'], "extra_owners": ed, "leo": len(ed), "queue": bot["queue"]}
+        bot_obj = {"bot": bot, "bot_id": bot["bot_id"], "avatar": bot_info["avatar"], "website": bot["website"], "username": bot_info["username"], "votes": await human_format(bot["votes"]), "servers": await human_format(bot["servers"]), "description": bot["description"], "support": bot['discord'], "invite": bot["invite"], "tags": bot["tags"], "library": bot['library'], "banner": banner, "shards": await human_format(bot["shard_count"]), "owner": bot["owner"], "owner_pretty": await get_user(bot["owner"]), "banned": bot['banned'], "disabled": bot['disabled'], "prefix": bot["prefix"], "github": bot['github'], "extra_owners": ed, "leo": len(ed), "queue": bot["queue"], "features": bot["features"], "fleo": len(bot["features"])}
     else:
         return templates.e(request, "Bot Not Found")
     # TAGS

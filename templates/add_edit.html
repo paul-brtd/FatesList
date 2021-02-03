@@ -58,21 +58,25 @@
    </section>
    {% endif %}
   <form
-    style="height: auto; margin-top: 30px; color: rgba(255, 255, 255, 0.87)"
+    style="height: auto; margin-top: 30px; color: rgba(255, 255, 255, 0.87); text-align: center;"
     id="bot_form"
     method="POST"
   >
     <div class="form-group">
+<div class="container">
+  <div class="row">
+	  <div class="col-lg">
+    <h5 style="font-weight: bold; margin-bottom: 15px;">Basic Information</h5>
       <label
         style="
           color: white;
           font-weight: bold;
           font-size: 16px;
-          margin-top: 30px;
         "
         for="bot_id"
-        >Bot ID</label
-      ><input
+	>Bot ID <span style="color: red; font-weight: bold" aria-hidden="true">*</span>
+      </label>
+      <input
 	{% if mode == "edit" %}disabled{% endif %}
         required
         class="form-control"
@@ -82,6 +86,7 @@
           border: grey;
           border-radius: 5px;
           max-width: 400px;
+	  margin: auto;
 	  margin-top: 7px;
 	  margin-bottom: 30px;
         "
@@ -96,8 +101,8 @@
           font-size: 16px;
         "
         for="extra_owners"
-        >Extra Owners(Seperate ids by commas,Not required)</label
-      ><input
+        >Extra Owners (Comma Seperated)</label>
+      <input
         class="form-control"
         type="text"
         style="
@@ -105,6 +110,7 @@
           border: grey;
           border-radius: 5px;
           max-width: 400px;
+	  margin: auto;
           margin-top: 7px;
           margin-bottom: 30px;
         "
@@ -120,35 +126,40 @@
           font-size: 16px;
 	"
         for="prefix"
-        >Prefix</label
-      ><input
+        >Prefix <span style="color: red; font-weight: bold" aria-hidden="true">*</span>
+      </label>
+      <input
         required
         class="form-control"
         type="text"
         style="
+	  margin: auto;
           background: #ffffff;
           border: grey;
           border-radius: 5px;
-          max-width: 200px;
+          max-width: 80px;
 	  margin-top: 7px; 
 	  margin-bottom: 30px;
         "
+	maxlength=9
         name="prefix"
         placeholder="!"
         value="{{bot.prefix}}"
-      /><label
+      />
+      <label
         style="
           color: white;
           font-weight: bold;
           font-size: 16px;
         "
         for="library"
-        >Library</label
+        >Library <span style="color: red; font-weight: bold" aria-hidden="true">*</span></label
       ><input
         required
         class="form-control"
         type="text"
         style="
+	  margin: auto;
           background: #ffffff;
           border: grey;
           border-radius: 5px;
@@ -160,6 +171,8 @@
         placeholder="Discord.py"
         value="{{bot.library}}"
       />
+  </div>
+  <div class="col-lg">
      <h5 style="font-weight: bold; margin-bottom: 15px;">Bot Settings</h5>
      <label
         style="
@@ -329,6 +342,21 @@
       {% if bot.github != None %}value="{{bot.github}}"{%endif%}
     />
     {% endif %}
+  </div>
+  </div>
+<h5 style="font-weight: bold; margin-bottom: 15px;">Bot Features</h5>
+<div class="container">
+<div class="row">
+<div class-"col">
+<div class="custom-control custom-switch" style="text-align: center; float: left;; display: block; margin-bottom: 3px;">
+	<input type="checkbox" class="custom-control-input" id="custom_prefix" style="margin: auto !important;" name="custom_prefix" {%if bot.features and "custom_prefix" in bot.features %}checked{% endif %}/>
+	<label class="custom-control-label" for="custom_prefix">Custom Prefix -> Can your prefix be customized/changed?</label>
+</div><br/>
+<div class="custom-control custom-switch" style="text-align: center; float: left;; display: block; margin-top: 15px;">
+        <input type="checkbox" class="custom-control-input" id="open_source" style="margin: auto !important;" name="open_source" {%if bot.features and "open_source" in bot.features %}checked{% endif %}/>
+	<label class="custom-control-label" for="open_source">Open Source -> Does your bot have it's code open to the public, preferrably on a git repository?</label>
+</div>
+</div></div><br/>
      <h5 style="font-weight: bold; margin-bottom: 15px;">Bot Purpose</h5>
       <label
         style="
@@ -402,6 +430,8 @@
     </div>
     {{bot.form.csrf_token}}
   </form>
+   </div>
+
 </div>
 <script src="/static/assets/js/bundle.min.js"></script>
 <script src="/static/assets/js/main.js"></script>

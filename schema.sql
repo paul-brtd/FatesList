@@ -11,6 +11,7 @@ CREATE TABLE bots (
     description text,
     long_description text,
     prefix text,
+    features TEXT[] DEFAULT [],
     api_token text unique,
     website text,
     discord text,

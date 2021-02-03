@@ -29,7 +29,7 @@
 	<p style="color: rgba(255,255,255,0.87);">Click the bots icon for more information</p>
 	{% if maint[0] %}
 	    <div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
-	    <strong>Maintenance In Progress!<br/>{{maint[1]["reason"]}}</strong>
+	    <strong>{{maint[1]["reason"]}}</strong>
         </div>
         {% endif %}
         <p style="margin 0 auto; color: rgba(255,255,255,0.87);font-weight: bold;opacity: 0.93;">{{bot.description}}</p>
@@ -116,13 +116,17 @@
 			<div class="modal-header">
 				<h5 style="color: black;" class="modal-title" id="bInfolabel">{{bot.username}}</h5>
 			</div>
-                        <div class="modal-body">
+                        <div class="modal-body" style="text-align: left">
 				<strong>Owners: </strong><a href="/profile/{{bot.owner}}">{{bot.owner_pretty.username}}</a>{% if bot.extra_owners == "None" or not bot.extra_owners or bot.extra_owners == [] %}{%else%}{%for bobj in bot.extra_owners %}{% if loop.index == bot.leo %} and {% else%}, {%endif%}<a href="/profile/{{bobj[1]}}">{{bobj[0]["username"]}}</a>{%endfor%}{%endif%}<br/>
 
 				<strong>Prefix:</strong> {{bot.prefix}}<br/>
 				<strong>Library:</strong> {{bot.library}}<br/>
 				<strong>Servers:</strong> {{bot.servers}}<br/>
-				<strong>Shards:</strong> {{bot.shards}}
+				<strong>Shards:</strong> {{bot.shards}}</br/>
+				{% if bot.features %}
+				<br/>
+				<strong>Features: </strong>{% for f in bot.features %}<a href="/feature/{{f}}">{{f.replace("_", " ").title()}}</a>{% if loop.index == bot.fleo - 1%} and {% elif loop.index != bot.fleo%}, {%endif%}{% endfor %}
+				{% endif %}
 			</div>
 			{% if staff[0] %}
 			<div class="modal-footer">
