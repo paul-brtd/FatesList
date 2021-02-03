@@ -14,18 +14,22 @@
 	<a href="javascript:void(0)"><img style="border-radius: 50%; width: 120px;" src="{{bot.avatar}}" onclick="modalShow('#botInfo')"></a>
         <h3 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;">{{bot.username}}</h3>
 	{% if bot.banned %}
-        <p style="color: red; font-size: 18px; font-weight: bold;">This bot has been BANNED or DENIED from this bot list for violating our rules or being a low-quality bot. Please do not invite it.</p>
+        <div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
+        <strong>This bot has been BANNED or DENIED from this bot list for violating our rules or being a low-quality bot. Please do not invite it.</strong>
+	</div>
 	{% elif bot.queue and not review%}
-        <p style="color: red; font-size: 18px; font-weight: bold;">This bot has not yet been verified/approved on this bot list and it may violate our rules or be a low-quality bot. Please do not invite it yet</p>
+        <div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
+        <strong>This bot has not yet been verified/approved on this bot list and it may violate our rules or be a low-quality bot. Please do not invite it yet</strong>
+	</div>
 	{% endif %}
 	{% if review %}
-	<p style="color: rgba(255,255,255,0.87);">You are in review mode. Test the bot by inviting it to the staff server by clicking <a href="https://discord.com/oauth2/authorize?client_id={{bot.bot_id}}&scope=bot&guild_id={{guild}}&disable_guild_select=true" target=”_blank”>here</a>. Once you are done reviewing the bot, click the bots icon to approve/deny it</p>
+	<div class="alert alert-info" style="text-align: center; justify-content: center; color: white !important;" role="alert">
+	<strong>You are in review mode. Test the bot by inviting it to the staff server by clicking <a href="https://discord.com/oauth2/authorize?client_id={{bot.bot_id}}&scope=bot" target=”_blank” style="opacity: 0.8; color: white;">here</a>. Once you are done reviewing the bot, click the bots icon to approve/deny it</strong></div>
 	{% endif %}
 	<p style="color: rgba(255,255,255,0.87);">Click the bots icon for more information</p>
 	{% if maint[0] %}
-        <div style="text-align: center;">
-        <p style="margin-bottom: 3px; color: red; font-size: 18px; font-weight: bold;">Maintenance in progress</p>
-        <p style="color: red; font-size: 18px; font-weight: bold;">{{maint[1]["reason"]}}</p>
+	    <div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
+	    <strong>Maintenance In Progress!<br/>{{maint[1]["reason"]}}</strong>
         </div>
         {% endif %}
         <p style="margin 0 auto; color: rgba(255,255,255,0.87);font-weight: bold;opacity: 0.93;">{{bot.description}}</p>
