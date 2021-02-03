@@ -107,7 +107,7 @@ async def add_bot_bt(request, bot_id, prefix, library, website, banner, support,
     await channel.send(f"<@{owner}> added the bot <@{bot_id}>({bot_name}) to queue")
 
 
-@router.get("/edit/{bid}")
+@router.get("/{bid}/edit")
 @csrf_protect
 async def bot_edit(request: Request, bid: int):
     guild = client.get_guild(reviewing_server)
@@ -139,7 +139,7 @@ async def bot_edit(request: Request, bid: int):
     else:
         return RedirectResponse("/")
 
-@router.post("/edit/{bid}")
+@router.post("/{bid}/edit")
 @csrf_protect
 async def bot_edit_api(
         request: Request,
@@ -226,7 +226,7 @@ async def bot_edit_api(
     features = [f for f in bot_dict.keys() if bot_dict[f] == "on" and f in ["custom_prefix", "open_source"]]
     print(features)
     bt.add_task(edit_bot_bt, request, bid, prefix, library, website, banner, support, long_description, description, selected_tags, extra_owners, creation, invite, webhook, vanity, github, features)
-    return templates.TemplateResponse("message.html", {"request": request, "message": "Bot has been edited.", "username": request.session.get("username", False), "avatar": request.session.get('avatar')}) 
+    return templates.TemplateResponse("message.html", {"request": request, "message": "Bot has been edited.<script>window.location.replace('/bot/" + str(bid) + "')</script>", "username": request.session.get("username", False), "avatar": request.session.get('avatar')}) 
 
 async def edit_bot_bt(request, botid, prefix, library, website, banner, support, long_description, description, selected_tags, extra_owners, creation, invite, webhook, vanity, github, features):
     await db.execute("UPDATE bots SET bot_library=$2, webhook=$3, description=$4, long_description=$5, prefix=$6, website=$7, discord=$8, tags=$9, banner=$10, invite=$11, extra_owners = $12, github = $13, features = $14 WHERE bot_id = $1", botid, library, webhook, description, long_description, prefix, website, support, selected_tags, banner, invite, extra_owners, github, features)
