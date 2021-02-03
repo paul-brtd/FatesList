@@ -15,4 +15,4 @@ prometheusrock
 orjson
 websockets
 aredis
-markdown2
+git+https://github.com/Python-Markdown/markdown.git
