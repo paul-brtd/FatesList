@@ -207,8 +207,7 @@
   </div>
   <div class="col-lg">
      <h5 style="font-weight: bold; margin-bottom: 15px;">Bot Settings</h5>
-     {% if mode == "templ_add" or mode == "templ_edit"%}
-     {% else %}
+     {% if not mode == "templ_add" or not mode == "templ_edit"%}
      <label
         style="
           color: white;
@@ -330,6 +329,7 @@
       {% if bot.webhook != None %}value="{{bot.webhook}}" {%endif%}
     />
     {% endif %}
+    {% if mode == "edit" %}
     <label
       style="
         color: white;
@@ -378,6 +378,7 @@
       minlength="3"
       {% if bot.github != None %}value="{{bot.github}}"{%endif%}
     />
+    {% endif %}
     {% endif %}
   </div>
   </div>
