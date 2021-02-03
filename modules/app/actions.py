@@ -175,16 +175,10 @@ async def bot_edit_api(
             eo = []
         else:
             eo = check["extra_owners"]
-        if user is None:
-            if check["owner"] == int(request.session["userid"]) or int(request.session["userid"]) in eo or is_staff(staff_roles, user.roles, 4)[0]:
-                pass
-            else:
-                return templates.TemplateResponse("message.html", {"request": request, "message": "You aren't the owner of this bot.", "username": request.session.get("username", False)})
+        if check["owner"] == int(request.session["userid"]) or int(request.session["userid"]) in eo or (user is not None and is_staff(staff_roles, user.roles, 4)[0]):    
+            pass
         else:
-            if check["owner"] == int(request.session["userid"]) or int(request.session["userid"]) in eo:
-                pass
-            else:
-                return templates.TemplateResponse("message.html", {"request": request, "message": "You aren't the owner of this bot.", "username": request.session.get("username", False)})
+            return templates.TemplateResponse("message.html", {"request": request, "message": "You aren't the owner of this bot.", "username": request.session.get("username", False)})
     else:
         return RedirectResponse("/")
     owner_check = await get_user(request.session["userid"])
