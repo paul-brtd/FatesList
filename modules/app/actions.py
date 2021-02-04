@@ -17,7 +17,7 @@ async def add_bot(request: Request):
             for tag in TAGS:
                 new_tag = tag.replace("_", " ")
                 tags_fixed.update({tag: new_tag.capitalize()})
-            return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "bot": {"form": form}, "error": None, "mode": "add"})
+            return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": {"form": form}, "error": None, "mode": "add"})
         else:
             owner_check = await get_user(request.session["userid"])
             if owner_check:
@@ -59,31 +59,31 @@ async def add_bot_api(
         new_tag = tag.replace("_", " ")
         tags_fixed.update({tag: new_tag.capitalize()})
     if bot_id == "" or prefix == "" or invite == "" or description == "" or long_description == "":
-        return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "bot": bot_dict, "error": "Please ensure you have filled out all the required fields.", "mode": "add"})
+        return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "Please ensure you have filled out all the required fields.", "mode": "add"})
     fetch = await db.fetch("SELECT bot_id FROM bots WHERE bot_id = $1", bot_id)
     if fetch:
-        return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "bot": bot_dict, "error": "This bot already exists on Fates List", "mode": "add"})
+        return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "This bot already exists on Fates List", "mode": "add"})
     if invite.startswith("https://discord.com") and "oauth" in invite:
         pass
     else:
-        return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "bot": bot_dict, "error": "Invalid Bot Invite: Your bot invite must be in the format of https://discord.com/api/oauth2... or https://discord.com/oauth2...", "mode": "add"})
+        return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "Invalid Bot Invite: Your bot invite must be in the format of https://discord.com/api/oauth2... or https://discord.com/oauth2...", "mode": "add"})
     if len(description) > 101:
-        return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "bot": bot_dict, "error": "Your short description must be shorter than 100 characters", "mode": "add"})
+        return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "Your short description must be shorter than 100 characters", "mode": "add"})
     description = description.replace("\n", " ").replace("\t", " ")
     try:
         bot_object = await get_bot(bot_id)
     except:
-        return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "bot": bot_dict, "error": "According to Discord's API and our cache, your bot does not exist. Please try again after 2 hours.", "mode": "add"})
+        return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "According to Discord's API and our cache, your bot does not exist. Please try again after 2 hours.", "mode": "add"})
     if not bot_object:
-        return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "bot": bot_dict, "error": "According to Discord's API and our cache, your bot does not exist. Please try again after 2 hours.", "mode": "add"})
+        return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "According to Discord's API and our cache, your bot does not exist. Please try again after 2 hours.", "mode": "add"})
     if tags == "":
-        return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "bot": bot_dict, "error": "You must select tags for your bot", "mode": "add"})
+        return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "You must select tags for your bot", "mode": "add"})
     selected_tags = tags.split(",")
     for test in selected_tags:
         if test in TAGS:
             pass
         else:
-            return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "bot": bot_dict, "error": "One of your tags doesn't exist internally. Please choose a different tags", "mode": "add"})
+            return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "One of your tags doesn't exist internally. Please choose a different tags", "mode": "add"})
     creation = time.time()
     if extra_owners == "":
         extra_owners = None
@@ -91,7 +91,7 @@ async def add_bot_api(
         try:
             extra_owners = [int(id) for id in extra_owners.split(",")]
         except:
-            return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "bot": bot_dict, "error": "One of your extra owners doesn't exist or you haven't comma-seperated them.", "mode": "add"})
+            return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "One of your extra owners doesn't exist or you haven't comma-seperated them.", "mode": "add"})
     # Feature check + add
     features = [f for f in bot_dict.keys() if bot_dict[f] == "on" and f in ["custom_prefix", "open_source"]]
     bt.add_task(add_bot_bt, request, bot_id, prefix, library, website, banner, support, long_description, description, selected_tags, extra_owners, creation, bot_object, invite, features)
@@ -134,7 +134,7 @@ async def bot_edit(request: Request, bid: int):
             vanity = {"vanity": None}
         bot = dict(fetch) | dict(vanity)
         bot["form"] = form
-        return templates.TemplateResponse("add_edit.html", {"request": request, "mode": "edit", "tags_fixed": tags_fixed, "username": request.session.get("username", False),"bot": bot, "avatar": request.session.get("avatar"), "epoch": time.time(), "vanity": vanity["vanity"]})
+        return templates.TemplateResponse("add_edit.html", {"request": request, "mode": "edit", "tags_fixed": tags_fixed, "username": request.session.get("username", False),"data": bot, "avatar": request.session.get("avatar"), "epoch": time.time(), "vanity": vanity["vanity"]})
     else:
         return RedirectResponse("/")
 

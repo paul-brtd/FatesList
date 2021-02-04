@@ -52,11 +52,11 @@
    {% if mode == "edit" %}
    <section style="border-style: solid; border-radius: 50px 50px 50px 50px; padding-left: 30px; padding: 5px;">
     <div style="margin 15px auto">
-   {% if bot.vanity != None %}
-    <h6 style="color: white; margin-top: 1px !important;">Vanity URL: <span style="font-size: 14px; opacity: 0.9">https://fateslist.xyz/{{bot.vanity}}</span></h6>
+   {% if data.vanity != None %}
+    <h6 style="color: white; margin-top: 1px !important;">Vanity URL: <span style="font-size: 14px; opacity: 0.9">https://fateslist.xyz/{{data.vanity}}</span></h6>
     {% endif %}
     </div>
-    <h6 style="color: white; margin-top: 1px !important; font-size: 12.5px; overflow-wrap: break-word;">API Token <span id="hidden_token">(Hidden)</span><span id="apitok" style="display: none; overflow-wrap: break-word !important; font-size: 11.5px; opacity: 0.9">{{bot.api_token}}</span></h6>
+    <h6 style="color: white; margin-top: 1px !important; font-size: 12.5px; overflow-wrap: break-word;">API Token <span id="hidden_token">(Hidden)</span><span id="apitok" style="display: none; overflow-wrap: break-word !important; font-size: 11.5px; opacity: 0.9">{{data.api_token}}</span></h6>
    <button onclick='showToken(this)' class="btn btn-outline-light">Show API Token</button>
    </section>
    {% endif %}
@@ -95,7 +95,7 @@
         "
         name="{% if mode == 'templ_add' or mode == 'templ_edit' %}template_code{% else %}bot_id{% endif %}"
         placeholder="12345678998764"
-	value="{% if mode == "templ_edit" %}{{templ.code}}{% elif mode == "templ_add" %}{% else %}{{bot.bot_id}}{% endif %}"
+	value="{% if mode == "templ_edit" %}{{data.code}}{% elif mode == "templ_add" %}{% else %}{{data.bot_id}}{% endif %}"
       />
       {% if mode == "templ_add" or mode == "templ_edit"%}
       <label
@@ -123,7 +123,7 @@
         maxlength=30
         name="template_code"
         placeholder="!"
-        value="{{templ.name}}"
+        value="{{bot.name}}"
       />
       {% else %}
       <label
@@ -147,7 +147,7 @@
           margin-bottom: 30px;
         "
         name="extra_owners"
-        value="{% if bot.extra_owners == [] or not bot.extra_owners or bot.extra_owners == "None" or bot.extra_owners == ""%}{% else %}{{bot.extra_owners.__str__().replace("[", "").replace("]", "").replace(" ", "")}} {% endif %}"
+        value="{% if data.extra_owners == [] or not data.extra_owners or data.extra_owners == "None" or data.extra_owners == ""%}{% else %}{{data.extra_owners.__str__().replace("[", "").replace("]", "").replace(" ", "")}} {% endif %}"
         placeholder="1234567899876,1234567865432"
         minlength="10"
       />
@@ -176,7 +176,7 @@
 	maxlength=9
         name="prefix"
         placeholder="!"
-        value="{{bot.prefix}}"
+        value="{{data.prefix}}"
       />
       <label
         style="
@@ -201,13 +201,14 @@
         "
         name="library"
         placeholder="Discord.py"
-        value="{{bot.library}}"
+        value="{{data.library}}"
       />
       {% endif %}
   </div>
   <div class="col-lg">
      <h5 style="font-weight: bold; margin-bottom: 15px;">Bot Settings</h5>
-     {% if not mode == "templ_add" or not mode == "templ_edit"%}
+     {% if mode == "templ_add" or  mode == "templ_edit"%}
+     {% else %}
      <label
         style="
           color: white;
@@ -231,7 +232,7 @@
         name="invite"
         placeholder="https://discord.com/oauth2/authorize?client_id=12345637172158464&amp;permissions=314432&amp;scope=bot"
         minlength="10"
-        value="{{bot.invite}}"
+        value="{{data.invite}}"
       /><label
         style="
           color: white;
@@ -254,7 +255,7 @@
         name="website"
         placeholder="https://support.com"
         minlength="10"
-        value="{{bot.website}}"
+        value="{{data.website}}"
       /><label
         style="
           color: white;
@@ -277,7 +278,7 @@
         name="banner"
         placeholder="https://cdn.discordapp.com/MySecretBanner.com"
         minlength="10"
-        value="{% if bot.banner == "none" or bot.banner == "" %}{%else%}{{bot.banner}}{%endif%}"
+        value="{% if data.banner == "none" or data.banner == "" %}{%else%}{{data.banner}}{%endif%}"
       /><label
         style="
           color: white;
@@ -301,7 +302,7 @@
         name="support"
         placeholder="https://discord.gg/738Hs"
         minlength="10"
-        value="{{bot.support}}"
+        value="{{data.support}}"
       />
       {% if mode == "edit" %}
       <label
@@ -326,7 +327,7 @@
       name="webhook"
       placeholder="http://129.332.123:5000/webhook"
       minlength="3"
-      {% if bot.webhook != None %}value="{{bot.webhook}}" {%endif%}
+      {% if data.webhook != None %}value="{{data.webhook}}" {%endif%}
     />
     {% endif %}
     {% if mode == "edit" %}
@@ -352,7 +353,7 @@
       name="vanity"
       placeholder="cats"
       minlength="3"
-      {% if bot.vanity != None %}value="{{bot.vanity}}"{%endif%}
+      {% if data.vanity != None %}value="{{data.vanity}}"{%endif%}
     />
 <label
       style="
@@ -376,10 +377,33 @@
       name="github"
       placeholder="https://www.github.com/XYZ/XYZ"
       minlength="3"
-      {% if bot.github != None %}value="{{bot.github}}"{%endif%}
+      {% if data.github != None %}value="{{data.github}}"{%endif%}
     />
     {% endif %}
     {% endif %}
+     <label
+        style="
+          color: white;
+          font-weight: bold;
+          font-size: 16px;
+        "
+        for="css"
+        >Custom CSS</label
+        ><textarea
+        class="form-control"
+        type="text"
+        style="
+          background: #ffffff;
+          border: grey;
+          border-radius: 5px;
+          max-width: 1000px;
+          margin-top: 7px;
+          margin-bottom: 30px;
+          height: 150px;
+        "
+        name="css"
+        placeholder="p {color: red}; -> NOT YET DONE"
+        >{{data.css}}</textarea>
   </div>
   </div>
 	    <h5 style="font-weight: bold; margin-bottom: 15px;">{% if mode == "templ_add" or mode == "templ_edit" %}Server Template Features{% else %}Bot Features{% endif %}</h5>
@@ -387,11 +411,11 @@
 <div class="row">
 <div class-"col">
 <div class="custom-control custom-switch" style="text-align: center; float: left;; display: block; margin-bottom: 3px;">
-	<input type="checkbox" class="custom-control-input" tabindex="0" id="custom_prefix" style="margin: auto !important;" name="custom_prefix" {% if mode == "templ_add" or mode == "templ_edit" %}{% else %}{%if bot.features and "custom_prefix" in bot.features %}checked aria-label="Custom Prefix Enabled"{% else %}aria-label="Custom Prefix Disabled"{% endif %}{% endif%}/>
+	<input type="checkbox" class="custom-control-input" tabindex="0" id="custom_prefix" style="margin: auto !important;" name="custom_prefix" {%if data.features and "custom_prefix" in data.features %}checked aria-label="Custom Prefix Enabled"{% else %}aria-label="Custom Prefix Disabled"{% endif%}/>
 	<label class="custom-control-label" for="custom_prefix">Custom Prefix -> Can your prefix be customized/changed?</label>
 </div><br/>
 <div class="custom-control custom-switch" style="text-align: center; float: left;; display: block; margin-top: 15px;">
-	<input type="checkbox" class="custom-control-input" tabindex="0" id="open_source" style="margin: auto !important;" name="open_source" {% if mode == "templ_add" or mode == "templ_edit" %}{% else %}{%if bot.features and "open_source" in bot.features %}checked aria-label="Open Source Enabled"{% else %}aria-label="Open Source Disabled"{% endif %}{% endif %}/>
+	<input type="checkbox" class="custom-control-input" tabindex="0" id="open_source" style="margin: auto !important;" name="open_source" {%if data.features and "open_source" in data.features %}checked aria-label="Open Source Enabled"{% else %}aria-label="Open Source Disabled"{% endif %}/>
 	<label class="custom-control-label" for="open_source">Open Source -> Does your bot have it's code open to the public, preferrably on a git repository?</label>
 </div>
 </div></div><br/>
@@ -421,7 +445,7 @@
         placeholder="Fates list is a good bot that does everything you need"
         minlength="10"
         maxlength="100"
-        value="{{bot.description}}"
+	value="{{data.description}}"
       />
   <label
         style="
@@ -446,7 +470,7 @@
         placeholder="Write about your bot using html or markdown"
         minlength="300"
         id="long_description"
-	>{{bot.long_description}}</textarea>
+	>{{data.long_description}}</textarea>
       <label
         style="
           color: white;
@@ -455,7 +479,7 @@
           margin-top: 30px;
         "
         for="tags"
-        >Select tags for your bot. <span style="color: red; font-weight: bold" aria-hidden="true">*</span></label
+	>Select tags for your {% if mode == "templ_add" or mode == "templ_edit" %}template{%else%}bot{%endif%}. <span style="color: red; font-weight: bold" aria-hidden="true">*</span></label
       ><span class="select_tags"></span>
       <div class="d-flex justify-content-center">
         <button
@@ -467,7 +491,7 @@
         </button>
       </div>
     </div>
-    {{bot.form.csrf_token}}
+    {{data.form.csrf_token}}
   </form>
    </div>
 
@@ -488,18 +512,18 @@
 		              <div class="form-group" class="d-flex justify-content-center" style="margin: 15px auto; width: 85%;text-align: center; color: white; font-weight: bold; overflow-wrap: anywhere;">
 				          <div style="margin 15px auto">
     <h6 style="margin-bottom: 4.5px;">Events are a great way to deliver important updates for your bot!</h6>
-            <a href="/apiweb/{{bot.api_token}}">
+            <a href="/apiweb/{{data.api_token}}">
 		<button class="btn btn-outline-light" style="margin-top: 20px; margin-bottom: 35px">
 				              Configure Events (APIWeb)
 					              </button>
 	   </a>
     <h6 style="margin-top: 30px;">Delete Bot</h6>
     <p style="margin-bottom: 3px;">Warning: This cannot be undone</p>
-    {% if bot.banned and not staff[0] %}
+    {% if data.banned and not staff[0] %}
     <h5>You may not delete your bot as it has been banned</h5>
     {% else %}
-    <form method="POST" action="/bot/{{bot.bot_id}}/delete">
-	{{bot.form.csrf_token}}
+    <form method="POST" action="/bot/{{data.bot_id}}/delete">
+	{{data.form.csrf_token}}
         <button
           class="btn btn-danger"
 	  type="submit" 
@@ -518,7 +542,7 @@
 <script>
   {% if mode == "edit" %}
   const selected_tags = [
-      {% for tag in bot.tags %}
+      {% for tag in data.tags %}
         "{{tag}}",
       {% endfor %}
   ]
