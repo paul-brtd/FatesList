@@ -58,8 +58,8 @@ async def add_bot_api(
     for tag in TAGS:
         new_tag = tag.replace("_", " ")
         tags_fixed.update({tag: new_tag.capitalize()})
-    if bot_id == "" or prefix == "" or invite == "" or description == "" or long_description == "":
-        return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "Please ensure you have filled out all the required fields.", "mode": "add"})
+    if bot_id == "" or prefix == "" or invite == "" or description == "" or long_description == "" or len(prefix) > 9:
+        return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "Please ensure you have filled out all the required fields and that your prefix is less than 9 characters.", "mode": "add"})
     fetch = await db.fetch("SELECT bot_id FROM bots WHERE bot_id = $1", bot_id)
     if fetch:
         return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "This bot already exists on Fates List", "mode": "add"})
@@ -165,6 +165,8 @@ async def bot_edit_api(
     bot_dict["request"] = None
     bot_dict["bt"] = None
     bot_dict["form"] = await Form.from_formdata(request)
+    if bid == "" or prefix == "" or invite == "" or description == "" or long_description == "" or len(prefix) > 9:
+        return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "Please ensure you have filled out all the required fields and that your prefix is less than 9 characters", "mode": "edit"})
     if "userid" in request.session.keys():
         check = await db.fetchrow("SELECT owner, extra_owners FROM bots WHERE bot_id = $1", bid)
         if not check:

@@ -206,6 +206,11 @@ async def get_bots_api(request: Request, bot_id: int):
     api_ret["maint"] = await in_maint(bot_id = bot_id)
     return api_ret
 
+@router.get("/templates/{code}", tags = ["Core API"])
+async def get_template_api(request: Request, code: str):
+    guild =  await client.fetch_template(code).source_guild
+    return template
+
 @router.get("/feature", tags = ["Core API"])
 async def get_feature_api(request: Request, name: str):
     """Gets a feature given its internal name (custom_prefix, open_source etc)"""

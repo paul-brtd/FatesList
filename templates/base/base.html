@@ -43,12 +43,12 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <!-- Add Material font (Roboto) and Material icon as needed -->
     <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend+Deca&display=swap" rel="stylesheet">
     <link rel="preconnect" href="https://cdn.jsdelivr.net/" crossorigin>
     <link href="/static/core/icons.css" rel="stylesheet">
     <link rel="shortcut icon" href="/static/favicon.ico"/>
     <!-- Material CSS -->
     <link href="/static/core/material.min.css" rel="stylesheet" async>
-
     <link href="/static/core/material-plugins.min.css" rel="stylesheet" async>
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.12.0/css/all.css" async>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" async>
@@ -56,9 +56,30 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     <link rel="stylesheet" href="/static/assets/css/front-head.css" async>
     <link rel="stylesheet" href="/static/assets/css/styles.css" async>
     <style>
-        .btn {
+    h1 {font-family: 'Lexend Deca', sans-serif  !important;} 
+    h2 {font-family: 'Lexend Deca', sans-serif !important;}
+    h3 {font-family: 'Lexend Deca', sans-serif !important;}
+    h4 {font-family: 'Lexend Deca', sans-serif !important;}
+    h5 {font-family: 'Lexend Deca', sans-serif !important;}
+    h6 {font-family: 'Lexend Deca', sans-serif !important;}
+    div {font-family: 'Lexend Deca', sans-serif !important;}
+    span {font-family: 'Lexend Deca', sans-serif !important;}
+    blockquote {font-family: 'Lexend Deca', sans-serif !important;}
+    pre {font-family: 'Lexend Deca', sans-serif !important;}
+    nav {font-family: 'Lexend Deca', sans-serif !important;}
+    header {font-family: 'Lexend Deca', sans-serif !important;}
+    section {font-family: 'Lexend Deca', sans-serif !important;}
+    html {font-family: 'Lexend Deca', sans-serif !important;}
+    .dropdown-item {background: black !important; color: white;}
+    .dropdown-item:hover {color: #57575c !important;}
+    .dropdown-divider {background: black !important; color: black; border-color: black; border: 0}
+    p {font-family: 'Lexend Deca', sans-serif !important;}
+	input[type="text"] {
+	}
+   .btn {
             border-radius: 100px 100px 100px 100px !important;
         }
+   label {font-size: 14px;}
 ::selection {
   background: #ffb7b7 !important; /* WebKit/Blink Browsers */
 }
@@ -93,7 +114,6 @@ textarea {
 	padding: 10px !important;
 	height: 500px;
 }
-
 .bg-red {
 	background: red;
 }
@@ -131,7 +151,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           aria-haspopup="true" aria-expanded="false">
         {% if username %}<img width="25px" style="border-radius: 50%; margin-right: 5px;" src="{{avatar}}">{{username}} {% else %} Not Logged In <i class="fas fa-frown" aria-hidden="true" role="presentation"></i>{%endif%}
         </span>
-        <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink-333">
+        <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink-333" style="background: black !important;">
           {% if username %}
           <a class="dropdown-item" href="/profile/me">My Profile</a>
           <a class="dropdown-item" href="/bot/admin/add">Add Bot</a>
@@ -139,7 +159,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <a class="dropdown-item" href="/support" target=”_blank”>Support Server</a>
           <a class="dropdown-item" href="/docs">API Docs (Swagger)</a>
 	  <a class="dropdown-item" href="/redoc">API Docs (Redoc)</a>
-	  <div class="dropdown-divider"></div>
+	  <div style="color: white; margin-top: 1px; margin-bottom: 1px;"></div>
           <a class="dropdown-item" href="/auth/logout">Logout</a>
 	  {% if staff[0] %}
           <a class="dropdown-item" href="/admin/console">Admin Console</a>
