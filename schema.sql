@@ -35,6 +35,7 @@ CREATE TABLE users (
     certified boolean,
     badges text[],
     username text
+    css text default '';
 );
 
 CREATE TABLE bot_cache (

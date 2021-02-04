@@ -26,7 +26,7 @@
 	<div class="alert alert-info" style="text-align: center; justify-content: center; color: white !important;" role="alert">
 	<strong>You are in review mode. Test the bot by inviting it to the staff server by clicking the Invite button and choosing the Testing Server. Once you are done reviewing the bot, click the bots icon to approve/deny it</strong></div>
 	{% endif %}
-	<p style="color: rgba(255,255,255,0.87);">Click the bots icon for more information</p>
+	<p style="color: rgba(255,255,255,0.87);">Click the bots icon for more information such as the prefix, owners etc.</p>
 	{% if maint[0] %}
 	    <div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
 	    <strong>{{maint[1]["reason"]}}</strong>
@@ -74,6 +74,7 @@
     </div>
     <div style="inline-block">
     <h6 style="font-weight: bold;color: rgba(255,255,255,0.87); text-align: center;">Tags</h6>
+    <hr style="width: 90%; color: white; background: white;"/>
     <div style="text-align: center;">
     {% for tag in bot.tags %}
         <button onclick="window.location.replace('/search/tags/{{tag}}')" class="btn btn-outline-dark" style="background-color: #7289DA; color: white !important; margin-right: 9px;"> <i class="fas"></i>{{tag.replace("_", " ")}}</button>

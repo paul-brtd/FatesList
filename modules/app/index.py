@@ -72,3 +72,13 @@ async def features_view(request: Request, name: str):
         if bot_info:
             bot_obj.append({"bot": bot, "avatar": bot_info["avatar"], "username": bot_info["username"], "votes": await human_format(bot["votes"]), "servers": await human_format(bot["servers"]), "description": bot["description"]})
     return templates.TemplateResponse("feature.html", {"request": request, "name": name, "feature": features[name], "bots": bot_obj})
+
+@router.get("/design/new")
+async def old_design_to_new(request: Request):
+    request.session["design"] = "new"
+    return RedirectResponse("/")
+
+@router.get("/design/old")
+async def new_design_to_old(request: Request):
+    request.session["design"] = "old"
+    return RedirectResponse("/")

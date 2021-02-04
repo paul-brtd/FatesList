@@ -36,7 +36,7 @@
         <div class="d-flex flex-wrap justify-content-center align-items-center" style="width: 80%;margin: 0 auto;">
             {% for tag,new_tag in tags_fixed.items() %}
                <div class="content-nomobile">
-		       <button class="text-nowrap btn d-flex justify-content-center align-items-center {{new_tag[1].split('|')[1]}}" style="color: white;border-radius: 10px; margin: 6px;" onclick="location.href='/search/tags?tag={{tag}}'" data-toggle="tooltip" title="{{new_tag[0]}}"><i class="{{new_tag[1].split('|')[0]}}"></i><span style="margin-left: 2px; font-size: 9.5px;">{{new_tag[0]}}</span></button>
+		       <button class="text-nowrap btn d-flex justify-content-center align-items-center {{new_tag[1].split('|')[1]}}" style="color: white;border-radius: 10px; margin: 6px;" onclick="location.href='/search/tags?tag={{tag}}'" data-toggle="tooltip" data-placement="bottom" title="{{new_tag[0]}}"><i class="{{new_tag[1].split('|')[0]}}"></i><span style="margin-left: 2px; font-size: 9.5px;">{{new_tag[0]}}</span></button>
                 </div>
             {% endfor %}
 	    <div class="content-mobileonly form">

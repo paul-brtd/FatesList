@@ -38,6 +38,7 @@ class templates():
             raise KeyError
         status = arg_dict.get("status_code")
         if "userid" in request.session.keys():
+            arg_dict["css"] = request.session.get("user_css")
             if "staff" not in arg_dict.keys():
                 user = guild.get_member(int(request.session["userid"]))
                 if user is not None:

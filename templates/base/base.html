@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
 <!-- Google Tag Manager -->
 <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
@@ -70,9 +70,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     header {font-family: 'Lexend Deca', sans-serif !important;}
     section {font-family: 'Lexend Deca', sans-serif !important;}
     html {font-family: 'Lexend Deca', sans-serif !important;}
-    .dropdown-item {background: black !important; color: white;}
-    .dropdown-item:hover {color: #57575c !important;}
-    .dropdown-divider {background: black !important; color: black; border-color: black; border: 0}
     p {font-family: 'Lexend Deca', sans-serif !important;}
 	input[type="text"] {
 	}
@@ -131,14 +128,13 @@ textarea {
 </style>
 </head>
 {% if not widget %}
-<!--<body style="background: #1D1E23;">-->
-<body style="background: black;">
+<body style="background: #1D1E23;">
 <!-- Google Tag Manager (noscript) -->
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KSZXP7T"
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
-<header role="navigation" style="background: black; color: white;" class="navbar fixed-top navbar-full navbar-light navigation-clean-button" aria-label="Site Navigation Menu">
-  <div class="navbar-brand">
+<header role="navigation" style="background: black; color: white;" class="navbar fixed-top navbar-full navbar-dark navigation-clean-button" aria-label="Site Navigation Menu">
+   <div class="navbar-brand">
      <a href="/" class="navbar-brand"><img alt="" style="margin-right: 5px;" width="30px" src="/static/assets/img/b7e5d6e0a9f6fddb68ea920a07546e6a%20(1).png"><span class="sr-only">Toggle navigation</span>Fates List</a>
    </div>
    <div class="content-nomobile navbar-nav" style="margin-top: 1px;">
@@ -152,7 +148,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           aria-haspopup="true" aria-expanded="false">
         {% if username %}<img width="25px" style="border-radius: 50%; margin-right: 5px;" src="{{avatar}}">{{username}} {% else %} Not Logged In <i class="fas fa-frown" aria-hidden="true" role="presentation"></i>{%endif%}
         </span>
-        <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink-333" style="background: black !important;">
+	<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink-333">
           {% if username %}
           <a class="dropdown-item" href="/profile/me">My Profile</a>
           <a class="dropdown-item" href="/bot/admin/add">Add Bot</a>
@@ -160,7 +156,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <a class="dropdown-item" href="/support" target=”_blank”>Support Server</a>
           <a class="dropdown-item" href="/docs">API Docs (Swagger)</a>
 	  <a class="dropdown-item" href="/redoc">API Docs (Redoc)</a>
-	  <div style="color: white; margin-top: 1px; margin-bottom: 1px;"></div>
+	  <div class="dropdown-divider"></div>
           <a class="dropdown-item" href="/auth/logout">Logout</a>
 	  {% if staff[0] %}
           <a class="dropdown-item" href="/admin/console">Admin Console</a>

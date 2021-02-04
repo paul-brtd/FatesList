@@ -40,6 +40,11 @@ async def login_confirm(request: Request, code: str):
         # 794834630942654546
         token = await get_user_token(int(userjson["id"]), request.session.get("username"))
         request.session["token"] = token
+        user_css = await db.fetchrow("SELECT css FROM users WHERE userid = $1", int(request.session["userid"]))
+        if user_css is None:
+            request.session["user_css"] = ""
+        else:
+            request.session["user_css"] = user_css["css"]
         if "RedirectResponse" in request.session.keys():
             return RedirectResponse(request.session["RedirectResponse"])
         return RedirectResponse("/")
