@@ -1,10 +1,35 @@
-{% extends "base/base.html" %}
-
-{% block head %}
-
-{% endblock %}
-
-{% block content %}
+<head>
+	    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend+Deca&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.12.0/css/all.css" async>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" async>
+    <link rel="stylesheet" href="/static/assets/fonts/fontawesome5-overrides.min.css" async>
+<style>
+    h1 {font-family: 'Lexend Deca', sans-serif  !important;}
+    h2 {font-family: 'Lexend Deca', sans-serif !important;}
+    h3 {font-family: 'Lexend Deca', sans-serif !important;}
+    h4 {font-family: 'Lexend Deca', sans-serif !important;}
+    h5 {font-family: 'Lexend Deca', sans-serif !important;}
+    h6 {font-family: 'Lexend Deca', sans-serif !important;}
+    div {font-family: 'Lexend Deca', sans-serif !important;}
+    span {font-family: 'Lexend Deca', sans-serif !important;}
+    blockquote {font-family: 'Lexend Deca', sans-serif !important;}
+    pre {font-family: 'Lexend Deca', sans-serif !important;}
+    nav {font-family: 'Lexend Deca', sans-serif !important;}
+    header {font-family: 'Lexend Deca', sans-serif !important;}
+    section {font-family: 'Lexend Deca', sans-serif !important;}
+    html {font-family: 'Lexend Deca', sans-serif !important;}
+    .dropdown-item {background: black !important; color: white;}
+    .dropdown-item:hover {color: #57575c !important;}
+    .dropdown-divider {background: black !important; color: black; border-color: black; border: 0}
+    p {font-family: 'Lexend Deca', sans-serif !important;}
+        input[type="text"] {
+        }
+   .btn {
+            border-radius: 100px 100px 100px 100px !important;
+        }
+    </style>
+</head>
 <a href="https://fateslist.xyz/bot/{{bot.bot.bot_id}}">
 <div style="display: inline-block; background: #111112;width: 300px; height: 175px; border: 3px; border-radius: 1px 1px 1px 1px;">
 <div style="margin-bottom: 2px;">
@@ -15,10 +40,6 @@
 <p class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;"><i class="fas fa-server" style="margin-right: 3px"></i>{{bot.servers}}<br/>
                     <i class="fas fa-thumbs-up" style="margin-right: 3px"></i>{{bot.votes}}</p>
 </div><br/>
-<p style="padding: 3px; font-weight: bold; color: white; opacity: 0.98; text-align: center; margin-top: 2px;">Fates List</p>
+<p style="padding: 3px; font-weight: bold; color: white; opacity: 0.98; margin-top: 2px;">Fates List</p>
 </div>
 </a>
-{%endblock%}
-{% block footer %}
-
-{% endblock %}
