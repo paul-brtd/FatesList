@@ -165,6 +165,11 @@ async def bot_edit_api(
     bot_dict["request"] = None
     bot_dict["bt"] = None
     bot_dict["form"] = await Form.from_formdata(request)
+    # TAGS
+    tags_fixed = {}
+    for tag in TAGS:
+        new_tag = tag.replace("_", " ")
+        tags_fixed.update({tag: new_tag.capitalize()})
     if bid == "" or prefix == "" or invite == "" or description == "" or long_description == "" or len(prefix) > 9:
         return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "Please ensure you have filled out all the required fields and that your prefix is less than 9 characters", "mode": "edit"})
     if "userid" in request.session.keys():
