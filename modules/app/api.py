@@ -190,18 +190,28 @@ async def regenerate_token(request: Request, token: TokenRegen):
 @router.get("/bots/{bot_id}", tags = ["Core API"])
 async def get_bots_api(request: Request, bot_id: int):
     """Gets bot information given a bot ID. If not found, 404 will be returned"""
-    api_ret = await db.fetchrow("SELECT bot_id AS id, description, tags, long_description, servers AS server_count, shard_count, prefix, invite, owner, extra_owners, bot_library AS library, queue, banned, website, discord AS support, github FROM bots WHERE bot_id = $1", bot_id)
+    api_ret = await db.fetchrow("SELECT bot_id AS id, description, tags, long_description, servers AS server_count, shard_count, prefix, invite, owner AS _owner, extra_owners AS _extra_owners, features, bot_library AS library, queue, banned, website, discord AS support, github FROM bots WHERE bot_id = $1", bot_id)
     if api_ret is None:
         return abort(404)
     api_ret = dict(api_ret)
     bot_obj = await get_bot(bot_id)
     api_ret["username"] = bot_obj["username"]
     api_ret["avatar"] = bot_obj["avatar"]
-    api_ret["owners"] = [api_ret["owner"]] + api_ret["extra_owners"]
+    if api_ret["_extra_owners"] is None:
+        api_ret["owners"] = [api_ret["_owner"]]
+    else:
+        api_ret["owners"] = [api_ret["_owner"]] + api_ret["_extra_owners"]
     api_ret["id"] = str(api_ret["id"])
     api_ret["events"] = await get_normal_events(bot_id = bot_id)
     api_ret["maint"] = await in_maint(bot_id = bot_id)
     return api_ret
+
+@router.get("/feature", tags = ["Core API"])
+async def get_feature_api(request: Request, name: str):
+    """Gets a feature given its internal name (custom_prefix, open_source etc)"""
+    if name not in features.keys():
+        return abort(404)
+    return features[name]
 
 class APISGC(BaseModel):
     api_token: Optional[str] = None

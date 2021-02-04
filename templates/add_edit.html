@@ -123,7 +123,7 @@
         maxlength=30
         name="template_code"
         placeholder="!"
-        value="{{bot.name}}"
+        value="{{data.name}}"
       />
       {% else %}
       <label
@@ -216,7 +216,7 @@
           font-size: 16px;
         "
         for="invite"
-        >Invite URL</label
+        >Invite URL <span style="color: red; font-weight: bold" aria-hidden="true">*</span></label
       ><input
         required
         class="form-control"
