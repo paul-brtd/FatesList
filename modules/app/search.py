@@ -30,7 +30,7 @@ async def search(request: Request, q: str):
     else:
         fetch = None
     if fetch is None:
-        abc = ("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE queue = false and banned = false and disabled = false and bot_id IN (" + data + ")")
+        abc = ("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE queue = false and banned = false and disabled = false and bot_id IN (" + data + ") ORDER BY votes DESC")
         fetch = await db.fetch(abc)
     search_bots = []
     # TOP VOTED BOTS
@@ -52,7 +52,7 @@ async def search(request: Request, q: str):
 async def tags(request: Request, tag: str):
     if tag not in TAGS:
         return RedirectResponse("/")
-    fetch = await db.fetch(f"SELECT description, banner,certified,votes,servers,bot_id,tags,invite FROM bots, unnest(tags) a WHERE  lower(a) = '{tag}' AND queue = false and banned = false and disabled = false ORDER BY votes")
+    fetch = await db.fetch(f"SELECT description, banner,certified,votes,servers,bot_id,tags,invite FROM bots, unnest(tags) a WHERE  lower(a) = '{tag}' AND queue = false and banned = false and disabled = false ORDER BY votes DESC")
     print(fetch)
     search_bots = []
     # TOP VOTED BOTS

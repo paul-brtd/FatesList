@@ -63,7 +63,7 @@ async def vanity_bot(request: Request, vanity: str):
 async def features_view(request: Request, name: str):
     if name not in features.keys():
         return abort(404)
-    feature_bots = (f"SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE ('{str(name)}' = ANY(features)) and queue = false and banned = false and disabled = false ORDER BY votes;")
+    feature_bots = (f"SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE ('{str(name)}' = ANY(features)) and queue = false and banned = false and disabled = false ORDER BY votes DESC;")
     print(feature_bots)
     bots = await db.fetch(feature_bots)
     bot_obj = []
