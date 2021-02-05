@@ -191,7 +191,8 @@ async def add_event(bot_id: int, event: str, context: str, *, send_event = True)
                 webhook = DiscordWebhook(url=uri)
                 #await add_event(bot_id, "vote", "user=" + str(uid) + "::votes=" + str(b['votes'] + 1))
                 print(context)
-                embed = DiscordEmbed(title=event.replace("_", " ").title(), description="\n".join([ctx.split("=")[0].replace("_", " ").title() + ": " + ctx.split("=")[1] for ctx in context.split("::")]), color=242424)
+                embed = DiscordEmbed(title=event.replace("_", " ").title(), description="\n".join([ctx.split("=")[0].replace("_", " ").title() + ": " + ctx.split("=")[1] for ctx in context.split("::") if not ctx.startswith("user_id")]), color=242424)
+                embed.description.replace("Id", "ID (for developers):")
                 print(embed.description)
                 webhook.add_embed(embed)
                 response = webhook.execute()
@@ -283,7 +284,7 @@ async def vote_bot(uid: int, username: str, bot_id: int) -> Optional[list]:
         return [404]
     await db.execute("UPDATE bots SET votes = votes + 1 WHERE bot_id = $1", int(bot_id))
     await db.execute("UPDATE users SET vote_epoch = $1 WHERE userid = $2", time.time(), int(uid))
-    event_id = await add_event(bot_id, "vote", "user=" + str(uid) + "::votes=" + str(b['votes'] + 1) + "::**Vote Here**=https://fateslist.xyz/bot/" + str(bot_id))
+    event_id = await add_event(bot_id, "vote", "username=" + (username) + "::user_id=" + str(uid) + "::votes=" + str(b['votes'] + 1) + "::**Vote Here**=https://fateslist.xyz/bot/" + str(bot_id))
     return []
 
 # Get Bots Helper
