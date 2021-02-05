@@ -100,7 +100,7 @@ async def add_bot_api(
 
 async def add_bot_bt(request, bot_id, prefix, library, website, banner, support, long_description, description, selected_tags, extra_owners, creation, bot_object, invite, features, private):
     await db.execute("INSERT INTO bots(bot_id,prefix,bot_library,invite,website,banner,discord,long_description,description,tags,owner,extra_owners,votes,servers,shard_count,created_at,api_token,features, private) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)", bot_id, prefix, library, invite, website, banner, support, long_description, description, selected_tags, int(request.session["userid"]), extra_owners, 0, 0, 0, int(creation), get_token(101), features, private)
-    await add_event(bot_id, "add_bot", "NULL")
+    await add_event(bot_id, "add_bot", {})
     owner=str(request.session["userid"])
     channel = client.get_channel(bot_logs)
     bot_name = bot_object["username"]
@@ -242,7 +242,7 @@ async def edit_bot_bt(request, botid, prefix, library, website, banner, support,
         await db.execute("INSERT INTO vanity (type, vanity_url, redirect) VALUES ($1, $2, $3)", 1, vanity, botid)
     else:
         await db.execute("UPDATE vanity SET vanity_url = $1 WHERE redirect = $2", vanity, botid)
-    await add_event(botid, "edit_bot", f"user={str(request.session['userid'])}")
+    await add_event(botid, "edit_bot", {"user": request.session['userid']})
     channel = client.get_channel(bot_logs)
     owner=str(request.session["userid"])
     await channel.send(f"<@{owner}> edited the bot <@{botid}>")
@@ -319,7 +319,7 @@ async def delete_bot(request: Request, bot_id: int, confirmer: str = FForm("1"))
             return templates.TemplateResponse("message.html", {"request": request, "username": request.session.get("username"), "avatar": request.session.get("avatar"), "message": "Forbidden", "context": "You have taken too long to click the Delete Bot button and for your security, you will need to go back, refresh the page and try again"})
     except:
         return templates.TemplateResponse("message.html", {"request": request, "username": request.session.get("username"), "avatar": request.session.get("avatar"), "message": "Forbidden", "context": "Invalid Confirm Code. Please go back and reload the page and if the problem still persists, please report it in the support server"})
-    await add_event(bot_id, "delete_bot", f"user={str(request.session.get('userid'))}")
+    await add_event(bot_id, "delete_bot", {"user": request.session.get('userid')})
     owner = request.session.get("userid")
     await db.execute("DELETE FROM bots WHERE bot_id = $1", bot_id)
     await channel.send(f"<@{owner}> deleted the bot <@{str(bot_id)}>.\nWe are sad to see you go...::sad::")
@@ -350,9 +350,9 @@ async def ban_bot(request: Request, bot_id: int, ban: int = FForm(1), reason: st
         except:
             pass
         await db.execute("UPDATE bots SET banned = true WHERE bot_id = $1", bot_id)
-        await add_event(bot_id, "ban", f"user={str(request.session.get('userid'))}")
+        await add_event(bot_id, "ban", {"user": request.session.get('userid')})
     else:
         await channel.send("<@" + str(bot_id) + "> has been unbanned")
         await db.execute("UPDATE bots SET banned = false WHERE bot_id = $1", bot_id)
-        await add_event(bot_id, "unban", f"user={str(request.session.get('userid'))}")
+        await add_event(bot_id, "unban", {"user": request.session.get('userid')})
     return RedirectResponse("/", status_code = 303)

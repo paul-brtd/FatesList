@@ -8,20 +8,17 @@ router = APIRouter(
     include_in_schema = True
 )
 
-class EventDelete(BaseModel):
+class PromoDelete(BaseModel):
     api_token: str
     event_id: Optional[uuid.UUID] = None
 
-class EventNew(BaseModel):
+class Promo(BaseModel):
     api_token: str
-    event: str
-    context: Optional[str] = "NONE"
+    title: str
+    info: str
 
-class EventUpdate(BaseModel):
-    api_token: str
-    event_id: uuid.UUID
-    event: str
-    context: Optional[str] = "NONE"
+class PromoPatch(Promo):
+    promo_id: uuid.UUID
 
 class TokenRegen(BaseModel):
     api_token: str
@@ -45,133 +42,80 @@ async def get_api_events(request: Request, api_token: str, human: Optional[int] 
     ret = await get_events(api_token = api_token, event_id = id)
     return ret
 
-@router.delete("/events", tags = ["Events API"])
-async def delete_api_events(request: Request, event: EventDelete):
-    """Deletes an event for a bot or deletes all events from a bot (WARNING: DO NOT DO THIS UNLESS YOU KNOW WHAT YOU ARE DOING). Events can be used to set guild/shard counts, enter maintenance mode or to show promotions
+@router.get("/promotion", tags = ["Promotion API"])
+async def get_promotions(request: Request, api_token: str):
+    """
+       Gets a list of all promotions (or just a single event if id is specified. Events can be used to set guild/shard counts, enter maintenance mode or to show promotions
+
+        **API Token**: You can get this by clicking your bot and clicking edit and scrolling down to API Token or clicking APIWeb
+
+        **Human**: Whether the APIWeb HTML should be returned or the raw JSON. Use 0 unless you are developing APIWeb
+
+        **ID**: The Event UUID if you want to just return a specific event
+    """
+    id = await db.fetchrow("SELECT bot_id FROM bots WHERE api_token = $1",api_token)
+    if id is None:
+        return {"done":  False, "reason": "NO_AUTH"}
+    id = id["bot_id"]
+    return await db.fetch("SELECT * FROM promotions WHERE bot_id = $1", id)
+@router.delete("/promotion", tags = ["Promotion API"])
+async def delete_api_events(request: Request, promo: PromoDelete):
+    """Deletes a promotion for a bot or deletes all promotions from a bot (WARNING: DO NOT DO THIS UNLESS YOU KNOW WHAT YOU ARE DOING).
 
     **API Token**: You can get this by clicking your bot and clicking edit and scrolling down to API Token or clicking APIWeb
 
     **Event ID**: This is the ID of the event you wish to delete. Not passing this will delete ALL events, so be careful
     """
-    id = await db.fetchrow("SELECT bot_id FROM bots WHERE api_token = $1", event.api_token)
+    id = await db.fetchrow("SELECT bot_id FROM bots WHERE api_token = $1", promo.api_token)
     if id is None:
         return {"done":  False, "reason": "NO_AUTH"}
     id = id["bot_id"]
-    if event.event_id is not None:
-        eid = await db.fetchrow("SELECT id FROM api_event WHERE id = $1", event.event_id)
+    if promo.promo_id is not None:
+        eid = await db.fetchrow("SELECT id FROM promotions WHERE id = $1", promo.promo_id)
         if eid is None:
-            return {"done":  False, "reason": "NO_MESSAGE_FOUND"}
-        await db.execute("DELETE FROM api_event WHERE bot_id = $1 AND id = $2", id, event.event_id)
-        webh_data = event.event_id
+            return {"done":  False, "reason": "NO_PROMOTION_FOUND"}
+        await db.execute("DELETE FROM promotions WHERE bot_id = $1 AND id = $2", id, promo.promo_id)
     else:
-        await db.execute("DELETE FROM api_event WHERE bot_id = $1", id)
-        webh_data = "ALL"
-
-    webh = await db.fetchrow("SELECT webhook FROM bots WHERE bot_id = $1", int(id))
-    if webh is not None and webh["webhook"] not in ["", None] and webh["webhook"].startswith("http"):
-        try:
-            asyncio.create_task(requests.put(webh["webhook"], json = {"type": "delete", "events": webh_data}))
-        except:
-            pass
+        await db.execute("DELETE FROM promotions WHERE bot_id = $1", id)
     return {"done":  True, "reason": None}
 
-@router.put("/events", tags = ["Events API"])
-async def create_api_event(request: Request, event: EventNew):
-    """Creates an event for a bot. Events can be used to set guild/shard counts, enter maintenance mode or to show promotions
+@router.put("/promotion", tags = ["Promotion API"])
+async def create_promotion(request: Request, promo: Promo):
+    """Creates a promotion for a bot. Events can be used to set guild/shard counts, enter maintenance mode or to show promotions
 
     **API Token**: You can get this by clicking your bot and clicking edit and scrolling down to API Token or clicking APIWeb
 
-    **Event**: This is the name of the event in question. There are a few special events as well:
+    **Promotion**: This is the name of the event in question. There are a few special events as well:
 
-        - add_bot - This is an Add Bot Event. These cannot be created normally using the API
-
-        - edit_bot - This is an Edit Bot Event. These cannot be created normally using the API
-
-        - guild_count - Sets the guild count, put the number of guilds in the context field
-
-        - shard_count - Sets the shard count, put the number of shards in the context field
-
-        - vote - This is a vote. These cannot be manually created using the API
-
-        - begin_maint - Enter maintenance mode. Put the reason in the context field
-
-        - end_maint - End Maintenance. Context field is optional here and doesn't matter
-
-        - delete_bot - This is an Delete Bot Event. These cannot be created normally using the API
-
-        - approve - This is an Approve Bot Event. These cannot be created normally using the API
-
-        - deny - This is an Deny Bot Event. These cannot be created normally using the API
-
-    **Note**: All other event names will be shown on the bot's page. You can add css by adding ::css=<YOUR CSS HERE> to the context field but this is not recommended unless you know what you are doing
-
-    **Context**: In a normal event, the context is what will displayed on the body of the event on the bot's page. In a special event, the context usually contains special information about the event in question.
     """
-
-    if len(event.event) < 3:
+    if len(promo.title) < 3:
         return {"done":  False, "reason": "TEXT_TOO_SMALL"}
-    if event.event.replace(" ", "") in ["guild_count", "shard_count"] and event.context is None:
-        return {"done":  False, "reason": "NO_GUILDS_OR_SHARDS"}
-    if event.event.replace(" ", "") in ["add_bot", "edit_bot", "vote", "delete_bot", "approve", "deny"]:
-        return {"done":  False, "reason": "INVALID_EVENT_NAME"}
+    id = await db.fetchrow("SELECT bot_id FROM bots WHERE api_token = $1", promo.api_token)
+    if id is None:
+        return {"done":  False, "reason": "NO_AUTH"}
+    id = id["bot_id"]
+    await add_promotion(id, promo.title, promo.info)
+    return {"done":  True, "reason": None}
+
+@router.patch("/promotion", tags = ["Promotion API"])
+async def edit_api_event(request: Request, promo: PromoPatch):
+    """Edits an promotion for a bot given its event ID. Events can be used to set guild/shard counts, enter maintenance mode or to show promotions.
+
+    **API Token**: You can get this by clicking your bot and clicking edit and scrolling down to API Token or clicking APIWeb
+
+    **Promotion ID**: This is the ID of the promotion you wish to edit 
+
+    """
+    if len(promo.title) < 3:
+        return {"done":  False, "reason": "TEXT_TOO_SMALL"}
     id = await db.fetchrow("SELECT bot_id FROM bots WHERE api_token = $1", event.api_token)
     if id is None:
         return {"done":  False, "reason": "NO_AUTH"}
     id = id["bot_id"]
-    await add_event(id, event.event, event.context)
-    return {"done":  True, "reason": None}
-
-@router.patch("/events", tags = ["Events API"])
-async def edit_api_event(request: Request, event: EventUpdate):
-    """Edits an event for a bot given its event ID. Events can be used to set guild/shard counts, enter maintenance mode or to show promotions.
-
-    **API Token**: You can get this by clicking your bot and clicking edit and scrolling down to API Token or clicking APIWeb
-
-    **Event ID**: This is the ID of the event you wish to edit 
-
-    **Event**: This is the new name of the event in question. There are a few special events as well. None of these special events are allowed to be editted or editted to:
-
-        - add_bot
-
-        - edit_bot
-
-        - vote
-
-        - begin_maint
-
-        - end_maint
-
-        - delete_bot
-
-        - approve
-
-        - deny
-
-    **Context**: In a normal event, the context is what will displayed on the body of the event on the bot's page. In a special event, the context usually contains special information about the event in question. You cannot edit the context (or anything for that matter) of a special event
-    """
-    if len(event.event) < 3:
-        return {"done":  False, "reason": "TEXT_TOO_SMALL"}
-    if event.event.replace(" ", "") in ["guild_count", "shard_count"] and event.context is None:
-        return {"done":  False, "reason": "NO_GUILDS_OR_SHARDS"}
-    if event.event.replace(" ", "") in ["add_bot", "edit_bot", "vote", "guild_count", "shard_count", "begin_maint", "end_maint", "delete_bot", "approve", "deny"]:
-        return {"done":  False, "reason": "INVALID_EVENT_NAME"}
-    id = await db.fetchrow("SELECT bot_id FROM bots WHERE api_token = $1", event.api_token)
-    if id is None:
-        return {"done":  False, "reason": "NO_AUTH"}
-    id = id["bot_id"]
-    eid = await db.fetchrow("SELECT id, events FROM api_event WHERE id = $1", event.event_id)
+    pid = await db.fetchrow("SELECT id, events FROM api_event WHERE id = $1", promo.promo_id)
     if eid is None:
         return {"done":  False, "reason": "NO_MESSAGE_FOUND"}
-    if eid["events"].split("|")[0].replace(" ", "") in ["add_bot", "edit_bot", "vote", "guild_count", "shard_count", "begin_maint", "end_maint", "delete_bot", "approve", "deny"]:
-        return {"done":  False, "reason": "INVALID_EVENT_NAME"}
-    new_event_data = "|".join((event.event, str(time.time()), event.context))
-    await db.execute("UPDATE api_event SET events = $1 WHERE id = $2", new_event_data, event.event_id)
-    webh = await db.fetchrow("SELECT webhook FROM bots WHERE bot_id = $1", int(id))
-    if webh is not None and webh["webhook"] not in ["", None] and webh["webhook"].startswith("http"):
-        try:
-            asyncio.create_task(requests.put(webh["webhook"], json = {"type": "update", "event_id": str(event.event_id), "event": event.event, "context": event.context}))
-        except:
-            pass
+    await db.execute("UPDATE promotions SET title = $1, info = $2 WHERE bot_id = $3", promo.title, promo.info, id)
     return {"done": True, "reason": None}
 
 @router.patch("/token", tags = ["Core API"])
@@ -230,7 +174,7 @@ async def roll_bots_api(request: Request):
     bot["bot_id"] = str(bot["bot_id"])
     return bot
 
-@router.post("/bots/stats", tags = ["API Shortcuts"])
+@router.post("/bots/stats", tags = ["Core API"])
 async def guild_shard_count_shortcut(request: Request, api: APISGC, Authorization: Optional[str] = FHeader(None)):
     """This is just a shortcut to /api/events for guild/shard posting primarily for BotsBlock but can be used by others. The Swagger Try It Out does not work right now if you use the authorization header but the other api_token in JSON can and should be used instead for ease of use.
     """
@@ -240,39 +184,34 @@ async def guild_shard_count_shortcut(request: Request, api: APISGC, Authorizatio
         atoken = Authorization
     else:
         atoken = api.api_token 
-    event = EventNew(api_token = atoken, event = "guild_count", context = str(api.guild_count))
-    eve = await create_api_event(request, event)
-    if eve["done"] == False and eve["reason"] == "NO_AUTH":
+    id = await db.fetchrow("SELECT bot_id FROM bots WHERE api_token = $1", atoken)
+    if id is None:
         return abort(401)
-    event = EventNew(api_token = atoken, event = "shard_count", context = str(api.shard_count))
-    eve = await create_api_event(request, event)
-    if eve["done"] == False and eve["reason"] == "NO_AUTH":
-        return abort(401)
-    return eve
+    await set_guild_shard_count(id["bot_id"], api.guild_count, api.shard_count)
+    return {"done": True, "reason": None}
 
 class APISMaint(BaseModel):
     api_token: str
-    mode: bool
-    reason: Optional[str] = "There was no reason specified"
+    mode: int = 1
+    reason: str
 
-@router.post("/bots/maint", tags = ["API Shortcuts"])
+@router.post("/bots/maint", tags = ["Core API"])
 async def maint_mode_shortcut(request: Request, api: APISMaint):
-    """This is just a shortcut to /api/events for enabling or disabling maintenance mode
+    """This is just an endpoing for enabling or disabling maintenance mode. As of the new API Revamp, this isi the only way to add a maint
 
     **API Token**: You can get this by clicking your bot and clicking edit and scrolling down to API Token or clicking APIWeb
 
-    **Mode**: Whether you went to enter or exit maintenance mode. Setting this to true will enable maintenance and setting this to false will disable maintenance
+    **Mode**: Whether you want to enter or exit maintenance mode. Setting this to 1 will enable maintenance and setting this to 0 will disable maintenance mode. Different maintenance modes are planned
     """
-    if api.mode:
-        event_name = "begin_maint"
-    else:
-        event_name = "end_maint"
+    
+    if api.mode not in [0, 1]:
+        return {"done":  False, "reason": "UNSUPPORTED_MODE"}
 
-    event = EventNew(api_token = api.api_token, event = event_name, context = api.reason)
-    eve = await create_api_event(request, event)
-    if eve["done"] == False and eve["reason"] == "NO_AUTH":
-        return abort(401)
-    return eve
+    id = await db.fetchrow("SELECT bot_id FROM bots WHERE api_token = $1", api.api_token)
+    if id is None:
+        return {"done":  False, "reason": "NO_AUTH"}
+    await add_maint(id["bot_id"], api.mode, api.reason)
+    return {"done": True, "reason": None}
 
 async def ws_send_events(websocket):
     for event_i in range(0, len(ws_events)):

@@ -153,21 +153,40 @@ def is_staff(staff_json: dict, roles: Union[list, int], base_perm: int) -> Union
         return False, tmp["perm"]
     return False, tmp["perm"]
 
-#await add_event(bot_id, "add_bot", "NULL")
-async def add_event(bot_id: int, event: str, context: str, *, send_event = True):
-    # Special Events
-    if event == "guild_count":
-        if int(context) > 300000000000:
-            return
-        await db.execute("UPDATE bots SET servers = $1 WHERE bot_id = $2", int(context), int(bot_id))
-        return
-    elif event == "shard_count":
-        if int(context) > 300000000000:
-            return
-        await db.execute("UPDATE bots SET shard_count = $1 WHERE bot_id = $2", int(context), int(bot_id))
-        return
 
-    new_event_data = "|".join((event, str(time.time()), context))
+#CREATE TABLE promotions (
+#   id uuid primary key DEFAULT uuid_generate_v4(),
+#   bot_id bigint,
+#   title text,
+#   info text
+#);
+#CREATE TABLE bot_maint (
+#   id uuid primary key DEFAULT uuid_generate_v4(),
+#   bot_id bigint,
+#   reason text,
+#   type integer
+#);
+#await add_event(bot_id, "add_bot", "NULL")
+
+async def add_maint(bot_id: int, type: int, reason: str):
+    return await db.execute("INSERT INTO bot_maint (bot_id, reason, type, epoch) VALUES ($1, $2, $3, $4)", bot_id, reason, type, time.time())
+
+async def set_guild_shard_count(bot_id: int, guild_count: int, shard_count: int):
+    if int(guild_count) > 300000000000 or int(shard_count) > 300000000000:
+        return
+    await db.execute("UPDATE bots SET servers = $1 WHERE bot_id = $2", guild_count, bot_id)
+    await db.execute("UPDATE bots SET shard_count = $1 WHERE bot_id = $2", shard_count, bot_id)
+
+async def add_promotion(bot_id: int, title: str, info: str):
+    return await db.execute("INSERT INTO promotions (bot_id, title, info) VALUES ($1, $2, $3)", bot_id, title, info)
+
+async def add_event(bot_id: int, event: str, context: dict, *, send_event = True, promotion = False):
+    if type(context) == dict:
+        pass
+    else:
+        raise KeyError
+
+    new_event_data = "|".join((event, str(time.time()), orjson.dumps(context).decode()))
     id = uuid.uuid4()
     await db.execute("INSERT INTO api_event (id, bot_id, events) VALUES ($1, $2, $3)", id, bot_id, new_event_data)
     webh = await db.fetchrow("SELECT webhook FROM bots WHERE bot_id = $1", int(bot_id))
@@ -189,10 +208,12 @@ async def add_event(bot_id: int, event: str, context: str, *, send_event = True)
                 print("Doing DISCORD")
                 uri = webhook_data[-1]
                 webhook = DiscordWebhook(url=uri)
-                #await add_event(bot_id, "vote", "user=" + str(uid) + "::votes=" + str(b['votes'] + 1))
                 print(context)
-                embed = DiscordEmbed(title=event.replace("_", " ").title(), description="\n".join([ctx.split("=")[0].replace("_", " ").title() + ": " + ctx.split("=")[1] for ctx in context.split("::") if not ctx.startswith("user_id")]), color=242424)
-                embed.description.replace("Id", "ID (for developers):")
+                embed = DiscordEmbed(
+                    title=event.replace("_", " ").title(),
+                    description="\n".join([f"{key.replace('_', ' ').title()}: {value}" for key, value in context.items() if key != "user_id"]),
+                    color=242424
+                )
                 print(embed.description)
                 webhook.add_embed(embed)
                 response = webhook.execute()
@@ -210,48 +231,23 @@ class Form(StarletteForm):
     pass
 
 async def in_maint(bot_id: str) -> Union[bool, Optional[dict]]:
-    api_data = await db.fetch("SELECT events FROM api_event WHERE bot_id = $1 AND events ilike '%maint%'", bot_id)
+    api_data = await db.fetch("SELECT type, reason, epoch FROM bot_maint WHERE bot_id = $1", bot_id)
     if api_data == []:
         return False, None
     curr_maint = None
-    for _event in api_data:
-        event = _event["events"]
-        if event.split("|")[0].replace(" ", "") == "begin_maint":
-            curr_maint = event
-        elif event.split("|")[0].replace(" ", "") == "end_maint" and curr_maint is not None:
+    for _maint in api_data:
+        if _maint["type"] != 0:
+            curr_maint = _maint
+        elif _maint["type"] == 0 and curr_maint is not None:
             curr_maint = None
     if curr_maint is not None:
-        return True, {"reason": curr_maint.split("|")[2], "epoch": curr_maint.split("|")[1]}
+        return True, {"reason": curr_maint["reason"], "epoch": curr_maint["epoch"]}
     else:
         return False, None
 
-
-# events = await get_normal_events(bot["bot_id"])
-async def get_normal_events(bot_id: int) -> list:
-    api_data = await db.fetch("SELECT events FROM api_event WHERE bot_id = $1", bot_id)
-    if api_data == []:
-        return []
-    special_events = ["add_bot", "edit_bot", "guild_count", "shard_count", "begin_maint", "end_maint", "vote", "delete_bot", "approve", "deny", "deleted", "ban", "unban"]
-    events = []
-    ie = False
-    for _event in api_data:
-        event = _event["events"]
-        if len(event.split("|")[0]) < 3:
-            continue
-        elif event.split("|")[0].replace(" ", "") in special_events:
-            if ie == False:
-                print("Ignoring event: ", end = "")
-                ie = True
-            print(event.split("|")[0].replace(" ", "") + ", ", end = "")
-        else:
-            try:
-                css = event.split("|")[2].split("::css=")[1]
-            except:
-                css = ""
-            events.append({"event": event.split("|")[0], "context": event.split("|")[2].split("::css=")[0].replace("onload", "").replace("<script", "").replace("</script>", "").replace("<iframe", ""), "css": css, "time": datetime.datetime.fromtimestamp(float(event.split("|")[1]))})
-    print("")
-    print(events)
-    return events
+async def get_promotions(bot_id: int) -> list:
+    api_data = await db.fetch("SELECT title, info, css FROM promotions WHERE bot_id = $1", bot_id)
+    return api_data
 
 async def get_user_token(uid: int, username: str) -> str:
         token = await db.fetchrow("SELECT username, token FROM users WHERE userid = $1", int(uid))
@@ -284,7 +280,7 @@ async def vote_bot(uid: int, username: str, bot_id: int) -> Optional[list]:
         return [404]
     await db.execute("UPDATE bots SET votes = votes + 1 WHERE bot_id = $1", int(bot_id))
     await db.execute("UPDATE users SET vote_epoch = $1 WHERE userid = $2", time.time(), int(uid))
-    event_id = await add_event(bot_id, "vote", "username=" + (username) + "::user_id=" + str(uid) + "::votes=" + str(b['votes'] + 1) + "::**Vote Here**=https://fateslist.xyz/bot/" + str(bot_id))
+    event_id = await add_event(bot_id, "vote", {"username": username, "user_id": str(uid), "votes": b['votes'] + 1, "**Vote Here**": "https://fateslist.xyz/bot/" + str(bot_id)})
     return []
 
 # Get Bots Helper
@@ -319,7 +315,7 @@ async def render_bot(request: Request, bot_id: int, review: bool, widget: bool):
         banner = "none"
 
     bot_info = await get_bot(bot["bot_id"])
-    events = await get_normal_events(bot["bot_id"])
+    promos = await get_promotions(bot["bot_id"])
     maint = await in_maint(bot["bot_id"])
     ed = [((await get_user(id)), id) for id in eo]
     if bot["features"] is None:
@@ -343,7 +339,7 @@ async def render_bot(request: Request, bot_id: int, review: bool, widget: bool):
     else:
         f = "bot.html"
         widget = False
-    return templates.TemplateResponse(f, {"request": request, "username": request.session.get("username", False), "bot": bot_obj, "tags_fixed": tags_fixed, "form": form, "avatar": request.session.get("avatar"), "events": events, "maint": maint, "bot_admin": bot_admin, "review": review, "guild": reviewing_server, "widget": widget})
+    return templates.TemplateResponse(f, {"request": request, "username": request.session.get("username", False), "bot": bot_obj, "tags_fixed": tags_fixed, "form": form, "avatar": request.session.get("avatar"), "promos": promos, "maint": maint, "bot_admin": bot_admin, "review": review, "guild": reviewing_server, "widget": widget})
 
 # WebSocket Base Code
 
@@ -426,6 +422,6 @@ async def get_events(api_token: Optional[str] = None, bot_id: Optional[str] = No
         uid = _event["id"]
         if len(event.split("|")[0]) < 3:
             continue # Event name size is too small
-        events.append({"id": uid,  "event": event.split("|")[0], "epoch": event.split("|")[1], "context": event.split("|")[2]})
+        events.append({"id": uid,  "event": event.split("|")[0], "epoch": event.split("|")[1], "context": orjson.loads(event.split("|")[2])})
     ret = {"events": events, "maint": (await in_maint(bid["bot_id"])), "guild_count": bid["servers"]}
     return ret

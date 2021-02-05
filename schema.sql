@@ -56,6 +56,22 @@ CREATE TABLE api_event (
     events text
 );
 
+CREATE TABLE promotions (
+   id uuid primary key DEFAULT uuid_generate_v4(),
+   bot_id bigint,
+   title text,
+   info text,
+   css text,
+);
+
+CREATE TABLE bot_maint (
+   id uuid primary key DEFAULT uuid_generate_v4(),
+   bot_id bigint,
+   reason text,
+   type integer,
+   epoch bigint
+);
+
 
 CREATE TABLE vanity (
     type integer, -- 1 = bot, 2 = profile, 3 =  nothing right now but may be used

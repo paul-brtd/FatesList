@@ -81,16 +81,14 @@
     {% endfor %}
     </div>
     </div>
-    {% if events != [] %}
+    {% if promos != [] %}
     <hr style="margin-top: 20px; font-size: 20px;border-top-width: 1px;border-top-color: #eee;width: 90%;">
-    <h5 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;margin-top: -13px;margin-bottom: 30px;">Events</h5>
+    <h5 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;margin-top: -13px;margin-bottom: 30px;">Special Promotions/Events</h5>
     {% endif %}
-    {% for event in events %}
-        <div class="alert alert-primary" role="alert" style='width: 90%; font-weight: bold; margin: 0 auto; height: 86%; padding: 5px; {% if event["css"] == "" %}background-color: #111112; {%endif%} {{event["css"]|safe}} margin-bottom: 3px;'>
-        <p style="color: white; margin-bottom: 3px; margin-left: 2px; {{event["css"]|safe}}">{{event["event"]}}</p>
-        {% if event["context"].replace(" ", "") != "NONE" and event["context"].replace(" ", "") != "" %}
-        <p style="color: white; {{event["css"]|safe}}">{{event["context"]|safe}}</p>
-        {% endif %}
+    {% for promo in promos %}
+        <div class="alert alert-primary" role="alert" style='width: 90%; font-weight: bold; margin: 0 auto; height: 86%; padding: 5px; {% if not promo.css %}background-color: #111112; {%endif%} {{promo.css|safe}} margin-bottom: 3px;'>
+        <p style="color: white; margin-bottom: 3px; margin-left: 2px; {{promo.css|safe}}">{{promo.title}}</p>
+	<p style="color: white; {{promo.css|safe}}">{{promo.info|safe}}</p>
         </div>
     {% endfor %}
         {% if staff[0] and not bot.banned %}
