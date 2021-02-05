@@ -35,7 +35,7 @@
     {% if not error %}
     {% else %}
     <div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
-            <strong>{{error}}</strong>
+            <strong>{{error|safe}}</strong>
     </div>
     {% endif %}
   </div>
@@ -312,7 +312,7 @@
         font-size: 16px;
       "
       for="webhook"
-      >Webhook(Not required)</label
+      >Webhook</label
     ><input
       class="form-control"
       type="text"
@@ -406,7 +406,7 @@
         >{{data.css}}</textarea>
   </div>
   </div>
-	    <h5 style="font-weight: bold; margin-bottom: 15px;">{% if mode == "templ_add" or mode == "templ_edit" %}Server Template Features{% else %}Bot Features{% endif %}</h5>
+	    <h5 style="font-weight: bold; margin-bottom: 15px;">{% if mode == "templ_add" or mode == "templ_edit" %}Server Template Features{% else %}Bot Features + Privacy{% endif %}</h5>
 <div class="container">
 <div class="row">
 <div class-"col">
@@ -417,6 +417,11 @@
 <div class="custom-control custom-switch" style="text-align: center; float: left;; display: block; margin-top: 15px;">
 	<input type="checkbox" class="custom-control-input" tabindex="0" id="open_source" style="margin: auto !important;" name="open_source" {%if data.features and "open_source" in data.features %}checked aria-label="Open Source Enabled"{% else %}aria-label="Open Source Disabled"{% endif %}/>
 	<label class="custom-control-label" for="open_source">Open Source -> Does your bot have it's code open to the public, preferrably on a git repository?</label>
+</div>
+<br/>
+<div class="custom-control custom-switch" style="text-align: center; float: left;; display: block; margin-top: 15px;">
+        <input type="checkbox" class="custom-control-input" tabindex="0" id="private" style="margin: auto !important;" name="private" {%if data.private %}checked aria-label="Private Bot"{% else %}aria-label="Public Bot"{% endif %}/>
+	<label class="custom-control-label" for="private">Private Bot -> Enable this if you want to make your bot 'private' on the bot list. Private bots cannot be seen whatsoever by anyone other than you</label>
 </div>
 </div></div><br/>
      <h5 style="font-weight: bold; margin-bottom: 15px;">Bot Purpose</h5>

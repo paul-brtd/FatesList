@@ -24,7 +24,8 @@ CREATE TABLE bots (
     extra_owners bigint[],
     invite text,
     banned BOOLEAN DEFAULT false,
-    github TEXT
+    github TEXT,
+    private boolean DEFAULT false;
 );
 
 CREATE TABLE users (

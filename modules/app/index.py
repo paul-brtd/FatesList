@@ -23,7 +23,7 @@ async def home(request: Request):
         bot_info = await get_bot(bot["bot_id"])
         if bot_info:
             new_bots.append({"bot": bot, "avatar": bot_info["avatar"], "username": bot_info["username"], "votes": await human_format(bot["votes"]), "servers": await human_format(bot["servers"]), "description": bot["description"]})
-    fetch = await db.fetch("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE queue = false and banned = false and disabled = false and certified = true LIMIT 12")
+    fetch = await db.fetch("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE queue = false and banned = false and disabled = false and certified = true ORDER BY votes DESC LIMIT 12")
     certified_bots = []
     # certified bots
     for bot in fetch:
