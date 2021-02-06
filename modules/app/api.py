@@ -10,7 +10,7 @@ router = APIRouter(
 
 class PromoDelete(BaseModel):
     api_token: str
-    event_id: Optional[uuid.UUID] = None
+    promo_id: Optional[uuid.UUID] = None
 
 class Promo(BaseModel):
     api_token: str
@@ -23,41 +23,6 @@ class PromoPatch(Promo):
 class TokenRegen(BaseModel):
     api_token: str
 
-class Events(BaseModel):
-    events: List[Optional[dict]] = []
-    maint: Optional[list] = None
-    guild_count: Optional[int] = None
-
-@router.get("/events", tags = ["Events API"], response_model = Events)
-async def get_api_events(request: Request, api_token: str, human: Optional[int] = 0, id: Optional[uuid.UUID] = None):
-    """
-       Gets a list of all events (or just a single event if id is specified. Events can be used to set guild/shard counts, enter maintenance mode or to show promotions
-
-        **API Token**: You can get this by clicking your bot and clicking edit and scrolling down to API Token or clicking APIWeb 
-
-        **Human**: Whether the APIWeb HTML should be returned or the raw JSON. Use 0 unless you are developing APIWeb
-
-        **ID**: The Event UUID if you want to just return a specific event
-    """
-    ret = await get_events(api_token = api_token, event_id = id)
-    return ret
-
-@router.get("/promotion", tags = ["Promotion API"])
-async def get_promotions(request: Request, api_token: str):
-    """
-       Gets a list of all promotions (or just a single event if id is specified. Events can be used to set guild/shard counts, enter maintenance mode or to show promotions
-
-        **API Token**: You can get this by clicking your bot and clicking edit and scrolling down to API Token or clicking APIWeb
-
-        **Human**: Whether the APIWeb HTML should be returned or the raw JSON. Use 0 unless you are developing APIWeb
-
-        **ID**: The Event UUID if you want to just return a specific event
-    """
-    id = await db.fetchrow("SELECT bot_id FROM bots WHERE api_token = $1",api_token)
-    if id is None:
-        return {"done":  False, "reason": "NO_AUTH"}
-    id = id["bot_id"]
-    return await db.fetch("SELECT * FROM promotions WHERE bot_id = $1", id)
 @router.delete("/promotion", tags = ["Promotion API"])
 async def delete_api_events(request: Request, promo: PromoDelete):
     """Deletes a promotion for a bot or deletes all promotions from a bot (WARNING: DO NOT DO THIS UNLESS YOU KNOW WHAT YOU ARE DOING).
@@ -132,8 +97,8 @@ async def regenerate_token(request: Request, token: TokenRegen):
 
 
 @router.get("/bots/{bot_id}", tags = ["Core API"])
-async def get_bots_api(request: Request, bot_id: int):
-    """Gets bot information given a bot ID. If not found, 404 will be returned"""
+async def get_bots_api(request: Request, bot_id: int, api_token: Optional[str] = None):
+    """Gets bot information given a bot ID. If not found, 404 will be returned. If a proper API Token is provided, sensitive information (System API Events will also be provided)"""
     api_ret = await db.fetchrow("SELECT bot_id AS id, description, tags, long_description, servers AS server_count, shard_count, prefix, invite, owner AS _owner, extra_owners AS _extra_owners, features, bot_library AS library, queue, banned, website, discord AS support, github FROM bots WHERE bot_id = $1", bot_id)
     if api_ret is None:
         return abort(404)
@@ -146,7 +111,19 @@ async def get_bots_api(request: Request, bot_id: int):
     else:
         api_ret["owners"] = [api_ret["_owner"]] + api_ret["_extra_owners"]
     api_ret["id"] = str(api_ret["id"])
-    api_ret["events"] = await get_normal_events(bot_id = bot_id)
+    if api_token is not None:
+        check = await db.fetchrow("SELECT bot_id FROM bots WHERE api_token = $1", api_token)
+        if check is None or check["bot_id"] != bot_id:
+            sensitive = False
+        else:
+            sensitive = True
+    else:
+        sensitive = False
+    if sensitive:
+        api_ret["sensitive"] = await get_events(bot_id = bot_id)
+    else:
+        api_ret["sensitive"] = {}
+    api_ret["promotions"] = await get_promotions(bot_id = bot_id)
     api_ret["maint"] = await in_maint(bot_id = bot_id)
     return api_ret
 

@@ -47,8 +47,9 @@ async def add_bot_api(
         long_description: str = FForm(""),
         custom_prefix: str = FForm("off"),
         open_source: str = FForm("off"),
-        private: str = FForm("off")
+        html_long_description: str = FForm("false")
     ):
+    html_long_description = html_long_description == "true"
     guild = client.get_guild(reviewing_server)
     bot_dict = locals()
     bot_dict["request"] = None
@@ -70,7 +71,7 @@ async def add_bot_api(
         pass
     else:
         return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "Invalid Bot Invite: Your bot invite must be in the format of https://discord.com/api/oauth2... or https://discord.com/oauth2...", "mode": "add"})
-    if len(description) > 101:
+    if len(description) > 110:
         return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "Your short description must be shorter than 100 characters", "mode": "add"})
     description = description.replace("\n", " ").replace("\t", " ")
     try:
@@ -95,11 +96,11 @@ async def add_bot_api(
             extra_owners = [int(id) for id in extra_owners.split(",")]
         except:
             return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "One of your extra owners doesn't exist or you haven't comma-seperated them.", "mode": "add"})
-    bt.add_task(add_bot_bt, request, bot_id, prefix, library, website, banner, support, long_description, description, selected_tags, extra_owners, creation, bot_object, invite, features, private == "on")
+    bt.add_task(add_bot_bt, request, bot_id, prefix, library, website, banner, support, long_description, description, selected_tags, extra_owners, creation, bot_object, invite, features, html_long_description)
     return RedirectResponse("/bot/" + str(bot_id), status_code = 303)
 
-async def add_bot_bt(request, bot_id, prefix, library, website, banner, support, long_description, description, selected_tags, extra_owners, creation, bot_object, invite, features, private):
-    await db.execute("INSERT INTO bots(bot_id,prefix,bot_library,invite,website,banner,discord,long_description,description,tags,owner,extra_owners,votes,servers,shard_count,created_at,api_token,features, private) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)", bot_id, prefix, library, invite, website, banner, support, long_description, description, selected_tags, int(request.session["userid"]), extra_owners, 0, 0, 0, int(creation), get_token(101), features, private)
+async def add_bot_bt(request, bot_id, prefix, library, website, banner, support, long_description, description, selected_tags, extra_owners, creation, bot_object, invite, features, html_long_description):
+    await db.execute("INSERT INTO bots(bot_id,prefix,bot_library,invite,website,banner,discord,long_description,description,tags,owner,extra_owners,votes,servers,shard_count,created_at,api_token,features, html_long_description) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)", bot_id, prefix, library, invite, website, banner, support, long_description, description, selected_tags, int(request.session["userid"]), extra_owners, 0, 0, 0, int(creation), get_token(101), features, html_long_description)
     await add_event(bot_id, "add_bot", {})
     owner=str(request.session["userid"])
     channel = client.get_channel(bot_logs)
@@ -129,7 +130,17 @@ async def bot_edit(request: Request, bid: int):
             new_tag = tag.replace("_", " ")
             tags_fixed.update({tag: new_tag.capitalize()})
         form = await Form.from_formdata(request)
-        fetch = await db.fetchrow("SELECT bot_id, prefix, bot_library AS library, invite, website, banner, long_description, description, tags, owner, extra_owners,  webhook, discord AS support, api_token, banner, banned, github, features, private FROM bots WHERE bot_id = $1", bid)
+        fetch = dict(await db.fetchrow("SELECT bot_id, prefix, bot_library AS library, invite, website, banner, long_description, description, tags, owner, extra_owners,  webhook AS _webhook, discord AS support, api_token, banner, banned, github, features, html_long_description FROM bots WHERE bot_id = $1", bid))
+        if fetch["_webhook"] is None:
+            fetch["webhook_type"] = "VOTE"
+            fetch["webhook"] = ""
+        else:
+            try:
+                fetch["webhook"] = fetch["_webhook"].split("$")[1]
+                fetch["webhook_type"] = fetch["_webhook"].split("$")[0] 
+            except:
+                fetch["webhook"] = fetch["_webhook"]
+                fetch["webhook_type"] = ''
         vanity = await db.fetchrow("SELECT vanity_url AS vanity FROM vanity WHERE redirect = $1", bid)
         if vanity is None:
             vanity = {"vanity": None}
@@ -156,12 +167,14 @@ async def bot_edit_api(
         support: Optional[str] = FForm(""),
         long_description: str = FForm(""),
         webhook: str = FForm(""),
+        webhook_type: str = FForm(""),
         vanity: str = FForm(""),
         github: str = FForm(""),
         custom_prefix: str = FForm("off"),
         open_source: str = FForm("off"),
-        private: str = FForm("off")
+        html_long_description: str = FForm("false")
     ):
+    html_long_description = html_long_description == "true"
     guild = client.get_guild(reviewing_server)
     bot_dict = locals()
     bot_dict["request"] = None
@@ -197,14 +210,13 @@ async def bot_edit_api(
         pass
     else:
         return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "You are either not in the support server or you do not exist on the Discord API", "username": request.session.get("username", False), "mode": "edit"})
-    if webhook.replace(" ", "") != "" and len(webhook.split("$")) == 1:
-        return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "Please specify what type of webhook you want by prepending it with DISCORD$ for Discord Integration, FC$ for Fates Client Webhook POST$ for generic POST or PUT$ for generic PUT", "username": request.session.get("username", False), "mode": "edit"})
+    webhook = "$".join((webhook_type, webhook))
     if invite.startswith("https://discord.com") and "oauth" in invite:
         pass
     else:
         return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "Invalid Bot Invite<br/>Your bot invite must be in the format of https://discord.com/api/oauth2... or https://discord.com/oauth2...", "username": request.session.get("username", False), "mode": "edit"})
     description = description.replace("\n", " ").replace("\t", " ")
-    if len(description) > 101:
+    if len(description) > 110:
         return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "Short description is too long.", "username": request.session.get("username", False), "mode": "edit"})
     if tags == "":
         return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "You need to select tags for your bot", "username": request.session.get("username", False), "mode": "edit"})
@@ -231,11 +243,11 @@ async def bot_edit_api(
         except:
             return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "One of your extra owners is invalid", "mode": "edit"})
     print(features)
-    bt.add_task(edit_bot_bt, request, bid, prefix, library, website, banner, support, long_description, description, selected_tags, extra_owners, creation, invite, webhook, vanity, github, features, private == "on")
+    bt.add_task(edit_bot_bt, request, bid, prefix, library, website, banner, support, long_description, description, selected_tags, extra_owners, creation, invite, webhook, vanity, github, features, html_long_description)
     return templates.TemplateResponse("message.html", {"request": request, "message": "Bot has been edited.<script>window.location.replace('/bot/" + str(bid) + "')</script>", "username": request.session.get("username", False), "avatar": request.session.get('avatar')}) 
 
-async def edit_bot_bt(request, botid, prefix, library, website, banner, support, long_description, description, selected_tags, extra_owners, creation, invite, webhook, vanity, github, features, private):
-    await db.execute("UPDATE bots SET bot_library=$2, webhook=$3, description=$4, long_description=$5, prefix=$6, website=$7, discord=$8, tags=$9, banner=$10, invite=$11, extra_owners = $12, github = $13, features = $14, private = $15 WHERE bot_id = $1", botid, library, webhook, description, long_description, prefix, website, support, selected_tags, banner, invite, extra_owners, github, features, private)
+async def edit_bot_bt(request, botid, prefix, library, website, banner, support, long_description, description, selected_tags, extra_owners, creation, invite, webhook, vanity, github, features, html_long_description):
+    await db.execute("UPDATE bots SET bot_library=$2, webhook=$3, description=$4, long_description=$5, prefix=$6, website=$7, discord=$8, tags=$9, banner=$10, invite=$11, extra_owners = $12, github = $13, features = $14, html_long_description = $15 WHERE bot_id = $1", botid, library, webhook, description, long_description, prefix, website, support, selected_tags, banner, invite, extra_owners, github, features, html_long_description)
     check = await db.fetchrow("SELECT vanity FROM vanity WHERE redirect = $1", botid)
     if check is None:
         print("am here")

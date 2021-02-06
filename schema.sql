@@ -10,6 +10,7 @@ CREATE TABLE bots (
     webhook text,
     description text,
     long_description text,
+    html_long_description boolean default false,
     prefix text,
     features TEXT[] DEFAULT [],
     api_token text unique,
@@ -71,7 +72,6 @@ CREATE TABLE bot_maint (
    type integer,
    epoch bigint
 );
-
 
 CREATE TABLE vanity (
     type integer, -- 1 = bot, 2 = profile, 3 =  nothing right now but may be used

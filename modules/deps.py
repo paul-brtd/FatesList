@@ -188,9 +188,12 @@ async def add_event(bot_id: int, event: str, context: dict, *, send_event = True
 
     new_event_data = "|".join((event, str(time.time()), orjson.dumps(context).decode()))
     id = uuid.uuid4()
+    apitok = await db.fetchrow("SELECT api_token FROM bots WHERE bot_id = $1", bot_id)
+    if apitok is None:
+        return
     await db.execute("INSERT INTO api_event (id, bot_id, events) VALUES ($1, $2, $3)", id, bot_id, new_event_data)
     webh = await db.fetchrow("SELECT webhook FROM bots WHERE bot_id = $1", int(bot_id))
-    if webh is not None and webh["webhook"] not in ["", None] and send_event:
+    if webh is not None and webh["webhook"] not in ["", None] and len(webh["webhook"].split("$")) == 2 and send_event:
         try:
             webhook_data = webh["webhook"].split("$")
             json = {"type": "add", "event_id": str(id), "event": event, "context": context}
@@ -218,6 +221,8 @@ async def add_event(bot_id: int, event: str, context: dict, *, send_event = True
                 webhook.add_embed(embed)
                 response = webhook.execute()
                 raise ValueError
+            elif webhook_data[0].upper() == "VOTE" and event == "vote":
+                json = {"id": context["user_id"], "api_token": apitok, "votes": context["votes"]}
             else:
                 print("Invalid method given\n\n\n")
                 raise ValueError # This will force an exit
@@ -423,5 +428,5 @@ async def get_events(api_token: Optional[str] = None, bot_id: Optional[str] = No
         if len(event.split("|")[0]) < 3:
             continue # Event name size is too small
         events.append({"id": uid,  "event": event.split("|")[0], "epoch": event.split("|")[1], "context": orjson.loads(event.split("|")[2])})
-    ret = {"events": events, "maint": (await in_maint(bid["bot_id"])), "guild_count": bid["servers"]}
+    ret = {"events": events}
     return ret

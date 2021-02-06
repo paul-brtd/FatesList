@@ -19,6 +19,7 @@ import importlib
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 from modules.deps import *
 from config import *
+import orjson
 import os
 
 # Setup
@@ -123,7 +124,6 @@ for f in os.listdir("modules/app"):
 async def setup_db():
 
     db = await asyncpg.create_pool(host="127.0.0.1", port=5432, user=pg_user, password=pg_pwd, database="fateslist")
-
     # some table creation here meow
 
     return db

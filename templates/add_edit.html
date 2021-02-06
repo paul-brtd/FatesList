@@ -305,6 +305,19 @@
         value="{{data.support}}"
       />
       {% if mode == "edit" %}
+      <label style="
+        color: white;
+        font-weight: bold;
+        font-size: 16px;
+      "
+      for="style"
+      >Webhook Type</label>
+      <div style="background: white; border-radius: 100px 100px 100px 100px; padding: 8px;         margin-top: 7px; margin-bottom: 30px;">
+      <select name="webhook_type" class="form-control" style="text-decoration: none; background: white !important!;  padding: 3px;">
+	      <option value="VOTE" {% if data.webhook_type == "VOTE" %}selected{%endif%}>Vote Webhook</option>
+              <option value="DISCORD" {% if data.webhook_type == "DISCORD" %}selected{%endif%}>Discord Integration</option>
+      </select>
+      </div>
       <label
       style="
         color: white;
@@ -418,11 +431,6 @@
 	<input type="checkbox" class="custom-control-input" tabindex="0" id="open_source" style="margin: auto !important;" name="open_source" {%if data.features and "open_source" in data.features %}checked aria-label="Open Source Enabled"{% else %}aria-label="Open Source Disabled"{% endif %}/>
 	<label class="custom-control-label" for="open_source">Open Source -> Does your bot have it's code open to the public, preferrably on a git repository?</label>
 </div>
-<br/>
-<div class="custom-control custom-switch" style="text-align: center; float: left;; display: block; margin-top: 15px;">
-        <input type="checkbox" class="custom-control-input" tabindex="0" id="private" style="margin: auto !important;" name="private" {%if data.private %}checked aria-label="Private Bot"{% else %}aria-label="Public Bot"{% endif %}/>
-	<label class="custom-control-label" for="private">Private Bot -> Enable this if you want to make your bot 'private' on the bot list. Private bots cannot be seen whatsoever by anyone other than you</label>
-</div>
 </div></div><br/>
      <h5 style="font-weight: bold; margin-bottom: 15px;">Bot Purpose</h5>
       <label
@@ -449,9 +457,22 @@
         name="description"
         placeholder="Fates list is a good bot that does everything you need"
         minlength="10"
-        maxlength="100"
+        maxlength="105"
 	value="{{data.description}}"
       />
+      <label style="
+        color: white;
+        font-weight: bold;
+        font-size: 16px;
+      "
+      for="html_long_description"
+      >Long Description Type</label>
+      <div style="background: white; border-radius: 100px 100px 100px 100px; padding: 8px; margin-top: 7px; margin-bottom: 30px;">
+      <select name="html_long_description" class="form-control" style="text-decoration: none; background: white !important!;  padding: 3px;">
+              <option value="true" {% if data.html_long_description %}selected{%endif%}>HTML</option>
+              <option value="false" {% if not data.html_long_description %}selected{%endif%}>Markdown</option>
+      </select>
+      </div>
   <label
         style="
           color: white;
