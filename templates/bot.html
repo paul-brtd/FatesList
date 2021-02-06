@@ -77,8 +77,8 @@
     <hr style="width: 90%; color: white; background: white;"/>
     <div style="text-align: center;">
     {% for tag in bot.tags %}
-        <button onclick="window.location.replace('/search/tags/{{tag}}')" class="btn btn-outline-dark" style="background-color: #7289DA; color: white !important; margin-right: 9px;"> <i class="fas"></i>{{tag.replace("_", " ")}}</button>
-    {% endfor %}
+        <button onclick='window.location.replace("/search/tags?tag={{tag}}")' class="btn btn-outline-dark" style="background-color: #7289DA; color: white !important; margin-right: 9px;"> <i class="fas"></i>{{tag.replace("_", " ")}}</button>
+	{% endfor %}
     </div>
     </div>
     {% if promos != [] %}
