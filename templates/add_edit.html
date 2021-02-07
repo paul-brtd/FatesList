@@ -1,23 +1,5 @@
 {% extends "base/base.html" %} 
 {% block head %}
-<style>
-.fform {
-        background: #ffffff !important;
-        border: grey !important;
-        margin-top: 7px !important;
-        margin-bottom: 30px !important;
-	margin: auto;
-	max-width: 1000px;
-}
-label {
-        color: white !important;
-        font-weight: bold !important;
-        font-size: 16px !important;
-}
-textarea {
-	height: 150px !important;
-}
-</style>
 {% endblock %} 
 {% block content %}
 
@@ -344,12 +326,6 @@ textarea {
 	      <div class="form-group" style="width: 80%; margin: 0 auto; height: auto; margin-top: 30px; color: rgba(255, 255, 255, 0.87)">
 		              <div class="form-group" class="d-flex justify-content-center" style="margin: 15px auto; width: 85%;text-align: center; color: white; font-weight: bold; overflow-wrap: anywhere;">
 				          <div style="margin 15px auto">
-    <h6 style="margin-bottom: 4.5px;">Events are a great way to deliver important updates for your bot!</h6>
-            <a href="/apiweb/{{data.api_token}}">
-		<button class="btn btn-outline-light" style="margin-top: 20px; margin-bottom: 35px">
-				              Configure Events (APIWeb)
-					              </button>
-	   </a>
     <h6 style="margin-top: 30px;">Delete Bot</h6>
     <p style="margin-bottom: 3px;">Warning: This cannot be undone</p>
     {% if data.banned and not staff[0] %}
