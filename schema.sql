@@ -7,6 +7,7 @@ CREATE TABLE bots (
     servers bigint,
     shard_count bigint,
     bot_library text,
+    webhook_type text DEFAULT 'VOTE',
     webhook text,
     description text,
     long_description text,

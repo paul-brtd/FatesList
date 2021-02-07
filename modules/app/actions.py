@@ -130,17 +130,7 @@ async def bot_edit(request: Request, bid: int):
             new_tag = tag.replace("_", " ")
             tags_fixed.update({tag: new_tag.capitalize()})
         form = await Form.from_formdata(request)
-        fetch = dict(await db.fetchrow("SELECT bot_id, prefix, bot_library AS library, invite, website, banner, long_description, description, tags, owner, extra_owners,  webhook AS _webhook, discord AS support, api_token, banner, banned, github, features, html_long_description FROM bots WHERE bot_id = $1", bid))
-        if fetch["_webhook"] is None:
-            fetch["webhook_type"] = "VOTE"
-            fetch["webhook"] = ""
-        else:
-            try:
-                fetch["webhook"] = fetch["_webhook"].split("$")[1]
-                fetch["webhook_type"] = fetch["_webhook"].split("$")[0] 
-            except:
-                fetch["webhook"] = fetch["_webhook"]
-                fetch["webhook_type"] = ''
+        fetch = dict(await db.fetchrow("SELECT bot_id, prefix, bot_library AS library, invite, website, banner, long_description, description, tags, owner, extra_owners, webhook, webhook_type, discord AS support, api_token, banner, banned, github, features, html_long_description FROM bots WHERE bot_id = $1", bid))
         vanity = await db.fetchrow("SELECT vanity_url AS vanity FROM vanity WHERE redirect = $1", bid)
         if vanity is None:
             vanity = {"vanity": None}
@@ -210,7 +200,6 @@ async def bot_edit_api(
         pass
     else:
         return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "You are either not in the support server or you do not exist on the Discord API", "username": request.session.get("username", False), "mode": "edit"})
-    webhook = "$".join((webhook_type, webhook))
     if invite.startswith("https://discord.com") and "oauth" in invite:
         pass
     else:
@@ -243,11 +232,11 @@ async def bot_edit_api(
         except:
             return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "One of your extra owners is invalid", "mode": "edit"})
     print(features)
-    bt.add_task(edit_bot_bt, request, bid, prefix, library, website, banner, support, long_description, description, selected_tags, extra_owners, creation, invite, webhook, vanity, github, features, html_long_description)
+    bt.add_task(edit_bot_bt, request, bid, prefix, library, website, banner, support, long_description, description, selected_tags, extra_owners, creation, invite, webhook, vanity, github, features, html_long_description, webhook_type)
     return templates.TemplateResponse("message.html", {"request": request, "message": "Bot has been edited.<script>window.location.replace('/bot/" + str(bid) + "')</script>", "username": request.session.get("username", False), "avatar": request.session.get('avatar')}) 
 
-async def edit_bot_bt(request, botid, prefix, library, website, banner, support, long_description, description, selected_tags, extra_owners, creation, invite, webhook, vanity, github, features, html_long_description):
-    await db.execute("UPDATE bots SET bot_library=$2, webhook=$3, description=$4, long_description=$5, prefix=$6, website=$7, discord=$8, tags=$9, banner=$10, invite=$11, extra_owners = $12, github = $13, features = $14, html_long_description = $15 WHERE bot_id = $1", botid, library, webhook, description, long_description, prefix, website, support, selected_tags, banner, invite, extra_owners, github, features, html_long_description)
+async def edit_bot_bt(request, botid, prefix, library, website, banner, support, long_description, description, selected_tags, extra_owners, creation, invite, webhook, vanity, github, features, html_long_description, webhook_type):
+    await db.execute("UPDATE bots SET bot_library=$2, webhook=$3, description=$4, long_description=$5, prefix=$6, website=$7, discord=$8, tags=$9, banner=$10, invite=$11, extra_owners = $12, github = $13, features = $14, html_long_description = $15, webhook_type = $16 WHERE bot_id = $1", botid, library, webhook, description, long_description, prefix, website, support, selected_tags, banner, invite, extra_owners, github, features, html_long_description, webhook_type)
     check = await db.fetchrow("SELECT vanity FROM vanity WHERE redirect = $1", botid)
     if check is None:
         print("am here")
