@@ -1,6 +1,6 @@
 import string
 import secrets
-from fastapi import Request, APIRouter, BackgroundTasks, Form as FForm, Header as FHeader, WebSocket, WebSocketDisconnect
+from fastapi import Request, APIRouter, BackgroundTasks, Form as FForm, Header as FHeader, WebSocket, WebSocketDisconnect, File, UploadFile
 import aiohttp
 import asyncpg
 import datetime
@@ -277,7 +277,7 @@ async def vote_bot(uid: int, username: str, bot_id: int) -> Optional[list]:
     if epoch is None:
         return [500]
     epoch = epoch["vote_epoch"]
-    WT = 60*60*12 # Wait Time
+    WT = 60*60*8 # Wait Time
     if time.time() - epoch < WT:
         return [401, str(WT - (time.time() - epoch))]
     b = await db.fetchrow("SELECT webhook, votes FROM bots WHERE bot_id = $1", int(bot_id))

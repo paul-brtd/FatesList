@@ -38,11 +38,6 @@ async def home(request: Request):
         tags_fixed.update({tag: [new_tag.capitalize(), tag_icon]})
     return templates.TemplateResponse("index.html", {"request": request, "username": request.session.get("username", False), "top_voted": top_voted, "new_bots": new_bots, "certified_bots": certified_bots, "tags_fixed": tags_fixed})
 
-@router.get("/support")
-@csrf_protect
-async def support(request: Request):
-    return RedirectResponse(support_url)
-
 @router.get("/none")
 async def nonerouter():
     return RedirectResponse("/static/assets/img/banner.webp", status_code = 301)
@@ -73,12 +68,3 @@ async def features_view(request: Request, name: str):
             bot_obj.append({"bot": bot, "avatar": bot_info["avatar"], "username": bot_info["username"], "votes": await human_format(bot["votes"]), "servers": await human_format(bot["servers"]), "description": bot["description"]})
     return templates.TemplateResponse("feature.html", {"request": request, "name": name, "feature": features[name], "bots": bot_obj})
 
-@router.get("/design/new")
-async def old_design_to_new(request: Request):
-    request.session["design"] = "new"
-    return RedirectResponse("/")
-
-@router.get("/design/old")
-async def new_design_to_old(request: Request):
-    request.session["design"] = "old"
-    return RedirectResponse("/")

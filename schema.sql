@@ -79,3 +79,14 @@ CREATE TABLE vanity (
     redirect bigint unique, -- What does this vanity resolve to
     redirect_text text unique-- For the future
 );
+
+CREATE TABLE support_requests (
+    id uuid primary key DEFAULT uuid_generate_v4(),
+    enquiry_type text,
+    resolved boolean default false,
+    files bytea[],
+    filenames TEXT[],
+    title text,
+    description text,
+    bot_id BIGINT
+);

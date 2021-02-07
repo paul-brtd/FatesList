@@ -1,0 +1,180 @@
+{% extends "base/base.html" %}
+
+{% block head %}
+<style>
+input[type='file']{
+  color:blue;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div
+  style="
+    border-radius: 15px;
+  "
+>
+  <div
+    class="d-flex d-sm-flex d-md-flex d-lg-flex d-xl-flex flex-column justify-content-center align-items-center flex-sm-column justify-content-sm-center align-items-sm-center flex-md-column justify-content-md-center align-items-md-center flex-lg-column justify-content-lg-center align-items-lg-center flex-xl-column justify-content-xl-center align-items-xl-center"
+  >
+    <h2
+      style="
+        color: rgba(255, 255, 255, 0.87);
+        font-weight: bold;
+        margin-top: 40px;
+      "
+    >
+      Fates List
+    </h2>
+    <p
+      style="
+        color: rgba(255, 255, 255, 0.87);
+        font-weight: bold;
+        opacity: 0.78;
+        font-size: 21px;
+      "
+    >
+    Hi! Did you need help with something? Reporting a bot perhaps?
+    </p>
+    {% if not error %}
+    {% else %}
+    <div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
+            <strong>{{error|safe}}</strong>
+    </div>
+    {% endif %}
+  </div>
+  <hr
+    style="
+      font-size: 20px;
+      border-top-width: 1px;
+      border-top-color: #eee;
+      width: 70%;
+    "
+  />
+    <div class="form-group" style="color: blue; width: 80%; margin: 0 auto; height: auto; margin-top: 30px; color: rgba(255, 255, 255, 0.87)">
+        <div class="form-group" class="d-flex" style="margin: 15px auto; width: 85%;color: white; font-weight: bold; overflow-wrap: anywhere;">
+
+  <form
+    style="height: auto; margin-top: 30px; color: rgba(255, 255, 255, 0.87); text-align: center;"
+    id="bot_form"
+    method="POST"
+    enctype="multipart/form-data"
+  >
+    <div class="form-group">
+<div class="container">
+      <label style="
+        color: white;
+        font-weight: bold;
+        font-size: 16px;
+      "
+      for="enquiry_type"
+      >What do you need help with?  <span style="color: red; font-weight: bold" aria-hidden="true">*</span></label>
+      <div style="background: white; border-radius: 20px 20px 20px 20px; padding: 8px;         margin-top: 7px; margin-bottom: 30px;">
+      <select name="enquiry_type" class="form-control" style="text-decoration: none; background: white !important!;  padding: 3px;">
+              <option value="report_bot">Report A Bot</option>
+              <option value="tag_request">Request New Tag</option>
+              <option value="feature_request">Feature Request</option>
+              <option value="certification_fup">Certification Follow Up</option>
+              <option value="gdpr">Data Deletion Request</option>
+      </select>
+      <small style="color: black">Please see <a href="https://forms.gle/6CHM6xm3WhbzxDwN8">here</a> for certification. Certification Follow Ups are if you want to add something to your request</small>
+      </div>
+      <label
+        style="
+          color: white;
+          font-weight: bold;
+          font-size: 16px;
+        "
+        for="bot_id"
+        >Bot ID <span style="color: red; font-weight: bold" aria-hidden="true">*</span>
+      </label>
+      <input
+        required
+        class="form-control"
+        type="number"
+        style="
+          margin: auto;
+          background: #ffffff;
+          border: grey;
+          border-radius: 5px;
+          margin-top: 7px;
+        "
+	maxlength="19"
+        name="bot_id"
+        placeholder="1234567890123456"
+      />
+      <small style="display: block; margin-bottom: 30px;">Please type 0 if not applicable (eg. you are requesting a non-bot-page-related feature or a new tag addition)</small>
+      <label
+        style="
+          color: white;
+          font-weight: bold;
+          font-size: 16px;
+        "
+        for="title"
+        >Title <span style="color: red; font-weight: bold" aria-hidden="true">*</span>
+      </label>
+      <input
+        required
+        class="form-control"
+        type="text"
+        style="
+          margin: auto;
+          background: #ffffff;
+          border: grey;
+          border-radius: 5px;
+          margin-top: 7px;
+          margin-bottom: 30px;
+        "
+        name="title"
+        placeholder="John Doe is practicing Vote Manipulation!"
+      />
+  <div class="row">
+          <div class="col-lg">
+     <h5 style="font-weight: bold; margin-bottom: 15px;">What's the issue?</h5>
+      <label
+        style="
+          color: white;
+          font-weight: bold;
+          font-size: 16px;
+        "
+        for="description"
+        >Description <span style="color: red; font-weight: bold" aria-hidden="true">*</span>
+      </label>
+      <textarea
+        required
+        class="form-control"
+        type="text"
+        style="
+          margin: auto;
+          background: #ffffff;
+          border: grey;
+          border-radius: 5px;
+          margin-top: 7px;
+          margin-bottom: 30px;
+          max-width: 1000px;
+	  height: 223px;
+        "
+        name="description"
+        placeholder="John Doe is practicing Vote Manipulation!"
+	></textarea>
+	  </div>
+   <div class="col-lg">
+     <h5 style="font-weight: bold; margin-bottom: 15px;">Upload Files (proof/certification files etc.)</h5>
+        <div style="background: #cdd1d1; color: black; display: inline-flex; justify-content: center; border-radius: 10px 10px 10px 10px">
+	<input multiple type="file" id="files" style="
+          text-align: center;
+	  display: flex;
+          margin: auto;
+          margin-top: 7px;
+	" name="files" accept=".pdf,.png,.gif,.jpg,.jpeg,.webp,.mov,.mp4,.mp3,.webm" />
+	</div><br/>
+	<small>Accepted formats are: pdf, png, gif, jpg, jpeg, webp, mov, mp4, mp3, webm<br/>Max File Size: approx. 12MB</small>
+	  </div>
+  </div>
+  {{form.csrf_token}}
+  <button type="submit" class="btn btn-outline-light" style="margin-top: 30px;">Submit</button>
+</form>
+{% endblock %}
+{% block footer %}
+
+{% endblock %}
