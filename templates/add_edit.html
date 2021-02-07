@@ -1,6 +1,22 @@
 {% extends "base/base.html" %} 
 {% block head %}
 <style>
+.fform {
+        background: #ffffff !important;
+        border: grey !important;
+        margin-top: 7px !important;
+        margin-bottom: 30px !important;
+	margin: auto;
+	max-width: 1000px;
+}
+label {
+        color: white !important;
+        font-weight: bold !important;
+        font-size: 16px !important;
+}
+textarea {
+	height: 150px !important;
+}
 </style>
 {% endblock %} 
 {% block content %}
@@ -71,55 +87,27 @@
 	  <div class="col-lg">
     <h5 style="font-weight: bold; margin-bottom: 15px;">Basic Information</h5>
       <label
-        style="
-          color: white;
-          font-weight: bold;
-          font-size: 16px;
-        "
 	for="{% if mode == 'templ_add' or mode == 'templ_edit' %}template_code{% else %}bot_id{% endif %}"
 	>{% if mode == 'templ_add' or mode == 'templ_edit' %}Template Code{%else%}Bot ID{% endif %} <span style="color: red; font-weight: bold" aria-hidden="true">*</span>
       </label>
       <input
 	{% if mode == "edit" or mode == "templ_edit"%}disabled{% endif %}
         required
-        class="form-control"
+        class="form-control fform"
         type="number"
-        style="
-          background: #ffffff;
-          border: grey;
-          border-radius: 5px;
-          max-width: 400px;
-	  margin: auto;
-	  margin-top: 7px;
-	  margin-bottom: 30px;
-        "
         name="{% if mode == 'templ_add' or mode == 'templ_edit' %}template_code{% else %}bot_id{% endif %}"
         placeholder="12345678998764"
 	value="{% if mode == "templ_edit" %}{{data.code}}{% elif mode == "templ_add" %}{% else %}{{data.bot_id}}{% endif %}"
       />
       {% if mode == "templ_add" or mode == "templ_edit"%}
       <label
-        style="
-          color: white;
-          font-weight: bold;
-          font-size: 16px;
-        "
         for="template_name"
         >Template Name <span style="color: red; font-weight: bold" aria-hidden="true">*</span>
       </label>
       <input
         required
-        class="form-control"
+        class="form-control fform"
         type="text"
-        style="
-          margin: auto;
-          background: #ffffff;
-          border: grey;
-          border-radius: 5px;
-          max-width: 400px;
-          margin-top: 7px;
-          margin-bottom: 30px;
-        "
         maxlength=30
         name="template_code"
         placeholder="!"
@@ -127,77 +115,41 @@
       />
       {% else %}
       <label
-        style="
-          color: white;
-          font-weight: bold;
-          font-size: 16px;
-        "
         for="extra_owners"
         >Extra Owners (Comma Seperated)</label>
       <input
-        class="form-control"
+        class="form-control fform"
         type="text"
-        style="
-          background: #ffffff;
-          border: grey;
-          border-radius: 5px;
-          max-width: 400px;
-	  margin: auto;
-          margin-top: 7px;
-          margin-bottom: 30px;
-        "
         name="extra_owners"
         value="{% if data.extra_owners == [] or not data.extra_owners or data.extra_owners == "None" or data.extra_owners == ""%}{% else %}{{data.extra_owners.__str__().replace("[", "").replace("]", "").replace(" ", "")}} {% endif %}"
         placeholder="1234567899876,1234567865432"
         minlength="10"
       />
       <label
-        style="
-          color: white;
-          font-weight: bold;
-          font-size: 16px;
-	"
         for="prefix"
         >Prefix <span style="color: red; font-weight: bold" aria-hidden="true">*</span>
       </label>
       <input
         required
-        class="form-control"
+        class="form-control fform"
         type="text"
         style="
-	  margin: auto;
-          background: #ffffff;
-          border: grey;
-          border-radius: 5px;
-          max-width: 120px;
-	  margin-top: 7px; 
-	  margin-bottom: 30px;
+          max-width: 320px;
         "
 	maxlength=9
         name="prefix"
-        placeholder="!"
+        placeholder="w!"
         value="{{data.prefix}}"
       />
       <label
-        style="
-          color: white;
-          font-weight: bold;
-          font-size: 16px;
-        "
         for="library"
         >Library <span style="color: red; font-weight: bold" aria-hidden="true">*</span></label
       ><input
         required
-        class="form-control"
+        class="form-control fform"
         type="text"
         style="
-	  margin: auto;
-          background: #ffffff;
-          border: grey;
-          border-radius: 5px;
-          max-width: 150px;
-	  margin-top: 7px; 
-	  margin-bottom: 30px;
+          max-width: 320px;
         "
         name="library"
         placeholder="Discord.py"
@@ -210,107 +162,51 @@
      {% if mode == "templ_add" or  mode == "templ_edit"%}
      {% else %}
      <label
-        style="
-          color: white;
-          font-weight: bold;
-          font-size: 16px;
-        "
         for="invite"
         >Invite URL <span style="color: red; font-weight: bold" aria-hidden="true">*</span></label
       ><input
         required
-        class="form-control"
+        class="form-control fform"
         type="text"
-        style="
-          background: #ffffff;
-          border: grey;
-          border-radius: 5px;
-          max-width: 1000px;
-	  margin-top: 7px;
-          margin-bottom: 30px;
-        "
         name="invite"
         placeholder="https://discord.com/oauth2/authorize?client_id=12345637172158464&amp;permissions=314432&amp;scope=bot"
         minlength="10"
         value="{{data.invite}}"
       /><label
-        style="
-          color: white;
-          font-weight: bold;
-          font-size: 16px;
-        "
         for="website"
         >Website URL</label
       ><input
-        class="form-control"
+        class="form-control fform"
         type="text"
-        style="
-          background: #ffffff;
-          border: grey;
-          border-radius: 5px;
-          max-width: 1000px;
-          margin-top: 7px;
-          margin-bottom: 30px;
-        "
         name="website"
         placeholder="https://support.com"
         minlength="10"
         value="{{data.website}}"
       /><label
-        style="
-          color: white;
-          font-weight: bold;
-          font-size: 16px;
-        "
         for="website"
         >Banner URL (optimal: 255x143px)</label
       ><input
-        class="form-control"
+        class="form-control fform"
         type="text"
-        style="
-          background: #ffffff;
-          border: grey;
-          border-radius: 5px;
-          max-width: 1000px;
-          margin-top: 7px;
-          margin-bottom: 30px;
-        "
         name="banner"
         placeholder="https://cdn.discordapp.com/MySecretBanner.com"
         minlength="10"
         value="{% if data.banner == "none" or data.banner == "" %}{%else%}{{data.banner}}{%endif%}"
       /><label
-        style="
-          color: white;
-          font-weight: bold;
-          font-size: 16px;
-        "
         for="support"
         >Support server</label
       >
       <input
-        class="form-control"
+        class="form-control fform"
         type="text"
-        style="
-          background: #ffffff;
-          border: grey;
-          border-radius: 5px;
-          max-width: 1000px;
-          margin-top: 7px;
-          margin-bottom: 30px;
-        "
         name="support"
         placeholder="https://discord.gg/738Hs"
         minlength="10"
         value="{{data.support}}"
       />
       {% if mode == "edit" %}
-      <label style="
-        color: white;
-        font-weight: bold;
-        font-size: 16px;
-      "
-      for="style"
+      <label 
+        for="style"
       >Webhook Type</label>
       <div style="background: white; border-radius: 100px 100px 100px 100px; padding: 8px;         margin-top: 7px; margin-bottom: 30px;">
       <select name="webhook_type" class="form-control" style="text-decoration: none; background: white !important!;  padding: 3px;">
@@ -319,24 +215,11 @@
       </select>
       </div>
       <label
-      style="
-        color: white;
-        font-weight: bold;
-        font-size: 16px;
-      "
       for="webhook"
       >Webhook</label
     ><input
-      class="form-control"
+      class="form-control fform"
       type="text"
-      style="
-        background: #ffffff;
-        border: grey;
-        border-radius: 5px;
-        max-width: 1000px;
-        margin-top: 7px;
-        margin-bottom: 30px;
-      "
       name="webhook"
       placeholder="http://129.332.123:5000/webhook"
       minlength="3"
@@ -345,48 +228,22 @@
     {% endif %}
     {% if mode == "edit" %}
     <label
-      style="
-        color: white;
-        font-weight: bold;
-        font-size: 16px;
-      "
       for="vanity"
       >Vanity (https://fateslist.xyz/v/VANITY_URL)</label
     ><input
-      class="form-control"
+      class="form-control fform"
       type="text"
-      style="
-        background: #ffffff;
-        border: grey;
-        border-radius: 5px;
-        max-width: 1000px;
-        margin-top: 7px;
-        margin-bottom: 30px;
-      "
       name="vanity"
       placeholder="cats"
       minlength="3"
       {% if data.vanity != None %}value="{{data.vanity}}"{%endif%}
     />
 <label
-      style="
-        color: white;
-        font-weight: bold;
-        font-size: 16px;
-      "
       for="github"
       >Github (https://www.github.com/XYZ/XYZ)</label
     ><input
-      class="form-control"
+      class="form-control fform"
       type="text"
-      style="
-        background: #ffffff;
-        border: grey;
-        border-radius: 5px;
-        max-width: 1000px;
-        margin-top: 7px;
-        margin-bottom: 30px;
-      "
       name="github"
       placeholder="https://www.github.com/XYZ/XYZ"
       minlength="3"
@@ -395,25 +252,11 @@
     {% endif %}
     {% endif %}
      <label
-        style="
-          color: white;
-          font-weight: bold;
-          font-size: 16px;
-        "
         for="css"
         >Custom CSS</label
         ><textarea
-        class="form-control"
+        class="form-control fform"
         type="text"
-        style="
-          background: #ffffff;
-          border: grey;
-          border-radius: 5px;
-          max-width: 1000px;
-          margin-top: 7px;
-          margin-bottom: 30px;
-          height: 150px;
-        "
         name="css"
         placeholder="p {color: red}; -> NOT YET DONE"
         >{{data.css}}</textarea>
@@ -434,37 +277,20 @@
 </div></div><br/>
      <h5 style="font-weight: bold; margin-bottom: 15px;">Bot Purpose</h5>
       <label
-        style="
-          color: white;
-          font-weight: bold;
-          font-size: 16px;
-        "
         for="description"
         >Short Description <span style="color: red; font-weight: bold" aria-hidden="true">*</span></label
       >
       <input
         required
-        class="form-control"
+        class="form-control fform"
         type="text"
-        style="
-          background: #ffffff;
-          border: grey;
-          border-radius: 5px;
-          max-width: 1000px;
-          margin-top: 7px;
-          margin-bottom: 30px;
-        "
         name="description"
         placeholder="Fates list is a good bot that does everything you need"
         minlength="10"
         maxlength="105"
 	value="{{data.description}}"
       />
-      <label style="
-        color: white;
-        font-weight: bold;
-        font-size: 16px;
-      "
+      <label 
       for="html_long_description"
       >Long Description Type</label>
       <div style="background: white; border-radius: 100px 100px 100px 100px; padding: 8px; margin-top: 7px; margin-bottom: 30px;">
@@ -474,36 +300,17 @@
       </select>
       </div>
   <label
-        style="
-          color: white;
-          font-weight: bold;
-          font-size: 16px;
-        "
         for="long_description"
         >Long description(Allows html and markdown) <span style="color: red; font-weight: bold" aria-hidden="true">*</span></label
       ><textarea
-        class="form-control"
+        class="form-control fform"
 	required
-        style="
-          background: #ffffff;
-          border-radius: 5px;
-          height: 150px;
-          max-width: 1000px;
-          margin-top: 7px;
-          margin-bottom: 30px;
-        "
         name="long_description"
         placeholder="Write about your bot using html or markdown"
         minlength="300"
         id="long_description"
 	>{{data.long_description}}</textarea>
       <label
-        style="
-          color: white;
-          font-weight: bold;
-          font-size: 16px;
-          margin-top: 30px;
-        "
         for="tags"
 	>Select tags for your {% if mode == "templ_add" or mode == "templ_edit" %}template{%else%}bot{%endif%}. <span style="color: red; font-weight: bold" aria-hidden="true">*</span></label
       ><span class="select_tags"></span>
