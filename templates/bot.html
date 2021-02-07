@@ -63,7 +63,7 @@
        {% endif %}
        {% if not bot.banned%}
         <div class="text-nowrap d-flex justify-content-xl-center align-items-xl-center" style="line-height: 2;border-radius: 25px;background: #7289DA;width: auto;margin: 10px;font-size: 11px;">
-        <a target=”_blank” href="{{bot.invite}}"><button class="btn btn-outline-dark" style="background-color: #7289DA; color: white !important;"><i class="fas"></i>Invite</button></a>
+	<a target=”_blank” href="/bot/{{bot.bot_id}}/invite"><button class="btn btn-outline-dark" style="background-color: #7289DA; color: white !important;"><i class="fas"></i>Invite</button></a>
         </div>
 	{% endif %}
         {% if bot_admin %}
@@ -122,6 +122,7 @@
 				<strong>Library:</strong> {{bot.library}}<br/>
 				<strong>Servers:</strong> {{bot.servers}}<br/>
 				<strong>Shards:</strong> {{bot.shards}}</br/>
+				<strong>Amount Of Invites:</strong> {{bot.invite_amount}}<br/>
 				{% if bot.features %}
 				<br/>
 				<strong>Features: </strong>{% for f in bot.features %}<a href="/feature/{{f}}">{{f.replace("_", " ").title()}}</a>{% if loop.index == bot.fleo - 1%} and {% elif loop.index != bot.fleo%}, {%endif%}{% endfor %}

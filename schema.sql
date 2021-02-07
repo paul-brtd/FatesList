@@ -24,6 +24,7 @@ CREATE TABLE bots (
     owner bigint,
     extra_owners bigint[],
     invite text,
+    invite_amount integer DEFAULT 0,
     banned BOOLEAN DEFAULT false,
     github TEXT,
     private boolean DEFAULT false;

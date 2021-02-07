@@ -191,7 +191,7 @@ async def add_event(bot_id: int, event: str, context: dict, *, send_event = True
     apitok = await db.fetchrow("SELECT api_token FROM bots WHERE bot_id = $1", bot_id)
     if apitok is None:
         return
-    await db.execute("INSERT INTO api_event (id, bot_id, events) VALUES ($1, $2, $3)", id, bot_id, new_event_data)
+    asyncio.create_task(db.execute("INSERT INTO api_event (id, bot_id, events) VALUES ($1, $2, $3)", id, bot_id, new_event_data))
     webh = await db.fetchrow("SELECT webhook FROM bots WHERE bot_id = $1", int(bot_id))
     if webh is not None and webh["webhook"] not in ["", None] and len(webh["webhook"].split("$")) == 2 and send_event:
         try:
@@ -222,10 +222,13 @@ async def add_event(bot_id: int, event: str, context: dict, *, send_event = True
                 response = webhook.execute()
                 raise ValueError
             elif webhook_data[0].upper() == "VOTE" and event == "vote":
+                print("Doing VOTE")
+                f = requests.post
                 json = {"id": context["user_id"], "api_token": apitok, "votes": context["votes"]}
             else:
                 print("Invalid method given\n\n\n")
                 raise ValueError # This will force an exit
+            print(json, f)
             asyncio.create_task(f(uri, json = json))
         except:
             pass
@@ -285,14 +288,14 @@ async def vote_bot(uid: int, username: str, bot_id: int) -> Optional[list]:
         return [404]
     await db.execute("UPDATE bots SET votes = votes + 1 WHERE bot_id = $1", int(bot_id))
     await db.execute("UPDATE users SET vote_epoch = $1 WHERE userid = $2", time.time(), int(uid))
-    event_id = await add_event(bot_id, "vote", {"username": username, "user_id": str(uid), "votes": b['votes'] + 1, "**Vote Here**": "https://fateslist.xyz/bot/" + str(bot_id)})
+    event_id = asyncio.create_task(add_event(bot_id, "vote", {"username": username, "user_id": str(uid), "votes": b['votes'] + 1, "**Vote Here**": "https://fateslist.xyz/bot/" + str(bot_id)}))
     return []
 
 # Get Bots Helper
 async def render_bot(request: Request, bot_id: int, review: bool, widget: bool):
     guild = client.get_guild(reviewing_server)
     print("Begin rendering bots")
-    bot = await db.fetchrow("SELECT prefix, shard_count, queue, description, bot_library AS library, tags, banner, website, certified, votes, servers, bot_id, invite, discord, owner, extra_owners, banner, banned, disabled, github, features FROM bots WHERE bot_id = $1 ORDER BY votes", bot_id)
+    bot = await db.fetchrow("SELECT prefix, shard_count, queue, description, bot_library AS library, tags, banner, website, certified, votes, servers, bot_id, discord, owner, extra_owners, banner, banned, disabled, github, features, invite_amount FROM bots WHERE bot_id = $1 ORDER BY votes", bot_id)
     print("Got here")
     if bot is None:
         return templates.e(request, "Bot Not Found")
@@ -328,7 +331,7 @@ async def render_bot(request: Request, bot_id: int, review: bool, widget: bool):
     else:
         features = bot["features"]
     if bot_info:
-        bot_obj = {"bot": bot, "bot_id": bot["bot_id"], "avatar": bot_info["avatar"], "website": bot["website"], "username": bot_info["username"], "votes": await human_format(bot["votes"]), "servers": await human_format(bot["servers"]), "description": bot["description"], "support": bot['discord'], "invite": bot["invite"], "tags": bot["tags"], "library": bot['library'], "banner": banner, "shards": await human_format(bot["shard_count"]), "owner": bot["owner"], "owner_pretty": await get_user(bot["owner"]), "banned": bot['banned'], "disabled": bot['disabled'], "prefix": bot["prefix"], "github": bot['github'], "extra_owners": ed, "leo": len(ed), "queue": bot["queue"], "features": features, "fleo": len(features)}
+        bot_obj = {"bot": bot, "bot_id": bot["bot_id"], "avatar": bot_info["avatar"], "website": bot["website"], "username": bot_info["username"], "votes": await human_format(bot["votes"]), "servers": await human_format(bot["servers"]), "description": bot["description"], "support": bot['discord'], "invite_amount": bot["invite_amount"], "tags": bot["tags"], "library": bot['library'], "banner": banner, "shards": await human_format(bot["shard_count"]), "owner": bot["owner"], "owner_pretty": await get_user(bot["owner"]), "banned": bot['banned'], "disabled": bot['disabled'], "prefix": bot["prefix"], "github": bot['github'], "extra_owners": ed, "leo": len(ed), "queue": bot["queue"], "features": features, "fleo": len(features)}
     else:
         return templates.e(request, "Bot Not Found")
     # TAGS
