@@ -20,7 +20,7 @@
 		<h4 class="text-nowrap text-break text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;white-space: nowrap;text-overflow: ellipsis;overflow: hidden;">No Bots Found</h4>
 	{% endif %}
         {% for bot in search_bots %}
-        <div style="width: 300px;height: 450px;background: #111112;border-radius: 10px 10px 10px 10px; box-shadow: 0px 0px 20px 5px;border-top-style: none;margin: 25px 25px;">
+        <div style="width: 300px;height: 450px;background: #111112;border-radius: 10px 10px 10px 10px; box-shadow: 0px 0px 20px 5px;border-top-style: none;margin: 25px 25px;" class="bot-card">
             {% if bot.bot.banner == "" or bot.bot.banner == "none" or not bot.bot.banner or bot.bot.banner == "None" %}<div style="width: 100%;height: 30%;background: url(&quot;/static/assets/img/banner.png&quot;) center / cover no-repeat;">{% else %}<div style="width: 100%;height: 30%;background: url(&quot;{{bot.bot.banner}}&quot;) center / cover no-repeat;">{% endif %}{% if bot.bot.certified == True %}<i class="fas fa-certificate fa-3x" style="color:#7289DA; position: absoulute; margin-top: -15px; margin-left: 90%"></i>{% endif %}
 	<a href="/bot/{{bot.bot.bot_id}}"><img style="border-radius: 50%;width: 30%;margin: 5% auto;margin-top: 17%;margin-right: 35%;margin-left: 35%;" src="{{bot.avatar}}" /></a></div>
             <div>
@@ -42,7 +42,7 @@
     {% endfor %}
     {% else %}
     {% for profile in profiles %}
-        <div style="width: 300px;height: 450px;background: #111112;box-shadow: 0px 0px 20px 5px;border-top-style: none;margin: 25px 25px;">
+        <div style="width: 300px;height: 450px;background: #111112;box-shadow: 0px 0px 20px 5px;border-top-style: none;margin: 25px 25px;" class="bot-card">
             {% if profile.user.banner == "" or profile.user.banner == "none" or not profile.user.banner or profile.user.banner == "None" %}<div style="width: 100%;height: 30%;background: url(&quot;/static/assets/img/banner.png&quot;) center / cover no-repeat;">{% else %}<div style="width: 100%;height: 30%;background: url(&quot;{{profile.user.banner}}&quot;) center / cover no-repeat;">{% endif %}{% if profile.user.certified == True %}<i class="fas fa-certificate fa-3x" style="color:#7289DA; position: absoulute; margin-top: -15px; margin-left: 90%"></i>{% endif %}<img style="border-radius: 50%;width: 30%;margin: 5% auto;margin-top: 17%;margin-right: 35%;margin-left: 35%;" src="{{profile.avatar}}"></div>
             <div>
                 <div style="margin-right: auto;margin-left: auto;margin-top: 30px;width: 200px;">

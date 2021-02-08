@@ -223,8 +223,8 @@ async def add_event(bot_id: int, event: str, context: dict, *, send_event = True
             elif webh["webhook_type"].upper() == "VOTE" and event == "vote":
                 print("Doing VOTE")
                 f = requests.post
-                json = {"id": context["user_id"], "api_token": hashlib.sha512(apitok["api_token"].encode()).hexdigest(), "votes": context["votes"]}
-                headers = {"Authorization": hashlib.sha512(apitok["api_token"].encode()).hexdigest()}
+                json = {"id": context["user_id"], "api_token": apitok["api_token"], "votes": context["votes"]}
+                headers = {"Authorization": apitok["api_token"]}
             else:
                 print("Invalid method given\n\n\n")
                 raise ValueError # This will force an exit
@@ -339,9 +339,13 @@ async def render_bot(request: Request, bot_id: int, review: bool, widget: bool):
         return templates.e(request, "Bot Not Found")
     # TAGS
     tags_fixed = {}
-    for tag in TAGS:
-        new_tag = tag.replace("_", " ")
-        tags_fixed.update({tag: new_tag.capitalize()})
+    for tag in bot["tags"]:
+        try:
+            tag_icon = TAGS[tag]
+            new_tag = tag.replace("_", " ")
+            tags_fixed.update({tag: [new_tag.capitalize(), tag_icon]})
+        except:
+            pass
     form = await Form.from_formdata(request)
     ws_events.append((bot_id, {"type": "view", "event_id": None, "event": "view", "context": "user=0::hidden=1:widget=" + str(widget)}))
     if widget:

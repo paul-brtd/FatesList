@@ -35,40 +35,40 @@
         <h3 style="margin 0 auto; color: white;font-weight: bold; font-size: 20px;">{{bot.description}}</h3>
     </div>
     <div class="d-flex justify-content-center align-items-center flex-wrap" style="width: 80%;margin: 0 auto;max-width: 1000px;">
-        <div class="text-nowrap d-flex justify-content-xl-center align-items-xl-center" style="line-height: 2;border-radius: 25px;background: #7289DA;width: auto;margin: 10px;font-size: 11px;">
+        <div class="text-nowrap d-flex justify-content-xl-center align-items-xl-center" style="line-height: 2;border-radius: 25px;width: auto;margin: 10px;font-size: 11px;">
 	{% if not bot.banned %}
         <form method = "POST" action = "/bot/{{bot.bot_id}}/vote">
             {{form.csrf_token}}
-            <button type="submit" class="btn btn-outline-dark" style="background-color: #7289DA; color: white !important;"><i class="fas fa-thumbs-up"></i>{{bot.votes}}</button>
+            <button type="submit" class="btn btn-outline-light" style="color: white !important;"><i class="fas fa-thumbs-up"></i>{{bot.votes}}</button>
         </form>
 	{% endif %}
         </div>
         {% if not bot.support or bot.support == "" or bot.support == "None" %}
         {% else %}
-        <div class="text-nowrap d-flex justify-content-xl-center align-items-xl-center" style="line-height: 2;border-radius: 25px;background: #7289DA;width: auto;margin: 10px;font-size: 11px;">
-        <a target=”_blank” href="{{bot.support}}"><button class="btn btn-outline-dark" style="background-color: #7289DA; color: white !important;"><i class="fas"></i>Support</button></a>
+        <div class="text-nowrap d-flex justify-content-xl-center align-items-xl-center" style="line-height: 2;border-radius: 25px;width: auto;margin: 10px;font-size: 11px;">
+        <a target=”_blank” href="{{bot.support}}"><button class="btn btn-outline-light" style="color: white !important;"><i class="fas"></i>Support</button></a>
         </div>
        {% endif %}
         {% if not bot.github or bot.github == "" or bot.github == "None" %}
         {% else %}
-        <div class="text-nowrap d-flex justify-content-xl-center align-items-xl-center" style="line-height: 2;border-radius: 25px;background: #7289DA;width: auto;margin: 10px;font-size: 11px;">
-        <a target=”_blank” href="{{bot.github}}"><button class="btn btn-outline-dark" style="background-color: #7289DA; color: white !important;"><i class="fas"></i>Github</button></a>
+        <div class="text-nowrap d-flex justify-content-xl-center align-items-xl-center" style="line-height: 2;border-radius: 25px;width: auto;margin: 10px;font-size: 11px;">
+        <a target=”_blank” href="{{bot.github}}"><button class="btn btn-outline-light" style="color: white !important;"><i class="fas"></i>Github</button></a>
         </div>
        {% endif %}
         {% if not bot.website or bot.website == "" or bot.website == "None" %}
         {% else %}
-        <div class="text-nowrap d-flex justify-content-xl-center align-items-xl-center" style="line-height: 2;border-radius: 25px;background: #7289DA;width: auto;margin: 10px;font-size: 11px;">
-        <a target=”_blank” href="{{bot.website}}"<button class="btn btn-outline-dark" style="background-color: #7289DA; color: white !important;"><i class="fas"></i>Website</button></a>
+        <div class="text-nowrap d-flex justify-content-xl-center align-items-xl-center" style="line-height: 2;border-radius: 25px;width: auto;margin: 10px;font-size: 11px;">
+        <a target=”_blank” href="{{bot.website}}"<button class="btn btn-outline-light" style="color: white !important;"><i class="fas"></i>Website</button></a>
         </div>
        {% endif %}
        {% if not bot.banned%}
-        <div class="text-nowrap d-flex justify-content-xl-center align-items-xl-center" style="line-height: 2;border-radius: 25px;background: #7289DA;width: auto;margin: 10px;font-size: 11px;">
-	<a target=”_blank” href="/bot/{{bot.bot_id}}/invite"><button class="btn btn-outline-dark" style="background-color: #7289DA; color: white !important;"><i class="fas"></i>Invite</button></a>
+        <div class="text-nowrap d-flex justify-content-xl-center align-items-xl-center" style="line-height: 2;border-radius: 25px;width: auto;margin: 10px;font-size: 11px;">
+	<a target=”_blank” href="/bot/{{bot.bot_id}}/invite"><button class="btn btn-outline-light" style="color: white !important;"><i class="fas"></i>Invite</button></a>
         </div>
 	{% endif %}
         {% if bot_admin %}
-        <div class="text-nowrap d-flex justify-content-xl-center align-items-xl-center" style="line-height: 2;border-radius: 25px;background: #7289DA;width: auto;margin: 10px;font-size: 11px;">
-        <a href="/bot/{{bot.bot_id}}/edit"><button class="btn btn-outline-dark" style="background-color: #7289DA; color: white !important;"><i class="fas"></i>Edit</button></a>
+        <div class="text-nowrap d-flex justify-content-xl-center align-items-xl-center" style="line-height: 2;border-radius: 25px;width: auto;margin: 10px;font-size: 11px;">
+        <a href="/bot/{{bot.bot_id}}/edit"><button class="btn btn-outline-light" style="color: white !important;"><i class="fas"></i>Edit</button></a>
         </div>
         {% endif %}
     </div>
@@ -76,9 +76,13 @@
     <h6 style="font-weight: bold;color: rgba(255,255,255,0.87); text-align: center;">Tags</h6>
     <hr style="width: 90%; color: white; background: white;"/>
     <div style="text-align: center;">
-    {% for tag in bot.tags %}
-        <button onclick='window.location.replace("/search/tags?tag={{tag}}")' class="btn btn-outline-dark" style="background-color: #7289DA; color: white !important; margin-right: 9px;"> <i class="fas"></i>{{tag.replace("_", " ")}}</button>
-	{% endfor %}
+        <div class="d-flex flex-wrap justify-content-center align-items-center" style="width: 97%;margin: 0 auto;">
+            {% for tag,new_tag in tags_fixed.items() %}
+               <div>
+                 <button class="text-nowrap btn d-flex justify-content-center align-items-center {{new_tag[1].split('|')[1]}}" style="color: white;border-radius: 10px; margin: 6px;" onclick="location.href='/search/tags?tag={{tag}}'" data-toggle="tooltip" data-placement="bottom" title="{{new_tag[0]}}"><i class="{{new_tag[1].split('|')[0]}}" aria-hidden="true"></i><span style="margin-left: 3px; font-size: 13px;"><strong>{{new_tag[0]}}</strong></span></button>
+                </div>
+            {% endfor %}
+	</div>
     </div>
     </div>
     {% if promos != [] %}
@@ -158,6 +162,12 @@
                         $(id).modal()
         }
 </script>
+    <script>
+            $(function () {
+  $('[data-toggle="tooltip"]').tooltip()
+})
+
+    </script>
 {% endblock %} 
 {% block footer %} 
 {% endblock %}

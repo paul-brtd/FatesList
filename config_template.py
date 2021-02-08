@@ -47,6 +47,10 @@ builtins.features = {
     "custom_prefix": {
         "type": "positive",
         "description": "A bot with Custom Prefix supports changing of the bot's prefix and is hence considered positive by Fates List"
+    },
+    "open_source": {
+        "type": "positive",
+        "description": "These bots are open source meaning they can easily be audited and/or potentially self hosted."
     }
 } 
 
@@ -56,15 +60,15 @@ builtins.site = "fateslist.xyz" # Replace this with your domain
 builtins.site_url = "https://" + site
 
 builtins.support_url = "https://discord.gg/PA5vjCRc5H"
-builtins.TOKEN = "TOKEN HERE"
-builtins.TAGS = {"music": "fas fa-music|bg-red", "moderation": "fas fa-hammer|bg-blue", "economy": "fa fa-viacoin|bg-green", "fun": "fa fa-heart|bg-pink", "anime": "fas fa-camera|bg-red", "games": "fas fa-smile-o|bg-pink", "web_dashboard": "", "logging": "", "streams": "", "game_stats": "", "leveling": "", "roleplay": "", "utility": "", "social": ""}
+builtins.TOKEN = "MY_BOT_TOKEN"
+builtins.TAGS = {"music": "fas fa-music|bg-red", "moderation": "fas fa-hammer|bg-blue", "economy": "fa fa-viacoin|bg-green", "fun": "fa fa-heart|bg-pink", "anime": "fas fa-camera|bg-red", "games": "fas fa-smile-o|bg-pink", "web_dashboard": "fa fa-bar-chart|bg-green", "logging": "fa fa-line-chart|bg-blue", "game_stats": "fa fa-bar-chart|bg-red", "leveling": "fa fa-long-arrow-up|bg-green", "roleplay": "fas fa-cat|bg-pink", "utility": "fas fa-desktop|bg-blue", "social": "fa fa-users|bg-red"}
 builtins.pg_user = "postgres" # Postgres Database Username
-builtins.pg_pwd = "PASSWORD HERE" # Postgres Database Password
-builtins.csrf_secret = "CSRF HERE"
-builtins.session_key = "SESSION HERE"
+builtins.pg_pwd = "POSTGRESS DB PASSWORD HERE" # Postgres Database Password
+builtins.csrf_secret = "CSRF_SECRET"
+builtins.session_key = "SESSION_KEY"
 class OauthConfig:
-    client_id = "CLIENT ID HERE"
-    client_secret = "CIENT SECRET HERE"
+    client_id = "798951566634778641"
+    client_secret = "CLIENT_SECRET"
     scope = ["identify"]
     redirect_uri = "https://" + site + "/auth/login/confirm"
 
