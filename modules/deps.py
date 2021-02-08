@@ -185,6 +185,10 @@ async def add_event(bot_id: int, event: str, context: dict, *, send_event = True
             json = {"type": "add", "event_id": str(id), "event": event, "context": context}
             headers = None
             if webh["webhook_type"].upper() == "FC":
+                mode = "FC"
+                f = requests.put
+                print("Doing FC\n\n\n")
+            elif webh["webhook_type"].upper() == "PUT":
                 mode = "PUT"
                 f = requests.put
                 print("Doing PUT\n\n\n")
@@ -215,9 +219,9 @@ async def add_event(bot_id: int, event: str, context: dict, *, send_event = True
                 raise ValueError # This will force an exit
             print(json, f)
             if headers is None:
-                asyncio.create_task(f(uri, json = json))
+                asyncio.create_task(f(uri, json = json | {"mode": mode}))
             else:
-                asyncio.create_task(f(url, json = json, headers = headers))
+                asyncio.create_task(f(url, json = json | {"mode": mode}, headers = headers))
         except:
             pass
     ws_events.append((bot_id, {"type": "add", "event_id": str(id), "event": event, "context": context}))
