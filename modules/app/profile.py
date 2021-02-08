@@ -81,4 +81,4 @@ async def profile_editor(request: Request, userid: int):
     vanity = await db.fetchrow("SELECT vanity_url AS vanity FROM vanity WHERE redirect = $1", userid)
     if vanity is None:
         vanity = {"vanity": None}
-    return templates.TemplateResponse("profile_edit.html", {"request": request, "token": data["token"], "certified": data["certified"] == True, "fstaff": staff, "vanity": vanity["vanity"]})
+    return templates.TemplateResponse("profile_edit.html", {"request": request, "token": data["token"], "certified": data["certified"] == True, "fstaff": staff, "vanity": vanity["vanity"], "form": await Form.from_formdata(request)})

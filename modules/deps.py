@@ -154,21 +154,6 @@ def is_staff(staff_json: dict, roles: Union[list, int], base_perm: int) -> Union
         return False, tmp["perm"]
     return False, tmp["perm"]
 
-
-#CREATE TABLE promotions (
-#   id uuid primary key DEFAULT uuid_generate_v4(),
-#   bot_id bigint,
-#   title text,
-#   info text
-#);
-#CREATE TABLE bot_maint (
-#   id uuid primary key DEFAULT uuid_generate_v4(),
-#   bot_id bigint,
-#   reason text,
-#   type integer
-#);
-#await add_event(bot_id, "add_bot", "NULL")
-
 async def add_maint(bot_id: int, type: int, reason: str):
     return await db.execute("INSERT INTO bot_maint (bot_id, reason, type, epoch) VALUES ($1, $2, $3, $4)", bot_id, reason, type, time.time())
 
@@ -181,13 +166,13 @@ async def set_guild_shard_count(bot_id: int, guild_count: int, shard_count: int)
 async def add_promotion(bot_id: int, title: str, info: str):
     return await db.execute("INSERT INTO promotions (bot_id, title, info) VALUES ($1, $2, $3)", bot_id, title, info)
 
-async def add_event(bot_id: int, event: str, context: dict, *, send_event = True, promotion = False):
+async def add_event(bot_id: int, event: str, context: dict, *, send_event = True):
     if type(context) == dict:
         pass
     else:
         raise KeyError
 
-    new_event_data = "|".join((event, str(time.time()), orjson.dumps(context).decode()))
+    new_event_data = [event, str(time.time()), orjson.dumps(context).decode()]
     id = uuid.uuid4()
     apitok = await db.fetchrow("SELECT api_token FROM bots WHERE bot_id = $1", bot_id)
     if apitok is None:
@@ -426,7 +411,7 @@ async def get_events(api_token: Optional[str] = None, bot_id: Optional[str] = No
         if api_data is None:
             return {"events": []}
         event = api_data["events"]
-        return {"events": [{"id": uid,  "event": event.split("|")[0], "epoch": event.split("|")[1], "context": event.split("|")[2]}]}
+        return {"events": [{"id": uid,  "event": event[0], "epoch": event[1], "context": event[2]}]}
 
     api_data = await db.fetch("SELECT id, events FROM api_event WHERE bot_id = $1 ORDER BY id", uid)
     if api_data == []:
@@ -435,8 +420,6 @@ async def get_events(api_token: Optional[str] = None, bot_id: Optional[str] = No
     for _event in api_data:
         event = _event["events"]
         uid = _event["id"]
-        if len(event.split("|")[0]) < 3:
-            continue # Event name size is too small
-        events.append({"id": uid,  "event": event.split("|")[0], "epoch": event.split("|")[1], "context": orjson.loads(event.split("|")[2])})
+        events.append({"id": uid,  "event": event[0], "epoch": event[1], "context": orjson.loads(event[2])})
     ret = {"events": events}
     return ret

@@ -56,7 +56,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE api_event (
     id uuid primary key DEFAULT uuid_generate_v4(),
     bot_id bigint,
-    events text
+    events text[]
 );
 
 CREATE TABLE promotions (

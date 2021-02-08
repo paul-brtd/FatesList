@@ -96,7 +96,7 @@ async def validation_exception_handler(request, exc):
             msg = "Profile Not Found"
             code = 404
         else:
-            msg = "Invalid Data Provided\n" + str(exc)
+            msg = "Invalid Data Provided<br/>" + str(exc)
             code = 422
 
     json = url_startswith(request.url, "/api")

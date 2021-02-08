@@ -36,7 +36,7 @@
     </div>
     <div class="d-flex justify-content-center align-items-center flex-wrap" style="width: 80%;margin: 0 auto;max-width: 1000px;">
         <div class="text-nowrap d-flex justify-content-xl-center align-items-xl-center" style="line-height: 2;border-radius: 25px;width: auto;margin: 10px;font-size: 11px;">
-	{% if not bot.banned %}
+	{% if not bot.banned and not maint[0] %}
         <form method = "POST" action = "/bot/{{bot.bot_id}}/vote">
             {{form.csrf_token}}
             <button type="submit" class="btn btn-outline-light" style="color: white !important;"><i class="fas fa-thumbs-up"></i>{{bot.votes}}</button>
@@ -79,7 +79,7 @@
         <div class="d-flex flex-wrap justify-content-center align-items-center" style="width: 97%;margin: 0 auto;">
             {% for tag,new_tag in tags_fixed.items() %}
                <div>
-                 <button class="text-nowrap btn d-flex justify-content-center align-items-center {{new_tag[1].split('|')[1]}}" style="color: white;border-radius: 10px; margin: 6px;" onclick="location.href='/search/tags?tag={{tag}}'" data-toggle="tooltip" data-placement="bottom" title="{{new_tag[0]}}"><i class="{{new_tag[1].split('|')[0]}}" aria-hidden="true"></i><span style="margin-left: 3px; font-size: 13px;"><strong>{{new_tag[0]}}</strong></span></button>
+                 <button class="text-nowrap btn d-flex justify-content-center align-items-center {{new_tag[1][1]}}" style="color: white;border-radius: 10px; margin: 6px;" onclick="location.href='/search/tags?tag={{tag}}'" data-toggle="tooltip" data-placement="bottom" title="{{new_tag[0]}}"><i class="{{new_tag[1][0]}}" aria-hidden="true"></i><span style="margin-left: 3px; font-size: 13px;"><strong>{{new_tag[0]}}</strong></span></button>
                 </div>
             {% endfor %}
 	</div>

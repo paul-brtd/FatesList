@@ -6,7 +6,7 @@ router = APIRouter(
     include_in_schema = False
 )
 
-@router.get("/")
+@router.get("/invite")
 @csrf_protect
 async def support(request: Request):
     return RedirectResponse(support_url)

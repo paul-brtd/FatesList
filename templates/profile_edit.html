@@ -1,167 +1,100 @@
 {% extends "base/base.html" %}
 
 {% block head %}
-
+<style>
+input[type='file']{
+  color:blue;
+}
+</style>
 {% endblock %}
 
 {% block content %}
-<div style="width: 80%;margin: 50px auto;background: #7289DA;border-radius: 15px;">
-    <div
-        class="d-flex d-sm-flex d-md-flex d-lg-flex d-xl-flex flex-column justify-content-center align-items-center flex-sm-column justify-content-sm-center align-items-sm-center flex-md-column justify-content-md-center align-items-md-center flex-lg-column justify-content-lg-center align-items-lg-center flex-xl-column justify-content-xl-center align-items-xl-center">
-        <h2 style="color: rgba(255,255,255,0.87);font-weight: bold;margin-top: 40px;">Fates List</h2>
-        <p style="color: rgba(255,255,255,0.87);font-weight: bold;opacity: 0.78;font-size: 21px;">Profile Editor</p>
+<div
+  style="
+    border-radius: 15px;
+  "
+>
+  <div
+    class="d-flex d-sm-flex d-md-flex d-lg-flex d-xl-flex flex-column justify-content-center align-items-center flex-sm-column justify-content-sm-center align-items-sm-center flex-md-column justify-content-md-center align-items-md-center flex-lg-column justify-content-lg-center align-items-lg-center flex-xl-column justify-content-xl-center align-items-xl-center"
+  >
+    <h2
+      style="
+        color: rgba(255, 255, 255, 0.87);
+        font-weight: bold;
+        margin-top: 40px;
+      "
+    >
+      Fates List
+    </h2>
+    <p
+      style="
+        color: rgba(255, 255, 255, 0.87);
+        font-weight: bold;
+        opacity: 0.78;
+        font-size: 21px;
+      "
+    >
+    Beep Boop! Lets edit your profile
+    </p>
+    {% if not error %}
+    {% else %}
+    <div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
+            <strong>{{error|safe}}</strong>
     </div>
-        <div class="form-group" style="width: 80%;margin: 0 auto; text-align: center; color: white; font-weight: bold; font-size: 17px; opacity: 0.75">
-<h4 style="font-size: 17px; opacity: 0.78; font-weight: bold;">Edit your profile to your hearts content</h4>
-</div>
-        <div class="form-group" class="d-flex justify-content-center" style="margin: 15px auto; width: 85%;text-align: center; color: white; font-weight: bold; overflow-wrap: anywhere;">
-    <div style="margin 15px auto">
-    <h6 style="color: white; margin-top: 1px !important;">User Token: <span style="font-size: 14px; opacity: 0.9">{{token}}</span></h6>
-    <h6 style="color: white; margin-top: 1px !important;">Certified: <span style="font-size: 14px; opacity: 0.9">{{certified}}</span></h6>
-    </div>
-    </div>
-    <div style="color: white">
-    <hr style="font-size: 20px;border-top-width: 1px;border-top-color: #eee;width: 90%;">
-        <div class="form-group" style="width: 80%;margin: 0 auto;">
-        <h5 style="font-weight: bold;">Custom Badges</h5>
-	    {% if not certified and not fstaff%}
-	    <strong>Custom Badges requires you to be a certified bot developer or a Fates List Staff Member</strong>
-	    {% else %}
-            <form method="PUT" action="/api/events" style="height: auto;margin-top: 30px;color: rgba(255,255,255,0.87);" id="bot_form">
-                <input type="hidden" name="api_token" value="{{api_token}}"/>
-                <label for="event" style="color: white;font-weight: bold;font-size: 16px;margin-top: 3px;">Event Name</label><br/>
-                <input required="true" class="form-control" placeholder="Event Name" style="background: #ffffff;border: grey;border-radius: 5px;max-width: 400px;" type="text" name="event"></input><br/>
-                <label for="context" style="color: white;font-weight: bold;font-size: 16px;margin-top: 3px;">Event Data/Context</label><br/>
-                <input type="text" class="form-control" placeholder="Event Data/Context" style="background: #ffffff;border: grey;border-radius: 5px;max-width: 400px;" name="context"></input><br/>
-            <div><button class="btn btn-primary" name="update_data"
-                    style="background: #1D1E23;margin-top: 30px;margin-bottom: 30px;">Add Event</button></div>
-            </form>
-	    {%endif%}
-        </div>
-    <hr style="font-size: 20px;border-top-width: 1px;border-top-color: #eee;width: 90%;">
-        <div class="form-group" style="width: 80%;margin: 0 auto;">
-        <h5 style="font-weight: bold;">Delete Event</h5>
-            <form method="DELETE" action="/api/events" style="height: auto;margin-top: 30px;color: rgba(255,255,255,0.87);" id="bot_form">
-                <input type="hidden" name="api_token" value="{{api_token}}"/>
-                <label for="event_id" style="color: white;font-weight: bold;font-size: 16px;margin-top: 3px;">Event ID</label><br/>
-                <input class="form-control" placeholder="Event ID" style="background: #ffffff;border: grey;border-radius: 5px;max-width: 400px;" type="text" name="event_id"></input><br/>
-            <div><button class="btn btn-primary" name="delete_data"
-                    style="background: #1D1E23;margin-top: 30px;margin-bottom: 30px;">Delete Event</button></div>
-            </form>
-        </div>
-    </div>
-</div>
+    {% endif %}
+  </div>
+  <hr
+    style="
+      font-size: 20px;
+      border-top-width: 1px;
+      border-top-color: #eee;
+      width: 70%;
+    "
+  />
+    <div class="form-group" style="color: blue; width: 80%; margin: 0 auto; height: auto; margin-top: 30px; color: rgba(255, 255, 255, 0.87)">
+        <div class="form-group" class="d-flex" style="margin: 15px auto; width: 85%;color: white; font-weight: bold; overflow-wrap: anywhere;">
 
-</div>
-
-<script>
-   var body;
-   var putMethod = ( event ) => {
-     // Prevent redirection of Form Click
-     event.preventDefault();
-     var target = event.target;
-     while ( target.tagName != "FORM" ) {
-       target = target.parentElement;
-     } // While the target is not te FORM tag, it looks for the parent element
-     // The action attribute provides the request URL
-     var url = target.getAttribute( "action" );
-
-     // Collect Form Data by prefix "put_" on name attribute
-     body = {}
-     var bodyForm = target.querySelectorAll( "[name]");
-     e = false
-     bodyForm.forEach( element => {
-       if(element.getAttribute( "required" ) == "true" && element.value === "") {
-            alert("You must specify a " + element.getAttribute( "name" ))
-            e = true
-            return false
-       }
-       var name = element.getAttribute( "name" );
-       var value = element.value;
-       body[name] = value;
-       }
-     );
-     if(e == true) {return}
-     var xhr = new XMLHttpRequest();
-     xhr.open( "PUT", url );
-     xhr.setRequestHeader("accept", "application/json");
-     xhr.setRequestHeader( "Content-Type", "application/json" );
-     xhr.onload = () => {
-       if ( xhr.status === 200 ) {
-       // reload() uses cache, reload( true ) force no-cache. I reload the page to make "redirects normal effect" of HTML form when submit. You can manipulate DOM instead.
-         location.reload( true );
-       } else {
-         console.log( xhr.status, xhr.responseText );
-       }
-     }
-     xhr.send(JSON.stringify(body));
-   }
-
-   var deleteMethod = ( event ) => {
-     // Prevent redirection of Form Click
-     event.preventDefault();
-     var target = event.target;
-     while ( target.tagName != "FORM" ) {
-       target = target.parentElement;
-     } // While the target is not te FORM tag, it looks for the parent element
-     // The action attribute provides the request URL
-     var url = target.getAttribute( "action" );
-
-     // Collect Form Data by prefix "put_" on name attribute
-     body = {}
-     var bodyForm = target.querySelectorAll( "[name]");
-     e = false
-     bodyForm.forEach( element => {
-       if(element.getAttribute( "required" ) == "true" && element.value === "") {
-            alert("You must specify a " + element.getAttribute( "name" ))
-            e = true
-            return false
-       }
-       var name = element.getAttribute( "name" );
-       var value = element.value;
-       if(value != "")
-           body[name] = value;
-       }
-     );
-     if(e == true) {return}
-     var xhr = new XMLHttpRequest();
-     xhr.open( "DELETE", url );
-     xhr.setRequestHeader("accept", "application/json");
-     xhr.setRequestHeader( "Content-Type", "application/json" );
-     xhr.onload = () => {
-       if ( xhr.status === 200 ) {
-       // reload() uses cache, reload( true ) force no-cache. I reload the page to make "redirects normal effect" of HTML form when submit. You can manipulate DOM instead.
-         location.reload( true );
-       } else {
-         console.log( xhr.status, xhr.responseText );
-       }
-     }
-     xhr.send(JSON.stringify(body));
-   }
-
-</script>
-<script>
-  document.querySelectorAll( "[name=update_data], [name=delete_data]" ).forEach( element => {
-    var button = element;
-    var form = element;
-    while ( form.tagName != "FORM" ) {
-      form = form.parentElement;
-    }
-    var method = form.getAttribute( "method" );
-    if ( method == "PUT" ) {
-      button.addEventListener( "click", putMethod );
-    }
-    if ( method == "DELETE" ) {
-      button.addEventListener( "click", deleteMethod );
-    }
-  } );
-</script>
-<script>
-  document.querySelectorAll( "[name=remove_data]" ).forEach( element => {
-    var button = element;
-    button.addEventListener( "click", deleteMethod );
-  });
-</script>
+  <form
+    style="height: auto; margin-top: 30px; color: rgba(255, 255, 255, 0.87); text-align: center;"
+    id="bot_form"
+    method="POST"
+  >
+    <div class="form-group">
+<div class="container">
+      <label
+        for="favorite_bot"
+        >Favorite Bot On Fates List (Bot ID)</span>
+      </label>
+      <input
+        class="form-control fform"
+        type="number"
+	maxlength="19"
+        name="favorite_bot"
+        placeholder="1234567890123456"
+      />
+  <div class="row">
+          <div class="col-lg">
+     <h5 style="font-weight: bold; margin-bottom: 15px;">General Information About You</h5>
+      <label
+        for="biography"
+        >Profile Biography/Description
+      </label>
+      <textarea
+        required
+        class="form-control fform"
+        type="text"
+        name="biography"
+        placeholder="John Doe is practicing Vote Manipulation!"
+	></textarea>
+	  </div>
+   <div class="col-lg">
+     <h5 style="font-weight: bold; margin-bottom: 15px;">Extras...</h5>
+     <h6>Coming soon...</h6>
+	  </div>
+  </div>
+  {{form.csrf_token}}
+  <button type="submit" class="btn btn-outline-light" style="margin-top: 30px;">Edit</button>
+</form>
 {% endblock %}
 {% block footer %}
 
