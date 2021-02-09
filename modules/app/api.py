@@ -23,15 +23,15 @@ class PromoPatch(Promo):
 class TokenRegen(BaseModel):
     api_token: str
 
-@router.delete("/promotion", tags = ["Promotion API"])
-async def delete_api_events(request: Request, promo: PromoDelete):
+@router.delete("/bots/{bot_id}/promotion", tags = ["Promotion API"])
+async def delete_promotion(request: Request, bot_id: int, promo: PromoDelete):
     """Deletes a promotion for a bot or deletes all promotions from a bot (WARNING: DO NOT DO THIS UNLESS YOU KNOW WHAT YOU ARE DOING).
 
     **API Token**: You can get this by clicking your bot and clicking edit and scrolling down to API Token or clicking APIWeb
 
     **Event ID**: This is the ID of the event you wish to delete. Not passing this will delete ALL events, so be careful
     """
-    id = await db.fetchrow("SELECT bot_id FROM bots WHERE api_token = $1", promo.api_token)
+    id = await db.fetchrow("SELECT bot_id FROM bots WHERE bot_id = $1 AND api_token = $2", bot_id, promo.api_token)
     if id is None:
         return {"done":  False, "reason": "NO_AUTH"}
     id = id["bot_id"]
@@ -44,8 +44,8 @@ async def delete_api_events(request: Request, promo: PromoDelete):
         await db.execute("DELETE FROM promotions WHERE bot_id = $1", id)
     return {"done":  True, "reason": None}
 
-@router.put("/promotion", tags = ["Promotion API"])
-async def create_promotion(request: Request, promo: Promo):
+@router.put("/bots/{bot_id}/promotion", tags = ["Promotion API"])
+async def create_promotion(request: Request, bot_id: int, promo: Promo):
     """Creates a promotion for a bot. Events can be used to set guild/shard counts, enter maintenance mode or to show promotions
 
     **API Token**: You can get this by clicking your bot and clicking edit and scrolling down to API Token or clicking APIWeb
@@ -55,16 +55,16 @@ async def create_promotion(request: Request, promo: Promo):
     """
     if len(promo.title) < 3:
         return {"done":  False, "reason": "TEXT_TOO_SMALL"}
-    id = await db.fetchrow("SELECT bot_id FROM bots WHERE api_token = $1", promo.api_token)
+    id = await db.fetchrow("SELECT bot_id FROM bots WHERE bot_id = $1 AND api_token = $2", bot_id, promo.api_token)
     if id is None:
         return {"done":  False, "reason": "NO_AUTH"}
     id = id["bot_id"]
     await add_promotion(id, promo.title, promo.info)
     return {"done":  True, "reason": None}
 
-@router.patch("/promotion", tags = ["Promotion API"])
-async def edit_api_event(request: Request, promo: PromoPatch):
-    """Edits an promotion for a bot given its event ID. Events can be used to set guild/shard counts, enter maintenance mode or to show promotions.
+@router.patch("/bots/{bot_id}/promotion", tags = ["Promotion API"])
+async def edit_promotion(request: Request, bot_id: int, promo: PromoPatch):
+    """Edits an promotion for a bot given its promotion ID.
 
     **API Token**: You can get this by clicking your bot and clicking edit and scrolling down to API Token or clicking APIWeb
 
@@ -73,7 +73,7 @@ async def edit_api_event(request: Request, promo: PromoPatch):
     """
     if len(promo.title) < 3:
         return {"done":  False, "reason": "TEXT_TOO_SMALL"}
-    id = await db.fetchrow("SELECT bot_id FROM bots WHERE api_token = $1", event.api_token)
+    id = await db.fetchrow("SELECT bot_id FROM bots WHERE bot_id = $1 AND api_token = $2", bot_id, event.api_token)
     if id is None:
         return {"done":  False, "reason": "NO_AUTH"}
     id = id["bot_id"]
@@ -83,18 +83,24 @@ async def edit_api_event(request: Request, promo: PromoPatch):
     await db.execute("UPDATE promotions SET title = $1, info = $2 WHERE bot_id = $3", promo.title, promo.info, id)
     return {"done": True, "reason": None}
 
-@router.patch("/token", tags = ["Core API"])
-async def regenerate_token(request: Request, token: TokenRegen):
+@router.patch("/bots/{bot_id}/token", tags = ["Core API"])
+async def regenerate_token(request: Request, bot_id: int, token: TokenRegen):
     """Regenerate the API token
 
     **API Token**: You can get this by clicking your bot and clicking edit and scrolling down to API Token or clicking APIWeb
     """
-    id = await db.fetchrow("SELECT bot_id FROM bots WHERE api_token = $1", token.api_token)
+    id = await db.fetchrow("SELECT bot_id FROM bots WHERE bot_id = $1 AND api_token = $2", bot_id, token.api_token)
     if id is None:
         return {"done":  False, "reason": "NO_AUTH"}
     await db.execute("UPDATE bots SET api_token = $1 WHERE bot_id = $2", get_token(101), id["bot_id"])
     return {"done": True, "reason": None}
 
+@router.get("/bots/random", tags = ["Core API"])
+async def random_bots_api(request: Request):
+    random_unp = await db.fetchrow("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE queue = false AND banned = false AND disabled = false ORDER BY RANDOM() LIMIT 1") # Unprocessed
+    bot = (await get_bot(random_unp["bot_id"])) | dict(random_unp)
+    bot["bot_id"] = str(bot["bot_id"])
+    return bot
 
 @router.get("/bots/{bot_id}", tags = ["Core API"])
 async def get_bots_api(request: Request, bot_id: int, api_token: Optional[str] = None):
@@ -127,32 +133,19 @@ async def get_bots_api(request: Request, bot_id: int, api_token: Optional[str] =
     api_ret["maint"] = await in_maint(bot_id = bot_id)
     return api_ret
 
-@router.get("/templates/{code}", tags = ["Core API"])
-async def get_template_api(request: Request, code: str):
-    guild =  await client.fetch_template(code).source_guild
-    return template
-
-@router.get("/feature", tags = ["Core API"])
-async def get_feature_api(request: Request, name: str):
-    """Gets a feature given its internal name (custom_prefix, open_source etc)"""
-    if name not in features.keys():
-        return abort(404)
-    return features[name]
+# TODO
+#@router.get("/templates/{code}", tags = ["Core API"])
+#async def get_template_api(request: Request, code: str):
+#    guild =  await client.fetch_template(code).source_guild
+#    return template
 
 class APISGC(BaseModel):
     api_token: Optional[str] = None
     guild_count: int
     shard_count: int
 
-@router.get("/roll", tags = ["Core API"])
-async def roll_bots_api(request: Request):
-    random_unp = await db.fetchrow("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE queue = false AND banned = false AND disabled = false ORDER BY RANDOM() LIMIT 1") # Unprocessed
-    bot = (await get_bot(random_unp["bot_id"])) | dict(random_unp)
-    bot["bot_id"] = str(bot["bot_id"])
-    return bot
-
-@router.post("/bots/stats", tags = ["Core API"])
-async def guild_shard_count_shortcut(request: Request, api: APISGC, Authorization: Optional[str] = FHeader(None)):
+@router.post("/bots/{bot_id}/stats", tags = ["Core API"])
+async def set_guild_shard_count(request: Request, bot_id: int, api: APISGC, Authorization: Optional[str] = FHeader(None)):
     """This is just a shortcut to /api/events for guild/shard posting primarily for BotsBlock but can be used by others. The Swagger Try It Out does not work right now if you use the authorization header but the other api_token in JSON can and should be used instead for ease of use.
     """
     if api.api_token is None and Authorization is None:
@@ -161,7 +154,7 @@ async def guild_shard_count_shortcut(request: Request, api: APISGC, Authorizatio
         atoken = Authorization
     else:
         atoken = api.api_token 
-    id = await db.fetchrow("SELECT bot_id FROM bots WHERE api_token = $1", atoken)
+    id = await db.fetchrow("SELECT bot_id FROM bots WHERE bot_id = $1 AND api_token = $2", bot_id, atoken)
     if id is None:
         return abort(401)
     await set_guild_shard_count(id["bot_id"], api.guild_count, api.shard_count)
@@ -172,8 +165,8 @@ class APISMaint(BaseModel):
     mode: int = 1
     reason: str
 
-@router.post("/bots/maint", tags = ["Core API"])
-async def maint_mode_shortcut(request: Request, api: APISMaint):
+@router.post("/bots/{bot_id}/maintenance", tags = ["Core API"])
+async def set_maintenance_mode(request: Request, bot_id: int, api: APISMaint):
     """This is just an endpoing for enabling or disabling maintenance mode. As of the new API Revamp, this isi the only way to add a maint
 
     **API Token**: You can get this by clicking your bot and clicking edit and scrolling down to API Token or clicking APIWeb
@@ -184,11 +177,19 @@ async def maint_mode_shortcut(request: Request, api: APISMaint):
     if api.mode not in [0, 1]:
         return {"done":  False, "reason": "UNSUPPORTED_MODE"}
 
-    id = await db.fetchrow("SELECT bot_id FROM bots WHERE api_token = $1", api.api_token)
+    id = await db.fetchrow("SELECT bot_id FROM bots WHERE bot_id = $1 AND api_token = $2", bot_id, api.api_token)
     if id is None:
         return {"done":  False, "reason": "NO_AUTH"}
     await add_maint(id["bot_id"], api.mode, api.reason)
     return {"done": True, "reason": None}
+
+@router.get("/features/{name}", tags = ["Core API"])
+async def get_feature_api(request: Request, name: str):
+    """Gets a feature given its internal name (custom_prefix, open_source etc)"""
+    if name not in features.keys():
+        return abort(404)
+    return features[name]
+
 
 async def ws_send_events(websocket):
     for event_i in range(0, len(ws_events)):
