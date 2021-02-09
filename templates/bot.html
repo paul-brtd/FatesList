@@ -127,6 +127,7 @@
 				<strong>Servers:</strong> {{bot.servers}}<br/>
 				<strong>Shards:</strong> {{bot.shards}}</br/>
 				<strong>Amount Of Invites:</strong> {{bot.invite_amount}}<br/>
+				<strong>Vote Page:</strong> <a href="/bot/{{bot.bot_id}}/vote">Share this with your friends!</a><br/>
 				{% if bot.features %}
 				<br/>
 				<strong>Features: </strong>{% for f in bot.features %}<a href="/feature/{{f}}">{{f.replace("_", " ").title()}}</a>{% if loop.index == bot.fleo - 1%} and {% elif loop.index != bot.fleo%}, {%endif%}{% endfor %}
