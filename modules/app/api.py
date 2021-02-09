@@ -100,6 +100,7 @@ async def random_bots_api(request: Request):
     random_unp = await db.fetchrow("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE queue = false AND banned = false AND disabled = false ORDER BY RANDOM() LIMIT 1") # Unprocessed
     bot = (await get_bot(random_unp["bot_id"])) | dict(random_unp)
     bot["bot_id"] = str(bot["bot_id"])
+    bot["servers"] = await human_format(bot["servers"])
     return bot
 
 @router.get("/bots/{bot_id}", tags = ["Core API"])
