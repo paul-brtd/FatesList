@@ -54,7 +54,10 @@ async def profile_of_user(request: Request, userid: int):
     if user_info is None:
         return RedirectResponse("/profile/404")
     guild = client.get_guild(reviewing_server)
-    user_dpy = guild.get_member(userid)
+    user_dpy = guild.get_member(int(userid))
+    if user_dpy is None:
+        user_dpy = await client.fetch_user(int(userid))
+    print(user_dpy)
     return templates.TemplateResponse("profile.html", {"request": request, "username": request.session.get("username", False), "user_bots": user_bots, "user": user, "avatar": request.session.get("avatar"), "admin": bot_admin, "userid": userid, "personal": personal, "badges": get_badges(user_dpy, user_info["badges"], user_info["certified"] == True)})
 
 @router.get("/{userid}/edit")

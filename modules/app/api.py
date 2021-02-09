@@ -23,7 +23,7 @@ class PromoPatch(Promo):
 class TokenRegen(BaseModel):
     api_token: str
 
-@router.delete("/bots/{bot_id}/promotion", tags = ["Promotion API"])
+@router.delete("/bots/{bot_id}/promotions", tags = ["API"])
 async def delete_promotion(request: Request, bot_id: int, promo: PromoDelete):
     """Deletes a promotion for a bot or deletes all promotions from a bot (WARNING: DO NOT DO THIS UNLESS YOU KNOW WHAT YOU ARE DOING).
 
@@ -44,7 +44,7 @@ async def delete_promotion(request: Request, bot_id: int, promo: PromoDelete):
         await db.execute("DELETE FROM promotions WHERE bot_id = $1", id)
     return {"done":  True, "reason": None}
 
-@router.put("/bots/{bot_id}/promotion", tags = ["Promotion API"])
+@router.put("/bots/{bot_id}/promotions", tags = ["API"])
 async def create_promotion(request: Request, bot_id: int, promo: Promo):
     """Creates a promotion for a bot. Events can be used to set guild/shard counts, enter maintenance mode or to show promotions
 
@@ -62,7 +62,7 @@ async def create_promotion(request: Request, bot_id: int, promo: Promo):
     await add_promotion(id, promo.title, promo.info)
     return {"done":  True, "reason": None}
 
-@router.patch("/bots/{bot_id}/promotion", tags = ["Promotion API"])
+@router.patch("/bots/{bot_id}/promotions", tags = ["API"])
 async def edit_promotion(request: Request, bot_id: int, promo: PromoPatch):
     """Edits an promotion for a bot given its promotion ID.
 
@@ -83,7 +83,7 @@ async def edit_promotion(request: Request, bot_id: int, promo: PromoPatch):
     await db.execute("UPDATE promotions SET title = $1, info = $2 WHERE bot_id = $3", promo.title, promo.info, id)
     return {"done": True, "reason": None}
 
-@router.patch("/bots/{bot_id}/token", tags = ["Core API"])
+@router.patch("/bots/{bot_id}/token", tags = ["API"])
 async def regenerate_token(request: Request, bot_id: int, token: TokenRegen):
     """Regenerate the API token
 
@@ -95,7 +95,7 @@ async def regenerate_token(request: Request, bot_id: int, token: TokenRegen):
     await db.execute("UPDATE bots SET api_token = $1 WHERE bot_id = $2", get_token(101), id["bot_id"])
     return {"done": True, "reason": None}
 
-@router.get("/bots/random", tags = ["Core API"])
+@router.get("/bots/random", tags = ["API"])
 async def random_bots_api(request: Request):
     random_unp = await db.fetchrow("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE queue = false AND banned = false AND disabled = false ORDER BY RANDOM() LIMIT 1") # Unprocessed
     bot = (await get_bot(random_unp["bot_id"])) | dict(random_unp)
@@ -103,7 +103,7 @@ async def random_bots_api(request: Request):
     bot["servers"] = await human_format(bot["servers"])
     return bot
 
-@router.get("/bots/{bot_id}", tags = ["Core API"])
+@router.get("/bots/{bot_id}", tags = ["API"])
 async def get_bots_api(request: Request, bot_id: int, api_token: Optional[str] = None):
     """Gets bot information given a bot ID. If not found, 404 will be returned. If a proper API Token is provided, sensitive information (System API Events will also be provided)"""
     api_ret = await db.fetchrow("SELECT bot_id AS id, description, tags, html_long_description, long_description, servers AS server_count, shard_count, prefix, invite, invite_amount, owner AS _owner, extra_owners AS _extra_owners, features, bot_library AS library, queue, banned, website, discord AS support, github FROM bots WHERE bot_id = $1", bot_id)
@@ -132,6 +132,7 @@ async def get_bots_api(request: Request, bot_id: int, api_token: Optional[str] =
         api_ret["sensitive"] = {}
     api_ret["promotions"] = await get_promotions(bot_id = bot_id)
     api_ret["maint"] = await in_maint(bot_id = bot_id)
+    api_ret["actions"] = [{"stats": f"https://fateslist.xyz/api/bots/{bot_id}/stats", "method": "POST"}, {"maintenance": f"https://fateslist.xyz/api/bots/{bot_id}/maintenance", "method": "POST"}, {"add_promotion": f"https://fateslist.xyz/api/bots/{bot_id}/promotions", "method": "PUT"}, {"edit_promotion": f"https://fateslist.xyz/api/bots/{bot_id}/promotions", "method": "PATCH"}, {"delete_promotion": f"https://fateslist.xyz/api/bots/{bot_id}/promotions", "method": "DELETE"}, {"regenerate_token": f"https://fateslist.xyz/api/bots/{bot_id}/token", "method": "PATCH"}]
     return api_ret
 
 # TODO
@@ -145,7 +146,7 @@ class APISGC(BaseModel):
     guild_count: int
     shard_count: int
 
-@router.post("/bots/{bot_id}/stats", tags = ["Core API"])
+@router.post("/bots/{bot_id}/stats", tags = ["API"])
 async def set_guild_shard_count(request: Request, bot_id: int, api: APISGC, Authorization: Optional[str] = FHeader(None)):
     """This is just a shortcut to /api/events for guild/shard posting primarily for BotsBlock but can be used by others. The Swagger Try It Out does not work right now if you use the authorization header but the other api_token in JSON can and should be used instead for ease of use.
     """
@@ -166,7 +167,7 @@ class APISMaint(BaseModel):
     mode: int = 1
     reason: str
 
-@router.post("/bots/{bot_id}/maintenance", tags = ["Core API"])
+@router.post("/bots/{bot_id}/maintenances", tags = ["API"])
 async def set_maintenance_mode(request: Request, bot_id: int, api: APISMaint):
     """This is just an endpoing for enabling or disabling maintenance mode. As of the new API Revamp, this isi the only way to add a maint
 
@@ -184,7 +185,7 @@ async def set_maintenance_mode(request: Request, bot_id: int, api: APISMaint):
     await add_maint(id["bot_id"], api.mode, api.reason)
     return {"done": True, "reason": None}
 
-@router.get("/features/{name}", tags = ["Core API"])
+@router.get("/features/{name}", tags = ["API"])
 async def get_feature_api(request: Request, name: str):
     """Gets a feature given its internal name (custom_prefix, open_source etc)"""
     if name not in features.keys():
