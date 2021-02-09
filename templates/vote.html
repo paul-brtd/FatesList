@@ -1,0 +1,30 @@
+{% extends "base/base.html" %}
+
+{% block head %}
+{% endblock %}
+
+{% block content %}
+    <div class="d-flex d-xl-flex flex-column justify-content-center align-items-center justify-content-xl-center align-items-xl-center">
+
+	<img style="border-radius: 50%; width: 120px;" src="{{bot.avatar}}">
+        <h3 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;">{{bot.username}}</h3>
+	{% if bot.banned %}
+        <div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
+        <strong>This bot has been BANNED or DENIED from this bot list for violating our rules or being a low-quality bot. Please do not invite it.</strong>
+	</div>
+	{% elif bot.queue %}
+        <div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
+        <strong>This bot has not yet been verified/approved on this bot list and it may violate our rules or be a low-quality bot. Please do not invite it yet</strong>
+	</div>
+	{% endif %}
+	<h3 style="margin 0 auto; color: white;font-weight: bold; font-size: 20px;">Please vote for {{bot.username}} now!</h3>
+    </div>
+     <div class="d-flex d-xl-flex flex-column justify-content-center align-items-center justify-content-xl-center align-items-xl-center">    
+    <form method = "POST" action = "/bot/{{bot.bot_id}}/vote">
+            {{form.csrf_token}}
+            <button type="submit" class="btn btn-block btn-lg btn-outline-light" style="color: white !important;"><i class="fas fa-thumbs-up"></i>{{bot.votes}}</button>
+        </form>
+       </div>
+{% endblock %} 
+{% block footer %} 
+{% endblock %}

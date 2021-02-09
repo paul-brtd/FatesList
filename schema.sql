@@ -4,6 +4,7 @@ CREATE DATABASE fateslist;
 CREATE TABLE bots (
     bot_id bigint,
     votes bigint,
+    voters bigint[],
     servers bigint,
     shard_count bigint,
     bot_library text,
