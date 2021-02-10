@@ -42,17 +42,44 @@ async def home(request: Request):
 async def nonerouter():
     return RedirectResponse("/static/assets/img/banner.webp", status_code = 301)
 
-@router.get("/v/{vanity}")
-@router.get("/{vanity}")
-async def vanity_bot(request: Request, vanity: str):
+async def vanity_bot(vanity: str):
     t = await db.fetchrow("SELECT type, redirect FROM vanity WHERE vanity_url = $1", vanity)
     if t is None:
-        return templates.e(request, "Invalid Vanity")
+        return None
     if t["type"] == 1:
-        pre = "/bot/"
+        type = "bot"
     else:
-        pre = "/profile/"
-    return RedirectResponse(pre + str(t["redirect"]))
+        type = "profile"
+    return "/" + type + "/" + str(t["redirect"]), type
+
+@router.get("/{vanity}")
+async def vanity_bot_uri(request: Request, vanity: str):
+    vurl = await vanity_bot(vanity)
+    if vurl is None:
+        return templates.e(request, "Invalid Vanity")
+    return RedirectResponse(vurl[0])
+
+@router.get("/{vanity}/edit")
+async def vanity_edit(request: Request, vanity: str):
+    vurl = await vanity_bot(vanity)
+    if vurl is None:
+        return templates.e(request, "Invalid Vanity")
+    if vurl[1] == "profile":
+        return abort(404)
+    return RedirectResponse(vurl[0] + "/edit")
+
+@router.get("/{vanity}/vote")
+async def vanity_edit(request: Request, vanity: str):
+    vurl = await vanity_bot(vanity)
+    if vurl is None:
+        return templates.e(request, "Invalid Vanity")
+    if vurl[1] == "profile":
+        return abort(404)
+    return RedirectResponse(vurl[0] + "/vote")
+
+@router.get("/v/{a:path}")
+async def v_legacy(request: Request, a: str):
+    return RedirectResponse(str(request.url).replace("/v/", "/"))
 
 @router.get("/feature/{name}")
 async def features_view(request: Request, name: str):

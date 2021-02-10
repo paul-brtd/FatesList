@@ -133,7 +133,14 @@ async def get_bots_api(request: Request, bot_id: int, Authorization: str = Heade
     api_ret["actions"] = [{"stats": f"https://fateslist.xyz/api/bots/{bot_id}/stats", "method": "POST"}, {"maintenance": f"https://fateslist.xyz/api/bots/{bot_id}/maintenance", "method": "POST"}, {"add_promotion": f"https://fateslist.xyz/api/bots/{bot_id}/promotions", "method": "PUT"}, {"edit_promotion": f"https://fateslist.xyz/api/bots/{bot_id}/promotions", "method": "PATCH"}, {"delete_promotion": f"https://fateslist.xyz/api/bots/{bot_id}/promotions", "method": "DELETE"}, {"regenerate_token": f"https://fateslist.xyz/api/bots/{bot_id}/token", "method": "PATCH"}]
     return api_ret
 
-@router.get("/bots/{bot_id}/votes", tags = ["API"])
+class BotVoteCheck(BaseModel):
+    votes: int
+    voted: bool
+    vote_right_now: bool
+    vote_epoch: int
+    time_to_vote: int
+
+@router.get("/bots/{bot_id}/votes", tags = ["API"], response_model = BotVoteCheck)
 async def get_votes_api(request: Request, bot_id: int, user_id: Optional[int] = None, Authorization: str = Header("INVALID_API_TOKEN")):
     """Endpoint to check amount of votes a user has"""
     id = await db.fetchrow("SELECT votes, voters FROM bots WHERE bot_id = $1 AND api_token = $2", bot_id, str(Authorization))
@@ -155,7 +162,7 @@ async def get_votes_api(request: Request, bot_id: int, user_id: Optional[int] = 
     time_to_vote = WT - (time.time() - vote_epoch)
     if time_to_vote < 0:
         time_to_vote = 0
-    return {"votes": voter_count, "voted": voter_count != 0, "vote_epoch": vote_epoch, "time_to_vote": time_to_vote}
+    return {"votes": voter_count, "voted": voter_count != 0, "vote_epoch": vote_epoch, "time_to_vote": time_to_vote, "vote_right_now": time_to_vote == 0}
 # TODO
 #@router.get("/templates/{code}", tags = ["Core API"])
 #async def get_template_api(request: Request, code: str):
