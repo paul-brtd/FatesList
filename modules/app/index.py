@@ -69,13 +69,22 @@ async def vanity_edit(request: Request, vanity: str):
     return RedirectResponse(vurl[0] + "/edit")
 
 @router.get("/{vanity}/vote")
-async def vanity_edit(request: Request, vanity: str):
+async def vanity_vote(request: Request, vanity: str):
     vurl = await vanity_bot(vanity)
     if vurl is None:
         return templates.e(request, "Invalid Vanity")
     if vurl[1] == "profile":
         return abort(404)
     return RedirectResponse(vurl[0] + "/vote")
+
+@router.get("/{vanity}/invite")
+async def vanity_invite(request: Request, vanity: str):
+    vurl = await vanity_bot(vanity)
+    if vurl is None:
+        return templates.e(request, "Invalid Vanity")
+    if vurl[1] == "profile":
+        return abort(404)
+    return RedirectResponse(vurl[0] + "/invite")
 
 @router.get("/v/{a:path}")
 async def v_legacy(request: Request, a: str):

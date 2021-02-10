@@ -7,15 +7,22 @@ router = APIRouter(
 )
 
 @router.get("/login")
-@csrf_protect
-async def login(request: Request):
+async def login_get(request: Request):
     if "userid" in request.session.keys():
         return RedirectResponse("/", status_code=HTTP_303_SEE_OTHER)
+    return templates.TemplateResponse("login.html", {"request": request, "form": await Form.from_formdata(request)})
+
+@router.post("/login")
+@csrf_protect
+async def login_post(request: Request, join_servers: str = FForm("off")):
+    if join_servers == "off":
+        request.session["join_servers"] = False
+        return RedirectResponse(discord_o.discord_login_url + discord_o.scope, status_code=HTTP_303_SEE_OTHER)
     else:
-        return RedirectResponse(discord_o.discord_login_url, status_code=HTTP_303_SEE_OTHER)
+        request.session["join_servers"] = True
+        return RedirectResponse(discord_o.discord_login_url + discord_o.scope_js, status_code=HTTP_303_SEE_OTHER)
 
 @router.get("/login/confirm")
-@csrf_protect
 async def login_confirm(request: Request, code: str):
     if "userid" in request.session.keys():
         return RedirectResponse("/")
@@ -45,6 +52,8 @@ async def login_confirm(request: Request, code: str):
             request.session["user_css"] = ""
         else:
             request.session["user_css"] = user_css["css"]
+        if request.session.get("join_servers"):
+            await discord_o.join_user(access_code, userjson["id"])
         if "RedirectResponse" in request.session.keys():
             return RedirectResponse(request.session["RedirectResponse"])
         return RedirectResponse("/")

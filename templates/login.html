@@ -1,0 +1,36 @@
+{% extends "base/base.html" %}
+
+{% block head %}
+
+{% endblock %}
+
+{% block content %}
+<div style="text-align: center; display: block; color: white;">
+<h3 style="font-weight: bold;">Fates List</h3>
+<h4>Login</h4>
+{% if perm_deny %}
+<h5>You need to login to access this page</h5>
+{% endif %}
+</div>
+<form method="POST">
+    <div class="form-group" style="color: blue; display: inline-block; margin: 0 auto; height: auto; color: rgba(255, 255, 255, 0.87);">
+        <div class="form-group" class="d-flex" style="margin: 15px auto; width: 85%;color: white; font-weight: bold; overflow-wrap: anywhere;">
+	    <div class="form-group">
+	{{form.csrf_token}}
+	<div class="custom-control custom-switch form-check" style="text-align: center; float: left; display: block; margin-bottom: 3px;"/>
+        <input type="checkbox" class="custom-control-input" tabindex="0" id="join_servers"  name="join_servers" aria-label="Join Servers" style="margin: auto !important;"/>
+	<label class="custom-control-label" for="join_servers">Join Servers -> Would you like to be added to the support server?</label>
+	</div><br/><br/>
+	    </div>
+	</div>
+    </div>
+    </div>
+    <div style="text-align: center; display: block;">
+	<button type="submit" class="btn btn-outline-light">Login</button>
+    </div>
+</form>
+</div>
+{% endblock %}
+{% block footer %}
+
+{% endblock %}

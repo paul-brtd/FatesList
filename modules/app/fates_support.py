@@ -2,12 +2,11 @@ from ..deps import *
 
 router = APIRouter(
     tags = ["Support"],
-    prefix = "/support",
+    prefix = "/support/fates",
     include_in_schema = False
 )
 
 @router.get("/invite")
-@csrf_protect
 async def support(request: Request):
     return RedirectResponse(support_url)
 

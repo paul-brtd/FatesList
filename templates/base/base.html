@@ -183,8 +183,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <a class="dropdown-item" href="/profile/me">My Profile</a>
           <a class="dropdown-item" href="/bot/admin/add">Add Bot</a>
 	  <!--<a class="dropdown-item" href="/template/admin/add">Add Server Template</a>-->
-          <a class="dropdown-item" href="/support/invite" target=”_blank”>Support Server</a>
-	  <a class="dropdown-item" href="/support/request" target=”_blank”>Support Request</a>
 	  <a class="dropdown-item" href="/docs">API Docs</a>
 	  <div class="dropdown-divider"></div>
           <a class="dropdown-item" href="/auth/logout">Logout</a>
@@ -193,10 +191,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 	  {%endif%}
           {% else %}
           <a class="dropdown-item" href="/auth/login">Login</a>
-          <a class="dropdown-item" href="/support">Support Server</a>
           <a class="dropdown-item" href="/docs">API Docs (Swagger)</a>
           <a class="dropdown-item" href="/redoc">API Docs (Redoc)</a>
            {%endif%}
+          <a class="dropdown-item" href="/support/fates/invite" target=”_blank”>Support Server</a>
+	  <a class="dropdown-item" href="/support/fates/request" target=”_blank”>Support Request</a>
           <a class="dropdown-item" href="/static/tos.txt">Terms Of Service</a>
          </div>
       </li>

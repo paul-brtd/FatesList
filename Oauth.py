@@ -1,12 +1,14 @@
 import aiohttp
+from aiohttp_requests import requests
 from config import OauthConfig
 class Oauth():
     def __init__(self):
         self.client_id = OauthConfig.client_id
         self.client_secret = OauthConfig.client_secret
         self.scope = "%20".join(OauthConfig.scope)
+        self.scope_js = "%20".join(OauthConfig.scope + ["guilds.join"])
         self.redirect_uri = OauthConfig.redirect_uri
-        self.discord_login_url = "https://discord.com/api/oauth2/authorize?client_id=" + self.client_id + "&redirect_uri=" + self.redirect_uri + "&response_type=code&scope=" + self.scope
+        self.discord_login_url = "https://discord.com/api/oauth2/authorize?client_id=" + self.client_id + "&redirect_uri=" + self.redirect_uri + "&response_type=code&scope="
         self.discord_token_url = "https://discord.com/api/oauth2/token"
         self.discord_api_url = "https://discordapp.com/api"
     
@@ -59,4 +61,14 @@ class Oauth():
       except:
         guilds = None
       return guilds
+
+    async def join_user(self, access_token, userid):
+        guild_id= str(reviewing_server)
+        url = self.discord_api_url+f"/guilds/{guild_id}/members/{userid}"
+
+        headers = {
+            "Authorization": f"Bot {TOKEN}"
+        }
+        rc = await requests.put(url, headers=headers,json={"access_token":access_token})
+        print(rc)
 
