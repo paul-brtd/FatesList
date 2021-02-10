@@ -2,6 +2,9 @@ from ..deps import *
 from uuid import UUID
 from fastapi.responses import HTMLResponse
 from typing import List
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+
+security = HTTPBearer()
 
 router = APIRouter(
     prefix = "/api",
@@ -101,7 +104,7 @@ async def random_bots_api(request: Request):
 @router.get("/bots/{bot_id}", tags = ["API"])
 async def get_bots_api(request: Request, bot_id: int, Authorization: str = Header("INVALID_API_TOKEN")):
     """Gets bot information given a bot ID. If not found, 404 will be returned. If a proper API Token is provided, sensitive information (System API Events will also be provided)"""
-    api_ret = await db.fetchrow("SELECT bot_id AS id, description, tags, html_long_description, long_description, servers AS server_count, shard_count, prefix, invite, invite_amount, owner AS _owner, extra_owners AS _extra_owners, features, bot_library AS library, queue, banned, website, discord AS support, github FROM bots WHERE bot_id = $1", bot_id)
+    api_ret = await db.fetchrow("SELECT bot_id AS id, description, tags, html_long_description, long_description, servers AS server_count, shard_count, prefix, invite, invite_amount, owner AS _owner, extra_owners AS _extra_owners, features, bot_library AS library, queue, banned, website, discord AS support, github, user_count FROM bots WHERE bot_id = $1", bot_id)
     if api_ret is None:
         return abort(404)
     api_ret = dict(api_ret)
@@ -159,20 +162,24 @@ async def get_votes_api(request: Request, bot_id: int, user_id: Optional[int] = 
 #    guild =  await client.fetch_template(code).source_guild
 #    return template
 
-class APISGC(BaseModel):
+class BotStats(BaseModel):
     guild_count: int
     shard_count: int
+    user_count: Optional[int] = None
 
 @router.post("/bots/{bot_id}/stats", tags = ["API"])
-async def set_bot_stats_api(request: Request, bot_id: int, api: APISGC, Authorization: str = Header("INVALID_API_TOKEN")):
+async def set_bot_stats_api(request: Request, bt: BackgroundTasks, bot_id: int, api: BotStats, Authorization: str = Header("INVALID_API_TOKEN")):
     """
     This endpoint allows you to set the guild + shard counts for your bot
     """
     id = await db.fetchrow("SELECT bot_id FROM bots WHERE bot_id = $1 AND api_token = $2", bot_id, str(Authorization))
     if id is None:
         return abort(401)
-    await set_guild_shard_count(id["bot_id"], api.guild_count, api.shard_count)
+    bt.add_task(set_stats, bot_id = id["bot_id"], guild_count = api.guild_count, shard_count = api.shard_count, user_count = api.user_count)
     return {"done": True, "reason": None}
+
+# set_stats(*, bot_id: int, guild_count: int, shard_count: int, user_count: Optiona;int] = None):
+
 class APISMaint(BaseModel):
     mode: int = 1
     reason: str
@@ -271,4 +278,3 @@ async def websocker_real_time_api(websocket: WebSocket):
             await asyncio.sleep(0.1)
     except WebSocketDisconnect:
         await manager.disconnect(websocket)
-

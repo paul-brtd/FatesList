@@ -1,6 +1,6 @@
 import string
 import secrets
-from fastapi import Request, APIRouter, BackgroundTasks, Form as FForm, Header, WebSocket, WebSocketDisconnect, File, UploadFile
+from fastapi import Request, APIRouter, BackgroundTasks, Form as FForm, Header, WebSocket, WebSocketDisconnect, File, UploadFile, Depends
 import aiohttp
 import asyncpg
 import datetime
@@ -171,11 +171,12 @@ def is_staff(staff_json: dict, roles: Union[list, int], base_perm: int) -> Union
 async def add_maint(bot_id: int, type: int, reason: str):
     return await db.execute("INSERT INTO bot_maint (bot_id, reason, type, epoch) VALUES ($1, $2, $3, $4)", bot_id, reason, type, time.time())
 
-async def set_guild_shard_count(bot_id: int, guild_count: int, shard_count: int):
+async def set_stats(*, bot_id: int, guild_count: int, shard_count: int, user_count: Optional[int] = None):
     if int(guild_count) > 300000000000 or int(shard_count) > 300000000000:
         return
-    await db.execute("UPDATE bots SET servers = $1 WHERE bot_id = $2", guild_count, bot_id)
-    await db.execute("UPDATE bots SET shard_count = $1 WHERE bot_id = $2", shard_count, bot_id)
+    await db.execute("UPDATE bots SET servers = $1, shard_count = $2 WHERE bot_id = $3", guild_count, shard_count, bot_id)
+    if user_count is not None:
+        await db.execute("UPDATE bots SET user_count = $1 WHERE bot_id = $2", user_count, bot_id)
 
 async def add_promotion(bot_id: int, title: str, info: str):
     return await db.execute("INSERT INTO promotions (bot_id, title, info) VALUES ($1, $2, $3)", bot_id, title, info)

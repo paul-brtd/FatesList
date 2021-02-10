@@ -25,7 +25,7 @@ import os
 # Setup
 builtins.intent = discord.Intents.all()
 builtins.client = commands.AutoShardedBot(command_prefix='!', intents=intent)
-builtins.app = FastAPI(default_response_class = ORJSONResponse, docs_url=None, redoc_url = "/docs")
+builtins.app = FastAPI(default_response_class = ORJSONResponse)
 builtins.app.add_middleware(SessionMiddleware, secret_key=session_key)
 builtins._templates = Jinja2Templates(directory="templates")
 builtins.ws_events = [] # events that need to be dispatched

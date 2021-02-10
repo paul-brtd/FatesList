@@ -6,6 +6,7 @@ CREATE TABLE bots (
     votes bigint,
     voters bigint[],
     servers bigint,
+    user_count bigint DEFAULT 0,
     shard_count bigint,
     bot_library text,
     webhook_type text DEFAULT 'VOTE',
