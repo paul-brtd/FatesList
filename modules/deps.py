@@ -21,7 +21,7 @@ import orjson
 from starlette_wtf import CSRFProtectMiddleware, csrf_protect,StarletteForm
 import builtins
 from typing import Optional, List, Union
-from aiohttp_requests import requests
+from aiohttp_requests import requests as _r_
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from websockets.exceptions import ConnectionClosedOK
 import hashlib
@@ -36,6 +36,20 @@ from starlette.websockets import WebSocket, WebSocketDisconnect
 from websockets.exceptions import ConnectionClosedError, ConnectionClosedOK
 from aioredis.errors import ConnectionClosedError as ServerConnectionClosedError
 from discord_webhook import DiscordWebhook, DiscordEmbed
+
+class requests:
+    @staticmethod
+    async def put(url, json = None, headers = None):
+        a = await _r_.put(url, json = json, headers = headers)
+        print(a, "\n")
+    @staticmethod
+    async def post(url, json = None, headers = None):
+        a = await _r_.post(url, json = json, headers = headers)
+        print(a, "\n")
+    @staticmethod
+    async def get(url, headers = None):
+        a = await _r_.get(url, headers = headers)
+        print(a, "\n")
 
 def redirect(path: str) -> RedirectResponse:
     return RedirectResponse(path, status_code=HTTP_303_SEE_OTHER)
@@ -180,50 +194,36 @@ async def add_event(bot_id: int, event: str, context: dict, *, send_event = True
     asyncio.create_task(db.execute("INSERT INTO api_event (id, bot_id, events) VALUES ($1, $2, $3)", id, bot_id, new_event_data))
     webh = await db.fetchrow("SELECT webhook, webhook_type FROM bots WHERE bot_id = $1", int(bot_id))
     if webh is not None and webh["webhook"] not in ["", None] and webh["webhook_type"] is not None and send_event:
-        try:
-            uri = webh["webhook"]
-            json = {"type": "add", "event_id": str(id), "event": event, "context": context}
-            headers = None
-            if webh["webhook_type"].upper() == "FC":
-                mode = "FC"
-                f = requests.put
-                print("Doing FC\n\n\n")
-            elif webh["webhook_type"].upper() == "PUT":
-                mode = "PUT"
-                f = requests.put
-                print("Doing PUT\n\n\n")
-            elif webh["webhook_type"].upper() == "POST":
-                mode = "POST"
-                f = requests.post
-                print("Doing POST\n\n\n")
-            elif webh["webhook_type"].upper() == "DISCORD" and event in ["edit_bot", "vote"]:
-                print("Doing DISCORD")
-                webhook = DiscordWebhook(url=uri)
-                print(context)
-                embed = DiscordEmbed(
-                    title=event.replace("_", " ").title(),
-                    description="\n".join([f"{key.replace('_', ' ').title()}: {value}" for key, value in context.items() if key != "user_id"]),
-                    color=242424
-                )
-                print(embed.description)
-                webhook.add_embed(embed)
-                response = webhook.execute()
-                raise ValueError
-            elif webh["webhook_type"].upper() == "VOTE" and event == "vote":
-                print("Doing VOTE")
-                f = requests.post
-                json = {"id": context["user_id"], "api_token": apitok["api_token"], "votes": context["votes"]}
-                headers = {"Authorization": apitok["api_token"]}
-            else:
-                print("Invalid method given\n\n\n")
-                raise ValueError # This will force an exit
-            print(json, f)
-            if headers is None:
-                asyncio.create_task(f(uri, json = json | {"mode": mode}))
-            else:
-                asyncio.create_task(f(url, json = json | {"mode": mode}, headers = headers))
-        except:
-            pass
+        uri = webh["webhook"]
+        cont = True
+        if webh["webhook_type"].upper() == "FC":
+            f = requests.put
+            print("Doing FC\n\n\n")
+        elif webh["webhook_type"].upper() == "DISCORD" and event in ["edit_bot", "vote"]:
+            print("Doing DISCORD")
+            webhook = DiscordWebhook(url=uri)
+            print(context)
+            embed = DiscordEmbed(
+                title=event.replace("_", " ").title(),
+                description="\n".join([f"{key.replace('_', ' ').title()}: {value}" for key, value in context.items() if key != "user_id"]),
+                color=242424
+            )
+            print(embed.description)
+            webhook.add_embed(embed)
+            response = webhook.execute()
+            cont = False
+        elif webh["webhook_type"].upper() == "VOTE" and event == "vote":
+            print("Doing VOTE")
+            f = requests.post
+            json = {"id": str(context["user_id"]), "votes": context["votes"]}
+            headers = {"Authorization": apitok["api_token"]}
+            print("Ready")
+        else:
+            print("Invalid method given\n\n\n")
+        if cont:
+            print(f"JSON: {json}\nFunction: {f}\nURL: {uri}\nHeaders: {headers}")
+            json = json | {"mode": webh["webhook_type"].upper()}
+            asyncio.create_task(f(uri, json = json, headers = headers))
     ws_events.append((bot_id, {"type": "add", "event_id": str(id), "event": event, "context": context}))
     return id
 

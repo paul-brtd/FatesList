@@ -194,8 +194,8 @@
       <select name="webhook_type" class="form-control" style="text-decoration: none; background: white !important!;  padding: 3px;">
 	      <option value="VOTE" {% if data.webhook_type == "VOTE" %}selected{%endif%}>Vote Webhook</option>
               <option value="DISCORD" {% if data.webhook_type == "DISCORD" %}selected{%endif%}>Discord Integration</option>
-              <option value="POST" {% if data.webhook_type == "POST" %}selected{%endif%}>Generic POST Request Endpoint</option>
-              <option value="PUT" {% if data.webhook_type == "PUT" %}selected{%endif%}>Generic PUT Request Endpoint</option>
+	      <!--<option value="POST" {% if data.webhook_type == "POST" %}selected{%endif%}>Generic POST Request Endpoint</option> -->
+	      <!--<option value="PUT" {% if data.webhook_type == "PUT" %}selected{%endif%}>Generic PUT Request Endpoint</option>-->
               <option value="FC" {% if data.webhook_type == "FC" %}selected{%endif%}>FatesHook (Fates Client)</option>
       </select>
       </div>
