@@ -25,8 +25,7 @@ async def add_bot(request: Request):
             else:
                 return templates.TemplateResponse("message.html", {"request": request, "message": "Something has went wrong getting your account. Please join our support server and contact us there"})
     else:
-        request.session["RedirectResponse"] = "/bot/admin/add"
-        return RedirectResponse("/auth/login")
+        return RedirectResponse("/auth/login?redirect=/bot/admin/add&pretty=to add a bot")
 
 
 @router.post("/admin/add")
@@ -255,8 +254,7 @@ async def vote_for_bot(
         bot_id: int
     ):
     if request.session.get("userid") is None:
-        request.session["RedirectResponse"] = "/bot/" + str(bot_id)
-        return RedirectResponse("/auth/login", status_code = 303)
+        return RedirectResponse(f"/auth/login?redirect=/bot/{bot_id}&pretty=to vote for this bot", status_code = 303)
     uid = request.session.get("userid")
     ret = await vote_bot(uid, request.session.get("username"), bot_id)
     if ret == []:

@@ -7,10 +7,11 @@ router = APIRouter(
 )
 
 @router.get("/login")
-async def login_get(request: Request):
+async def login_get(request: Request, redirect: Optional[str] = None, pretty: Optional[str] = "to access this page"):
     if "userid" in request.session.keys():
         return RedirectResponse("/", status_code=HTTP_303_SEE_OTHER)
-    return templates.TemplateResponse("login.html", {"request": request, "form": await Form.from_formdata(request)})
+    request.session["redirect"] = redirect
+    return templates.TemplateResponse("login.html", {"request": request, "form": await Form.from_formdata(request), "perm_needed": redirect is not None, "perm_pretty": pretty})
 
 @router.post("/login")
 @csrf_protect
@@ -54,8 +55,8 @@ async def login_confirm(request: Request, code: str):
             request.session["user_css"] = user_css["css"]
         if request.session.get("join_servers"):
             await discord_o.join_user(access_code, userjson["id"])
-        if "RedirectResponse" in request.session.keys():
-            return RedirectResponse(request.session["RedirectResponse"])
+        if request.session.get("redirect") is not None:
+            return RedirectResponse(request.session["redirect"])
         return RedirectResponse("/")
 
 @router.get("/logout")

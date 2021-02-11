@@ -6,10 +6,9 @@
 
 {% block content %}
 <div style="text-align: center; display: block; color: white;">
-<h3 style="font-weight: bold;">Fates List</h3>
-<h4>Login</h4>
-{% if perm_deny %}
-<h5>You need to login to access this page</h5>
+<h3 style="font-weight: bold;">Login</h3>
+{% if perm_needed %}
+<h5><span style="color: red">Oops!</span><br/>You need to login {{perm_pretty}}</h5>
 {% endif %}
 </div>
 <form method="POST">
