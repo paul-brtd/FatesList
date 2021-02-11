@@ -221,6 +221,7 @@ async def add_event(bot_id: int, event: str, context: dict, *, send_event = True
             print("Ready")
         else:
             print("Invalid method given\n\n\n")
+            cont = False
         if cont:
             print(f"JSON: {json}\nFunction: {f}\nURL: {uri}\nHeaders: {headers}")
             json = json | {"mode": webh["webhook_type"].upper()}

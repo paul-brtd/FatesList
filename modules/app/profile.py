@@ -14,37 +14,32 @@ async def profile(request: Request):
         user = await get_user(int(request.session["userid"]))
         if not user:
             return RedirectResponse("/")
-        return await profile_of_user(request, int(request.session["userid"]))
+        return await profile_of_user(request, int(request.session["userid"]), True)
     else:
         return RedirectResponse("/")
 
 @router.get("/{userid}")
 @csrf_protect
-async def profile_of_user(request: Request, userid: int):
+async def profile_of_user_generic(request: Request, userid: int):
+    return await profile_of_user(request, userid, False)
+
+async def profile_of_user(request: Request, userid: int, personal: bool):
     user = await get_user(int(userid))
     if not user:
         return templates.e(request, "Profile Not Found", 404)
-    a = (f"SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE (owner = {str(userid)} OR {str(userid)} = ANY(extra_owners)) and queue = false and banned = false and disabled = false ORDER BY votes;")
-    fetch = await db.fetch(a)
+    base_query = a = (f"SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE (owner = {str(userid)} OR {str(userid)} = ANY(extra_owners))")
+    if not personal:
+        query = base_query + "and queue = false and banned = false and disabled = false ORDER BY votes;"
+    else:
+        query = base_query + "ORDER BY votes;"
+    fetch = await db.fetch(query)
     if "userid" in request.session.keys():
         guild = client.get_guild(builtins.reviewing_server)
         userobj = guild.get_member(int(request.session.get("userid")))
-        personal = False
-        try:
-            if userid == int(request.session["userid"]):
-                personal = True
-            if userid == int(request.session["userid"]) or (userobj is not None and is_staff(staff_roles, userobj.roles, 4)[0]):
-                bot_admin = True
-            else:
-                bot_admin = False
-        except:
-            if userid == int(request.session["userid"]):
-                bot_admin = True
-            else:
-                bot_admin = False
-    else:
-        bot_admin = False
-        personal = False
+        if userid == int(request.session["userid"]) or (userobj is not None and is_staff(staff_roles, userobj.roles, 4)[0]):
+            bot_admin = True
+        else:
+            bot_admin = False
     user_bots = []
     for bot in fetch:
         bot_info = await get_bot(bot["bot_id"])

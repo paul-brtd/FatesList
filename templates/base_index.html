@@ -35,23 +35,8 @@
    </div>
         <div class="d-flex flex-wrap justify-content-center align-items-center" style="width: 97%;margin: 0 auto;">
             {% for tag,new_tag in tags_fixed.items() %}
-               <div class="content-nomobile">
 		       <button class="text-nowrap btn d-flex justify-content-center align-items-center {{new_tag[1][1]}}" style="color: white;border-radius: 10px; margin: 6px;" onclick="location.href='/search/tags?tag={{tag}}'" data-toggle="tooltip" data-placement="bottom" title="{{new_tag[0]}}"><i class="{{new_tag[1][0]}}" aria-hidden="true"></i><span style="margin-left: 3px; font-size: 13px;"><strong>{{new_tag[0]}}</strong></span></button>
-                </div>
             {% endfor %}
-	    <div class="content-mobileonly form">
-		    <form method="GET" action="/search/tags">
-			    <div class="form-group">
-			    <label for="tag">Choose A Tag</label>
-			    <select class="form-control" name="tag">
-				    {% for tag, new_tag in tags_fixed.items() %}
-				    <option value="{{tag}}">{{new_tag[0]}}</option>
-				    {%endfor%}
-			    </select>
-			    </div>
-			    <button class="btn btn-primary" style="background: #7289DA;" type="submit">Search</button>
-		    </form>
-	    </div>
     </div>
     <script>
 	    $(function () {

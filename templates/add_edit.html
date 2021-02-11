@@ -331,9 +331,6 @@
 				          <div style="margin 15px auto">
     <h6 style="margin-top: 30px;">Delete Bot</h6>
     <p style="margin-bottom: 3px;">Warning: This cannot be undone</p>
-    {% if data.banned and not staff[0] %}
-    <h5>You may not delete your bot as it has been banned</h5>
-    {% else %}
     <form method="POST" action="/bot/{{data.bot_id}}/delete">
 	{{data.form.csrf_token}}
         <button
@@ -345,7 +342,6 @@
         </button>
     	<input type="hidden" name="confirmer" value="{{epoch}}"/>
     </form>
-    {% endif%}
     </div>
 			      </div>
 	      </div>

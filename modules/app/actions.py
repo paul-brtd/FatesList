@@ -313,8 +313,6 @@ async def delete_bot(request: Request, bot_id: int, confirmer: str = FForm("1"))
             return templates.TemplateResponse("message.html", {"request": request, "message": "You aren't the owner of this bot.", "context": "Only owners and admins can delete bots", "username": request.session.get("username", False)})
     else:
         return RedirectResponse("/", status_code = 303)
-    if check["banned"] and not is_staff(staff_roles, user.roles, 4)[0]:
-        return templates.TemplateResponse("message.html", {"request": request, "message": "Forbidden", "context": "Only Admins can delete banned bots", "username": request.session.get("username", False)})
     try:
         if time.time() - int(float(confirmer)) > 30:
             return templates.TemplateResponse("message.html", {"request": request, "username": request.session.get("username"), "avatar": request.session.get("avatar"), "message": "Forbidden", "context": "You have taken too long to click the Delete Bot button and for your security, you will need to go back, refresh the page and try again"})
