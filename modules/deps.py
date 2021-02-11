@@ -311,11 +311,12 @@ async def render_bot(request: Request, bot_id: int, review: bool, widget: bool):
             eo = bot["extra_owners"]
         if "userid" in request.session.keys():
             user = guild.get_member(int(request.session.get("userid")))
-            if client.PUBAV.get(str(request.session.get("userid")) + str(bot_id)) is not None:
-                upubav = client.PUBAV.get(str(request.session.get("userid")) + str(bot_id))
+            if (await redis_db.get(str(request.session.get("userid")) + str(bot_id))) is not None:
+                upubav = await redis_db.get(str(request.session.get("userid")) + str(bot_id))
+                upubav = upubav.decode()
             else:
                 upubav = get_token(11).upper()
-                client.PUBAV[str(request.session.get("userid")) + str(bot_id)] = upubav
+                await redis_db.set(str(request.session.get("userid")) + str(bot_id),  upubav)
             bot_admin = bot["owner"] == int(request.session["userid"]) or int(request.session["userid"]) in eo or (user is not None and is_staff(staff_roles, user.roles, 4)[0])
         else:
             bot_admin = False

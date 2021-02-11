@@ -232,7 +232,6 @@ async def autovote_bot(request: Request, bot_id: int, api: APIAutoVote, Authoriz
     if user_obj is None:
         return ORJSONResponse({"done": False, "reason": "INVALID_USER"}, status_code = 400)
     ret = await vote_bot(uid = api.user_id, username = user_obj["username"], bot_id = bot_id, autovote = True)
-    print(client.PUBAV)
     if ret == []:
         return {"done": True, "reason": None}
     return ORJSONResponse({"done": False, "reason": ret}, status_code = 400)
@@ -247,12 +246,13 @@ async def autovote_bot(request: Request, bot_id: int, api: APIAutoVoteRegister, 
         awu = []
     else:
         awu = id["awu"]
+    print((await redis_db.get(str(api.user_id) + str(bot_id))).decode())
     if not id["aw"]:
         return ORJSONResponse({"done": False, "reason": "BOT_NOT_WHITELISTED"}, status_code = 400)
+    elif (await redis_db.get(str(api.user_id) + str(bot_id))).decode() != api.PUBAV:
+        return ORJSONResponse({"done": False, "reason": "INVALID_PUBAV"}, status_code = 400)
     elif api.user_id in awu:
         return ORJSONResponse({"done": False, "reason": "USER_ALREADY_EXISTS"}, status_code = 400)
-    elif client.PUBAV.get(str(api.user_id) + str(bot_id)) != api.PUBAV:
-        return ORJSONResponse({"done": False, "reason": "INVALID_PUBAV"}, status_code = 400)
     user_obj = await get_user(api.user_id)
     if user_obj is None:
         return ORJSONResponse({"done": False, "reason": "INVALID_USER"}, status_code = 400)

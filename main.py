@@ -21,6 +21,7 @@ from modules.deps import *
 from config import *
 import orjson
 import os
+import aioredis
 
 # Setup
 builtins.intent = discord.Intents.all()
@@ -151,7 +152,15 @@ async def startup():
     builtins.db = await setup_db()
     print("Discord")
     asyncio.create_task(client.start(TOKEN))
-    #Verify users and bots!!!
+    builtins.redis_db = await aioredis.create_redis_pool('redis://localhost')
+
+@app.on_event("shutdown")
+async def close():
+    print("Closing")
+    redis_db.close()
+    await redis_db.wait_closed()
+
+
 
 @client.event
 async def on_ready():
