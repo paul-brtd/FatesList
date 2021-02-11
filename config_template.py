@@ -60,15 +60,15 @@ builtins.site = "fateslist.xyz" # Replace this with your domain
 builtins.site_url = "https://" + site
 
 builtins.support_url = "https://discord.gg/PA5vjCRc5H"
-builtins.TOKEN = "MY_BOT_TOKEN"
-builtins.TAGS = {"music": "fas fa-music|bg-red", "moderation": "fas fa-hammer|bg-blue", "economy": "fa fa-viacoin|bg-green", "fun": "fa fa-heart|bg-pink", "anime": "fas fa-camera|bg-red", "games": "fas fa-smile-o|bg-pink", "web_dashboard": "fa fa-bar-chart|bg-green", "logging": "fa fa-line-chart|bg-blue", "game_stats": "fa fa-bar-chart|bg-red", "leveling": "fa fa-long-arrow-up|bg-green", "roleplay": "fas fa-cat|bg-pink", "utility": "fas fa-desktop|bg-blue", "social": "fa fa-users|bg-red"}
+builtins.TOKEN = "BOT TOKEN HERE"
+builtins.TAGS = {"music": ["fas fa-music", "bg-red"], "moderation": ["fas fa-hammer", "bg-blue"], "economy": ["fa fa-viacoin", "bg-green"], "fun": ["fa fa-heart", "bg-pink"], "anime": ["fas fa-camera", "bg-red"], "games": ["fas fa-smile-o", "bg-pink"], "web_dashboard": ["fa fa-bar-chart", "bg-green"], "logging": ["fa fa-line-chart", "bg-blue"], "game_stats": ["fa fa-bar-chart", "bg-red"], "leveling": ["fa fa-long-arrow-up", "bg-green"], "roleplay": ["fas fa-cat", "bg-pink"], "utility": ["fas fa-desktop", "bg-blue"], "social": ["fa fa-users", "bg-red"]}
 builtins.pg_user = "postgres" # Postgres Database Username
-builtins.pg_pwd = "POSTGRESS DB PASSWORD HERE" # Postgres Database Password
+builtins.pg_pwd = "POSTGRES PASSWORD HERE" # Postgres Database Password
 builtins.csrf_secret = "CSRF_SECRET"
 builtins.session_key = "SESSION_KEY"
 class OauthConfig:
     client_id = "798951566634778641"
-    client_secret = "CLIENT_SECRET"
+    client_secret = "CLIENT SECRET"
     scope = ["identify"]
     redirect_uri = "https://" + site + "/auth/login/confirm"
 
