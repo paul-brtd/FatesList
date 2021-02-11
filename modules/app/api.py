@@ -240,18 +240,21 @@ async def autovote_bot(request: Request, bot_id: int, api: APIAutoVote, Authoriz
 async def autovote_bot(request: Request, bot_id: int, api: APIAutoVoteRegister, Authorization: str = Header("INVALID_API_TOKEN")):
     """This endpoint allows for automatic voting. It is the ONLY supported API for bots to vote for users. All other APIs are against Fates List ToS. You must be whitelisted to use this. Please join the support server to do so. PUBAV is the per-user-bot-auto-vote token and can be gotten by clicking the bot icon while being logged in. This will be randomly generated every time the list restarts"""
     id = await db.fetchrow("SELECT bot_id, autovote_whitelist AS aw, autovote_whitelisted_users AS awu FROM bots WHERE bot_id = $1 AND api_token = $2", bot_id, str(Authorization))
+    print(id)
     if id is None:
         return abort(401)
     elif id["awu"] is None:
         awu = []
     else:
         awu = id["awu"]
-    print((await redis_db.get(str(api.user_id) + str(bot_id))).decode())
     if not id["aw"]:
         return ORJSONResponse({"done": False, "reason": "BOT_NOT_WHITELISTED"}, status_code = 400)
-    elif (await redis_db.get(str(api.user_id) + str(bot_id))).decode() != api.PUBAV:
+    try:
+        if (await redis_db.get(str(api.user_id) + str(bot_id))).decode() != api.PUBAV:
+            return ORJSONResponse({"done": False, "reason": "INVALID_PUBAV"}, status_code = 400)
+    except:
         return ORJSONResponse({"done": False, "reason": "INVALID_PUBAV"}, status_code = 400)
-    elif api.user_id in awu:
+    if api.user_id in awu:
         return ORJSONResponse({"done": False, "reason": "USER_ALREADY_EXISTS"}, status_code = 400)
     user_obj = await get_user(api.user_id)
     if user_obj is None:
