@@ -110,7 +110,7 @@
 
 	<script>
 		function randomBotRoll(){
-			$.get("{{site_url}}/api/bots/random", function(data, status) {
+			$.get("{{site_url}}{{roll_api}}", function(data, status) {
 				random_bots = document.querySelector("#random-bots")
 				if(data.banner == "" || data.banner == "none") {
 					banner = "none"

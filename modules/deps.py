@@ -352,6 +352,84 @@ async def render_bot(request: Request, bot_id: int, review: bool, widget: bool):
         widget = False
     return templates.TemplateResponse(f, {"request": request, "username": request.session.get("username", False), "bot": bot_obj, "tags_fixed": tags_fixed, "form": form, "avatar": request.session.get("avatar"), "promos": promos, "maint": maint, "bot_admin": bot_admin, "review": review, "guild": reviewing_server, "widget": widget})
 
+async def render_index(request: Request, api: bool):
+    fetch = await db.fetch("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE queue = false AND banned = false AND disabled = false ORDER BY votes DESC LIMIT 12")
+    top_voted = []
+    # TOP VOTED BOTS
+    for bot in fetch:
+        bot_info = await get_bot(bot["bot_id"])
+        if bot_info:
+            top_voted.append({"bot": bot, "avatar": bot_info["avatar"], "username": bot_info["username"], "votes": await human_format(bot["votes"]), "servers": await human_format(bot["servers"]), "description": bot["description"]})
+    fetch = await db.fetch("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE queue = false AND banned = false AND disabled = false ORDER BY created_at DESC LIMIT 12")
+    new_bots = []
+    # new bots
+    for bot in fetch:
+        bot_info = await get_bot(bot["bot_id"])
+        if bot_info:
+            new_bots.append({"bot": bot, "avatar": bot_info["avatar"], "username": bot_info["username"], "votes": await human_format(bot["votes"]), "servers": await human_format(bot["servers"]), "description": bot["description"]})
+    fetch = await db.fetch("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE queue = false and banned = false and disabled = false and certified = true ORDER BY votes DESC LIMIT 12")
+    certified_bots = []
+    # certified bots
+    for bot in fetch:
+        bot_info = await get_bot(bot["bot_id"])
+        if bot_info:
+            certified_bots.append({"bot": bot, "avatar": bot_info["avatar"], "username": bot_info["username"], "votes": await human_format(bot["votes"]), "servers": await human_format(bot["servers"]), "description": bot["description"]})
+        # TAGS
+    tags_fixed = {}
+    for tag in TAGS.keys():
+        tag_icon = TAGS[tag]
+        new_tag = tag.replace("_", " ")
+        tags_fixed.update({tag: [new_tag.capitalize(), tag_icon]})
+    if not api:
+        return templates.TemplateResponse("index.html", {"request": request, "username": request.session.get("username", False), "top_voted": top_voted, "new_bots": new_bots, "certified_bots": certified_bots, "tags_fixed": tags_fixed, "roll_api": "/api/bots/random"})
+    else:
+        return {"tags": tags_fixed, "top_voted": top_voted, "new_bots": new_bots, "certified_bots": certified_bots, "roll_api": "/api/bots/random"}
+
+async def render_search(request: Request, q: str, api: bool):
+    if q == "":
+        if api:
+            return abort(404)
+        else:
+            return RedirectResponse("/")
+    try:
+        es = " OR owner = " + str(int(q)) + f" OR {str(q)} = ANY(extra_owners) OR bot_id = " + str(int(q))
+    except:
+        es = ""
+    desc = ("SELECT bot_id FROM bots WHERE (queue = false and banned = false and disabled = false) and (description ilike '%" + re.sub(r'\W+|_', ' ', q) + "%'" + es + ")")
+    print(desc)
+    desc = await db.fetch(desc)
+    userc = await db.fetch("SELECT bot_id FROM bot_cache WHERE username ilike '%" + re.sub(r'\W+|_', ' ', q) + "%' and valid_for ilike '%bot%'")
+    bids = list(set([id["bot_id"] for id in desc]).union(set([id["bot_id"] for id in userc])))
+    print(bids, desc, userc)
+    data = str(tuple([int(bid) for bid in bids])).replace("(", "").replace(")", "")
+    print("data is " + data)
+    if data.replace(" ", "") in ["()", None, ",", ""]:
+        fetch = []
+    elif data.split(",")[-1].replace(" ", "") == "":
+        data = data.replace(",", "")
+        fetch = None
+    else:
+        fetch = None
+    if fetch is None:
+        abc = ("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE queue = false and banned = false and disabled = false and bot_id IN (" + data + ") ORDER BY votes DESC")
+        fetch = await db.fetch(abc)
+    search_bots = []
+    # TOP VOTED BOTS
+    for bot in fetch:
+        bot_info = await get_bot(bot["bot_id"])
+        if bot_info:
+            search_bots.append({"bot": bot, "avatar": bot_info["avatar"], "username": bot_info["username"], "votes": await human_format(bot["votes"]), "servers": await human_format(bot["servers"]), "description": bot["description"]})
+
+        # TAGS
+    tags_fixed = {}
+    for tag in TAGS.keys():
+        tag_icon = TAGS[tag]
+        new_tag = tag.replace("_", " ")
+        tags_fixed.update({tag: [new_tag.capitalize(), tag_icon]})
+    if not api:
+        return templates.TemplateResponse("search.html", {"request": request, "search_bots": search_bots, "tags_fixed": tags_fixed, "query": q, "profile_search": False})
+    else:
+        return {"search_bots": search_bots, "tags_fixed": tags_fixed, "query": q, "profile_search": False}
 # WebSocket Base Code
 
 class ConnectionManager:

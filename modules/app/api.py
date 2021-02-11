@@ -216,6 +216,15 @@ async def get_feature_api(request: Request, name: str):
         return abort(404)
     return features[name]
 
+@router.get("/bots/ext/index", tags = ["API (Other)"])
+async def bots_index_page_api_do(request: Request):
+    """For any potential Android/iOS app, crawlers etc."""
+    return await render_index(request = request, api = True)
+
+@router.get("/bots/ext/search", tags = ["API (Other)"])
+async def bots_search_page(request: Request, query: str):
+    """For any potential Android/iOS app, crawlers etc. Query is the query to search for"""
+    return await render_search(request = request, q = query, api = True)
 
 async def ws_send_events(websocket):
     for event_i in range(0, len(ws_events)):
