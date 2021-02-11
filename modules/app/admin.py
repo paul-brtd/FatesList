@@ -68,6 +68,12 @@ async def admin_api(request:Request, admin: str = FForm(""), bot_id: int = FForm
         owner=str(request.session["userid"])
         await channel.send(f"<@{owner}> uncertified the bot <@{bot_id}>")
         return templates.TemplateResponse("message.html", {"request": request, "message": "Hey mikes, i hope it uncertified the bot!", "username": request.session.get("username", False)})
+    elif admin == "whitelist":
+        await db.execute("UPDATE bots SET autovote_whitelist = true WHERE bot_id = $1", bot_id)
+        return "Done"
+    elif admin == "unwhitelist":
+        await db.execute("UPDATE bots SET autovote_whitelist = false WHERE bot_id = $1", bot_id)
+        return "Done"
     elif admin=="reset":
         await db.execute("UPDATE bots SET votes = 0")
         return templates.TemplateResponse("message.html", {"request": request, "message": "Hey mikes, i hope your wish comes true ;)", "username": request.session.get("username", False)})

@@ -268,13 +268,16 @@ async def get_user_token(uid: int, username: str) -> str:
                 await db.execute("UPDATE users SET username = $1 WHERE userid = $2", username, int(uid))
             token = token["token"]
 
-async def vote_bot(uid: int, username: str, bot_id: int) -> Optional[list]:
+async def vote_bot(uid: int, bot_id: int, username, autovote: bool) -> Optional[list]:
     await get_user_token(uid, username) # Make sure we have a user profile first
     epoch = await db.fetchrow("SELECT vote_epoch FROM users WHERE userid = $1", int(uid))
     if epoch is None:
         return [500]
     epoch = epoch["vote_epoch"]
-    WT = 60*60*8 # Wait Time
+    if autovote:
+        WT = 60*60*11 # Autovote Wait Time
+    else:
+        WT = 60*60*8 # Wait Time
     if time.time() - epoch < WT:
         return [401, str(WT - (time.time() - epoch))]
     b = await db.fetchrow("SELECT webhook, votes, voters FROM bots WHERE bot_id = $1", int(bot_id))
@@ -308,9 +311,15 @@ async def render_bot(request: Request, bot_id: int, review: bool, widget: bool):
             eo = bot["extra_owners"]
         if "userid" in request.session.keys():
             user = guild.get_member(int(request.session.get("userid")))
+            if client.PUBAV.get(str(request.session.get("userid")) + str(bot_id)) is not None:
+                upubav = client.PUBAV.get(str(request.session.get("userid")) + str(bot_id))
+            else:
+                upubav = get_token(11).upper()
+                client.PUBAV[str(request.session.get("userid")) + str(bot_id)] = upubav
             bot_admin = bot["owner"] == int(request.session["userid"]) or int(request.session["userid"]) in eo or (user is not None and is_staff(staff_roles, user.roles, 4)[0])
         else:
             bot_admin = False
+            upubav = None
     print("Here")
     img_header_list = ["image/gif", "image/png", "image/jpeg", "image/jpg"]
     banner = bot["banner"].replace(" ", "%20").replace("\n", "")
@@ -350,7 +359,7 @@ async def render_bot(request: Request, bot_id: int, review: bool, widget: bool):
     else:
         f = "bot.html"
         widget = False
-    return templates.TemplateResponse(f, {"request": request, "username": request.session.get("username", False), "bot": bot_obj, "tags_fixed": tags_fixed, "form": form, "avatar": request.session.get("avatar"), "promos": promos, "maint": maint, "bot_admin": bot_admin, "review": review, "guild": reviewing_server, "widget": widget})
+    return templates.TemplateResponse(f, {"request": request, "username": request.session.get("username", False), "bot": bot_obj, "tags_fixed": tags_fixed, "form": form, "avatar": request.session.get("avatar"), "promos": promos, "maint": maint, "bot_admin": bot_admin, "review": review, "guild": reviewing_server, "widget": widget, "pubav": upubav})
 
 async def render_index(request: Request, api: bool):
     fetch = await db.fetch("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE queue = false AND banned = false AND disabled = false ORDER BY votes DESC LIMIT 12")

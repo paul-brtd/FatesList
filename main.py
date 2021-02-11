@@ -25,6 +25,7 @@ import os
 # Setup
 builtins.intent = discord.Intents.all()
 builtins.client = commands.AutoShardedBot(command_prefix='!', intents=intent)
+builtins.client.PUBAV = {}
 builtins.app = FastAPI(default_response_class = ORJSONResponse)
 builtins.app.add_middleware(SessionMiddleware, secret_key=session_key)
 builtins._templates = Jinja2Templates(directory="templates")

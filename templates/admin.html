@@ -116,7 +116,22 @@
                     <div class="input-group-append"><button class="btn btn-primary" type="submit">Submit</button></div>
                 </div>
             </form>
-        
+            <form method="POST">
+                {{form.csrf_token}}
+                <input type="hidden" name="admin" value="whitelist"></input>
+                <div class="input-group">
+                    <div class="input-group-prepend"><span class="input-group-text" style="background: #00000000;color: rgba(255,255,255,0.87);">Autovote Whitelist a bot</span></div><input class="form-control" type="number" style="background: #ffffff;" name="bot_id">
+                    <div class="input-group-append"><button class="btn btn-primary" type="submit">Submit</button></div>
+                </div>
+	    </form><br/>
+            <form method="POST">
+                {{form.csrf_token}}
+                <input type="hidden" name="admin" value="unwhitelist"></input>
+                <div class="input-group">
+                    <div class="input-group-prepend"><span class="input-group-text" style="background: #00000000;color: rgba(255,255,255,0.87);">Autovote Unwhitelist a bot</span></div><input class="form-control" type="number" style="background: #ffffff;" name="bot_id">
+                    <div class="input-group-append"><button class="btn btn-primary" type="submit">Submit</button></div>
+                </div>
+            </form>
         {% if owner %}
         <form method="POST">
             {{form.csrf_token}}

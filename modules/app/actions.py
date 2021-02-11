@@ -256,7 +256,7 @@ async def vote_for_bot(
     if request.session.get("userid") is None:
         return RedirectResponse(f"/auth/login?redirect=/bot/{bot_id}&pretty=to vote for this bot", status_code = 303)
     uid = request.session.get("userid")
-    ret = await vote_bot(uid, request.session.get("username"), bot_id)
+    ret = await vote_bot(uid = uid, username = request.session.get("username"), bot_id = bot_id, autovote = False)
     if ret == []:
         return templates.TemplateResponse("message.html", {"request": request, "message": "Successfully voted for this bot!<script>window.location.replace('/bot/" + str(bot_id) + "')</script>", "username": request.session.get("username", False), "avatar": request.session.get('avatar')})
     elif ret[0] in [404, 500]:

@@ -30,7 +30,9 @@ CREATE TABLE bots (
     invite_amount integer DEFAULT 0,
     banned BOOLEAN DEFAULT false,
     github TEXT,
-    private boolean DEFAULT false;
+    private boolean DEFAULT false,
+    autovote_whitelist boolean DEFAULT false,
+    autovote_whitelisted_users bigint[] DEFAULT [];
 );
 
 CREATE TABLE users (
