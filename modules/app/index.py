@@ -16,7 +16,7 @@ async def nonerouter():
     return RedirectResponse("/static/assets/img/banner.webp", status_code = 301)
 
 async def vanity_bot(vanity: str):
-    t = await db.fetchrow("SELECT type, redirect FROM vanity WHERE vanity_url = $1", vanity)
+    t = await db.fetchrow("SELECT type, redirect FROM vanity WHERE lower(vanity_url) = $1", vanity.lower())
     if t is None:
         return None
     if t["type"] == 1:

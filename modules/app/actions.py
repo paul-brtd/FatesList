@@ -12,11 +12,6 @@ async def add_bot(request: Request):
     if "userid" in request.session.keys():
         form = await Form.from_formdata(request)
         if request.method == "GET":
-            # TAGS
-            tags_fixed = {}
-            for tag in TAGS:
-                new_tag = tag.replace("_", " ")
-                tags_fixed.update({tag: new_tag.capitalize()})
             return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": {"form": form}, "error": None, "mode": "add"})
         else:
             owner_check = await get_user(request.session["userid"])
@@ -56,11 +51,6 @@ async def add_bot_api(
     bot_dict["form"] = await Form.from_formdata(request)
     features = [f for f in bot_dict.keys() if bot_dict[f] == "on" and f in ["custom_prefix", "open_source"]]
     bot_dict["features"] = features
-    # TAGS
-    tags_fixed = {}
-    for tag in TAGS:
-        new_tag = tag.replace("_", " ")
-        tags_fixed.update({tag: new_tag.capitalize()})
     if bot_id == "" or prefix == "" or invite == "" or description == "" or long_description == "" or len(prefix) > 9:
         return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "Please ensure you have filled out all the required fields and that your prefix is less than 9 characters.", "mode": "add"})
     fetch = await db.fetch("SELECT bot_id FROM bots WHERE bot_id = $1", bot_id)
@@ -124,10 +114,6 @@ async def bot_edit(request: Request, bid: int):
             pass
         else:
             return templates.TemplateResponse("message.html", {"request": request, "message": "You aren't the owner of this bot.", "username": request.session.get("username", False), "avatar": request.session.get("avatar")})
-        tags_fixed = {}
-        for tag in TAGS:
-            new_tag = tag.replace("_", " ")
-            tags_fixed.update({tag: new_tag.capitalize()})
         form = await Form.from_formdata(request)
         fetch = dict(await db.fetchrow("SELECT bot_id, prefix, bot_library AS library, invite, website, banner, long_description, description, tags, owner, extra_owners, webhook, webhook_type, discord AS support, api_token, banner, banned, github, features, html_long_description FROM bots WHERE bot_id = $1", bid))
         vanity = await db.fetchrow("SELECT vanity_url AS vanity FROM vanity WHERE redirect = $1", bid)
@@ -173,10 +159,6 @@ async def bot_edit_api(
     features = [f for f in bot_dict.keys() if bot_dict[f] == "on" and f in ["custom_prefix", "open_source"]]
     bot_dict["features"] = features
     bot_dict["tags"] = bot_dict["tags"].split(",")
-    tags_fixed = {}
-    for tag in TAGS:
-        new_tag = tag.replace("_", " ")
-        tags_fixed.update({tag: new_tag.capitalize()})
     if bid == "" or prefix == "" or invite == "" or description == "" or long_description == "" or len(prefix) > 9:
         return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "Please ensure you have filled out all the required fields and that your prefix is less than 9 characters", "mode": "edit"})
     if "userid" in request.session.keys():
@@ -217,7 +199,7 @@ async def bot_edit_api(
     if vanity == "":
         pass
     else:
-        vanity_check = await db.fetchrow("SELECT type FROM vanity WHERE vanity_url = $1 AND redirect != $2", vanity.replace(" ", "").lower(), bid)
+        vanity_check = await db.fetchrow("SELECT type FROM vanity WHERE lower(vanity_url) = $1 AND redirect != $2", vanity.replace(" ", "").lower(), bid)
         if vanity_check is not None or vanity.replace("", "").lower() in ["bot", "docs", "redoc", "doc", "profile", "server", "bots", "servers", "search", "invite", "discord", "login", "logout", "register", "admin"] or vanity.replace("", "").lower().__contains__("/"):
             return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "Your custom vanity URL is already in use or is reserved", "mode": "edit"})
     if github != "" and not github.startswith("https://www.github.com"):

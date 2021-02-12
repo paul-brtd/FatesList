@@ -358,11 +358,11 @@
   const selected_tags = []
   {% endif %}
   const myOptions = [
-      {% for tag, new_tag in tags_fixed.items() %}
+      {% for tag_key, tag_val in tags_fixed.items() %}
 
     {
-      label: '{{new_tag}}',
-          value: '{{tag}}',
+      label: '{{tag_val[0]}}',
+          value: '{{tag_key}}',
         },
         {% endfor %}
       ]
