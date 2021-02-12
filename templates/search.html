@@ -20,25 +20,29 @@
 		<h4 class="text-nowrap text-break text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;white-space: nowrap;text-overflow: ellipsis;overflow: hidden;">No Bots Found</h4>
 	{% endif %}
         {% for bot in search_bots %}
-        <div style="width: 300px;height: 450px;background: #111112;border-radius: 10px 10px 10px 10px; box-shadow: 0px 0px 20px 5px;border-top-style: none;margin: 25px 25px;" class="bot-card">
-            {% if bot.banner == "" or bot.banner == "none" or not bot.banner or bot.banner == "None" %}<div style="width: 100%;height: 30%;background: url(&quot;/static/assets/img/banner.png&quot;) center / cover no-repeat;">{% else %}<div style="width: 100%;height: 30%;background: url(&quot;{{bot.banner}}&quot;) center / cover no-repeat;">{% endif %}{% if bot.certified == True %}<i class="fas fa-certificate fa-3x" style="color:#7289DA; position: absoulute; margin-top: -15px; margin-left: 90%"></i>{% endif %}
-	<a href="/bot/{{bot.bot_id}}"><img style="border-radius: 50%;width: 30%;margin: 5% auto;margin-top: 17%;margin-right: 35%;margin-left: 35%;" src="{{bot.avatar}}" /></a></div>
-            <div>
-                <div style="margin-right: auto;margin-left: auto;margin-top: 30px;width: 200px;">
-                    <h4 class="text-nowrap text-break text-center" style="color: white; font-weight: bold;white-space: nowrap;text-overflow: ellipsis;overflow: hidden; font-size: 21px; margin-top: 35px">{{bot.username}}</h4>
+            <div style="width: 300px;height: 475px;background: #111112;box-shadow: 0px 0px 20px 5px;border-top-style: none;margin: 25px 25px;" class="bot-card">
+                {% if bot.banner == "" %}
+                        <div class="lozad" data-background-image="{{bot.banner}}" style="width: 100%;height: 30%;background: center / cover no-repeat;">
+                {% else %}
+                        <div class="lozad" data-background-image="{{bot.banner}}" style="width: 100%;height: 30%; background: center / cover no-repeat;">{% endif %}{% if bot.certified == True %}<i class="fas fa-certificate fa-3x" style="color:#7289DA; position: absoulute; margin-top: -15px; margin-left: 90%"></i>{% endif %}
+                        <a href="/bot/{{bot.bot_id}}"><img alt="bot avatar" style="border-radius: 50%;width: 30%;margin: 5% auto;margin-top: 17%;margin-right: 35%;margin-left: 35%;" src="{{bot.avatar}}" loading="lazy" /></a></div>
+
+                <div>
+                    <div style="margin-right: auto;margin-left: auto;margin-top: 30px;width: 200px;">
+                        <h4 class="text-nowrap text-break text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;white-space: nowrap;text-overflow: ellipsis;overflow: hidden; font-size: 21px; margin-top: 35px">{{bot.username}}</h4>
+                    </div>
                 </div>
+                <h6 style="font-size: 16px;font-weight: bold;color: rgba(255,255,255,0.87);opacity: 0.63;width: 90%;margin: 0 5%;height:105px"><strong style="overflow-wrap: anywhere;">{{bot.description}}</strong></h6>
+                <div class="d-flex" style="width: 80%;margin: 0 10%;height: 10%;margin-top: 20px;margin-bottom: 20px;">
+                    <div style="height: 30px;width: 101px;margin-right: 10px;">
+                        <p class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;"><i class="fas fa-server" style="margin-right: 3px"></i>{{bot.servers}}</p>
+                    </div>
+                    <div style="height: 30px;width: 101px;margin-left: 28px;">
+                        <p class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;"><i class="fas fa-thumbs-up" style="margin-right: 3px"></i>{{bot.votes}}</p>
+                    </div>
+                </div>
+                <div style="width: 80%;margin: 0 10%;"><a role="button" aria-label="View" href="/bot/{{bot.bot_id}}" class="btn btn-outline-light" style="width: 45%;margin-right: 5%;border-radius: 25px;font-weight: bold;">View</a><a role="button" aria-label="Invite" href="{{bot.invite}}" class="btn btn-outline-light" style="width: 45%;margin-left: 5%;border-radius: 25px;font-weight: bold;" target="_blank" rel="noreferrer">Invite</a></div>
             </div>
-            <h6 style="font-size: 16px;font-weight: bold;color: white; ;opacity: 0.63;width: 90%;margin: 0 5%;height:105px"><strong style="overflow-wrap: anywhere;">{{bot.description}}</strong></h6>
-            <div class="d-flex" style="width: 80%;margin: 0 10%;height: 10%;margin-top: 20px;margin-bottom: 20px;">
-                <div style="height: 30px;width: 101px;margin-right: 10px;">
-                    <p class="text-center" style="color: white; font-weight: bold;"><i class="fas fa-server" style="margin-right: 3px"></i>{{bot.servers}}</p>
-                </div>
-                <div style="height: 30px;width: 101px;margin-left: 28px;">
-                    <p class="text-center" style="color: white; font-weight: bold;"><i class="fas fa-thumbs-up" style="margin-right: 3px"></i>{{bot.votes}}</p>
-                </div>
-            </div>
-            <div style="width: 80%;margin: 0 10%;"><a href="/bot/{{bot.bot_id}}" class="btn btn-outline-light" style="width: 45%;margin-right: 5%;font-weight: bold;">View</a><a href="{{bot.invite}}" class="btn btn-outline-light" style="width: 45%;margin-left: 5%;font-weight: bold;" target="_blank">Invite</a></div>
-        </div>
     {% endfor %}
     {% else %}
     {% for profile in profiles %}
