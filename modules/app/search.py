@@ -15,16 +15,9 @@ async def search(request: Request, q: str):
 async def tags(request: Request, tag: str):
     if tag not in TAGS:
         return RedirectResponse("/")
-    fetch = await db.fetch(f"SELECT description, banner,certified,votes,servers,bot_id,tags,invite FROM bots, unnest(tags) a WHERE  lower(a) = '{tag}' AND queue = false and banned = false and disabled = false ORDER BY votes DESC")
-    print(fetch)
-    search_bots = []
-    # TOP VOTED BOTS
-    for bot in fetch:
-        bot_info = await get_bot(bot["bot_id"])
-        if bot_info:
-            search_bots.append({"bot": bot, "avatar": bot_info["avatar"], "username": bot_info["username"], "votes": await human_format(bot["votes"]), "servers": await human_format(bot["servers"]), "description": bot["description"]})
-
-        # TAGS
+    fetch = await db.fetch(f"SELECT description, banner,certified,votes,servers,bot_id,tags,invite FROM bots, unnest(tags) a WHERE  lower(a) = '{tag}' AND queue = false and banned = false and disabled = false ORDER BY votes DESC LIMIT 12")
+    search_bots = await parse_bot_list(fetch)
+    # TAGS
     tags_fixed = {}
     for tag in TAGS.keys():
         tag_icon = TAGS[tag]

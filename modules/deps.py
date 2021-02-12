@@ -69,7 +69,7 @@ def get_token(length: str) -> str:
     )
     return secure_str
 
-async def human_format(num: int) -> str:
+def human_format(num: int) -> str:
     num = float('{:.3g}'.format(num))
     magnitude = 0
     while abs(num) >= 1000:
@@ -340,7 +340,7 @@ async def render_bot(request: Request, bot_id: int, review: bool, widget: bool):
     else:
         features = bot["features"]
     if bot_info:
-        bot_obj = {"bot": bot, "bot_id": bot["bot_id"], "avatar": bot_info["avatar"], "website": bot["website"], "username": bot_info["username"], "votes": await human_format(bot["votes"]), "servers": await human_format(bot["servers"]), "description": bot["description"], "support": bot['discord'], "invite_amount": bot["invite_amount"], "tags": bot["tags"], "library": bot['library'], "banner": banner, "shards": await human_format(bot["shard_count"]), "owner": bot["owner"], "owner_pretty": await get_user(bot["owner"]), "banned": bot['banned'], "disabled": bot['disabled'], "prefix": bot["prefix"], "github": bot['github'], "extra_owners": ed, "leo": len(ed), "queue": bot["queue"], "features": features, "fleo": len(features)}
+        bot_obj = {"bot": bot, "bot_id": bot["bot_id"], "avatar": bot_info["avatar"], "website": bot["website"], "username": bot_info["username"], "votes": human_format(bot["votes"]), "servers": human_format(bot["servers"]), "description": bot["description"], "support": bot['discord'], "invite_amount": bot["invite_amount"], "tags": bot["tags"], "library": bot['library'], "banner": banner, "shards": human_format(bot["shard_count"]), "owner": bot["owner"], "owner_pretty": await get_user(bot["owner"]), "banned": bot['banned'], "disabled": bot['disabled'], "prefix": bot["prefix"], "github": bot['github'], "extra_owners": ed, "leo": len(ed), "queue": bot["queue"], "features": features, "fleo": len(features)}
     else:
         return templates.e(request, "Bot Not Found")
     # TAGS
@@ -362,29 +362,30 @@ async def render_bot(request: Request, bot_id: int, review: bool, widget: bool):
         widget = False
     return templates.TemplateResponse(f, {"request": request, "username": request.session.get("username", False), "bot": bot_obj, "tags_fixed": tags_fixed, "form": form, "avatar": request.session.get("avatar"), "promos": promos, "maint": maint, "bot_admin": bot_admin, "review": review, "guild": reviewing_server, "widget": widget, "pubav": upubav})
 
+async def parse_bot_list(fetch: List[asyncpg.Record]) -> list:
+    lst = []
+    for bot in fetch:
+        bot_info = await get_bot(bot["bot_id"])
+        print(human_format(bot["servers"]))
+        if bot_info:
+            bot = dict(bot)
+            votes = bot["votes"]
+            servers = bot["servers"]
+            del bot["votes"]
+            del bot["servers"]
+            lst.append({"avatar": bot_info["avatar"], "username": bot_info["username"], "votes": human_format(votes), "servers": human_format(servers), "description": bot["description"]} | bot)
+    return lst
+
+async def do_index_query(add_query: str) -> List[asyncpg.Record]:
+    base_query = "SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE queue = false AND banned = false AND disabled = false"
+    end_query = "DESC LIMIT 12"
+    return await db.fetch(" ".join((base_query, add_query, end_query)))
+
 async def render_index(request: Request, api: bool):
-    fetch = await db.fetch("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE queue = false AND banned = false AND disabled = false ORDER BY votes DESC LIMIT 12")
-    top_voted = []
-    # TOP VOTED BOTS
-    for bot in fetch:
-        bot_info = await get_bot(bot["bot_id"])
-        if bot_info:
-            top_voted.append({"bot": bot, "avatar": bot_info["avatar"], "username": bot_info["username"], "votes": await human_format(bot["votes"]), "servers": await human_format(bot["servers"]), "description": bot["description"]})
-    fetch = await db.fetch("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE queue = false AND banned = false AND disabled = false ORDER BY created_at DESC LIMIT 12")
-    new_bots = []
-    # new bots
-    for bot in fetch:
-        bot_info = await get_bot(bot["bot_id"])
-        if bot_info:
-            new_bots.append({"bot": bot, "avatar": bot_info["avatar"], "username": bot_info["username"], "votes": await human_format(bot["votes"]), "servers": await human_format(bot["servers"]), "description": bot["description"]})
-    fetch = await db.fetch("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE queue = false and banned = false and disabled = false and certified = true ORDER BY votes DESC LIMIT 12")
-    certified_bots = []
-    # certified bots
-    for bot in fetch:
-        bot_info = await get_bot(bot["bot_id"])
-        if bot_info:
-            certified_bots.append({"bot": bot, "avatar": bot_info["avatar"], "username": bot_info["username"], "votes": await human_format(bot["votes"]), "servers": await human_format(bot["servers"]), "description": bot["description"]})
-        # TAGS
+    top_voted = await parse_bot_list((await do_index_query("ORDER BY votes")))
+    new_bots = await parse_bot_list((await do_index_query("ORDER BY created_at"))) # and certified = true ORDER BY votes
+    certified_bots = await parse_bot_list((await do_index_query("and certified = true ORDER BY votes")))
+    # TAGS
     tags_fixed = {}
     for tag in TAGS.keys():
         tag_icon = TAGS[tag]
@@ -421,16 +422,10 @@ async def render_search(request: Request, q: str, api: bool):
     else:
         fetch = None
     if fetch is None:
-        abc = ("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE queue = false and banned = false and disabled = false and bot_id IN (" + data + ") ORDER BY votes DESC")
+        abc = ("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE queue = false and banned = false and disabled = false and bot_id IN (" + data + ") ORDER BY votes DESC LIMIT 12")
         fetch = await db.fetch(abc)
-    search_bots = []
-    # TOP VOTED BOTS
-    for bot in fetch:
-        bot_info = await get_bot(bot["bot_id"])
-        if bot_info:
-            search_bots.append({"bot": bot, "avatar": bot_info["avatar"], "username": bot_info["username"], "votes": await human_format(bot["votes"]), "servers": await human_format(bot["servers"]), "description": bot["description"]})
-
-        # TAGS
+    search_bots = await parse_bot_list(fetch)
+    # TAGS
     tags_fixed = {}
     for tag in TAGS.keys():
         tag_icon = TAGS[tag]

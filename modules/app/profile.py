@@ -51,7 +51,7 @@ async def profile_of_user(request: Request, userid: int, personal: bool):
     for bot in fetch:
         bot_info = await get_bot(bot["bot_id"])
         if bot_info:
-            user_bots.append({"bot": bot, "avatar": bot_info["avatar"], "username": bot_info["username"], "votes": await human_format(bot["votes"]), "servers": await human_format(bot["servers"]), "description": bot["description"]})
+            user_bots.append({"bot": bot, "avatar": bot_info["avatar"], "username": bot_info["username"], "votes": human_format(bot["votes"]), "servers": human_format(bot["servers"]), "description": bot["description"]})
     user_info = await db.fetchrow("SELECT badges, description, certified FROM users WHERE userid = $1", userid)
     if user_info is None:
         return RedirectResponse("/profile/404")
