@@ -82,7 +82,7 @@ async def add_bot_api(
         extra_owners = None
     else:
         try:
-            extra_owners = [int(id) for id in extra_owners.split(",")]
+            extra_owners = [int(id.replace(" ", "")) for id in extra_owners.split(",")]
         except:
             return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "One of your extra owners doesn't exist or you haven't comma-seperated them.", "mode": "add"})
     bt.add_task(add_bot_bt, request, bot_id, prefix, library, website, banner, support, long_description, description, selected_tags, extra_owners, creation, bot_object, invite, features, html_long_description)
@@ -209,7 +209,7 @@ async def bot_edit_api(
         extra_owners = None
     else:
         try:
-            extra_owners = [int(id) for id in extra_owners.split(",")]
+            extra_owners = [int(id.replace(" ", "")) for id in extra_owners.split(",")]
         except:
             return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "One of your extra owners is invalid", "mode": "edit"})
     print(features)

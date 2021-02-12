@@ -37,7 +37,7 @@
     <div class="d-flex justify-content-center align-items-center flex-wrap" style="width: 80%;margin: 0 auto;max-width: 1000px;">
         <div class="text-nowrap d-flex justify-content-xl-center align-items-xl-center" style="line-height: 2;border-radius: 25px;width: auto;margin: 10px;font-size: 11px;">
 	{% if not bot.banned and not maint[0] %}
-        <form method = "POST" action = "/bot/{{bot.bot_id}}/vote">
+        <form method = "POST" action = "/bot/{{bot_id}}/vote">
             {{form.csrf_token}}
             <button type="submit" class="btn btn-outline-light" style="color: white !important;"><i class="fas fa-thumbs-up"></i>{{bot.votes}}</button>
         </form>
@@ -63,12 +63,12 @@
        {% endif %}
        {% if not bot.banned%}
         <div class="text-nowrap d-flex justify-content-xl-center align-items-xl-center" style="line-height: 2;border-radius: 25px;width: auto;margin: 10px;font-size: 11px;">
-	<a target=”_blank” href="/bot/{{bot.bot_id}}/invite"><button class="btn btn-outline-light" style="color: white !important;"><i class="fas"></i>Invite</button></a>
+	<a target=”_blank” href="/bot/{{bot_id}}/invite"><button class="btn btn-outline-light" style="color: white !important;"><i class="fas"></i>Invite</button></a>
         </div>
 	{% endif %}
         {% if bot_admin %}
         <div class="text-nowrap d-flex justify-content-xl-center align-items-xl-center" style="line-height: 2;border-radius: 25px;width: auto;margin: 10px;font-size: 11px;">
-        <a href="/bot/{{bot.bot_id}}/edit"><button class="btn btn-outline-light" style="color: white !important;"><i class="fas"></i>Edit</button></a>
+        <a href="/bot/{{bot_id}}/edit"><button class="btn btn-outline-light" style="color: white !important;"><i class="fas"></i>Edit</button></a>
         </div>
         {% endif %}
     </div>
@@ -96,7 +96,7 @@
         </div>
     {% endfor %}
         {% if staff[0] and not bot.banned %}
-        <form style="text-align: center; margin: 10px;" method="POST" action="/bot/ban/{{bot.bot_id}}">
+        <form style="text-align: center; margin: 10px;" method="POST" action="/bot/ban/{{bot_id}}">
                 {{form.csrf_token}}
 		<input type="hidden" name="ban" value="1"/>
 		<p style="font-weight: bold;color: rgba(255,255,255,0.87); text-align: center;">If this bot is misbehaving...</p>
@@ -105,14 +105,14 @@
         </form>
         {% endif %}
         {% if staff[0] and bot.banned %}
-        <form style="text-align: center; margin: 10px;" method="POST" action="/bot/ban/{{bot.bot_id}}">
+        <form style="text-align: center; margin: 10px;" method="POST" action="/bot/ban/{{bot_id}}">
                 {{form.csrf_token}}
                 <p style="font-weight: bold;color: rgba(255,255,255,0.87); text-align: center;">If this bot has learnt its lesson...</p>
                 <input type="hidden" name="ban" value="0"/>
                 <button type="submit" class="btn btn-outline-dark" style="background-color: red; color: white !important;"><i class="fas"></i>Unban</button>
         </form>
         {% endif %}
-    <iframe id="myIframe" src="/bot/{{bot.bot_id}}/description" style="font-size: 18px; width: 90%;height: 300px;color: rgba(255,255,255,0.87)!important;margin: 0 5%; border: none" scrolling="no" onload="resizeIframe(this)"></iframe>
+    <iframe id="myIframe" src="/bot/{{bot_id}}/description" style="font-size: 18px; width: 90%;height: 300px;color: rgba(255,255,255,0.87)!important;margin: 0 5%; border: none" scrolling="no" onload="resizeIframe(this)"></iframe>
 <div class="modal fade" id="botInfo" tabindex="-1"  aria-labelledby="{{badge_id}}Label" aria-hidden="true">
 	<div class="modal-dialog modal-dialog-centered">
 		<div class="modal-content">
@@ -127,7 +127,7 @@
 				<strong>Servers:</strong> {{bot.servers}}<br/>
 				<strong>Shards:</strong> {{bot.shards}}</br/>
 				<strong>Amount Of Invites:</strong> {{bot.invite_amount}}<br/>
-				<strong>Vote Page:</strong> <a href="/bot/{{bot.bot_id}}/vote">Share this with your friends!</a><br/>
+				<strong>Vote Page:</strong> <a href="/bot/{{bot_id}}/vote">Share this with your friends!</a><br/>
 				{% if bot.features %}
 				<strong>Features: </strong>{% for f in bot.features %}<a href="/feature/{{f}}">{{f.replace("_", " ").title()}}</a>{% if loop.index == bot.fleo - 1%} and {% elif loop.index != bot.fleo%}, {%endif%}{% endfor %}
 				{% endif %}<br/><br/>
@@ -136,18 +136,18 @@
 			{% if staff[0] %}
 			<div class="modal-footer">
 				{% if review %}
-				<form method="POST" action="/admin/review/{{bot.bot_id}}">
+				<form method="POST" action="/admin/review/{{bot_id}}">
 					{{ form.csrf_token }}
 					<input hidden name="accept" value="true"></input>
 					<button class="btn btn-primary" type="submit" style="margin: 0 15px;">Accept</button>
 				</form>
-                                <form method="POST" action="/admin/review/{{bot.bot_id}}">
+                                <form method="POST" action="/admin/review/{{bot_id}}">
                                         {{ form.csrf_token }}
                                         <input hidden name="accept" value="false"></input>
                                         <button class="btn btn-primary" type="submit" style="margin: 0 15px;">Deny</button>
                                 </form>
 				{% elif not bot.queue %}
-                                <form method="POST" action="/admin/review/{{bot.bot_id}}">
+                                <form method="POST" action="/admin/review/{{bot_id}}">
                                         {{ form.csrf_token }}
                                         <input hidden name="accept" value="unverify"></input>
                                         <button class="btn btn-primary" type="submit" style="margin: 0 15px;">Unverify</button>

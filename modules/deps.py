@@ -340,7 +340,14 @@ async def render_bot(request: Request, bot_id: int, review: bool, widget: bool):
     else:
         features = bot["features"]
     if bot_info:
-        bot_obj = {"bot": bot, "bot_id": bot["bot_id"], "avatar": bot_info["avatar"], "website": bot["website"], "username": bot_info["username"], "votes": human_format(bot["votes"]), "servers": human_format(bot["servers"]), "description": bot["description"], "support": bot['discord'], "invite_amount": bot["invite_amount"], "tags": bot["tags"], "library": bot['library'], "banner": banner, "shards": human_format(bot["shard_count"]), "owner": bot["owner"], "owner_pretty": await get_user(bot["owner"]), "banned": bot['banned'], "disabled": bot['disabled'], "prefix": bot["prefix"], "github": bot['github'], "extra_owners": ed, "leo": len(ed), "queue": bot["queue"], "features": features, "fleo": len(features)}
+        bot = dict(bot)
+        votes = bot["votes"]
+        servers = bot["servers"]
+        shard_count = bot["shard_count"]
+        del bot["votes"]
+        del bot["servers"]
+        del bot["shard_count"]
+        bot_obj = {"bot_id": bot["bot_id"], "avatar": bot_info["avatar"], "website": bot["website"], "username": bot_info["username"], "votes": human_format(votes), "servers": human_format(servers), "description": bot["description"], "support": bot['discord'], "invite_amount": bot["invite_amount"], "tags": bot["tags"], "library": bot['library'], "banner": banner, "shards": human_format(shard_count), "owner": bot["owner"], "owner_pretty": await get_user(bot["owner"]), "banned": bot['banned'], "disabled": bot['disabled'], "prefix": bot["prefix"], "github": bot['github'], "extra_owners": ed, "leo": len(ed), "queue": bot["queue"], "features": features, "fleo": len(features)}
     else:
         return templates.e(request, "Bot Not Found")
     _tags_fixed_bot = {tag: tags_fixed[tag] for tag in tags_fixed if tag in bot["tags"]}
@@ -352,7 +359,7 @@ async def render_bot(request: Request, bot_id: int, review: bool, widget: bool):
     else:
         f = "bot.html"
         widget = False
-    return templates.TemplateResponse(f, {"request": request, "username": request.session.get("username", False), "bot": bot_obj, "tags_fixed": _tags_fixed_bot, "form": form, "avatar": request.session.get("avatar"), "promos": promos, "maint": maint, "bot_admin": bot_admin, "review": review, "guild": reviewing_server, "widget": widget, "pubav": upubav})
+    return templates.TemplateResponse(f, {"request": request, "bot_id": bot_id, "bot": bot_obj, "tags_fixed": _tags_fixed_bot, "form": form, "avatar": request.session.get("avatar"), "promos": promos, "maint": maint, "bot_admin": bot_admin, "review": review, "guild": reviewing_server, "widget": widget, "pubav": upubav})
 
 async def parse_bot_list(fetch: List[asyncpg.Record]) -> list:
     lst = []
