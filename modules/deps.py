@@ -366,7 +366,6 @@ async def parse_bot_list(fetch: List[asyncpg.Record]) -> list:
     lst = []
     for bot in fetch:
         bot_info = await get_bot(bot["bot_id"])
-        print(human_format(bot["servers"]))
         if bot_info:
             bot = dict(bot)
             votes = bot["votes"]
@@ -391,10 +390,11 @@ async def render_index(request: Request, api: bool):
         tag_icon = TAGS[tag]
         new_tag = tag.replace("_", " ")
         tags_fixed.update({tag: [new_tag.capitalize(), tag_icon]})
+    base_json = {"tags_fixed": tags_fixed, "top_voted": top_voted, "new_bots": new_bots, "certified_bots": certified_bots, "roll_api": "/api/bots/random"}
     if not api:
-        return templates.TemplateResponse("index.html", {"request": request, "username": request.session.get("username", False), "top_voted": top_voted, "new_bots": new_bots, "certified_bots": certified_bots, "tags_fixed": tags_fixed, "roll_api": "/api/bots/random"})
+        return templates.TemplateResponse("index.html", {"request": request} | base_json)
     else:
-        return {"tags": tags_fixed, "top_voted": top_voted, "new_bots": new_bots, "certified_bots": certified_bots, "roll_api": "/api/bots/random"}
+        return base_json
 
 async def render_search(request: Request, q: str, api: bool):
     if q == "":
