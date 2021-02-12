@@ -17,20 +17,10 @@ async def tags(request: Request, tag: str):
         return RedirectResponse("/")
     fetch = await db.fetch(f"SELECT description, banner,certified,votes,servers,bot_id,tags,invite FROM bots, unnest(tags) a WHERE  lower(a) = '{tag}' AND queue = false and banned = false and disabled = false ORDER BY votes DESC LIMIT 12")
     search_bots = await parse_bot_list(fetch)
-    # TAGS
-    tags_fixed = {}
-    for tag in TAGS.keys():
-        tag_icon = TAGS[tag]
-        new_tag = tag.replace("_", " ")
-        tags_fixed.update({tag: [new_tag.capitalize(), tag_icon]})
     return templates.TemplateResponse("search.html", {"request": request, "username": request.session.get("username", False), "search_bots": search_bots, "tags_fixed": tags_fixed, "avatar": request.session.get("avatar"), "profile_search": False})
 
 @router.get("/profile")
 async def profile_search(request: Request, q: Optional[str] = None):
-    tags_fixed = {}
-    for tag in TAGS:
-        new_tag = tag.replace("_", " ")
-        tags_fixed.update({tag: new_tag.capitalize()})
     if q is None:
         query = ""
     else:

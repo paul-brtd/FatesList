@@ -343,15 +343,7 @@ async def render_bot(request: Request, bot_id: int, review: bool, widget: bool):
         bot_obj = {"bot": bot, "bot_id": bot["bot_id"], "avatar": bot_info["avatar"], "website": bot["website"], "username": bot_info["username"], "votes": human_format(bot["votes"]), "servers": human_format(bot["servers"]), "description": bot["description"], "support": bot['discord'], "invite_amount": bot["invite_amount"], "tags": bot["tags"], "library": bot['library'], "banner": banner, "shards": human_format(bot["shard_count"]), "owner": bot["owner"], "owner_pretty": await get_user(bot["owner"]), "banned": bot['banned'], "disabled": bot['disabled'], "prefix": bot["prefix"], "github": bot['github'], "extra_owners": ed, "leo": len(ed), "queue": bot["queue"], "features": features, "fleo": len(features)}
     else:
         return templates.e(request, "Bot Not Found")
-    # TAGS
-    tags_fixed = {}
-    for tag in bot["tags"]:
-        try:
-            tag_icon = TAGS[tag]
-            new_tag = tag.replace("_", " ")
-            tags_fixed.update({tag: [new_tag.capitalize(), tag_icon]})
-        except:
-            pass
+    _tags_fixed_bot = {tag: tags_fixed[tag] for tag in tags_fixed if tag in bot["tags"]}
     form = await Form.from_formdata(request)
     ws_events.append((bot_id, {"type": "view", "event_id": None, "event": "view", "context": "user=0::hidden=1:widget=" + str(widget)}))
     if widget:
@@ -360,7 +352,7 @@ async def render_bot(request: Request, bot_id: int, review: bool, widget: bool):
     else:
         f = "bot.html"
         widget = False
-    return templates.TemplateResponse(f, {"request": request, "username": request.session.get("username", False), "bot": bot_obj, "tags_fixed": tags_fixed, "form": form, "avatar": request.session.get("avatar"), "promos": promos, "maint": maint, "bot_admin": bot_admin, "review": review, "guild": reviewing_server, "widget": widget, "pubav": upubav})
+    return templates.TemplateResponse(f, {"request": request, "username": request.session.get("username", False), "bot": bot_obj, "tags_fixed": _tags_fixed_bot, "form": form, "avatar": request.session.get("avatar"), "promos": promos, "maint": maint, "bot_admin": bot_admin, "review": review, "guild": reviewing_server, "widget": widget, "pubav": upubav})
 
 async def parse_bot_list(fetch: List[asyncpg.Record]) -> list:
     lst = []
@@ -384,12 +376,6 @@ async def render_index(request: Request, api: bool):
     top_voted = await parse_bot_list((await do_index_query("ORDER BY votes")))
     new_bots = await parse_bot_list((await do_index_query("ORDER BY created_at"))) # and certified = true ORDER BY votes
     certified_bots = await parse_bot_list((await do_index_query("and certified = true ORDER BY votes")))
-    # TAGS
-    tags_fixed = {}
-    for tag in TAGS.keys():
-        tag_icon = TAGS[tag]
-        new_tag = tag.replace("_", " ")
-        tags_fixed.update({tag: [new_tag.capitalize(), tag_icon]})
     base_json = {"tags_fixed": tags_fixed, "top_voted": top_voted, "new_bots": new_bots, "certified_bots": certified_bots, "roll_api": "/api/bots/random"}
     if not api:
         return templates.TemplateResponse("index.html", {"request": request} | base_json)
@@ -425,12 +411,6 @@ async def render_search(request: Request, q: str, api: bool):
         abc = ("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE queue = false and banned = false and disabled = false and bot_id IN (" + data + ") ORDER BY votes DESC LIMIT 12")
         fetch = await db.fetch(abc)
     search_bots = await parse_bot_list(fetch)
-    # TAGS
-    tags_fixed = {}
-    for tag in TAGS.keys():
-        tag_icon = TAGS[tag]
-        new_tag = tag.replace("_", " ")
-        tags_fixed.update({tag: [new_tag.capitalize(), tag_icon]})
     if not api:
         return templates.TemplateResponse("search.html", {"request": request, "search_bots": search_bots, "tags_fixed": tags_fixed, "query": q, "profile_search": False})
     else:

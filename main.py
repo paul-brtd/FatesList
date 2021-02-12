@@ -160,8 +160,6 @@ async def close():
     redis_db.close()
     await redis_db.wait_closed()
 
-
-
 @client.event
 async def on_ready():
     print("UP ON DISCORD")
@@ -194,3 +192,10 @@ async def deny(ctx, bot: discord.Member, reason: Optional[str] = "There was no r
         await ctx.send("MAGA'd this bot :)")
     else:
         await ctx.send("You don't have the permission to do this")
+
+# Tag calculation
+builtins.tags_fixed = {}
+for tag in TAGS.keys():
+    tag_icon = TAGS[tag]
+    new_tag = tag.replace("_", " ")
+    builtins.tags_fixed.update({tag: [new_tag.capitalize(), tag_icon]})
