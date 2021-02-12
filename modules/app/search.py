@@ -34,8 +34,7 @@ async def profile_search(request: Request, q: Optional[str] = None):
         profiles = "SELECT userid, description, certified FROM users" # Base profile
         if query != "":
             profiles = profiles + (" WHERE (username ilike '%" + re.sub(r'\W+|_', ' ', query) + "%'" + es + ")")
-        print(profiles)
-        profiles = await db.fetch(profiles)
+        profiles = await db.fetch(profiles + " LIMIT 12")
         print(profiles)
     else:
         profiles = []

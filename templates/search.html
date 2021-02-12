@@ -53,8 +53,8 @@
                     <h4 class="text-nowrap text-break text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;white-space: nowrap;text-overflow: ellipsis;overflow: hidden; font-size: 21px; margin-top: 35px">{{profile.username}}</h4>
                 </div>
             </div>
-	    <h6 style="font-size: 16px;font-weight: bold;color: rgba(255,255,255,0.87);opacity: 0.63;width: 90%;text-align: center; height:105px"><strong style="overflow-wrap: anywhere;">{% if not profile.description %}No Description Is Available{%else%}{{profile.description}}{%endif%}</strong></h6>
-            <div style="width: 80%; text-align: center; margin-left: 20px !important; "><a href="/profile/{{profile.user.userid}}" class="btn btn-primary btn-block" style="width: 45%;margin-right: 5%;background: #7289DA;border-radius: 25px;font-weight: bold;">View</a>
+	    <h6 style="font-size: 16px;font-weight: bold;color: rgba(255,255,255,0.87);opacity: 0.63;width: 90%;margin: 0 5%;height:105px"><strong style="overflow-wrap: anywhere;">{% if not profile.description %}No Description Is Available{%else%}{{profile.description}}{%endif%}</strong></h6>
+            <div style="text-align: center;"><a href="/profile/{{profile.user.userid}}" class="btn btn-outline-light" style="border-radius: 25px;font-weight: bold;">View</a>
             </div>
 	   </div>
     {% endfor %}
