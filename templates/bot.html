@@ -9,6 +9,7 @@
   <style>
 	.bot-buttons-all {margin-right: 15px !important;}
 	{{bot.css.replace("alert", "").replace("alert-danger", "").replace("form", "").replace("modal-footer", "")}}
+	.long-desc-link {color: white !important; opacity: 0.63 !important;}
   </style>
 {% endblock %}
 {% block content %}
@@ -108,7 +109,7 @@
                 <button type="submit" class="btn btn-outline-dark" style="background-color: red; color: white !important;"><i class="fas"></i>Unban</button>
         </form>
         {% endif %}
-	<div id="bot-long-description holder" style="color: white; text-align: left; margin-left: 5%; margin-right: 5%; margin-top: 3px;">{{bot.long_description|safe}}</div>
+	<div id="bot-long-description holder" style="color: white; text-align: left; margin-left: 5%; margin-right: 5%; margin-top: 3px;">{{bot.long_description.replace("<a", "<a class='long-desc-link'")|safe}}</div>
 <div class="modal fade" id="bot-info-modal" tabindex="-1"  aria-labelledby="{{badge_id}}Label" aria-hidden="true">
 	<div class="modal-dialog modal-dialog-centered">
 		<div class="modal-content">
