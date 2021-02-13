@@ -7,7 +7,8 @@
     }
   </script>
   <style>
-	{{bot.css.replace("alert", "").replace("alert-danger", "").replace("form", "").replace("modal-footer", "").replace("head", "")}}
+	.bot-buttons-all {margin-right: 15px !important;}
+	{{bot.css.replace("alert", "").replace("alert-danger", "").replace("form", "").replace("modal-footer", "")}}
   </style>
 {% endblock %}
 
@@ -30,7 +31,7 @@
 	<div class="alert alert-info" style="text-align: center; justify-content: center; color: white !important;" role="alert">
 	<strong>You are in review mode. Test the bot by inviting it to the staff server by clicking the Invite button and choosing the Testing Server. Once you are done reviewing the bot, click the bots icon to approve/deny it</strong></div>
 	{% endif %}
-	<p style="color: rgba(255,255,255,0.87);">Click the bots icon for more information such as the prefix, owners etc.</p>
+	<p id="bot-click-info" style="color: rgba(255,255,255,0.87);">Click the bots icon for more information such as the prefix, owners etc.</p>
 	{% if maint[0] %}
 	    <div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
 	    <strong>{{maint[1]["reason"]}}</strong>
@@ -39,41 +40,29 @@
         <h3 style="margin 0 auto; color: white;font-weight: bold; font-size: 20px;" id="bot-description">{{bot.description}}</h3>
     </div>
     <div class="d-flex justify-content-center align-items-center flex-wrap" style="width: 80%;margin: 0 auto;max-width: 1000px;" id="bot-buttons">
-        <div class="text-nowrap d-flex justify-content-xl-center align-items-xl-center" style="line-height: 2;border-radius: 25px;width: auto;margin: 10px;font-size: 11px;">
 	{% if not bot.banned and not maint[0] %}
         <form method = "POST" action = "/bot/{{bot_id}}/vote">
             {{form.csrf_token}}
-            <button type="submit" class="btn btn-outline-light" style="color: white !important;"><i class="fas fa-thumbs-up"></i>{{bot.votes}}</button>
+            <button type="submit" class="btn btn-outline-light bot-buttons-all" id="bot-buttons-vote"><i class="fas fa-thumbs-up"></i>{{bot.votes}}</button>
         </form>
 	{% endif %}
-        </div>
         {% if not bot.support or bot.support == "" or bot.support == "None" %}
         {% else %}
-        <div class="text-nowrap d-flex justify-content-xl-center align-items-xl-center" style="line-height: 2;border-radius: 25px;width: auto;margin: 10px;font-size: 11px;">
-        <a target=”_blank” href="{{bot.support}}"><button class="btn btn-outline-light" style="color: white !important;"><i class="fas"></i>Support</button></a>
-        </div>
+	<a target=”_blank” href="{{bot.support}}"><button class="btn btn-outline-light bot-buttons-all" id="bot-buttons-support">Support</button></a>
        {% endif %}
         {% if not bot.github or bot.github == "" or bot.github == "None" %}
         {% else %}
-        <div class="text-nowrap d-flex justify-content-xl-center align-items-xl-center" style="line-height: 2;border-radius: 25px;width: auto;margin: 10px;font-size: 11px;">
-        <a target=”_blank” href="{{bot.github}}"><button class="btn btn-outline-light" style="color: white !important;"><i class="fas"></i>Github</button></a>
-        </div>
+	<a target=”_blank” href="{{bot.github}}"><button class="btn btn-outline-light bot-buttons-all" id="bot-buttons-github">Github</button></a>
        {% endif %}
         {% if not bot.website or bot.website == "" or bot.website == "None" %}
         {% else %}
-        <div class="text-nowrap d-flex justify-content-xl-center align-items-xl-center" style="line-height: 2;border-radius: 25px;width: auto;margin: 10px;font-size: 11px;">
-        <a target=”_blank” href="{{bot.website}}"<button class="btn btn-outline-light" style="color: white !important;"><i class="fas"></i>Website</button></a>
-        </div>
+	<a target=”_blank” href="{{bot.website}}"<button class="btn btn-outline-light bot-buttons-all" id="bot-buttons-website">Website</button></a>
        {% endif %}
        {% if not bot.banned%}
-        <div class="text-nowrap d-flex justify-content-xl-center align-items-xl-center" style="line-height: 2;border-radius: 25px;width: auto;margin: 10px;font-size: 11px;">
-	<a target=”_blank” href="/bot/{{bot_id}}/invite"><button class="btn btn-outline-light" style="color: white !important;"><i class="fas"></i>Invite</button></a>
-        </div>
+       <a target=”_blank” href="/bot/{{bot_id}}/invite"><button class="btn btn-outline-light bot-buttons-all" id="bot-buttons-invite">Invite</button></a>
 	{% endif %}
         {% if bot_admin %}
-        <div class="text-nowrap d-flex justify-content-xl-center align-items-xl-center" style="line-height: 2;border-radius: 25px;width: auto;margin: 10px;font-size: 11px;">
-        <a href="/bot/{{bot_id}}/edit"><button class="btn btn-outline-light" style="color: white !important;"><i class="fas"></i>Edit</button></a>
-        </div>
+	<a href="/bot/{{bot_id}}/edit"><button class="btn btn-outline-light bot-buttons-all" id="bot-buttons-edit">Edit</button></a>
         {% endif %}
     </div>
     <div style="inline-block" id="bot-tags">
