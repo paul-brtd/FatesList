@@ -6,13 +6,16 @@
       obj.style.height = obj.contentWindow.document.documentElement.scrollHeight + 100 + 'px';
     }
   </script>
+  <style>
+	{{bot.css.replace("body", "").replace("alert", "").replace("alert-danger", "").replace("form", "")}}
+  </style>
 {% endblock %}
 
 {% block content %}
-    <div class="d-flex d-xl-flex flex-column justify-content-center align-items-center justify-content-xl-center align-items-xl-center">
+    <div class="d-flex d-xl-flex flex-column justify-content-center align-items-center justify-content-xl-center align-items-xl-center" id="bot-content">
 
-	<a href="javascript:void(0)"><img style="border-radius: 50%; width: 120px;" src="{{bot.avatar}}" onclick="modalShow('#botInfo')"></a>
-        <h3 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;">{{bot.username}}</h3>
+	<a href="javascript:void(0)"><img style="border-radius: 50%; width: 120px;" src="{{bot.avatar}}" onclick="modalShow('#bot-info-modal')" id="bot-avatar"></a>
+	<h3 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;" id="bot-username">{{bot.username}}</h3>
 	{% if bot.banned %}
         <div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
         <strong>This bot has been BANNED or DENIED from this bot list for violating our rules or being a low-quality bot. Please do not invite it.</strong>
@@ -32,9 +35,9 @@
 	    <strong>{{maint[1]["reason"]}}</strong>
         </div>
         {% endif %}
-        <h3 style="margin 0 auto; color: white;font-weight: bold; font-size: 20px;">{{bot.description}}</h3>
+        <h3 style="margin 0 auto; color: white;font-weight: bold; font-size: 20px;" id="bot-description">{{bot.description}}</h3>
     </div>
-    <div class="d-flex justify-content-center align-items-center flex-wrap" style="width: 80%;margin: 0 auto;max-width: 1000px;">
+    <div class="d-flex justify-content-center align-items-center flex-wrap" style="width: 80%;margin: 0 auto;max-width: 1000px;" id="bot-buttons">
         <div class="text-nowrap d-flex justify-content-xl-center align-items-xl-center" style="line-height: 2;border-radius: 25px;width: auto;margin: 10px;font-size: 11px;">
 	{% if not bot.banned and not maint[0] %}
         <form method = "POST" action = "/bot/{{bot_id}}/vote">
@@ -72,14 +75,14 @@
         </div>
         {% endif %}
     </div>
-    <div style="inline-block">
-    <h6 style="font-weight: bold;color: rgba(255,255,255,0.87); text-align: center;">Tags</h6>
+    <div style="inline-block" id="bot-tags">
+    <h6 style="font-weight: bold;color: rgba(255,255,255,0.87); text-align: center;" id="bot-tags-header">Tags</h6>
     <hr style="width: 90%; color: white; background: white;"/>
-    <div style="text-align: center;">
-        <div class="d-flex flex-wrap justify-content-center align-items-center" style="width: 97%;margin: 0 auto;">
+    <div style="text-align: center;" id="bot-tags-container">
+        <div class="d-flex flex-wrap justify-content-center align-items-center" style="width: 97%;margin: 0 auto;" id="bot-tags-container-inner">
             {% for tag,new_tag in tags_fixed.items() %}
-               <div>
-                 <button class="text-nowrap btn d-flex justify-content-center align-items-center {{new_tag[1][1]}}" style="color: white;border-radius: 10px; margin: 6px;" onclick="location.href='/search/tags?tag={{tag}}'" data-toggle="tooltip" data-placement="bottom" title="{{new_tag[0]}}"><i class="{{new_tag[1][0]}}" aria-hidden="true"></i><span style="margin-left: 3px; font-size: 13px;"><strong>{{new_tag[0]}}</strong></span></button>
+	    <div id="bot-tags-{{tag}}">
+		    <button id="bot-tags-{{tag}}-button" class="text-nowrap btn d-flex justify-content-center align-items-center {{new_tag[1][1]}}" style="color: white;border-radius: 10px; margin: 6px;" onclick="location.href='/search/tags?tag={{tag}}'" data-toggle="tooltip" data-placement="bottom" title="{{new_tag[0]}}"><i class="{{new_tag[1][0]}}" aria-hidden="true"></i><span style="margin-left: 3px; font-size: 13px;"><strong>{{new_tag[0]}}</strong></span></button>
                 </div>
             {% endfor %}
 	</div>
@@ -87,14 +90,18 @@
     </div>
     {% if promos != [] %}
     <hr style="margin-top: 20px; font-size: 20px;border-top-width: 1px;border-top-color: #eee;width: 90%;">
-    <h5 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;margin-top: -13px;margin-bottom: 30px;">Special Promotions/Events</h5>
+    <div id="bot-promo">
+    <h5 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;margin-top: -13px;margin-bottom: 30px;" id="bot-promo-header">Special Promotions/Events</h5>
     {% endif %}
     {% for promo in promos %}
-        <div class="alert alert-primary" role="alert" style='width: 90%; font-weight: bold; margin: 0 auto; height: 86%; padding: 5px; {% if not promo.css %}background-color: #111112; {%endif%} {{promo.css|safe}} margin-bottom: 3px;'>
-        <p style="color: white; margin-bottom: 3px; margin-left: 2px; {{promo.css|safe}}">{{promo.title}}</p>
-	<p style="color: white; {{promo.css|safe}}">{{promo.info|safe}}</p>
+    <div class="alert alert-primary" id="bot-promo-container-{{loop.index}}" class="bot-promo-container" role="alert" style='width: 90%; font-weight: bold; margin: 0 auto; height: 86%; padding: 5px; {% if not promo.css %}background-color: #111112; {%endif%} {{promo.css}} margin-bottom: 3px;'>
+        <p style="color: white; margin-bottom: 3px; margin-left: 2px; {{promo.css}}">{{promo.title}}</p>
+	<p style="color: white; {{promo.css}}">{{promo.info}}</p>
         </div>
     {% endfor %}
+    {% if promos != [] %}
+    </div>
+    {% endif %}
         {% if staff[0] and not bot.banned %}
         <form style="text-align: center; margin: 10px;" method="POST" action="/bot/ban/{{bot_id}}">
                 {{form.csrf_token}}
@@ -112,8 +119,8 @@
                 <button type="submit" class="btn btn-outline-dark" style="background-color: red; color: white !important;"><i class="fas"></i>Unban</button>
         </form>
         {% endif %}
-    <iframe id="myIframe" src="/bot/{{bot_id}}/description" style="font-size: 18px; width: 90%;height: 300px;color: rgba(255,255,255,0.87)!important;margin: 0 5%; border: none" scrolling="no" onload="resizeIframe(this)"></iframe>
-<div class="modal fade" id="botInfo" tabindex="-1"  aria-labelledby="{{badge_id}}Label" aria-hidden="true">
+    <iframe id="bot-long-description" src="/bot/{{bot_id}}/description" style="font-size: 18px; width: 90%;height: 300px;color: rgba(255,255,255,0.87)!important;margin: 0 5%; border: none" scrolling="no" onload="resizeIframe(this)"></iframe>
+<div class="modal fade" id="bot-info-modal" tabindex="-1"  aria-labelledby="{{badge_id}}Label" aria-hidden="true">
 	<div class="modal-dialog modal-dialog-centered">
 		<div class="modal-content">
 			<div class="modal-header">

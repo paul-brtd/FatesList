@@ -178,8 +178,11 @@ async def set_stats(*, bot_id: int, guild_count: int, shard_count: int, user_cou
     if user_count is not None:
         await db.execute("UPDATE bots SET user_count = $1 WHERE bot_id = $2", user_count, bot_id)
 
-async def add_promotion(bot_id: int, title: str, info: str):
-    return await db.execute("INSERT INTO promotions (bot_id, title, info) VALUES ($1, $2, $3)", bot_id, title, info)
+async def add_promotion(bot_id: int, title: str, info: str, css: str):
+    if css is not None:
+        css = css.replace("</style", "").replace("<script", "")
+    info = info.replace("</style", "").replace("<script", "")
+    return await db.execute("INSERT INTO promotions (bot_id, title, info, css) VALUES ($1, $2, $3, $4)", bot_id, title, info, css)
 
 async def add_event(bot_id: int, event: str, context: dict, *, send_event = True):
     if type(context) == dict:
@@ -297,7 +300,7 @@ async def vote_bot(uid: int, bot_id: int, username, autovote: bool) -> Optional[
 async def render_bot(request: Request, bot_id: int, review: bool, widget: bool):
     guild = client.get_guild(reviewing_server)
     print("Begin rendering bots")
-    bot = await db.fetchrow("SELECT prefix, shard_count, queue, description, bot_library AS library, tags, banner, website, certified, votes, servers, bot_id, discord, owner, extra_owners, banner, banned, disabled, github, features, invite_amount FROM bots WHERE bot_id = $1 ORDER BY votes", bot_id)
+    bot = await db.fetchrow("SELECT prefix, shard_count, queue, description, bot_library AS library, tags, banner, website, certified, votes, servers, bot_id, discord, owner, extra_owners, banner, banned, disabled, github, features, invite_amount, css FROM bots WHERE bot_id = $1", bot_id)
     print("Got here")
     if bot is None:
         return templates.e(request, "Bot Not Found")
@@ -330,7 +333,6 @@ async def render_bot(request: Request, bot_id: int, review: bool, widget: bool):
             banner = "none"
     except:
         banner = "none"
-
     bot_info = await get_bot(bot["bot_id"])
     promos = await get_promotions(bot["bot_id"])
     maint = await in_maint(bot["bot_id"])
@@ -341,13 +343,7 @@ async def render_bot(request: Request, bot_id: int, review: bool, widget: bool):
         features = bot["features"]
     if bot_info:
         bot = dict(bot)
-        votes = bot["votes"]
-        servers = bot["servers"]
-        shard_count = bot["shard_count"]
-        del bot["votes"]
-        del bot["servers"]
-        del bot["shard_count"]
-        bot_obj = {"bot_id": bot["bot_id"], "avatar": bot_info["avatar"], "website": bot["website"], "username": bot_info["username"], "votes": human_format(votes), "servers": human_format(servers), "description": bot["description"], "support": bot['discord'], "invite_amount": bot["invite_amount"], "tags": bot["tags"], "library": bot['library'], "banner": banner, "shards": human_format(shard_count), "owner": bot["owner"], "owner_pretty": await get_user(bot["owner"]), "banned": bot['banned'], "disabled": bot['disabled'], "prefix": bot["prefix"], "github": bot['github'], "extra_owners": ed, "leo": len(ed), "queue": bot["queue"], "features": features, "fleo": len(features)}
+        bot_obj = {"bot_id": bot["bot_id"], "avatar": bot_info["avatar"], "website": bot["website"], "username": bot_info["username"], "votes": human_format(bot["votes"]), "servers": human_format(bot["servers"]), "description": bot["description"], "support": bot['discord'], "invite_amount": bot["invite_amount"], "tags": bot["tags"], "library": bot['library'], "banner": banner, "shards": human_format(bot["shard_count"]), "owner": bot["owner"], "owner_pretty": await get_user(bot["owner"]), "banned": bot['banned'], "disabled": bot['disabled'], "prefix": bot["prefix"], "github": bot['github'], "extra_owners": ed, "leo": len(ed), "queue": bot["queue"], "features": features, "fleo": len(features), "css": bot["css"]}
     else:
         return templates.e(request, "Bot Not Found")
     _tags_fixed_bot = {tag: tags_fixed[tag] for tag in tags_fixed if tag in bot["tags"]}

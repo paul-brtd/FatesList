@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+</head>
+<body>
+<pre>
+
+CSS Docs Reference
+
+#bot-content -> The entire div your bot page is in
+#bot-avatar -> The bots avatar. This is an img tag
+#bot-username -> The bots username. This is a h3
+
+Not allowed to edit
+.alert, .alert-danger - We will replace this with "" so dont try and we will ban your bot if you try to abuse this
+
+Description
+
+#bot-description -> Your bots short description. This is an h3 tag
+#bot-buttons -> The Edit, Invite, Report etc buttons. If you want to change an individual button, .bot-buttons-button
+Not allowed to edit
+form - We will replace this with "" so dont try and we will ban your bot if you try to abuse this
+
+Tags
+
+#bot-tags -> The div containing all your tags and the header
+#bot-tags-header -> The "Tags" part of the tags. This is a h6
+#bot-tags-container -> The div that contains just the tags, not the header
+#bot-tags-container-inner -> The div inside bot-tags-container to help position the tags
+#bot-tags-TAG -> This is the div for the TAG (replace TAG with the tag)
+bot-tags-TAG-button -> The actual TAG (replace TAG with the tag). This is a button tag
+
+Promos
+
+#bot-promo -> This is the div containing all promotions
+#bot-promo-header -> This is the header of all the promotions (the Special Promotions/Events)
+.bot-promo-container -> This is the container for a promo
+#bot-promo-container-INDEX -> This is one promo based on jinja2 loop.index which is a number going from 0 (I think) to the N-1th promo
+
+Footer
+
+#bot-long-description - This is the bots long description, it is an iframe
+
+Modal
+
+#bot-info-modal -> This is the div for the info modal
+
+Not allowed to edit
+.modal-footer - We will replace this with "" so dont try and we will ban your bot if you try to abuse this
+
+Other Utility
+
+.btn, .btn-primary etc. -> Buttons
+
+See djibe docs on modals for bot-info-modal (<a href="https://djibe.github.io/material/docs/4.5/components/modal/">here</a>)
+
+Not allowed to edit
+body - We will replace this with "" so dont try and we will ban your bot if you try to abuse this
+
+Important note
+
+Things that are not allowed to edit are naively replaced meaning all places where you use them including in css rules will be removed
+</pre>
+</body>
+</html>

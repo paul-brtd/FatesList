@@ -17,6 +17,7 @@ class PromoDelete(BaseModel):
 class Promo(BaseModel):
     title: str
     info: str
+    css: Optional[str] = None
 
 class PromoPatch(Promo):
     promo_id: uuid.UUID
@@ -57,7 +58,7 @@ async def create_promotion(request: Request, bot_id: int, promo: Promo, Authoriz
     if id is None:
         return abort(401)
     id = id["bot_id"]
-    await add_promotion(id, promo.title, promo.info)
+    await add_promotion(id, promo.title, promo.info, promo.css)
     return {"done":  True, "reason": None}
 
 @router.patch("/bots/{bot_id}/promotions", tags = ["API"])
