@@ -36,7 +36,7 @@ from starlette.websockets import WebSocket, WebSocketDisconnect
 from websockets.exceptions import ConnectionClosedError, ConnectionClosedOK
 from aioredis.errors import ConnectionClosedError as ServerConnectionClosedError
 from discord_webhook import DiscordWebhook, DiscordEmbed
-
+import markdown
 class requests:
     @staticmethod
     async def put(url, json = None, headers = None):
@@ -300,10 +300,18 @@ async def vote_bot(uid: int, bot_id: int, username, autovote: bool) -> Optional[
 async def render_bot(request: Request, bot_id: int, review: bool, widget: bool):
     guild = client.get_guild(reviewing_server)
     print("Begin rendering bots")
-    bot = await db.fetchrow("SELECT prefix, shard_count, queue, description, bot_library AS library, tags, banner, website, certified, votes, servers, bot_id, discord, owner, extra_owners, banner, banned, disabled, github, features, invite_amount, css FROM bots WHERE bot_id = $1", bot_id)
+    bot = await db.fetchrow("SELECT prefix, shard_count, queue, description, bot_library AS library, tags, banner, website, certified, votes, servers, bot_id, discord, owner, extra_owners, banner, banned, disabled, github, features, invite_amount, css, html_long_description AS html_ld, long_description FROM bots WHERE bot_id = $1", bot_id)
     print("Got here")
     if bot is None:
         return templates.e(request, "Bot Not Found")
+    if not bot["html_ld"]:
+        ldesc = markdown.markdown(bot['long_description'])
+    else:
+        ldesc = bot['long_description']
+    
+    # Take the h1...h5 anad drop it one lower
+    ldesc = ldesc.replace("<h1", "<h2").replace("<h2", "<h3").replace("<h3", "<h4").replace("<h5", "<h6")
+
     if widget:
         eo = []
         bot_admin = False
@@ -324,7 +332,6 @@ async def render_bot(request: Request, bot_id: int, review: bool, widget: bool):
         else:
             bot_admin = False
             upubav = None
-    print("Here")
     img_header_list = ["image/gif", "image/png", "image/jpeg", "image/jpg"]
     banner = bot["banner"].replace(" ", "%20").replace("\n", "")
     try:
@@ -343,7 +350,7 @@ async def render_bot(request: Request, bot_id: int, review: bool, widget: bool):
         features = bot["features"]
     if bot_info:
         bot = dict(bot)
-        bot_obj = {"bot_id": bot["bot_id"], "avatar": bot_info["avatar"], "website": bot["website"], "username": bot_info["username"], "votes": human_format(bot["votes"]), "servers": human_format(bot["servers"]), "description": bot["description"], "support": bot['discord'], "invite_amount": bot["invite_amount"], "tags": bot["tags"], "library": bot['library'], "banner": banner, "shards": human_format(bot["shard_count"]), "owner": bot["owner"], "owner_pretty": await get_user(bot["owner"]), "banned": bot['banned'], "disabled": bot['disabled'], "prefix": bot["prefix"], "github": bot['github'], "extra_owners": ed, "leo": len(ed), "queue": bot["queue"], "features": features, "fleo": len(features), "css": bot["css"]}
+        bot_obj = {"bot_id": bot["bot_id"], "avatar": bot_info["avatar"], "website": bot["website"], "username": bot_info["username"], "votes": human_format(bot["votes"]), "servers": human_format(bot["servers"]), "description": bot["description"], "support": bot['discord'], "invite_amount": bot["invite_amount"], "tags": bot["tags"], "library": bot['library'], "banner": banner, "shards": human_format(bot["shard_count"]), "owner": bot["owner"], "owner_pretty": await get_user(bot["owner"]), "banned": bot['banned'], "disabled": bot['disabled'], "prefix": bot["prefix"], "github": bot['github'], "extra_owners": ed, "leo": len(ed), "queue": bot["queue"], "features": features, "fleo": len(features), "css": bot["css"], "long_description": ldesc}
     else:
         return templates.e(request, "Bot Not Found")
     _tags_fixed_bot = {tag: tags_fixed[tag] for tag in tags_fixed if tag in bot["tags"]}

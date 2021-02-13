@@ -11,7 +11,6 @@
 	{{bot.css.replace("alert", "").replace("alert-danger", "").replace("form", "").replace("modal-footer", "")}}
   </style>
 {% endblock %}
-
 {% block content %}
 <div id="bot-content">
     <div class="d-flex d-xl-flex flex-column justify-content-center align-items-center justify-content-xl-center align-items-xl-center">
@@ -31,15 +30,15 @@
 	<div class="alert alert-info" style="text-align: center; justify-content: center; color: white !important;" role="alert">
 	<strong>You are in review mode. Test the bot by inviting it to the staff server by clicking the Invite button and choosing the Testing Server. Once you are done reviewing the bot, click the bots icon to approve/deny it</strong></div>
 	{% endif %}
-	<p id="bot-click-info" style="color: rgba(255,255,255,0.87);">Click the bots icon for more information such as the prefix, owners etc.</p>
+	<strong id="bot-click-info" style="opacity: 0.86; color: rgba(255,255,255,0.87); margin-bottom: 3px;">Click the bots icon for more information such as the prefix, owners etc.</strong>
 	{% if maint[0] %}
 	    <div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
 	    <strong>{{maint[1]["reason"]}}</strong>
         </div>
         {% endif %}
-        <h3 style="margin 0 auto; color: white;font-weight: bold; font-size: 20px;" id="bot-description">{{bot.description}}</h3>
+        <p style="color: rgba(255,255,255,0.87); font-weight: bold; font-size: 18px;" id="bot-description">{{bot.description}}</p>
     </div>
-    <div class="d-flex justify-content-center align-items-center flex-wrap" style="width: 80%;margin: 0 auto;max-width: 1000px;" id="bot-buttons">
+    <div class="d-flex justify-content-center align-items-center flex-wrap" style="width: 80%;margin: 0 auto;max-width: 1000px; margin-bottom: 3px !important;" id="bot-buttons">
 	{% if not bot.banned and not maint[0] %}
         <form method = "POST" action = "/bot/{{bot_id}}/vote">
             {{form.csrf_token}}
@@ -109,7 +108,7 @@
                 <button type="submit" class="btn btn-outline-dark" style="background-color: red; color: white !important;"><i class="fas"></i>Unban</button>
         </form>
         {% endif %}
-    <iframe id="bot-long-description" src="/bot/{{bot_id}}/description" style="font-size: 18px; width: 90%;height: 300px;color: rgba(255,255,255,0.87)!important;margin: 0 5%; border: none" scrolling="no" onload="resizeIframe(this)"></iframe>
+	<div id="bot-long-description holder" style="color: white; text-align: left; margin-left: 5%; margin-right: 5%; margin-top: 3px;">{{bot.long_description|safe}}</div>
 <div class="modal fade" id="bot-info-modal" tabindex="-1"  aria-labelledby="{{badge_id}}Label" aria-hidden="true">
 	<div class="modal-dialog modal-dialog-centered">
 		<div class="modal-content">
@@ -118,7 +117,6 @@
 			</div>
                         <div class="modal-body" style="text-align: left">
 				<strong>Owners: </strong><a href="/profile/{{bot.owner}}">{{bot.owner_pretty.username}}</a>{% if bot.extra_owners == "None" or not bot.extra_owners or bot.extra_owners == [] %}{%else%}{%for bobj in bot.extra_owners %}{% if loop.index == bot.leo %} and {% else%}, {%endif%}<a href="/profile/{{bobj[1]}}">{{bobj[0]["username"]}}</a>{%endfor%}{%endif%}<br/>
-
 				<strong>Prefix:</strong> {{bot.prefix}}<br/>
 				<strong>Library:</strong> {{bot.library}}<br/>
 				<strong>Servers:</strong> {{bot.servers}}<br/>
@@ -157,8 +155,15 @@
 </div>
 <script>
         function modalShow(id) {
-                        $(id).modal()
+            $(id).modal()
         }
+// Block onload
+var x = document.getElementById("bot-long-description");
+x.addEventListener("load", myFunction);
+function myFunction(event) {
+  event.stopImmediatePropagation();
+} 
+
 </script>
 </div>
 {% endblock %} 
