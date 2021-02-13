@@ -116,15 +116,15 @@
 				<h5 style="color: black;" class="modal-title" id="bInfolabel">{{bot.username}}</h5>
 			</div>
                         <div class="modal-body" style="text-align: left">
-				<strong>Owners: </strong><a href="/profile/{{bot.owner}}">{{bot.owner_pretty.username}}</a>{% if bot.extra_owners == "None" or not bot.extra_owners or bot.extra_owners == [] %}{%else%}{%for bobj in bot.extra_owners %}{% if loop.index == bot.leo %} and {% else%}, {%endif%}<a href="/profile/{{bobj[1]}}">{{bobj[0]["username"]}}</a>{%endfor%}{%endif%}<br/>
+				<strong>Owners: </strong><a class="link-modal" href="/profile/{{bot.owner}}">{{bot.owner_pretty.username}}</a>{% if bot.extra_owners == "None" or not bot.extra_owners or bot.extra_owners == [] %}{%else%}{%for bobj in bot.extra_owners %}{% if loop.index == bot.leo %} and {% else%}, {%endif%}<a class="link-modal" href="/profile/{{bobj[1]}}">{{bobj[0]["username"]}}</a>{%endfor%}{%endif%}<br/>
 				<strong>Prefix:</strong> {{bot.prefix}}<br/>
 				<strong>Library:</strong> {{bot.library}}<br/>
 				<strong>Servers:</strong> {{bot.servers}}<br/>
 				<strong>Shards:</strong> {{bot.shards}}</br/>
 				<strong>Amount Of Invites:</strong> {{bot.invite_amount}}<br/>
-				<strong>Vote Page:</strong> <a href="/bot/{{bot_id}}/vote">Share this with your friends!</a><br/>
+				<strong>Vote Page:</strong> <a class="link-modal" href="/bot/{{bot_id}}/vote">Share this with your friends!</a><br/>
 				{% if bot.features %}
-				<strong>Features: </strong>{% for f in bot.features %}<a href="/feature/{{f}}">{{f.replace("_", " ").title()}}</a>{% if loop.index == bot.fleo - 1%} and {% elif loop.index != bot.fleo%}, {%endif%}{% endfor %}
+				<strong>Features: </strong>{% for f in bot.features %}<a class="link-modal" href="/feature/{{f}}">{{f.replace("_", " ").title()}}</a>{% if loop.index == bot.fleo - 1%} and {% elif loop.index != bot.fleo%}, {%endif%}{% endfor %}
 				{% endif %}<br/><br/>
 				{% if username %}<strong>PUBAV Token:</strong> {{pubav}}<br/>{% endif %}
 			</div>

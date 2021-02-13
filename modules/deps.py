@@ -315,6 +315,7 @@ async def render_bot(request: Request, bot_id: int, review: bool, widget: bool):
     if widget:
         eo = []
         bot_admin = False
+        upubav = None
     else:
         if bot["extra_owners"] is None:
             eo = []
