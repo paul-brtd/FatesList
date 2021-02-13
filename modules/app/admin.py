@@ -7,20 +7,20 @@ router = APIRouter(
 )
 
 @router.get("/console")
-async def admin(request:Request):
-    if "userid" in request.session.keys():
-        guild = client.get_guild(reviewing_server)
-        user = guild.get_member(int(request.session["userid"]))
-        if user is None:
-            return RedirectResponse("/", status_code = 303)
-        staff = is_staff(staff_roles, user.roles, 2)
-        if not staff[0]:
-            return RedirectResponse("/", status_code = 303)
+async def admin_dashboard(request:Request, stats: Optional[int] = 0):
+    if "userid" in request.session.keys() or stats == 1:
+        if "userid" in request.session.keys() and stats != 1:
+            guild = client.get_guild(reviewing_server)
+            user = guild.get_member(int(request.session["userid"]))
+            if user is None:
+                return RedirectResponse("/", status_code = 303)
+            staff = is_staff(staff_roles, user.roles, 2)
+            if not staff[0]:
+                return RedirectResponse("/", status_code = 303)
         certified_bots = len(await db.fetch("SELECT bot_id FROM bots WHERE certified = true"))
         bots = len(await db.fetch("SELECT bot_id FROM bots WHERE queue = false"))
         fetch = await db.fetch("SELECT bot_id, votes, servers, description, banned FROM bots WHERE queue = true")
         banned = await db.fetch("SELECT bot_id FROM bots WHERE banned = true")
-        print(staff[1])
         queue_bots = []
         queue_amount = len([i for i in fetch if not i["banned"]])
         form = await Form.from_formdata(request)
@@ -32,7 +32,7 @@ async def admin(request:Request):
             bot_info = {"username": bot_info["username"], "id": bot["bot_id"], "avatar": bot_info["avatar"], "form": form, "banned": bot["banned"]}
             if bot_info:
                 queue_bots.append({"bot": bot, "id": bot["bot_id"], "avatar": bot_info["avatar"], "username": bot_info["username"], "votes": human_format(bot["votes"]), "servers": human_format(bot["servers"]), "description": bot["description"], "form": form, "banned": bot_info["banned"]})
-        return templates.TemplateResponse("admin.html",{"request": request, "cert": certified_bots,"bots": bots, "queue_bots": queue_bots, "queue_amount": queue_amount, "admin": staff[1] == 4, "mod": staff[1] == 3, "owner": staff[1] == 5, "bot_review": staff[1] == 2, "username": request.session["username"], "form": form, "avatar": request.session["avatar"], "banned": banned})
+        return templates.TemplateResponse("admin_stats.html",{"request": request, "cert": certified_bots,"bots": bots, "queue_bots": queue_bots, "queue_amount": queue_amount, "admin": stats != 1 and staff[1] == 4, "mod": stats != 1 and staff[1] == 3, "owner": stats != 1 and staff[1] == 5, "bot_review": stats != 1 and staff[1] == 2, "form": form, "banned": banned, "stats": stats == 1})
     else:
         return RedirectResponse("/", status_code = 303)
 

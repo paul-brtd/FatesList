@@ -85,8 +85,15 @@ async def validation_exception_handler(request, exc):
     if type(exc) == RequestValidationError:
         exc.status_code = 422
     if exc.status_code == 404:
-        msg = "404\nNot Found"
-        code = 404
+        if url_startswith(request.url, "/bot"):
+            msg = "Bot Not Found"
+            code = 404
+        elif url_startswith(request.url, "/profile"):
+            msg = "Profile Not Found"
+            code = 404
+        else:
+            msg = "404\nNot Found"
+            code = 404
     elif exc.status_code == 401:
         msg = "401\nNot Authorized"
         code = 401
@@ -94,7 +101,7 @@ async def validation_exception_handler(request, exc):
         if url_startswith(request.url, "/bot"):
             msg = "Bot Not Found"
             code = 404
-        elif url_startswith(request.url, "/bot"):
+        elif url_startswith(request.url, "/profile"):
             msg = "Profile Not Found"
             code = 404
         else:

@@ -77,3 +77,6 @@ async def features_view(request: Request, name: str):
             bot_obj.append({"bot": bot, "avatar": bot_info["avatar"], "username": bot_info["username"], "votes": human_format(bot["votes"]), "servers": human_format(bot["servers"]), "description": bot["description"]})
     return templates.TemplateResponse("feature.html", {"request": request, "name": name, "feature": features[name], "bots": bot_obj})
 
+@router.get("/fates/stats")
+async def stats():
+    return RedirectResponse("/admin/console?stats=1")
