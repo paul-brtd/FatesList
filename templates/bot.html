@@ -7,12 +7,13 @@
     }
   </script>
   <style>
-	{{bot.css.replace("body", "").replace("alert", "").replace("alert-danger", "").replace("form", "").replace("modal-footer", "")}}
+	{{bot.css.replace("alert", "").replace("alert-danger", "").replace("form", "").replace("modal-footer", "").replace("head", "")}}
   </style>
 {% endblock %}
 
 {% block content %}
-    <div class="d-flex d-xl-flex flex-column justify-content-center align-items-center justify-content-xl-center align-items-xl-center" id="bot-content">
+<div id="bot-content">
+    <div class="d-flex d-xl-flex flex-column justify-content-center align-items-center justify-content-xl-center align-items-xl-center">
 
 	<a href="javascript:void(0)"><img style="border-radius: 50%; width: 120px;" src="{{bot.avatar}}" onclick="modalShow('#bot-info-modal')" id="bot-avatar"></a>
 	<h3 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;" id="bot-username">{{bot.username}}</h3>
@@ -170,6 +171,7 @@
                         $(id).modal()
         }
 </script>
+</div>
 {% endblock %} 
 {% block footer %} 
 {% endblock %}
