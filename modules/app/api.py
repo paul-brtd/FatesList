@@ -164,6 +164,37 @@ async def get_votes_api(request: Request, bot_id: int, user_id: Optional[int] = 
     if time_to_vote < 0:
         time_to_vote = 0
     return {"votes": voter_count, "voted": voter_count != 0, "vote_epoch": vote_epoch, "time_to_vote": time_to_vote, "vote_right_now": time_to_vote == 0}
+
+class BotVoteReset(BaseModel):
+    user: Optional[int] = None
+    count: Optional[int] = None
+
+@router.delete("/bots/{bot_id}/votes")
+async def delete_votes_api(request: Request, bot_id: int, api: BotVoteReset, Authorization: str = Header("INVALID_API_TOKEN")):
+    """Endpoint to reset the votes of the bot, a specific user or a specific amount less"""
+    if api.count is not None and api.count < 0:
+        return ORJSONResponse({"done": False, "reason": "COUNT_CANNOT_BE_NEGATIVE"}, status_code = 400)
+    id = await db.fetchrow("SELECT votes, voters FROM bots WHERE bot_id = $1 AND api_token = $2", bot_id, str(Authorization))
+    if id is None:
+        return abort(401)
+    elif id["voters"] is None:
+        return ORJSONResponse({"done": False, "reason": "NO_VOTES_YET"}, status_code = 400)
+    
+    if api.user is not None:
+        voters = [user for user in id["voters"] if user != api.user]
+    else:
+        voters = id["voters"]
+
+    if api.count is not None and id["votes"] - len(voters) < api.count:
+            del_count = api.count
+    else:
+        del_count = id["votes"] - len(voters)
+    db_count = id["votes"] - del_count
+    print(db_count, del_count, api.user, api.count, voters, id["votes"])
+    if db_count < 0:
+        return ORJSONResponse({"done": False, "reason": "TOO_FEW_VOTES_PRESENT"}, status_code = 400)
+    await db.execute("UPDATE bots SET votes = $1, voters = $2 WHERE bot_id = $3", db_count, voters, bot_id)
+    return {"done": True, "reason": None}
 # TODO
 #@router.get("/templates/{code}", tags = ["Core API"])
 #async def get_template_api(request: Request, code: str):
