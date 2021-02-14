@@ -1,4 +1,4 @@
-# Extra parsing for markdown
+# Extra parsing for markdown (Highlighting and alert boxes)
 
 def parse(rtxt, look, control):
     txtl = rtxt.split(look)
