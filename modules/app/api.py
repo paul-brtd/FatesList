@@ -22,7 +22,11 @@ class Promo(BaseModel):
 class PromoPatch(Promo):
     promo_id: uuid.UUID
 
-@router.delete("/bots/{bot_id}/promotions", tags = ["API"])
+class APIResponse(BaseModel):
+    done: bool
+    reason: Optional[str] = None
+
+@router.delete("/bots/{bot_id}/promotions", tags = ["API"], response_model = APIResponse)
 async def delete_promotion(request: Request, bot_id: int, promo: PromoDelete, Authorization: str = Header("INVALID_API_TOKEN")):
     """Deletes a promotion for a bot or deletes all promotions from a bot (WARNING: DO NOT DO THIS UNLESS YOU KNOW WHAT YOU ARE DOING).
 
@@ -43,7 +47,7 @@ async def delete_promotion(request: Request, bot_id: int, promo: PromoDelete, Au
         await db.execute("DELETE FROM promotions WHERE bot_id = $1", id)
     return {"done":  True, "reason": None}
 
-@router.put("/bots/{bot_id}/promotions", tags = ["API"])
+@router.put("/bots/{bot_id}/promotions", tags = ["API"], response_model = APIResponse)
 async def create_promotion(request: Request, bot_id: int, promo: Promo, Authorization: str = Header("INVALID_API_TOKEN")):
     """Creates a promotion for a bot. Events can be used to set guild/shard counts, enter maintenance mode or to show promotions
 
@@ -61,7 +65,7 @@ async def create_promotion(request: Request, bot_id: int, promo: Promo, Authoriz
     await add_promotion(id, promo.title, promo.info, promo.css)
     return {"done":  True, "reason": None}
 
-@router.patch("/bots/{bot_id}/promotions", tags = ["API"])
+@router.patch("/bots/{bot_id}/promotions", tags = ["API"], response_model = APIResponse)
 async def edit_promotion(request: Request, bot_id: int, promo: PromoPatch, Authorization: str = Header("INVALID_API_TOKEN")):
     """Edits an promotion for a bot given its promotion ID.
 
@@ -82,7 +86,7 @@ async def edit_promotion(request: Request, bot_id: int, promo: PromoPatch, Autho
     await db.execute("UPDATE promotions SET title = $1, info = $2 WHERE bot_id = $3", promo.title, promo.info, id)
     return {"done": True, "reason": None}
 
-@router.patch("/bots/{bot_id}/token", tags = ["API"])
+@router.patch("/bots/{bot_id}/token", tags = ["API"], response_model = APIResponse)
 async def regenerate_token(request: Request, bot_id: int, Authorization: str = Header("INVALID_API_TOKEN")):
     """Regenerate the API token
 
@@ -168,12 +172,20 @@ async def get_votes_api(request: Request, bot_id: int, user_id: Optional[int] = 
 class BotVoteReset(BaseModel):
     user: Optional[int] = None
     count: Optional[int] = None
+    reset: Optional[bool] = False
 
-@router.delete("/bots/{bot_id}/votes")
+@router.delete("/bots/{bot_id}/votes", tags = ["API"], response_model = APIResponse)
 async def delete_votes_api(request: Request, bot_id: int, api: BotVoteReset, Authorization: str = Header("INVALID_API_TOKEN")):
-    """Endpoint to reset the votes of the bot, a specific user or a specific amount less"""
+    """Endpoint to reset the votes of the bot, a specific user or a specific amount less
+
+    This API takes either a user or a count (or reset which just nukes all your votes). If u specify a user, all the users vote are deleted. If u specify count, the count is the minimum votes to delete and the amount that will be deleted without user field. If u specify both user and count, the api will remove all user votes with the minimum votes to delete being count (AKA user voted 10 times, count being 20 will remove users 10 votes and 10 more votes to satisfy count)
+
+    """
     if api.count is not None and api.count < 0:
         return ORJSONResponse({"done": False, "reason": "COUNT_CANNOT_BE_NEGATIVE"}, status_code = 400)
+    if api.reset:
+        await db.execute("UPDATE bots SET votes = $1, voters = $2 WHERE bot_id = $3", 0, [], bot_id)
+        return {"done": True, "reason": None}
     id = await db.fetchrow("SELECT votes, voters FROM bots WHERE bot_id = $1 AND api_token = $2", bot_id, str(Authorization))
     if id is None:
         return abort(401)
@@ -195,6 +207,7 @@ async def delete_votes_api(request: Request, bot_id: int, api: BotVoteReset, Aut
         return ORJSONResponse({"done": False, "reason": "TOO_FEW_VOTES_PRESENT"}, status_code = 400)
     await db.execute("UPDATE bots SET votes = $1, voters = $2 WHERE bot_id = $3", db_count, voters, bot_id)
     return {"done": True, "reason": None}
+
 # TODO
 #@router.get("/templates/{code}", tags = ["Core API"])
 #async def get_template_api(request: Request, code: str):
@@ -206,7 +219,7 @@ class BotStats(BaseModel):
     shard_count: int
     user_count: Optional[int] = None
 
-@router.post("/bots/{bot_id}/stats", tags = ["API"])
+@router.post("/bots/{bot_id}/stats", tags = ["API"], response_model = APIResponse)
 async def set_bot_stats_api(request: Request, bt: BackgroundTasks, bot_id: int, api: BotStats, Authorization: str = Header("INVALID_API_TOKEN")):
     """
     This endpoint allows you to set the guild + shard counts for your bot
@@ -223,7 +236,7 @@ class APISMaint(BaseModel):
     mode: int = 1
     reason: str
 
-@router.post("/bots/{bot_id}/maintenances", tags = ["API"])
+@router.post("/bots/{bot_id}/maintenances", tags = ["API"], response_model = APIResponse)
 async def set_maintenance_mode(request: Request, bot_id: int, api: APISMaint, Authorization: str = Header("INVALID_API_TOKEN")):
     """This is just an endpoing for enabling or disabling maintenance mode. As of the new API Revamp, this isi the only way to add a maint
 
@@ -248,7 +261,7 @@ class APIAutoVoteRegister(BaseModel):
     user_id: int
     PUBAV: str
 
-@router.post("/bots/{bot_id}/autovotes/vote", tags = ["API (Autovote)"])
+@router.post("/bots/{bot_id}/autovotes/vote", tags = ["API (Autovote)"], response_model = APIResponse)
 async def autovote_bot(request: Request, bot_id: int, api: APIAutoVote, Authorization: str = Header("INVALID_API_TOKEN")):
     """This endpoint allows for automatic voting. It is the ONLY supported API for bots to vote for users. All other APIs are against Fates List ToS. You must be whitelisted to use this. Please join the support server to do so"""
     id = await db.fetchrow("SELECT bot_id, autovote_whitelist AS aw, autovote_whitelisted_users AS awu FROM bots WHERE bot_id = $1 AND api_token = $2", bot_id, str(Authorization))
@@ -268,7 +281,7 @@ async def autovote_bot(request: Request, bot_id: int, api: APIAutoVote, Authoriz
         return {"done": True, "reason": None}
     return ORJSONResponse({"done": False, "reason": ret}, status_code = 400)
 
-@router.put("/bots/{bot_id}/autovotes/register", tags = ["API (Autovote)"])
+@router.put("/bots/{bot_id}/autovotes/register", tags = ["API (Autovote)"], response_model = APIResponse)
 async def autovote_bot(request: Request, bot_id: int, api: APIAutoVoteRegister, Authorization: str = Header("INVALID_API_TOKEN")):
     """This endpoint allows for automatic voting. It is the ONLY supported API for bots to vote for users. All other APIs are against Fates List ToS. You must be whitelisted to use this. Please join the support server to do so. PUBAV is the per-user-bot-auto-vote token and can be gotten by clicking the bot icon while being logged in. This will be randomly generated every time the list restarts"""
     id = await db.fetchrow("SELECT bot_id, autovote_whitelist AS aw, autovote_whitelisted_users AS awu FROM bots WHERE bot_id = $1 AND api_token = $2", bot_id, str(Authorization))

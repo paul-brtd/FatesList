@@ -37,6 +37,7 @@ from websockets.exceptions import ConnectionClosedError, ConnectionClosedOK
 from aioredis.errors import ConnectionClosedError as ServerConnectionClosedError
 from discord_webhook import DiscordWebhook, DiscordEmbed
 import markdown
+from modules.emd import emd
 class requests:
     @staticmethod
     async def put(url, json = None, headers = None):
@@ -305,7 +306,7 @@ async def render_bot(request: Request, bot_id: int, review: bool, widget: bool):
     if bot is None:
         return templates.e(request, "Bot Not Found")
     if not bot["html_ld"]:
-        ldesc = markdown.markdown(bot['long_description'])
+        ldesc = emd(markdown.markdown(bot['long_description'], extensions=["extra", "abbr", "attr_list", "def_list", "fenced_code", "footnotes", "tables", "admonition", "codehilite", "meta", "nl2br", "sane_lists", "toc", "wikilinks", "smarty", "md_in_html"]))
     else:
         ldesc = bot['long_description']
     
