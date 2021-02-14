@@ -146,29 +146,40 @@ class BotVoteCheck(BaseModel):
     time_to_vote: int
 
 @router.get("/bots/{bot_id}/votes", tags = ["API"], response_model = BotVoteCheck)
-async def get_votes_api(request: Request, bot_id: int, user_id: Optional[int] = None, Authorization: str = Header("INVALID_API_TOKEN")):
-    """Endpoint to check amount of votes a user has"""
-    id = await db.fetchrow("SELECT votes, voters FROM bots WHERE bot_id = $1 AND api_token = $2", bot_id, str(Authorization))
+async def get_votes_api(request: Request, bot_id: int, user_id: int, Authorization: str = Header("INVALID_API_TOKEN")):
+    """Endpoint to check amount of votes a user has."""
+    id = await db.fetchrow("SELECT bot_id FROM bots WHERE bot_id = $1 AND api_token = $2", bot_id, str(Authorization))
     if id is None:
         return abort(401)
-    if id["voters"] is None:
-        return {"votes": 0, "voted": False}
-    if user_id is not None:
-        voter_count = len([user for user in id["voters"] if user == user_id])
-        vote_epoch = await db.fetchrow("SELECT vote_epoch FROM users WHERE userid = $1", user_id)
-        if vote_epoch is None:
-            vote_epoch = 0
-        else:
-            vote_epoch = vote_epoch["vote_epoch"]
-    else:
-        voter_count = id["votes"]
+    voters = await db.fetchrow("SELECT timestamps FROM bots_voters WHERE bot_id = $1 AND userid = $2", int(bot_id), int(user_id))
+    if voters is None:
+        return {"votes": 0, "voted": False, "vote_epoch": 0, "time_to_vote": 0, "vote_right_now": True}
+    voter_count = len(voters["timestamps"])
+    vote_epoch = await db.fetchrow("SELECT vote_epoch FROM users WHERE userid = $1", user_id)
+    if vote_epoch is None:
         vote_epoch = 0
+    else:
+        vote_epoch = vote_epoch["vote_epoch"]
     WT = 60*60*8 # Wait Time
     time_to_vote = WT - (time.time() - vote_epoch)
     if time_to_vote < 0:
         time_to_vote = 0
     return {"votes": voter_count, "voted": voter_count != 0, "vote_epoch": vote_epoch, "time_to_vote": time_to_vote, "vote_right_now": time_to_vote == 0}
 
+@router.get("/bots/{bot_id}/votes/timestamped")
+async def timestamped_get_votes_api(request: Request, bot_id: int, user_id: Optional[int] = None, Authorization: str = Header("INVALID_API_TOKEN")):
+    """Endpoint to check amount of votes a user has with timestamps. This does not return whether a user can vote"""
+    id = await db.fetchrow("SELECT bot_id FROM bots WHERE bot_id = $1 AND api_token = $2", bot_id, str(Authorization))
+    if id is None:
+        return abort(401)
+    elif user_id is not None:
+        ldata = await db.fetch("SELECT userid, timestamps FROM bots_voters WHERE bot_id = $1 AND userid = $2", int(bot_id), int(user_id))
+    else:
+        ldata = await db.fetch("SELECT userid, timestamps FROM bots_voters WHERE bot_id = $1", int(bot_id))
+    ret = {}
+    for data in ldata:
+        ret[str(data["userid"])] = data["timestamps"]
+    return {"user": "timestamp"} | ret
 class BotVoteReset(BaseModel):
     user: Optional[int] = None
     count: Optional[int] = None

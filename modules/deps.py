@@ -284,15 +284,19 @@ async def vote_bot(uid: int, bot_id: int, username, autovote: bool) -> Optional[
         WT = 60*60*8 # Wait Time
     if time.time() - epoch < WT:
         return [401, str(WT - (time.time() - epoch))]
-    b = await db.fetchrow("SELECT webhook, votes, voters FROM bots WHERE bot_id = $1", int(bot_id))
+    b = await db.fetchrow("SELECT webhook, votes FROM bots WHERE bot_id = $1", int(bot_id))
+    voters = await db.fetchrow("SELECT timestamps FROM bots_voters WHERE bot_id = $1 AND userid = $2", int(bot_id), int(uid))
     if b is None:
         return [404]
-    if b["voters"] is None:
-        voters = [int(uid)]
+    if voters is None:
+        await db.execute("INSERT INTO bots_voters (userid, bot_id, timestamps) VALUES ($1, $2, $3)", int(uid), int(bot_id), [int(time.time())])
     else:
-        voters = b["voters"]
-        voters.append(int(uid))
-    await db.execute("UPDATE bots SET votes = votes + 1, voters = $2 WHERE bot_id = $1", int(bot_id), voters)
+        print(type(voters["timestamps"]))
+        voters["timestamps"].append(int(time.time()))
+        ts = voters["timestamps"]
+        print(ts)
+        await db.execute("UPDATE bots_voters SET timestamps = $1 WHERE bot_id = $2 AND userid = $3", ts, int(bot_id), int(uid))
+    await db.execute("UPDATE bots SET votes = votes + 1 WHERE bot_id = $1", int(bot_id))
     await db.execute("UPDATE users SET vote_epoch = $1 WHERE userid = $2", time.time(), int(uid))
     event_id = asyncio.create_task(add_event(bot_id, "vote", {"username": username, "user_id": str(uid), "votes": b['votes'] + 1, "**Vote Here**": "https://fateslist.xyz/bot/" + str(bot_id)}))
     return []

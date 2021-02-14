@@ -58,5 +58,18 @@ Important note
 
 Things that are not allowed to edit are naively replaced meaning all places where you use them including in css rules will be removed
 </pre>
+<br/>
+<pre>
+Webhook Documentation
+
+There are many types of webhooks in Fates List, however you MUST select Vote Webhook for votes unless you are using Fates Client or another library
+
+Your webhook will be sent in this format:
+	id: String -> User ID
+	votes: Integer -> Votes
+	
+The webhook will have a Authorization header with your API Token.
+The Test API Token (so you can try out the webhook) is eb83da1b-1bbf-44e6-a938-5545bcc2934f. This only applies to webhooks and not for other non webhook related things
+</pre>
 </body>
 </html>

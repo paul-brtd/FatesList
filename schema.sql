@@ -4,7 +4,6 @@ CREATE DATABASE fateslist;
 CREATE TABLE bots (
     bot_id bigint,
     votes bigint,
-    voters bigint[],
     servers bigint,
     user_count bigint DEFAULT 0,
     shard_count bigint,
@@ -34,6 +33,12 @@ CREATE TABLE bots (
     private boolean DEFAULT false,
     autovote_whitelist boolean DEFAULT false,
     autovote_whitelisted_users bigint[] DEFAULT [];
+);
+
+CREATE TABLE bots_voters (
+    bot_id bigint,
+    userid bigint,
+    timestamps bigint[]
 );
 
 CREATE TABLE users (
