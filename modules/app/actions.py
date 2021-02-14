@@ -6,6 +6,8 @@ router = APIRouter(
     include_in_schema = False
 )
 
+allowed_file_ext = [".gif", ".png", ".jpeg", ".jpg", ".webm", ".webp"]
+
 @router.get("/admin/add")
 @csrf_protect
 async def add_bot(request: Request):
@@ -44,6 +46,7 @@ async def add_bot_api(
         open_source: str = FForm("off"),
         html_long_description: str = FForm("false")
     ):
+    banner = banner.replace("http://", "https://").replace("(", "").replace(")", "")
     html_long_description = html_long_description == "true"
     guild = client.get_guild(reviewing_server)
     bot_dict = locals()
@@ -54,6 +57,8 @@ async def add_bot_api(
     bot_dict["features"] = features
     if bot_id == "" or prefix == "" or invite == "" or description == "" or long_description == "" or len(prefix) > 9:
         return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "Please ensure you have filled out all the required fields and that your prefix is less than 9 characters.", "mode": "add"})
+    if not banner.startswith("https://"):
+        return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "Your banner does not use https://. Please change it", "mode": "add"})
     fetch = await db.fetch("SELECT bot_id FROM bots WHERE bot_id = $1", bot_id)
     if fetch:
         return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "This bot already exists on Fates List", "mode": "add"})
@@ -161,8 +166,11 @@ async def bot_edit_api(
     features = [f for f in bot_dict.keys() if bot_dict[f] == "on" and f in ["custom_prefix", "open_source"]]
     bot_dict["features"] = features
     bot_dict["tags"] = bot_dict["tags"].split(",")
+    banner = banner.replace("http://", "https://").replace("(", "").replace(")", "")
     if bid == "" or prefix == "" or invite == "" or description == "" or long_description == "" or len(prefix) > 9:
         return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "Please ensure you have filled out all the required fields and that your prefix is less than 9 characters", "mode": "edit"})
+    if not banner.startswith("https://"):
+        return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "Your banner does not use https://. Please change it", "mode": "edit"})
     if "userid" in request.session.keys():
         check = await db.fetchrow("SELECT owner, extra_owners FROM bots WHERE bot_id = $1", bid)
         if not check:

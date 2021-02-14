@@ -109,7 +109,7 @@ async def random_bots_api(request: Request):
 @router.get("/bots/{bot_id}", tags = ["API"])
 async def get_bots_api(request: Request, bot_id: int, Authorization: str = Header("INVALID_API_TOKEN")):
     """Gets bot information given a bot ID. If not found, 404 will be returned. If a proper API Token is provided, sensitive information (System API Events will also be provided)"""
-    api_ret = await db.fetchrow("SELECT bot_id AS id, description, tags, html_long_description, long_description, servers AS server_count, shard_count, prefix, invite, invite_amount, owner AS _owner, extra_owners AS _extra_owners, features, bot_library AS library, queue, banned, website, discord AS support, github, user_count FROM bots WHERE bot_id = $1", bot_id)
+    api_ret = await db.fetchrow("SELECT bot_id AS id, description, tags, html_long_description, long_description, servers AS server_count, shard_count, prefix, invite, invite_amount, owner AS _owner, extra_owners AS _extra_owners, features, bot_library AS library, queue, banned, website, discord AS support, github, user_count, votes, css FROM bots WHERE bot_id = $1", bot_id)
     if api_ret is None:
         return abort(404)
     api_ret = dict(api_ret)
@@ -135,7 +135,6 @@ async def get_bots_api(request: Request, bot_id: int, Authorization: str = Heade
         api_ret["sensitive"] = {}
     api_ret["promotions"] = await get_promotions(bot_id = bot_id)
     api_ret["maint"] = await in_maint(bot_id = bot_id)
-    api_ret["actions"] = [{"stats": f"https://fateslist.xyz/api/bots/{bot_id}/stats", "method": "POST"}, {"maintenance": f"https://fateslist.xyz/api/bots/{bot_id}/maintenance", "method": "POST"}, {"add_promotion": f"https://fateslist.xyz/api/bots/{bot_id}/promotions", "method": "PUT"}, {"edit_promotion": f"https://fateslist.xyz/api/bots/{bot_id}/promotions", "method": "PATCH"}, {"delete_promotion": f"https://fateslist.xyz/api/bots/{bot_id}/promotions", "method": "DELETE"}, {"regenerate_token": f"https://fateslist.xyz/api/bots/{bot_id}/token", "method": "PATCH"}]
     return api_ret
 
 class BotVoteCheck(BaseModel):
@@ -227,7 +226,7 @@ async def delete_votes_api(request: Request, bot_id: int, api: BotVoteReset, Aut
 
 class BotStats(BaseModel):
     guild_count: int
-    shard_count: int
+    shard_count: Optional[int] = None
     user_count: Optional[int] = None
 
 @router.post("/bots/{bot_id}/stats", tags = ["API"], response_model = APIResponse)
@@ -235,10 +234,14 @@ async def set_bot_stats_api(request: Request, bt: BackgroundTasks, bot_id: int, 
     """
     This endpoint allows you to set the guild + shard counts for your bot
     """
-    id = await db.fetchrow("SELECT bot_id FROM bots WHERE bot_id = $1 AND api_token = $2", bot_id, str(Authorization))
+    id = await db.fetchrow("SELECT bot_id, shard_count FROM bots WHERE bot_id = $1 AND api_token = $2", bot_id, str(Authorization))
     if id is None:
         return abort(401)
-    bt.add_task(set_stats, bot_id = id["bot_id"], guild_count = api.guild_count, shard_count = api.shard_count, user_count = api.user_count)
+    if api.shard_count is None:
+        shard_count = id["shard_count"]
+    else:
+        shard_count = api.shard_count
+    bt.add_task(set_stats, bot_id = id["bot_id"], guild_count = api.guild_count, shard_count = shard_count, user_count = api.user_count)
     return {"done": True, "reason": None}
 
 # set_stats(*, bot_id: int, guild_count: int, shard_count: int, user_count: Optiona;int] = None):
