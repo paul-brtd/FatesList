@@ -21,7 +21,7 @@ import orjson
 from starlette_wtf import CSRFProtectMiddleware, csrf_protect,StarletteForm
 import builtins
 from typing import Optional, List, Union
-from aiohttp_requests import requests as _r_
+from aiohttp_requests import requests
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from websockets.exceptions import ConnectionClosedOK
 import hashlib
@@ -38,20 +38,6 @@ from aioredis.errors import ConnectionClosedError as ServerConnectionClosedError
 from discord_webhook import DiscordWebhook, DiscordEmbed
 import markdown
 from modules.emd_hab import emd
-class requests:
-    @staticmethod
-    async def put(url, json = None, headers = None):
-        a = await _r_.put(url, json = json, headers = headers)
-        print(a, "\n")
-    @staticmethod
-    async def post(url, json = None, headers = None):
-        a = await _r_.post(url, json = json, headers = headers)
-        print(a, "\n")
-    @staticmethod
-    async def get(url, headers = None):
-        a = await _r_.get(url, headers = headers)
-        print(a, "\n")
-
 def redirect(path: str) -> RedirectResponse:
     return RedirectResponse(path, status_code=HTTP_303_SEE_OTHER)
 
