@@ -110,19 +110,11 @@ async def add_bot_bt(request, bot_id, prefix, library, website, banner, support,
 @router.get("/{bid}/edit")
 @csrf_protect
 async def bot_edit(request: Request, bid: int):
-    guild = client.get_guild(reviewing_server)
     if "userid" in request.session.keys():
-        check = await db.fetchrow("SELECT owner,extra_owners FROM bots WHERE bot_id = $1", bid)
-        if not check:
+        check = await is_bot_admin(int(bid), int(request.session.get("userid")))
+        if check is None:
             return templates.TemplateResponse("message.html", {"request": request, "message": "This bot doesn't exist in our database.", "username": request.session.get("username", False)})
-        user = guild.get_member(int(request.session.get("userid")))
-        if check["extra_owners"] is None:
-            eo = []
-        else:
-            eo = check["extra_owners"]
-        if check["owner"] == int(request.session["userid"]) or int(request.session["userid"]) in eo or (user is not None and is_staff(staff_roles, user.roles, 4)[0]):
-            pass
-        else:
+        elif check == False:
             return templates.TemplateResponse("message.html", {"request": request, "message": "You aren't the owner of this bot.", "username": request.session.get("username", False), "avatar": request.session.get("avatar")})
         form = await Form.from_formdata(request)
         fetch = dict(await db.fetchrow("SELECT bot_id, prefix, bot_library AS library, invite, website, banner, long_description, description, tags, owner, extra_owners, webhook, webhook_type, discord AS support, api_token, banner, banned, github, features, html_long_description, css FROM bots WHERE bot_id = $1", bid))
@@ -177,17 +169,10 @@ async def bot_edit_api(
     if not banner.startswith("https://") and banner not in ["", "none"]:
         return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "Your banner does not use https://. Please change it", "mode": "edit"})
     if "userid" in request.session.keys():
-        check = await db.fetchrow("SELECT owner, extra_owners FROM bots WHERE bot_id = $1", bid)
-        if not check:
+        check = await is_bot_admin(int(bid), int(request.session.get("userid")))
+        if check is None:
             return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "This bot doesn't exist in our database.", "username": request.session.get("username", False), "mode": "edit"})
-        user = guild.get_member(int(request.session.get("userid")))
-        if check["extra_owners"] is None:
-            eo = []
-        else:
-            eo = check["extra_owners"]
-        if check["owner"] == int(request.session["userid"]) or int(request.session["userid"]) in eo or (user is not None and is_staff(staff_roles, user.roles, 4)[0]):    
-            pass
-        else:
+        elif check == False:
             return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "You aren't the owner of this bot.", "username": request.session.get("username", False), "mode": "edit"})
     else:
         return RedirectResponse("/")
@@ -297,21 +282,10 @@ async def delete_bot(request: Request, bot_id: int, confirmer: str = FForm("1"))
     guild = client.get_guild(reviewing_server)
     channel = client.get_channel(bot_logs)
     if "userid" in request.session.keys():
-        check = await db.fetchrow("SELECT owner, extra_owners, banned FROM bots WHERE bot_id = $1", bot_id)
-        if not check:
-            return templates.TemplateResponse("message.html", {"request": request, "message": "This bot doesn't exist in our database.", "username": request.session.get("username", False)})
-        user = guild.get_member(int(request.session.get("userid")))
-        if user is None:
-            roles = []
-        else:
-            roles = user.roles
-        if check["extra_owners"] is None:
-            eo = []
-        else:
-            eo = check["extra_owners"]
-        if check["owner"] == int(request.session["userid"]) or str(request.session["userid"]) in eo  or is_staff(staff_roles, roles, 4)[0]:
-            pass
-        else:
+        check = await is_bot_admin(int(bid), int(request.session.get("userid")))
+        if check is None:
+            return templates.TemplateResponse("message.html", {"request": request, "message": "This bot doesn't exist in our database."})
+        elif check == False:
             return templates.TemplateResponse("message.html", {"request": request, "message": "You aren't the owner of this bot.", "context": "Only owners and admins can delete bots", "username": request.session.get("username", False)})
     else:
         return RedirectResponse("/", status_code = 303)
@@ -326,7 +300,7 @@ async def delete_bot(request: Request, bot_id: int, confirmer: str = FForm("1"))
     await channel.send(f"<@{owner}> deleted the bot <@{str(bot_id)}>.\nWe are sad to see you go...::sad::")
     return RedirectResponse("/", status_code = 303)
 
-@router.post("/ban/{bot_id}")
+@router.post("/{bot_id}/ban")
 async def ban_bot(request: Request, bot_id: int, ban: int = FForm(1), reason: str = FForm('There was no reason specified')):
     guild = client.get_guild(reviewing_server)
     channel = client.get_channel(bot_logs)
@@ -357,3 +331,7 @@ async def ban_bot(request: Request, bot_id: int, ban: int = FForm(1), reason: st
         await db.execute("UPDATE bots SET banned = false WHERE bot_id = $1", bot_id)
         await add_event(bot_id, "unban", {"user": request.session.get('userid')})
     return RedirectResponse("/", status_code = 303)
+
+@router.get("/{bot_id}/promotions/new")
+async def new_promotion(request: Request):
+    return "Not Yet Done"

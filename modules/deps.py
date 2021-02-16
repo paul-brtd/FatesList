@@ -237,6 +237,21 @@ async def in_maint(bot_id: str) -> Union[bool, Optional[dict]]:
     else:
         return False, None
 
+async def is_bot_admin(bot_id: int, user_id: int):
+    guild = client.get_guild(reviewing_server)
+    check = await db.fetchrow("SELECT owner, extra_owners FROM bots WHERE bot_id = $1", bot_id)
+    if not check:
+        return None
+    user = guild.get_member(user_id)
+    if check["extra_owners"] is None:
+        eo = []
+    else:
+        eo = check["extra_owners"]
+    if check["owner"] == user_id or user_id in eo or (user is not None and is_staff(staff_roles, user.roles, 4)[0]):
+        return True
+    else:
+        return False
+
 async def get_promotions(bot_id: int) -> list:
     api_data = await db.fetch("SELECT title, info, css FROM promotions WHERE bot_id = $1", bot_id)
     return api_data
@@ -320,7 +335,7 @@ async def render_bot(request: Request, bot_id: int, review: bool, widget: bool):
             else:
                 upubav = get_token(11).upper()
                 await redis_db.set(str(request.session.get("userid")) + str(bot_id),  upubav)
-            bot_admin = bot["owner"] == int(request.session["userid"]) or int(request.session["userid"]) in eo or (user is not None and is_staff(staff_roles, user.roles, 4)[0])
+            bot_admin = await is_bot_admin(int(bot_id), int(request.session.get("userid"))) 
         else:
             bot_admin = False
             upubav = None
