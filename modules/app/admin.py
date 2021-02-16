@@ -129,7 +129,7 @@ async def review_api(request:Request, bot_id: int, accept: str = FForm("")):
                 if eo_member is None:
                     pass
                 else:
-                    await eo.add_roles(guild.get_role(bot_dev_role))
+                    await eo_member.add_roles(guild.get_role(bot_dev_role))
 
         return templates.TemplateResponse("last.html",{"request":request,"message":"Bot accepted; You MUST Invite it by this url","username":request.session["username"],"url":f"https://discord.com/oauth2/authorize?client_id={str(bot_id)}&scope=bot&guild_id={guild.id}&disable_guild_select=true&permissions=0"})
     elif accept == "unverify":

@@ -25,11 +25,9 @@
     <div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center div-is" id="tt-2">
         {% for bot in certified_bots %}
         <div class="bot-card">
-                {% if bot.banner == "" %}
-		<div class="lozad bot-card-banner" data-background-image="/static/assets/img/banner.webp">
-			{% else %}
-			<div class="lozad bot-card-banner" data-background-image="{{bot.banner}}">{% endif %}<i class="fas fa-certificate fa-3x bot-card-cert"></i>
-	<a href="/bot/{{bot.bot_id}}"><img alt="Bot avatar" class="bot-card-avatar" src="{{bot.avatar}}" loading="lazy"></a></div>
+		<div class="lozad bot-card-banner" data-background-image="{{bot.banner}}">
+			<i class="fas fa-certificate fa-3x bot-card-cert"></i>
+			<a href="/bot/{{bot.bot_id}}"><img alt="Bot avatar" class="bot-card-avatar" src="{{bot.avatar}}" loading="lazy"></a></div>
 		<div>
                 <div class="bot-card-username">
                     <h4 class="text-nowrap text-break text-center bot-card-username-txt white-bold">{{bot.username}}</h4>
@@ -57,13 +55,44 @@
     <div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center div-is" id="tt-1">
         {% for bot in top_voted %}
             <div class="bot-card">
-                {% if bot.banner == "" %}
-			<div class="lozad bot-card-banner" data-background-image="{{bot.banner}}">
-		{% else %}
-			<div class="lozad bot-card-banner" data-background-image="{{bot.banner}}">{% endif %}{% if bot.certified == True %}<i class="fas fa-certificate fa-3x bot-card-cert"></i>{% endif %}
-			<a href="/bot/{{bot.bot_id}}"><img alt="bot avatar" class="bot-card-avatar" src="{{bot.avatar}}" loading="lazy"/></a></div>
-                
+		<div class="lozad bot-card-banner" data-background-image="{{bot.banner}}">
+		{% if bot.certified == True %}
+			<i class="fas fa-certificate fa-3x bot-card-cert"></i>
+		{% endif %}
+		<a href="/bot/{{bot.bot_id}}"><img alt="bot avatar" class="bot-card-avatar" src="{{bot.avatar}}" loading="lazy"/></a></div>
 		<div>
+                    <div class="bot-card-username">
+                        <h4 class="text-nowrap text-break text-center bot-card-username-txt white-bold">{{bot.username}}</h4>
+                    </div>
+                </div>
+                <h6 class="bot-card-description" ><strong style="overflow-wrap: anywhere;">{{bot.description}}</strong></h6>
+                <div class="d-flex bot-card-footer">
+                    <div class="bot-card-footer-stats">
+                        <p class="text-center white-bold"><i class="fas fa-server i-m3"></i>{{bot.servers}}</p>
+                    </div>
+                    <div class="bot-card-footer-stats">
+                        <p class="text-center white-bold"><i class="fas fa-thumbs-up i-m3"></i>{{bot.votes}}</p>
+                    </div>
+                </div>
+            	<div class="bot-card-actions">
+                    <a role="button" aria-label="View" href="/bot/{{bot.bot_id}}" class="btn btn-outline-light bot-card-actions-link" >View</a>
+                    <a href="{{bot.invite}}" class="btn btn-outline-light bot-card-actions-link" style="margin-left: 6.5%;" target="_blank" rel="noreferrer" role="button" aria-label="Invite">Invite</a></div>
+	    	</div>
+        {% endfor %}
+    </div>
+    <hr class="hr-is">
+    <div class="d-flex" style="margin-left: 5%;"><i class="fas fa-plus-square fa-3x white"></i>
+        <h4 style="color: rgba(255,255,255,0.87);margin-left: 15px;">New Bots</h4>
+    </div>
+    <div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center" id="tt" style="width: 90%;margin: 30px 5%;">
+        {% for bot in new_bots %}
+            <div class="bot-card">
+                <div class="lozad bot-card-banner" data-background-image="{{bot.banner}}">
+                {% if bot.certified == True %}
+                        <i class="fas fa-certificate fa-3x bot-card-cert"></i>
+                {% endif %}
+                <a href="/bot/{{bot.bot_id}}"><img alt="bot avatar" class="bot-card-avatar" src="{{bot.avatar}}" loading="lazy"/></a></div>
+                <div>
                     <div class="bot-card-username">
                         <h4 class="text-nowrap text-break text-center bot-card-username-txt white-bold">{{bot.username}}</h4>
                     </div>
@@ -80,36 +109,8 @@
             <div class="bot-card-actions">
                     <a role="button" aria-label="View" href="/bot/{{bot.bot_id}}" class="btn btn-outline-light bot-card-actions-link" >View</a>
                     <a href="{{bot.invite}}" class="btn btn-outline-light bot-card-actions-link" style="margin-left: 6.5%;" target="_blank" rel="noreferrer" role="button" aria-label="Invite">Invite</a></div>
-        </div>
-        {% endfor %}
-    </div>
-    <hr class="hr-is">
-    <div class="d-flex" style="margin-left: 5%;"><i class="fas fa-plus-square fa-3x white"></i>
-        <h4 style="color: rgba(255,255,255,0.87);margin-left: 15px;">New Bots</h4>
-    </div>
-    <div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center" id="tt" style="width: 90%;margin: 30px 5%;">
-        {% for bot in new_bots %}
-        <div style="width: 300px;height: 475px;background: #111112;box-shadow: 0px 0px 20px 5px;border-top-style: none;margin: 25px 25px;" class="bot-card">
-		{% if bot.banner == "" %}<div class="lozad" data-background-image="/static/assets/img/banner.webp" style="width: 100%;height: 30%;background: center / cover no-repeat;">{% else %}<div class="lozad" data-background-image="{{bot.banner}}" style="width: 100%;height: 30%;background: center / cover no-repeat;">{% endif %}{% if bot.certified == True %}<i class="fas fa-certificate fa-3x" style="color:#7289DA; position: absoulute; margin-top: -15px; margin-left: 90%"></i>{% endif %}
-		<a href="/bot/{{bot.bot_id}}"><img alt="Bot avatar" style="border-radius: 50%;width: 30%;margin: 5% auto;margin-top: 17%;margin-right: 35%;margin-left: 35%;" src="{{bot.avatar}}" loading="lazy" /></a></div>
-            <div>
-                <div style="margin-right: auto;margin-left: auto;margin-top: 30px;width: 200px;">
-                    <h4 class="text-nowrap text-break text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;white-space: nowrap;text-overflow: ellipsis;overflow: hidden; font-size: 21px; margin-top: 35px">{{bot.username}}</h4>
-                </div>
-            </div>
-            <h6 style="font-size: 16px;font-weight: bold;color: rgba(255,255,255,0.87);opacity: 0.63;width: 90%;margin: 0 5%;height:105px"><strong style="overflow-wrap: anywhere;">{{bot.description}}</strong></h6>
-            <div class="d-flex" style="width: 80%;margin: 0 10%;height: 10%;margin-top: 20px;margin-bottom: 20px;">
-                <div style="height: 30px;width: 101px;margin-right: 10px;">
-                    <p class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;"><i class="fas fa-server" style="margin-right: 3px"></i>{{bot.servers}}</p>
-                </div>
-                <div style="height: 30px;width: 101px;margin-left: 28px;">
-                    <p class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;"><i class="fas fa-thumbs-up" style="margin-right: 3px"></i>{{bot.votes}}</p>
-                </div>
-            </div>
-            <div style="width: 80%;margin: 0 10%;"><a href="/bot/{{bot.bot_id}}" class="btn btn-outline-light" style="width: 45%;margin-right: 5%;border-radius: 25px;font-weight: bold;">View</a><a href="{{bot.invite}}" class="btn btn-outline-light" style="width: 45%;margin-left: 5%;border-radius: 25px;font-weight: bold;" target="_blank" rel="noreferrer">Invite</a></div>
-        </div>
-    {% endfor %}
-    </div>
+	    </div>
+    	{% endfor %}
     </div>
     <script src="/static/assets/js/main.js"></script>
 
@@ -119,32 +120,35 @@
 			$.get("{{site_url}}{{roll_api}}", function(data, status) {
 				random_bots = document.querySelector("#random-bots")
 				if(data.banner == "" || data.banner == "none") {
-					banner = "none"
+					banner = "/static/assets/img/banner.webp"
 				}
 				else {
 					banner = data.banner
 				}
-				d = `
-            <div style="width: 300px;height: 475px;background: #111112;box-shadow: 0px 0px 20px 5px;border-top-style: none;margin: 25px 25px;" class="bot-card">
-			<div style="background: url('` + data.banner + `') center / cover no-repeat; width: 100%;height: 30%;">`; if(data.certified == true){d += `<i class="fas fa-certificate fa-3x" style="color:#7289DA; position: absoulute; margin-top: -15px; margin-left: 90%"></i>`;} d += `<a href="/bot/` + data.bot_id + `"><img alt="bot avatar" style="border-radius: 50%;width: 30%;margin: 5% auto;margin-top: 20%;margin-right: 35%;margin-left: 35%;" src="` + data.avatar + `" loading="lazy"></a></div>
-
-                <div>
-                    <div style="margin-right: auto;margin-left: auto;margin-top: 10px;width: 200px;">
-                        <h4 class="text-nowrap text-break text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;white-space: nowrap;text-overflow: ellipsis;overflow: hidden; font-size: 21px; margin-top: 35px">` + data.username + `</h4>
-                    </div>
-                </div>
-                <h6 style="font-size: 16px;font-weight: bold;color: rgba(255,255,255,0.87);opacity: 0.63;width: 90%;margin: 0 5%;height:105px"><strong style="overflow-wrap: anywhere;">` + data.description + `</strong></h6>
-                <div class="d-flex" style="width: 80%;margin: 0 10%;height: 10%;margin-top: 20px;margin-bottom: 20px;">
-                    <div style="height: 30px;width: 101px;margin-right: 10px;">
-                        <p class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;"><i class="fas fa-server" style="margin-right: 3px"></i>` + data.servers + `</p>
-                    </div>
-                    <div style="height: 30px;width: 101px;margin-left: 28px;">
-                        <p class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;"><i class="fas fa-thumbs-up" style="margin-right: 3px"></i>` + data.votes + `</p>
-                    </div>
-                </div>
-                <div style="width: 80%;margin: 0 10%;"><a role="button" aria-label="View" href="/bot/` + data.bot_id + `" class="btn btn-outline-light" style="width: 45%;margin-right: 5%;border-radius: 25px;font-weight: bold;">View</a><a role="button" aria-label="Invite" href=` + data.invite + `" class="btn btn-outline-light" style="width: 45%;margin-left: 5%;border-radius: 25px;font-weight: bold;" target="_blank" rel="noreferrer">Invite</a></div>
-            </div>
-	`; random_bots.innerHTML = d;
+				d = `<div class="bot-card">` // Bot card
+				d += `<div class="lozad bot-card-banner" data-background-image="${banner}" style="background-image: url('${banner}');">`; // Banner
+		                if(data.certified)
+		                        d += '<i class="fas fa-certificate fa-3x bot-card-cert"></i>';
+				d += `<a href="/bot/${data.bot_id}"><img alt="bot avatar" class="bot-card-avatar" src="${data.avatar}" loading="lazy"/></a></div>`
+			        d += `<div>
+		                    <div class="bot-card-username">
+                		        <h4 class="text-nowrap text-break text-center bot-card-username-txt white-bold">${data.username}</h4>
+		                    </div>
+                		</div>` // Username
+		                d += `<h6 class="bot-card-description" ><strong style="overflow-wrap: anywhere;">${data.description}</strong></h6>` // Description
+                		d += `<div class="d-flex bot-card-footer">
+		                    <div class="bot-card-footer-stats">
+                		        <p class="text-center white-bold"><i class="fas fa-server i-m3"></i>${data.servers}</p>
+		                    </div>` // Servers
+                	        d += `<div class="bot-card-footer-stats">
+                        		<p class="text-center white-bold"><i class="fas fa-thumbs-up i-m3"></i>${data.votes}</p>
+		                    </div>
+				</div>` // Votes
+				d += `<div class="bot-card-actions">
+		        	            <a role="button" aria-label="View" href="/bot/${data.bot_id}" class="btn btn-outline-light bot-card-actions-link" >View</a>
+                			    <a href="${data.invite}" class="btn btn-outline-light bot-card-actions-link" style="margin-left: 6.5%;" target="_blank" rel="noreferrer" role="button" aria-label="Invite">Invite</a></div>
+		                	</div>`; 
+				random_bots.innerHTML = d;
 			})
 		}
 	window.addEventListener("load", randomBotRoll())
