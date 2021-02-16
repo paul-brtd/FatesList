@@ -316,7 +316,7 @@ async def render_bot(request: Request, bot_id: int, review: bool, widget: bool):
         ldesc = bot['long_description']
     
     # Take the h1...h5 anad drop it one lower
-    ldesc = ldesc.replace("h1", "h2").replace("h2", "h3").replace("h4", "h5").replace("h6", "p")
+    ldesc = ldesc.replace("<h1", "<h2 style='text-align: center'").replace("<h2", "<h3").replace("<h4", "<h5").replace("<h6", "<p")
 
     if widget:
         eo = []

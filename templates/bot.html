@@ -106,8 +106,8 @@
 		{% endif %}
         </form>
 	</div>
-	<div style="display: inline-block; width: 100%; background: black; border-radius: 40px 40px 40px 40px; margin-top: 3px; min-height: 500px;" id="bot-long-description-container">
-		<div id="bot-long-description" style="color: white; text-align: left; margin-left: 5%; margin-right: 5%; margin-top: 13px;">{{bot.long_description.replace("<a", "<a class='long-desc-link'").replace("ajax", "").replace("http://", "https://").replace(").", ")! ")|safe}}</div>
+	<div style="background: black; border-radius: 40px 40px 40px 40px; margin-top: 5px; min-height: 500px; padding: 5px;" id="bot-long-description-container">
+		<div id="bot-long-description" style="color: white; text-align: left; margin-left: 5%; margin-right: 5%; margin-top: 13px;">{{bot.long_description.replace("<a", "<a class='long-desc-link'").replace("ajax", "").replace("http://", "https://")|safe}}</div>
 	</div>
 <div class="modal fade" id="bot-info-modal" tabindex="-1"  aria-labelledby="{{badge_id}}Label" aria-hidden="true">
 	<div class="modal-dialog modal-dialog-centered">
