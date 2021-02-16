@@ -44,7 +44,8 @@ async def add_bot_api(
         css: str = FForm(""),
         custom_prefix: str = FForm("off"),
         open_source: str = FForm("off"),
-        html_long_description: str = FForm("false")
+        html_long_description: str = FForm("false"),
+        guild_count: int = FForm(None)
     ):
     banner = banner.replace("http://", "https://").replace("(", "").replace(")", "")
     html_long_description = html_long_description == "true"
@@ -57,7 +58,7 @@ async def add_bot_api(
     bot_dict["features"] = features
     if bot_id == "" or prefix == "" or invite == "" or description == "" or long_description == "" or len(prefix) > 9:
         return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "Please ensure you have filled out all the required fields and that your prefix is less than 9 characters.", "mode": "add"})
-    if not banner.startswith("https://"):
+    if not banner.startswith("https://") and banner not in ["", "none"]:
         return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "Your banner does not use https://. Please change it", "mode": "add"})
     fetch = await db.fetch("SELECT bot_id FROM bots WHERE bot_id = $1", bot_id)
     if fetch:
@@ -91,11 +92,14 @@ async def add_bot_api(
             extra_owners = [int(id.replace(" ", "")) for id in extra_owners.split(",")]
         except:
             return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "One of your extra owners doesn't exist or you haven't comma-seperated them.", "mode": "add"})
-    bt.add_task(add_bot_bt, request, bot_id, prefix, library, website, banner, support, long_description, description, selected_tags, extra_owners, creation, bot_object, invite, features, html_long_description, css)
+    bt.add_task(add_bot_bt, request, bot_id, prefix, library, website, banner, support, long_description, description, selected_tags, extra_owners, creation, bot_object, invite, features, html_long_description, css, guild_count)
     return RedirectResponse("/bot/" + str(bot_id), status_code = 303)
 
-async def add_bot_bt(request, bot_id, prefix, library, website, banner, support, long_description, description, selected_tags, extra_owners, creation, bot_object, invite, features, html_long_description, css):
+async def add_bot_bt(request, bot_id, prefix, library, website, banner, support, long_description, description, selected_tags, extra_owners, creation, bot_object, invite, features, html_long_description, css, guild_count):
     await db.execute("INSERT INTO bots(bot_id,prefix,bot_library,invite,website,banner,discord,long_description,description,tags,owner,extra_owners,votes,servers,shard_count,created_at,api_token,features, html_long_description, css) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)", bot_id, prefix, library, invite, website, banner, support, long_description, description, selected_tags, int(request.session["userid"]), extra_owners, 0, 0, 0, int(creation), get_token(101), features, html_long_description, css)
+    if guild_count is not None:
+        # Since we are adding, lets assume 0 shards
+        await set_stats(bot_id = int(bot_id), guild_count = guild_count, shard_count = 0)
     await add_event(bot_id, "add_bot", {})
     owner=str(request.session["userid"])
     channel = client.get_channel(bot_logs)
@@ -154,7 +158,8 @@ async def bot_edit_api(
         github: str = FForm(""),
         custom_prefix: str = FForm("off"),
         open_source: str = FForm("off"),
-        html_long_description: str = FForm("false")
+        html_long_description: str = FForm("false"),
+        guild_count: int = FForm(None)
     ):
     html_long_description = html_long_description == "true"
     guild = client.get_guild(reviewing_server)
@@ -169,7 +174,7 @@ async def bot_edit_api(
     banner = banner.replace("http://", "https://").replace("(", "").replace(")", "")
     if bid == "" or prefix == "" or invite == "" or description == "" or long_description == "" or len(prefix) > 9:
         return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "Please ensure you have filled out all the required fields and that your prefix is less than 9 characters", "mode": "edit"})
-    if not banner.startswith("https://"):
+    if not banner.startswith("https://") and banner not in ["", "none"]:
         return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "Your banner does not use https://. Please change it", "mode": "edit"})
     if "userid" in request.session.keys():
         check = await db.fetchrow("SELECT owner, extra_owners FROM bots WHERE bot_id = $1", bid)
@@ -223,10 +228,10 @@ async def bot_edit_api(
         except:
             return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "One of your extra owners is invalid", "mode": "edit"})
     print(features)
-    bt.add_task(edit_bot_bt, request, bid, prefix, library, website, banner, support, long_description, description, selected_tags, extra_owners, creation, invite, webhook, vanity, github, features, html_long_description, webhook_type, css)
+    bt.add_task(edit_bot_bt, request, bid, prefix, library, website, banner, support, long_description, description, selected_tags, extra_owners, creation, invite, webhook, vanity, github, features, html_long_description, webhook_type, css, guild_count)
     return templates.TemplateResponse("message.html", {"request": request, "message": "Bot has been edited.<script>window.location.replace('/bot/" + str(bid) + "')</script>", "username": request.session.get("username", False), "avatar": request.session.get('avatar')}) 
 
-async def edit_bot_bt(request, botid, prefix, library, website, banner, support, long_description, description, selected_tags, extra_owners, creation, invite, webhook, vanity, github, features, html_long_description, webhook_type, css):
+async def edit_bot_bt(request, botid, prefix, library, website, banner, support, long_description, description, selected_tags, extra_owners, creation, invite, webhook, vanity, github, features, html_long_description, webhook_type, css, guild_count):
     await db.execute("UPDATE bots SET bot_library=$2, webhook=$3, description=$4, long_description=$5, prefix=$6, website=$7, discord=$8, tags=$9, banner=$10, invite=$11, extra_owners = $12, github = $13, features = $14, html_long_description = $15, webhook_type = $16, css = $17 WHERE bot_id = $1", botid, library, webhook, description, long_description, prefix, website, support, selected_tags, banner, invite, extra_owners, github, features, html_long_description, webhook_type, css)
     check = await db.fetchrow("SELECT vanity FROM vanity WHERE redirect = $1", botid)
     if check is None:
@@ -234,6 +239,13 @@ async def edit_bot_bt(request, botid, prefix, library, website, banner, support,
         await db.execute("INSERT INTO vanity (type, vanity_url, redirect) VALUES ($1, $2, $3)", 1, vanity, botid)
     else:
         await db.execute("UPDATE vanity SET vanity_url = $1 WHERE redirect = $2", vanity, botid)
+    if guild_count is not None:
+        shard_count = await db.fetchrow("SELECT shard_count FROM bots WHERE bot_id = $1", botid)
+        if shard_count is None or shard_count["shard_count"] is None:
+            shard_count = 0
+        else:
+            shard_count = shard_count["shard_count"]
+        await set_stats(bot_id = int(botid), guild_count = guild_count, shard_count = shard_count)
     await add_event(botid, "edit_bot", {"user": request.session['userid']})
     channel = client.get_channel(bot_logs)
     owner=str(request.session["userid"])

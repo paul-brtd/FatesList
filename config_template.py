@@ -1,5 +1,7 @@
 import builtins
 builtins.bot_logs=789946587203764224
+builtins.bots_role=789934898408194059
+builtins.bot_dev_role = 789935019531304991
 builtins.reviewing_server=789934742128558080 # Bit of a misnomer, but this is the actual main server
 builtins.test_server = 794834630942654546 # And THIS is the test server for reviewing bots
 # Confusing right? Sorry, i already did 50% using reviewing server so meow ig

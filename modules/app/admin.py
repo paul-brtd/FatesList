@@ -101,13 +101,36 @@ async def review_api(request:Request, bot_id: int, accept: str = FForm("")):
     if not s[0]:
         return RedirectResponse("/")                
     elif accept == "true":
-        b = await db.fetchrow("SELECT owner FROM bots WHERE bot_id = $1", bot_id)
+        b = await db.fetchrow("SELECT owner, extra_owners FROM bots WHERE bot_id = $1", bot_id)
         if b is None:
             return RedirectResponse("/admin/console")
         await db.execute("UPDATE bots SET queue=false WHERE bot_id = $1", bot_id)
         await add_event(bot_id, "approve", {"user": request.session.get('userid')})
         channel = client.get_channel(bot_logs)
         await channel.send(f"<@{bot_id}> by <@{str(b['owner'])}> has been approved")
+        
+        # Give Bot Dev Roles
+        try:
+            owner = guild.get_member(int(b['owner']))
+        except:
+            owner = None
+        if owner is None:
+            pass
+        else:
+            await owner.add_roles(guild.get_role(bot_dev_role))
+        if b["extra_owners"] is None:
+            pass
+        else:
+            for eo in b["extra_owners"]:
+                try:
+                    eo_member = guild.get_member(int(eo))
+                except:
+                    eo_member = None
+                if eo_member is None:
+                    pass
+                else:
+                    await eo.add_roles(guild.get_role(bot_dev_role))
+
         return templates.TemplateResponse("last.html",{"request":request,"message":"Bot accepted; You MUST Invite it by this url","username":request.session["username"],"url":f"https://discord.com/oauth2/authorize?client_id={str(bot_id)}&scope=bot&guild_id={guild.id}&disable_guild_select=true&permissions=0"})
     elif accept == "unverify":
         b = await db.fetchrow("SELECT owner FROM bots WHERE bot_id = $1", bot_id)

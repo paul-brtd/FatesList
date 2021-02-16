@@ -1,1 +1,1 @@
-uvicorn main:app --port 9999
+python3 manager_bot.py & uvicorn main:app --port 9999
