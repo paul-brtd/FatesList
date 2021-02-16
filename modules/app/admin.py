@@ -137,7 +137,7 @@ async def review_api(request:Request, bot_id: int, accept: str = FForm("")):
         if b is None:
             return RedirectResponse("/admin/console")
         await db.execute("UPDATE bots SET queue=true, banned = false WHERE bot_id = $1", bot_id)
-        await add_event(bot_id, "approve", f"user={str(request.session.get('userid'))}")
+        await add_event(bot_id, "unverify", {"user": request.session.get('userid')})
         channel = client.get_channel(bot_logs)
         await channel.send(f"<@{bot_id}> by <@{str(b['owner'])}> has been unverified")
         return templates.TemplateResponse("message.html",{"request":request,"message":"Bot unverified. Please carry on with your day"})
