@@ -38,7 +38,7 @@ async def admin_dashboard(request:Request, stats: Optional[int] = 0):
 
 @router.post("/console")
 @csrf_protect
-async def admin_api(request:Request, admin: str = FForm(""), bot_id: int = FForm(0), bt: BackgroundTasks):
+async def admin_api(request: Request, bt: BackgroundTasks, admin: str = FForm(""), bot_id: int = FForm(0)):
     print(bot_id)
     guild = client.get_guild(reviewing_server)
     user = guild.get_member(int(request.session["userid"]))

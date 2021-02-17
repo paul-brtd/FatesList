@@ -124,3 +124,5 @@ CREATE TABLE support_requests (
     description text,
     bot_id BIGINT
 );
+
+CREATE OR REPLACE FUNCTION resetVoteEpoch () RETURNS integer AS $rc$ DECLARE rc INTEGER; BEGIN UPDATE bots SET vote_epoch = 0;  RETURN 1; END; $rc$ LANGUAGE plpgsql;

@@ -1,6 +1,104 @@
 {% extends "base/base.html" %}
 
 {% block head %}
+<style>
+body {
+    margin: 5%;
+    text-align: center;
+    background: #111;
+    color: #333;
+}
+h1 {
+    font-size: 2em;
+    margin-bottom: .5rem;
+}
+
+.slider {
+  -webkit-appearance: none;
+  width: 20%;
+  height: 5px;
+  border-radius: 5px;   
+  background: #d3d3d3;
+  outline: none;
+  opacity: 0.7;
+  -webkit-transition: .2s;
+  transition: opacity .2s;
+}
+
+/* Mouse-over effects */
+.slider:hover {
+  opacity: 1; /* Fully shown on mouse-over */
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%; 
+  background: #4CAF50;
+  cursor: pointer;
+}
+
+.slider::-moz-range-thumb {
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  background: #4CAF50;
+  cursor: pointer;
+}
+
+/* Style the tab */
+.tab {
+  text-align: center;
+  color: white !important;
+  border: none;
+}
+
+/* Style the buttons that are used to open the tab content */
+.tab button {
+  background-color: black;
+  color: white;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 14px 16px;
+  transition: 0.3s;
+}
+
+/* Change background color of buttons on hover */
+.tab button:hover {
+  background-color: #2e3033;
+}
+
+/* Create an active/current tablink class */
+.tab button.active {
+  border-bottom: solid;
+  color: white;
+}
+
+/* Style the tab content */
+.tabcontent {
+  display: none;
+}
+
+    .blackbar {background: black; border-radius: 40px 40px 40px 40px; border: hidden; margin-top: 5px; min-height: 500px; padding: 5px;}
+
+th, td {
+  padding: 15px;
+  border-bottom: solid;
+  border-width: thin;
+}
+tr:last-child td {
+    border-bottom: none;
+}
+tr:last-child th {
+    border-bottom: none;
+}
+th {
+  text-align: left;
+}
+</style>
 <script>
     function resizeIframe(obj) {
       obj.style.height = obj.contentWindow.document.documentElement.scrollHeight + 100 + 'px';
@@ -16,7 +114,7 @@
 <div id="bot-content">
     <div class="d-flex d-xl-flex flex-column justify-content-center align-items-center justify-content-xl-center align-items-xl-center">
 
-	<a href="javascript:void(0)"><img style="border-radius: 50%; width: 120px;" src="{{bot.avatar}}" onclick="modalShow('#bot-info-modal')" id="bot-avatar"></a>
+	<img style="border-radius: 50%; width: 120px;" src="{{bot.avatar}}" id="bot-avatar">>
 	<h3 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;" id="bot-username">{{bot.username}}</h3>
 	{% if bot.banned %}
         <div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
@@ -31,7 +129,6 @@
 	<div class="alert alert-info" style="text-align: center; justify-content: center; color: white !important;" role="alert">
 	<strong>You are in review mode. Test the bot by inviting it to the staff server by clicking the Invite button and choosing the Testing Server. Once you are done reviewing the bot, click the bots icon to approve/deny it</strong></div>
 	{% endif %}
-	<strong id="bot-click-info" style="opacity: 0.86; color: rgba(255,255,255,0.87); margin-bottom: 3px;">Click the bots icon for more information such as the prefix, owners etc.</strong>
 	{% if maint[0] %}
 	    <div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
 	    <strong>{{maint[1]["reason"]}}</strong>
@@ -106,46 +203,77 @@
 		{% endif %}
         </form>
 	</div>
-	<div style="background: black; border-radius: 40px 40px 40px 40px; margin-top: 5px; min-height: 500px; padding: 5px;" id="bot-long-description-container">
-		<div id="bot-long-description" style="color: white; text-align: left; margin-left: 5%; margin-right: 5%; margin-top: 13px;">{{bot.long_description.replace("<a", "<a class='long-desc-link'").replace("ajax", "").replace("http://", "https://")|safe}}</div>
+	<div id="bot-switcher" style='margin-bottom: 3px;' class='blackbar'>
+		<div class="tab">
+			  <button id="bot-long-desc-tab-button" class="tablinks" onclick="openf(event, 'bot-long-description-container')">Description</button>
+			  <button id="bot-review-tab-button" class="tablinks" onclick="openf(event, 'bot-reviews')">Reviews</button>
+                          <button id="bot-about-button" class="tablinks" onclick="openf(event, 'bot-about')">About</button>
+		</div>
+	<div  id="bot-long-description-container" class='tabcontent'>
+		<div id="bot-long-description" style="color: white; text-align: left; margin-left: 5%; margin-right: 5%; margin-top: 13px;">{{bot.long_description.replace("<script", "").replace("<a", "<a class='long-desc-link'").replace("ajax", "").replace("http://", "https://")|safe}}</div>
 	</div>
-<div class="modal fade" id="bot-info-modal" tabindex="-1"  aria-labelledby="{{badge_id}}Label" aria-hidden="true">
-	<div class="modal-dialog modal-dialog-centered">
-		<div class="modal-content">
-			<div class="modal-header">
-				<h5 style="color: black;" class="modal-title" id="bInfolabel">{{bot.username}}</h5>
-			</div>
-                        <div class="modal-body" style="text-align: left">
-				<strong>Owners: </strong><a class="link-modal" href="/profile/{{bot.owner}}">{{bot.owner_pretty.username}}</a>{% if bot.extra_owners == "None" or not bot.extra_owners or bot.extra_owners == [] %}{%else%}{%for bobj in bot.extra_owners %}{% if loop.index == bot.leo %} and {% else%}, {%endif%}<a class="link-modal" href="/profile/{{bobj[1]}}">{{bobj[0]["username"]}}</a>{%endfor%}{%endif%}<br/>
-				<strong>Prefix:</strong> {{bot.prefix}}<br/>
-				<strong>Library:</strong> {{bot.library}}<br/>
-				<strong>Servers:</strong> {{bot.servers}}<br/>
-				<strong>Shards:</strong> {{bot.shards}}</br/>
-				<strong>Amount Of Invites:</strong> {{bot.invite_amount}}<br/>
-				<strong>Vote Page:</strong> <a class="link-modal" href="/bot/{{bot_id}}/vote">Share this with your friends!</a><br/>
-				{% if bot.features %}
-				<strong>Features: </strong>{% for f in bot.features %}<a class="link-modal" href="/feature/{{f}}">{{f.replace("_", " ").title()}}</a>{% if loop.index == bot.fleo - 1%} and {% elif loop.index != bot.fleo%}, {%endif%}{% endfor %}
-				{% endif %}<br/><br/>
-				{% if username %}<strong>PUBAV Token:</strong> {{pubav}}<br/>{% endif %}
-			</div>
+        <div id="bot-reviews" class='tabcontent'>
+		<h5 class="white">Bot Reviews</h5>
+		<form role="form" id="review_form">
+			<label for="rating">On a scale of 1 to 10, how much did you like this bot?</label><br/>
+			<input id='bot-range-slider' type="range" name="rating" min="0.1" max="10" value='0' step='0.1' id="bot-range-slider" class='slider'/>
+			<p id='rating-desc' style="color: white;"></p>
+		</form>
+	</div>
+	<div id="bot-about" class='tabcontent white'>
+			<table style="margin: 0 auto !important;">
+			   <tr>
+				<th>Owners</th>
+                                <td><a class='long-desc-link' href="/profile/{{bot.owner}}">{{bot.owner_pretty.username}}</a>{% if bot.extra_owners == "None" or not bot.extra_owners or bot.extra_owners == [] %}{%else%}{%for bobj in bot.extra_owners %}{% if loop.index == bot.leo %} and {% else%}, {%endif%}<a class='long-desc-link' href="/profile/{{bobj[1]}}">{{bobj[0]["username"]}}</a>{%endfor%}{%endif%}</td>
+			   </tr>
+			   <tr>
+				<th>Prefix</th>
+				<td>{{bot.prefix}}</td>
+			   </tr>
+			   <tr>
+			   	<th>Library</th>
+				<td>{{bot.library}}</td>
+			   </tr>
+			   <tr>
+                                <th>Servers</th>
+				<td>{{bot.servers}}</td>
+			   </tr>
+			   <tr>
+                                <th>Shards</th>
+				<td>{{bot.shards}}</td>
+			   </tr>
+			   <tr>
+                                <th>Invites</th>
+                                <td>{{bot.invite_amount}}</td>
+			   </tr>
+			   <tr>
+				<th>Vote Page</th>
+                                <td><a class='long-desc-link' href="/bot/{{bot_id}}/vote">Here</a></td>
+		 	   </tr>
+                           {% if bot.features %}
+			   <tr>
+				<th>Features</th>
+	                        <td>{% for f in bot.features %}<a class='long-desc-link' href="/feature/{{f}}">{{f.replace("_", " ").title()}}</a>{% if loop.index == bot.fleo - 1%} and {% elif loop.index != bot.fleo%}, {%endif%}{% endfor %}
+			   </tr>
+			   {% endif %}
+			</table>
 			{% if staff[0] %}
-			<div class="modal-footer">
-				{% if review %}
-				<form method="POST" action="/admin/review/{{bot_id}}">
-					{{ form.csrf_token }}
-					<input hidden name="accept" value="true"></input>
-					<button class="btn btn-primary" type="submit" style="margin: 0 15px;">Accept</button>
+			{% if review %}
+			<form method="POST" action="/admin/review/{{bot_id}}">
+				{{ form.csrf_token }}
+				<input hidden name="accept" value="true"></input>
+				<button class="btn btn-outline-light" type="submit" style="margin: 0 15px;">Accept</button>
 				</form>
-                                <form method="POST" action="/admin/review/{{bot_id}}">
-                                        {{ form.csrf_token }}
-                                        <input hidden name="accept" value="false"></input>
-                                        <button class="btn btn-primary" type="submit" style="margin: 0 15px;">Deny</button>
-                                </form>
+                        <form method="POST" action="/admin/review/{{bot_id}}">
+                                {{ form.csrf_token }}
+                                <input hidden name="accept" value="false"></input>
+                                <button class="btn btn-outline-light" type="submit" style="margin: 0 15px;">Deny</button>
+                        </form>
 				{% elif not bot.queue %}
                                 <form method="POST" action="/admin/review/{{bot_id}}">
                                         {{ form.csrf_token }}
                                         <input hidden name="accept" value="unverify"></input>
-                                        <button class="btn btn-primary" type="submit" style="margin: 0 15px;">Unverify</button>
+                                        <button class="btn btn-outline-light" type="submit" style="margin: 0 15px;">Unverify</button>
                                 </form>
 				{% endif %}
 			</div>
@@ -154,16 +282,65 @@
 	</div>
 </div>
 <script>
-        function modalShow(id) {
-            $(id).modal()
-        }
+var rating = 0;
 // Block onload
 var x = document.getElementById("bot-long-description");
 x.addEventListener("load", myFunction);
 function myFunction(event) {
   event.stopImmediatePropagation();
-} 
+}
 
+var slider = document.getElementById("bot-range-slider");
+var output = document.getElementById("rating-desc");
+output.innerHTML = "Drag the slider to change your rating"; // Display the default slider value
+// Update the current slider value (each time you drag the slider handle)
+slider.oninput = function() {
+  if(this.value < 1)
+	state = "Atrocity"
+  else if(this.value < 2)
+	state = "Absymal"
+  else if(this.value < 3)
+	state = "Really Poor"
+  else if(this.value < 4)
+	state = "Poor"
+  else if(this.value < 5)
+	state = "Below Average"
+  else if(this.value < 6)
+	state = "Average"
+  else if(this.value < 7)
+	state = "Above Average"
+  else if(this.value < 8)
+	state = "Meets Expectations"
+  else if(this.value < 9)
+	state = "Great"
+  else if(this.value < 10)
+	state = "Exceeds Expectations"
+  else if(this.value == 10)
+	state = "Without a doubt, perfect"
+  output.innerHTML = state + ", " + this.value;
+}
+
+function openf(evt, id) {
+  // Declare all variables
+  var i, tabcontent, tablinks;
+
+  // Get all elements with class="tabcontent" and hide them
+  tabcontent = document.getElementsByClassName("tabcontent");
+  for (i = 0; i < tabcontent.length; i++) {
+    tabcontent[i].style.display = "none";
+  }
+
+  // Get all elements with class="tablinks" and remove the class "active"
+  tablinks = document.getElementsByClassName("tablinks");
+  for (i = 0; i < tablinks.length; i++) {
+    tablinks[i].className = tablinks[i].className.replace(" active", "");
+  }
+
+  // Show the current tab, and add an "active" class to the button that opened the tab
+  document.getElementById(id).style.display = "block";
+  evt.currentTarget.className += " active";
+}
+document.getElementById('bot-long-desc-tab-button').click()
 </script>
 </div>
 {% endblock %} 

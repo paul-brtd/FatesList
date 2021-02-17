@@ -314,7 +314,7 @@ async def vote_bot(uid: int, bot_id: int, username, autovote: bool) -> Optional[
     if check is None:
         await db.execute("INSERT INTO bot_stats_votes (bot_id, total_votes) VALUES ($1, $2)", int(bot_id), b["votes"] + 1)
     else:
-        await db.execute("UPDATE bot_stats_votes SET total_votes = total_votes + 1 WHERE bot_id = $2", int(bot_id))
+        await db.execute("UPDATE bot_stats_votes SET total_votes = total_votes + 1 WHERE bot_id = $1", int(bot_id))
 
     event_id = asyncio.create_task(add_event(bot_id, "vote", {"username": username, "user_id": str(uid), "votes": b['votes'] + 1, "**Vote Here**": "https://fateslist.xyz/bot/" + str(bot_id)}))
     return []
@@ -338,7 +338,6 @@ async def render_bot(request: Request, bot_id: int, review: bool, widget: bool):
     if widget:
         eo = []
         bot_admin = False
-        upubav = None
     else:
         if bot["extra_owners"] is None:
             eo = []
@@ -346,16 +345,9 @@ async def render_bot(request: Request, bot_id: int, review: bool, widget: bool):
             eo = bot["extra_owners"]
         if "userid" in request.session.keys():
             user = guild.get_member(int(request.session.get("userid")))
-            if (await redis_db.get(str(request.session.get("userid")) + str(bot_id))) is not None:
-                upubav = await redis_db.get(str(request.session.get("userid")) + str(bot_id))
-                upubav = upubav.decode()
-            else:
-                upubav = get_token(11).upper()
-                await redis_db.set(str(request.session.get("userid")) + str(bot_id),  upubav)
             bot_admin = await is_bot_admin(int(bot_id), int(request.session.get("userid"))) 
         else:
             bot_admin = False
-            upubav = None
     img_header_list = ["image/gif", "image/png", "image/jpeg", "image/jpg"]
     banner = bot["banner"].replace(" ", "%20").replace("\n", "")
     try:
@@ -386,7 +378,7 @@ async def render_bot(request: Request, bot_id: int, review: bool, widget: bool):
     else:
         f = "bot.html"
         widget = False
-    return templates.TemplateResponse(f, {"request": request, "bot": bot_obj, "bot_id": bot_id, "tags_fixed": _tags_fixed_bot, "form": form, "avatar": request.session.get("avatar"), "promos": promos, "maint": maint, "bot_admin": bot_admin, "review": review, "guild": reviewing_server, "widget": widget, "pubav": upubav})
+    return templates.TemplateResponse(f, {"request": request, "bot": bot_obj, "bot_id": bot_id, "tags_fixed": _tags_fixed_bot, "form": form, "avatar": request.session.get("avatar"), "promos": promos, "maint": maint, "bot_admin": bot_admin, "review": review, "guild": reviewing_server, "widget": widget})
 
 async def parse_bot_list(fetch: List[asyncpg.Record]) -> list:
     lst = []
