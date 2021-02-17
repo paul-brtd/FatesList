@@ -67,14 +67,10 @@ async def v_legacy(request: Request, a: str):
 async def features_view(request: Request, name: str):
     if name not in features.keys():
         return abort(404)
-    feature_bots = (f"SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE ('{str(name)}' = ANY(features)) and queue = false and banned = false and disabled = false ORDER BY votes DESC;")
+    feature_bots = (f"SELECT description, banner, certified, votes, servers, bot_id, invite FROM bots WHERE ('{str(name)}' = ANY(features)) and queue = false and banned = false and disabled = false ORDER BY votes DESC;")
     print(feature_bots)
     bots = await db.fetch(feature_bots)
-    bot_obj = []
-    for bot in bots:
-        bot_info = await get_bot(bot["bot_id"])
-        if bot_info:
-            bot_obj.append({"bot": bot, "avatar": bot_info["avatar"], "username": bot_info["username"], "votes": human_format(bot["votes"]), "servers": human_format(bot["servers"]), "description": bot["description"]})
+    bot_obj = await parse_bot_list(bots)
     return templates.TemplateResponse("feature.html", {"request": request, "name": name, "feature": features[name], "bots": bot_obj})
 
 @router.get("/fates/stats")
