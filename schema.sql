@@ -35,6 +35,28 @@ CREATE TABLE bots (
     autovote_whitelisted_users bigint[] DEFAULT [];
 );
 
+CREATE TABLE bot_stats_votes (
+   bot_id bigint,
+   total_votes bigint
+);
+
+CREATE TABLE bot_stats_votes_pm (
+   bot_id bigint,
+   month integer,
+   votes bigint
+);
+
+CREATE TABLE bot_reviews (
+   bot_id bigint not null,
+   star_rating float4 default 0.0,
+   review boolean default false, -- Review or rating flag
+   review_title text,
+   review_text text,
+   review_upvotes integer default 0,
+   review_downvotes integer default 0,
+   flagged boolean default false
+);
+
 CREATE TABLE bots_voters (
     bot_id bigint,
     userid bigint,

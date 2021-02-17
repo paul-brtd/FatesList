@@ -38,7 +38,7 @@ async def admin_dashboard(request:Request, stats: Optional[int] = 0):
 
 @router.post("/console")
 @csrf_protect
-async def admin_api(request:Request, admin: str = FForm(""), bot_id: int = FForm(0)):
+async def admin_api(request:Request, admin: str = FForm(""), bot_id: int = FForm(0), bt: BackgroundTasks):
     print(bot_id)
     guild = client.get_guild(reviewing_server)
     user = guild.get_member(int(request.session["userid"]))
@@ -75,10 +75,16 @@ async def admin_api(request:Request, admin: str = FForm(""), bot_id: int = FForm
         await db.execute("UPDATE bots SET autovote_whitelist = false WHERE bot_id = $1", bot_id)
         return "Done"
     elif admin=="reset":
-        await db.execute("UPDATE bots SET votes = 0")
+        bt.add_task(stat_update_bt)        
         return templates.TemplateResponse("message.html", {"request": request, "message": "Hey mikes, i hope your wish comes true ;)", "username": request.session.get("username", False)})
     else:
         return RedirectResponse("/admin/console", status_code = 303)
+
+async def stat_update_bt():
+    bots = await db.fetch("SELECT bot_id, votes FROM bots")
+    for bot in bots:
+        await db.execute("INSERT INTO bot_stats_votes_pm (bot_id, epoch, votes) VALUES ($1, $2, $2)", bot["bot_id"], time.time(), bot["votes"])
+    await db.execute("UPDATE bots SET votes = 0")
 
 @router.get("/review/{bot_id}")
 async def review(request: Request, bot_id: int):

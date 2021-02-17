@@ -179,44 +179,6 @@ async def timestamped_get_votes_api(request: Request, bot_id: int, user_id: Opti
     for data in ldata:
         ret[str(data["userid"])] = data["timestamps"]
     return {"user": "timestamp"} | ret
-class BotVoteReset(BaseModel):
-    user: Optional[int] = None
-    count: Optional[int] = None
-    reset: Optional[bool] = False
-
-@router.delete("/bots/{bot_id}/votes", tags = ["API"], response_model = APIResponse)
-async def delete_votes_api(request: Request, bot_id: int, api: BotVoteReset, Authorization: str = Header("INVALID_API_TOKEN")):
-    """Endpoint to reset the votes of the bot, a specific user or a specific amount less
-
-    This API takes either a user or a count (or reset which just nukes all your votes). If u specify a user, all the users vote are deleted. If u specify count, the count is the minimum votes to delete and the amount that will be deleted without user field. If u specify both user and count, the api will remove all user votes with the minimum votes to delete being count (AKA user voted 10 times, count being 20 will remove users 10 votes and 10 more votes to satisfy count)
-
-    """
-    if api.count is not None and api.count < 0:
-        return ORJSONResponse({"done": False, "reason": "COUNT_CANNOT_BE_NEGATIVE"}, status_code = 400)
-    if api.reset:
-        await db.execute("UPDATE bots SET votes = $1, voters = $2 WHERE bot_id = $3", 0, [], bot_id)
-        return {"done": True, "reason": None}
-    id = await db.fetchrow("SELECT votes, voters FROM bots WHERE bot_id = $1 AND api_token = $2", bot_id, str(Authorization))
-    if id is None:
-        return abort(401)
-    elif id["voters"] is None:
-        return ORJSONResponse({"done": False, "reason": "NO_VOTES_YET"}, status_code = 400)
-    
-    if api.user is not None:
-        voters = [user for user in id["voters"] if user != api.user]
-    else:
-        voters = id["voters"]
-
-    if api.count is not None and id["votes"] - len(voters) < api.count:
-            del_count = api.count
-    else:
-        del_count = id["votes"] - len(voters)
-    db_count = id["votes"] - del_count
-    print(db_count, del_count, api.user, api.count, voters, id["votes"])
-    if db_count < 0:
-        return ORJSONResponse({"done": False, "reason": "TOO_FEW_VOTES_PRESENT"}, status_code = 400)
-    await db.execute("UPDATE bots SET votes = $1, voters = $2 WHERE bot_id = $3", db_count, voters, bot_id)
-    return {"done": True, "reason": None}
 
 # TODO
 #@router.get("/templates/{code}", tags = ["Core API"])

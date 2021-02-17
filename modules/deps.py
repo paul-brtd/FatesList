@@ -273,6 +273,17 @@ async def get_user_token(uid: int, username: str) -> str:
                 await db.execute("UPDATE users SET username = $1 WHERE userid = $2", username, int(uid))
             token = token["token"]
 
+#CREATE TABLE bot_stats_votes (
+#   bot_id bigint,
+#   total_votes bigint
+#);
+
+#CREATE TABLE bot_stats_votes_pm (
+#   bot_id bigint,
+#   epoch bigint,
+#   votes bigint
+#);
+
 async def vote_bot(uid: int, bot_id: int, username, autovote: bool) -> Optional[list]:
     await get_user_token(uid, username) # Make sure we have a user profile first
     epoch = await db.fetchrow("SELECT vote_epoch FROM users WHERE userid = $1", int(uid))
@@ -292,13 +303,19 @@ async def vote_bot(uid: int, bot_id: int, username, autovote: bool) -> Optional[
     if voters is None:
         await db.execute("INSERT INTO bots_voters (userid, bot_id, timestamps) VALUES ($1, $2, $3)", int(uid), int(bot_id), [int(time.time())])
     else:
-        print(type(voters["timestamps"]))
         voters["timestamps"].append(int(time.time()))
         ts = voters["timestamps"]
-        print(ts)
         await db.execute("UPDATE bots_voters SET timestamps = $1 WHERE bot_id = $2 AND userid = $3", ts, int(bot_id), int(uid))
     await db.execute("UPDATE bots SET votes = votes + 1 WHERE bot_id = $1", int(bot_id))
     await db.execute("UPDATE users SET vote_epoch = $1 WHERE userid = $2", time.time(), int(uid))
+
+    # Update bot_stats
+    check = await db.fetchrow("SELECT bot_id FROM bot_stats_votes WHERE bot_id = $1", int(bot_id))
+    if check is None:
+        await db.execute("INSERT INTO bot_stats_votes (bot_id, total_votes) VALUES ($1, $2)", int(bot_id), b["votes"] + 1)
+    else:
+        await db.execute("UPDATE bot_stats_votes SET total_votes = total_votes + 1 WHERE bot_id = $2", int(bot_id))
+
     event_id = asyncio.create_task(add_event(bot_id, "vote", {"username": username, "user_id": str(uid), "votes": b['votes'] + 1, "**Vote Here**": "https://fateslist.xyz/bot/" + str(bot_id)}))
     return []
 
