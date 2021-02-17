@@ -378,7 +378,7 @@ async def render_bot(request: Request, bot_id: int, review: bool, widget: bool):
     else:
         f = "bot.html"
         widget = False
-    return templates.TemplateResponse(f, {"request": request, "bot": bot_obj, "bot_id": bot_id, "tags_fixed": _tags_fixed_bot, "form": form, "avatar": request.session.get("avatar"), "promos": promos, "maint": maint, "bot_admin": bot_admin, "review": review, "guild": reviewing_server, "widget": widget})
+    return templates.TemplateResponse(f, {"request": request, "bot": bot_obj, "bot_id": bot_id, "tags_fixed": _tags_fixed_bot, "form": form, "avatar": request.session.get("avatar"), "promos": promos, "maint": maint, "bot_admin": bot_admin, "review": review, "guild": reviewing_server, "widget": widget, "botp": True})
 
 async def parse_bot_list(fetch: List[asyncpg.Record]) -> list:
     lst = []

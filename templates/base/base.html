@@ -1,37 +1,48 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
-<!-- Google Tag Manager -->
-<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-KSZXP7T');</script>
-<!-- End Google Tag Manager -->
-
+{% if not botp %}
 <!-- Primary Meta Tags -->
 <title>Fates List | Discord Bot List</title>
 <meta name="title" content="Fates List | Discord Bot List">
 <meta name="description" content="Find, invite and discover the best Discord bots, now on Fates List.">
+{% else %}
+<title>{{bot.username}}</title>
+<meta name="title" content="{{bot.username}}">
+<meta name="description" content="{{bot.description}}">
+{% endif %}
 <meta name="keywords" content="discord bot list, fateslist, fates list, bot list, discord list, list of bost, discord bots, fateslist bots, fates list">
-
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <meta name="language" content="English">
 
+{% if not botp %}
 <!-- Open Graph / Facebook -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://fateslist.xyz/">
 <meta property="og:title" content="Fates List | Discord Bot List">
 <meta property="og:description" content="Find, invite and discover the best Discord bots, now on Fates List.">
 <meta property="og:image" content="https://fateslist.xyz/static/assets/img/banner.webp">
-
+{% else %}
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://fateslist.xyz/bot/{{bot_id}}">
+<meta property="og:title" content="{{bot.username}}">
+<meta property="og:description" content="{{bot.description}}">
+<meta property="og:image" content="{{bot.avatar}}">
+{% endif %}
 <!-- Twitter -->
+{% if not botp %}
 <meta property="twitter:card" content="summary">
 <meta property="twitter:url" content="https://fateslist.xyz/">
 <meta property="twitter:title" content="Fates List | Discord Bot List">
 <meta property="twitter:description" content="Find, invite and discover the best Discord bots, now on Fates List.">
 <meta property="twitter:image" content="https://fateslist.xyz/static/assets/img/banner.webp">
-
+{% else %}
+<meta property="twitter:card" content="summary">
+<meta property="twitter:url" content="https://fateslist.xyz/">
+<meta property="twitter:title" content="{{bot.username}}">
+<meta property="twitter:description" content="{{bot.description}}">
+<meta property="twitter:image" content="{{bot.avatar}}">
+{% endif %}
 <link rel="canonical" href="https://fateslist.xyz/"/>
 
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lozad/dist/lozad.min.js"></script>
