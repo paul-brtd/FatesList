@@ -15,16 +15,6 @@ async def index_fend(request: Request):
 async def nonerouter():
     return RedirectResponse("/static/assets/img/banner.webp", status_code = 301)
 
-async def vanity_bot(vanity: str):
-    t = await db.fetchrow("SELECT type, redirect FROM vanity WHERE lower(vanity_url) = $1", vanity.lower())
-    if t is None:
-        return None
-    if t["type"] == 1:
-        type = "bot"
-    else:
-        type = "profile"
-    return "/" + type + "/" + str(t["redirect"]), type
-
 @router.get("/{vanity}")
 async def vanity_bot_uri(request: Request, vanity: str):
     vurl = await vanity_bot(vanity)

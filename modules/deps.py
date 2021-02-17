@@ -443,6 +443,20 @@ async def render_search(request: Request, q: str, api: bool):
         return templates.TemplateResponse("search.html", {"request": request, "search_bots": search_bots, "tags_fixed": tags_fixed, "query": q, "profile_search": False})
     else:
         return {"search_bots": search_bots, "tags_fixed": tags_fixed, "query": q, "profile_search": False}
+
+# Check vanity of bot 
+async def vanity_bot(vanity: str, compact = True):
+    t = await db.fetchrow("SELECT type, redirect FROM vanity WHERE lower(vanity_url) = $1", vanity.lower())
+    if t is None:
+        return None
+    if t["type"] == 1:
+        type = "bot"
+    else:
+        type = "profile"
+    if compact:
+        return type, str(t["redirect"])
+    return "/" + type + "/" + str(t["redirect"]), type
+
 # WebSocket Base Code
 
 class ConnectionManager:

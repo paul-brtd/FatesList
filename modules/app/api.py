@@ -135,6 +135,11 @@ async def get_bots_api(request: Request, bot_id: int, Authorization: str = Heade
         api_ret["sensitive"] = {}
     api_ret["promotions"] = await get_promotions(bot_id = bot_id)
     api_ret["maint"] = await in_maint(bot_id = bot_id)
+    vanity = await db.fetchrow("SELECT vanity_url FROM vanity WHERE redirect = $1", bot_id)
+    if vanity is None:
+        api_ret["vanity"] = None
+    else:
+        api_ret["vanity"] = vanity["vanity_url"]
     return api_ret
 
 class BotVoteCheck(BaseModel):
@@ -236,6 +241,13 @@ async def get_feature_api(request: Request, name: str):
     if name not in features.keys():
         return abort(404)
     return features[name]
+
+@router.get("/vanity/{vanity}", tags = ["API"])
+async def get_vanity(request: Request, vanity: str):
+    vb = await vanity_bot(vanity, compact = True)
+    if vb is None:
+        return abort(404)
+    return {"type": vb[0], "redirect": vb[1]}
 
 @router.get("/bots/ext/index", tags = ["API (Other)"])
 async def bots_index_page_api_do(request: Request):
