@@ -345,6 +345,8 @@ async def parse_reviews(bot_id: int, reviews: List[asyncpg.Record] = None) -> Li
             _parsed_reply = await parse_reviews(bot_id, _reply)
             reviews[i]["replies"].append(_parsed_reply)
         i+=1
+    if i == 0:
+        return reviews, 10.0
     return reviews, round(stars/i, 2)
 
 # Get Bots Helper

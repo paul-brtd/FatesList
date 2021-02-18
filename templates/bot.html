@@ -239,7 +239,8 @@ th {
 			<p class="white">You need to be logged in to make reviews</p>
 		{% endif %}
 		<hr class="hr-is">
-                <p class="white">Average Rating: <i class='fas fa-star' style="margin-right: 3px;"></i>{{average_rating}}/10.0</p>
+		<span style="font-size: 18px;" class="white">Reviews: {{bot_reviews.__len__()}}</span><br/>
+		<span style="font-size: 18px;" class="white">Average Rating: <i class='fas fa-star' style="margin-right: 3px;"></i>{{average_rating}}/10.0</span><br/>
 		<span class="white">
 			<input disabled class='slider' type="range" name="rating" min="0.1" max="10" value='{{average_rating}}' step='0.1' tabindex="-1"/>
 			<p id="rating-desc-avg"></p>
@@ -398,7 +399,7 @@ function parseState(v) {
   return state
 }
 
-document.querySelector("#rating-desc-avg").innerHTML = parseState({{average_rating}}) + "," + {{average_rating}} 
+document.querySelector("#rating-desc-avg").innerHTML = parseState({{average_rating}}) + ", " + {{average_rating}} 
 
 function openf(evt, id) {
   // Declare all variables
