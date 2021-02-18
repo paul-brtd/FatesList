@@ -170,7 +170,7 @@ async def get_votes_api(request: Request, bot_id: int, user_id: int, Authorizati
         time_to_vote = 0
     return {"votes": voter_count, "voted": voter_count != 0, "vote_epoch": vote_epoch, "time_to_vote": time_to_vote, "vote_right_now": time_to_vote == 0}
 
-@router.get("/bots/{bot_id}/votes/timestamped")
+@router.get("/bots/{bot_id}/votes/timestamped", tags = ["API"])
 async def timestamped_get_votes_api(request: Request, bot_id: int, user_id: Optional[int] = None, Authorization: str = Header("INVALID_API_TOKEN")):
     """Endpoint to check amount of votes a user has with timestamps. This does not return whether a user can vote"""
     id = await db.fetchrow("SELECT bot_id FROM bots WHERE bot_id = $1 AND api_token = $2", bot_id, str(Authorization))

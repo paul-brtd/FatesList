@@ -17,7 +17,7 @@ CREATE TABLE bots (
     html_long_description boolean default false,
     css text default '',
     prefix text,
-    features TEXT[] DEFAULT [],
+    features TEXT[] DEFAULT '{}',
     api_token text unique,
     website text,
     discord text,
@@ -57,7 +57,8 @@ CREATE TABLE bot_reviews (
    review_upvotes integer default 0,
    review_downvotes integer default 0,
    flagged boolean default false,
-   epoch bigint
+   epoch bigint[] default '{}',
+   replies uuid[] default '{}'
 );
 
 CREATE TABLE bots_voters (

@@ -229,7 +229,7 @@ th {
 		{% if username %}
 		<form method="POST" id="review_form" action="/bot/{{bot_id}}/reviews/new" style="margin-bottom: 10px;">
 			<label for="rating">On a scale of 1 to 10, how much did you like this bot?</label><br/>
-			<input id='bot-range-slider' type="range" name="rating" min="0.1" max="10" value='5' step='0.1' id="bot-range-slider" class='slider'/>
+			<input class='slider bot-range-slider' type="range" name="rating" min="0.1" max="10" value='5' step='0.1' output="rating-desc"/>
 			<p id='rating-desc' style="color: white;"></p>
 			<label for="review">Please write a few words about the bot (in your opinion)</label>
 			<textarea id='bot-rating-review' name="review" type="text" class="form-control fform" style="min-height: 100px; height: 100px;" required minlength="9" placeholder="This bot is a really good bot because of X, Y and Z however...">{{review_desc}}</textarea>
@@ -240,18 +240,41 @@ th {
 		{% endif %}
 		<div style="text-align: left; margin-left: 30px;">
 		{% for rev in bot_reviews %}
-		<div class="bot-review-user" style="margin-left: 5%; border: solid;">
+		<div class="bot-review-user" style="margin-left: 5%; border: solid; margin-bottom: 20px;">
 		   <div class="bot-review-left">
-			<a href='/profile/{{rev.user_id}}' class="white">
+		   	<div class="bot-review-header" style="margin-bottom: 10px; font-weight: bold;">
+			<a href='/profile/{{rev.user_id}}' class="white" style="margin-right: 3px;">
 					<img style="border-radius: 50%; width: 24px;" src="{{rev.user.avatar}}" class="review-avatar">
-					<span class="white">{{rev.user.username}} | <i style="margin-right: 2px" class='fas fa-angle-up'></i> {{rev.review_upvotes - rev.review_downvotes}} | <span style="font-weight: bold"><i class='fas fa-star'></i> {{rev.star_rating}}/10.0</span>
+					<span class="white" style="margin-right: 3px;">{{rev.user.username}}</span>
+					<span class="white">|</span>
 			</a>
+			<a class="white" href="/bot/{{bot_id}}/review/{{rev.id}}/upvote" style="margin-right: 3px;">
+				<span class="white">
+					<i style="margin-right: 2px" class='fas fa-angle-up'></i>
+				</span>
+				<span class="white" style="margin-right: 3px;">{{rev.review_upvotes - rev.review_downvotes}}</span>
+					<span class="white">|</span>
+				</span>
+			</a>
+			<span class="white" style="font-weight: bold">
+				<i class='fas fa-star'></i>
+				<span>{{rev.star_rating}}/10.0</span>
+			</span>
 			{% if userid == rev.user_id or staff[0] %}
-			<a href='/bot/{{bot_id}}/reviews/{{rev.id}}/edit' target="_blank" style='font-weight: bold; margin-left: 3px;' class="long-desc-link">Edit</a>
+			<form method="POST" id="review-{{rev.id}}" style="display: none; width: 100%;" action="/bot/{{bot_id}}/reviews/{{rev.id}}/edit" class="white">
+				<input type="hidden" name="id" value="{{rev.id}}" /> <!-- The ID to update -->
+	                        <label for="rating">On a scale of 1 to 10, how much did you like this bot?</label><br/>
+				<input class='slider bot-range-slider' type="range" name="rating" min="0.1" max="10" value='{{rev.star_rating}}' step='0.1' style="width:100%;" output="rating-desc-{{loop.index}}"/>
+				<strong><p id='rating-desc-{{loop.index}}' style="color: white;"></p></strong>
+                        	<label for="review">Please write a few words about the bot (in your opinion)</label>
+	                        <textarea id='bot-rating-review' name="review" type="text" class="form-control fform" style="min-height: 100px; height: 100px;" required minlength="9" placeholder="This bot is a really good bot because of X, Y and Z however...">{{rev.review}}</textarea>
+	                        <button type="submit" class="btn btn-outline-light">Edit</button>
+			</form>
+			<a href='javascript:void()' style='font-weight: bold; margin-left: 3px;' class="long-desc-link" onclick="botReviewEditPane(this, '{{rev.id}}')">Edit</a>
 			{% endif %}
-			<br/><br/>
-                            <span style="margin-left: 30px !important; color: white">{{rev.review}}</span>
-		    </div><br/><br/>
+			</div>
+			    <span style="margin-left: 30px !important; color: white" id="review_text-{{rev.id}}">{{rev.review}}</span>
+		    </div>
 		    </div>
 		{% endfor %}
 		</div>
@@ -329,11 +352,14 @@ function myFunction(event) {
   event.stopImmediatePropagation();
 }
 
-var slider = document.getElementById("bot-range-slider");
-var output = document.getElementById("rating-desc");
-output.innerHTML = "Drag the slider to change your rating"; // Display the default slider value
+var slider = document.querySelectorAll(".bot-range-slider");
 // Update the current slider value (each time you drag the slider handle)
-slider.oninput = function() {
+for(var i = 0; i < slider.length; i++) {
+  output_id = slider[i].getAttribute("output")
+  document.getElementById(output_id).innerHTML = "Drag the slider to change your rating"; // Display the default slider value
+slider[i].oninput = function() {
+  output = document.getElementById(this.getAttribute("output"))
+  console.log(output)
   if(this.value < 1)
 	state = "Atrocity"
   else if(this.value < 2)
@@ -358,6 +384,7 @@ slider.oninput = function() {
 	state = "Without a doubt, perfect"
   output.innerHTML = state + ", " + this.value;
 }
+}
 
 function openf(evt, id) {
   // Declare all variables
@@ -380,7 +407,22 @@ function openf(evt, id) {
   evt.currentTarget.className += " active";
 }
 </script>
-	
+<script>
+	function botReviewEditPane(el, id) {
+		rev = document.querySelector('#review-' + id)
+		if(rev.style.display == "none") {
+			rev.style.display = 'block';
+        	        document.querySelector("#review_text-" + id).style.display = "none";
+			el.innerHTML = 'Close';
+		}
+		else {
+                        rev.style.display = 'none';
+                        document.querySelector("#review_text-" + id).style.display = "block";
+			el.innerHTML = 'Edit';
+		}
+	}
+
+</script>	
 <script>
 document.getElementById('bot-long-desc-tab-button').click()
 </script>

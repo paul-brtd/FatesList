@@ -319,6 +319,28 @@ async def vote_bot(uid: int, bot_id: int, username, autovote: bool) -> Optional[
     event_id = asyncio.create_task(add_event(bot_id, "vote", {"username": username, "user_id": str(uid), "votes": b['votes'] + 1, "**Vote Here**": "https://fateslist.xyz/bot/" + str(bot_id)}))
     return []
 
+async def parse_reviews(bot_id: int, reviews: List[asyncpg.Record] = None) -> List[dict]:
+    if reviews is None:
+        reviews = await db.fetch("SELECT id, user_id, star_rating, review_text AS review, review_upvotes, review_downvotes, flagged, epoch, replies AS _replies FROM bot_reviews WHERE bot_id = $1 ORDER BY star_rating ASC", bot_id)
+    i = 0
+    while i < len(reviews):
+        reviews[i] = dict(reviews[i])
+        if reviews[i]["epoch"] in ([], None):
+            reviews[i]["epoch"] = [time.time()]
+        else:
+            reviews[i]["epoch"].sort(reverse = True)
+        reviews[i]["time_past"] = time.time() - reviews[i]["epoch"][0]
+        reviews[i]["id"] = str(reviews[i]["id"])
+        reviews[i]["user"] = await get_user(reviews[i]["user_id"])
+        reviews[i]["star_rating"] = round(reviews[i]["star_rating"], 2)
+        reviews[i]["replies"] = []
+        for review_id in reviews[i]["_replies"]:
+            _reply = await db.fetch("SELECT id, user_id, star_rating, review_text AS review, review_upvotes, review_downvotes, flagged, epoch, replies AS _replies FROM bot_reviews WHERE id = $1", review_id)
+            _parsed_reply = await parse_reviews(bot_id, _reply)
+            reviews[i]["replies"].append(_parsed_reply)
+        i+=1
+    return reviews
+
 # Get Bots Helper
 async def render_bot(request: Request, bot_id: int, review: bool, widget: bool):
     guild = client.get_guild(reviewing_server)
@@ -379,15 +401,7 @@ async def render_bot(request: Request, bot_id: int, review: bool, widget: bool):
     else:
         f = "bot.html"
         widget = False
-        reviews = await db.fetch("SELECT id, user_id, star_rating, review_text AS review, review_upvotes, review_downvotes, flagged, epoch FROM bot_reviews WHERE bot_id = $1", bot_id)
-        i = 0
-        while i < len(reviews):
-            reviews[i] = dict(reviews[i])
-            reviews[i]["time_past"] = time.time() - reviews[i]["epoch"]
-            reviews[i]["id"] = str(reviews[i]["id"])
-            reviews[i]["user"] = await get_user(reviews[i]["user_id"])
-            reviews[i]["star_rating"] = round(reviews[i]["star_rating"], 2)
-            i+=1
+        reviews = await parse_reviews(bot_id)
     return templates.TemplateResponse(f, {"request": request, "bot": bot_obj, "bot_id": bot_id, "tags_fixed": _tags_fixed_bot, "form": form, "avatar": request.session.get("avatar"), "promos": promos, "maint": maint, "bot_admin": bot_admin, "review": review, "guild": reviewing_server, "widget": widget, "botp": True, "bot_reviews": reviews})
 
 #    id uuid primary key DEFAULT uuid_generate_v4(),

@@ -347,11 +347,12 @@ async def ban_bot(request: Request, bot_id: int, ban: int = FForm(1), reason: st
 async def new_reviews(request: Request, bot_id: int, rating: float = FForm(5.1), review: str = FForm("This is a placeholder review as the user has not posted anything...")):
     if "userid" not in request.session.keys():
         return RedirectResponse(f"/auth/login?redirect=/bot/{bot_id}&pretty=to review this bot", status_code = 303)
-    check = await db.fetchrow("SELECT bot_id FROM bot_reviews WHERE bot_id = $1 AND user_id = $2", bot_id, int(request.session["userid"]))
+    check = await db.fetchrow("SELECT FROM bot_reviews WHERE bot_id = $1 AND user_id = $2", bot_id, int(request.session["userid"]))
     if check is not None:
         return templates.TemplateResponse("message.html", {"request": request, "message": "You have already made a review for this bot, please edit that one instead of making a new one!"})
-    await db.execute("INSERT INTO bot_reviews (bot_id, user_id, star_rating, review_text, epoch) VALUES ($1, $2, $3, $4, $5)", bot_id, int(request.session["userid"]), rating, review, [time.time()])
+    await db.execute("INSERT INTO bot_reviews (bot_id, user_id, star_rating, review_text, epoch) VALUES ($1, $2, $3, $4, $5)", bot_id, int(request.session["userid"]), rating, review, time.time())
     return templates.TemplateResponse("message.html", {"request": request, "message": "Successfully made a review for this bot!<script>window.location.replace('/bot/" + str(bot_id) + "')</script>", "username": request.session.get("username", False), "avatar": request.session.get('avatar')}) 
+
 
 @router.post("/{bot_id}/reviews/{rid}/edit")
 async def edit_review(request: Request, bot_id: int, rid: uuid.UUID, rating: float = FForm(5.1), review: str = FForm("This is a placeholder review as the user has not posted anything...")):
@@ -361,17 +362,6 @@ async def edit_review(request: Request, bot_id: int, rid: uuid.UUID, rating: flo
     user = guild.get_member(int(request.session["userid"]))
     s = is_staff(staff_roles, user.roles, 2)
     if s[0]:
-        check = await db.fetchrow("SELECT epoch FROM bot_reviews WHERE id = $1", rid)
-        if check is None:
-            return templates.TemplateResponse("message.html", {"request": request, "message": "You are not allowed to edit this review (doesn't actually exist)"})
+        pass
     else:
-        check = await db.fetchrow("SELECT epoch FROM bot_reviews WHERE id = $1 AND bot_id = $2 AND user_id = $3", rid, bot_id, int(request.session["userid"]))
-        if check is None:
-            return templates.TemplateResponse("message.html", {"request": request, "message": "You are not allowed to edit this review"})
-    if check["epoch"] is not None:
-        check["epoch"].append(time.time())
-        epoch = check["epoch"]
-    else:
-        epoch = [time.time()]
-    await db.execute("UPDATE bot_reviews SET star_rating = $1, review_text = $2, epoch = $3 WHERE id = $4", rating, review, epoch, rid)
-    return templates.TemplateResponse("message.html", {"request": request, "message": "Successfully editted your/this review for this bot!<script>window.location.replace('/bot/" + str(bot_id) + "')</script>", "username": request.session.get("username", False), "avatar": request.session.get('avatar')})
+        check = await db.fetchrow("SELECT FROM bot_reviews WHERE bot_id = $1 AND user_id = $2", bot_id, int(request.session["userid"]))
