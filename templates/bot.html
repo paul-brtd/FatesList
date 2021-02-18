@@ -114,17 +114,10 @@ th {
     .bot-review-left {
 	display: inline-block;
     }
-</style>
-<script>
-    function resizeIframe(obj) {
-      obj.style.height = obj.contentWindow.document.documentElement.scrollHeight + 100 + 'px';
-    }
-  </script>
-  <style>
 	.bot-buttons-all {margin-right: 15px !important;}
-	{{bot.css.replace("alert", "").replace("alert-danger", "").replace("form", "").replace("modal-footer", "")}}
-	.long-desc-link {color: white !important; opacity: 0.63 !important;}
-  </style>
+        .long-desc-link {color: white !important; opacity: 0.63 !important;}
+	{{bot.css.replace(".alert", "")}}
+</style>
 {% endblock %}
 {% block content %}
 <div id="bot-content">
@@ -305,7 +298,7 @@ th {
                         <h6>Administrative Tasks</h6>
 			{% if staff[0] %}
 			{% if review %}
-			<form method="POST" action="/admin/review/{{bot_id}}">
+			<form method="POST" action="/admin/review/{{bot_id}}" style="margin-bottom: 3px;">
 				{{ form.csrf_token }}
 				<input hidden name="accept" value="true"></input>
 				<button class="btn btn-outline-light" type="submit" style="margin: 0 15px;">Accept</button>
