@@ -1,3 +1,5 @@
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 CREATE DATABASE fateslist;
 \c fateslist
 
@@ -47,14 +49,15 @@ CREATE TABLE bot_stats_votes_pm (
 );
 
 CREATE TABLE bot_reviews (
+   id uuid primary key DEFAULT uuid_generate_v4(),
    bot_id bigint not null,
+   user_id bigint not null,
    star_rating float4 default 0.0,
-   review boolean default false, -- Review or rating flag
-   review_title text,
    review_text text,
    review_upvotes integer default 0,
    review_downvotes integer default 0,
-   flagged boolean default false
+   flagged boolean default false,
+   epoch bigint
 );
 
 CREATE TABLE bots_voters (
@@ -83,7 +86,6 @@ CREATE TABLE bot_cache (
     valid_for text
 );
 
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE TABLE api_event (
     id uuid primary key DEFAULT uuid_generate_v4(),
@@ -125,4 +127,3 @@ CREATE TABLE support_requests (
     bot_id BIGINT
 );
 
-CREATE OR REPLACE FUNCTION resetVoteEpoch () RETURNS integer AS $rc$ DECLARE rc INTEGER; BEGIN UPDATE bots SET vote_epoch = 0;  RETURN 1; END; $rc$ LANGUAGE plpgsql;

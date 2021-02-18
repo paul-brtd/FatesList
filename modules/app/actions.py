@@ -332,6 +332,23 @@ async def ban_bot(request: Request, bot_id: int, ban: int = FForm(1), reason: st
         await add_event(bot_id, "unban", {"user": request.session.get('userid')})
     return RedirectResponse("/", status_code = 303)
 
-@router.get("/{bot_id}/promotions/new")
-async def new_promotion(request: Request):
-    return "Not Yet Done"
+# CREATE TABLE bot_reviews (
+#   id uuid primary key DEFAULT uuid_generate_v4(),
+#   bot_id bigint not null,
+#   star_rating float4 default 0.0,
+#   review_text text,
+#   review_upvotes integer default 0,
+#   review_downvotes integer default 0,
+#   flagged boolean default false,
+#   epoch bigint
+#);
+
+@router.post("/{bot_id}/reviews/new")
+async def new_reviews(request: Request, bot_id: int, rating: float = FForm(5.1), review: str = FForm("This is a placeholder review as the user has not posted anything...")):
+    if "userid" not in request.session.keys():
+        return RedirectResponse(f"/auth/login?redirect=/bot/{bot_id}&pretty=to review this bot", status_code = 303)
+    check = await db.fetchrow("SELECT FROM bot_reviews WHERE bot_id = $1 AND user_id = $2", bot_id, int(request.session["userid"]))
+    if check is not None:
+        return templates.TemplateResponse("message.html", {"request": request, "message": "You have already made a review for this bot, please edit that one instead of making a new one!"})
+    await db.execute("INSERT INTO bot_reviews (bot_id, user_id, star_rating, review_text, epoch) VALUES ($1, $2, $3, $4, $5)", bot_id, int(request.session["userid"]), rating, review, time.time())
+    return templates.TemplateResponse("message.html", {"request": request, "message": "Successfully made a review for this bot!<script>window.location.replace('/bot/" + str(bot_id) + "')</script>", "username": request.session.get("username", False), "avatar": request.session.get('avatar')}) 

@@ -248,7 +248,7 @@ th {
 			<a href='/profile/{{rev.user_id}}'>
 					<img style="border-radius: 50%; width: 24px;" src="{{rev.user.avatar}}" class="review-avatar">
 					<span class="long-desc-link">{{rev.user.username}} <i style="margin-right: 2px" class='fas fa-angle-up'></i> {{rev.review_upvotes - rev.review_downvotes}}<span style="font-weight: bold"><i style="margin-right: 2px"  class='fas fa-star'></i> ({{rev.star_rating}}/10)</span>
-			</a><br/>
+			</a>
                             <span style="margin-left: 30 !important; color: white">{{rev.review}}</span>
 		    </div><br/><br/>
 		    <hr class='hr-is'>

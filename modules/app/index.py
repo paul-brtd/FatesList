@@ -18,6 +18,7 @@ async def nonerouter():
 @router.get("/{vanity}")
 async def vanity_bot_uri(request: Request, vanity: str):
     vurl = await vanity_bot(vanity)
+    print("Vanity: ", vurl)
     if vurl is None:
         return templates.e(request, "Invalid Vanity")
     return RedirectResponse(vurl[0])

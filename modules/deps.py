@@ -375,10 +375,29 @@ async def render_bot(request: Request, bot_id: int, review: bool, widget: bool):
     if widget:
         f = "widget.html"
         widget = True
+        reviews = []
     else:
         f = "bot.html"
         widget = False
-    return templates.TemplateResponse(f, {"request": request, "bot": bot_obj, "bot_id": bot_id, "tags_fixed": _tags_fixed_bot, "form": form, "avatar": request.session.get("avatar"), "promos": promos, "maint": maint, "bot_admin": bot_admin, "review": review, "guild": reviewing_server, "widget": widget, "botp": True})
+        reviews = await db.fetch("SELECT id, user_id, star_rating, review_text AS review, review_upvotes, review_downvotes, flagged, epoch FROM bot_reviews")
+        i = 0
+        while i < len(reviews):
+            reviews[i] = dict(reviews[i])
+            reviews[i]["time_past"] = time.time() - reviews[i]["epoch"]
+            reviews[i]["id"] = str(reviews[i]["id"])
+            reviews[i]["user"] = await get_user(reviews[i]["user_id"])
+            reviews[i]["star_rating"] = round(reviews[i]["star_rating"], 2)
+            i+=1
+    return templates.TemplateResponse(f, {"request": request, "bot": bot_obj, "bot_id": bot_id, "tags_fixed": _tags_fixed_bot, "form": form, "avatar": request.session.get("avatar"), "promos": promos, "maint": maint, "bot_admin": bot_admin, "review": review, "guild": reviewing_server, "widget": widget, "botp": True, "bot_reviews": reviews})
+
+#    id uuid primary key DEFAULT uuid_generate_v4(),
+#   bot_id bigint not null,
+#   star_rating float4 default 0.0,
+#   review_text text,
+#   review_upvotes integer default 0,
+#   review_downvotes integer default 0,
+#   flagged boolean default false,
+#   epoch bigint
 
 async def parse_bot_list(fetch: List[asyncpg.Record]) -> list:
     lst = []
@@ -445,7 +464,7 @@ async def render_search(request: Request, q: str, api: bool):
         return {"search_bots": search_bots, "tags_fixed": tags_fixed, "query": q, "profile_search": False}
 
 # Check vanity of bot 
-async def vanity_bot(vanity: str, compact = True):
+async def vanity_bot(vanity: str, compact = False):
     t = await db.fetchrow("SELECT type, redirect FROM vanity WHERE lower(vanity_url) = $1", vanity.lower())
     if t is None:
         return None

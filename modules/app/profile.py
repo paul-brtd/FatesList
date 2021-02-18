@@ -47,11 +47,7 @@ async def profile_of_user(request: Request, userid: int, personal: bool):
     else:
         query = base_query + "ORDER BY votes;"
     fetch = await db.fetch(query)
-    user_bots = []
-    for bot in fetch:
-        bot_info = await get_bot(bot["bot_id"])
-        if bot_info:
-            user_bots.append({"bot": bot, "avatar": bot_info["avatar"], "username": bot_info["username"], "votes": human_format(bot["votes"]), "servers": human_format(bot["servers"]), "description": bot["description"]})
+    user_bots = await parse_bot_list(fetch)
     user_info = await db.fetchrow("SELECT badges, description, certified FROM users WHERE userid = $1", userid)
     if user_info is None:
         return abort(404)
