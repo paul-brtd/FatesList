@@ -140,6 +140,10 @@ async def get_bots_api(request: Request, bot_id: int, Authorization: str = Heade
         api_ret["vanity"] = None
     else:
         api_ret["vanity"] = vanity["vanity_url"]
+    api_ret["_reviews"] = await parse_reviews(bot_id)
+    api_ret["reviews"] = api_ret["_reviews"][0]
+    api_ret["average_stars"] = api_ret["_reviews"][1]
+    del api_ret["_reviews"]
     return api_ret
 
 class BotVoteCheck(BaseModel):

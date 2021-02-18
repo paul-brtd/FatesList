@@ -238,6 +238,11 @@ th {
 		{% else %}
 			<p class="white">You need to be logged in to make reviews</p>
 		{% endif %}
+		<span class="white">
+			<input disabled class='slider' type="range" name="rating" min="0.1" max="10" value='{{average_rating}}' step='0.1' tabindex="-1"/>
+			<p id="rating-desc-avg"></p>
+		</span>
+		<p class="white">Average Rating: <i class='fas fa-star' style="margin-right: 3px;"></i>{{average_rating}}/10.0</p>
 		<div style="text-align: left; margin-left: 30px;">
 		{% for rev in bot_reviews %}
 		<div class="bot-review-user" style="margin-left: 5%; border: solid; margin-bottom: 20px;">
@@ -360,31 +365,39 @@ for(var i = 0; i < slider.length; i++) {
 slider[i].oninput = function() {
   output = document.getElementById(this.getAttribute("output"))
   console.log(output)
-  if(this.value < 1)
-	state = "Atrocity"
-  else if(this.value < 2)
-	state = "Absymal"
-  else if(this.value < 3)
-	state = "Really Poor"
-  else if(this.value < 4)
-	state = "Poor"
-  else if(this.value < 5)
-	state = "Below Average"
-  else if(this.value < 6)
-	state = "Average"
-  else if(this.value < 7)
-	state = "Above Average"
-  else if(this.value < 8)
-	state = "Meets Expectations"
-  else if(this.value < 9)
-	state = "Great"
-  else if(this.value < 10)
-	state = "Exceeds Expectations"
-  else if(this.value == 10)
-	state = "Without a doubt, perfect"
+  state = parseState(this.value)
   output.innerHTML = state + ", " + this.value;
 }
 }
+
+function parseState(v) {
+  state = ""
+  if(v < 1)
+        state = "Atrocity"
+  else if(v < 2)
+        state = "Absymal"
+  else if(v < 3)
+        state = "Really Poor"
+  else if(v < 4)
+        state = "Poor"
+  else if(v < 5)
+        state = "Below Average"
+  else if(v < 6)
+        state = "Average"
+  else if(v < 7)
+        state = "Above Average"
+  else if(v < 8)
+        state = "Meets Expectations"
+  else if(v < 9)
+        state = "Great"
+  else if(v < 10)
+        state = "Exceeds Expectations"
+  else if(v == 10)
+        state = "Without a doubt, perfect"
+  return state
+}
+
+document.querySelector("#rating-desc-avg").innerHTML = parseState({{average_rating}}) + "," + {{average_rating}} 
 
 function openf(evt, id) {
   // Declare all variables
