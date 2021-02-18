@@ -4,6 +4,7 @@ import asyncio
 from discord.ext import commands, tasks
 import builtins
 from config import *
+from modules.deps import *
 from typing import Optional
 
 builtins.intent = discord.Intents.all()
@@ -48,10 +49,14 @@ async def approve(ctx, bot: discord.Member):
     if not ctx.guild:
         return await ctx.send("You must run this command in a guild")
     elif is_staff(builtins.staff_roles, ctx.author.roles, 2)[0]:
+        check = await db.fetchrow("SELECT owner FROM bots WHERE bot_id = $1 AND queue = true", bot_id)
+        if check is None:
+            return await ctx.send("This bot doesn't exist on our database or is not in the queue")
+        owner = check["owner"]
         await db.execute("UPDATE bots SET queue=$2 WHERE bot_id = $1", bot_id, False)
         channel = client.get_channel(bot_logs)
         await add_event(int(bot_id), "approve", {"user": ctx.author.id})
-        await channel.send(f"<@{bot_id}> has been approved")
+        await channel.send(f"<@{bot_id}> by <@{ctx.guild.get_member(owner)}> has been approved")
         await ctx.send("Approved this bot :)")
     else:
         await ctx.send("You don't have the permission to do this")

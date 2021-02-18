@@ -12,6 +12,7 @@ h1 {
     font-size: 2em;
     margin-bottom: .5rem;
 }
+html,body { height:100%; }
 
 .slider {
   -webkit-appearance: none;
@@ -223,6 +224,9 @@ th {
 			  <button id="bot-long-desc-tab-button" class="tablinks" onclick="openf(event, 'bot-long-description-container')">Description</button>
 			  <button id="bot-review-tab-button" class="tablinks" onclick="openf(event, 'bot-reviews')">Reviews</button>
                           <button id="bot-about-button" class="tablinks" onclick="openf(event, 'bot-about')">About</button>
+                          {% if staff[0] %}
+                          <button id="bot-admin-button" class="tablinks" onclick="openf(event, 'bot-admin')">Admin</button>
+		          {% endif %}
 		</div>
 	<div  id="bot-long-description-container" class='tabcontent'>
 		<div id="bot-long-description" style="color: white; text-align: left; margin-left: 5%; margin-right: 5%; margin-top: 13px;">{{bot.long_description.replace("<script", "").replace("<a", "<a class='long-desc-link'").replace("ajax", "").replace("http://", "https://")|safe}}</div>
@@ -243,21 +247,23 @@ th {
 		{% endif %}
 		<div style="text-align: left; margin-left: 30px;">
 		{% for rev in bot_reviews %}
-		<div class="bot-review-user" style="margin-left: 5%">
+		<div class="bot-review-user" style="margin-left: 5%; border: solid;">
 		   <div class="bot-review-left">
-			<a href='/profile/{{rev.user_id}}'>
+			<a href='/profile/{{rev.user_id}}' class="white">
 					<img style="border-radius: 50%; width: 24px;" src="{{rev.user.avatar}}" class="review-avatar">
-					<span class="long-desc-link">{{rev.user.username}} <i style="margin-right: 2px" class='fas fa-angle-up'></i> {{rev.review_upvotes - rev.review_downvotes}}<span style="font-weight: bold"><i style="margin-right: 2px"  class='fas fa-star'></i> ({{rev.star_rating}}/10)</span>
-			</a><br/>
-                            <span style="margin-left: 30 !important; color: white">{{rev.review}}</span>
+					<span class="white">{{rev.user.username}} | <i style="margin-right: 2px" class='fas fa-angle-up'></i> {{rev.review_upvotes - rev.review_downvotes}} | <span style="font-weight: bold"><i class='fas fa-star'></i> {{rev.star_rating}}/10.0</span>
+			</a>
+			{% if userid == rev.user_id or staff[0] %}
+			<a href='/bot/{{bot_id}}/reviews/{{rev.id}}/edit' target="_blank" style='font-weight: bold; margin-left: 3px;' class="long-desc-link">Edit</a>
+			{% endif %}
+			<br/><br/>
+                            <span style="margin-left: 30px !important; color: white">{{rev.review}}</span>
 		    </div><br/><br/>
-		    <hr class='hr-is'>
-			<p class="white">{{rev}}</p>
+		    </div>
 		{% endfor %}
 		</div>
 		</div>
-		</div>
-	<div id="bot-about" class='tabcontent white'>
+		<div id="bot-about" class='tabcontent white'>
 			<table style="margin: 0 auto !important;">
 			   <tr>
 				<th>Owners</th>
@@ -294,6 +300,9 @@ th {
 			   </tr>
 			   {% endif %}
 			</table>
+			</div>
+			<div id="bot-admin" class='tabcontent white'>
+                        <h6>Administrative Tasks</h6>
 			{% if staff[0] %}
 			{% if review %}
 			<form method="POST" action="/admin/review/{{bot_id}}">
@@ -377,6 +386,9 @@ function openf(evt, id) {
   document.getElementById(id).style.display = "block";
   evt.currentTarget.className += " active";
 }
+</script>
+	
+<script>
 document.getElementById('bot-long-desc-tab-button').click()
 </script>
 </div>

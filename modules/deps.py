@@ -379,7 +379,7 @@ async def render_bot(request: Request, bot_id: int, review: bool, widget: bool):
     else:
         f = "bot.html"
         widget = False
-        reviews = await db.fetch("SELECT id, user_id, star_rating, review_text AS review, review_upvotes, review_downvotes, flagged, epoch FROM bot_reviews")
+        reviews = await db.fetch("SELECT id, user_id, star_rating, review_text AS review, review_upvotes, review_downvotes, flagged, epoch FROM bot_reviews WHERE bot_id = $1", bot_id)
         i = 0
         while i < len(reviews):
             reviews[i] = dict(reviews[i])

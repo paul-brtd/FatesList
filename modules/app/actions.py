@@ -282,7 +282,7 @@ async def delete_bot(request: Request, bot_id: int, confirmer: str = FForm("1"))
     guild = client.get_guild(reviewing_server)
     channel = client.get_channel(bot_logs)
     if "userid" in request.session.keys():
-        check = await is_bot_admin(int(bid), int(request.session.get("userid")))
+        check = await is_bot_admin(int(bot_id), int(request.session.get("userid")))
         if check is None:
             return templates.TemplateResponse("message.html", {"request": request, "message": "This bot doesn't exist in our database."})
         elif check == False:

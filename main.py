@@ -49,6 +49,7 @@ class templates():
                     staff = [False]
                 arg_dict["avatar"] = request.session.get("avatar")
                 arg_dict["username"] = request.session.get("username")
+                arg_dict["userid"] = int(request.session.get("userid"))
         else:
             staff = [False]
         arg_dict["staff"] = staff
