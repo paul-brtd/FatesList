@@ -1,6 +1,6 @@
 import aiohttp
 from aiohttp_requests import requests
-from config import OauthConfig
+from config import *
 class Oauth():
     def __init__(self):
         self.client_id = OauthConfig.client_id
