@@ -11,6 +11,14 @@
 {% block content %}
     <div class="d-flex d-xl-flex flex-column justify-content-center align-items-center justify-content-xl-center align-items-xl-center"><img style="border-radius: 50%;width: 128px;" src="{{user.avatar}}">
         <h3 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;">{{user.username}}</h3>
+	<span style="font-size: 18px" class="white">
+		<strong style="margin-right: 3px;">Profile Bio:</strong><span id="bio_text-0" style="opacity: 0.7">{% if not descripton %}This user prefers to be an enigma{% else %}{{description}}{% endif %}</span>
+		{% if admin %}<a role="button" aria-label="Edit Profile" href="javascript:void" class="long-desc-link" style="color: white !important; opacity: 0.7; font-size: 14px" onclick="pbioEditPane(this, 0)">Edit</a>{% endif %}
+		<div role="form" id="bio-0" style="display: none">
+			<input type="text" class="fform" id="bio-form-0" value="{% if not descripton %}This user prefers to be an enigma{% else %}{{description}}{% endif %}" placeholder="Enter your bio here">
+			<button class="btn btn-outline-light" onclick="updateBio()">Edit</button>
+		</div>
+	</span>
 	<h4 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;">Badges</h4>
 	{% if badges == [] or not badges or badges == {} %}
 		<h5 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;">No Badges Yet...</h5>
@@ -33,9 +41,6 @@
                 </div>
         {%endfor%}
 	</div>
-	{% if admin %}
-	<a role="button" aria-label="Edit Profile" href="/profile/{{userid}}/edit" class="btn btn-primary" style="text-align: center; background: #7289DA;border-radius: 25px;font-weight: bold; margin-top: 7.5px !important;">Edit</a>
-	{% endif %}
     </div>
     <hr style="font-size: 20px;border-top-width: 1px;border-top-color: #eee;width: 90%;">
     <div class="d-flex" style="margin-left: 5%;"><i class="fas fa-robot fa-3x" style="color:white;"></i>
@@ -76,6 +81,35 @@
         function modalShow(id) {
                         $(id).modal()
         }
+        function pbioEditPane(el, id) {
+                bio = document.querySelector('#bio-' + id)
+                if(bio.style.display == "none") {
+                        bio.style.display = 'block';
+                        document.querySelector("#bio_text-" + id).style.display = "none";
+                        el.innerHTML = 'Close Edit Menu';
+                }
+                else {
+                        bio.style.display = 'none';
+                        document.querySelector("#bio_text-" + id).style.display = "inline-block";
+                        el.innerHTML = 'Edit';
+                }
+        }
+  {% if admin %}
+  function updateBio() {
+        json = JSON.stringify({"description": document.querySelector("#bio-form-0").value})
+        headers = {"Authorization": "{{token}}"}
+        $.ajax({
+		url: "/api/profiles/{{userid}}/description",
+                dataType: "json",
+                headers: headers,
+                type: "PATCH",
+                processData: false,
+                contentType: 'application/json',
+                data: json
+        })
+        alert("Changed your bio successfully")
+  }
+{% endif %}
 </script>
 {% endblock %}
 {% block footer %}

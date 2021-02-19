@@ -48,7 +48,7 @@
     <div class="form-group" style="color: blue; width: 80%; margin: 0 auto; height: auto; margin-top: 30px; color: rgba(255, 255, 255, 0.87)">
         <div class="form-group" class="d-flex" style="margin: 15px auto; width: 85%;color: white; font-weight: bold; overflow-wrap: anywhere;">
    {% if mode == "edit" %}
-   <section style="border-style: solid; border-radius: 50px 50px 50px 50px; padding-left: 30px; padding: 5px;">
+   <section style="border-style: solid; border-radius: 4px 4px 4px 4px; padding-left: 30px; padding: 5px;">
     <div style="margin 15px auto">
    {% if data.vanity != None %}
     <h6 style="color: white; margin-top: 1px !important;">Vanity URL: <span style="font-size: 14px; opacity: 0.9">https://fateslist.xyz/{{data.vanity}}</span></h6>
@@ -258,6 +258,7 @@
         class="form-control fform"
         type="text"
         name="css"
+        style="border-radius: 4px 4px 4px 4px !important;"
         placeholder="p {color: red};"
         >{{data.css}}</textarea>
   </div>
@@ -288,12 +289,13 @@
         placeholder="Fates list is a good bot that does everything you need"
         minlength="10"
         maxlength="105"
+        style="border-radius: 4px 4px 4px 4px !important;"
 	value="{{data.description}}"
       />
       <label 
       for="html_long_description"
       >Long Description Type</label>
-      <div style="background: white; border-radius: 100px 100px 100px 100px; padding: 8px; margin-top: 7px; margin-bottom: 30px;">
+      <div style="background: white; border-radius: 4px 4px 4px 4px; padding: 8px; margin-top: 7px; margin-bottom: 30px; width: 93%; margin-left: 40px;">
       <select name="html_long_description" class="form-control" style="text-decoration: none; background: white !important!;  padding: 3px;">
               <option value="true" {% if data.html_long_description %}selected{%endif%}>HTML</option>
               <option value="false" {% if not data.html_long_description %}selected{%endif%}>Markdown</option>
@@ -309,6 +311,7 @@
         placeholder="Write about your bot using html or markdown"
         minlength="300"
         id="long_description"
+	style="border-radius: 4px 4px 4px 4px !important;"
 	>{{data.long_description}}</textarea>
       <label
         for="tags"

@@ -83,7 +83,7 @@ html,body { height:100%; }
   display: none;
 }
 
-    .blackbar {background: black; border-radius: 40px 40px 0px 0px; border: hidden; margin-top: 5px; min-height: 500px; padding: 5px;}
+    .blackbar {background: black; border-radius: 120px 120px 0px 0px; border: hidden; margin-top: 5px; min-height: 500px; padding: 5px;}
 
 th, td {
   padding: 23px;
@@ -171,7 +171,7 @@ th {
 	<a href="/bot/{{bot_id}}/edit"><button class="btn btn-outline-light bot-buttons-all" id="bot-buttons-edit">Edit</button></a>
         {% endif %}
     </div>
-    <div style="display: inline-block; border-style: solid; width: fit-content; height: fit-content; border-radius: 40px 40px 40px 40px; border-width: thin; border-color: white; margin: 7px; padding: 7px;" id="bot-key-container">
+    <div style="display: inline-block; width: fit-content; height: fit-content; margin: 7px; padding: 7px;" id="bot-key-container">
 	<div id="bot-tags">
     		<h5 style="font-weight: bold;color: rgba(255,255,255,0.87); text-align: center; margin-top: 3px;" id="bot-tags-header">Tags</h5>
 		<div style="text-align: center;" id="bot-tags-container">
@@ -185,7 +185,7 @@ th {
 		</div>
     	</div>
     {% if promos != [] or bot_admin %}
-    <div id="bot-promo" style="margin-top: 10px;">
+    <div id="bot-promo" style="margin-top: 30px;">
 	    <h5 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;margin-top: -13px;margin-bottom: 3px;" id="bot-promo-header">Promotions, Announcements and More!</h5>
 	    {% if bot_admin %}
     		<a href="/bot/{{bot_id}}/promotions/new" style="color: white !important; opacity: 0.8;"><i class="fa fa-plus" aria-hidden="true"></i> New Promotion</a>
@@ -203,8 +203,8 @@ th {
 		{% if staff[0] and not bot.banned %}
 			<input type="hidden" name="ban" value="1"/>
 			<p style="font-weight: bold;color: rgba(255,255,255,0.87); text-align: center;">If this bot is misbehaving...</p>
-                	<input type="text" name="reason" placeholder="Enter ban reason" required/>
-                	<button type="submit" class="btn btn-outline-dark" style="background-color: red; color: white !important;"><i class="fas fa-hammer"></i> Ban</button>
+                	<input type="text" name="reason" style="border-radius: 4px 4px 4px 4px !important;" placeholder="Enter ban reason" required/>
+                	<button type="submit" class="btn btn-outline-dark" style="border-radius: 4px 4px 4px 4px !important; background-color: red; color: white !important;"><i class="fas fa-hammer"></i> Ban</button>
 		{% elif staff[0] and bot.banned %}
 	                <p style="font-weight: bold;color: rgba(255,255,255,0.87); text-align: center;">If this bot has learnt its lesson...</p>
         	        <input type="hidden" name="ban" value="0"/>
@@ -232,7 +232,7 @@ th {
 			<input class='slider bot-range-slider' type="range" name="rating" min="0.1" max="10" value='5' step='0.1' output="rating-desc"/>
 			<p id='rating-desc' style="color: white;"></p>
 			<label for="review">Please write a few words about the bot (in your opinion)</label>
-			<textarea id='bot-rating-review' name="review" type="text" class="form-control fform" style="min-height: 100px; height: 100px;" required minlength="9" placeholder="This bot is a really good bot because of X, Y and Z however...">{{review_desc}}</textarea>
+			<textarea id='bot-rating-review' name="review" type="text" class="form-control fform" style="min-height: 100px; height: 100px; border-radius: 20px 20px 20px 20px !important;" required minlength="9" placeholder="This bot is a really good bot because of X, Y and Z however...">{{review_desc}}</textarea>
 			<button type="submit" class="btn btn-outline-light">Review</button>
 		</form>
 		{% else %}
@@ -372,7 +372,7 @@ th {
                                 <form method="POST" action="/admin/review/{{bot_id}}">
                                         {{ form.csrf_token }}
                                         <input hidden name="accept" value="unverify"></input>
-                                        <button class="btn btn-outline-light" type="submit" style="margin: 0 15px;">Unverify</button>
+                                        <button class="btn btn-outline-light" type="submit" style="margin: 0 15px; border-radius: 4px 4px 4px 4px !important;">Unverify</button>
                                 </form>
 				{% endif %}
 			</div>

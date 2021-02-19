@@ -48,7 +48,7 @@ async def profile_of_user(request: Request, userid: int, personal: bool):
         query = base_query + "ORDER BY votes;"
     fetch = await db.fetch(query)
     user_bots = await parse_bot_list(fetch)
-    user_info = await db.fetchrow("SELECT badges, description, certified FROM users WHERE userid = $1", userid)
+    user_info = await db.fetchrow("SELECT token, badges, description, certified FROM users WHERE userid = $1", userid)
     if user_info is None:
         return abort(404)
     guild = client.get_guild(reviewing_server)
@@ -56,7 +56,7 @@ async def profile_of_user(request: Request, userid: int, personal: bool):
     if user_dpy is None:
         user_dpy = await client.fetch_user(int(userid))
     print(user_dpy)
-    return templates.TemplateResponse("profile.html", {"request": request, "username": request.session.get("username", False), "user_bots": user_bots, "user": user, "avatar": request.session.get("avatar"), "admin": bot_admin, "userid": userid, "personal": personal, "badges": get_badges(user_dpy, user_info["badges"], user_info["certified"] == True)})
+    return templates.TemplateResponse("profile.html", {"request": request, "username": request.session.get("username", False), "user_bots": user_bots, "user": user, "avatar": request.session.get("avatar"), "admin": bot_admin, "userid": userid, "personal": personal, "badges": get_badges(user_dpy, user_info["badges"], user_info["certified"] == True), "description": user_info["description"], "token": user_info["token"]})
 
 @router.get("/{userid}/edit")
 async def profile_editor(request: Request, userid: int):
