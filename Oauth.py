@@ -25,9 +25,8 @@ class Oauth():
         headers = {
             'Content-Type': 'application/x-www-form-urlencoded'
         }
-        async with aiohttp.ClientSession() as sess:
-            async with sess.post(self.discord_token_url, data=payload, headers=headers) as response:
-                json = await response.json()
+        res = await requests.post(self.discord_token_url, data=payload, headers=headers)
+        json = await res.json()
         return json.get("access_token")
 
     async def get_user_json(self, access_token):
