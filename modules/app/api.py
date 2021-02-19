@@ -292,6 +292,12 @@ async def recv_ws(websocket):
             continue
         print(data)
 
+async def ws_close(websocket: WebSocket, code: int):
+    try:
+        return await websocket.close(code=code)
+    except:
+        return
+        
 @router.websocket("/api/ws")
 async def websocker_real_time_api(websocket: WebSocket):
     await manager.connect(websocket)
@@ -301,17 +307,11 @@ async def websocker_real_time_api(websocket: WebSocket):
             api_token = await websocket.receive_json()
         except:
             await manager.send_personal_message({"msg": "KILL_CONN", "reason": "NO_AUTH"}, websocket)
-            try:
-                return await websocket.close(code=4004)
-            except:
-                return
+            return await ws_close(websocket, 4004)
         api_token = api_token.get("api_token")
         if api_token is None or type(api_token) == int:
             await manager.send_personal_message({"msg": "KILL_CONN", "reason": "NO_AUTH"}, websocket)
-            try:
-                return await websocket.close(code=4004)
-            except:
-                return
+            return await ws_close(websocket, 4004)
         for bot in api_token:
             bid = await db.fetchrow("SELECT bot_id FROM bots WHERE api_token = $1", str(bot))
             if bid is None:
@@ -321,7 +321,7 @@ async def websocker_real_time_api(websocket: WebSocket):
                 websocket.bot_id.append(bid["bot_id"])
         if websocket.api_token == [] or websocket.bot_id == []:
             await manager.send_personal_message({"msg": "KILL_CONN", "reason": "NO_AUTH"}, websocket)
-            return await websocket.close(code=4004)
+            return await ws_close(websocker, 4004)
     await manager.send_personal_message({"msg": "READY", "reason": "AUTH_DONE"}, websocket)
     asyncio.create_task(recv_ws(websocket))
     try:
