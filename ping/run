@@ -1,1 +1,0 @@
-uvicorn app:app --port 9998 --timeout-keep-alive 60
