@@ -18,7 +18,7 @@ import aioredis
 
 # Setup
 intent = discord.Intents.all()
-builtins.client = discord.AutoShardedClient(intents=intent)
+builtins.client = discord.Client(intents=intent)
 
 app = FastAPI(default_response_class = ORJSONResponse, docs_url = None, redoc_url = "/api/docs")
 app.add_middleware(SessionMiddleware, secret_key=session_key)
