@@ -60,12 +60,15 @@ async def server_data_use_check(ctx):
         return None
 
 async def prompt_user(ctx, mini, prompt, *, minlength = None, maxlength = None):
-    await ctx.send(prompt + "\n*This can be changed at any time by editting your server on Fates List*")
+    await ctx.send(prompt + "\n*This can be changed at any time by editting your server on Fates List*\n\nType cancel to stop the prompt")
     try:
         msg = await client.wait_for('message', check = lambda m : m.author.id == ctx.author.id and m.guild.id == ctx.guild.id and m.channel.id == ctx.channel.id, timeout=120)
     except asyncio.TimeoutError:
         setup_servers[str(ctx.guild.id)] = False
         await ctx.send("Sorry, but setup has been cancelled as you have taken too long to respond (we wait 2 minutes). Please rerun this command again to readd your server")
+        return None
+    if msg.content == "cancel":
+        setup_servers[str(ctx.guild.id)] = False
         return None
     if minlength is not None and len(msg.content) < minlength:
         await ctx.send(f"Your {mini} must be at least {minlength} characters long.\nError Code: ROOTSPRING3")

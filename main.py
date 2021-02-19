@@ -41,19 +41,9 @@ for f in os.listdir("modules/app"):
         app.include_router(route.router)
 
 async def setup_db():
-
     db = await asyncpg.create_pool(host="127.0.0.1", port=5432, user=pg_user, password=pg_pwd, database="fateslist")
     # some table creation here meow
-
     return db
-
-@app.middleware("http")
-async def add_process_time_header(request: Request, call_next):
-    response = await call_next(request)
-    response.headers["Content-Security-Policy"] = "default-src cdnjs.cloudflare.com fonts.gstatic.com use.fontawesome.com 'self' *; img-src *; media-src *; script-src * 'unsafe-inline'; style-src * use.fontawesome.com fonts.googleapis.com 'self' 'unsafe-inline' cdnjs.cloudflare.com;"
-    response.headers["X-Frame-Options"] = "SAMEORIGIN"
-    return response
-
 
 @app.on_event("startup")
 async def startup():

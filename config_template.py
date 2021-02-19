@@ -56,12 +56,16 @@ features = {
 } 
 
 site = "fateslist.xyz" # Replace this with your domain
+server_site = "serverbot.fateslist.xyz" # Same as above
+
+server_bot_invite = "https://discord.com/api/oauth2/authorize?client_id=811073947382579200&permissions=67649&scope=bot" # Ensure that it uses 67649 for perms
 
 # This value below dont need to be changed
 site_url = "https://" + site
 
 support_url = "https://discord.gg/PA5vjCRc5H"
-TOKEN = ""
+TOKEN_MAIN = ""
+TOKEN_SERVER = ""
 TAGS = {"music": ["fas fa-music", "bg-red"], "moderation": ["fas fa-hammer", "bg-blue"], "economy": ["fa fa-viacoin", "bg-green"], "fun": ["fa fa-heart", "bg-pink"], "anime": ["fas fa-camera", "bg-red"], "games": ["fas fa-smile-o", "bg-pink"], "web_dashboard": ["fa fa-bar-chart", "bg-green"], "logging": ["fa fa-line-chart", "bg-blue"], "game_stats": ["fa fa-bar-chart", "bg-red"], "leveling": ["fa fa-long-arrow-up", "bg-green"], "roleplay": ["fas fa-cat", "bg-pink"], "utility": ["fas fa-desktop", "bg-blue"], "social": ["fa fa-users", "bg-red"]}
 pg_user = "postgres" # Postgres Database Username
 pg_pwd = "" # Postgres Database Password
