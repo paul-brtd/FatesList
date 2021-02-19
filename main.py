@@ -1,13 +1,7 @@
 from fastapi import FastAPI, Request, Form as FForm
-from fastapi.exceptions import RequestValidationError
 from starlette.middleware.sessions import SessionMiddleware
 from fastapi.responses import ORJSONResponse
 from fastapi.templating import Jinja2Templates
-from fastapi.exception_handlers import (
-    http_exception_handler,
-    request_validation_exception_handler,
-)
-import Oauth
 import asyncpg
 from pydantic import BaseModel
 import discord
@@ -23,104 +17,20 @@ import os
 import aioredis
 
 # Setup
-builtins.intent = discord.Intents.all()
+intent = discord.Intents.all()
 builtins.client = discord.AutoShardedClient(intents=intent)
-builtins.client.PUBAV = {}
-builtins.app = FastAPI(default_response_class = ORJSONResponse, docs_url = None, redoc_url = "/api/docs")
-builtins.app.add_middleware(SessionMiddleware, secret_key=session_key)
-builtins._templates = Jinja2Templates(directory="templates")
-builtins.ws_events = [] # events that need to be dispatched
-class templates():
-    @staticmethod
-    def TemplateResponse(f, arg_dict):
-        guild = client.get_guild(reviewing_server)
-        try:
-            request = arg_dict["request"]
-        except:
-            raise KeyError
-        status = arg_dict.get("status_code")
-        if "userid" in request.session.keys():
-            arg_dict["css"] = request.session.get("user_css")
-            if "staff" not in arg_dict.keys():
-                user = guild.get_member(int(request.session["userid"]))
-                if user is not None:
-                    staff = is_staff(staff_roles, user.roles, 2)
-                else:
-                    staff = [False]
-                arg_dict["avatar"] = request.session.get("avatar")
-                arg_dict["username"] = request.session.get("username")
-                arg_dict["userid"] = int(request.session.get("userid"))
-        else:
-            staff = [False]
-        arg_dict["staff"] = staff
-        arg_dict["site_url"] = site_url
-        if status is None:
-            return _templates.TemplateResponse(f, arg_dict)
-        return _templates.TemplateResponse(f, arg_dict, status_code = status)
 
-    @staticmethod
-    def error(f, arg_dict, status_code):
-        arg_dict["status_code"] = status_code
-        return templates.TemplateResponse(f, arg_dict)
+app = FastAPI(default_response_class = ORJSONResponse, docs_url = None, redoc_url = "/api/docs")
+app.add_middleware(SessionMiddleware, secret_key=session_key)
 
-    @staticmethod
-    def e(request, reason: str, status_code: str = 404):
-        return templates.error("message.html", {"request": request, "context": reason}, status_code)
+app.add_middleware(CSRFProtectMiddleware, csrf_secret=csrf_secret)
+app.add_middleware(ProxyHeadersMiddleware)
 
-builtins.templates = templates
-builtins.app.add_middleware(CSRFProtectMiddleware, csrf_secret=csrf_secret)
-builtins.app.add_middleware(ProxyHeadersMiddleware)
-
-def url_startswith(url, begin, slash = True):
-    # Slash indicates whether to check /route or /route/
-    if slash:
-       begin = begin + "/"
-    return str(url).startswith(site_url + begin)
-
-@builtins.app.exception_handler(401)
-@builtins.app.exception_handler(404)
-@builtins.app.exception_handler(RequestValidationError)
+@app.exception_handler(401)
+@app.exception_handler(404)
+@app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):
-    print(request.url)
-    if type(exc) == RequestValidationError:
-        exc.status_code = 422
-    if exc.status_code == 404:
-        if url_startswith(request.url, "/bot"):
-            msg = "Bot Not Found"
-            code = 404
-        elif url_startswith(request.url, "/profile"):
-            msg = "Profile Not Found"
-            code = 404
-        else:
-            msg = "404\nNot Found"
-            code = 404
-    elif exc.status_code == 401:
-        msg = "401\nNot Authorized"
-        code = 401
-    elif exc.status_code == 422:
-        if url_startswith(request.url, "/bot"):
-            msg = "Bot Not Found"
-            code = 404
-        elif url_startswith(request.url, "/profile"):
-            msg = "Profile Not Found"
-            code = 404
-        else:
-            msg = "Invalid Data Provided<br/>" + str(exc)
-            code = 422
-
-    json = url_startswith(request.url, "/api")
-    if json:
-        if exc.status_code == 404 or exc.status_code == 401:
-            return await http_exception_handler(request, exc)
-        elif exc.status_code == 422:
-            return await request_validation_exception_handler(request, exc)
-        else:
-            pass
-    return templates.e(request, msg, code)
-
-app = builtins.app # As much as i hate it, patch uvicorns stupidity
-
-builtins.discord_o = Oauth.Oauth()
+    return await FLError.error_handler(request, exc)
 
 print("FATES LIST: Loading Modules")
 # Include all the modules

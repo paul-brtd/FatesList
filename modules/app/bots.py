@@ -11,12 +11,12 @@ async def bot_rdir(request: Request):
     return RedirectResponse("/")
 
 @router.get("/{bot_id}")
-async def bot_index(request: Request, bot_id: int):
-    return await render_bot(request, bot_id, review = False, widget = False)
+async def bot_index(request: Request, bot_id: int, bt: BackgroundTasks):
+    return await render_bot(request, bt, bot_id, review = False, widget = False)
 
 @router.get("/{bot_id}/widget")
-async def bot_widget(request: Request, bot_id: int):
-    return await render_bot(request, bot_id, review = False, widget = True)
+async def bot_widget(request: Request, bot_id: int, bt: BackgroundTasks):
+    return await render_bot(request, bt, bot_id, review = False, widget = True)
 
 @router.get("/{bot_id}/invite")
 async def bot_invite_and_log(request: Request, bot_id: int, bt: BackgroundTasks):

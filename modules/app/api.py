@@ -263,17 +263,17 @@ async def bots_search_page(request: Request, query: str):
     """For any potential Android/iOS app, crawlers etc. Query is the query to search for"""
     return await render_search(request = request, q = query, api = True)
 
-async def ws_send_events(websocket):
-    for event_i in range(0, len(ws_events)):
-        event = ws_events[event_i]
+async def ws_send_events():
+    manager.fl_loaded = True
+    while True:
         for ws in manager.active_connections:
-            if int(event[0]) in [int(bot_id["bot_id"]) for bot_id in ws.bot_id]:
-                rc = await manager.send_personal_message({"msg": "EVENT", "data": event[1], "reason": event[0]}, ws)
-                try:
-                    if rc != False:
-                        ws_events[event_i] = [-1, -2]
-                except:
-                    pass
+            for bid in ws.bot_id:
+                ws_events = {str(bid): (await redis_db.hgetall(str(bid) + "_ws", encoding = 'utf-8'))}
+                if ws_events[str(bid)].get("status") == "READY":
+                    rc = await manager.send_personal_message({"msg": "EVENTS", "data": ws_events}, ws)
+                    for key in (await redis_db.hkeys(str(bid) + "_ws", encoding = "utf-8")):
+                        await redis_db.hdel(str(bid) + "_ws", key)
+                    await redis_db.hset(str(bid) + "_ws", mapping = {"status": "IDLE"})
 
 async def recv_ws(websocket):
     print("Getting things")
@@ -313,21 +313,22 @@ async def websocker_real_time_api(websocket: WebSocket):
             except:
                 return
         for bot in api_token:
-            bid = await db.fetchrow("SELECT bot_id, servers FROM bots WHERE api_token = $1", str(bot))
+            bid = await db.fetchrow("SELECT bot_id FROM bots WHERE api_token = $1", str(bot))
             if bid is None:
                 pass
             else:
                 websocket.api_token.append(api_token)
-                websocket.bot_id.append(bid)
+                websocket.bot_id.append(bid["bot_id"])
         if websocket.api_token == [] or websocket.bot_id == []:
             await manager.send_personal_message({"msg": "KILL_CONN", "reason": "NO_AUTH"}, websocket)
             return await websocket.close(code=4004)
     await manager.send_personal_message({"msg": "READY", "reason": "AUTH_DONE"}, websocket)
-    await ws_send_events(websocket)
     asyncio.create_task(recv_ws(websocket))
     try:
         while True:
-            await ws_send_events(websocket)
-            await asyncio.sleep(0.1)
+            if manager.fl_loaded == False:
+                asyncio.create_task(ws_send_events())
+            await asyncio.sleep(1) # Keep Waiting Forever
     except WebSocketDisconnect:
         await manager.disconnect(websocket)
+

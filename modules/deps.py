@@ -13,6 +13,8 @@ from pydantic import BaseModel
 from starlette.status import HTTP_302_FOUND, HTTP_303_SEE_OTHER
 import secrets
 import string
+from modules.Oauth import Oauth
+from fastapi.templating import Jinja2Templates
 import discord
 import asyncio
 import time
@@ -38,6 +40,13 @@ from aioredis.errors import ConnectionClosedError as ServerConnectionClosedError
 from discord_webhook import DiscordWebhook, DiscordEmbed
 import markdown
 from modules.emd_hab import emd
+from config import *
+from fastapi.exceptions import RequestValidationError
+from fastapi.exception_handlers import (
+    http_exception_handler,
+    request_validation_exception_handler,
+)
+
 def redirect(path: str) -> RedirectResponse:
     return RedirectResponse(path, status_code=HTTP_303_SEE_OTHER)
 
@@ -75,7 +84,7 @@ async def internal_get_bot(userid: int, bot_only: bool) -> Optional[dict]:
         return None # This is impossible to actually exist on the discord API
     
     cache = await db.fetchrow("SELECT username, avatar, valid, valid_for, epoch FROM bot_cache WHERE bot_id = $1 AND username IS NOT NULL AND avatar IS NOT NULL", int(userid))
-    if cache is None or time.time() - cache['epoch'] > 60 * 60 * 4: # 4 Hour cacher
+    if cache is None or time.time() - cache['epoch'] > 60 * 60 * 8: # 4 Hour cacher
         # The cache is invalid, pass
         print("Not using cache for id ", str(userid))
         pass
@@ -216,7 +225,7 @@ async def add_event(bot_id: int, event: str, context: dict, *, send_event = True
             print(f"JSON: {json}\nFunction: {f}\nURL: {uri}\nHeaders: {headers}")
             json = json | {"mode": webh["webhook_type"].upper()}
             asyncio.create_task(f(uri, json = json, headers = headers))
-    ws_events.append((bot_id, {"type": "add", "event_id": str(id), "event": event, "context": context}))
+    await add_ws_event(bot_id, {"type": "add", "id": str(id), "event": event, "context": context})
     return id
 
 class Form(StarletteForm):
@@ -350,7 +359,7 @@ async def parse_reviews(bot_id: int, reviews: List[asyncpg.Record] = None) -> Li
     return reviews, round(stars/i, 2)
 
 # Get Bots Helper
-async def render_bot(request: Request, bot_id: int, review: bool, widget: bool):
+async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, review: bool, widget: bool):
     guild = client.get_guild(reviewing_server)
     print("Begin rendering bots")
     bot = await db.fetchrow("SELECT prefix, shard_count, queue, description, bot_library AS library, tags, banner, website, certified, votes, servers, bot_id, discord, owner, extra_owners, banner, banned, disabled, github, features, invite_amount, css, html_long_description AS html_ld, long_description FROM bots WHERE bot_id = $1", bot_id)
@@ -401,7 +410,7 @@ async def render_bot(request: Request, bot_id: int, review: bool, widget: bool):
         return templates.e(request, "Bot Not Found")
     _tags_fixed_bot = {tag: tags_fixed[tag] for tag in tags_fixed if tag in bot["tags"]}
     form = await Form.from_formdata(request)
-    ws_events.append((bot_id, {"type": "view", "event_id": None, "event": "view", "context": "user=0::hidden=1:widget=" + str(widget)}))
+    bt.add_task(add_ws_event, bot_id, {"type": "view", "id": str(uuid.uuid4()), "event": "view", "context": {"user": 0, "hidden": 1, "widget": str(widget)}})
     if widget:
         f = "widget.html"
         widget = True
@@ -503,7 +512,7 @@ async def vanity_bot(vanity: str, compact = False):
 class ConnectionManager:
     def __init__(self):
         self.active_connections: List[WebSocket] = []
-
+        self.fl_loaded = False
     async def connect(self, websocket: WebSocket, api: bool = True):
         await websocket.accept()
         if api:
@@ -580,3 +589,100 @@ async def get_events(api_token: Optional[str] = None, bot_id: Optional[str] = No
         events.append({"id": uid,  "event": event[0], "epoch": event[1], "context": orjson.loads(event[2])})
     ret = {"events": events}
     return ret
+
+
+class templates():
+    @staticmethod
+    def TemplateResponse(f, arg_dict):
+        guild = client.get_guild(reviewing_server)
+        try:
+            request = arg_dict["request"]
+        except:
+            raise KeyError
+        status = arg_dict.get("status_code")
+        if "userid" in request.session.keys():
+            arg_dict["css"] = request.session.get("user_css")
+            if "staff" not in arg_dict.keys():
+                user = guild.get_member(int(request.session["userid"]))
+                if user is not None:
+                    staff = is_staff(staff_roles, user.roles, 2)
+                else:
+                    staff = [False]
+                arg_dict["avatar"] = request.session.get("avatar")
+                arg_dict["username"] = request.session.get("username")
+                arg_dict["userid"] = int(request.session.get("userid"))
+        else:
+            staff = [False]
+        arg_dict["staff"] = staff
+        arg_dict["site_url"] = site_url
+        if status is None:
+            return _templates.TemplateResponse(f, arg_dict)
+        return _templates.TemplateResponse(f, arg_dict, status_code = status)
+
+    @staticmethod
+    def error(f, arg_dict, status_code):
+        arg_dict["status_code"] = status_code
+        return templates.TemplateResponse(f, arg_dict)
+
+    @staticmethod
+    def e(request, reason: str, status_code: str = 404):
+        return templates.error("message.html", {"request": request, "context": reason}, status_code)
+
+def url_startswith(url, begin, slash = True):
+    # Slash indicates whether to check /route or /route/
+    if slash:
+       begin = begin + "/"
+    return str(url).startswith(site_url + begin)
+
+_templates = Jinja2Templates(directory="templates")
+
+class FLError():
+    @staticmethod
+    async def error_handler(request, exc):
+        print(request.url)
+        if type(exc) == RequestValidationError:
+            exc.status_code = 422
+        if exc.status_code == 404:
+            if url_startswith(request.url, "/bot"):
+                msg = "Bot Not Found"
+                code = 404
+            elif url_startswith(request.url, "/profile"):
+                msg = "Profile Not Found"
+                code = 404
+            else:
+                msg = "404\nNot Found"
+                code = 404
+        elif exc.status_code == 401:
+            msg = "401\nNot Authorized"
+            code = 401
+        elif exc.status_code == 422:
+            if url_startswith(request.url, "/bot"):
+                msg = "Bot Not Found"
+                code = 404
+            elif url_startswith(request.url, "/profile"):
+                msg = "Profile Not Found"
+                code = 404
+            else:
+                msg = "Invalid Data Provided<br/>" + str(exc)
+                code = 422
+
+        json = url_startswith(request.url, "/api")
+        if json:
+            if exc.status_code == 404 or exc.status_code == 401:
+                return await http_exception_handler(request, exc)
+            elif exc.status_code == 422:
+                return await request_validation_exception_handler(request, exc)
+            else:
+                pass
+        return templates.e(request, msg, code)
+
+async def add_ws_event(bot_id: int, ws_event: dict) -> None:
+    """A WS Event must have the following format:
+        - {id: Event ID, event: Event Name, context: Context, type: Event Type}
+    """
+    curr_ws_events = await redis_db.hgetall(str(bot_id) + "_ws", encoding = 'utf-8')
+    if curr_ws_events is None:
+        curr_ws_events = {}
+    curr_ws_events[ws_event["id"]] = orjson.dumps(ws_event)
+    curr_ws_events["status"] = "READY"
+    await redis_db.hset(str(bot_id) + "_ws", mapping = curr_ws_events)

@@ -87,7 +87,7 @@ async def stat_update_bt():
     await db.execute("UPDATE bots SET votes = 0")
 
 @router.get("/review/{bot_id}")
-async def review(request: Request, bot_id: int):
+async def review(request: Request, bot_id: int, bt: BackgroundTasks):
     if "userid" in request.session.keys():
         guild = client.get_guild(reviewing_server)
         user = guild.get_member(int(request.session["userid"]))
@@ -95,7 +95,7 @@ async def review(request: Request, bot_id: int):
         if not s[0]:
             return RedirectResponse("/")
         # async def _get_bot(bot_id: int, review: bool):
-        return await render_bot(request, bot_id, review = True, widget = False)
+        return await render_bot(request, bt, bot_id, review = True, widget = False)
     else:
         return RedirectResponse("/") 
 

@@ -28,7 +28,7 @@ async def profile_of_user(request: Request, userid: int, personal: bool):
     if not user:
         return templates.e(request, "Profile Not Found", 404)
     if "userid" in request.session.keys():
-        guild = client.get_guild(builtins.reviewing_server)
+        guild = client.get_guild(reviewing_server)
         userobj = guild.get_member(int(request.session.get("userid")))
         if userid == int(request.session["userid"]):
             bot_admin = True
@@ -62,7 +62,7 @@ async def profile_of_user(request: Request, userid: int, personal: bool):
 async def profile_editor(request: Request, userid: int):
     if request.session.get("userid") is None:
         return RedirectResponse("/")
-    guild = client.get_guild(builtins.reviewing_server)
+    guild = client.get_guild(reviewing_server)
     userobj = guild.get_member(int(request.session.get("userid")))
     admin = False
     staff = False
