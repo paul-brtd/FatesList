@@ -128,3 +128,22 @@ CREATE TABLE support_requests (
     bot_id BIGINT
 );
 
+CREATE TABLE servers (
+    guild_id bigint not null unique,
+    votes bigint,    
+    webhook_type text DEFAULT 'VOTE',
+    webhook text,
+    description text,
+    long_description text,
+    html_long_description boolean default false,
+    css text default '',
+    api_token text unique,
+    website text,
+    tags text[],
+    certified boolean DEFAULT false,
+    created_at bigint,
+    banned BOOLEAN DEFAULT false,
+    invite_amount integer DEFAULT 0,
+    user_provided_invite boolean,
+    invite_code text
+)

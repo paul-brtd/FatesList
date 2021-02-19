@@ -47,11 +47,19 @@ async def setup_db():
 
     return db
 
+@app.middleware("http")
+async def add_process_time_header(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["Content-Security-Policy"] = "default-src cdnjs.cloudflare.com fonts.gstatic.com use.fontawesome.com 'self' *; img-src *; media-src *; script-src * 'unsafe-inline'; style-src * use.fontawesome.com fonts.googleapis.com 'self' 'unsafe-inline' cdnjs.cloudflare.com;"
+    response.headers["X-Frame-Options"] = "SAMEORIGIN"
+    return response
+
+
 @app.on_event("startup")
 async def startup():
     builtins.db = await setup_db()
     print("Discord")
-    asyncio.create_task(client.start(TOKEN))
+    asyncio.create_task(client.start(TOKEN_MAIN))
     builtins.redis_db = await aioredis.create_redis_pool('redis://localhost')
 
 @app.on_event("shutdown")

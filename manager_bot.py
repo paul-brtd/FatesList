@@ -7,8 +7,8 @@ from config import *
 from modules.deps import *
 from typing import Optional
 
-builtins.intent = discord.Intents.all()
-builtins.client = commands.AutoShardedBot(command_prefix='!', intents=intent)
+intent = discord.Intents.all()
+client = commands.Bot(command_prefix='!', intents=intent)
 
 async def setup_db():
 
@@ -19,7 +19,7 @@ async def setup_db():
 
 @client.event
 async def on_ready():
-    builtins.db = await setup_db()
+    db = await setup_db()
     print("Manager Bot Is UP")
 
 @client.event
@@ -48,7 +48,7 @@ async def approve(ctx, bot: discord.Member):
     bot_id = bot.id
     if not ctx.guild:
         return await ctx.send("You must run this command in a guild")
-    elif is_staff(builtins.staff_roles, ctx.author.roles, 2)[0]:
+    elif is_staff(staff_roles, ctx.author.roles, 2)[0]:
         check = await db.fetchrow("SELECT owner FROM bots WHERE bot_id = $1 AND queue = true", bot_id)
         if check is None:
             return await ctx.send("This bot doesn't exist on our database or is not in the queue")
@@ -66,7 +66,7 @@ async def deny(ctx, bot: discord.Member, reason: Optional[str] = "There was no r
     bot_id = bot.id
     if not ctx.guild:
         return await ctx.send("You must run this command in a guild")
-    elif is_staff(builtins.staff_roles, ctx.author.roles, 2)[0]:
+    elif is_staff(staff_roles, ctx.author.roles, 2)[0]:
         channel = client.get_channel(bot_logs)
         await db.execute("UPDATE bots SET banned = true WHERE bot_id = $1", bot_id)
         channel = client.get_channel(bot_logs)
@@ -76,4 +76,4 @@ async def deny(ctx, bot: discord.Member, reason: Optional[str] = "There was no r
     else:
         await ctx.send("You don't have the permission to do this")
 
-client.run(TOKEN)
+client.run(TOKEN_MAIN)

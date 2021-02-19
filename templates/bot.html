@@ -283,6 +283,36 @@ th {
 			    <span style="margin-left: 30px !important; color: white" id="review_text-{{rev.id}}">{{rev.review}}</span>
 		    </div>
 		    </div>
+		    <script type="application/ld+json">
+			{
+				  "@context" : "http://schema.org",
+				  "@type" : "Product",
+			 	  "name" : "{{bot.username}}",
+				  "image" : "{{bot.avatar}}",
+				  "description": "{{bot.description}}",
+				  "sku": "{{rev.id}}",
+				  "offers": "",
+				  "aggregateRating" : {
+    				  "@type" : "AggregateRating",
+				        "bestRating" : "10",
+				  	"ratingValue" : {{rev.star_rating}},
+					 "reviewCount": 1
+			 	 },
+			  "review" : [ {
+				    "@type" : "Review",
+				    "author" : {
+				            "@type" : "Person",
+					    "name" : "{{rev.user.username}}"
+			           },
+		         	   "reviewRating" : {
+				           "bestRating" : "10",
+				           "@type" : "Rating",
+					   "ratingValue" : {{rev.star_rating}}
+				    },
+		        	 "reviewBody" : "{{rev.review}}"
+				  } ]
+			}
+		</script>
 		{% endfor %}
 		</div>
 		</div>
