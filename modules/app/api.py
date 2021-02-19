@@ -95,7 +95,7 @@ async def regenerate_token(request: Request, bot_id: int, Authorization: str = H
     id = await db.fetchrow("SELECT bot_id FROM bots WHERE bot_id = $1 AND api_token = $2", bot_id, str(Authorization))
     if id is None:
         return abort(401)
-    await db.execute("UPDATE bots SET api_token = $1 WHERE bot_id = $2", get_token(101), id["bot_id"])
+    await db.execute("UPDATE bots SET api_token = $1 WHERE bot_id = $2", get_token(132), id["bot_id"])
     return {"done": True, "reason": None}
 
 @router.get("/bots/random", tags = ["API"])
