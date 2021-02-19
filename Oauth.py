@@ -48,14 +48,13 @@ class Oauth():
       url = self.discord_api_url+"/users/@me/guilds"
       headers = {'Content-Type': 'application/x-www-form-urlencoded',
                           "Authorization": "Bearer " + access_token}
-      async with aiohttp.ClientSession() as sess:
-          async with sess.get(url, headers=headers) as response:
-              r = await response.json()
+      res = await requests.get(url, headers=headers) as response:
+      guild_json await res.json()
 
       try:
         guilds = []
-        for server in r:
-            if int(server["id"]) == 758290404910301184:
+        for guild in guild_json:
+            if int(guild["id"]) == 758290404910301184:
                 guilds = True
       except:
         guilds = None
