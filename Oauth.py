@@ -35,9 +35,8 @@ class Oauth():
         headers = {
             "Authorization": f"Bearer {access_token}"
         }
-        async with aiohttp.ClientSession() as sess:
-            async with sess.get(url, headers=headers) as response:
-                user_json = await response.json()
+        res = await requests.get(url, headers=headers)
+        user_json = await res.json()
         id = user_json.get("id")
         name = user_json.get("username")
         dash = user_json.get("discriminator")
