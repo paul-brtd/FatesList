@@ -47,8 +47,8 @@ class Oauth():
       url = self.discord_api_url+"/users/@me/guilds"
       headers = {'Content-Type': 'application/x-www-form-urlencoded',
                           "Authorization": "Bearer " + access_token}
-      res = await requests.get(url, headers=headers) as response:
-      guild_json await res.json()
+      res = await requests.get(url, headers=headers)
+      guild_json = await res.json()
 
       try:
         guilds = []
