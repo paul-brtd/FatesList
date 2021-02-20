@@ -87,7 +87,7 @@ async def internal_get_bot(userid: int, bot_only: bool) -> Optional[dict]:
     cache_redis = await redis_db.hgetall(str(userid) + "_cache", encoding = 'utf-8')
     if cache_redis is not None and cache_redis.get("cache_obj") is not None:
         cache = orjson.loads(cache_redis["cache_obj"])
-        if time.time() - cache['epoch'] > 60*60*8: # 8 Hour cacher
+        if cache.get("valid_user") is None or time.time() - cache['epoch'] > 60*60*8: # 8 Hour cacher
             # The cache is invalid, pass
             print("Not using cache for id ", str(userid))
             pass
@@ -97,7 +97,7 @@ async def internal_get_bot(userid: int, bot_only: bool) -> Optional[dict]:
                 return {"username": cache['username'], "avatar": cache['avatar'], "disc": cache["disc"]}
             elif cache.get("valid_user") and not bot_only:
                 return {"username": cache['username'], "avatar": cache['avatar'], "disc": cache["disc"]}
-        return None
+            return None
 
     # Add ourselves to cache
     valid_user = False
