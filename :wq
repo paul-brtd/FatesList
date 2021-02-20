@@ -81,49 +81,56 @@ async def internal_get_bot(userid: int, bot_only: bool) -> Optional[dict]:
 
     if len(str(userid)) not in [17, 18]:
         print("Ignoring blatantly wrong User ID")
-        return None # This is impossible to actually exist on the discord API or on our cache
-
-    # Query redis cache for some important info
-    cache_redis = await redis_db.hgetall(str(userid) + "_cache", encoding = 'utf-8')
-    if cache_redis is not None and cache_redis.get("cache_obj") is not None:
-        cache = orjson.loads(cache_redis["cache_obj"])
-        if time.time() - cache['epoch'] > 60*60*8: # 8 Hour cacher
-            # The cache is invalid, pass
-            print("Not using cache for id ", str(userid))
-            pass
-        else:
-            print("Using cache for id ", str(userid))
-            if cache.get("valid_user") and bot_only and cache["bot"]:
-                return {"username": cache['username'], "avatar": cache['avatar'], "disc": cache["disc"]}
-            elif cache.get("valid_user") and not bot_only:
-                return {"username": cache['username'], "avatar": cache['avatar'], "disc": cache["disc"]}
+        return None # This is impossible to actually exist on the discord API
+    
+    cache = await db.fetchrow("SELECT username, avatar, valid, valid_for, epoch FROM bot_cache WHERE bot_id = $1 AND username IS NOT NULL AND avatar IS NOT NULL", int(userid))
+    if cache is None or time.time() - cache['epoch'] > 60 * 60 * 8: # 4 Hour cacher
+        # The cache is invalid, pass
+        print("Not using cache for id ", str(userid))
+        pass
+    else:
+        print("Using cache for id ", str(userid))
+        if cache["valid"] and "bot" in cache["valid_for"].split("|"):
+            return {"username": str(cache['username']), "avatar": str(cache['avatar'])}
+        elif cache["valid"] and not bot_only:
+            return {"username": str(cache['username']), "avatar": str(cache['avatar'])}
         return None
 
-    # Add ourselves to cache
-    valid_user = False
-    bot = False
-    username, avatar, disc = None, None, None # All are none at first
-
-    try:
-        print(f"Making API call to get user {userid}")
-        bot_obj = await client.fetch_user(int(userid))
-        valid_user = True
-        bot = bot_obj.bot
-    except:
-        pass
+    # If all else fails, add to cache, then recall ourselves
+    invalid = False
     
-    if valid_user:
-        username = bot_obj.name
-        avatar = str(bot_obj.avatar_url)
-        disc = bot_obj.discriminator
-    cache = orjson.dumps({"epoch": time.time(), "bot": bot, "username": username, "avatar": avatar, "disc": disc, "valid_user": valid_user})
-    await redis_db.hset(str(userid) + "_cache", mapping = {"cache_obj": cache})
+    try:
+        print("Making API call to get user", str(userid))
+        bot = await client.fetch_user(int(userid))
+    except:
+        invalid = True
+        valid_for = None
+        return None
 
-    if bot_only and valid_user and bot:
-        return {"username": username, "avatar": avatar, "disc": disc}
-    elif not bot_only and valid_user and not bot:
-        return {"username": username, "avatar": avatar, "disc": disc}
-    return None
+    if bot:
+        invalid = False
+        valid_for = "user"
+    else:
+        invalid = True
+        valid_for = None
+
+    if bot and bot.bot:
+        invalid = False
+        valid_for+="|bot"
+
+    if invalid:
+        username = None
+        avatar = None
+    else:
+        username = str(bot.name)
+        avatar = str(bot.avatar_url)
+ 
+    cache = await db.fetchrow("SELECT epoch FROM bot_cache WHERE bot_id = $1", int(userid))
+    if cache is None:
+        await db.execute("INSERT INTO bot_cache (bot_id, username, avatar, epoch, valid, valid_for) VALUES ($1, $2, $3, $4, $5, $6)", userid, username, avatar, time.time(), (not invalid), valid_for)
+    else:
+        await db.execute("UPDATE bot_cache SET username = $1, avatar = $2, epoch = $3, valid = $4, valid_for = $6 WHERE bot_id = $5", username, avatar, time.time(), (not invalid), userid, valid_for)
+    return await internal_get_bot(userid, bot_only)
 
 async def get_user(userid: int) -> Optional[dict]:
     return await internal_get_bot(userid, False)
@@ -396,7 +403,7 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, review:
         features = bot["features"]
     if bot_info:
         bot = dict(bot)
-        bot = bot | {"votes": human_format(bot["votes"]), "servers": human_format(bot["servers"]), "banner": banner.replace("\"", "").replace("'", "").replace("http://", "https://").replace("(", "").replace(")", "").replace("file://", ""), "shards": human_format(bot["shard_count"]), "owner_pretty": await get_user(bot["owner"]), "extra_owners": ed, "leo": len(ed), "features": features, "fleo": len(features), "long_description": ldesc.replace("window.location", "").replace("document.ge", ""), "user": (await get_bot(bot_id))}
+        bot = bot | {"votes": human_format(bot["votes"]), "servers": human_format(bot["servers"]), "banner": banner.replace("\"", "").replace("'", "").replace("http://", "https://").replace("(", "").replace(")", "").replace("file://", ""), "shards": human_format(bot["shard_count"]), "owner_pretty": await get_user(bot["owner"]), "extra_owners": ed, "leo": len(ed), "features": features, "fleo": len(features), "long_description": ldesc.replace("window.location", "").replace("document.ge", "")}
     else:
         return templates.e(request, "Bot Not Found")
     _tags_fixed_bot = {tag: tags_fixed[tag] for tag in tags_fixed if tag in bot["tags"]}

@@ -123,8 +123,8 @@ th {
 <div id="bot-content">
     <div class="d-flex d-xl-flex flex-column justify-content-center align-items-center justify-content-xl-center align-items-xl-center">
 
-	<img style="border-radius: 50%; width: 120px;" src="{{bot.avatar}}" id="bot-avatar">
-	<h3 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;" id="bot-username">{{bot.username}}</h3>
+	<img style="border-radius: 50%; width: 120px;" src="{{bot.user.avatar}}" id="bot-avatar">
+	<h3 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;" id="bot-username">{{bot.user.username}}</h3>
 	{% if bot.banned %}
         <div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
         <strong>This bot has been BANNED or DENIED from this bot list for violating our rules or being a low-quality bot. Please do not invite it.</strong>
@@ -188,7 +188,7 @@ th {
     <div id="bot-promo" style="margin-top: 30px;">
 	    <h5 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;margin-top: -13px;margin-bottom: 3px;" id="bot-promo-header">Promotions, Announcements and More!</h5>
 	    {% if bot_admin %}
-    		<a href="/bot/{{bot_id}}/promotions/new" style="color: white !important; opacity: 0.8;"><i class="fa fa-plus" aria-hidden="true"></i> New Promotion</a>
+	    <a href="javascript:void()" onclick="newPromotion('{{bot.api_token}}')" style="color: white !important; opacity: 0.8;"><i class="fa fa-plus" aria-hidden="true"></i> New Promotion</a>
 	    {% endif %}
     {% endif %}
     {% for promo in promos %}
