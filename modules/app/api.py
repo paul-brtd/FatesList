@@ -98,7 +98,18 @@ async def regenerate_token(request: Request, bot_id: int, Authorization: str = H
     await db.execute("UPDATE bots SET api_token = $1 WHERE bot_id = $2", get_token(132), id["bot_id"])
     return {"done": True, "reason": None}
 
-@router.get("/bots/random", tags = ["API"])
+class RandomBotsAPI(BaseModel):
+    bot_id: str
+    description: str
+    banner: str
+    certified: bool
+    username: str
+    avatar: str
+    servers: str
+    invite: str
+    votes: int
+
+@router.get("/bots/random", tags = ["API"], response_model = RandomBotsAPI)
 async def random_bots_api(request: Request):
     random_unp = await db.fetchrow("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE queue = false AND banned = false AND disabled = false ORDER BY RANDOM() LIMIT 1") # Unprocessed
     bot = (await get_bot(random_unp["bot_id"])) | dict(random_unp)
@@ -154,8 +165,10 @@ class BotVoteCheck(BaseModel):
     time_to_vote: int
 
 @router.get("/bots/{bot_id}/votes", tags = ["API"], response_model = BotVoteCheck)
-async def get_votes_api(request: Request, bot_id: int, user_id: int, Authorization: str = Header("INVALID_API_TOKEN")):
+async def get_votes_api(request: Request, bot_id: int, user_id: Optional[int] = None, Authorization: str = Header("INVALID_API_TOKEN")):
     """Endpoint to check amount of votes a user has."""
+    if user_id is None:
+        return dict((await db.fetchrow("SELECT votes FROM bots WHERE bot_id = $1", bot_id))) | {"vote_epoch": 0, "voted": False, "time_to_vote": 1, "vote_right_now": False}
     id = await db.fetchrow("SELECT bot_id FROM bots WHERE bot_id = $1 AND api_token = $2", bot_id, str(Authorization))
     if id is None:
         return abort(401)
@@ -246,7 +259,11 @@ async def get_feature_api(request: Request, name: str):
         return abort(404)
     return features[name]
 
-@router.get("/vanity/{vanity}", tags = ["API"])
+class VanityAPI(BaseModel):
+    type: str
+    redirect: str
+
+@router.get("/vanity/{vanity}", tags = ["API"], response_model = VanityAPI)
 async def get_vanity(request: Request, vanity: str):
     vb = await vanity_bot(vanity, compact = True)
     if vb is None:

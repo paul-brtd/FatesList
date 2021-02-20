@@ -668,12 +668,10 @@ class FLError():
 
         json = url_startswith(request.url, "/api")
         if json:
-            if exc.status_code == 404 or exc.status_code == 401:
+            if exc.status_code != 422:
                 return await http_exception_handler(request, exc)
-            elif exc.status_code == 422:
-                return await request_validation_exception_handler(request, exc)
             else:
-                pass
+                return await request_validation_exception_handler(request, exc)
         return templates.e(request, msg, code)
 
 async def add_ws_event(bot_id: int, ws_event: dict) -> None:
