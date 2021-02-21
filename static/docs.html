@@ -2,80 +2,131 @@
 <html lang="en" data-theme="light">
 <head>
         <title>Fates List | Other Docs</title>
+	<link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin>
+   	<link href="https://fonts.googleapis.com/css2?family=Lexend+Deca&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.12.0/css/all.css" async>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" async>
+	<link rel="stylesheet" href="/static/assets/fonts/fontawesome5-overrides.min.css" async>
+
+	<style>
+		a {
+			color: white;
+			opacity: 0.7;
+			text-decoration: none;
+		}
+		.hr-is {font-size: 20px; border-top-width: 1px; border-top-color: #eee; width: 90%;}
+		html, pre {
+			font-family: 'Lexend Deca', sans-serif  !important;
+		}
+		.docm, pre, #resources {
+			margin-left: 100px;
+			font-size: 18px;
+		}
+		strong {
+			margin-right: 5px;
+		}
+		h3 {
+			font-size: 24px;
+			text-align: center;
+		}
+		.alert {
+			padding: 3px;
+			text-align: left !important;
+			margin-left: 100px;
+			display: inline-block;
+			background: red;
+			border-radius: 4px 4px 4px 4px;
+		}
+		.doc {
+			margin-right: 10px;
+		}
+		table, th, tr, td {
+			padding: 10px;
+			border: 1px solid white;
+			border-collapse: collapse;
+		}
+	</style>
 </head>
-<body>
-<pre>
+<body style="background: black; color: white;">
+<header>
+	<span>
+		<h1 style="text-align: center; margin-bottom: 0px !important;"><strong>Fates List</strong></h1>
+		<h2 style="text-align: center; font-weight: normal; font-size: 16px;">Additional API Docs</h2>
+		<hr class="hr-is"/>
+	</span>
+</header>
 
-CSS Docs Reference
-
-#bot-content -> The entire div your bot page is in
-#bot-avatar -> The bots avatar. This is an img tag
-#bot-username -> The bots username. This is a h3
-
-Not allowed to edit
-.alert, .alert-danger - We will replace this with "" so dont try and we will ban your bot if you try to abuse this
-
-Description
-
-#bot-description -> Your bots short description. This is an h3 tag
-#bot-buttons -> The Edit, Invite, Report etc buttons. If you want to change an individual button, .bot-buttons-button
-Not allowed to edit
-form - We will replace this with "" so dont try and we will ban your bot if you try to abuse this
-
-Tags
-
-#bot-tags -> The div containing all your tags and the header
-#bot-tags-header -> The "Tags" part of the tags. This is a h6
-#bot-tags-container -> The div that contains just the tags, not the header
-#bot-tags-container-inner -> The div inside bot-tags-container to help position the tags
-#bot-tags-TAG -> This is the div for the TAG (replace TAG with the tag)
-bot-tags-TAG-button -> The actual TAG (replace TAG with the tag). This is a button tag
-
-Promos
-
-#bot-promo -> This is the div containing all promotions
-#bot-promo-header -> This is the header of all the promotions (the Special Promotions/Events)
-.bot-promo-container -> This is the container for a promo
-#bot-promo-container-INDEX -> This is one promo based on jinja2 loop.index which is a number going from 0 (I think) to the N-1th promo
-
-Footer
-
-#bot-long-description - This is the bots long description, it is an iframe
-
-Modal
-
-#bot-info-modal -> This is the div for the info modal
-
-Not allowed to edit
-.modal-footer - We will replace this with "" so dont try and we will ban your bot if you try to abuse this
-
-Other Utility
-
-.btn, .btn-primary etc. -> Buttons
-
-See djibe docs on modals for bot-info-modal (<a href="https://djibe.github.io/material/docs/4.5/components/modal/">here</a>)
-
-Important note
-
-Things that are not allowed to edit are naively replaced meaning all places where you use them including in css rules will be removed
-</pre>
+<h3><strong>CSS Docs Reference</strong></h3>
+<div style="font-size: 18px;" class="docm">
+	<strong class="doc">#bot-content</strong><span>The entire div your bot page is in</span><br/>
+	<strong class="doc">#bot-avatar</strong><span>The bots avatar. This is an img tag</span><br/>
+	<strong class="doc">#bot-username</strong><span>The bots username. This is a h3</span><br/>
+	<strong class="doc">#bot-description</strong><span>Your bots short description. This is an h3 tag</span><br/>
+	<strong class="doc">#bot-buttons</strong><span>The Edit, Invite etc. buttons. If you want to change an individual button, .bot-buttons-button_name</span><br/>
+	<strong class="doc" style="font-size: 16px">Button Names</strong><span>support, github, website, invite, vote, edit</span><br/>
+	<strong class="doc">#bot-tags</strong><span>The div containing all your tags and the header</span><br/>
+	<strong class="doc">#bot-tags-header</strong><span>The "Tags" part of the tags. This is a h5</span><br/>
+	<strong class="doc">#bot-tags-container</strong><span>The div that contains just the tags, not the header</span><br/>
+	<strong class="doc">#bot-tags-container-inner</strong><span>The div inside bot-tags-container to help position the tags</span><br/>
+	<strong class="doc">#bot-tags-TAG</strong><span>This is the div for the TAG (replace TAG with the tag, see "Resources" for the full list of tag names)</span><br/>
+	<strong class="doc">#bot-tags-TAG-button</strong><span>The actual TAG (replace TAG with the tag). This is a button tag</span><br/>
+	<strong class="doc">#bot-promo</strong><span>This is the div containing all promotions</span><br/>
+	<strong class="doc">#bot-promo-header</strong><span>This is the header of all the promotions (the Special Promotions/Events)</span><br/>
+	<strong class="doc">.bot-promo-container</strong><span>This is the container for a promo</span><br/>
+	<strong class="doc">#bot-promo-container-INDEX</strong><span>This is one promo based on jinja2 loop.index which is a number going from 0 to the N-1th promo index</span><br/>
+	<strong class="doc">#bot-long-description</strong><span>This is the bots long description, it is in a div tag. All links are given the long-desc-link class</span><br/>
+	<strong class="doc">Buttons</strong><span>.btn, .btn-primary etc.</span><br/>
+</div>
 <br/>
-<pre>
-Webhook Documentation
-
-There are many types of webhooks in Fates List, however you MUST select Vote Webhook for votes unless you are using Fates Client or another library
-
+<div id="resources">
+        <strong>Resources</strong><br/>
+        <strong class="doc">Tags (names and classes)</strong><a href="https://github.com/Fates-List/FatesList/blob/a855259f57b390e3b9c038e1c6fe5d1a1e1ab766/config_template.py#L69">click here</a>
+</div>
+<div class="alert">
+	<i class="fas fa-exclamation-triangle"></i>
+	<strong>Important Note</strong>
+	<p>There are some things that are not allowed to edit. Below is a list of the currently not allowed elements:</p>
+	<p style="margin-left: 30px;"><em><strong>.alert</strong></em></p>
+	<span>Things that are not allowed to edit are naively replaced meaning all places where you use them including in css rules will be removed</span>
+</div>
+<h3><strong>Webhook Documentation</strong></h3>
+	<div class="alert">
+	        <i class="fas fa-exclamation-triangle"></i>
+		<strong>There are many types of webhooks in Fates List, however you MUST select Vote Webhook for votes unless you are using Fates Client or another library</strong>
+	</div>
+<div style="font-size: 18px;" class="docm">
+<strong style="font-size: 20px;">Vote Webhook</strong>
 Your webhook will be sent in this format:
 	id: String -> User ID
 	votes: Integer -> Votes
 	
 The webhook will have a Authorization header with your API Token.
 The Test API Token (so you can try out the webhook) is eb83da1b-1bbf-44e6-a938-5545bcc2934f. This only applies to webhooks and not for other non webhook related things
-</pre><br/>
+</div>
+<h3><strong>WebSocket Documentation</strong></h3>
 <pre>
-WebSocket Documentation
+Fates List offers a WebSocket API at /api/ws for getting real time stats on your bot. This is the only way to get view events (and potentially other events)
 
-Fates List offers a WebSocket API at /api/ws for getting real time stats on your bot. This is the only way to get certain events such as view and new_review
+Upon attempting to connect to /api/ws, you will get a JSONs with the following basic syntax:
+<table>
+  <tr>
+    <th>Key</th>
+    <th>Description</th>
+    <th>Type</th>
+  </tr>
+  <tr>
+    <td>payload</td>
+    <td>This is a payload which is essentially what is being sent to you. This can be a IDENTITY, STATUS, KILL_CONN or EVENTS but this may change in the future</td>
+    <td>String</td>
+  </tr>
+  <tr>
+    <td>type</td>
+    <td>This is the payload type which is how you are supposed to respond or extra information about the payload such as NO_AUTH or API_TOKEN.</td>
+    <td>String</td>
+  </tr>
+</table>
+
+{"payload": "IDENTITY", "type": "API_TOKEN"}
 </pre>
 </body>
 </html>

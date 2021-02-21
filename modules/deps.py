@@ -84,7 +84,7 @@ async def _internal_user_fetch(userid: str, bot_only: bool) -> Optional[dict]:
 
     # Query redis cache for some important info
     cache_redis = await redis_db.hgetall(f"{userid}_cache", encoding = 'utf-8')
-    if not cache_redis and not cache_redis.get("cache_obj"):
+    if cache_redis is not None and cache_redis.get("cache_obj") is not None:
         cache = orjson.loads(cache_redis["cache_obj"])
         if cache.get("valid_user") is None or time.time() - cache['epoch'] > 60*60*8: # 8 Hour cacher
             # The cache is invalid, pass
@@ -213,7 +213,11 @@ async def add_event(bot_id: int, event: str, context: dict, *, send_event = True
             cont = False
         if cont:
             print(f"JSON: {json}\nFunction: {f}\nURL: {uri}\nHeaders: {headers}")
-            json = json | {"mode": webh["webhook_type"].upper()}
+            json = json | {"payload": "event", "mode": webh["webhook_type"].upper()}
+            try:
+                del json["type"]
+            except:
+                pass
             asyncio.create_task(f(uri, json = json, headers = headers))
     await add_ws_event(bot_id, {"payload": "event", "id": str(id), "event": event, "context": context})
     return id

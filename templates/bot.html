@@ -221,8 +221,8 @@ th {
                           <button id="bot-admin-button" class="tablinks" onclick="openf(event, 'bot-admin')">Admin</button>
 		          {% endif %}
 		</div>
-	<div  id="bot-long-description-container" class='tabcontent'>
-		<div id="bot-long-description" style="color: white; text-align: left; margin-left: 5%; margin-right: 5%; margin-top: 13px;">{{bot.long_description.replace("<script", "").replace("<a", "<a class='long-desc-link'").replace("ajax", "").replace("http://", "https://")|safe}}</div>
+	<div id="bot-long-description-container" class='tabcontent'>
+		<div id="bot-long-description" style="color: white; text-align: left; margin-left: 5%; margin-right: 5%; margin-top: 13px;">{{bot.long_description.replace("<script", "").replace("<a", "<a class='long-desc-link'").replace("ajax", "").replace("http://", "https://").replace(".alert", "")|safe}}</div>
 	</div>
         <div id="bot-reviews" class='tabcontent'>
 		<h5 class="white">Bot Reviews</h5>

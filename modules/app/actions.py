@@ -351,6 +351,7 @@ async def new_reviews(request: Request, bot_id: int, rating: float = FForm(5.1),
     if check is not None:
         return templates.TemplateResponse("message.html", {"request": request, "message": "You have already made a review for this bot, please edit that one instead of making a new one!"})
     await db.execute("INSERT INTO bot_reviews (bot_id, user_id, star_rating, review_text, epoch) VALUES ($1, $2, $3, $4, $5)", bot_id, int(request.session["userid"]), rating, review, [time.time()])
+    await add_event(bot_id, "new_review", {"user": request.session["userid"]})
     return templates.TemplateResponse("message.html", {"request": request, "message": "Successfully made a review for this bot!<script>window.location.replace('/bot/" + str(bot_id) + "')</script>", "username": request.session.get("username", False), "avatar": request.session.get('avatar')}) 
 
 @router.post("/{bot_id}/reviews/{rid}/edit")
