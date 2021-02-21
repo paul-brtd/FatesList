@@ -124,6 +124,12 @@ Upon attempting to connect to /api/ws, you will get a JSONs with the following b
     <td>This is the payload type which is how you are supposed to respond or extra information about the payload such as NO_AUTH or API_TOKEN.</td>
     <td>String</td>
   </tr>
+  <tr>
+    <td>data</td>
+    <td>If the payload is a data payload like EVENTS_V1, then this the main data sent by the payload. This key is not present on non-data payloads</td>
+    <td>Optional[String]</td>
+  </tr>
+
 </table>
 
 {"payload": "IDENTITY", "type": "API_TOKEN"}
