@@ -19,7 +19,7 @@ async def setup_db():
 
 @client.event
 async def on_ready():
-    db = await setup_db()
+    builtins.db = await setup_db()
     print("Manager Bot Is UP")
 
 @client.event

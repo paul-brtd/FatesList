@@ -128,9 +128,9 @@ async def get_bots_api(request: Request, bot_id: int, Authorization: str = Heade
     api_ret["username"] = bot_obj["username"]
     api_ret["avatar"] = bot_obj["avatar"]
     if api_ret["_extra_owners"] is None:
-        api_ret["owners"] = [api_ret["_owner"]]
+        api_ret["owners"] = [str(api_ret["_owner"])]
     else:
-        api_ret["owners"] = [api_ret["_owner"]] + api_ret["_extra_owners"]
+        api_ret["owners"] = [str(api_ret["_owner"])] + [str(eo) for eo in api_ret["_extra_owners"]]
     api_ret["id"] = str(api_ret["id"])
     if Authorization is not None:
         check = await db.fetchrow("SELECT bot_id FROM bots WHERE api_token = $1", str(Authorization))

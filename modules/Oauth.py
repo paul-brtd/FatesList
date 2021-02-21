@@ -64,7 +64,7 @@ class Oauth():
         url = self.discord_api_url+f"/guilds/{guild_id}/members/{userid}"
 
         headers = {
-            "Authorization": f"Bot {TOKEN}"
+            "Authorization": f"Bot {TOKEN_MAIN}"
         }
         rc = await requests.put(url, headers=headers,json={"access_token":access_token})
         print(rc)

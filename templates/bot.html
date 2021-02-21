@@ -178,7 +178,7 @@ th {
 		        <div class="d-flex flex-wrap justify-content-center align-items-center" style="width: 97%;margin: 0 auto;" id="bot-tags-container-inner">
             			{% for tag,new_tag in tags_fixed.items() %}
 				    <div id="bot-tags-{{tag}}">
-					    <button id="bot-tags-{{tag}}-button" class="text-nowrap btn d-flex justify-content-center align-items-center btn-outline-light" style="color: white;border-radius: 10px; margin: 6px;" onclick="location.href='/search/tags?tag={{tag}}'" title="{{new_tag[0]}}"><i class="{{new_tag[1][0]}}" aria-hidden="true"></i><span style="margin-left: 3px; font-size: 13px;"><strong>{{new_tag[0]}}</strong></span></button>
+					    <button id="bot-tags-{{tag}}-button" class="text-nowrap btn d-flex justify-content-center align-items-center btn-outline-light" style="color: white;border-radius: 10px; margin: 6px;" onclick="location.href='/search/tags?tag={{tag}}'" title="{{new_tag[0]}}"><i class="{{new_tag[1]}}" aria-hidden="true"></i><span style="margin-left: 3px; font-size: 13px;"><strong>{{new_tag[0]}}</strong></span></button>
                 		    </div>
 		                {% endfor %}
 			</div>
