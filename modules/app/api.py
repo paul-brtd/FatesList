@@ -314,12 +314,14 @@ async def websocker_real_time_api(websocket: WebSocket):
         await manager.send_personal_message({"payload": "IDENTITY", "type": "API_TOKEN"}, websocket)
         try:
             api_token = await websocket.receive_json()
+            if api_token.get("payload") != "IDENTITY_RESPONSE" or api_token.get("type") != "API_TOKEN":
+                raise TypeError
         except:
-            await manager.send_personal_message({"payload": "KILL_CONN", "type": "NO_AUTH"}, websocket)
+            await manager.send_personal_message({"payload": "KILL_CONN", "type": "INVALID_IDENTITY_RESPONSE"}, websocket)
             return await ws_close(websocket, 4004)
-        api_token = api_token.get("api_token")
-        if api_token is None or type(api_token) == int:
-            await manager.send_personal_message({"payload": "KILL_CONN", "type": "NO_AUTH"}, websocket)
+        api_token = api_token.get("data")
+        if api_token is None or type(api_token) == int or type(api_token) == str:
+            await manager.send_personal_message({"payload": "KILL_CONN", "type": "INVALID_IDENTITY_RESPONSE"}, websocket)
             return await ws_close(websocket, 4004)
         for bot in api_token:
             bid = await db.fetchrow("SELECT bot_id FROM bots WHERE api_token = $1", str(bot))

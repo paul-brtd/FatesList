@@ -9,6 +9,9 @@
 	<link rel="stylesheet" href="/static/assets/fonts/fontawesome5-overrides.min.css" async>
 
 	<style>
+		body {
+			width: 100%;
+		}
 		a {
 			color: white;
 			opacity: 0.7;
@@ -39,11 +42,16 @@
 		}
 		.doc {
 			margin-right: 10px;
+			margin-bottom: 5px;
 		}
 		table, th, tr, td {
 			padding: 10px;
 			border: 1px solid white;
 			border-collapse: collapse;
+		}
+		.table {
+			width: 45%;
+			margin-bottom: 5px;
 		}
 	</style>
 </head>
@@ -104,10 +112,10 @@ The webhook will have a Authorization header with your API Token.
 The Test API Token (so you can try out the webhook) is eb83da1b-1bbf-44e6-a938-5545bcc2934f. This only applies to webhooks and not for other non webhook related things
 </div>
 <h3><strong>WebSocket Documentation</strong></h3>
-<pre>
-Fates List offers a WebSocket API at /api/ws for getting real time stats on your bot. This is the only way to get view events (and potentially other events)
-
-Upon attempting to connect to /api/ws, you will get a JSONs with the following basic syntax:
+<div style="font-size: 18px;" class="docm">
+<p>Fates List offers a WebSocket API at /api/ws for getting real time stats on your bot. This is the only way to get view events (and potentially other events). All things sent must be as payloads. See below for more information</p>
+<p>Upon attempting to connect to /api/ws, you must communicate using payloads. After authentication, the transmissions become one way from server to your client. The below table explains the payload format:</p>
+<div class="table">
 <table>
   <tr>
     <th>Key</th>
@@ -131,8 +139,9 @@ Upon attempting to connect to /api/ws, you will get a JSONs with the following b
   </tr>
 
 </table>
-
-{"payload": "IDENTITY", "type": "API_TOKEN"}
-</pre>
+</div>
+<strong class="doc">Identity Payload</strong><span>{"payload": "IDENTITY", "type": "API_TOKEN"}</span>
+<p>Identity Payloads are what you will get when you first try to connect to the WebSocket API. You must repond using a IDENTITY_RESPONSE payload with the type being API_TOKEN and the data being the <em>list</em> of API Tokens you want events for. If you do not use the correct format, a KILL_CONN payload with the type INVALID_IDENTITY_RESPONSE will be sent to you and the connection will be closed with code 4004. If none of your API Tokens match, you will get a KILL_CONN payload with the type NO_AUTH. Once connections is successful, a STATUS payload with type READY will be sent to you. From here, all transmissions other than ping become server -> client only</p>
+</div>
 </body>
 </html>
