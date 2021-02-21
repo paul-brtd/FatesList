@@ -215,7 +215,7 @@ async def add_event(bot_id: int, event: str, context: dict, *, send_event = True
             print(f"JSON: {json}\nFunction: {f}\nURL: {uri}\nHeaders: {headers}")
             json = json | {"mode": webh["webhook_type"].upper()}
             asyncio.create_task(f(uri, json = json, headers = headers))
-    await add_ws_event(bot_id, {"type": "add", "id": str(id), "event": event, "context": context})
+    await add_ws_event(bot_id, {"payload": "event", "id": str(id), "event": event, "context": context})
     return id
 
 class Form(StarletteForm):

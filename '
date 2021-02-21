@@ -296,7 +296,7 @@ async def ws_send_events():
             for bid in ws.bot_id:
                 ws_events = {str(bid): (await redis_db.hgetall(str(bid) + "_ws", encoding = 'utf-8'))}
                 if ws_events[str(bid)].get("status") == "READY":
-                    rc = await manager.send_personal_message({"payload": "EVENTS", "type": "EVENTS_V1", "data": ws_events}, ws)
+                    rc = await manager.send_personal_message({"msg": "EVENTS", "data": ws_events}, ws)
                     for key in (await redis_db.hkeys(str(bid) + "_ws", encoding = "utf-8")):
                         await redis_db.hdel(str(bid) + "_ws", key)
                     await redis_db.hset(str(bid) + "_ws", mapping = {"status": "IDLE"})
@@ -311,15 +311,15 @@ async def ws_close(websocket: WebSocket, code: int):
 async def websocker_real_time_api(websocket: WebSocket):
     await manager.connect(websocket)
     if websocket.api_token == []:
-        await manager.send_personal_message({"payload": "IDENTITY", "type": "API_TOKEN"}, websocket)
+        await manager.send_personal_message({"msg": "IDENTITY", "type": "API_TOKEN"}, websocket)
         try:
             api_token = await websocket.receive_json()
         except:
-            await manager.send_personal_message({"payload": "KILL_CONN", "type": "NO_AUTH"}, websocket)
+            await manager.send_personal_message({"msg": "KILL_CONN", "type": "NO_AUTH"}, websocket)
             return await ws_close(websocket, 4004)
         api_token = api_token.get("api_token")
         if api_token is None or type(api_token) == int:
-            await manager.send_personal_message({"payload": "KILL_CONN", "type": "NO_AUTH"}, websocket)
+            await manager.send_personal_message({"msg": "KILL_CONN", "reason": "NO_AUTH"}, websocket)
             return await ws_close(websocket, 4004)
         for bot in api_token:
             bid = await db.fetchrow("SELECT bot_id FROM bots WHERE api_token = $1", str(bot))
@@ -329,9 +329,9 @@ async def websocker_real_time_api(websocket: WebSocket):
                 websocket.api_token.append(api_token)
                 websocket.bot_id.append(bid["bot_id"])
         if websocket.api_token == [] or websocket.bot_id == []:
-            await manager.send_personal_message({"payload": "KILL_CONN", "type": "NO_AUTH"}, websocket)
+            await manager.send_personal_message({"msg": "KILL_CONN", "reason": "NO_AUTH"}, websocket)
             return await ws_close(websocker, 4004)
-    await manager.send_personal_message({"payload": "STATUS", "type": "READY"}, websocket)
+    await manager.send_personal_message({"msg": "READY", "reason": "AUTH_DONE"}, websocket)
     try:
         while True:
             if manager.fl_loaded == False:
