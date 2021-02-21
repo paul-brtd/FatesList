@@ -75,23 +75,23 @@ def human_format(num: int) -> str:
         num /= 1000.0
     return '{} {}'.format('{:f}'.format(num).rstrip('0').rstrip('.'), ['', 'K', 'M', 'B', 'T', "Quad.", "Quint.", "Sext.", "Sept.", "Oct.", "Non.", "Dec.", "Tre.", "Quat.", "quindec.", "Sexdec.", "Octodec.", "Novemdec.", "Vigint.", "Duovig.", "Trevig.", "Quattuorvig.", "Quinvig.", "Sexvig.", "Septenvig.", "Octovig.", "Nonvig.", "Trigin.", "Untrig.", "Duotrig.", "Googol."][magnitude])
 
-async def _internal_user_fetch(userid: int, bot_only: bool) -> Optional[dict]:
+async def _internal_user_fetch(userid: str, bot_only: bool) -> Optional[dict]:
     # Check if a suitable version is in the cache first before querying Discord
 
-    if len(str(userid)) not in [17, 18]:
+    if len(userid) not in [17, 18]:
         print("Ignoring blatantly wrong User ID")
         return None # This is impossible to actually exist on the discord API or on our cache
 
     # Query redis cache for some important info
-    cache_redis = await redis_db.hgetall(str(userid) + "_cache", encoding = 'utf-8')
-    if cache_redis is not None and cache_redis.get("cache_obj") is not None:
+    cache_redis = await redis_db.hgetall(f"{userid}_cache", encoding = 'utf-8')
+    if not cache_redis and not cache_redis.get("cache_obj"):
         cache = orjson.loads(cache_redis["cache_obj"])
         if cache.get("valid_user") is None or time.time() - cache['epoch'] > 60*60*8: # 8 Hour cacher
             # The cache is invalid, pass
-            print("Not using cache for id ", str(userid))
+            print("Not using cache for id ", userid)
             pass
         else:
-            print("Using cache for id ", str(userid))
+            print("Using cache for id ", userid)
             if cache.get("valid_user") and bot_only and cache["bot"]:
                 return {"username": cache['username'], "avatar": cache['avatar'], "disc": cache["disc"]}
             elif cache.get("valid_user") and not bot_only:
@@ -116,7 +116,7 @@ async def _internal_user_fetch(userid: int, bot_only: bool) -> Optional[dict]:
         avatar = str(bot_obj.avatar_url)
         disc = bot_obj.discriminator
     cache = orjson.dumps({"epoch": time.time(), "bot": bot, "username": username, "avatar": avatar, "disc": disc, "valid_user": valid_user})
-    await redis_db.hset(str(userid) + "_cache", mapping = {"cache_obj": cache})
+    await redis_db.hset(f"{userid}_cache", mapping = {"cache_obj": cache})
 
     if bot_only and valid_user and bot:
         return {"username": username, "avatar": avatar, "disc": disc}
@@ -125,10 +125,10 @@ async def _internal_user_fetch(userid: int, bot_only: bool) -> Optional[dict]:
     return None
 
 async def get_user(userid: int) -> Optional[dict]:
-    return await _internal_user_fetch(int(userid), False)
+    return await _internal_user_fetch(str(int(userid)), False)
 
 async def get_bot(userid: int) -> Optional[dict]:
-    return await _internal_user_fetch(int(userid), True)
+    return await _internal_user_fetch(str(int(userid)), True)
 
 # Internal backend entry to check if one role is in staff and return a dict of that entry if so
 def is_staff_internal(staff_json: dict, role: int) -> dict:
