@@ -75,9 +75,8 @@ def human_format(num: int) -> str:
         num /= 1000.0
     return '{} {}'.format('{:f}'.format(num).rstrip('0').rstrip('.'), ['', 'K', 'M', 'B', 'T', "Quad.", "Quint.", "Sext.", "Sept.", "Oct.", "Non.", "Dec.", "Tre.", "Quat.", "quindec.", "Sexdec.", "Octodec.", "Novemdec.", "Vigint.", "Duovig.", "Trevig.", "Quattuorvig.", "Quinvig.", "Sexvig.", "Septenvig.", "Octovig.", "Nonvig.", "Trigin.", "Untrig.", "Duotrig.", "Googol."][magnitude])
 
-async def internal_get_bot(userid: int, bot_only: bool) -> Optional[dict]:
-    userid = int(userid)
-    # Check if a suitable version is in the bot_cache first before querying Discord
+async def _internal_user_fetch(userid: int, bot_only: bool) -> Optional[dict]:
+    # Check if a suitable version is in the cache first before querying Discord
 
     if len(str(userid)) not in [17, 18]:
         print("Ignoring blatantly wrong User ID")
@@ -126,10 +125,10 @@ async def internal_get_bot(userid: int, bot_only: bool) -> Optional[dict]:
     return None
 
 async def get_user(userid: int) -> Optional[dict]:
-    return await internal_get_bot(userid, False)
+    return await _internal_user_fetch(int(userid), False)
 
 async def get_bot(userid: int) -> Optional[dict]:
-    return await internal_get_bot(userid, True)
+    return await _internal_user_fetch(int(userid), True)
 
 # Internal backend entry to check if one role is in staff and return a dict of that entry if so
 def is_staff_internal(staff_json: dict, role: int) -> dict:
