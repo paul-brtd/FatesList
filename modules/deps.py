@@ -404,7 +404,7 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, review:
         return templates.e(request, "Bot Not Found")
     _tags_fixed_bot = {tag: tags_fixed[tag] for tag in tags_fixed if tag in bot["tags"]}
     form = await Form.from_formdata(request)
-    bt.add_task(add_ws_event, bot_id, {"type": "view", "id": str(uuid.uuid4()), "event": "view", "context": {"user": 0, "hidden": 1, "widget": str(widget)}})
+    bt.add_task(add_ws_event, bot_id, {"payload": "event", "id": str(uuid.uuid4()), "event": "view", "context": {"user": 0, "hidden": 1, "widget": str(widget)}})
     if widget:
         f = "widget.html"
         widget = True

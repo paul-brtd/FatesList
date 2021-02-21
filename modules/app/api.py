@@ -296,6 +296,14 @@ async def ws_send_events():
             for bid in ws.bot_id:
                 ws_events = {str(bid): (await redis_db.hgetall(str(bid) + "_ws", encoding = 'utf-8'))}
                 if ws_events[str(bid)].get("status") == "READY":
+                    # Make sure payload is made a dict
+                    for key in ws_events[str(bid)].keys():
+                        try:
+                            ws_events[str(bid)][key] = orjson.loads(ws_events[str(bid)][key])
+                            del ws_events[str(bid)][key]['id']
+                            print("KEY: " + ws_events[str(bid)][key])
+                        except:
+                            pass
                     rc = await manager.send_personal_message({"payload": "EVENTS", "type": "EVENTS_V1", "data": ws_events}, ws)
                     for key in (await redis_db.hkeys(str(bid) + "_ws", encoding = "utf-8")):
                         await redis_db.hdel(str(bid) + "_ws", key)
@@ -314,6 +322,7 @@ async def websocker_real_time_api(websocket: WebSocket):
         await manager.send_personal_message({"payload": "IDENTITY", "type": "API_TOKEN"}, websocket)
         try:
             api_token = await websocket.receive_json()
+            print("HERE")
             if api_token.get("payload") != "IDENTITY_RESPONSE" or api_token.get("type") != "API_TOKEN":
                 raise TypeError
         except:
@@ -332,7 +341,7 @@ async def websocker_real_time_api(websocket: WebSocket):
                 websocket.bot_id.append(bid["bot_id"])
         if websocket.api_token == [] or websocket.bot_id == []:
             await manager.send_personal_message({"payload": "KILL_CONN", "type": "NO_AUTH"}, websocket)
-            return await ws_close(websocker, 4004)
+            return await ws_close(websocket, 4004)
     await manager.send_personal_message({"payload": "STATUS", "type": "READY"}, websocket)
     try:
         while True:
