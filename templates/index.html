@@ -10,7 +10,7 @@
     <div class="index-fl">
     <hr class="hr-is">
     <div class="d-flex" style="margin-left: 5%;"><i class="fas fa-question fa-3x white"></i>
-        <h4 class="title-is">Random Bot</h4>
+        <p class="title-is">Random Bot</p>
     </div>
     <div id="random-section" class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center div-is">
 	    <div id="random-bots"></div> <!-- This is where random bots will be -->
@@ -20,7 +20,7 @@
     </div>
     <hr class="hr-is">
     <div class="d-flex" style="margin-left: 5%;"><i class="fas fa-certificate fa-3x white"></i>
-        <h4 class="title-is">Certified Bots</h4>
+        <p class="title-is">Certified Bots</p>
     </div>
     <div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center div-is" id="tt-2">
         {% for bot in certified_bots %}
@@ -33,7 +33,7 @@
                     <h4 class="text-nowrap text-break text-center bot-card-username-txt white-bold">{{bot.username}}</h4>
                 </div>
             </div>
-            <h6 class="bot-card-description"><strong style="overflow-wrap: anywhere;">{{bot.description}}</strong></h6>
+            <p class="bot-card-description"><strong style="overflow-wrap: anywhere;">{{bot.description}}</strong></p>
             <div class="d-flex bot-card-footer">
                 <div class="bot-card-footer-stats">
                    <p class="text-center white-bold"><i class="fas fa-server i-m3"></i>{{bot.servers}}</p>
@@ -50,7 +50,7 @@
     </div>
     <hr class="hr-is">
     <div class="d-flex" style="margin-left: 5%;"><i class="fas fa-sort-amount-up fa-3x white"></i>
-        <h4 class="title-is">Top Voted</h4>
+        <p class="title-is">Top Voted</p>
     </div>
     <div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center div-is" id="tt-1">
         {% for bot in top_voted %}
@@ -65,7 +65,7 @@
                         <h4 class="text-nowrap text-break text-center bot-card-username-txt white-bold">{{bot.username}}</h4>
                     </div>
                 </div>
-                <h6 class="bot-card-description" ><strong style="overflow-wrap: anywhere;">{{bot.description}}</strong></h6>
+                <p class="bot-card-description" ><strong style="overflow-wrap: anywhere;">{{bot.description}}</strong></p>
                 <div class="d-flex bot-card-footer">
                     <div class="bot-card-footer-stats">
                         <p class="text-center white-bold"><i class="fas fa-server i-m3"></i>{{bot.servers}}</p>
@@ -82,7 +82,7 @@
     </div>
     <hr class="hr-is">
     <div class="d-flex" style="margin-left: 5%;"><i class="fas fa-plus-square fa-3x white"></i>
-        <h4 style="color: rgba(255,255,255,0.87);margin-left: 15px;">New Bots</h4>
+        <p style="color: rgba(255,255,255,0.87);margin-left: 15px;">New Bots</p>
     </div>
     <div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center" id="tt" style="width: 90%;margin: 30px 5%;">
         {% for bot in new_bots %}
@@ -97,7 +97,7 @@
                         <h4 class="text-nowrap text-break text-center bot-card-username-txt white-bold">{{bot.username}}</h4>
                     </div>
                 </div>
-                <h6 class="bot-card-description" ><strong style="overflow-wrap: anywhere;">{{bot.description}}</strong></h6>
+                <p class="bot-card-description" ><strong style="overflow-wrap: anywhere;">{{bot.description}}</strong></p>
                 <div class="d-flex bot-card-footer">
                     <div class="bot-card-footer-stats">
                         <p class="text-center white-bold"><i class="fas fa-server i-m3"></i>{{bot.servers}}</p>
@@ -129,13 +129,13 @@
 				d += `<div class="lozad bot-card-banner" data-background-image="${banner}" style="background-image: url('${banner}');">`; // Banner
 		                if(data.certified)
 		                        d += '<i class="fas fa-certificate fa-3x bot-card-cert"></i>';
-				d += `<a href="/bot/${data.bot_id}"><img alt="bot avatar" class="bot-card-avatar" src="${data.avatar}" loading="lazy"/></a></div>`
+				d += `<a href="/bot/${data.bot_id}"><img alt="bot avatar" class="bot-card-avatar" src="${data.avatar.replace("?size=1024", "?size=512")}" loading="lazy"/></a></div>`
 			        d += `<div>
 		                    <div class="bot-card-username">
                 		        <h4 class="text-nowrap text-break text-center bot-card-username-txt white-bold">${data.username}</h4>
 		                    </div>
                 		</div>` // Username
-		                d += `<h6 class="bot-card-description" ><strong style="overflow-wrap: anywhere;">${data.description}</strong></h6>` // Description
+		                d += `<p class="bot-card-description" ><strong style="overflow-wrap: anywhere;">${data.description}</strong></p>` // Description
                 		d += `<div class="d-flex bot-card-footer">
 		                    <div class="bot-card-footer-stats">
                 		        <p class="text-center white-bold"><i class="fas fa-server i-m3"></i>${data.servers}</p>

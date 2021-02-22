@@ -67,3 +67,7 @@ async def features_view(request: Request, name: str):
 @router.get("/fates/stats")
 async def stats():
     return RedirectResponse("/admin/console?stats=1")
+
+@router.get("/api/docs")
+async def api_docs_view(request: Request):
+    return HTMLResponse(api_docs)

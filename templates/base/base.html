@@ -55,16 +55,14 @@
     <!-- Add Material font (Roboto) and Material icon as needed -->
     <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Lexend+Deca&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Icons" rel="stylesheet" crossorigin>
     <link rel="preconnect" href="https://cdn.jsdelivr.net/" crossorigin>
-    <link href="/static/core/icons.css" rel="stylesheet">
     <link rel="shortcut icon" href="/static/favicon.ico"/>
     <!-- Material CSS -->
     <link href="https://cdn.jsdelivr.net/gh/djibe/material@4.6.0-rc1/css/material.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/gh/djibe/material@4.6.0-rc1/css/material-plugins.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.12.0/css/all.css">
-    <!--<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">-->
-    <link rel="stylesheet" href="/static/assets/css/front-head.css" async>
-    <link rel="stylesheet" href="/static/assets/css/styles.css" async>
+    <link rel="stylesheet" href="/static/assets/css/front-head.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Fates-List/FatesList@master/static/assets/css/styles.css">
 <!-- Base Styles -->
 <style>
 .fform {
@@ -94,27 +92,39 @@ filter: blur;
 .profile-card:hover {
 transform: scale(1.025, 1.025) perspective(1px) translateZ(0);
 }
-</style>
-    <style>
-    h1 {font-family: 'Lexend Deca', sans-serif  !important;} 
-    h2 {font-family: 'Lexend Deca', sans-serif !important;}
-    h3 {font-family: 'Lexend Deca', sans-serif !important;}
-    h4 {font-family: 'Lexend Deca', sans-serif !important;}
-    h5 {font-family: 'Lexend Deca', sans-serif !important;}
-    h6 {font-family: 'Lexend Deca', sans-serif !important;}
-    div {font-family: 'Lexend Deca', sans-serif !important;}
-    span {font-family: 'Lexend Deca', sans-serif !important;}
-    blockquote {font-family: 'Lexend Deca', sans-serif !important;}
-    pre {font-family: 'Lexend Deca', sans-serif !important;}
-    nav {font-family: 'Lexend Deca', sans-serif !important;}
-    header {font-family: 'Lexend Deca', sans-serif !important;}
-    section {font-family: 'Lexend Deca', sans-serif !important;}
-    html {font-family: 'Lexend Deca', sans-serif !important;}
+
+
+     .swc{
+     position:relative;
+     margin:0 5px 0 10px !important;
+     display:inline-block !important;
+     padding: 0 35px 0 20px !important;
+        font-size: 25px !important;
+     line-height:65px !important;
+        cursor: pointer !important;
+        font-weight: 100 !important;
+        margin: 20px 25px !important;
+        transition: background 0.3s !important;
+    }
+
+    #swc:after{
+     position:absolute;
+     content:"";
+     right:-19px;
+     width: 1px;
+     height:0px;
+     border-left:18px solid #f3f3f3;
+     border-top:  33px solid transparent;
+     border-bottom: 33px solid transparent;
+        transition: border 0.3s;
+    }
+
+    html, body, header, nav, footer {font-family: 'Lexend Deca', sans-serif !important;}
     p {font-family: 'Lexend Deca', sans-serif !important;}
 	input[type="text"] {
 	}
    .btn {
-            border-radius: 20px 20px 20px 20px !important;
+            border-radius: 4px 4px 4px 4px !important;
         }
    label {font-size: 14px;}
 ::selection {
@@ -180,7 +190,7 @@ background-color: blue;
 
 /* Index + Bot Card */
 .hr-is {font-size: 20px; border-top-width: 1px; border-top-color: #eee; width: 90%;}
-.title-is {color: rgba(255,255,255,0.87); margin-left: 15px;}
+.title-is {color: rgba(255,255,255,0.87); margin-left: 15px; font-size: 32px;}
 .div-is {width: 90%;margin: 30px 5%;}
 .bot-card {width: 300px;height: 475px;background: #111112;box-shadow: 0px 0px 20px 5px;border-top-style: none;margin: 25px 25px; border-radius: 10px 10px 10px 10px;}
 .bot-card-banner {width: 100%;height: 30%;background: center / cover no-repeat;}
@@ -212,14 +222,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
    <div class="content-nomobile navbar-nav" style="margin-top: 1px;">
     <li class="nav-item">
 	  <a class="nav-link" href="/bot/admin/add" style="float: left; text-align: center; margin-top: 2px;">Add Bot</a>
+          <a class="nav-link" href="/server/admin/add" style="float: left; text-align: center; margin-top: 2px;">Add Server</a>
+
    </li>
    </div>
    <ul class="navbar-nav ml-auto">
       <li class="nav-item dropdown">
         <span class="nav-link dropdown-toggle" id="navbarDropdownMenuLink-333" data-toggle="dropdown"
           aria-haspopup="true" aria-expanded="false">
-        {% if username %}<img width="25px" style="border-radius: 50%; margin-right: 5px;" src="{{avatar}}">{{username}} {% else %} Not Logged In{%endif%}
-        </span>
+	{% if username %}<img alt="{{username}}'s Avatar" width="25px" style="border-radius: 50%; margin-right: 5px;" src="{{avatar}}">{{username}}{% else %}Not Logged In{%endif%}</span>
 	<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink-333">
           {% if username %}
           <a class="dropdown-item" href="/profile/me">My Profile</a>
@@ -233,8 +244,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           {% else %}
           <a class="dropdown-item" href="/auth/login">Login</a>
            {%endif%}
-          <a class="dropdown-item" href="/api/docs">API Docs (Main)</a>
-	  <a class="dropdown-item" href="/static/other_docs.html">API Docs (Other)</a>
+          <a class="dropdown-item" href="/api/docs">API Docs</a>
+	  <a class="dropdown-item" href="/api/docs/endpoints">API Endpoints</a>
           <a class="dropdown-item" href="/support/fates/invite" target=”_blank”>Support Server</a>
 	  <a class="dropdown-item" href="/support/fates/request" target=”_blank”>Support Request</a>
 	  <a class="dropdown-item" href="/fates/stats" target=”_blank”>Fates List Stats</a>

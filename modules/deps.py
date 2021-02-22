@@ -407,13 +407,11 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, review:
     bt.add_task(add_ws_event, bot_id, {"payload": "event", "id": str(uuid.uuid4()), "event": "view", "context": {"user": 0, "hidden": 1, "widget": str(widget)}})
     if widget:
         f = "widget.html"
-        widget = True
-        reviews = []
+        reviews = [0, 1]
     else:
         f = "bot.html"
-        widget = False
         reviews = await parse_reviews(bot_id)
-    return templates.TemplateResponse(f, {"request": request, "bot": bot, "bot_id": bot_id, "tags_fixed": _tags_fixed_bot, "form": form, "avatar": request.session.get("avatar"), "promos": promos, "maint": maint, "bot_admin": bot_admin, "review": review, "guild": reviewing_server, "widget": widget, "botp": True, "bot_reviews": reviews[0], "average_rating": reviews[1]})
+    return templates.TemplateResponse(f, {"request": request, "bot": bot, "bot_id": bot_id, "tags_fixed": _tags_fixed_bot, "form": form, "avatar": request.session.get("avatar"), "promos": promos, "maint": maint, "bot_admin": bot_admin, "review": review, "guild": reviewing_server, "botp": True, "bot_reviews": reviews[0], "average_rating": reviews[1]})
 
 #    id uuid primary key DEFAULT uuid_generate_v4(),
 #   bot_id bigint not null,
@@ -436,7 +434,7 @@ async def parse_bot_list(fetch: List[asyncpg.Record]) -> list:
             del bot["servers"]
             banner = bot["banner"]
             del bot["banner"]
-            lst.append({"avatar": bot_info["avatar"], "username": bot_info["username"], "votes": human_format(votes), "servers": human_format(servers), "description": bot["description"], "banner": banner.replace("\"", "").replace("'", "").replace("http://", "https://").replace("(", "").replace(")", "").replace("file://", "")} | bot)
+            lst.append({"avatar": bot_info["avatar"].replace("?size=1024", "?size=128"), "username": bot_info["username"], "votes": human_format(votes), "servers": human_format(servers), "description": bot["description"], "banner": banner.replace("\"", "").replace("'", "").replace("http://", "https://").replace("(", "").replace(")", "").replace("file://", "")} | bot)
     return lst
 
 async def do_index_query(add_query: str) -> List[asyncpg.Record]:

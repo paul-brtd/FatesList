@@ -149,7 +149,7 @@ th {
 	{% if not bot.banned and not maint[0] %}
         <form method = "POST" action = "/bot/{{bot_id}}/vote">
             {{form.csrf_token}}
-            <button type="submit" class="btn btn-outline-light bot-buttons-all" id="bot-buttons-vote"><i class="fas fa-thumbs-up"></i>{{bot.votes}}</button>
+            <button type="submit" class="btn btn-outline-light bot-buttons-all vote" id="bot-buttons-vote"><i class="fas fa-thumbs-up"></i>{{bot.votes}}</button>
         </form>
 	{% endif %}
         {% if not bot.support or bot.support == "" or bot.support == "None" %}
@@ -287,8 +287,8 @@ th {
 			{
 				  "@context" : "http://schema.org",
 				  "@type" : "Product",
-			 	  "name" : "{{bot.username}}",
-				  "image" : "{{bot.avatar}}",
+			 	  "name" : "{{bot.user.username}}",
+				  "image" : "{{bot.user.avatar}}",
 				  "description": "{{bot.description}}",
 				  "sku": "{{rev.id}}",
 				  "offers": "",

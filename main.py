@@ -20,7 +20,7 @@ import aioredis
 intent = discord.Intents.all()
 builtins.client = discord.Client(intents=intent)
 
-app = FastAPI(default_response_class = ORJSONResponse, docs_url = None, redoc_url = "/api/docs")
+app = FastAPI(default_response_class = ORJSONResponse, docs_url = None, redoc_url = "/api/docs/endpoints")
 app.add_middleware(SessionMiddleware, secret_key=session_key)
 
 app.add_middleware(CSRFProtectMiddleware, csrf_secret=csrf_secret)
@@ -68,3 +68,5 @@ for tag in TAGS.keys():
     tag_icon = TAGS[tag]
     new_tag = tag.replace("_", " ")
     builtins.tags_fixed.update({tag: [new_tag.capitalize(), tag_icon]})
+
+builtins.api_docs = open("static/api_docs.html").read()
