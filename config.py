@@ -1,7 +1,9 @@
 from config_secrets import TOKEN_MAIN, TOKEN_SERVER, pg_pwd, csrf_secret, session_key, oauth_client_secret
-bot_logs=789946587203764224
-bots_role=789934898408194059
-bot_dev_role = 789935019531304991
+bot_logs = 789946587203764224 # #bot-logs in support server
+appeals_channel = 813422505900376095 # #resubmissions-and-appeals in support server
+bots_role = 789934898408194059 # BOTS role in support server
+bot_dev_role = 789935019531304991 # BOT Developer in support server
+certified_dev_role = 792204630922100797 # Certified Developer in support server
 reviewing_server=789934742128558080 # Bit of a misnomer, but this is the actual main server
 test_server = 794834630942654546 # And THIS is the test server for reviewing bots
 # Confusing right? Sorry, i already did 50% using reviewing server so meow ig

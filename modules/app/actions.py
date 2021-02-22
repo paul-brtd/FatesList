@@ -97,15 +97,14 @@ async def add_bot_api(
 
 async def add_bot_bt(request, bot_id, prefix, library, website, banner, support, long_description, description, selected_tags, extra_owners, creation, bot_object, invite, features, html_long_description, css, guild_count):
     await db.execute("INSERT INTO bots(bot_id,prefix,bot_library,invite,website,banner,discord,long_description,description,tags,owner,extra_owners,votes,servers,shard_count,created_at,api_token,features, html_long_description, css) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)", bot_id, prefix, library, invite, website, banner, support, long_description, description, selected_tags, int(request.session["userid"]), extra_owners, 0, 0, 0, int(creation), get_token(132), features, html_long_description, css)
-    if guild_count is not None:
-        # Since we are adding, lets assume 0 shards
-        await set_stats(bot_id = int(bot_id), guild_count = guild_count, shard_count = 0)
     await add_event(bot_id, "add_bot", {})
     owner=str(request.session["userid"])
     channel = client.get_channel(bot_logs)
     bot_name = bot_object["username"]
     await channel.send(f"<@{owner}> added the bot <@{bot_id}>({bot_name}) to queue")
-
+    if guild_count is not None:
+        # Since we are adding, lets assume 0 shards
+        await set_stats(bot_id = int(bot_id), guild_count = guild_count, shard_count = 0, shards = [])
 
 @router.get("/{bid}/edit")
 @csrf_protect
@@ -225,12 +224,16 @@ async def edit_bot_bt(request, botid, prefix, library, website, banner, support,
     else:
         await db.execute("UPDATE vanity SET vanity_url = $1 WHERE redirect = $2", vanity, botid)
     if guild_count is not None:
-        shard_count = await db.fetchrow("SELECT shard_count FROM bots WHERE bot_id = $1", botid)
+        shard_count = await db.fetchrow("SELECT shard_count, shards FROM bots WHERE bot_id = $1", botid)
         if shard_count is None or shard_count["shard_count"] is None:
             shard_count = 0
         else:
             shard_count = shard_count["shard_count"]
-        await set_stats(bot_id = int(botid), guild_count = guild_count, shard_count = shard_count)
+        if shard_count["shards"] is None:
+            shards = []
+        else:
+            shards = shard_count["shards"]
+        await set_stats(bot_id = int(botid), guild_count = guild_count, shard_count = shard_count, shards = shards)
     await add_event(botid, "edit_bot", {"user": request.session['userid']})
     channel = client.get_channel(bot_logs)
     owner=str(request.session["userid"])
@@ -314,10 +317,10 @@ async def ban_bot(request: Request, bot_id: int, ban: int = FForm(1), reason: st
         if not check:
             return templates.TemplateResponse("message.html", {"request": request, "message": "This bot doesn't exist in our database.", "username": request.session.get("username", False)})
         user = guild.get_member(int(request.session.get("userid")))
-        if is_staff(staff_roles, user.roles, 4)[0]:
+        if is_staff(staff_roles, user.roles, 3)[0]:
             pass
         else:
-            return templates.TemplateResponse("message.html", {"request": request, "message": "You aren't the owner of this bot.", "context": "Only admins can unban bots", "username": request.session.get("username", False)})
+            return templates.TemplateResponse("message.html", {"request": request, "message": "You aren't the owner of this bot.", "context": "Only owners, admins and moderators can unban bots. Please contact them if you accidentally denied a bot.", "username": request.session.get("username", False)})
     if ban == 1:
         await channel.send("<@" + str(bot_id) + "> has been banned for reason: " + reason)
         try:
@@ -376,3 +379,19 @@ async def edit_review(request: Request, bot_id: int, rid: uuid.UUID, rating: flo
         epoch = [time.time()]
     await db.execute("UPDATE bot_reviews SET star_rating = $1, review_text = $2, epoch = $3 WHERE id = $4", rating, review, epoch, rid)
     return templates.TemplateResponse("message.html", {"request": request, "message": "Successfully editted your/this review for this bot!<script>window.location.replace('/bot/" + str(bot_id) + "')</script>", "username": request.session.get("username", False), "avatar": request.session.get('avatar')})
+
+@router.get("/{bid}/resubmit")
+async def resubmit_bot(request: Request, bid: int):
+    if "userid" in request.session.keys():
+        check = await is_bot_admin(int(bid), int(request.session.get("userid")))
+        if check is None:
+            return templates.TemplateResponse("message.html", {"request": request, "message": "This bot does not exist on our database."})
+        elif check == False:
+            return templates.TemplateResponse("message.html", {"request": request, "message": "You aren't the owner of this bot."})
+    else:
+        return RedirectResponse("/")
+    user = await get_bot(bid)
+    if user is None:
+        return templates.TemplateResponse("message.html", {"request": request, "message": "This bot does not exist on our database."})
+    form = await Form.from_formdata(request)
+    return templates.TemplateResponse("resubmit.html", {"request": request, "user": user, "bot_id": bid, "form": form})
