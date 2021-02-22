@@ -15,3 +15,4 @@ if t == 1:
     tag_desc = pinput("Enter tag description: ")
     print("\nOUTPUT:\n")
     print(f'<strong class="doc">{css_tag}</strong><span>{tag_desc}</span><br/>')
+    print("")
