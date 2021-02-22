@@ -13,4 +13,5 @@ t = pinput("Enter the type (1 = CSS): ")
 if t == 1:
     css_tag = pinput("Enter CSS Tag To Document: ")
     tag_desc = pinput("Enter tag description: ")
+    print("\nOUTPUT:\n")
     print(f'<strong class="doc">{css_tag}</strong><span>{tag_desc}</span><br/>')
