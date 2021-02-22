@@ -350,11 +350,11 @@ th {
 				<input hidden name="accept" value="true"></input>
 				<button class="btn btn-outline-light" type="submit" style="margin: 0 15px;">Accept</button>
 				</form>
-                        <form method="POST" action="/admin/review/{{bot_id}}">
+                        	<form method="POST" action="/admin/review/{{bot_id}}">
                                 {{ form.csrf_token }}
                                 <input hidden name="accept" value="false"></input>
                                 <button class="btn btn-outline-light" type="submit" style="margin: 0 15px;">Deny</button>
-                        </form>
+                        	</form>
 				{% elif not bot.queue %}
                                 <form method="POST" action="/admin/review/{{bot_id}}">
                                         {{ form.csrf_token }}
@@ -362,9 +362,7 @@ th {
                                         <button class="btn btn-outline-light" type="submit" style="margin: 0 15px; border-radius: 4px 4px 4px 4px !important;">Unverify</button>
                                 </form>
 				{% endif %}
-			</div>
-			{% endif %}
-		<form style="text-align: center; margin: 10px;" method="POST" action="/bot/{{bot_id}}/ban">
+                <form style="text-align: center; margin: 10px;" method="POST" action="/bot/{{bot_id}}/ban">
                 {{form.csrf_token}}
                 {% if staff[0] and not bot.banned %}
                         <input type="hidden" name="ban" value="1"/>
@@ -378,6 +376,8 @@ th {
                 {% endif %}
         </form>
 
+			</div>
+			{% endif %}
 		</div>
 	</div>
 </div>
