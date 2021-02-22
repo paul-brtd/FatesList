@@ -100,7 +100,7 @@ async def review(request: Request, bot_id: int, bt: BackgroundTasks):
         return RedirectResponse("/") 
 
 @router.post("/review/{bot_id}")
-async def review_api(request:Request, bot_id: int, accept: str = FForm("")):
+async def review_api(request:Request, bot_id: int, accept: str = FForm(""), deny_reason: str = FForm("There was no reason specified. DM/Ping the mod who banned your bot to learn why it was banned")):
     guild = client.get_guild(reviewing_server)
     user = guild.get_member(int(request.session["userid"]))
     s = is_staff(staff_roles, user.roles, 2)
@@ -148,39 +148,13 @@ async def review_api(request:Request, bot_id: int, accept: str = FForm("")):
         await channel.send(f"<@{bot_id}> by <@{str(b['owner'])}> has been unverified")
         return templates.TemplateResponse("message.html",{"request":request,"message":"Bot unverified. Please carry on with your day"})
     elif accept == "false":
-        return RedirectResponse("/admin/review/"+str(bot_id)+"/deny", status_code=303)
-    else:
-        return RedirectResponse("/")
-
-@router.get("/review/{bot_id}/deny")
-async def review_deny(request:Request, bot_id: int):
-    if "userid" in request.session.keys():
-        form = await Form.from_formdata(request)
-        guild = client.get_guild(reviewing_server)
-        user = guild.get_member(int(request.session["userid"]))
-        s = is_staff(staff_roles, user.roles, 2)
-        if not s[0]:
-            return RedirectResponse("/")            
-        else:    
-            bot = await db.fetchrow("SELECT * FROM bots WHERE bot_id = $1 AND queue = true",int(bot_id))
-            if not bot:
-                return templates.TemplateResponse("message.html",{"request":request,"message":"Bot does not exist! Idk how"})
-            return templates.TemplateResponse("last_deny.html",{"request":request,"bot":bot,"username":request.session["username"], "form": form})
-
-@router.post("/review/{bot_id}/deny")
-async def review_deny_api(request:Request, bot_id: int, reason: str = FForm("There was no reason specified")):
-    guild = client.get_guild(reviewing_server)
-    user = guild.get_member(int(request.session["userid"]))
-    s = is_staff(staff_roles, user.roles, 2)
-    if not s[0]:
-        return RedirectResponse("/")
-    else:
-        check = await db.fetchrow("SELECT owner FROM bots WHERE bot_id=$1 and queue=true", bot_id)
-        if not check:
-            return templates.TemplateResponse("message.html",{"request":request,"message":"Bot does not exist! Idk how"})
+        b = await db.fetchrow("SELECT owner FROM bots WHERE bot_id = $1", bot_id)
+        if b is None:
+            return RedirectResponse("/admin/console")
         await db.execute("UPDATE bots SET banned = true WHERE bot_id = $1", bot_id)
-        owner=str(request.session["userid"])
-        await add_event(bot_id, "deny", {"user": request.session.get('userid')})
+        await add_event(bot_id, "ban", {"user": request.session.get('userid'), "type": "deny"})
         channel = client.get_channel(bot_logs)
-        await channel.send(f"<@{owner}> has denied the bot <@{bot_id}> by <@{str(check['owner'])}> with the reason: {reason}")
-        return templates.TemplateResponse("message.html",{"request":request,"message":"I hope it DENIED the bot review GUY","username":request.session["username"]})
+        await channel.send(f"<@{bot_id}> by <@{str(b['owner'])}> has been denied for the reason: {deny_reason}")
+        return templates.TemplateResponse("message.html",{"request":request,"message":"Bot denied. Please carry on with your day"})
+    else:
+        return RedirectResponse("/")

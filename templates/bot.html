@@ -345,13 +345,14 @@ th {
                         <h6>Administrative Tasks</h6>
 			{% if staff[0] %}
 			{% if review %}
-			<form method="POST" action="/admin/review/{{bot_id}}" style="margin-bottom: 3px;">
+			<form method="POST" action="/admin/review/{{bot_id}}" style="margin-bottom: 10px;">
 				{{ form.csrf_token }}
 				<input hidden name="accept" value="true"></input>
 				<button class="btn btn-outline-light" type="submit" style="margin: 0 15px;">Accept</button>
 				</form>
                         	<form method="POST" action="/admin/review/{{bot_id}}">
                                 {{ form.csrf_token }}
+	                        <input type="text" name="deny_reason" style="border-radius: 4px 4px 4px 4px !important;" placeholder="Enter deny reason"/>
                                 <input hidden name="accept" value="false"></input>
                                 <button class="btn btn-outline-light" type="submit" style="margin: 0 15px;">Deny</button>
                         	</form>
