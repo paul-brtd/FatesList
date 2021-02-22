@@ -65,6 +65,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Fates-List/FatesList@master/static/assets/css/styles.css">
 <!-- Base Styles -->
 <style>
+.btn-no {border: none !important; outline: none !important;}
 .fform {
         background: #ffffff !important;
         border: grey !important;
@@ -92,32 +93,6 @@ filter: blur;
 .profile-card:hover {
 transform: scale(1.025, 1.025) perspective(1px) translateZ(0);
 }
-
-
-     .swc{
-     position:relative;
-     margin:0 5px 0 10px !important;
-     display:inline-block !important;
-     padding: 0 35px 0 20px !important;
-        font-size: 25px !important;
-     line-height:65px !important;
-        cursor: pointer !important;
-        font-weight: 100 !important;
-        margin: 20px 25px !important;
-        transition: background 0.3s !important;
-    }
-
-    #swc:after{
-     position:absolute;
-     content:"";
-     right:-19px;
-     width: 1px;
-     height:0px;
-     border-left:18px solid #f3f3f3;
-     border-top:  33px solid transparent;
-     border-bottom: 33px solid transparent;
-        transition: border 0.3s;
-    }
 
     html, body, header, nav, footer {font-family: 'Lexend Deca', sans-serif !important;}
     p {font-family: 'Lexend Deca', sans-serif !important;}
@@ -161,21 +136,6 @@ textarea {
 	padding: 10px !important;
 	height: 500px;
 }
-.bg-red {
-	background: red;
-}
-
-.bg-blue {
-	background: #4b42f5;
-}
-.bg-green {
-	background: green;
-}
-
-.bg-pink {
-	background: #d457d2;
-}
-
 .highlight {
 background-color: black;
 font-weight: bold;
@@ -203,13 +163,14 @@ background-color: blue;
 .bot-card-footer-stats {height: 30px !important; width: 55% !important;}
 .i-m3 {margin-right: 3px}
 .bot-card-actions {width: 80%;margin: 0 10%;}
-.bot-card-actions-link {width: 45%; border-radius: 25px; font-weight: bold;}
+.bot-card-actions-link {width: 45%; font-weight: bold; border: none !important; outline: none !important;}
 /*width: 45%;margin-right: 5%;border-radius: 25px;font-weight: bold;*/
 .white {color:white;}
 .bold {font-weight: bold;}
+
+
 </style>
 </head>
-{% if not widget %}
 <body style="background: #1D1E23;">
 <!-- Google Tag Manager (noscript) -->
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KSZXP7T"
@@ -254,20 +215,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       </li>
   </ul>
 </header>
-{% else %}
 <body>
-<!-- Google Tag Manager (noscript) -->
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KSZXP7T"
-height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-<!-- End Google Tag Manager (noscript) -->
-{%endif%}
     <!-- jQuery, Bootstrap Bundle (includes Popper) and Material -->
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js" crossorigin></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js" crossorigin></script>
     <script src="https://cdn.jsdelivr.net/gh/djibe/material@4.6.0-rc1/js/material.min.js"></script>
-<div style="padding: 2px;">
+	<div style="padding: 2px;">
         <div class="text-center" id="header_text" style="margin-right: auto;margin-left: auto;margin-top: 75px;">
-    <main {% if not widget %}{% endif %}>{% block icontent %}{%endblock%}{% block content %}{% endblock %}</main>
+    <main>{% block icontent %}{%endblock%}{% block content %}{% endblock %}</main>
+    <footer>
+    </footer>
 </div>
 </body>
 <script>

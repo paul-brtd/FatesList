@@ -198,19 +198,6 @@ th {
 	</div>
     {% endfor %}
 	    </div>
-        <form style="text-align: center; margin: 10px;" method="POST" action="/bot/{{bot_id}}/ban">
-                {{form.csrf_token}}
-		{% if staff[0] and not bot.banned %}
-			<input type="hidden" name="ban" value="1"/>
-			<p style="font-weight: bold;color: rgba(255,255,255,0.87); text-align: center;">If this bot is misbehaving...</p>
-                	<input type="text" name="reason" style="border-radius: 4px 4px 4px 4px !important;" placeholder="Enter ban reason" required/>
-                	<button type="submit" class="btn btn-outline-dark" style="border-radius: 4px 4px 4px 4px !important; background-color: red; color: white !important;"><i class="fas fa-hammer"></i> Ban</button>
-		{% elif staff[0] and bot.banned %}
-	                <p style="font-weight: bold;color: rgba(255,255,255,0.87); text-align: center;">If this bot has learnt its lesson...</p>
-        	        <input type="hidden" name="ban" value="0"/>
-                	<button type="submit" class="btn btn-outline-dark" style="background-color: red; color: white !important;"><i class="fas fa-hammer"></i> Unban</button>
-		{% endif %}
-        </form>
 	</div>
 	<div id="bot-switcher" style='margin-bottom: 3px;' class='blackbar'>
 		<div class="tab">
@@ -377,6 +364,20 @@ th {
 				{% endif %}
 			</div>
 			{% endif %}
+		<form style="text-align: center; margin: 10px;" method="POST" action="/bot/{{bot_id}}/ban">
+                {{form.csrf_token}}
+                {% if staff[0] and not bot.banned %}
+                        <input type="hidden" name="ban" value="1"/>
+                        <p style="font-weight: bold;color: rgba(255,255,255,0.87); text-align: center;">If this bot is misbehaving...</p>
+                        <input type="text" name="reason" style="border-radius: 4px 4px 4px 4px !important;" placeholder="Enter ban reason" required/>
+                        <button type="submit" class="btn btn-outline-dark" style="border-radius: 4px 4px 4px 4px !important; background-color: red; color: white !important;"><i class="fas fa-hammer"></i> Ban</button>
+                {% elif staff[0] and bot.banned %}
+                        <p style="font-weight: bold;color: rgba(255,255,255,0.87); text-align: center;">If this bot has learnt its lesson...</p>
+                        <input type="hidden" name="ban" value="0"/>
+                        <button type="submit" class="btn btn-outline-dark" style="background-color: red; color: white !important;"><i class="fas fa-hammer"></i> Unban</button>
+                {% endif %}
+        </form>
+
 		</div>
 	</div>
 </div>

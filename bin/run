@@ -1,1 +1,1 @@
-python3.9 manager_bot.py & gunicorn -k uvicorn.workers.UvicornWorker main:app -b 0.0.0.0:9999 -w 4
+gunicorn -k uvicorn.workers.UvicornWorker main:app -b 0.0.0.0:9999 -w 4

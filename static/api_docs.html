@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
-        <title>Fates List | Other Docs</title>
+        <title>Fates List | API Docs</title>
+	<link rel="shortcut icon" href="/static/favicon.ico"/>
 	<link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin>
    	<link href="https://fonts.googleapis.com/css2?family=Lexend+Deca&display=swap" rel="stylesheet">
 	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.12.0/css/all.css" async>
@@ -37,7 +38,7 @@
 			text-align: left !important;
 			margin-left: 100px;
 			display: inline-block;
-			background: red;
+			border: 3px solid red;
 			border-radius: 4px 4px 4px 4px;
 			margin-bottom: 3px;
 		}
@@ -55,19 +56,25 @@
 			width: 45%;
 			margin-bottom: 5px;
 		}
+
+		html, body {
+			max-width: 100%;
+			overflow-x: hidden;
+		}
+
 	</style>
 </head>
 <body style="background: black; color: white;">
 <header>
 	<span>
 		<h1 style="font-size: 36px; text-align: center; margin-bottom: 0px !important;"><strong>Fates List</strong></h1>
-		<h2 style="text-align: center; font-weight: normal; font-size: 16px;">Additional API Docs</h2>
+		<h2 style="text-align: center; font-weight: normal; font-size: 16px;">API Docs</h2>
 		<hr class="hr-is"/>
 	</span>
 </header>
 <h3><strong>Endpoints</strong></h3>
 <div style="font-size: 18px;" class="docm">
-	<p>Please see <a href="/api/docs/endpoints">API Docs (Endpoints)</a> for more information about this</p>
+	<p>Please see <a href="/api/docs/endpoints">API Endpoints</a> for the actual API endpoints we currently give you. Join the Support Server and Ping/DM Rootspring#6701 if you want to request a specific API Endpoint</p>
 </div>
 <h3><strong>CSS Docs Reference</strong></h3>
 <div style="font-size: 18px;" class="docm">
@@ -77,6 +84,7 @@
 	<strong class="doc">#bot-description</strong><span>Your bots short description. This is an h3 tag</span><br/>
 	<strong class="doc">#bot-buttons</strong><span>The Edit, Invite etc. buttons. If you want to change an individual button, .bot-buttons-button_name</span><br/>
 	<strong class="doc" style="font-size: 16px">Button Names</strong><span>support, github, website, invite, vote, edit</span><br/>
+        <strong class="doc">#bot-key-container</strong><span>The div containing tags and promotions both</span><br/>
 	<strong class="doc">#bot-tags</strong><span>The div containing all your tags and the header</span><br/>
 	<strong class="doc">#bot-tags-header</strong><span>The "Tags" part of the tags. This is a h5</span><br/>
 	<strong class="doc">#bot-tags-container</strong><span>The div that contains just the tags, not the header</span><br/>
@@ -137,7 +145,7 @@
 </div>
 <h3><strong>WebSocket Documentation</strong></h3>
 <div style="font-size: 18px;" class="docm">
-<p>Fates List offers a WebSocket API at /api/ws for getting real time stats on your bot. This is the only way to get view events (and potentially other events). All things sent must be as payloads. See below for more information</p>
+<p>Fates List offers a WebSocket API at /api/ws for getting real time stats on your bot. This is the only way to get view events (and potentially other events). All things sent must be as payloads, which are JSONs with a special format. See below for more information</p>
 <p>Upon attempting to connect to /api/ws, you must communicate using payloads. After authentication, the transmissions become one way from server to your client. The below table explains the payload format:</p>
 <div class="table">
 <table>

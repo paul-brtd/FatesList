@@ -5,11 +5,14 @@ router = APIRouter(
     include_in_schema = False
 )
 
-
+# We want to handle any request method to index page
 @router.get("/")
+@router.post("/")
+@router.patch("/")
+@router.delete("/")
+@router.put("/")
 async def index_fend(request: Request):
     return await render_index(request = request, api = False)
-
 
 @router.get("/none")
 async def nonerouter():

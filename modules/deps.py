@@ -356,7 +356,7 @@ async def parse_reviews(bot_id: int, reviews: List[asyncpg.Record] = None) -> Li
 async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, review: bool, widget: bool):
     guild = client.get_guild(reviewing_server)
     print("Begin rendering bots")
-    bot = await db.fetchrow("SELECT api_token, prefix, shard_count, queue, description, bot_library AS library, tags, banner, website, certified, votes, servers, bot_id, discord, owner, extra_owners, banner, banned, disabled, github, features, invite_amount, css, html_long_description AS html_ld, long_description FROM bots WHERE bot_id = $1", bot_id)
+    bot = dict(await db.fetchrow("SELECT api_token, prefix, shard_count, queue, description, bot_library AS library, tags, banner, website, certified, votes, servers, bot_id, discord, owner, extra_owners, banner, banned, disabled, github, features, invite_amount, css, html_long_description AS html_ld, long_description FROM bots WHERE bot_id = $1", bot_id))
     print("Got here")
     if bot is None:
         return templates.e(request, "Bot Not Found")
@@ -377,10 +377,11 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, review:
         else:
             eo = bot["extra_owners"]
         if "userid" in request.session.keys():
-            user = guild.get_member(int(request.session.get("userid")))
             bot_admin = await is_bot_admin(int(bot_id), int(request.session.get("userid"))) 
         else:
             bot_admin = False
+    if not bot_admin:
+        bot["api_token"] = None
     img_header_list = ["image/gif", "image/png", "image/jpeg", "image/jpg"]
     banner = bot["banner"].replace(" ", "%20").replace("\n", "")
     try:
