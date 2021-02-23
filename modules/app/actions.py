@@ -84,6 +84,11 @@ async def add_bot_api(
             pass
         else:
             return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "One of your tags doesn't exist internally. Please choose a different tags", "mode": "add"})
+    img = banner
+    if img != "none" and img != "":
+        img = await requests.get(banner)
+        if img.headers.get("Content-Type") is None or img.headers.get("Content-Type").split("/")[0] != "image":
+            return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "Banner URL is not an image. Please make sure it is setting the proper Content-Type", "mode": "add"})
     creation = time.time()
     if extra_owners == "":
         extra_owners = None
@@ -202,7 +207,12 @@ async def bot_edit_api(
         if vanity_check is not None or vanity.replace("", "").lower() in ["bot", "docs", "redoc", "doc", "profile", "server", "bots", "servers", "search", "invite", "discord", "login", "logout", "register", "admin"] or vanity.replace("", "").lower().__contains__("/"):
             return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "Your custom vanity URL is already in use or is reserved", "mode": "edit"})
     if github != "" and not github.startswith("https://www.github.com"):
-        return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "Your github link must start with https://www.github.com", "username": request.session.get("username", False), "mode": "edit"})
+        return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "Your github link must start with https://www.github.com", "mode": "edit"})
+    img = banner
+    if img != "none" and img != "":
+        img = await requests.get(banner)
+        if img.headers.get("Content-Type") is None or img.headers.get("Content-Type").split("/")[0] != "image":
+            return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "Banner URL is not an image. Please make sure it is setting the proper Content-Type", "mode": "edit"})
     creation = time.time()
     if extra_owners == "":
         extra_owners = None
