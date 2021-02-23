@@ -267,7 +267,8 @@ th {
 	                        <textarea id='bot-rating-review' name="review" type="text" class="form-control fform" style="min-height: 100px; height: 100px;" required minlength="9" placeholder="This bot is a really good bot because of X, Y and Z however...">{{rev.review}}</textarea>
 	                        <button type="submit" class="btn btn-outline-light">Edit</button>
 			</form>
-			<a href='javascript:void()' style='font-weight: bold; margin-left: 3px;' class="long-desc-link" onclick="botReviewEditPane(this, '{{rev.id}}')">Edit</a>
+			<a href='javascript:void' style='font-weight: bold; margin-left: 3px;' class="long-desc-link" onclick="botReviewEditPane(this, '{{rev.id}}')">Edit</a>
+			<a href='javascript:void' style='font-weight: bold; margin-left: 3px;' class="long-desc-link" onclick="deleteReview('{{rev.id}}')">Delete</a>
 			{% endif %}
 			</div>
 			    <span style="margin-left: 30px !important; color: white" id="review_text-{{rev.id}}">{{rev.review}}</span>
@@ -471,7 +472,16 @@ function openf(evt, id) {
 			el.innerHTML = 'Edit';
 		}
 	}
-
+	function deleteReview(rev_id) {
+        $.ajax({
+           type: 'POST',
+	   url: `/bot/{{bot_id}}/reviews/${rev_id}/delete`,
+           processData: false,
+           contentType: 'application/json',
+        });
+        alert("Deleted Review Successfully")
+        window.location.reload()
+	}
 </script>	
 <script>
 document.getElementById('bot-long-desc-tab-button').click()

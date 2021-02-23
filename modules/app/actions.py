@@ -378,7 +378,26 @@ async def edit_review(request: Request, bot_id: int, rid: uuid.UUID, rating: flo
     else:
         epoch = [time.time()]
     await db.execute("UPDATE bot_reviews SET star_rating = $1, review_text = $2, epoch = $3 WHERE id = $4", rating, review, epoch, rid)
-    return templates.TemplateResponse("message.html", {"request": request, "message": "Successfully editted your/this review for this bot!<script>window.location.replace('/bot/" + str(bot_id) + "')</script>", "username": request.session.get("username", False), "avatar": request.session.get('avatar')})
+    return templates.TemplateResponse("message.html", {"request": request, "message": "Successfully editted your/this review for this bot!<script>window.location.replace('/bot/" + str(bot_id) + "')</script>"})
+
+@router.post("/{bot_id}/reviews/{rid}/delete")
+async def delete_review(request: Request, bot_id: int, rid: uuid.UUID):
+    if "userid" not in request.session.keys():
+        return RedirectResponse(f"/auth/login?redirect=/bot/{bot_id}&pretty=to delete reviews", status_code = 303)
+    guild = client.get_guild(reviewing_server)
+    user = guild.get_member(int(request.session["userid"]))
+    s = is_staff(staff_roles, user.roles, 2)
+    if s[0]:
+        check = await db.fetchrow("SELECT epoch FROM bot_reviews WHERE id = $1", rid)
+        if check is None:
+            return templates.TemplateResponse("message.html", {"request": request, "message": "You are not allowed to delete this review (doesn't actually exist)"})
+    else:
+        check = await db.fetchrow("SELECT epoch FROM bot_reviews WHERE id = $1 AND bot_id = $2 AND user_id = $3", rid, bot_id, int(request.session["userid"]))
+        if check is None:
+            return templates.TemplateResponse("message.html", {"request": request, "message": "You are not allowed to delete this review"})
+    await db.execute("DELETE FROM bot_reviews WHERE id = $1", rid)
+    return templates.TemplateResponse("message.html", {"request": request, "message": "Successfully deleted your/this review for this bot!<script>window.location.replace('/bot/" + str(bot_id) + "')</script>"})
+
 
 @router.get("/{bid}/resubmit")
 async def resubmit_bot(request: Request, bid: int):
