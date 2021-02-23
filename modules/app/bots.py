@@ -1,5 +1,7 @@
 from ..deps import *
 import markdown
+from starlette.responses import StreamingResponse
+import io
 router = APIRouter(
     prefix = "/bot",
     tags = ["Bots"],
@@ -25,6 +27,22 @@ async def bot_invite_and_log(request: Request, bot_id: int, bt: BackgroundTasks)
         return abort(404)
     bt.add_task(invite_updater_bt, bot_id, bot["invite_amount"] + 1)
     return RedirectResponse(bot["invite"])
+
+#@router.get("/{bot_id}/banner")
+async def banner(request: Request, bot_id: int):
+    bot = await db.fetchrow("SELECT banner FROM bots WHERE bot_id = $1", bot_id)
+    if bot is None:
+        return abort(404)
+    if bot["banner"] in ["none", ""]:
+        banner = "https://fateslist.xyz/static/assets/img/banner.webp"
+    else:
+        banner = bot["banner"]
+    banner = await requests.get(banner)
+    img = banner
+    if img.headers.get("Content-Type") is None or img.headers.get("Content-Type").split("/")[0] != "image":
+        return abort(400)
+    banner = await banner.read()
+    return StreamingResponse(io.BytesIO(banner), media_type = img.headers.get("Content-Type"))
 
 async def invite_updater_bt(bot_id, invite_amount):
     return await db.execute("UPDATE bots SET invite_amount = $1 WHERE bot_id = $2", invite_amount, bot_id)
