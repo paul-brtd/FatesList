@@ -395,3 +395,22 @@ async def resubmit_bot(request: Request, bid: int):
         return templates.TemplateResponse("message.html", {"request": request, "message": "This bot does not exist on our database."})
     form = await Form.from_formdata(request)
     return templates.TemplateResponse("resubmit.html", {"request": request, "user": user, "bot_id": bid, "form": form})
+
+@router.post("/{bid}/resubmit")
+async def resubmit_bot(request: Request, bid: int, appeal: str = FForm("No appeal provided"), qtype: str = FForm("off")):
+    if "userid" in request.session.keys():
+        check = await is_bot_admin(int(bid), int(request.session.get("userid")))
+        if check is None:
+            return templates.TemplateResponse("message.html", {"request": request, "message": "This bot does not exist on our database."})
+        elif check == False:
+            return templates.TemplateResponse("message.html", {"request": request, "message": "You aren't the owner of this bot."})
+    else:
+        return RedirectResponse("/")
+    user = await get_bot(bid)
+    if user is None:
+        return templates.TemplateResponse("message.html", {"request": request, "message": "This bot does not exist on our database."})
+    resubmit = qtype == "on"
+    reschannel = client.get_channel(appeals_channel)
+    await reschannel.send(f"**Username:** {user['username']}\n**Bot ID:** {bid}\n**Resubmission:** {resubmit}\n**Appeal/Context:** {appeal}")
+    return templates.TemplateResponse("message.html", {"request": request, "message": "Appeal sent successfully!."})
+

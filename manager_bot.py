@@ -32,6 +32,7 @@ async def on_member_remove(member):
                 await db.execute("UPDATE bots SET banned = true WHERE bot_id = $1",member.id)
                 await channel.send(f"Bot <@{str(member.id)}> {str(member)} has been removed from the server and hence has been banned from the bot list. Contact an admin for more info")
         else:
+            channel = client.get_channel(bot_logs)
             bot = await db.fetch("SELECT bot_id FROM bots WHERE owner = $1",member.id)
             if len(bot) >=1:
                 for m in bot:

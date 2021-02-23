@@ -18,20 +18,14 @@ async def admin_dashboard(request:Request, stats: Optional[int] = 0):
             if not staff[0]:
                 return RedirectResponse("/", status_code = 303)
         certified_bots = len(await db.fetch("SELECT bot_id FROM bots WHERE certified = true"))
-        bots = len(await db.fetch("SELECT bot_id FROM bots WHERE queue = false"))
-        fetch = await db.fetch("SELECT bot_id, votes, servers, description, banned FROM bots WHERE queue = true")
-        banned = await db.fetch("SELECT bot_id FROM bots WHERE banned = true")
-        queue_bots = []
-        queue_amount = len([i for i in fetch if not i["banned"]])
+        bots = await db.fetchrow("SELECT COUNT(1) FROM bots WHERE queue = false AND banned = false")
+        bots = bots["count"]
+        queue = await db.fetch("SELECT description, banner,certified,votes,servers,bot_id,invite,banned FROM bots WHERE queue = true AND banned = false")
+        banned = await db.fetch("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE banned = true")
+        queue_bots = await parse_bot_list(queue)
+        banned = await parse_bot_list(banned)
+        queue_amount = len(queue)
         form = await Form.from_formdata(request)
-        # TOP VOTED BOTS
-        for bot in fetch:
-            bot_info = await get_bot(bot["bot_id"])
-            if bot_info is None:
-                continue
-            bot_info = {"username": bot_info["username"], "id": bot["bot_id"], "avatar": bot_info["avatar"], "form": form, "banned": bot["banned"]}
-            if bot_info:
-                queue_bots.append({"bot": bot, "id": bot["bot_id"], "avatar": bot_info["avatar"], "username": bot_info["username"], "votes": human_format(bot["votes"]), "servers": human_format(bot["servers"]), "description": bot["description"], "form": form, "banned": bot_info["banned"]})
         return templates.TemplateResponse("admin_stats.html",{"request": request, "cert": certified_bots,"bots": bots, "queue_bots": queue_bots, "queue_amount": queue_amount, "admin": stats != 1 and staff[1] == 4, "mod": stats != 1 and staff[1] == 3, "owner": stats != 1 and staff[1] == 5, "bot_review": stats != 1 and staff[1] == 2, "form": form, "banned": banned, "stats": stats == 1})
     else:
         return RedirectResponse("/", status_code = 303)
