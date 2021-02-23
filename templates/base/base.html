@@ -25,9 +25,9 @@
 {% else %}
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://fateslist.xyz/bot/{{bot_id}}">
-<meta property="og:title" content="{{bot.username}}">
+<meta property="og:title" content="{{bot.user.username}}">
 <meta property="og:description" content="{{bot.description}}">
-<meta property="og:image" content="{{bot.avatar}}">
+<meta property="og:image" content="{{bot.user.avatar}}">
 {% endif %}
 <!-- Twitter -->
 {% if not botp %}
@@ -39,9 +39,9 @@
 {% else %}
 <meta property="twitter:card" content="summary">
 <meta property="twitter:url" content="https://fateslist.xyz/">
-<meta property="twitter:title" content="{{bot.username}}">
+<meta property="twitter:title" content="{{bot.user.username}}">
 <meta property="twitter:description" content="{{bot.description}}">
-<meta property="twitter:image" content="{{bot.avatar}}">
+<meta property="twitter:image" content="{{bot.user.avatar}}">
 {% endif %}
 <link rel="canonical" href="https://fateslist.xyz/"/>
 

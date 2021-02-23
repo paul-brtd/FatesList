@@ -65,7 +65,7 @@
                                         <li class="list-group-item">
                                             <div class="row align-items-center no-gutters">
                                                 <div class="col mr-2">
-							<h6 class="mb-0"><a href="{% if stats %}/bot/{% else %}/admin/review/{% endif %}{{bot.bot_id}}"><strong>{{bot.username}}</strong></a></h6><span class="text-xs">{{bot.description}}</span>
+							<h6 class="mb-0"><a href="/bot/{{bot.bot_id}}"><strong>{{bot.username}}</strong></a></h6><span class="text-xs">{{bot.description}}</span>
                                                 </div>
                                             </div>
                                         </li>
@@ -113,22 +113,6 @@
                 <input type="hidden" name="admin" value="uncertify"></input>
                 <div class="input-group" style="margin: 50px 0;">
                     <div class="input-group-prepend"><span class="input-group-text" style="background: #00000000;color: rgba(255,255,255,0.87);">Uncertify a bot</span></div><input class="form-control" type="number" style="background: #ffffff;" name="bot_id">
-                    <div class="input-group-append"><button class="btn btn-primary" type="submit">Submit</button></div>
-                </div>
-            </form>
-            <form method="POST">
-                {{form.csrf_token}}
-                <input type="hidden" name="admin" value="whitelist"></input>
-                <div class="input-group">
-                    <div class="input-group-prepend"><span class="input-group-text" style="background: #00000000;color: rgba(255,255,255,0.87);">Autovote Whitelist a bot</span></div><input class="form-control" type="number" style="background: #ffffff;" name="bot_id">
-                    <div class="input-group-append"><button class="btn btn-primary" type="submit">Submit</button></div>
-                </div>
-	    </form><br/>
-            <form method="POST">
-                {{form.csrf_token}}
-                <input type="hidden" name="admin" value="unwhitelist"></input>
-                <div class="input-group">
-                    <div class="input-group-prepend"><span class="input-group-text" style="background: #00000000;color: rgba(255,255,255,0.87);">Autovote Unwhitelist a bot</span></div><input class="form-control" type="number" style="background: #ffffff;" name="bot_id">
                     <div class="input-group-append"><button class="btn btn-primary" type="submit">Submit</button></div>
                 </div>
             </form>

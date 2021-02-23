@@ -16,6 +16,7 @@ CREATE TABLE bots (
     description text,
     long_description text,
     html_long_description boolean default false,
+    js_whitelist boolean default false,
     css text default '',
     prefix text,
     features TEXT[] DEFAULT '{}',

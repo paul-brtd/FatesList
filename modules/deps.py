@@ -46,6 +46,9 @@ from fastapi.exception_handlers import (
     http_exception_handler,
     request_validation_exception_handler,
 )
+import lxml
+from lxml.html.clean import Cleaner
+
 
 def redirect(path: str) -> RedirectResponse:
     return RedirectResponse(path, status_code=HTTP_303_SEE_OTHER)
@@ -356,7 +359,10 @@ async def parse_reviews(bot_id: int, reviews: List[asyncpg.Record] = None) -> Li
 async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, review: bool, widget: bool):
     guild = client.get_guild(reviewing_server)
     print("Begin rendering bots")
-    bot = dict(await db.fetchrow("SELECT api_token, prefix, shard_count, queue, description, bot_library AS library, tags, banner, website, certified, votes, servers, bot_id, discord, owner, extra_owners, banner, banned, disabled, github, features, invite_amount, css, html_long_description AS html_ld, long_description FROM bots WHERE bot_id = $1", bot_id))
+    try:
+        bot = dict(await db.fetchrow("SELECT js_whitelist, api_token, prefix, shard_count, queue, description, bot_library AS library, tags, banner, website, certified, votes, servers, bot_id, discord, owner, extra_owners, banner, banned, disabled, github, features, invite_amount, css, html_long_description AS html_ld, long_description FROM bots WHERE bot_id = $1", bot_id))
+    except:
+        return templates.e(request, "Bot Not Found")
     print("Got here")
     if bot is None:
         return templates.e(request, "Bot Not Found")
@@ -364,7 +370,11 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, review:
         ldesc = emd(markdown.markdown(bot['long_description'], extensions=["extra", "abbr", "attr_list", "def_list", "fenced_code", "footnotes", "tables", "admonition", "codehilite", "meta", "nl2br", "sane_lists", "toc", "wikilinks", "smarty", "md_in_html"]))
     else:
         ldesc = bot['long_description']
-    
+    if not bot["js_whitelist"]:
+        cleaner = Cleaner()
+        cleaner.javascript = True # This is True because we want to activate the javascript filter 
+        cleaner.whitelist_tags = ['style']
+        ldesc = cleaner.clean_html(ldesc)
     # Take the h1...h5 anad drop it one lower
     ldesc = ldesc.replace("<h1", "<h2 style='text-align: center'").replace("<h2", "<h3").replace("<h4", "<h5").replace("<h6", "<p")
 

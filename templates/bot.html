@@ -137,9 +137,9 @@ th {
         <strong>This bot has not yet been verified/approved on this bot list and it may violate our rules or be a low-quality bot. Please do not invite it yet</strong>
 	</div>
 	{% endif %}
-	{% if review %}
+	{% if bot.queue and staff[0] %}
 	<div class="alert alert-info" style="text-align: center; justify-content: center; color: white !important;" role="alert">
-	<strong>You are in review mode. Test the bot by inviting it to the staff server by clicking the Invite button and choosing the Testing Server. Once you are done reviewing the bot, click the bots icon to approve/deny it</strong></div>
+	<strong>You are in review mode. Test the bot by inviting it to the staff server by clicking the Invite button and choosing the Testing Server. Once you are done reviewing the bot, click Admin to approve/deny it</strong></div>
 	{% endif %}
 	{% if maint[0] %}
 	    <div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
@@ -348,18 +348,18 @@ th {
 			<div id="bot-admin" class='tabcontent white'>
                         <h6>Administrative Tasks</h6>
 			{% if staff[0] %}
-			{% if review %}
+			{% if bot.queue %}
 			<form method="POST" action="/admin/review/{{bot_id}}" style="margin-bottom: 10px;">
 				{{ form.csrf_token }}
 				<input hidden name="accept" value="true"></input>
 				<button class="btn btn-outline-light" type="submit" style="margin: 0 15px;">Accept</button>
-				</form>
-                        	<form method="POST" action="/admin/review/{{bot_id}}">
+			</form>
+                        <form method="POST" action="/admin/review/{{bot_id}}">
                                 {{ form.csrf_token }}
 	                        <input type="text" name="deny_reason" style="border-radius: 4px 4px 4px 4px !important;" placeholder="Enter deny reason"/>
                                 <input hidden name="accept" value="false"></input>
                                 <button class="btn btn-outline-light" type="submit" style="margin: 0 15px;">Deny</button>
-                        	</form>
+                        </form>
 				{% elif not bot.queue %}
                                 <form method="POST" action="/admin/review/{{bot_id}}">
                                         {{ form.csrf_token }}

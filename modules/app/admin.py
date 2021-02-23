@@ -80,21 +80,10 @@ async def stat_update_bt():
         await db.execute("INSERT INTO bot_stats_votes_pm (bot_id, epoch, votes) VALUES ($1, $2, $2)", bot["bot_id"], time.time(), bot["votes"])
     await db.execute("UPDATE bots SET votes = 0")
 
-@router.get("/review/{bot_id}")
-async def review(request: Request, bot_id: int, bt: BackgroundTasks):
-    if "userid" in request.session.keys():
-        guild = client.get_guild(reviewing_server)
-        user = guild.get_member(int(request.session["userid"]))
-        s = is_staff(staff_roles, user.roles, 2)
-        if not s[0]:
-            return RedirectResponse("/")
-        # async def _get_bot(bot_id: int, review: bool):
-        return await render_bot(request, bt, bot_id, review = True, widget = False)
-    else:
-        return RedirectResponse("/") 
-
-@router.post("/review/{bot_id}")
-async def review_api(request:Request, bot_id: int, accept: str = FForm(""), deny_reason: str = FForm("There was no reason specified. DM/Ping the mod who banned your bot to learn why it was banned")):
+@router.post("review/{bot_id}")
+async def review_tool(request: Request, bot_id: int, accept: str = FForm(""), deny_reason: str = FForm("There was no reason specified. DM/Ping the mod who banned your bot to learn why it was banned")):
+    if "userid" not in request.session.keys():
+        return RedirectResponse("/")
     guild = client.get_guild(reviewing_server)
     user = guild.get_member(int(request.session["userid"]))
     s = is_staff(staff_roles, user.roles, 2)
