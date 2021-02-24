@@ -35,7 +35,7 @@ class BoxControl(Control):
     def inner(self, s):
         style = s.split("\n")[0].strip().replace("<br />", "") # This controls info, alert, danger, warning, error etc...
         if style == "info": # info box
-            return "<div class='alert-info' style='color: white;'><i class='fa fa-info-circle i-m3' aria-hidden='true'></i><span class='bold'>Info</span>" + s.replace("info", "", 1) + "</div>"
+            return "<div class='alert-info white' style='color: white !important;'><i class='fa fa-info-circle i-m3' aria-hidden='true'></i><span class='bold'>Info</span>" + s.replace("info", "", 1) + "</div>"
         return s
 
 # This adds the == highlighter and ::: boxes
