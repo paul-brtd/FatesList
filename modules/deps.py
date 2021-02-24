@@ -360,7 +360,7 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, review:
     guild = client.get_guild(reviewing_server)
     print("Begin rendering bots")
     try:
-        bot = dict(await db.fetchrow("SELECT js_whitelist, api_token, prefix, shard_count, queue, description, bot_library AS library, tags, banner, website, certified, votes, servers, bot_id, discord, owner, extra_owners, banner, banned, disabled, github, features, invite_amount, css, html_long_description AS html_ld, long_description FROM bots WHERE bot_id = $1", bot_id))
+        bot = dict(await db.fetchrow("SELECT js_whitelist, api_token, prefix, shard_count, queue, description, bot_library AS library, tags, banner, website, certified, votes, servers, bot_id, discord AS support, owner, extra_owners, banner, banned, disabled, github, features, invite_amount, css, html_long_description AS html_ld, long_description FROM bots WHERE bot_id = $1", bot_id))
     except:
         return templates.e(request, "Bot Not Found")
     print("Got here")

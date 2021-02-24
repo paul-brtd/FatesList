@@ -154,7 +154,7 @@ th {
             <button type="submit" class="btn btn-outline-light bot-buttons-all vote" id="bot-buttons-vote"><i class="fas fa-thumbs-up"></i>{{bot.votes}}</button>
         </form>
 	{% endif %}
-        {% if not bot.support or bot.support == "" or bot.support == "None" %}
+        {% if not bot.support and bot.support != "" and bot.support != "None" %}
         {% else %}
 	<a target=”_blank” href="{{bot.support}}"><button class="btn btn-outline-light bot-buttons-all" id="bot-buttons-support">Support</button></a>
        {% endif %}
