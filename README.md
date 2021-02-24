@@ -24,7 +24,7 @@ BTW please add your bots there if you want to support us
 
 5. Download this repo on the VPS using "git clone https://github.com/Fates-List/FatesList"
 
-6. Enter Fates List directory, copy config_template.py to config.py and fill in the required information on there. You do not need to change site_url or mobile_site_url fields (site and mobile_site do need to be filled in without the https://).
+6. Enter Fates List directory, copy config_secrets_template.py to config_secrets.py and fill in the required information on there. You do not need to change site_url or mobile_site_url fields (site and mobile_site do need to be filled in without the https://).
 
 7. Download and install nginx, redis, python3 and PostgreSQL (using the pg_user and pg_pwd you setup in config.py)
 
