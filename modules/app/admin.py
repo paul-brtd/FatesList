@@ -80,7 +80,7 @@ async def stat_update_bt():
         await db.execute("INSERT INTO bot_stats_votes_pm (bot_id, epoch, votes) VALUES ($1, $2, $2)", bot["bot_id"], time.time(), bot["votes"])
     await db.execute("UPDATE bots SET votes = 0")
 
-@router.post("review/{bot_id}")
+@router.post("/review/{bot_id}")
 async def review_tool(request: Request, bot_id: int, accept: str = FForm(""), deny_reason: str = FForm("There was no reason specified. DM/Ping the mod who banned your bot to learn why it was banned")):
     if "userid" not in request.session.keys():
         return RedirectResponse("/")

@@ -310,12 +310,26 @@ async def ws_send_events():
                         await redis_db.hdel(str(bid) + "_ws", key)
                     await redis_db.hset(str(bid) + "_ws", mapping = {"status": "IDLE"})
 
+
+@router.post("/md", tags = ["API (Other)"])
+async def markdown_to_html_api(request: Request, text: str):
+    text = emd(markdown.markdown(text, extensions=["extra", "abbr", "attr_list", "def_list", "fenced_code", "footnotes", "tables", "admonition", "codehilite", "meta", "nl2br", "sane_lists", "toc", "wikilinks", "smarty", "md_in_html"]))
+    cleaner = Cleaner()
+    cleaner.javascript = True # This is True because we want to activate the javascript filter 
+    cleaner.whitelist_tags = ['style']
+    data = cleaner.clean_html(text)
+    # Take the h1...h5 anad drop it one lower
+    data = data.replace("<h1", "<h2 style='text-align: center'").replace("<h2", "<h3").replace("<h4", "<h5").replace("<h6", "<p")
+    return {"data": data}
+
 async def ws_close(websocket: WebSocket, code: int):
     try:
         return await websocket.close(code=code)
     except:
         return
-        
+
+
+
 @router.websocket("/api/ws")
 async def websocker_real_time_api(websocket: WebSocket):
     await manager.connect(websocket)

@@ -24,6 +24,8 @@ async def vanity_bot_uri(request: Request, vanity: str):
     print("Vanity: ", vurl)
     if vurl is None:
         return templates.e(request, "Invalid Vanity")
+    if vurl[1] == "profile":
+        return abort(404)
     return RedirectResponse(vurl[0])
 
 @router.get("/{vanity}/edit")
