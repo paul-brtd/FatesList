@@ -10,7 +10,7 @@ class Oauth():
         self.redirect_uri = OauthConfig.redirect_uri
         self.discord_login_url = "https://discord.com/api/oauth2/authorize?client_id=" + self.client_id + "&redirect_uri=" + self.redirect_uri + "&response_type=code&scope="
         self.discord_token_url = "https://discord.com/api/oauth2/token"
-        self.discord_api_url = "https://discordapp.com/api"
+        self.discord_api_url = "https://discord.com/api"
     
     async def get_access_token(self, code):
         payload = {
