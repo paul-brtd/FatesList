@@ -423,8 +423,6 @@ async def delete_review(request: Request, bot_id: int, rid: uuid.UUID):
         check = await db.fetchrow("SELECT replies FROM bot_reviews WHERE id = $1 AND bot_id = $2 AND user_id = $3", rid, bot_id, int(request.session["userid"]))
         if check is None:
             return templates.TemplateResponse("message.html", {"request": request, "message": "You are not allowed to delete this review"})
-    for reply in check["replies"]:
-        await db.execute("DELETE FROM bot_reviews WHERE id = $1", reply) # Delete all replies attached
     await db.execute("DELETE FROM bot_reviews WHERE id = $1", rid)
     return templates.TemplateResponse("message.html", {"request": request, "message": "Successfully deleted your/this review for this bot!<script>window.location.replace('/bot/" + str(bot_id) + "')</script>"})
 

@@ -350,8 +350,10 @@ async def parse_reviews(bot_id: int, reviews: List[asyncpg.Record] = None) -> Li
         for review_id in reviews[i]["_replies"]:
             _reply = await db.fetch("SELECT id, reply, user_id, star_rating, review_text AS review, review_upvotes, review_downvotes, flagged, epoch, replies AS _replies FROM bot_reviews WHERE id = $1", review_id)
             _parsed_reply = await parse_reviews(bot_id, _reply)
-            print(_parsed_reply[0][0])
-            reviews[i]["replies"].append(_parsed_reply[0][0])
+            try:
+                reviews[i]["replies"].append(_parsed_reply[0][0])
+            except:
+                pass
         i+=1
     if i == 0:
         return reviews, 10.0
