@@ -390,6 +390,20 @@ async def edit_review(request: Request, bot_id: int, rid: uuid.UUID, rating: flo
     await db.execute("UPDATE bot_reviews SET star_rating = $1, review_text = $2, epoch = $3 WHERE id = $4", rating, review, epoch, rid)
     return templates.TemplateResponse("message.html", {"request": request, "message": "Successfully editted your/this review for this bot!<script>window.location.replace('/bot/" + str(bot_id) + "')</script>"})
 
+@router.post("/{bot_id}/reviews/{rid}/reply")
+async def edit_review(request: Request, bot_id: int, rid: uuid.UUID, rating: float = FForm(5.1), review: str = FForm("This is a placeholder review as the user has not posted anything...")):
+    if "userid" not in request.session.keys():
+        return RedirectResponse(f"/auth/login?redirect=/bot/{bot_id}&pretty=to edit reviews", status_code = 303)
+    check = await db.fetchrow("SELECT replies FROM bot_reviews WHERE id = $1", rid)
+    if check is None:
+        return templates.TemplateResponse("message.html", {"request": request, "message": "You are not allowed to reply to this review (doesn't actually exist)"})
+    reply_id = uuid.uuid4()
+    await db.execute("INSERT INTO bot_reviews (id, bot_id, user_id, star_rating, review_text, epoch, reply) VALUES ($1, $2, $3, $4, $5, $6, $7)", reply_id, bot_id, int(request.session["userid"]), rating, review, [time.time()], True)
+    replies = check["replies"]
+    replies.append(reply_id)
+    await db.execute("UPDATE bot_reviews SET replies = $1 WHERE id = $2", replies, rid)
+    return templates.TemplateResponse("message.html", {"request": request, "message": "Successfully replied to your/this review for this bot!<script>window.location.replace('/bot/" + str(bot_id) + "')</script>"})
+
 @router.post("/{bot_id}/reviews/{rid}/delete")
 async def delete_review(request: Request, bot_id: int, rid: uuid.UUID):
     if "userid" not in request.session.keys():
@@ -402,13 +416,15 @@ async def delete_review(request: Request, bot_id: int, rid: uuid.UUID):
     else:
         s = is_staff(staff_roles, user.roles, 2)
     if s[0]:
-        check = await db.fetchrow("SELECT epoch FROM bot_reviews WHERE id = $1", rid)
+        check = await db.fetchrow("SELECT replies FROM bot_reviews WHERE id = $1", rid)
         if check is None:
             return templates.TemplateResponse("message.html", {"request": request, "message": "You are not allowed to delete this review (doesn't actually exist)"})
     else:
-        check = await db.fetchrow("SELECT epoch FROM bot_reviews WHERE id = $1 AND bot_id = $2 AND user_id = $3", rid, bot_id, int(request.session["userid"]))
+        check = await db.fetchrow("SELECT replies FROM bot_reviews WHERE id = $1 AND bot_id = $2 AND user_id = $3", rid, bot_id, int(request.session["userid"]))
         if check is None:
             return templates.TemplateResponse("message.html", {"request": request, "message": "You are not allowed to delete this review"})
+    for reply in check["replies"]:
+        await db.execute("DELETE FROM bot_reviews WHERE id = $1", reply) # Delete all replies attached
     await db.execute("DELETE FROM bot_reviews WHERE id = $1", rid)
     return templates.TemplateResponse("message.html", {"request": request, "message": "Successfully deleted your/this review for this bot!<script>window.location.replace('/bot/" + str(bot_id) + "')</script>"})
 

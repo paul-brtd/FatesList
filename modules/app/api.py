@@ -150,6 +150,9 @@ class Bot(BaseModel):
     promotions: list
     maint: list
     average_stars: float
+    username: str
+    avatar: str
+    disc: str
 
 @router.get("/bots/{bot_id}", tags = ["API"], response_model = Bot, dependencies=[Depends(RateLimiter(times=30, minutes=1))])
 async def get_bots_api(request: Request, bot_id: int, Authorization: str = Header("INVALID_API_TOKEN")):

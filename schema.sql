@@ -60,7 +60,8 @@ CREATE TABLE bot_reviews (
    review_downvotes bigint[] default '{}',
    flagged boolean default false,
    epoch bigint[] default '{}',
-   replies uuid[] default '{}'
+   replies uuid[] default '{}',
+   reply boolean default false
 );
 
 CREATE TABLE bots_voters (

@@ -329,7 +329,7 @@ async def vote_bot(uid: int, bot_id: int, username, autovote: bool) -> Optional[
 async def parse_reviews(bot_id: int, reviews: List[asyncpg.Record] = None) -> List[dict]:
     if reviews is None:
         _rev = True
-        reviews = await db.fetch("SELECT id, user_id, star_rating, review_text AS review, review_upvotes, review_downvotes, flagged, epoch, replies AS _replies FROM bot_reviews WHERE bot_id = $1 ORDER BY star_rating ASC", bot_id)
+        reviews = await db.fetch("SELECT id, reply, user_id, star_rating, review_text AS review, review_upvotes, review_downvotes, flagged, epoch, replies AS _replies FROM bot_reviews WHERE bot_id = $1 AND reply = false ORDER BY star_rating ASC", bot_id)
     else:
         _rev = False
     i = 0
@@ -348,9 +348,10 @@ async def parse_reviews(bot_id: int, reviews: List[asyncpg.Record] = None) -> Li
         if _rev:
             stars += reviews[i]["star_rating"]
         for review_id in reviews[i]["_replies"]:
-            _reply = await db.fetch("SELECT id, user_id, star_rating, review_text AS review, review_upvotes, review_downvotes, flagged, epoch, replies AS _replies FROM bot_reviews WHERE id = $1", review_id)
+            _reply = await db.fetch("SELECT id, reply, user_id, star_rating, review_text AS review, review_upvotes, review_downvotes, flagged, epoch, replies AS _replies FROM bot_reviews WHERE id = $1", review_id)
             _parsed_reply = await parse_reviews(bot_id, _reply)
-            reviews[i]["replies"].append(_parsed_reply)
+            print(_parsed_reply[0][0])
+            reviews[i]["replies"].append(_parsed_reply[0][0])
         i+=1
     if i == 0:
         return reviews, 10.0
