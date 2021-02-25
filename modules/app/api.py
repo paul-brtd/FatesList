@@ -123,7 +123,7 @@ class Bot(BaseModel):
     description: str
     tags: list
     html_long_description: bool
-    long_description: str
+    long_description: Optional[str] = None
     server_count: int
     shard_count: Optional[int] = 0
     user_count: int
@@ -142,25 +142,28 @@ class Bot(BaseModel):
     website: Optional[str] = None
     support: Optional[str] = None
     github: Optional[str] = None
-    css: str
+    css: Optional[str] = None
     votes: int
     vanity: Optional[str] = None
-    reviews: list
+    reviews: Optional[list] = None # Compact
     sensitive: dict
     promotions: list
     maint: list
-    average_stars: float
+    average_stars: Optional[float] = None # Conpact
     username: str
     avatar: str
     disc: str
 
 @router.get("/bots/{bot_id}", tags = ["API"], response_model = Bot, dependencies=[Depends(RateLimiter(times=30, minutes=1))])
-async def get_bots_api(request: Request, bot_id: int, Authorization: str = Header("INVALID_API_TOKEN")):
+async def get_bots_api(request: Request, bot_id: int, compact: Optional[bool] = False, Authorization: str = Header("INVALID_API_TOKEN")):
     """Gets bot information given a bot ID. If not found, 404 will be returned. If a proper API Token is provided, sensitive information (System API Events will also be provided)"""
     api_ret = await db.fetchrow("SELECT bot_id AS id, description, tags, html_long_description, long_description, servers AS server_count, shard_count, shards, prefix, invite, invite_amount, owner AS main_owner, extra_owners, features, bot_library AS library, queue, banned, certified, website, discord AS support, github, user_count, votes, css FROM bots WHERE bot_id = $1", bot_id)
     if api_ret is None:
         return abort(404)
     api_ret = dict(api_ret)
+    if compact:
+        del api_ret["css"]
+        del api_ret["long_description"]
     bot_obj = await get_bot(bot_id)
     api_ret["id"] = str(api_ret["id"])
     api_ret["username"] = bot_obj["username"]
@@ -191,10 +194,11 @@ async def get_bots_api(request: Request, bot_id: int, Authorization: str = Heade
         api_ret["vanity"] = None
     else:
         api_ret["vanity"] = vanity["vanity_url"]
-    api_ret["_reviews"] = await parse_reviews(bot_id)
-    api_ret["reviews"] = api_ret["_reviews"][0]
-    api_ret["average_stars"] = float(api_ret["_reviews"][1])
-    del api_ret["_reviews"]
+    if not compact:
+        api_ret["_reviews"] = await parse_reviews(bot_id)
+        api_ret["reviews"] = api_ret["_reviews"][0]
+        api_ret["average_stars"] = float(api_ret["_reviews"][1])
+        del api_ret["_reviews"]
     return api_ret
 
 class BotVoteCheck(BaseModel):
