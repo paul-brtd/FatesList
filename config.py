@@ -1,4 +1,4 @@
-from config_secrets import TOKEN_MAIN, TOKEN_SERVER, pg_pwd, csrf_secret, session_key, oauth_client_secret
+from config_secrets import TOKEN_MAIN, TOKEN_SERVER, pg_pwd, csrf_secret, session_key, oauth_client_secret, ratelimit_bypass_key
 bot_logs = 789946587203764224 # #bot-logs in support server
 appeals_channel = 813422505900376095 # #resubmissions-and-appeals in support server
 bots_role = 789934898408194059 # BOTS role in support server

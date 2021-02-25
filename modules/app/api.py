@@ -119,7 +119,7 @@ async def random_bots_api(request: Request):
     return bot
 
 class Bot(BaseModel):
-    id: int
+    id: str
     description: str
     tags: list
     html_long_description: bool
@@ -144,8 +144,14 @@ class Bot(BaseModel):
     github: Optional[str] = None
     css: str
     votes: int
+    vanity: Optional[str] = None
+    reviews: list
+    sensitive: dict
+    promotions: list
+    maint: list
+    average_stars: float
 
-@router.get("/bots/{bot_id}", tags = ["API"], response_model = Bot, dependencies=[Depends(RateLimiter(times=10, minutes=1))])
+@router.get("/bots/{bot_id}", tags = ["API"], response_model = Bot, dependencies=[Depends(RateLimiter(times=30, minutes=1))])
 async def get_bots_api(request: Request, bot_id: int, Authorization: str = Header("INVALID_API_TOKEN")):
     """Gets bot information given a bot ID. If not found, 404 will be returned. If a proper API Token is provided, sensitive information (System API Events will also be provided)"""
     api_ret = await db.fetchrow("SELECT bot_id AS id, description, tags, html_long_description, long_description, servers AS server_count, shard_count, shards, prefix, invite, invite_amount, owner AS main_owner, extra_owners, features, bot_library AS library, queue, banned, certified, website, discord AS support, github, user_count, votes, css FROM bots WHERE bot_id = $1", bot_id)
@@ -153,6 +159,7 @@ async def get_bots_api(request: Request, bot_id: int, Authorization: str = Heade
         return abort(404)
     api_ret = dict(api_ret)
     bot_obj = await get_bot(bot_id)
+    api_ret["id"] = str(api_ret["id"])
     api_ret["username"] = bot_obj["username"]
     api_ret["avatar"] = bot_obj["avatar"]
     api_ret["disc"] = bot_obj["disc"]
@@ -183,7 +190,7 @@ async def get_bots_api(request: Request, bot_id: int, Authorization: str = Heade
         api_ret["vanity"] = vanity["vanity_url"]
     api_ret["_reviews"] = await parse_reviews(bot_id)
     api_ret["reviews"] = api_ret["_reviews"][0]
-    api_ret["average_stars"] = api_ret["_reviews"][1]
+    api_ret["average_stars"] = float(api_ret["_reviews"][1])
     del api_ret["_reviews"]
     return api_ret
 
@@ -394,6 +401,11 @@ async def websocker_real_time_api(websocket: WebSocket):
             await asyncio.sleep(1) # Keep Waiting Forever
     except WebSocketDisconnect:
         await manager.disconnect(websocket)
+
+class User(BaseModel):
+    id: int
+    desription: str
+
 
 @router.get("/users/{user_id}")
 async def get_user_api(request: Request, user_id: int):

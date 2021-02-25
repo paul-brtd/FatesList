@@ -22,6 +22,8 @@ logging.basicConfig(level=logging.DEBUG)
 
 # SlowAPI rl func
 async def rl_key_func(request: Request) -> str:
+    if request.headers.get("FatesList-RateLimitBypass") == ratelimit_bypass_key:
+        return get_token(32)
     if "Authorization" in request.headers or "authorization" in request.headers:
         try:
             r = request.headers["Authorization"]
@@ -31,7 +33,7 @@ async def rl_key_func(request: Request) -> str:
         if check is None:
             return ip_check(request)
         if check["certified"]:
-            return get_token(16)
+            return get_token(32)
         return r
     else:
         return ip_check(request)
