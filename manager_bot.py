@@ -6,9 +6,11 @@ import builtins
 from config import *
 from modules.deps import *
 from typing import Optional
-
-intent = discord.Intents.all()
-client = commands.Bot(command_prefix='!', intents=intent)
+import logging
+logging.basicConfig(level=logging.DEBUG)
+intent = discord.Intents.default()
+intent.members = True
+client = commands.AutoShardedBot(command_prefix='!', intents=intent)
 
 async def setup_db():
 

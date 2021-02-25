@@ -17,6 +17,8 @@ import os
 import aioredis
 from fastapi_limiter import FastAPILimiter
 from fastapi_limiter.depends import RateLimiter
+import logging
+logging.basicConfig(level=logging.DEBUG)
 
 # SlowAPI rl func
 async def rl_key_func(request: Request) -> str:
@@ -42,7 +44,16 @@ def ip_check(request: Request) -> str:
 
 
 
-intent = discord.Intents.all()
+intent = discord.Intents.default()
+intent.typing = False
+intent.bans = False
+intent.emojis = False
+intent.integrations = False
+intent.webhooks = False
+intent.invites = False
+intent.voice_states = False
+intent.messages = False
+intent.members = True
 builtins.client = discord.Client(intents=intent)
 
 limiter = FastAPILimiter
@@ -74,8 +85,9 @@ async def setup_db():
 @app.on_event("startup")
 async def startup():
     builtins.db = await setup_db()
-    print("Discord")
+    print("Discord init beginning")
     asyncio.create_task(client.start(TOKEN_MAIN))
+    await asyncio.sleep(4)
     builtins.redis_db = await aioredis.create_redis_pool('redis://localhost')
     limiter.init(redis_db, identifier = rl_key_func)
 
@@ -87,7 +99,7 @@ async def close():
 
 @client.event
 async def on_ready():
-    print("UP ON DISCORD")
+    print(client.user, "up")
 
 # Tag calculation
 builtins.tags_fixed = {}

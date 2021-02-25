@@ -145,7 +145,7 @@ class Bot(BaseModel):
     css: str
     votes: int
 
-@router.get("/bots/{bot_id}", tags = ["API"], response_model = Bot, dependencies=[Depends(RateLimiter(times=3, minutes=2))])
+@router.get("/bots/{bot_id}", tags = ["API"], response_model = Bot, dependencies=[Depends(RateLimiter(times=10, minutes=1))])
 async def get_bots_api(request: Request, bot_id: int, Authorization: str = Header("INVALID_API_TOKEN")):
     """Gets bot information given a bot ID. If not found, 404 will be returned. If a proper API Token is provided, sensitive information (System API Events will also be provided)"""
     api_ret = await db.fetchrow("SELECT bot_id AS id, description, tags, html_long_description, long_description, servers AS server_count, shard_count, shards, prefix, invite, invite_amount, owner AS main_owner, extra_owners, features, bot_library AS library, queue, banned, certified, website, discord AS support, github, user_count, votes, css FROM bots WHERE bot_id = $1", bot_id)
@@ -194,7 +194,7 @@ class BotVoteCheck(BaseModel):
     vote_epoch: int
     time_to_vote: int
 
-@router.get("/bots/{bot_id}/votes", tags = ["API"], response_model = BotVoteCheck, dependencies=[Depends(RateLimiter(times=3, minutes=1))])
+@router.get("/bots/{bot_id}/votes", tags = ["API"], response_model = BotVoteCheck, dependencies=[Depends(RateLimiter(times=5, minutes=1))])
 async def get_votes_api(request: Request, bot_id: int, user_id: Optional[int] = None, Authorization: str = Header("INVALID_API_TOKEN")):
     """Endpoint to check amount of votes a user has."""
     if user_id is None:
