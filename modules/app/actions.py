@@ -395,8 +395,12 @@ async def delete_review(request: Request, bot_id: int, rid: uuid.UUID):
     if "userid" not in request.session.keys():
         return RedirectResponse(f"/auth/login?redirect=/bot/{bot_id}&pretty=to delete reviews", status_code = 303)
     guild = client.get_guild(reviewing_server)
+
     user = guild.get_member(int(request.session["userid"]))
-    s = is_staff(staff_roles, user.roles, 2)
+    if user is None:
+        s = [False]
+    else:
+        s = is_staff(staff_roles, user.roles, 2)
     if s[0]:
         check = await db.fetchrow("SELECT epoch FROM bot_reviews WHERE id = $1", rid)
         if check is None:
@@ -408,6 +412,26 @@ async def delete_review(request: Request, bot_id: int, rid: uuid.UUID):
     await db.execute("DELETE FROM bot_reviews WHERE id = $1", rid)
     return templates.TemplateResponse("message.html", {"request": request, "message": "Successfully deleted your/this review for this bot!<script>window.location.replace('/bot/" + str(bot_id) + "')</script>"})
 
+@router.post("/{bot_id}/reviews/{rid}/upvote")
+async def upvote_bot(request: Request, bot_id: int, rid: uuid.UUID):
+    if "userid" not in request.session.keys():
+        return RedirectResponse(f"/auth/login?redirect=/bot/{bot_id}&pretty=to upvote reviews", status_code = 303)
+    bot_rev = await db.fetchrow("SELECT review_upvotes, review_downvotes FROM bot_reviews WHERE id = $1", rid)
+    if bot_rev is None:
+        return templates.e("message.html", {"request": request, "message": "You are not allowed to upvote this review (doesn't actually exist)"})
+    bot_rev = dict(bot_rev)
+    user = int(request.session.get("userid"))
+    if user in bot_rev["review_upvotes"]:
+        return abort(429)
+    if user in bot_rev["review_upvotes"]:
+        while True:
+            try:
+                bot_rev["review_upvotes"].remove(user)
+            except:
+                break
+    bot_rev["review_upvotes"].append(int(user))
+    await db.execute("UPDATE bot_reviews SET review_upvotes = $1, review_downvotes = $2 WHERE id = $3", bot_rev["review_upvotes"], bot_rev["review_downvotes"], rid)
+    return templates.TemplateResponse("message.html", {"request": request, "message": "Successfully upvoted this review for this bot!<script>window.location.replace('/bot/" + str(bot_id) + "')</script>"})
 
 @router.get("/{bid}/resubmit")
 async def resubmit_bot(request: Request, bid: int):

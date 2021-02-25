@@ -115,6 +115,7 @@ async def random_bots_api(request: Request):
     bot = (await get_bot(random_unp["bot_id"])) | dict(random_unp)
     bot["bot_id"] = str(bot["bot_id"])
     bot["servers"] = human_format(bot["servers"])
+    bot["description"] = bot["description"].replace("<", "").replace(">", "")
     return bot
 
 @router.get("/bots/{bot_id}", tags = ["API"])

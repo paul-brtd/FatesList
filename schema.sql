@@ -56,8 +56,8 @@ CREATE TABLE bot_reviews (
    user_id bigint not null,
    star_rating float4 default 0.0,
    review_text text,
-   review_upvotes integer default 0,
-   review_downvotes integer default 0,
+   review_upvotes bigint[] default '{}',
+   review_downvotes bigint[] default '{}',
    flagged boolean default false,
    epoch bigint[] default '{}',
    replies uuid[] default '{}'

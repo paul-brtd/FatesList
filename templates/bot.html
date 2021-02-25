@@ -244,11 +244,11 @@ th {
 					<span class="white" style="margin-right: 3px;">{{rev.user.username}}</span>
 					<span class="white">|</span>
 			</a>
-			<a class="white" href="/bot/{{bot_id}}/review/{{rev.id}}/upvote" style="margin-right: 3px;">
+			<a class="white" href="javascript:void" onclick="upvoteReview('{{rev.id}}')" style="margin-right: 3px;">
 				<span class="white">
 					<i style="margin-right: 2px" class='fas fa-angle-up'></i>
 				</span>
-				<span class="white" style="margin-right: 3px;">{{rev.review_upvotes - rev.review_downvotes}}</span>
+				<span class="white" style="margin-right: 3px;">{{rev.review_upvotes.__len__() - rev.review_downvotes.__len__()}}</span>
 					<span class="white">|</span>
 				</span>
 			</a>
@@ -477,9 +477,39 @@ function openf(evt, id) {
 	   url: `/bot/{{bot_id}}/reviews/${rev_id}/delete`,
            processData: false,
            contentType: 'application/json',
+	   statusCode: {
+		303: function(data) {
+			window.location.href = data.redirect;
+		}
+	   }
         });
         alert("Deleted Review Successfully")
         window.location.reload()
+	}
+
+	function upvoteReview(rev_id) {
+        $.ajax({
+           type: 'POST',
+           url: `/bot/{{bot_id}}/reviews/${rev_id}/upvote`,
+           processData: false,
+           contentType: 'application/json',
+	   statusCode: {
+                303: function(data) {
+                        window.location.href = data.redirect;
+                },
+		429: function(data) {
+			alert("You have already upvoted this review. You cannot upvote it again");
+		},
+		200: function(data) {
+			alert("Upvoted successfully")
+		        window.location.reload()
+		},
+		404: function(data) {
+			alert("Review does not exist or this feature isn't done yet!")
+		}
+	   }
+        });
+
 	}
 </script>	
 <script>
