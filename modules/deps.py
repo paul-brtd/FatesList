@@ -46,6 +46,7 @@ from fastapi.exception_handlers import (
     http_exception_handler,
     request_validation_exception_handler,
 )
+from fastapi_limiter.depends import RateLimiter
 import lxml
 from lxml.html.clean import Cleaner
 

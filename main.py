@@ -15,11 +15,37 @@ from config import *
 import orjson
 import os
 import aioredis
+from fastapi_limiter import FastAPILimiter
+from fastapi_limiter.depends import RateLimiter
 
-# Setup
+# SlowAPI rl func
+async def rl_key_func(request: Request) -> str:
+    if "Authorization" in request.headers or "authorization" in request.headers:
+        try:
+            r = request.headers["Authorization"]
+        except KeyError:
+            r = request.headers["authorization"]
+        check = await db.fetchrow("SELECT bot_id, certified FROM bots WHERE api_token = $1", r)
+        if check is None:
+            return ip_check(request)
+        if check["certified"]:
+            return get_token(16)
+        return r
+    else:
+        return ip_check(request)
+
+def ip_check(request: Request) -> str:
+    forwarded = request.headers.get("X-Forwarded-For")
+    if forwarded:
+        return forwarded.split(",")[0]
+    return request.client.host
+
+
+
 intent = discord.Intents.all()
 builtins.client = discord.Client(intents=intent)
 
+limiter = FastAPILimiter
 app = FastAPI(default_response_class = ORJSONResponse, docs_url = None, redoc_url = "/api/docs/endpoints")
 app.add_middleware(SessionMiddleware, secret_key=session_key)
 
@@ -51,6 +77,7 @@ async def startup():
     print("Discord")
     asyncio.create_task(client.start(TOKEN_MAIN))
     builtins.redis_db = await aioredis.create_redis_pool('redis://localhost')
+    limiter.init(redis_db, identifier = rl_key_func)
 
 @app.on_event("shutdown")
 async def close():
@@ -70,3 +97,5 @@ for tag in TAGS.keys():
     builtins.tags_fixed.update({tag: [new_tag.capitalize(), tag_icon]})
 
 builtins.api_docs = open("static/api_docs.html").read()
+
+

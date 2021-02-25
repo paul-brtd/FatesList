@@ -118,10 +118,37 @@ async def random_bots_api(request: Request):
     bot["description"] = bot["description"].replace("<", "").replace(">", "")
     return bot
 
-@router.get("/bots/{bot_id}", tags = ["API"])
+class Bot(BaseModel):
+    id: int
+    description: str
+    tags: list
+    html_long_description: bool
+    long_description: str
+    server_count: int
+    shard_count: Optional[int] = 0
+    user_count: int
+    shards: Optional[list] = []
+    prefix: str
+    library: str
+    invite: str
+    invite_amount: int
+    main_owner: str
+    extra_owners: list
+    owners: list
+    features: list
+    queue: bool
+    banned: bool
+    certified: bool
+    website: Optional[str] = None
+    support: Optional[str] = None
+    github: Optional[str] = None
+    css: str
+    votes: int
+
+@router.get("/bots/{bot_id}", tags = ["API"], response_model = Bot, dependencies=[Depends(RateLimiter(times=3, minutes=2))])
 async def get_bots_api(request: Request, bot_id: int, Authorization: str = Header("INVALID_API_TOKEN")):
     """Gets bot information given a bot ID. If not found, 404 will be returned. If a proper API Token is provided, sensitive information (System API Events will also be provided)"""
-    api_ret = await db.fetchrow("SELECT bot_id AS id, description, tags, html_long_description, long_description, servers AS server_count, shard_count, shards, prefix, invite, invite_amount, owner AS _owner, extra_owners AS _extra_owners, features, bot_library AS library, queue, banned, certified, website, discord AS support, github, user_count, votes, css FROM bots WHERE bot_id = $1", bot_id)
+    api_ret = await db.fetchrow("SELECT bot_id AS id, description, tags, html_long_description, long_description, servers AS server_count, shard_count, shards, prefix, invite, invite_amount, owner AS main_owner, extra_owners, features, bot_library AS library, queue, banned, certified, website, discord AS support, github, user_count, votes, css FROM bots WHERE bot_id = $1", bot_id)
     if api_ret is None:
         return abort(404)
     api_ret = dict(api_ret)
@@ -129,10 +156,11 @@ async def get_bots_api(request: Request, bot_id: int, Authorization: str = Heade
     api_ret["username"] = bot_obj["username"]
     api_ret["avatar"] = bot_obj["avatar"]
     api_ret["disc"] = bot_obj["disc"]
-    if api_ret["_extra_owners"] is None:
-        api_ret["owners"] = [str(api_ret["_owner"])]
-    else:
-        api_ret["owners"] = [str(api_ret["_owner"])] + [str(eo) for eo in api_ret["_extra_owners"]]
+    api_ret["main_owner"] = str(api_ret["main_owner"])
+    if api_ret["extra_owners"] is None:
+        api_ret["extra_owners"] = []
+    api_ret["extra_owners"] = [str(eo) for eo in api_ret["extra_owners"]]
+    api_ret["owners"] = [api_ret["main_owner"]] + api_ret["extra_owners"]
     api_ret["id"] = str(api_ret["id"])
     if Authorization is not None:
         check = await db.fetchrow("SELECT bot_id FROM bots WHERE api_token = $1", str(Authorization))
@@ -166,7 +194,7 @@ class BotVoteCheck(BaseModel):
     vote_epoch: int
     time_to_vote: int
 
-@router.get("/bots/{bot_id}/votes", tags = ["API"], response_model = BotVoteCheck)
+@router.get("/bots/{bot_id}/votes", tags = ["API"], response_model = BotVoteCheck, dependencies=[Depends(RateLimiter(times=3, minutes=1))])
 async def get_votes_api(request: Request, bot_id: int, user_id: Optional[int] = None, Authorization: str = Header("INVALID_API_TOKEN")):
     """Endpoint to check amount of votes a user has."""
     if user_id is None:
@@ -366,4 +394,15 @@ async def websocker_real_time_api(websocket: WebSocket):
             await asyncio.sleep(1) # Keep Waiting Forever
     except WebSocketDisconnect:
         await manager.disconnect(websocket)
+
+@router.get("/users/{user_id}")
+async def get_user_api(request: Request, user_id: int):
+    return ORJSONResponse({"done":  False, "reason": "NOT_YET_IMPLEMENTED"}, status_code = 400)
+
+# A User object should have:
+#
+#
+#
+#
+#
 
