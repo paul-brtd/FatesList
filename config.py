@@ -67,7 +67,7 @@ server_bot_invite = "https://discord.com/api/oauth2/authorize?client_id=81107394
 site_url = "https://" + site
 
 support_url = "https://discord.gg/PA5vjCRc5H"
-TAGS = {"music": "fas fa-music", "moderation": "fas fa-hammer", "economy": "fab fa-viacoin", "fun": "fa fa-heart", "anime": "fas fa-camera", "games": "fas fa-smile", "web_dashboard": "fas fa-chart-bar", "logging": "fas fa-chart-line", "game_stats": "fas fa-chart-pie", "leveling": "fas fa-arrow-up", "roleplay": "fas fa-cat", "utility": "fas fa-desktop", "social": "fa fa-users"}
+TAGS = {"music": "fa-solid:music", "moderation": "fa-solid:hammer", "economy": "fa-solid:coins", "fun": "fa-solid:heart", "anime": "fa-solid:camera", "games": "fa-solid:smile", "web_dashboard": "fa-solid:chart-bar", "logging": "fa-solid:chart-line", "game_stats": "fa-solid:chart-pie", "leveling": "fa-solid:arrow-up", "roleplay": "fa-solid:cat", "utility": "fa-solid:desktop", "social": "fa-solid:users"}
 pg_user = "postgres" # Postgres Database Username
 class OauthConfig:
     client_id = "798951566634778641"

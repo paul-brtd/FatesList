@@ -151,8 +151,11 @@ th {
 	{% if not bot.banned and not maint[0] %}
         <form method = "POST" action = "/bot/{{bot_id}}/vote">
             {{form.csrf_token}}
-            <button type="submit" class="btn btn-outline-light bot-buttons-all vote" id="bot-buttons-vote"><i class="fas fa-thumbs-up"></i>{{bot.votes}}</button>
-        </form>
+		<button type="submit" class="btn bot-buttons-all vote btn-outline-light" id="bot-buttons-vote" style="color: white !important;">
+			<span class="iconify" data-icon="fa-solid:thumbs-up" data-inline="false"></span><span style="margin-left: 3px;">{{bot.votes}}</span>
+		</button>
+
+	</form>
 	{% endif %}
         {% if not bot.support and bot.support != "" and bot.support != "None" %}
         {% else %}
@@ -180,7 +183,7 @@ th {
 		        <div class="d-flex flex-wrap justify-content-center align-items-center" style="width: 97%;margin: 0 auto;" id="bot-tags-container-inner">
             			{% for tag,new_tag in tags_fixed.items() %}
 				    <div id="bot-tags-{{tag}}">
-					    <button id="bot-tags-{{tag}}-button" class="text-nowrap btn d-flex justify-content-center align-items-center btn-outline-light" style="color: white;border-radius: 10px; margin: 6px;" onclick="location.href='/search/tags?tag={{tag}}'" title="{{new_tag[0]}}"><i class="{{new_tag[1]}}" aria-hidden="true"></i><span style="margin-left: 3px; font-size: 13px;"><strong>{{new_tag[0]}}</strong></span></button>
+					    <button id="bot-tags-{{tag}}-button" class="text-nowrap btn d-flex justify-content-center align-items-center btn-outline-light" style="color: white;border-radius: 10px; margin: 6px;" onclick="location.href='/search/tags?tag={{tag}}'" title="{{new_tag[0]}}"><span class="iconify" data-icon="{{new_tag[1]}}" data-inline="false" aria-hidden="true"></span><span style="margin-left: 3px; font-size: 13px;"><strong>{{new_tag[0]}}</strong></span></button>
                 		    </div>
 		                {% endfor %}
 			</div>
@@ -190,7 +193,7 @@ th {
     <div id="bot-promo" style="margin-top: 30px;">
 	    <h5 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;margin-top: -13px;margin-bottom: 3px;" id="bot-promo-header">Promotions, Announcements and More!</h5>
 	    {% if bot_admin %}
-	    <a href="javascript:void()" onclick="newPromotion('{{bot.api_token}}')" style="color: white !important; opacity: 0.8;"><i class="fa fa-plus" aria-hidden="true"></i> New Promotion (Coming Soon)</a>
+	    <a href="javascript:void()" onclick="newPromotion('{{bot.api_token}}')" style="color: white !important; opacity: 0.8;"><span class="iconify" data-icon="fa-solid:plus" data-inline="false"></span><span style="margin-left: 3px">New Promotion (Coming Soon)</span></a>
 	    {% endif %}
     {% endif %}
     {% for promo in promos %}
@@ -229,7 +232,7 @@ th {
 		{% endif %}
 		<hr class="hr-is">
 		<span style="font-size: 18px;" class="white">Reviews: {{bot_reviews.__len__()}}</span><br/>
-		<span style="font-size: 18px;" class="white">Average Rating: <i class='fas fa-star' style="margin-right: 3px;"></i>{{average_rating}}/10.0</span><br/>
+		<span style="font-size: 18px;" class="white">Average Rating: <i class='iconify' data-icon='fa-solid:star' data-inline='true' style="margin-right: 3px; margin-bottom: 1px;"></i>{{average_rating}}/10.0</span><br/>
 		<span class="white">
 			<input disabled class='slider' type="range" name="rating" min="0.1" max="10" value='{{average_rating}}' step='0.1' tabindex="-1"/>
 			<p id="rating-desc-avg"></p>
@@ -246,20 +249,20 @@ th {
 			</a>
 			<a class="white" href="javascript:void" onclick="upvoteReview('{{rev.id}}')" style="margin-right: 3px;">
 				<span class="white">
-					<i style="margin-right: 2px" class='fas fa-angle-up'></i>
+					<span class='iconify' style="margin-right: 3px; margin-bottom: 1px;" data-icon='fa-solid:angle-up' data-inline='true'></span>
 				</span>
 				<span class="white" style="margin-right: 3px;">{{rev.review_upvotes.__len__() - rev.review_downvotes.__len__()}}</span>
 					<span class="white">|</span>
 				</span>
 			</a>
 			<span class="white" style="font-weight: bold">
-				<i class='fas fa-star'></i>
+				<span class='iconify' style="margin-right: 3px; margin-bottom: 1px;" data-icon='fa-solid:star'></span>
 				<span>{{rev.star_rating}}/10.0</span>
 				<span class="white" style="margin-right: 3px;">|</span>
 			</span>
                         <span class="white">
-                                <i style="margin-right: 2px" class='fas fa-reply'></i>
-                        </span>
+                                <span class='iconify' style="margin-right: 3px; margin-bottom: 1px;" data-icon='fa-solid:reply'></span>
+			</span>
 
                         <a class="white" style="color: white !important" href="javascript:void" onclick="replyReview(this, '{{rev.id}}')" style="margin-right: 3px;">
 				  <span class="white" style="margin-right: 3px;">Reply</span>
@@ -400,11 +403,11 @@ th {
                         <input type="hidden" name="ban" value="1"/>
                         <p style="font-weight: bold;color: rgba(255,255,255,0.87); text-align: center;">If this bot is misbehaving...</p>
                         <input type="text" name="reason" style="border-radius: 4px 4px 4px 4px !important;" placeholder="Enter ban reason" required/>
-                        <button type="submit" class="btn btn-outline-dark" style="border-radius: 4px 4px 4px 4px !important; background-color: red; color: white !important;"><i class="fas fa-hammer"></i> Ban</button>
+                        <button type="submit" class="btn btn-outline-dark" style="border-radius: 4px 4px 4px 4px !important; background-color: red; color: white !important;"><span class='iconify' style="margin-right: 3px; margin-bottom: 1px;" data-icon='fa-solid:hammer'></span>Ban</button>
                 {% elif staff[0] and bot.banned %}
                         <p style="font-weight: bold;color: rgba(255,255,255,0.87); text-align: center;">If this bot has learnt its lesson...</p>
                         <input type="hidden" name="ban" value="0"/>
-                        <button type="submit" class="btn btn-outline-dark" style="background-color: red; color: white !important;"><i class="fas fa-hammer"></i> Unban</button>
+                        <button type="submit" class="btn btn-outline-dark" style="background-color: red; color: white !important;"><span class='iconify' style="margin-right: 3px; margin-bottom: 1px;" data-icon='fa-solid:hammer'></span>Unban</button>
                 {% endif %}
         </form>
 

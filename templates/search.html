@@ -10,7 +10,7 @@
         <h4 style="color: rgba(255,255,255,0.87);margin-left: 15px;">Search Results</h4>
     </div>
     {% if search_bots == [] %}
-    <div>
+    <div class="index-fl">
     {% else %}
     <div class="index-fl" style="color: #111112 !important;">
     {% endif %}
@@ -22,8 +22,8 @@
         {% for bot in search_bots %}
 		{{ botCard(bot, False) }}
 	{% endfor %}
-    {% else %}
-    {% for profile in profiles %}
+        {% else %}
+        {% for profile in profiles %}
         <div class="bot-card">
 	    <div class="lozad bot-card-banner" data-background-image="{{profile.user.banner}}">
 		    <a href="/profile/{{profile.user.userid}}"><img alt="bot avatar" class="bot-card-avatar" src="{{profile.avatar}}" loading="lazy"/></a>

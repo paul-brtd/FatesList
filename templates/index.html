@@ -9,7 +9,8 @@
 {% block content %}
 <div class="index-fl">
 	<hr class="hr-is">
-	<div class="d-flex" style="margin-left: 5%;"><i class="fas fa-question fa-3x white"></i>
+	<div class="d-flex" style="margin-left: 5%;">
+		<span class="iconify white" data-icon="fa-solid:search" data-inline="false" data-height="3em"></span>
 		<p class="title-is">Random Bot</p>
 	</div>
 	<div id="random-section" class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center div-is">
@@ -19,7 +20,8 @@
 		<button class="btn btn-outline-light text-center" style="display: block;  text-align: center; justify-content: center;" onclick="randomBotRoll()">Roll</button>
 	</div>
 	<hr class="hr-is">
-	<div class="d-flex" style="margin-left: 5%;"><i class="fas fa-certificate fa-3x white"></i>
+	<div class="d-flex" style="margin-left: 5%;">
+                <span class="iconify white" data-icon="fa-solid:certificate" data-inline="false" data-height="3em"></span>
 		<p class="title-is">Certified Bots</p>
 	</div>
 	<div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center div-is" id="tt-2">
@@ -28,7 +30,8 @@
 		{% endfor %}
 	</div>
 	<hr class="hr-is">
-	<div class="d-flex" style="margin-left: 5%;"><i class="fas fa-sort-amount-up fa-3x white"></i>
+	<div class="d-flex" style="margin-left: 5%;">
+		<span class="iconify white" data-icon="fa-solid:sort-amount-up" data-inline="false" data-height="3em"></span>
 		<p class="title-is">Top Voted</p>
 	</div>
 	<div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center div-is" id="tt-1">
@@ -37,8 +40,9 @@
 		{% endfor %}
 	</div>
 	<hr class="hr-is">
-	<div class="d-flex" style="margin-left: 5%;"><i class="fas fa-plus-square fa-3x white"></i>
-		<p style="color: rgba(255,255,255,0.87);margin-left: 15px;">New Bots</p>
+	<div class="d-flex" style="margin-left: 5%;">
+		<span class="iconify white" data-icon="fa-solid:plus" data-inline="false" data-height="3em"></span>
+		<p class="title-is">New Bots</p>
 	</div>
 	<div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center" id="tt" style="width: 90%;margin: 30px 5%;">
 		{% for bot in new_bots %}

@@ -323,12 +323,12 @@ async def get_vanity(request: Request, vanity: str):
         return abort(404)
     return {"type": vb[0], "redirect": vb[1]}
 
-@router.get("/bots/ext/index", tags = ["API (Other)"])
+@router.get("/bots/ext/index", tags = ["API (Extras)"])
 async def bots_index_page_api_do(request: Request):
     """For any potential Android/iOS app, crawlers etc."""
     return await render_index(request = request, api = True)
 
-@router.get("/bots/ext/search", tags = ["API (Other)"])
+@router.get("/bots/search", tags = ["API (Extras)"])
 async def bots_search_page(request: Request, query: str):
     """For any potential Android/iOS app, crawlers etc. Query is the query to search for"""
     return await render_search(request = request, q = query, api = True)

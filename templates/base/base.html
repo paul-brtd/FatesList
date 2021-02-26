@@ -2,7 +2,7 @@
 <section class="bot-card">
         <div class="lozad bot-card-banner" data-background-image="{{bot.banner}}">
                 {% if bot.certified == True or rand%}
-                        <i class="fas fa-certificate fa-3x bot-card-cert"></i>
+			<span class="iconify bot-card-cert" data-icon="fa-solid:certificate" data-inline="false" data-height="3em"></span>
                 {% endif %}
                 <a href="/bot/{{bot.bot_id}}" class="bot-card-view-link">
                         <img alt="bot avatar" class="lozad bot-card-avatar" data-placeholder-background="black" data-src="{{bot.avatar}}"/>
@@ -18,10 +18,14 @@
         </p>
         <div class="d-flex bot-card-footer">
                 <div class="bot-card-footer-stats">
-                        <p class="text-center white-bold"><i class="fas fa-server i-m3"></i><span class="bot-servers">{{bot.servers}}</span></p>
+                        <p class="text-center white-bold">
+				<span class="iconify i-m3" data-icon="fa-solid:server" data-inline="false"></span><span style="margin-left: 3px;" class="bot-servers">{{bot.servers}}</span>
+			</p>
                 </div>
                 <div class="bot-card-footer-stats">
-                        <p class="text-center white-bold"><i class="fas fa-thumbs-up i-m3"></i><span class="bot-votes">{{bot.votes}}</span></p>
+                        <p class="text-center white-bold">
+				<span class="iconify i-m3" data-icon="fa-solid:thumbs-up" data-inline="false"></span><span style="margin-left: 3px;" class="bot-votes">{{bot.votes}}</span>
+			</p>
                 </div>
         </div>
         <div class="bot-card-actions">
@@ -35,6 +39,7 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
+<script src="https://code.iconify.design/1/1.0.7/iconify.min.js"></script>
 {% if not botp %}
 <!-- Primary Meta Tags -->
 <title>Fates List | Discord Bot List</title>
@@ -94,7 +99,6 @@
     <link rel="shortcut icon" href="/static/favicon.ico"/>
     <!-- Material CSS -->
     <link href="https://cdn.jsdelivr.net/gh/djibe/material@4.6.0-rc1/css/material.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.12.0/css/all.css">
     <link rel="stylesheet" href="/static/assets/css/front-head.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Fates-List/FatesList@master/static/assets/css/styles.css">
 <!-- Base Styles -->
@@ -209,7 +213,7 @@ background-color: blue;
 
 </style>
 </head>
-<body style="background: #1D1E23;">
+<body style="background-color: #1D1E23;">
 <!-- Google Tag Manager (noscript) -->
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KSZXP7T"
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
@@ -222,7 +226,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <li class="nav-item">
 	  <a class="nav-link" href="/bot/admin/add" style="float: left; text-align: center; margin-top: 2px;">Add Bot</a>
           <a class="nav-link" href="/server/admin/add" style="float: left; text-align: center; margin-top: 2px;">Add Server</a>
-
    </li>
    </div>
    <ul class="navbar-nav ml-auto">
