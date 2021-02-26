@@ -239,7 +239,7 @@ th {
 		</span>
 		<div style="text-align: left; margin-left: 30px;">
 		{% macro review(rev, index) %}
-		<div class="bot-review-user" style="margin-left: 5%; border: solid; margin-bottom: 20px;">
+		<div class="bot-review-user" style="margin-left: 5%; border: solid;">
 		   <div class="bot-review-left">
 		   	<div class="bot-review-header" style="margin-bottom: 10px; font-weight: bold;">
 			<a href='/profile/{{rev.user_id}}' class="white" style="margin-right: 3px;">
@@ -293,11 +293,9 @@ th {
 			</div>
 			    <span style="margin-left: 30px !important; color: white" id="review_text-{{rev.id}}">{{rev.review}}</span>
 	          	</div>
-			<div style="margin-bottom: 2px;">
+			<div>
 		    	{% for rep in rev.replies %}
-	                    <div style="width: 80%; margin-bottom: 10px;">
 				{{ review(rep, loop.index) }}
-			    </div>
 			{% endfor %}
 			</div>
 		    </div>
