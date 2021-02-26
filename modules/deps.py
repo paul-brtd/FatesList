@@ -463,7 +463,7 @@ async def render_index(request: Request, api: bool):
     certified_bots = await parse_bot_list((await do_index_query("and certified = true ORDER BY votes")))
     base_json = {"tags_fixed": tags_fixed, "top_voted": top_voted, "new_bots": new_bots, "certified_bots": certified_bots, "roll_api": "/api/bots/random"}
     if not api:
-        return templates.TemplateResponse("index.html", {"request": request} | base_json)
+        return templates.TemplateResponse("index.html", {"request": request, "random": random} | base_json)
     else:
         return base_json
 

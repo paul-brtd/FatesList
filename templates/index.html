@@ -1,5 +1,38 @@
 {% extends "base_index.html" %}
 
+{% macro botCard(bot, rand) %}
+<section class="bot-card">
+	<div class="lozad bot-card-banner" data-background-image="{{bot.banner}}">
+		{% if bot.certified == True or rand%}
+			<i class="fas fa-certificate fa-3x bot-card-cert"></i>
+		{% endif %}
+		<a href="/bot/{{bot.bot_id}}" class="bot-card-view-link">
+			<img alt="bot avatar" class="lozad bot-card-avatar" data-placeholder-background="black" data-src="{{bot.avatar}}"/>
+		</a>
+	</div>
+	<div>
+		<div class="bot-card-username">
+			<h4 class="text-nowrap text-break text-center bot-card-username-txt white-bold">{{bot.username}}</h4>
+		</div>
+	</div>
+	<p class="bot-card-description">
+		<strong class="bot-card-description-txt" style="overflow-wrap: anywhere;">{{bot.description}}</strong>
+	</p>
+	<div class="d-flex bot-card-footer">
+		<div class="bot-card-footer-stats">
+			<p class="text-center white-bold"><i class="fas fa-server i-m3"></i><span class="bot-servers">{{bot.servers}}</span></p>
+		</div>
+		<div class="bot-card-footer-stats">
+			<p class="text-center white-bold"><i class="fas fa-thumbs-up i-m3"></i><span class="bot-votes">{{bot.votes}}</span></p>
+		</div>
+	</div>
+	<div class="bot-card-actions">
+		<a role="button" aria-label="View" href="/bot/{{bot.bot_id}}" class="btn btn-outline-light bot-card-actions-link bot-card-view-link">View</a>
+		<a role="button" aria-label="Invite" href="/bot/{{bot.bot_id}}/invite" class="btn btn-outline-light bot-card-actions-link bot-card-invite-link" style="margin-left: 6.5%;" target="_blank">Invite</a>
+	</div>
+</section>
+{% endmacro %}
+
 {% block head %}
 <style>   
 	.btn-outline-light {margin-bottom: 39px !important;}
@@ -7,148 +40,80 @@
 {% endblock %}
 
 {% block content %}
-    <div class="index-fl">
-    <hr class="hr-is">
-    <div class="d-flex" style="margin-left: 5%;"><i class="fas fa-question fa-3x white"></i>
-        <p class="title-is">Random Bot</p>
-    </div>
-    <div id="random-section" class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center div-is">
-	    <div id="random-bots"></div> <!-- This is where random bots will be -->
-    </div>
-    <div id="random-section-bt" class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center div-is">
-	    <button class="btn btn-outline-light text-center" style="display: block;  text-align: center; justify-content: center;" onclick="randomBotRoll()">Roll</button>
-    </div>
-    <hr class="hr-is">
-    <div class="d-flex" style="margin-left: 5%;"><i class="fas fa-certificate fa-3x white"></i>
-        <p class="title-is">Certified Bots</p>
-    </div>
-    <div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center div-is" id="tt-2">
-        {% for bot in certified_bots %}
-        <div class="bot-card">
-		<div class="lozad bot-card-banner" data-background-image="{{bot.banner}}">
-			<i class="fas fa-certificate fa-3x bot-card-cert"></i>
-			<a href="/bot/{{bot.bot_id}}"><img alt="Bot avatar" class="bot-card-avatar" src="{{bot.avatar}}" loading="lazy"></a></div>
-		<div>
-                <div class="bot-card-username">
-                    <h4 class="text-nowrap text-break text-center bot-card-username-txt white-bold">{{bot.username}}</h4>
-                </div>
-            </div>
-            <p class="bot-card-description"><strong style="overflow-wrap: anywhere;">{{bot.description}}</strong></p>
-            <div class="d-flex bot-card-footer">
-                <div class="bot-card-footer-stats">
-                   <p class="text-center white-bold"><i class="fas fa-server i-m3"></i>{{bot.servers}}</p>
-                </div>
-                <div class="bot-card-footer-stats">
-                    <p class="text-center white-bold" ><i class="fas fa-thumbs-up i-m3"></i>{{bot.votes}}</p>
-                </div>
-            </div>
-            <div class="bot-card-actions">
-		    <a role="button" aria-label="View" href="/bot/{{bot.bot_id}}" class="btn btn-outline-light bot-card-actions-link" >View</a>
-		    <a href="/bot/{{bot.bot_id}}/invite" class="btn btn-outline-light bot-card-actions-link" style="margin-left: 6.5%;" target="_blank" rel="noreferrer" role="button" aria-label="Invite">Invite</a></div>
-        </div>
-    {% endfor %}
-    </div>
-    <hr class="hr-is">
-    <div class="d-flex" style="margin-left: 5%;"><i class="fas fa-sort-amount-up fa-3x white"></i>
-        <p class="title-is">Top Voted</p>
-    </div>
-    <div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center div-is" id="tt-1">
-        {% for bot in top_voted %}
-            <div class="bot-card">
-		<div class="lozad bot-card-banner" data-background-image="{{bot.banner}}">
-		{% if bot.certified == True %}
-			<i class="fas fa-certificate fa-3x bot-card-cert"></i>
-		{% endif %}
-		<a href="/bot/{{bot.bot_id}}"><img alt="bot avatar" class="bot-card-avatar" src="{{bot.avatar}}" loading="lazy"/></a></div>
-		<div>
-                    <div class="bot-card-username">
-                        <h4 class="text-nowrap text-break text-center bot-card-username-txt white-bold">{{bot.username}}</h4>
-                    </div>
-                </div>
-                <p class="bot-card-description" ><strong style="overflow-wrap: anywhere;">{{bot.description}}</strong></p>
-                <div class="d-flex bot-card-footer">
-                    <div class="bot-card-footer-stats">
-                        <p class="text-center white-bold"><i class="fas fa-server i-m3"></i>{{bot.servers}}</p>
-                    </div>
-                    <div class="bot-card-footer-stats">
-                        <p class="text-center white-bold"><i class="fas fa-thumbs-up i-m3"></i>{{bot.votes}}</p>
-                    </div>
-                </div>
-            	<div class="bot-card-actions">
-                    <a role="button" aria-label="View" href="/bot/{{bot.bot_id}}" class="btn btn-outline-light bot-card-actions-link" >View</a>
-                    <a href="/bot/{{bot.bot_id}}/invite" class="btn btn-outline-light bot-card-actions-link" style="margin-left: 6.5%;" target="_blank" rel="noreferrer" role="button" aria-label="Invite">Invite</a></div>
-	    	</div>
-        {% endfor %}
-    </div>
-    <hr class="hr-is">
-    <div class="d-flex" style="margin-left: 5%;"><i class="fas fa-plus-square fa-3x white"></i>
-        <p style="color: rgba(255,255,255,0.87);margin-left: 15px;">New Bots</p>
-    </div>
-    <div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center" id="tt" style="width: 90%;margin: 30px 5%;">
-        {% for bot in new_bots %}
-            <div class="bot-card">
-                <div class="lozad bot-card-banner" data-background-image="{{bot.banner}}">
-                {% if bot.certified == True %}
-                        <i class="fas fa-certificate fa-3x bot-card-cert"></i>
-                {% endif %}
-                <a href="/bot/{{bot.bot_id}}"><img alt="bot avatar" class="bot-card-avatar" src="{{bot.avatar}}" loading="lazy"/></a></div>
-                <div>
-                    <div class="bot-card-username">
-                        <h4 class="text-nowrap text-break text-center bot-card-username-txt white-bold">{{bot.username}}</h4>
-                    </div>
-                </div>
-                <p class="bot-card-description" ><strong style="overflow-wrap: anywhere;">{{bot.description}}</strong></p>
-                <div class="d-flex bot-card-footer">
-                    <div class="bot-card-footer-stats">
-                        <p class="text-center white-bold"><i class="fas fa-server i-m3"></i>{{bot.servers}}</p>
-                    </div>
-                    <div class="bot-card-footer-stats">
-                        <p class="text-center white-bold"><i class="fas fa-thumbs-up i-m3"></i>{{bot.votes}}</p>
-                    </div>
-                </div>
-                <div class="bot-card-actions">
-                    <a role="button" aria-label="View" href="/bot/{{bot.bot_id}}" class="btn btn-outline-light bot-card-actions-link" >View</a>
-                    <a href="/bot/{{bot.bot_id}}/invite" class="btn btn-outline-light bot-card-actions-link" style="margin-left: 6.5%;" target="_blank" rel="noreferrer" role="button" aria-label="Invite">Invite</a></div>
-	       </div>
-    	{% endfor %}
-    </div>
-    <script src="/static/assets/js/main.js"></script>
-
-
+<div class="index-fl">
+	<hr class="hr-is">
+	<div class="d-flex" style="margin-left: 5%;"><i class="fas fa-question fa-3x white"></i>
+		<p class="title-is">Random Bot</p>
+	</div>
+	<div id="random-section" class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center div-is">
+		<div id="random-bots">{{ botCard(random.shuffle(random_bot_initial), True) }}</div> <!-- This is where random bots will be -->
+	</div>
+	<div id="random-section-bt" class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center div-is">
+		<button class="btn btn-outline-light text-center" style="display: block;  text-align: center; justify-content: center;" onclick="randomBotRoll()">Roll</button>
+	</div>
+	<hr class="hr-is">
+	<div class="d-flex" style="margin-left: 5%;"><i class="fas fa-certificate fa-3x white"></i>
+		<p class="title-is">Certified Bots</p>
+	</div>
+	<div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center div-is" id="tt-2">
+        	{% for bot in certified_bots %}
+			{{ botCard(bot, False) }}
+		{% endfor %}
+	</div>
+	<hr class="hr-is">
+	<div class="d-flex" style="margin-left: 5%;"><i class="fas fa-sort-amount-up fa-3x white"></i>
+		<p class="title-is">Top Voted</p>
+	</div>
+	<div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center div-is" id="tt-1">
+		{% for bot in top_voted %}
+			{{ botCard(bot, False) }}
+		{% endfor %}
+	</div>
+	<hr class="hr-is">
+	<div class="d-flex" style="margin-left: 5%;"><i class="fas fa-plus-square fa-3x white"></i>
+		<p style="color: rgba(255,255,255,0.87);margin-left: 15px;">New Bots</p>
+	</div>
+	<div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center" id="tt" style="width: 90%;margin: 30px 5%;">
+		{% for bot in new_bots %}
+			{{ botCard(bot, False) }}
+		{% endfor %}
+	</div>
+	<script src="/static/assets/js/main.js"></script>
 	<script>
 		function randomBotRoll(){
 			$.get("{{site_url}}{{roll_api}}", function(data, status) {
 				random_bots = document.querySelector("#random-bots")
+				
+				// Get banner
 				if(data.banner == "" || data.banner == "none") {
 					banner = "/static/assets/img/banner.webp"
 				}
 				else {
 					banner = data.banner
 				}
-				d = `<div class="bot-card">` // Bot card
-				d += `<div class="lozad bot-card-banner" data-background-image="${banner}" style="background-image: url('${banner}');">`; // Banner
-		                if(data.certified)
-		                        d += '<i class="fas fa-certificate fa-3x bot-card-cert"></i>';
-				d += `<a href="/bot/${data.bot_id}"><img alt="bot avatar" class="bot-card-avatar" src="${data.avatar.replace("?size=1024", "?size=512")}" loading="lazy"/></a></div>`
-			        d += `<div>
-		                    <div class="bot-card-username">
-                		        <h4 class="text-nowrap text-break text-center bot-card-username-txt white-bold">${data.username}</h4>
-		                    </div>
-                		</div>` // Username
-		                d += `<p class="bot-card-description" ><strong style="overflow-wrap: anywhere;">${data.description}</strong></p>` // Description
-                		d += `<div class="d-flex bot-card-footer">
-		                    <div class="bot-card-footer-stats">
-                		        <p class="text-center white-bold"><i class="fas fa-server i-m3"></i>${data.servers}</p>
-		                    </div>` // Servers
-                	        d += `<div class="bot-card-footer-stats">
-                        		<p class="text-center white-bold"><i class="fas fa-thumbs-up i-m3"></i>${data.votes}</p>
-		                    </div>
-				</div>` // Votes
-				d += `<div class="bot-card-actions">
-		        	            <a role="button" aria-label="View" href="/bot/${data.bot_id}" class="btn btn-outline-light bot-card-actions-link" >View</a>
-                			    <a href="/bot/${data.bot_id}/invite" class="btn btn-outline-light bot-card-actions-link" style="margin-left: 6.5%;" target="_blank" rel="noreferrer" role="button" aria-label="Invite">Invite</a></div>
-		                	</div>`; 
-				random_bots.innerHTML = d;
+				if(data.certified) {
+					certified_ico = "visible"
+				}
+				else {
+					certified_ico = "hidden"
+				}
+				banner_dom = random_bots.querySelectorAll(".bot-card-banner")[0] // Banner
+				banner_dom.setAttribute("data-background-image", banner)
+				random_bots.querySelectorAll(".bot-card-cert")[0].style.visibility = certified_ico // Certified
+				avatar_dom = random_bots.querySelectorAll(".bot-card-avatar")[0] // Avatar
+				avatar_dom.setAttribute("data-src", data.avatar)
+				avatar_dom.setAttribute("data-loaded", "false") // Lozad Reload Avatar
+                                banner_dom.setAttribute("data-loaded", "false") // Lozad Reload Banner
+				observer.observe() // Lozad Reobserve
+				view_links = random_bots.querySelectorAll(".bot-card-view-link")
+				for(let i = 0; i < view_links.length; i++) {
+					view_links[i].setAttribute("href", "/bot/" + data.bot_id.toString())
+				}
+				username_dom = random_bots.querySelectorAll(".bot-card-username-txt")[0].innerHTML = data.username
+                                random_bots.querySelectorAll(".bot-card-description-txt")[0].innerHTML = data.description
+				random_bots.querySelectorAll(".bot-servers")[0].innerHTML = data.servers
+                                random_bots.querySelectorAll(".bot-votes")[0].innerHTML = data.votes
+				random_bots.querySelectorAll(".bot-card-invite-link")[0].setAttribute("href", "/bot/" + data.bot_id.toString() + "/invite")
 			})
 		}
 	window.addEventListener("load", randomBotRoll())

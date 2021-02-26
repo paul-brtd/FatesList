@@ -148,7 +148,7 @@ class Bot(BaseModel):
     reviews: Optional[list] = None # Compact
     sensitive: dict
     promotions: list
-    maint: list
+    maint: dict
     average_stars: Optional[float] = None # Conpact
     username: str
     avatar: str
@@ -188,17 +188,17 @@ async def get_bots_api(request: Request, bot_id: int, compact: Optional[bool] = 
     else:
         api_ret["sensitive"] = {}
     api_ret["promotions"] = await get_promotions(bot_id = bot_id)
-    api_ret["maint"] = await in_maint(bot_id = bot_id)
+    maint = await in_maint(bot_id = bot_id)
+    api_ret["maint"] = {"status": maint[0], "reason": maint[1]}
     vanity = await db.fetchrow("SELECT vanity_url FROM vanity WHERE redirect = $1", bot_id)
     if vanity is None:
         api_ret["vanity"] = None
     else:
         api_ret["vanity"] = vanity["vanity_url"]
     if not compact:
-        api_ret["_reviews"] = await parse_reviews(bot_id)
-        api_ret["reviews"] = api_ret["_reviews"][0]
-        api_ret["average_stars"] = float(api_ret["_reviews"][1])
-        del api_ret["_reviews"]
+        reviews = await parse_reviews(bot_id)
+        api_ret["reviews"] = reviews[0]
+        api_ret["average_stars"] = float(reviews[1])
     return api_ret
 
 class BotVoteCheck(BaseModel):

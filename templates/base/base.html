@@ -262,6 +262,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </script>
 <script>
   var observer = lozad()
-  observer.observe()
+  observer.observe('.lozad', {
+    enableAutoReload: true // it will reload the new image when validating attributes changes
+  });
 </script>
 </html>
