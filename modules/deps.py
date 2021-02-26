@@ -249,16 +249,21 @@ async def is_bot_admin(bot_id: int, user_id: int):
     check = await db.fetchrow("SELECT owner, extra_owners FROM bots WHERE bot_id = $1", bot_id)
     if not check:
         return None
-    user = guild.get_member(user_id)
+    try:
+        user = guild.get_member(user_id)
+    except:
+        user = None
     if check["extra_owners"] is None:
         eo = []
     else:
         eo = check["extra_owners"]
-    if check["owner"] == user_id or user_id in eo or (user is not None and is_staff(staff_roles, user.roles, 4)[0]):
-        return True
-    else:
+    try:
+        if check["owner"] == user_id or user_id in eo or (user is not None and is_staff(staff_roles, user.roles, 4)[0]):
+            return True
+        else:
+            return False
+    except:
         return False
-
 async def get_promotions(bot_id: int) -> list:
     api_data = await db.fetch("SELECT title, info, css FROM promotions WHERE bot_id = $1", bot_id)
     return api_data
@@ -440,7 +445,10 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, review:
 async def parse_bot_list(fetch: List[asyncpg.Record]) -> list:
     lst = []
     for bot in fetch:
-        bot_info = await get_bot(bot["bot_id"])
+        try:
+            bot_info = await get_bot(bot["bot_id"])
+        except:
+            continue
         if bot_info:
             bot = dict(bot)
             votes = bot["votes"]
@@ -609,18 +617,21 @@ class templates():
         status = arg_dict.get("status_code")
         if "userid" in request.session.keys():
             arg_dict["css"] = request.session.get("user_css")
-            if "staff" not in arg_dict.keys():
+            try:
                 user = guild.get_member(int(request.session["userid"]))
-                if user is not None:
-                    staff = is_staff(staff_roles, user.roles, 2)
-                else:
-                    staff = [False]
-                arg_dict["avatar"] = request.session.get("avatar")
-                arg_dict["username"] = request.session.get("username")
-                arg_dict["userid"] = int(request.session.get("userid"))
+            except:
+                user = None
+            if user is not None:
+                request.session["staff"] = is_staff(staff_roles, user.roles, 2)
+            else:
+                pass
+            arg_dict["staff"] = request.session.get("staff", [False])
+            arg_dict["avatar"] = request.session.get("avatar")
+            arg_dict["username"] = request.session.get("username")
+            arg_dict["userid"] = int(request.session.get("userid"))
         else:
-            staff = [False]
-        arg_dict["staff"] = staff
+            arg_dict["staff"] = [False]
+        print(arg_dict["staff"])
         arg_dict["site_url"] = site_url
         if status is None:
             return _templates.TemplateResponse(f, arg_dict)

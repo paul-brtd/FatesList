@@ -18,7 +18,7 @@ import aioredis
 from fastapi_limiter import FastAPILimiter
 from fastapi_limiter.depends import RateLimiter
 import logging
-logging.basicConfig(level=logging.DEBUG)
+#logging.basicConfig(level=logging.DEBUG)
 
 # SlowAPI rl func
 async def rl_key_func(request: Request) -> str:

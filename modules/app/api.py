@@ -402,9 +402,8 @@ async def websocker_real_time_api(websocket: WebSocket):
             return await ws_close(websocket, 4004)
     await manager.send_personal_message({"payload": "STATUS", "type": "READY"}, websocket)
     try:
+        asyncio.create_task(ws_send_events())
         while True:
-            if manager.fl_loaded == False:
-                asyncio.create_task(ws_send_events())
             await asyncio.sleep(1) # Keep Waiting Forever
     except WebSocketDisconnect:
         await manager.disconnect(websocket)

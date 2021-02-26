@@ -14,6 +14,10 @@ router = APIRouter(
 async def index_fend(request: Request):
     return await render_index(request = request, api = False)
 
+@router.get("/legal")
+async def legal_router():
+    return RedirectResponse("/static/tos.html", status_code = 303)
+
 @router.get("/none")
 async def nonerouter():
     return RedirectResponse("/static/assets/img/banner.webp", status_code = 301)

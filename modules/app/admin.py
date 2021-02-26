@@ -34,8 +34,11 @@ async def admin_dashboard(request:Request, stats: Optional[int] = 0):
 @csrf_protect
 async def admin_api(request: Request, bt: BackgroundTasks, admin: str = FForm(""), bot_id: int = FForm(0)):
     print(bot_id)
-    guild = client.get_guild(reviewing_server)
-    user = guild.get_member(int(request.session["userid"]))
+    try:
+        guild = client.get_guild(reviewing_server)
+        user = guild.get_member(int(request.session["userid"]))
+    except:
+        return HTMLResponse("Discord API is down right now")
     if user is None:
         return RedirectResponse("/")
     if not is_staff(staff_roles, user.roles, 5)[0]:
