@@ -12,7 +12,6 @@ async def support(request: Request):
 
 @router.get("/request")
 async def support(request: Request):
-    b = b + 2
     return templates.TemplateResponse("request.html", {"request": request, "form": (await Form.from_formdata(request))})
 
 # CREATE TABLE support_requests (

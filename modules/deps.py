@@ -49,8 +49,7 @@ from fastapi.exception_handlers import (
 from fastapi_limiter.depends import RateLimiter
 import lxml
 from lxml.html.clean import Cleaner
-import mystbin
-mystbin_client = mystbin.Client()
+import io
 
 def redirect(path: str) -> RedirectResponse:
     return RedirectResponse(path, status_code=HTTP_303_SEE_OTHER)
@@ -671,7 +670,30 @@ def etrace(ex):
         'trace': trace
     })
 
+
 class FLError():
+    @staticmethod
+    async def log(request, exc, error_id, curr_time):
+        site_errors = client.get_channel(site_errors_channel)
+        traceback = exc.__traceback__
+        try:
+            fl_info = f"Error ID: {error_id}\n\nMinimal output\n\n"
+            while traceback is not None:
+                fl_info += f"{traceback.tb_frame.f_code.co_filename}: {traceback.tb_lineno}\n"
+                traceback = traceback.tb_next
+            try:
+                fl_info += f"\n\nExtended output\n\n{etrace(exc)}"
+            except:
+                fl_info += f"\n\nExtended output\n\nNo extended output could be logged..."
+        except:
+            pass
+        await site_errors.send(f"500 (Internal Server Error) at {str(request.url).replace('https://', '')}\n\n**Error**: {exc}\n**Type**: {type(exc)}\n**Data**: File will be uploaded below if we didn't run into errors collecting leogging information\n\n**Error ID**: {error_id}\n**Time When Error Happened**: {curr_time}")
+        fl_file = discord.File(io.BytesIO(bytes(fl_info, 'utf-8')), f'{error_id}.txt')
+        if fl_file is not None:
+            await site_errors.send(file=fl_file)
+        else:
+            await site_errors.send("No extra information could be logged and/or send right now")
+
     @staticmethod
     async def error_handler(request, exc):
         error_id = str(uuid.uuid4())
@@ -684,24 +706,7 @@ class FLError():
             else:
                 exc.status_code = 500
         if exc.status_code in [500, 501, 502, 503, 504, 507, 508, 510]:
-            try:
-                site_errors = client.get_channel(site_errors_channel)
-                traceback = exc.__traceback__
-                try:
-                    fl_info = f"Error ID: {error_id}\n\nMinimal output\n\n"
-                    while traceback is not None:
-                        fl_info += f"{traceback.tb_frame.f_code.co_filename}: {traceback.tb_lineno}\n"
-                        traceback = traceback.tb_next
-                    try:
-                        fl_info += f"\n\nExtended output\n\n{etrace(exc)}"
-                    except:
-                        fl_info += f"\n\nExtended output\n\nNo extended output could be logged..."
-                    fl_mystbin = await mystbin_client.post(fl_info, syntax="python")
-                    await site_errors.send(f"500 (Internal Server Error) at {str(request.url).replace('https://', '')}\n\n**Error**: {exc}\n**Type**: {type(exc)}\n**Data**: {fl_mystbin}\n\n**Error ID**: {error_id}\n**Time When Error Happened**: {curr_time}")
-                except:
-                    fl_mystbin = "No further information could be recorded at this time..."
-            except:
-                pass
+            asyncio.create_task(FLError.log(request, exc, error_id, curr_time))
             return HTMLResponse(f"<strong>500 Internal Server Error</strong><br/>Fates List had a slight issue and our developers and looking into what happened<br/><br/>Error ID: {error_id}<br/>Time When Error Happened: {curr_time}", status_code=500)
         if exc.status_code == 404:
             if url_startswith(request.url, "/bot"):
