@@ -3,6 +3,7 @@ bot_logs = 789946587203764224 # #bot-logs in support server
 appeals_channel = 813422505900376095 # #resubmissions-and-appeals in support server
 site_errors_channel = 815055552857243699 # Where to log site errors
 bots_role = 789934898408194059 # BOTS role in support server
+staff_ping_add_role=815174404932894731
 bot_dev_role = 789935019531304991 # BOT Developer in support server
 certified_dev_role = 792204630922100797 # Certified Developer in support server
 reviewing_server=789934742128558080 # Bit of a misnomer, but this is the actual main server

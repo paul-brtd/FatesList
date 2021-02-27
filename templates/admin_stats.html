@@ -1,4 +1,8 @@
-{% extends "base/base.html" %} {% block head %} {% endblock %} {% block content %}
+{% extends "base/base.html" %} 
+{% block head %} 
+.card-body {box-shadow: 0px 0px 20px 5px;}
+{% endblock %} 
+{% block content %}
     
     <div id="wrapper" style="text-align: left;">
         <div class="d-flex flex-column" id="content-wrapper">
@@ -9,14 +13,14 @@
                     </div>
                     <div class="row">
                         <div class="col-md-6 col-xl-3 mb-4">
-                            <div class="card shadow border-left-primary py-2">
+                            <div class="card shadow border-left-primary py-2" style="background: black !important;">
                                 <div class="card-body">
                                     <div class="row align-items-center no-gutters">
                                         <div class="col mr-2">
-                                            <div class="text-uppercase text-primary font-weight-bold text-xs mb-1"><span>Bots in queue</span></div>
-                                            <div class="text-dark font-weight-bold h5 mb-0"><span>{{queue_amount}}</span></div>
+                                            <div class="text-uppercase text-primary font-weight-bold text-xs mb-1" style="color: white !important;"><span>Bots in queue</span></div>
+                                            <div class="font-weight-bold h5 mb-0" style="color: white !important;"><span>{{queue_amount}}</span></div>
                                         </div>
-                                        <div class="col-auto">
+                                        <div class="col-auto" style="color: white !important;">
 						<span class="iconify" data-icon="fa-solid:robot" data-inline="false" data-height="3em"></span>
 					</div>
                                     </div>
@@ -24,14 +28,14 @@
                             </div>
                         </div>
                         <div class="col-md-6 col-xl-3 mb-4">
-                            <div class="card shadow border-left-success py-2">
+                            <div class="card shadow border-left-success py-2" style="background: black !important;">
                                 <div class="card-body">
                                     <div class="row align-items-center no-gutters">
                                         <div class="col mr-2">
-                                            <div class="text-uppercase text-success font-weight-bold text-xs mb-1"><span>Bots on the list</span></div>
-                                            <div class="text-dark font-weight-bold h5 mb-0"><span>{{bots}}</span></div>
+                                            <div class="text-uppercase text-success font-weight-bold text-xs mb-1" style="color: white !important;"><span>Bots on the list</span></div>
+                                            <div class="font-weight-bold h5 mb-0" style="color: white !important;"><span>{{bots}}</span></div>
                                         </div>
-                                        <div class="col-auto">
+                                        <div class="col-auto" style="color: white !important;">
 						<span class="iconify" data-icon="fa-solid:list-alt" data-inline="false" data-height="3em"></span>
 					</div>
                                     </div>
@@ -39,14 +43,14 @@
                             </div>
                         </div>
                         <div class="col-md-6 col-xl-3 mb-4">
-                            <div class="card shadow border-left-info py-2">
+                            <div class="card shadow border-left-info py-2" style="background: black !important;">
                                 <div class="card-body">
                                     <div class="row align-items-center no-gutters">
                                         <div class="col mr-2">
-                                            <div class="text-uppercase text-success font-weight-bold text-xs mb-1"><span>Certified Bots</span></div>
-                                            <div class="text-dark font-weight-bold h5 mb-0"><span>{{cert}}</span></div>
+                                            <div class="text-uppercase text-success font-weight-bold text-xs mb-1" style="color: white !important;"><span>Certified Bots</span></div>
+                                            <div class="text-dark font-weight-bold h5 mb-0" style="color: white !important;"><span>{{cert}}</span></div>
                                         </div>
-                                        <div class="col-auto">
+                                        <div class="col-auto" style="color: white !important;">
 						<span class="iconify" data-icon="fa-solid:certificate" data-inline="false" data-height="3em"></span>
 					</div>
                                     </div>
@@ -56,18 +60,18 @@
                     </div>
                     <div class="row">
                         <div class="col-lg-6 mb-4">
-                            <div class="card shadow mb-4">
+                            <div class="card shadow mb-4" style="background: black !important;">
                                 <div class="card-header py-3">
-                                    <h6 class="text-primary font-weight-bold m-0">Bots in queue</h6>
+                                    <h6 class="text-primary font-weight-bold m-0" style="color: white !important;">Bots in queue</h6>
                                 </div>
-                                <ul class="list-group list-group-flush">
+                                <ul class="list-group list-group-flush" style="background: black !important;">
                                     {% for bot in queue_bots %}
 				    	{% if bot.banned %}
 					{% else %}
                                         <li class="list-group-item">
                                             <div class="row align-items-center no-gutters">
                                                 <div class="col mr-2">
-							<h6 class="mb-0"><a href="/bot/{{bot.bot_id}}"><strong>{{bot.username}}</strong></a></h6><span class="text-xs">{{bot.description}}</span>
+							<h6 class="mb-0"><a href="/bot/{{bot.bot_id}}" style="color: white !important;"><strong>{{bot.username}}</strong></a></h6><span class="text-xs long-desc-link">{{bot.description}}</span>
                                                 </div>
                                             </div>
                                         </li>
@@ -77,15 +81,15 @@
 			    </div>
 			    <div class="row">
 	                           <div class="col-lg-6 mb-4">
-				       <div class="card shadow mb-4">
+				       <div class="card shadow mb-4" style="background: black !important;">
 		                                <div class="card-header py-3">
-					           <h6 class="text-primary font-weight-bold m-0">Banned Bots</h6>
+					           <h6 class="text-primary font-weight-bold m-0" style="color: white !important;">Banned Bots</h6>
 						</div>
 						{% for bot in banned %}
-                                <li class="list-group-item">
+		                                <li class="list-group-item">
 						        <div class="row align-items-center no-gutters">
 								<div class="col mr-2">
-									<a href="/bot/{{bot.bot_id}}">{{bot.username}} ({{bot.bot_id}})</a>
+									<a style="color: white !important;" href="/bot/{{bot.bot_id}}">{{bot.username}} ({{bot.bot_id}})</a>
                                 </div>
                             </li>																									                                            </li>
 						{% endfor %}

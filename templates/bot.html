@@ -227,9 +227,9 @@ th {
         <div id="bot-reviews" class='tabcontent'>
 		<h5 class="white">Bot Reviews</h5>
 		{% if username %}
-		<form method="POST" id="review_form" action="/bot/{{bot_id}}/reviews/new" style="margin-bottom: 13px;">
+		<form method="POST" id="review_form" action="/bot/{{bot_id}}/reviews/new" style="width: 100%; margin-bottom: 13px;">
 			<label for="rating">On a scale of 1 to 10, how much did you like this bot?</label><br/>
-			<input class='slider bot-range-slider' type="range" name="rating" min="0.1" max="10" value='5' step='0.1' output="rating-desc"/>
+			<input class='slider bot-range-slider' type="range" name="rating" min="0.1" max="10" style="width: 100%" value='5' step='0.1' output="rating-desc"/>
 			<p id='rating-desc' style="color: white;"></p>
 			<label for="review">Please write a few words about the bot (in your opinion)</label>
 			<textarea id='bot-rating-review' name="review" type="text" class="form-control fform" style="min-height: 100px; height: 100px; border-radius: 20px 20px 20px 20px !important;" required minlength="9" placeholder="This bot is a really good bot because of X, Y and Z however...">{{review_desc}}</textarea>
@@ -242,7 +242,7 @@ th {
 		<span style="font-size: 18px;" class="white">Reviews: {{bot_reviews.__len__()}}</span><br/>
 		<span style="font-size: 18px;" class="white">Average Rating: <i class='iconify' data-icon='fa-solid:star' data-inline='true' style="margin-right: 3px; margin-bottom: 1px;"></i>{{average_rating}}/10.0</span><br/>
 		<span class="white">
-			<input disabled class='slider' type="range" name="rating" min="0.1" max="10" value='{{average_rating}}' step='0.1' tabindex="-1"/>
+			<input disabled class='slider' type="range" name="rating" min="0.1" max="10" value='{{average_rating}}' style="width: 100%" step='0.1' tabindex="-1"/>
 			<p id="rating-desc-avg"></p>
 		</span>
 		<div style="text-align: left;">

@@ -106,7 +106,7 @@ async def add_bot_bt(request, bot_id, prefix, library, website, banner, support,
     owner=str(request.session["userid"])
     channel = client.get_channel(bot_logs)
     bot_name = bot_object["username"]
-    await channel.send(f"<@{owner}> added the bot <@{bot_id}>({bot_name}) to queue")
+    await channel.send(f"<@{owner}> added the bot <@{bot_id}>({bot_name}) to queue <@{staff_ping_add_role}>")
     if guild_count is not None:
         # Since we are adding, lets assume 0 shards
         await set_stats(bot_id = int(bot_id), guild_count = guild_count, shard_count = 0, shards = [])
