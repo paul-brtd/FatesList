@@ -164,6 +164,8 @@ async def get_bots_api(request: Request, bot_id: int, compact: Optional[bool] = 
     if compact:
         del api_ret["css"]
         del api_ret["long_description"]
+    if api_ret["features"] is None:
+        api_ret["features"] = []
     bot_obj = await get_bot(bot_id)
     api_ret["id"] = str(api_ret["id"])
     api_ret["username"] = bot_obj["username"]

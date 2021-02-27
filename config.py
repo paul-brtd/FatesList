@@ -1,6 +1,7 @@
 from config_secrets import TOKEN_MAIN, TOKEN_SERVER, pg_pwd, csrf_secret, session_key, oauth_client_secret, ratelimit_bypass_key
 bot_logs = 789946587203764224 # #bot-logs in support server
 appeals_channel = 813422505900376095 # #resubmissions-and-appeals in support server
+site_errors_channel = 815055552857243699 # Where to log site errors
 bots_role = 789934898408194059 # BOTS role in support server
 bot_dev_role = 789935019531304991 # BOT Developer in support server
 certified_dev_role = 792204630922100797 # Certified Developer in support server

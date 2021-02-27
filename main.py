@@ -18,6 +18,7 @@ import aioredis
 from fastapi_limiter import FastAPILimiter
 from fastapi_limiter.depends import RateLimiter
 import logging
+from fastapi.exceptions import HTTPException 
 #logging.basicConfig(level=logging.DEBUG)
 
 # SlowAPI rl func
@@ -68,6 +69,10 @@ app.add_middleware(ProxyHeadersMiddleware)
 @app.exception_handler(401)
 @app.exception_handler(404)
 @app.exception_handler(RequestValidationError)
+@app.exception_handler(ValidationError)
+@app.exception_handler(500)
+@app.exception_handler(HTTPException)
+@app.exception_handler(Exception)
 async def validation_exception_handler(request, exc):
     return await FLError.error_handler(request, exc)
 

@@ -18,6 +18,10 @@ async def index_fend(request: Request):
 async def legal_router():
     return RedirectResponse("/static/tos.html", status_code = 303)
 
+@router.get("/etest/{code}")
+async def test_error(code: int):
+    raise TypeError()
+
 @router.get("/none")
 async def nonerouter():
     return RedirectResponse("/static/assets/img/banner.webp", status_code = 301)

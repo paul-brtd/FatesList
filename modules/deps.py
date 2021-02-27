@@ -41,7 +41,7 @@ from discord_webhook import DiscordWebhook, DiscordEmbed
 import markdown
 from modules.emd_hab import emd
 from config import *
-from fastapi.exceptions import RequestValidationError
+from fastapi.exceptions import RequestValidationError, ValidationError
 from fastapi.exception_handlers import (
     http_exception_handler,
     request_validation_exception_handler,
@@ -49,7 +49,8 @@ from fastapi.exception_handlers import (
 from fastapi_limiter.depends import RateLimiter
 import lxml
 from lxml.html.clean import Cleaner
-
+import mystbin
+mystbin_client = mystbin.Client()
 
 def redirect(path: str) -> RedirectResponse:
     return RedirectResponse(path, status_code=HTTP_303_SEE_OTHER)
@@ -654,10 +655,51 @@ def url_startswith(url, begin, slash = True):
 
 _templates = Jinja2Templates(directory="templates")
 
+def etrace(ex):
+    trace = []
+    tb = ex.__traceback__
+    while tb is not None:
+        trace.append({
+            "filename": tb.tb_frame.f_code.co_filename,
+            "name": tb.tb_frame.f_code.co_name,
+            "lineno": tb.tb_lineno
+        })
+        tb = tb.tb_next
+    return str({
+        'type': type(ex).__name__,
+        'message': str(ex),
+        'trace': trace
+    })
+
 class FLError():
     @staticmethod
     async def error_handler(request, exc):
-        print(request.url)
+        error_id = str(uuid.uuid4())
+        curr_time = str(datetime.datetime.now())
+        try:
+            status_code = exc.status_code # Check for 500 using status code presence
+        except:
+            exc.status_code = 500
+        if exc.status_code in [500, 501, 502, 503, 504, 507, 508, 510]:
+            try:
+                site_errors = client.get_channel(site_errors_channel)
+                traceback = exc.__traceback__
+                try:
+                    fl_info = f"Error ID: {error_id}\n\nMinimal output\n\n"
+                    while traceback is not None:
+                        fl_info += f"{traceback.tb_frame.f_code.co_filename}: {traceback.tb_lineno}\n"
+                        traceback = traceback.tb_next
+                    try:
+                        fl_info += f"\n\nExtended output\n\n{etrace(exc)}"
+                    except:
+                        fl_info += f"\n\nExtended output\n\nNo extended output could be logged..."
+                    fl_mystbin = await mystbin_client.post(fl_info, syntax="python")
+                    await site_errors.send(f"500 (Internal Server Error) at {str(request.url).replace('https://', '')}\n\n**Error**: {exc}\n**Type**: {type(exc)}\n**Data**: {fl_mystbin}\n\n**Error ID**: {error_id}\n**Time When Error Happened**: {curr_time}")
+                except:
+                    fl_mystbin = "No further information could be recorded at this time..."
+            except:
+                pass
+            return HTMLResponse(f"<strong>500 Internal Server Error</strong><br/>Fates List had a slight issue and our developers and looking into what happened<br/><br/>Error ID: {error_id}<br/>Time When Error Happened: {curr_time}", status_code=500)
         if type(exc) == RequestValidationError:
             exc.status_code = 422
         if exc.status_code == 404:
