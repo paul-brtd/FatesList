@@ -679,7 +679,10 @@ class FLError():
         try:
             status_code = exc.status_code # Check for 500 using status code presence
         except:
-            exc.status_code = 500
+            if type(exc) == RequestValidationError:
+                exc.status_code = 422
+            else:
+                exc.status_code = 500
         if exc.status_code in [500, 501, 502, 503, 504, 507, 508, 510]:
             try:
                 site_errors = client.get_channel(site_errors_channel)
@@ -700,8 +703,6 @@ class FLError():
             except:
                 pass
             return HTMLResponse(f"<strong>500 Internal Server Error</strong><br/>Fates List had a slight issue and our developers and looking into what happened<br/><br/>Error ID: {error_id}<br/>Time When Error Happened: {curr_time}", status_code=500)
-        if type(exc) == RequestValidationError:
-            exc.status_code = 422
         if exc.status_code == 404:
             if url_startswith(request.url, "/bot"):
                 msg = "Bot Not Found"
