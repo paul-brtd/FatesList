@@ -39,6 +39,19 @@ CREATE TABLE bots (
     autovote_whitelisted_users bigint[] DEFAULT [];
 );
 
+CREATE TABLE bot_commands (
+   id uuid primary key DEFAULT uuid_generate_v4(),
+   bot_id bigint,
+   slash integer, -- 0 = no, 1 = guild, 2 = global
+   name text, -- command name
+   description text, -- command description
+   args text[], -- list of arguments
+   examples text[], -- examples
+   premium_only boolean default false, -- premium status
+   notes text[], -- notes on said command
+   doc_link text -- link to documentation of command
+);
+
 CREATE TABLE bot_stats_votes (
    bot_id bigint,
    total_votes bigint

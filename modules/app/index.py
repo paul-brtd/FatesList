@@ -11,6 +11,7 @@ router = APIRouter(
 @router.patch("/")
 @router.delete("/")
 @router.put("/")
+@router.head("/")
 async def index_fend(request: Request):
     return await render_index(request = request, api = False)
 

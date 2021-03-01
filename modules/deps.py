@@ -191,39 +191,33 @@ async def add_event(bot_id: int, event: str, context: dict, *, send_event = True
         uri = webh["webhook"]
         cont = True
         if webh["webhook_type"].upper() == "FC":
-            f = requests.put
-            print("Doing FC\n\n\n")
-        elif webh["webhook_type"].upper() == "DISCORD" and event in ["edit_bot", "vote"]:
-            print("Doing DISCORD")
+            f = requests.post
+            json = context
+            headers = {"Authorization": apitok["api_token"]}
+        if webh["webhook_type"].upper() == "DISCORD" and event in "vote":
             webhook = DiscordWebhook(url=uri)
-            print(context)
+            user = await get_user(int(context["user_id"])) # Get the user
+            bot = await get_bot(bot_id) # Get the bot
             embed = DiscordEmbed(
-                title=event.replace("_", " ").title(),
-                description="\n".join([f"{key.replace('_', ' ').title()}: {value}" for key, value in context.items() if key != "user_id"]),
+                title = "New Vote on Fates List",
+                description=f"{user['username']} has just cast a vote for {bot['username']} on Fates List!\nIt now has {context['votes']} votes!\n\nThank you for supporting this bot\n**GG**",
                 color=242424
             )
-            print(embed.description)
             webhook.add_embed(embed)
             response = webhook.execute()
             cont = False
         elif webh["webhook_type"].upper() == "VOTE" and event == "vote":
-            print("Doing VOTE")
             f = requests.post
             json = {"id": str(context["user_id"]), "votes": context["votes"]}
             headers = {"Authorization": apitok["api_token"]}
-            print("Ready")
         else:
-            print("Invalid method given\n\n\n")
             cont = False
         if cont:
+            print(f"Method Given: {webh['webhook_type'].upper()}")
             print(f"JSON: {json}\nFunction: {f}\nURL: {uri}\nHeaders: {headers}")
             json = json | {"payload": "event", "mode": webh["webhook_type"].upper()}
-            try:
-                del json["type"]
-            except:
-                pass
             asyncio.create_task(f(uri, json = json, headers = headers))
-    await add_ws_event(bot_id, {"payload": "event", "id": str(id), "event": event, "context": context})
+    asyncio.create_task(add_ws_event(bot_id, {"payload": "event", "id": str(id), "event": event, "context": context}))
     return id
 
 class Form(StarletteForm):

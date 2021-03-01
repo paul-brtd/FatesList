@@ -80,8 +80,9 @@ async def admin_api(request: Request, bt: BackgroundTasks, admin: str = FForm(""
 async def stat_update_bt():
     bots = await db.fetch("SELECT bot_id, votes FROM bots")
     for bot in bots:
-        await db.execute("INSERT INTO bot_stats_votes_pm (bot_id, epoch, votes) VALUES ($1, $2, $2)", bot["bot_id"], time.time(), bot["votes"])
+        await db.execute("INSERT INTO bot_stats_votes_pm (bot_id, epoch, votes) VALUES ($1, $2, $3)", bot["bot_id"], time.time(), bot["votes"])
     await db.execute("UPDATE bots SET votes = 0")
+    await db.execute("UPDATE users SET vote_epoch = 0")
 
 @router.post("/review/{bot_id}")
 async def review_tool(request: Request, bot_id: int, accept: str = FForm(""), deny_reason: str = FForm("There was no reason specified. DM/Ping the mod who banned your bot to learn why it was banned")):

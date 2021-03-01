@@ -154,7 +154,7 @@ class Bot(BaseModel):
     avatar: str
     disc: str
 
-@router.get("/bots/{bot_id}", tags = ["API"], response_model = Bot, dependencies=[Depends(RateLimiter(times=30, minutes=1))])
+@router.get("/bots/{bot_id}", tags = ["API"], response_model = Bot, dependencies=[Depends(RateLimiter(times=20, minutes=1))])
 async def get_bots_api(request: Request, bot_id: int, compact: Optional[bool] = False, Authorization: str = Header("INVALID_API_TOKEN")):
     """Gets bot information given a bot ID. If not found, 404 will be returned. If a proper API Token is provided, sensitive information (System API Events will also be provided)"""
     api_ret = await db.fetchrow("SELECT bot_id AS id, description, tags, html_long_description, long_description, servers AS server_count, shard_count, shards, prefix, invite, invite_amount, owner AS main_owner, extra_owners, features, bot_library AS library, queue, banned, certified, website, discord AS support, github, user_count, votes, css FROM bots WHERE bot_id = $1", bot_id)
@@ -202,6 +202,36 @@ async def get_bots_api(request: Request, bot_id: int, compact: Optional[bool] = 
         api_ret["reviews"] = reviews[0]
         api_ret["average_stars"] = float(reviews[1])
     return api_ret
+
+class BotCommandAdd(BaseModel):
+    slash: int # 0 = no, 1 = guild, 2 = global
+    name: str
+    description: str
+    args: Optional[list] = ["<user>"]
+    examples: Optional[list] = []
+    premium_only: Optional[bool] = False
+    notes: Optional[list] = []
+    doc_link: str
+
+@router.post("/bots/{bot_id}/commands", tags = ["API"], response_model = APIResponse, dependencies=[Depends(RateLimiter(times=20, minutes=1))])
+async def add_bot_command_api(request: Request, bot_id: int, command: BotCommandAdd, Authorization: str = Header("INVALID_API_TOKEN"), force_add: Optional[bool] = False):
+    """
+        Self explaining command. Note that if force_add is set, the API will not check if your command already exists and will forcefully add it, this may lead to duplicate commands on your bot.
+    """
+    if command.slash not in [0, 1, 2]:
+        return ORJSONResponse({"done":  False, "reason": "UNSUPPORTED_MODE"}, status_code = 400)
+
+    id = await db.fetchrow("SELECT bot_id FROM bots WHERE bot_id = $1 AND api_token = $2", bot_id, str(Authorization))
+    if id is None:
+        return abort(401)
+
+    if force_add is False:
+        check = await db.fetchrow("SELECT name FROM bot_commands WHERE name = $1 AND bot_id = $2", command.name, bot_id)
+        if check is not None:
+            return ORJSONResponse({"done":  False, "reason": "COMMAND_ALREADY_EXISTS"}, status_code = 400)
+
+    await db.execute("INSERT INTO bot_commands (bot_id, slash, name, description, args, examples, premium_only, notes, doc_link) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)", bot_id, command.slash, command.name, command.description, command.args, command.examples, command.premium_only, command.notes, command.doc_link)
+    return {"done": True, "reason": None}
 
 class BotVoteCheck(BaseModel):
     votes: int
