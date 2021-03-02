@@ -146,7 +146,7 @@ class Bot(BaseModel):
     vanity: Optional[str] = None
     reviews: Optional[list] = None # Compact
     sensitive: dict
-    promotions: list
+    promotions: Optional[List[Promo]] = {}
     maint: dict
     average_stars: Optional[float] = None # Conpact
     username: str
@@ -215,7 +215,7 @@ class BotCommandAdd(BaseModel):
 class APIResponseCommandAdd(APIResponse):
     id: uuid.UUID
 
-@router.post("/bots/{bot_id}/commands", tags = ["API"], response_model = APIResponseCommandAdd, dependencies=[Depends(RateLimiter(times=20, minutes=1))])
+@router.put("/bots/{bot_id}/commands", tags = ["API"], response_model = APIResponseCommandAdd, dependencies=[Depends(RateLimiter(times=20, minutes=1))])
 async def add_bot_command_api(request: Request, bot_id: int, command: BotCommandAdd, Authorization: str = Header("INVALID_API_TOKEN"), force_add: Optional[bool] = False):
     """
         Self explaining command. Note that if force_add is set, the API will not check if your command already exists and will forcefully add it, this may lead to duplicate commands on your bot. If ret_id is not set, you will not get the command id back in the api response
@@ -255,6 +255,8 @@ async def edit_bot_command_api(request: Request, bot_id: int, command: BotComman
     if id is None:
         return abort(401)
     data = await db.fetchrow(f"SELECT id, slash, name, description, args, examples, premium_only, notes, doc_link FROM bot_commands WHERE id = $1 AND bot_id = $2", command.id, bot_id)
+    if data is None:
+        return abort(404)
 
     # Check values to be editted
     command_dict = command.dict()
@@ -262,6 +264,17 @@ async def edit_bot_command_api(request: Request, bot_id: int, command: BotComman
         if command_dict[key] is None: 
             command_dict[key] = data[key]
     await db.execute("UPDATE bot_commands SET slash = $2, name = $3, description = $4, args = $5, examples = $6, premium_only = $7, notes = $8, doc_link = $9 WHERE id = $1", command_dict["id"], command_dict["slash"], command_dict["name"], command_dict["description"], command_dict["args"], command_dict["examples"], command_dict["premium_only"], command_dict["notes"], command_dict["doc_link"])
+    return {"done": True, "reason": None}
+
+class BotCommandDelete(BaseModel):
+    id: uuid.UUID
+
+@router.delete("/bots/{bot_id}/commands", tags = ["API"], response_model = APIResponse, dependencies=[Depends(RateLimiter(times=20, minutes=1))])
+async def delete_bot_command_api(request: Request, bot_id: int, command: BotCommandDelete, Authorization: str = Header("INVALID_API_TOKEN")):
+    id = await db.fetchrow("SELECT bot_id FROM bots WHERE bot_id = $1 AND api_token = $2", bot_id, str(Authorization))
+    if id is None:
+        return abort(401)
+    await db.execute("DELETE FROM bot_commands WHERE id = $1 AND bot_id = $2", command.id, bot_id)
     return {"done": True, "reason": None}
 
 class BotVoteCheck(BaseModel):
