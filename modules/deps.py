@@ -168,11 +168,11 @@ async def set_stats(*, bot_id: int, guild_count: int, shard_count: int, user_cou
         return
     await db.execute("UPDATE bots SET servers = $1, shard_count = $2, user_count = $3, shards = $4 WHERE bot_id = $5", guild_count, shard_count, user_count, shards, bot_id)
 
-async def add_promotion(bot_id: int, title: str, info: str, css: str):
+async def add_promotion(bot_id: int, title: str, info: str, css: str, type: int):
     if css is not None:
         css = css.replace("</style", "").replace("<script", "")
     info = info.replace("</style", "").replace("<script", "")
-    return await db.execute("INSERT INTO promotions (bot_id, title, info, css) VALUES ($1, $2, $3, $4)", bot_id, title, info, css)
+    return await db.execute("INSERT INTO bot_promotions (bot_id, title, info, css, type) VALUES ($1, $2, $3, $4, $5)", bot_id, title, info, css, type)
 
 async def add_event(bot_id: int, event: str, context: dict, *, send_event = True):
     if type(context) == dict:
@@ -259,7 +259,7 @@ async def is_bot_admin(bot_id: int, user_id: int):
     except:
         return False
 async def get_promotions(bot_id: int) -> list:
-    api_data = await db.fetch("SELECT title, info, css FROM promotions WHERE bot_id = $1", bot_id)
+    api_data = await db.fetch("SELECT title, info, css, type FROM bot_promotions WHERE bot_id = $1", bot_id)
     return api_data
 
 async def get_user_token(uid: int, username: str) -> str:
@@ -339,11 +339,15 @@ async def parse_reviews(bot_id: int, reviews: List[asyncpg.Record] = None) -> Li
             reviews[i]["epoch"] = [time.time()]
         else:
             reviews[i]["epoch"].sort(reverse = True)
-        reviews[i]["time_past"] = time.time() - reviews[i]["epoch"][0]
+        reviews[i]["time_past"] = str(time.time() - reviews[i]["epoch"][0])
+        reviews[i]["epoch"] = [str(ep) for ep in reviews[i]["epoch"]]
         reviews[i]["id"] = str(reviews[i]["id"])
         reviews[i]["user"] = await get_user(reviews[i]["user_id"])
+        reviews[i]["user_id"] = str(reviews[i]["user_id"])
         reviews[i]["star_rating"] = round(reviews[i]["star_rating"], 2)
         reviews[i]["replies"] = []
+        reviews[i]["review_upvotes"] = [str(ru) for ru in reviews[i]["review_upvotes"]]
+        reviews[i]["review_downvotes"] = [str(rd) for rd in reviews[i]["review_downvotes"]]
         if _rev:
             stars += reviews[i]["star_rating"]
         for review_id in reviews[i]["_replies"]:

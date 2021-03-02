@@ -18,6 +18,7 @@ class Promo(BaseModel):
     title: str
     info: str
     css: Optional[str] = None
+    type: int
 
 class PromoPatch(Promo):
     promo_id: uuid.UUID
@@ -39,30 +40,28 @@ async def delete_promotion(request: Request, bot_id: int, promo: PromoDelete, Au
         return abort(401)
     id = id["bot_id"]
     if promo.promo_id is not None:
-        eid = await db.fetchrow("SELECT id FROM promotions WHERE id = $1", promo.promo_id)
+        eid = await db.fetchrow("SELECT id FROM bot_promotions WHERE id = $1", promo.promo_id)
         if eid is None:
             return {"done":  False, "reason": "NO_PROMOTION_FOUND"}
-        await db.execute("DELETE FROM promotions WHERE bot_id = $1 AND id = $2", id, promo.promo_id)
+        await db.execute("DELETE FROM bot_promotions WHERE bot_id = $1 AND id = $2", id, promo.promo_id)
     else:
-        await db.execute("DELETE FROM promotions WHERE bot_id = $1", id)
+        await db.execute("DELETE FROM bot_promotions WHERE bot_id = $1", id)
     return {"done":  True, "reason": None}
 
 @router.put("/bots/{bot_id}/promotions", tags = ["API"], response_model = APIResponse)
 async def create_promotion(request: Request, bot_id: int, promo: Promo, Authorization: str = Header("INVALID_API_TOKEN")):
-    """Creates a promotion for a bot. Events can be used to set guild/shard counts, enter maintenance mode or to show promotions
-
-    **API Token**: You can get this by clicking your bot and clicking edit and scrolling down to API Token or clicking APIWeb
-
-    **Promotion**: This is the name of the event in question. There are a few special events as well:
+    """Creates a promotion for a bot. Type can be 1 for announcement, 2 for promotion or 3 for generic
 
     """
     if len(promo.title) < 3:
         return {"done":  False, "reason": "TEXT_TOO_SMALL"}
+    if promo.type not in [1, 2, 3]:
+        return {"done":  False, "reason": "INVALID_PROMO_TYPE"}
     id = await db.fetchrow("SELECT bot_id FROM bots WHERE bot_id = $1 AND api_token = $2", bot_id, str(Authorization))
     if id is None:
         return abort(401)
     id = id["bot_id"]
-    await add_promotion(id, promo.title, promo.info, promo.css)
+    await add_promotion(id, promo.title, promo.info, promo.css, promo.type)
     return {"done":  True, "reason": None}
 
 @router.patch("/bots/{bot_id}/promotions", tags = ["API"], response_model = APIResponse)
@@ -83,7 +82,7 @@ async def edit_promotion(request: Request, bot_id: int, promo: PromoPatch, Autho
     pid = await db.fetchrow("SELECT id, events FROM api_event WHERE id = $1", promo.promo_id)
     if eid is None:
         return {"done":  False, "reason": "NO_MESSAGE_FOUND"}
-    await db.execute("UPDATE promotions SET title = $1, info = $2 WHERE bot_id = $3", promo.title, promo.info, id)
+    await db.execute("UPDATE bot_promotions SET title = $1, info = $2 WHERE bot_id = $3", promo.title, promo.info, id)
     return {"done": True, "reason": None}
 
 @router.patch("/bots/{bot_id}/token", tags = ["API"], response_model = APIResponse)
@@ -477,7 +476,7 @@ class User(BaseModel):
     desription: str
 
 
-@router.get("/users/{user_id}")
+@router.get("/users/{user_id}", tags = ["API"])
 async def get_user_api(request: Request, user_id: int):
     return ORJSONResponse({"done":  False, "reason": "NOT_YET_IMPLEMENTED"}, status_code = 400)
 

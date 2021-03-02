@@ -110,12 +110,13 @@ CREATE TABLE api_event (
     events text[]
 );
 
-CREATE TABLE promotions (
+CREATE TABLE bot_promotions (
    id uuid primary key DEFAULT uuid_generate_v4(),
    bot_id bigint,
    title text,
    info text,
    css text,
+   type integer default 3 -- 1 = announcement, 2 = promo, 3 = generic
 );
 
 CREATE TABLE bot_maint (
