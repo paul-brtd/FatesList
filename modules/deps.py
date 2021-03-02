@@ -259,7 +259,7 @@ async def is_bot_admin(bot_id: int, user_id: int):
     except:
         return False
 async def get_promotions(bot_id: int) -> list:
-    api_data = await db.fetch("SELECT title, info, css, type FROM bot_promotions WHERE bot_id = $1", bot_id)
+    api_data = await db.fetch("SELECT id, title, info, css, type FROM bot_promotions WHERE bot_id = $1", bot_id)
     return api_data
 
 async def get_user_token(uid: int, username: str) -> str:
