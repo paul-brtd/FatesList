@@ -26,7 +26,7 @@
         {% for profile in profiles %}
         <div class="bot-card">
 	    <div class="lozad bot-card-banner" data-background-image="{{profile.user.banner}}">
-		    <a href="/profile/{{profile.user.userid}}"><img alt="bot avatar" class="bot-card-avatar" src="{{profile.avatar}}" loading="lazy"/></a>
+		    <a href="/profile/{{profile.user.user_id}}"><img alt="bot avatar" class="bot-card-avatar" src="{{profile.avatar}}" loading="lazy"/></a>
 	    </div>
             <div>
                 <div class="bot-card-username">
@@ -34,7 +34,7 @@
 		</div>
             </div>
 	    <h6 class="bot-card-description"><strong style="overflow-wrap: anywhere;">{% if not profile.description %}No Description Is Available{%else%}{{profile.description}}{%endif%}</strong></h6>
-            <div style="text-align: center;"><a href="/profile/{{profile.user.userid}}" class="btn btn-outline-light bot-card-actions-link">View</a>
+            <div style="text-align: center;"><a href="/profile/{{profile.user.user_id}}" class="btn btn-outline-light bot-card-actions-link">View</a>
             </div>
 	   </div>
     {% endfor %}

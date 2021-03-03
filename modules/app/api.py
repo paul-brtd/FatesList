@@ -419,7 +419,7 @@ async def bots_index_page_api_do(request: Request):
     """For any potential Android/iOS app, crawlers etc."""
     return await render_index(request = request, api = True)
 
-@router.get("/bots/search", tags = ["API (Extras)"])
+@router.get("/bots/ext/search", tags = ["API (Extras)"])
 async def bots_search_page(request: Request, query: str):
     """For any potential Android/iOS app, crawlers etc. Query is the query to search for"""
     return await render_search(request = request, q = query, api = True)
@@ -444,17 +444,22 @@ async def ws_send_events():
                         await redis_db.hdel(str(bid) + "_ws", key)
                     await redis_db.hset(str(bid) + "_ws", mapping = {"status": "IDLE"})
 
+class MDRequest(BaseModel):
+    markdown: str
 
-@router.post("/md", tags = ["API (Other)"])
-async def markdown_to_html_api(request: Request, text: str):
-    text = emd(markdown.markdown(text, extensions=["extra", "abbr", "attr_list", "def_list", "fenced_code", "footnotes", "tables", "admonition", "codehilite", "meta", "nl2br", "sane_lists", "toc", "wikilinks", "smarty", "md_in_html"]))
+class MDResponse(BaseModel):
+    html: str
+
+@router.put("/md", tags = ["API (Other)"], response_model = MDResponse)
+async def markdown_to_html_api(request: Request, md: MDRequest):
+    text = emd(markdown.markdown(md.markdown, extensions=["extra", "abbr", "attr_list", "def_list", "fenced_code", "footnotes", "tables", "admonition", "codehilite", "meta", "nl2br", "sane_lists", "toc", "wikilinks", "smarty", "md_in_html"]))
     cleaner = Cleaner()
     cleaner.javascript = True # This is True because we want to activate the javascript filter 
     cleaner.whitelist_tags = ['style']
     data = cleaner.clean_html(text)
     # Take the h1...h5 anad drop it one lower
     data = data.replace("<h1", "<h2 style='text-align: center'").replace("<h2", "<h3").replace("<h4", "<h5").replace("<h6", "<p")
-    return {"data": data}
+    return {"html": data}
 
 async def ws_close(websocket: WebSocket, code: int):
     try:

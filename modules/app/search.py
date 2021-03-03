@@ -26,12 +26,12 @@ async def profile_search(request: Request, q: Optional[str] = None):
     else:
         query = q
     try:
-        es = " OR userid = " + str(int(query))
+        es = " OR user_id = " + str(int(query))
     except:
         es = ""
     debug = False
     if query.replace(" ", "") != "" or debug:
-        profiles = "SELECT userid, description, certified FROM users" # Base profile
+        profiles = "SELECT user_id, description, certified FROM users" # Base profile
         if query != "":
             profiles = profiles + (" WHERE (username ilike '%" + re.sub(r'\W+|_', ' ', query) + "%'" + es + ")")
         profiles = await db.fetch(profiles + " LIMIT 12")
@@ -40,7 +40,7 @@ async def profile_search(request: Request, q: Optional[str] = None):
         profiles = []
     profile_obj = []
     for profile in profiles:
-        profile_info = await get_user(profile["userid"])
+        profile_info = await get_user(profile["user_id"])
         print(profile_info)
         if profile_info:
             profile_obj.append({"user": profile, "avatar": profile_info["avatar"], "username": profile_info["username"], "description": profile["description"], "certified": profile["certified"] == True})
