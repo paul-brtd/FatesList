@@ -159,6 +159,7 @@ class Bot(BaseModel):
     username: str
     avatar: str
     disc: str
+    status: int
 
 @router.get("/bots/{bot_id}", tags = ["API"], response_model = Bot, dependencies=[Depends(RateLimiter(times=20, minutes=1))])
 async def get_bots_api(request: Request, bot_id: int, compact: Optional[bool] = False, Authorization: str = Header("INVALID_API_TOKEN")):
@@ -177,6 +178,7 @@ async def get_bots_api(request: Request, bot_id: int, compact: Optional[bool] = 
     api_ret["username"] = bot_obj["username"]
     api_ret["avatar"] = bot_obj["avatar"]
     api_ret["disc"] = bot_obj["disc"]
+    api_ret["status"] = bot_obj["status"]
     api_ret["main_owner"] = str(api_ret["main_owner"])
     if api_ret["extra_owners"] is None:
         api_ret["extra_owners"] = []

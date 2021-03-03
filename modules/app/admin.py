@@ -10,7 +10,7 @@ router = APIRouter(
 async def admin_dashboard(request:Request, stats: Optional[int] = 0):
     if "userid" in request.session.keys() or stats == 1:
         if "userid" in request.session.keys() and stats != 1:
-            guild = client.get_guild(reviewing_server)
+            guild = client.get_guild(main_server)
             user = guild.get_member(int(request.session["userid"]))
             if user is None:
                 return RedirectResponse("/", status_code = 303)
@@ -35,7 +35,7 @@ async def admin_dashboard(request:Request, stats: Optional[int] = 0):
 async def admin_api(request: Request, bt: BackgroundTasks, admin: str = FForm(""), bot_id: int = FForm(0)):
     print(bot_id)
     try:
-        guild = client.get_guild(reviewing_server)
+        guild = client.get_guild(main_server)
         user = guild.get_member(int(request.session["userid"]))
     except:
         return HTMLResponse("Discord API is down right now")
@@ -88,7 +88,7 @@ async def stat_update_bt():
 async def review_tool(request: Request, bot_id: int, accept: str = FForm(""), deny_reason: str = FForm("There was no reason specified. DM/Ping the mod who banned your bot to learn why it was banned")):
     if "userid" not in request.session.keys():
         return RedirectResponse("/")
-    guild = client.get_guild(reviewing_server)
+    guild = client.get_guild(main_server)
     user = guild.get_member(int(request.session["userid"]))
     s = is_staff(staff_roles, user.roles, 2)
     if not s[0]:

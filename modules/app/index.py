@@ -84,4 +84,4 @@ async def stats():
 
 @router.get("/api/docs")
 async def api_docs_view(request: Request):
-    return HTMLResponse(api_docs)
+    return HTMLResponse(open("static/api_docs.html").read())

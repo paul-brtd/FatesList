@@ -57,6 +57,7 @@ intent.invites = False
 intent.voice_states = False
 intent.messages = False
 intent.members = True
+intent.presences = True
 builtins.client = discord.Client(intents=intent)
 
 limiter = FastAPILimiter
@@ -115,6 +116,5 @@ for tag in TAGS.keys():
     new_tag = tag.replace("_", " ")
     builtins.tags_fixed.update({tag: [new_tag.capitalize(), tag_icon]})
 
-builtins.api_docs = open("static/api_docs.html").read()
 
 

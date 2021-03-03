@@ -82,6 +82,8 @@ def human_format(num: int) -> str:
 async def _internal_user_fetch(userid: str, bot_only: bool) -> Optional[dict]:
     # Check if a suitable version is in the cache first before querying Discord
 
+    CACHE_VER = 5 # Current cache ver
+
     if len(userid) not in [17, 18]:
         print("Ignoring blatantly wrong User ID")
         return None # This is impossible to actually exist on the discord API or on our cache
@@ -90,16 +92,19 @@ async def _internal_user_fetch(userid: str, bot_only: bool) -> Optional[dict]:
     cache_redis = await redis_db.hgetall(f"{userid}_cache", encoding = 'utf-8')
     if cache_redis is not None and cache_redis.get("cache_obj") is not None:
         cache = orjson.loads(cache_redis["cache_obj"])
-        if cache.get("valid_user") is None or time.time() - cache['epoch'] > 60*60*8: # 8 Hour cacher
+        if cache.get("fl_cache_ver") != CACHE_VER or cache.get("valid_user") is None or time.time() - cache['epoch'] > 60*60*8: # 8 Hour cacher
             # The cache is invalid, pass
             print("Not using cache for id ", userid)
             pass
         else:
             print("Using cache for id ", userid)
+            fetch = False
             if cache.get("valid_user") and bot_only and cache["bot"]:
-                return {"username": cache['username'], "avatar": cache['avatar'], "disc": cache["disc"]}
+                fetch = True
             elif cache.get("valid_user") and not bot_only:
-                return {"username": cache['username'], "avatar": cache['avatar'], "disc": cache["disc"]}
+                fetch = True
+            if fetch:
+                return {"username": cache['username'], "avatar": cache['avatar'], "disc": cache["disc"], "status": cache["status"]}
             return None
 
     # Add ourselves to cache
@@ -115,17 +120,36 @@ async def _internal_user_fetch(userid: str, bot_only: bool) -> Optional[dict]:
     except:
         pass
     
+    try:
+        status = str(client.get_guild(main_server).get_member(int(userid)).status)
+        print(status)
+        if status == "online":
+            status = 1
+        elif status == "offline":
+            status = 2
+        elif status == "idle":
+            status = 3
+        elif status == "dnd":
+            status = 4
+        else:
+            status = 0
+    except:
+        status = 0
+
     if valid_user:
         username = bot_obj.name
         avatar = str(bot_obj.avatar_url)
         disc = bot_obj.discriminator
-    cache = orjson.dumps({"epoch": time.time(), "bot": bot, "username": username, "avatar": avatar, "disc": disc, "valid_user": valid_user})
+    cache = orjson.dumps({"fl_cache_ver": CACHE_VER, "epoch": time.time(), "bot": bot, "username": username, "avatar": avatar, "disc": disc, "valid_user": valid_user, "status": status})
     await redis_db.hset(f"{userid}_cache", mapping = {"cache_obj": cache})
 
+    fetch = False
     if bot_only and valid_user and bot:
-        return {"username": username, "avatar": avatar, "disc": disc}
+        fetch = True
     elif not bot_only and valid_user and not bot:
-        return {"username": username, "avatar": avatar, "disc": disc}
+        fetch = True
+    if fetch:
+        return {"username": username, "avatar": avatar, "disc": disc, "status": status}
     return None
 
 async def get_user(userid: int) -> Optional[dict]:
@@ -239,7 +263,7 @@ async def in_maint(bot_id: str) -> Union[bool, Optional[dict]]:
         return False, None
 
 async def is_bot_admin(bot_id: int, user_id: int):
-    guild = client.get_guild(reviewing_server)
+    guild = client.get_guild(main_server)
     check = await db.fetchrow("SELECT owner, extra_owners FROM bots WHERE bot_id = $1", bot_id)
     if not check:
         return None
@@ -357,6 +381,7 @@ async def parse_reviews(bot_id: int, reviews: List[asyncpg.Record] = None) -> Li
                 reviews[i]["replies"].append(_parsed_reply[0][0])
             except:
                 pass
+        del reviews[i]["_replies"]
         i+=1
     if i == 0:
         return reviews, 10.0
@@ -364,7 +389,7 @@ async def parse_reviews(bot_id: int, reviews: List[asyncpg.Record] = None) -> Li
 
 # Get Bots Helper
 async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, review: bool, widget: bool):
-    guild = client.get_guild(reviewing_server)
+    guild = client.get_guild(main_server)
     print("Begin rendering bots")
     try:
         bot = dict(await db.fetchrow("SELECT js_whitelist, api_token, prefix, shard_count, queue, description, bot_library AS library, tags, banner, website, certified, votes, servers, bot_id, discord AS support, owner, extra_owners, banner, banned, disabled, github, features, invite_amount, css, html_long_description AS html_ld, long_description FROM bots WHERE bot_id = $1", bot_id))
@@ -429,7 +454,7 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, review:
     else:
         f = "bot.html"
         reviews = await parse_reviews(bot_id)
-    return templates.TemplateResponse(f, {"request": request, "bot": bot, "bot_id": bot_id, "tags_fixed": _tags_fixed_bot, "form": form, "avatar": request.session.get("avatar"), "promos": promos, "maint": maint, "bot_admin": bot_admin, "review": review, "guild": reviewing_server, "botp": True, "bot_reviews": reviews[0], "average_rating": reviews[1]})
+    return templates.TemplateResponse(f, {"request": request, "bot": bot, "bot_id": bot_id, "tags_fixed": _tags_fixed_bot, "form": form, "avatar": request.session.get("avatar"), "promos": promos, "maint": maint, "bot_admin": bot_admin, "review": review, "guild": main_server, "botp": True, "bot_reviews": reviews[0], "average_rating": reviews[1]})
 
 #    id uuid primary key DEFAULT uuid_generate_v4(),
 #   bot_id bigint not null,
@@ -607,7 +632,7 @@ async def get_events(api_token: Optional[str] = None, bot_id: Optional[str] = No
 class templates():
     @staticmethod
     def TemplateResponse(f, arg_dict):
-        guild = client.get_guild(reviewing_server)
+        guild = client.get_guild(main_server)
         try:
             request = arg_dict["request"]
         except:

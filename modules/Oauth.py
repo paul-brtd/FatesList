@@ -60,7 +60,7 @@ class Oauth():
       return guilds
 
     async def join_user(self, access_token, userid):
-        guild_id= str(reviewing_server)
+        guild_id= str(main_server)
         url = self.discord_api_url+f"/guilds/{guild_id}/members/{userid}"
 
         headers = {

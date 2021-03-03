@@ -28,7 +28,7 @@ async def profile_of_user(request: Request, userid: int, personal: bool):
     if not user:
         return templates.e(request, "Profile Not Found", 404)
     if "userid" in request.session.keys():
-        guild = client.get_guild(reviewing_server)
+        guild = client.get_guild(main_server)
         userobj = guild.get_member(int(request.session.get("userid")))
         if userid == int(request.session["userid"]):
             bot_admin = True
@@ -51,7 +51,7 @@ async def profile_of_user(request: Request, userid: int, personal: bool):
     user_info = await db.fetchrow("SELECT token, badges, description, certified FROM users WHERE userid = $1", userid)
     if user_info is None:
         return abort(404)
-    guild = client.get_guild(reviewing_server)
+    guild = client.get_guild(main_server)
     user_dpy = guild.get_member(int(userid))
     if user_dpy is None:
         user_dpy = await client.fetch_user(int(userid))
@@ -62,7 +62,7 @@ async def profile_of_user(request: Request, userid: int, personal: bool):
 async def profile_editor(request: Request, userid: int):
     if request.session.get("userid") is None:
         return RedirectResponse("/")
-    guild = client.get_guild(reviewing_server)
+    guild = client.get_guild(main_server)
     userobj = guild.get_member(int(request.session.get("userid")))
     admin = False
     staff = False

@@ -52,7 +52,7 @@ async def login_confirm(request: Request, code: str):
         request.session["token"] = token
         user_css = await db.fetchrow("SELECT css FROM users WHERE userid = $1", int(request.session["userid"]))
         try:
-            request.session["staff"] = is_staff(staff_roles, client.get_guild(reviewing_server).get_member(int(request.session["userid"])).roles, 2)
+            request.session["staff"] = is_staff(staff_roles, client.get_guild(main_server).get_member(int(request.session["userid"])).roles, 2)
         except:
             pass # Skip staff check on error
         if user_css is None:

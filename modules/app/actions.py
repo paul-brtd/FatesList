@@ -49,7 +49,7 @@ async def add_bot_api(
     ):
     banner = banner.replace("http://", "https://").replace("(", "").replace(")", "")
     html_long_description = html_long_description == "true"
-    guild = client.get_guild(reviewing_server)
+    guild = client.get_guild(main_server)
     bot_dict = locals()
     bot_dict["request"] = None
     bot_dict["bt"] = None
@@ -158,7 +158,7 @@ async def bot_edit_api(
         guild_count: int = FForm(None)
     ):
     html_long_description = html_long_description == "true"
-    guild = client.get_guild(reviewing_server)
+    guild = client.get_guild(main_server)
     bot_dict = locals()
     bot_dict["request"] = None
     bot_dict["bt"] = None
@@ -292,7 +292,7 @@ async def vote_for_bot(
 @csrf_protect
 async def delete_bot(request: Request, bot_id: int, confirmer: str = FForm("1")):
     print(confirmer)
-    guild = client.get_guild(reviewing_server)
+    guild = client.get_guild(main_server)
     channel = client.get_channel(bot_logs)
     if "userid" in request.session.keys():
         check = await is_bot_admin(int(bot_id), int(request.session.get("userid")))
@@ -315,7 +315,7 @@ async def delete_bot(request: Request, bot_id: int, confirmer: str = FForm("1"))
 
 @router.post("/{bot_id}/ban")
 async def ban_bot(request: Request, bot_id: int, ban: int = FForm(1), reason: str = FForm('There was no reason specified')):
-    guild = client.get_guild(reviewing_server)
+    guild = client.get_guild(main_server)
     channel = client.get_channel(bot_logs)
     if ban not in [0, 1]:
         return RedirectResponse("/bot/" + str(bot_id), status_code = 303)
@@ -371,7 +371,7 @@ async def new_reviews(request: Request, bot_id: int, rating: float = FForm(5.1),
 async def edit_review(request: Request, bot_id: int, rid: uuid.UUID, rating: float = FForm(5.1), review: str = FForm("This is a placeholder review as the user has not posted anything...")):
     if "userid" not in request.session.keys():
         return RedirectResponse(f"/auth/login?redirect=/bot/{bot_id}&pretty=to edit reviews", status_code = 303)
-    guild = client.get_guild(reviewing_server)
+    guild = client.get_guild(main_server)
     user = guild.get_member(int(request.session["userid"]))
     s = is_staff(staff_roles, user.roles, 2)
     if s[0]:
@@ -408,7 +408,7 @@ async def edit_review(request: Request, bot_id: int, rid: uuid.UUID, rating: flo
 async def delete_review(request: Request, bot_id: int, rid: uuid.UUID):
     if "userid" not in request.session.keys():
         return RedirectResponse(f"/auth/login?redirect=/bot/{bot_id}&pretty=to delete reviews", status_code = 303)
-    guild = client.get_guild(reviewing_server)
+    guild = client.get_guild(main_server)
 
     user = guild.get_member(int(request.session["userid"]))
     if user is None:

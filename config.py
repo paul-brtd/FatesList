@@ -6,8 +6,8 @@ bots_role = 789934898408194059 # BOTS role in support server
 staff_ping_add_role=815174404932894731
 bot_dev_role = 789935019531304991 # BOT Developer in support server
 certified_dev_role = 792204630922100797 # Certified Developer in support server
-reviewing_server=789934742128558080 # Bit of a misnomer, but this is the actual main server
-test_server = 794834630942654546 # And THIS is the test server for reviewing bots
+main_server=789934742128558080 # Main server
+test_server = 794834630942654546 # The test server for reviewing bots
 owner = 563808552288780322
 # Confusing right? Sorry, i already did 50% using reviewing server so meow ig
 staff_roles = {
@@ -68,7 +68,6 @@ server_bot_invite = "https://discord.com/api/oauth2/authorize?client_id=81107394
 
 # This value below dont need to be changed
 site_url = "https://" + site
-
 support_url = "https://discord.gg/PA5vjCRc5H"
 TAGS = {"music": "fa-solid:music", "moderation": "fa-solid:hammer", "economy": "fa-solid:coins", "fun": "fa-solid:heart", "anime": "fa-solid:camera", "games": "fa-solid:smile", "web_dashboard": "fa-solid:chart-bar", "logging": "fa-solid:chart-line", "game_stats": "fa-solid:chart-pie", "leveling": "fa-solid:arrow-up", "roleplay": "fa-solid:cat", "utility": "fa-solid:desktop", "social": "fa-solid:users"}
 pg_user = "postgres" # Postgres Database Username

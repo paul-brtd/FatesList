@@ -73,6 +73,36 @@
 <div style="font-size: 18px;" class="docm">
 	<p>Please see <a href="/api/docs/endpoints">API Endpoints</a> for the actual API endpoints we currently give you. Join the Support Server and Ping/DM Rootspring#6701 if you want to request a specific API Endpoint</p>
 </div>
+<h3><strong>Basic Structures/Constructs</strong></h3>
+<div style="font-size: 18px;" class="docm">
+	<strong class="doc">User</strong><span>{"username": "Dexter", "avatar": "https://cdn.discordapp.com/avatars/780079091172900884/a_67334df2dd44cfcf20e025bb8d7f7f34.gif?size=1024", "disc": "6969", "status": 2}</span>
+	<div class="table">
+	<table>
+		<tr>
+			<th>Key</th>
+			<th>Description</th>
+			<th>Type</th>
+		</tr>
+  		<tr>
+			<td>username</td>
+			<td>This is the username of the user as per the Redis cache which expires every 8 hours</td>
+			<td>String</td>
+		</tr>
+		<tr>
+    <td>type</td>
+    <td>This is the payload type which is how you are supposed to respond or extra information about the payload such as NO_AUTH or API_TOKEN.</td>
+    <td>String</td>
+  </tr>
+  <tr>
+    <td>data</td>
+    <td>If the payload is a data payload like EVENTS_V1, then this the main data sent by the payload. This key is not present on non-data payloads</td>
+    <td>Optional[String]</td>
+  </tr>
+
+</table>
+</div>
+
+</div>
 <h3><strong>CSS Docs Reference</strong></h3>
 <div style="font-size: 18px;" class="docm">
 	<strong class="doc">#bot-content</strong><span>The entire div your bot page is in</span><br/>
