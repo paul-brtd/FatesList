@@ -348,7 +348,7 @@ async def vote_bot(uid: int, bot_id: int, username, autovote: bool) -> Optional[
     else:
         await db.execute("UPDATE bot_stats_votes SET total_votes = total_votes + 1 WHERE bot_id = $1", int(bot_id))
 
-    event_id = asyncio.create_task(add_event(bot_id, "vote", {"username": username, "user_id": str(uid), "votes": b['votes'] + 1, "**Vote Here**": "https://fateslist.xyz/bot/" + str(bot_id)}))
+    event_id = asyncio.create_task(add_event(bot_id, "vote", {"username": username, "user_id": str(uid), "votes": b['votes'] + 1}))
     return []
 
 async def parse_reviews(bot_id: int, reviews: List[asyncpg.Record] = None) -> List[dict]:

@@ -164,7 +164,7 @@ th {
         <p style="color: rgba(255,255,255,0.87); font-weight: bold; font-size: 18px;" id="bot-description">{{bot.description}}</p>
     </div>
     <div class="d-flex justify-content-center align-items-center flex-wrap" style="width: 80%;margin: 0 auto;max-width: 1000px; margin-bottom: 3px !important;" id="bot-buttons">
-	{% if not bot.banned and not maint[0] %}
+	{% if not bot.banned %}
         <form method = "POST" action = "/bot/{{bot_id}}/vote">
             {{form.csrf_token}}
 		<button type="submit" class="btn bot-buttons-all vote btn-outline-light" id="bot-buttons-vote" style="color: white !important;">
