@@ -287,21 +287,21 @@ async def get_promotions(bot_id: int) -> list:
     return api_data
 
 async def get_user_token(uid: int, username: str) -> str:
-        token = await db.fetchrow("SELECT username, token FROM users WHERE userid = $1", int(uid))
-        if token is None:
-            flag = True
-            while flag:
-                token = get_token(101)
-                tcheck = await db.fetchrow("SELECT token FROM users WHERE token = $1", token)
-                if tcheck is None:
-                    flag = False
-            await db.execute("INSERT INTO users (userid, token, vote_epoch, username) VALUES ($1, $2, $3, $4)", int(uid), token, 0, username)
-        else:
-            # Update their username if needed
-            if token["username"] != username:
-                print("Updating profile")
-                await db.execute("UPDATE users SET username = $1 WHERE userid = $2", username, int(uid))
-            token = token["token"]
+    token = await db.fetchrow("SELECT username, api_token FROM users WHERE user_id = $1", int(uid))
+    if token is None:
+        flag = True
+        while flag:
+            token = get_token(101)
+            tcheck = await db.fetchrow("SELECT api_token FROM users WHERE api_token = $1", token)
+            if tcheck is None:
+                flag = False
+        await db.execute("INSERT INTO users (user_id, api_token, vote_epoch, username) VALUES ($1, $2, $3, $4)", int(uid), token, 0, username)
+    else:
+        # Update their username if needed
+        if token["username"] != username:
+            print("Updating profile")
+            await db.execute("UPDATE users SET username = $1 WHERE user_id = $2", username, int(uid))
+        token = token["api_token"]
 
 #CREATE TABLE bot_stats_votes (
 #   bot_id bigint,
@@ -316,7 +316,7 @@ async def get_user_token(uid: int, username: str) -> str:
 
 async def vote_bot(uid: int, bot_id: int, username, autovote: bool) -> Optional[list]:
     await get_user_token(uid, username) # Make sure we have a user profile first
-    epoch = await db.fetchrow("SELECT vote_epoch FROM users WHERE userid = $1", int(uid))
+    epoch = await db.fetchrow("SELECT vote_epoch FROM users WHERE user_id = $1", int(uid))
     if epoch is None:
         return [500]
     epoch = epoch["vote_epoch"]
@@ -327,17 +327,17 @@ async def vote_bot(uid: int, bot_id: int, username, autovote: bool) -> Optional[
     if time.time() - epoch < WT:
         return [401, str(WT - (time.time() - epoch))]
     b = await db.fetchrow("SELECT webhook, votes FROM bots WHERE bot_id = $1", int(bot_id))
-    voters = await db.fetchrow("SELECT timestamps FROM bots_voters WHERE bot_id = $1 AND userid = $2", int(bot_id), int(uid))
+    voters = await db.fetchrow("SELECT timestamps FROM bot_voters WHERE bot_id = $1 AND user_id = $2", int(bot_id), int(uid))
     if b is None:
         return [404]
     if voters is None:
-        await db.execute("INSERT INTO bots_voters (userid, bot_id, timestamps) VALUES ($1, $2, $3)", int(uid), int(bot_id), [int(time.time())])
+        await db.execute("INSERT INTO bot_voters (user_id, bot_id, timestamps) VALUES ($1, $2, $3)", int(uid), int(bot_id), [int(time.time())])
     else:
         voters["timestamps"].append(int(time.time()))
         ts = voters["timestamps"]
-        await db.execute("UPDATE bots_voters SET timestamps = $1 WHERE bot_id = $2 AND userid = $3", ts, int(bot_id), int(uid))
+        await db.execute("UPDATE bot_voters SET timestamps = $1 WHERE bot_id = $2 AND user_id = $3", ts, int(bot_id), int(uid))
     await db.execute("UPDATE bots SET votes = votes + 1 WHERE bot_id = $1", int(bot_id))
-    await db.execute("UPDATE users SET vote_epoch = $1 WHERE userid = $2", time.time(), int(uid))
+    await db.execute("UPDATE users SET vote_epoch = $1 WHERE user_id = $2", time.time(), int(uid))
 
     # Update bot_stats
     check = await db.fetchrow("SELECT bot_id FROM bot_stats_votes WHERE bot_id = $1", int(bot_id))

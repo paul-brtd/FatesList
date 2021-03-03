@@ -50,7 +50,7 @@ async def login_confirm(request: Request, code: str):
         # 794834630942654546
         token = await get_user_token(int(userjson["id"]), request.session.get("username"))
         request.session["token"] = token
-        user_css = await db.fetchrow("SELECT css FROM users WHERE userid = $1", int(request.session["userid"]))
+        user_css = await db.fetchrow("SELECT css FROM users WHERE user_id = $1", int(request.session["userid"]))
         try:
             request.session["staff"] = is_staff(staff_roles, client.get_guild(main_server).get_member(int(request.session["userid"])).roles, 2)
         except:

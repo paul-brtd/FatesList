@@ -28,15 +28,22 @@ async def profile_of_user(request: Request, userid: int, personal: bool):
     if not user:
         return templates.e(request, "Profile Not Found", 404)
     if "userid" in request.session.keys():
-        guild = client.get_guild(main_server)
-        userobj = guild.get_member(int(request.session.get("userid")))
-        if userid == int(request.session["userid"]):
+        try:
+            guild = client.get_guild(main_server)
+            userobj = guild.get_member(int(request.session.get("userid")))
+            dapi_up = True
+        except:
+            dapi_up = False
+        if userid == int(request.session["userid"]) and dapi_up:
             bot_admin = True
         else:
             bot_admin = False
-        if (userobj is not None and is_staff(staff_roles, userobj.roles, 4)[0]):
+        if dapi_up and (userobj is not None and is_staff(staff_roles, userobj.roles, 4)[0]):
             staff = True
         else:
+            staff = False
+        if not dapi_up:
+            bot_admin = False
             staff = False
     else:
         bot_admin = False
@@ -48,15 +55,26 @@ async def profile_of_user(request: Request, userid: int, personal: bool):
         query = base_query + "ORDER BY votes;"
     fetch = await db.fetch(query)
     user_bots = await parse_bot_list(fetch)
-    user_info = await db.fetchrow("SELECT token, badges, description, certified FROM users WHERE userid = $1", userid)
+    if personal:
+        user_info = await db.fetchrow("SELECT api_token, badges, description, certified FROM users WHERE user_id = $1", userid)
+    else:
+        user_info = await db.fetchrow("SELECT badges, description, certified FROM users WHERE user_id = $1", userid)
     if user_info is None:
         return abort(404)
     guild = client.get_guild(main_server)
-    user_dpy = guild.get_member(int(userid))
+    ok = False
+    while ok is False:
+        try:
+            user_dpy = guild.get_member(int(userid))
+            ok = True
+        except:
+            ok = False
+        if not ok:
+            await asyncio.sleep(0.2) # Wait to be up
     if user_dpy is None:
         user_dpy = await client.fetch_user(int(userid))
     print(user_dpy)
-    return templates.TemplateResponse("profile.html", {"request": request, "username": request.session.get("username", False), "user_bots": user_bots, "user": user, "avatar": request.session.get("avatar"), "admin": bot_admin, "userid": userid, "personal": personal, "badges": get_badges(user_dpy, user_info["badges"], user_info["certified"] == True), "description": user_info["description"], "token": user_info["token"]})
+    return templates.TemplateResponse("profile.html", {"request": request, "username": request.session.get("username", False), "user_bots": user_bots, "user": user, "avatar": request.session.get("avatar"), "admin": bot_admin, "userid": userid, "personal": personal, "badges": get_badges(user_dpy, user_info["badges"], user_info["certified"]), "user_info": user_info})
 
 @router.get("/{userid}/edit")
 async def profile_editor(request: Request, userid: int):

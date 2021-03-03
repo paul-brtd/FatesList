@@ -307,11 +307,11 @@ async def get_votes_api(request: Request, bot_id: int, user_id: Optional[int] = 
     id = await db.fetchrow("SELECT bot_id FROM bots WHERE bot_id = $1 AND api_token = $2", bot_id, str(Authorization))
     if id is None:
         return abort(401)
-    voters = await db.fetchrow("SELECT timestamps FROM bots_voters WHERE bot_id = $1 AND userid = $2", int(bot_id), int(user_id))
+    voters = await db.fetchrow("SELECT timestamps FROM bot_voters WHERE bot_id = $1 AND user_id = $2", int(bot_id), int(user_id))
     if voters is None:
         return {"votes": 0, "voted": False, "vote_epoch": 0, "time_to_vote": 0, "vote_right_now": True}
     voter_count = len(voters["timestamps"])
-    vote_epoch = await db.fetchrow("SELECT vote_epoch FROM users WHERE userid = $1", user_id)
+    vote_epoch = await db.fetchrow("SELECT vote_epoch FROM users WHERE user_id = $1", user_id)
     if vote_epoch is None:
         vote_epoch = 0
     else:
@@ -329,9 +329,9 @@ async def timestamped_get_votes_api(request: Request, bot_id: int, user_id: Opti
     if id is None:
         return abort(401)
     elif user_id is not None:
-        ldata = await db.fetch("SELECT userid, timestamps FROM bots_voters WHERE bot_id = $1 AND userid = $2", int(bot_id), int(user_id))
+        ldata = await db.fetch("SELECT userid, timestamps FROM bot_voters WHERE bot_id = $1 AND user_id = $2", int(bot_id), int(user_id))
     else:
-        ldata = await db.fetch("SELECT userid, timestamps FROM bots_voters WHERE bot_id = $1", int(bot_id))
+        ldata = await db.fetch("SELECT userid, timestamps FROM bot_voters WHERE bot_id = $1", int(bot_id))
     ret = {}
     for data in ldata:
         ret[str(data["userid"])] = data["timestamps"]
@@ -507,6 +507,17 @@ class User(BaseModel):
 @router.get("/users/{user_id}", tags = ["API"])
 async def get_user_api(request: Request, user_id: int):
     return ORJSONResponse({"done":  False, "reason": "NOT_YET_IMPLEMENTED"}, status_code = 400)
+
+class UserDescEdit(BaseModel):
+    description: str
+
+@router.patch("/users/{user_id}/description", tags = ["API"])
+async def set_user_description_api(request: Request, user_id: int, desc: UserDescEdit, Authorization: str = Header("INVALID_API_TOKEN")):
+    id = await db.fetchrow("SELECT user_id FROM users WHERE user_id = $1 AND api_token = $2", user_id, str(Authorization))
+    if id is None:
+        return abort(401)
+    await db.execute("UPDATE users SET description = $1 WHERE user_id = $2", desc.description, user_id)
+    return {"done": True, "reason": None}
 
 # A User object should have:
 #

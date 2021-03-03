@@ -76,7 +76,7 @@
         json = JSON.stringify({"description": document.querySelector("#bio-form-0").value})
         headers = {"Authorization": "{{token}}"}
         $.ajax({
-		url: "/api/profiles/{{userid}}/description",
+		url: "/api/users/{{userid}}/description",
                 dataType: "json",
                 headers: headers,
                 type: "PATCH",

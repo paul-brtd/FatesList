@@ -84,8 +84,8 @@ CREATE TABLE bots_voters (
 );
 
 CREATE TABLE users (
-    userid bigint,
-    token text,
+    user_id bigint,
+    api_token text,
     vote_epoch bigint,
     description text,
     certified boolean,
