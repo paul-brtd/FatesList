@@ -31,25 +31,16 @@ async def profile_of_user(request: Request, userid: int, personal: bool):
         try:
             guild = client.get_guild(main_server)
             userobj = guild.get_member(int(request.session.get("userid")))
-            dapi_up = True
         except:
-            dapi_up = False
-        if userid == int(request.session["userid"]) and dapi_up:
-            bot_admin = True
+            return templates.TemplateResponse("message.html", {"request": request, "message": "Still connecting to Discord. Please refresh in a minute or two"})
+        if userid == int(request.session["userid"]):
+            personal = True
         else:
-            bot_admin = False
-        if dapi_up and (userobj is not None and is_staff(staff_roles, userobj.roles, 4)[0]):
-            staff = True
-        else:
-            staff = False
-        if not dapi_up:
-            bot_admin = False
-            staff = False
-    else:
-        bot_admin = False
-        staff = False
+            personal = False
+        if userobj is not None and is_staff(staff_roles, userobj.roles, 4)[0]:
+            personal = True
     base_query = a = (f"SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE (owner = {str(userid)} OR {str(userid)} = ANY(extra_owners))")
-    if not personal and not staff:
+    if not personal:
         query = base_query + "and queue = false and banned = false and disabled = false ORDER BY votes;"
     else:
         query = base_query + "ORDER BY votes;"
@@ -62,42 +53,9 @@ async def profile_of_user(request: Request, userid: int, personal: bool):
     if user_info is None:
         return abort(404)
     guild = client.get_guild(main_server)
-    ok = False
-    while ok is False:
-        try:
-            user_dpy = guild.get_member(int(userid))
-            ok = True
-        except:
-            ok = False
-        if not ok:
-            await asyncio.sleep(0.2) # Wait to be up
+    user_dpy = guild.get_member(int(userid))
     if user_dpy is None:
         user_dpy = await client.fetch_user(int(userid))
     print(user_dpy)
-    return templates.TemplateResponse("profile.html", {"request": request, "username": request.session.get("username", False), "user_bots": user_bots, "user": user, "avatar": request.session.get("avatar"), "admin": bot_admin, "userid": userid, "personal": personal, "badges": get_badges(user_dpy, user_info["badges"], user_info["certified"]), "user_info": user_info})
+    return templates.TemplateResponse("profile.html", {"request": request, "username": request.session.get("username", False), "user_bots": user_bots, "user": user, "avatar": request.session.get("avatar"), "userid": userid, "personal": personal, "badges": get_badges(user_dpy, user_info["badges"], user_info["certified"]), "user_info": user_info})
 
-@router.get("/{userid}/edit")
-async def profile_editor(request: Request, userid: int):
-    if request.session.get("userid") is None:
-        return RedirectResponse("/")
-    guild = client.get_guild(main_server)
-    userobj = guild.get_member(int(request.session.get("userid")))
-    admin = False
-    staff = False
-    if userobj is None:
-        if userid == int(request.session.get("userid")):
-            admin = True
-        else:
-            admin = False
-    elif admin or (is_staff(staff_roles, userobj.roles, 4)[0] or userid == int(request.session.get("userid"))):
-        admin = True
-        staff = True
-    else:
-        pass
-    if not admin:
-        return RedirectResponse("/")
-    data = await db.fetchrow("SELECT token, description, certified, badges FROM users WHERE userid = $1", userid)
-    vanity = await db.fetchrow("SELECT vanity_url AS vanity FROM vanity WHERE redirect = $1", userid)
-    if vanity is None:
-        vanity = {"vanity": None}
-    return templates.TemplateResponse("profile_edit.html", {"request": request, "token": data["token"], "certified": data["certified"] == True, "fstaff": staff, "vanity": vanity["vanity"], "form": await Form.from_formdata(request)})
