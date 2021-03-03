@@ -517,7 +517,11 @@ class User(BaseModel):
 
 @router.get("/users/{user_id}", tags = ["API"])
 async def get_user_api(request: Request, user_id: int):
-    return ORJSONResponse({"done":  False, "reason": "NOT_YET_IMPLEMENTED"}, status_code = 400)
+    user = await db.fetchrow("SELECT description, css, user_id AS id FROM users WHERE user_id = $1", user_id)
+    user_obj = await get_user(user_id)
+    if user is None:
+        return abort(404)
+    return dict(user) | {"user": user_obj}
 
 class UserDescEdit(BaseModel):
     description: str
