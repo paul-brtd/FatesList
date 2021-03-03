@@ -33,10 +33,8 @@
      {% endif %}  
    </div>
         <div class="d-flex flex-wrap justify-content-center align-items-center" style="width: 97%;margin: 0 auto;">
-	    {% for tag,new_tag in tags_fixed.items() %}
-	    <button class="btn d-flex justify-content-center align-items-center btn-outline-light" style="margin-bottom: 4px !important; margin-left: 6px;" onclick="location.href='/search/tags?tag={{tag}}'" title="{{new_tag[0]}}"><span class="iconify" data-icon="{{new_tag[1]}}" data-inline="false" aria-hidden="true"></span><span style="margin-left: 3px; font-size: 13px;"><strong>{{new_tag[0]}}</strong></span></button>
-            {% endfor %}
-    </div>
+	{{ tags(tags_fixed) }}
+	</div>
 {% endblock %}
 {% block footer %}
 {% endblock %}

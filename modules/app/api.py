@@ -403,6 +403,14 @@ async def get_feature_api(request: Request, name: str):
         return abort(404)
     return features[name]
 
+@router.get("/tags/{name}", tags = ["API"])
+async def get_tags_api(request: Request, name: str):
+    """Gets a tag given its internal name (custom_prefix, open_source etc)"""
+    if name not in TAGS.keys():
+        return abort(404)
+    return {"name": name.replace("_", " ").title(), "iconify_data": TAGS[name]}
+
+
 class VanityAPI(BaseModel):
     type: str
     redirect: str
@@ -466,8 +474,6 @@ async def ws_close(websocket: WebSocket, code: int):
         return await websocket.close(code=code)
     except:
         return
-
-
 
 @router.websocket("/api/ws")
 async def websocker_real_time_api(websocket: WebSocket):

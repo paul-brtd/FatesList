@@ -72,6 +72,8 @@ def get_token(length: str) -> str:
 def human_format(num: int) -> str:
     num = float('{:.3g}'.format(num))
     magnitude = 0
+    if abs(num) < 1000:
+        return str(num)
     while abs(num) >= 1000:
         magnitude += 1
         if magnitude == 31:
@@ -445,7 +447,7 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, review:
         bot = bot | {"votes": human_format(bot["votes"]), "servers": human_format(bot["servers"]), "banner": banner.replace("\"", "").replace("'", "").replace("http://", "https://").replace("(", "").replace(")", "").replace("file://", ""), "shards": human_format(bot["shard_count"]), "owner_pretty": await get_user(bot["owner"]), "extra_owners": ed, "leo": len(ed), "features": features, "fleo": len(features), "long_description": ldesc.replace("window.location", "").replace("document.ge", ""), "user": (await get_bot(bot_id))}
     else:
         return templates.e(request, "Bot Not Found")
-    _tags_fixed_bot = {tag: tags_fixed[tag] for tag in tags_fixed if tag in bot["tags"]}
+    _tags_fixed_bot = [tag for tag in tags_fixed if tag["id"] in bot["tags"]]
     form = await Form.from_formdata(request)
     bt.add_task(add_ws_event, bot_id, {"payload": "event", "id": str(uuid.uuid4()), "event": "view", "context": {"user": 0, "hidden": 1, "widget": str(widget)}})
     if widget:

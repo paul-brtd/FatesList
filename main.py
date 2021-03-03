@@ -110,11 +110,8 @@ async def on_ready():
     print(client.user, "up")
 
 # Tag calculation
-builtins.tags_fixed = {}
+builtins.tags_fixed = []
 for tag in TAGS.keys():
-    tag_icon = TAGS[tag]
-    new_tag = tag.replace("_", " ")
-    builtins.tags_fixed.update({tag: [new_tag.capitalize(), tag_icon]})
-
+    tags_fixed.append({"name": tag.replace("_", " ").title(), "iconify_data": TAGS[tag], "id": tag})
 
 

@@ -197,11 +197,7 @@ th {
     		<h5 style="font-weight: bold;color: rgba(255,255,255,0.87); text-align: center; margin-top: 3px;" id="bot-tags-header">Tags</h5>
 		<div style="text-align: center;" id="bot-tags-container">
 		        <div class="d-flex flex-wrap justify-content-center align-items-center" style="width: 97%;margin: 0 auto;" id="bot-tags-container-inner">
-            			{% for tag,new_tag in tags_fixed.items() %}
-				    <div id="bot-tags-{{tag}}">
-					    <button id="bot-tags-{{tag}}-button" class="text-nowrap btn d-flex justify-content-center align-items-center btn-outline-light" style="color: white;border-radius: 10px; margin: 6px;" onclick="location.href='/search/tags?tag={{tag}}'" title="{{new_tag[0]}}"><span class="iconify" data-icon="{{new_tag[1]}}" data-inline="false" aria-hidden="true"></span><span style="margin-left: 3px; font-size: 13px;"><strong>{{new_tag[0]}}</strong></span></button>
-                		    </div>
-		                {% endfor %}
+		        {{ tags(tags_fixed) }}
 			</div>
 		</div>
     	</div>
