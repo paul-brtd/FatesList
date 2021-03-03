@@ -20,12 +20,19 @@ class Promo(BaseModel):
     css: Optional[str] = None
     type: int
 
+class PromoObj(BaseModel):
+    promotions: list
+
 class PromoPatch(Promo):
     promo_id: uuid.UUID
 
 class APIResponse(BaseModel):
     done: bool
     reason: Optional[str] = None
+
+@router.get("/bots/{bot_id}/promotions", tags = ["API"], response_model = PromoObj)
+async def get_promotion(request:  Request, bot_id: int):
+    return {"promotions": (await get_promotions(bot_id))}
 
 @router.delete("/bots/{bot_id}/promotions", tags = ["API"], response_model = APIResponse)
 async def delete_promotion(request: Request, bot_id: int, promo: PromoDelete, Authorization: str = Header("INVALID_API_TOKEN")):
@@ -214,6 +221,14 @@ class BotCommandAdd(BaseModel):
 
 class APIResponseCommandAdd(APIResponse):
     id: uuid.UUID
+
+class CommandObj(BaseModel):
+    commands: list
+
+@router.get("/bots/{bot_id}/commands", tags = ["API"], response_model = CommandObj)
+async def get_promotion(request:  Request, bot_id: int):
+    return {"commands": (await db.fetch("SELECT id, slash, name, description, args, examples, premium_only, notes, doc_link FROM bot_commands WHERE bot_id = $1", bot_id))}
+
 
 @router.put("/bots/{bot_id}/commands", tags = ["API"], response_model = APIResponseCommandAdd, dependencies=[Depends(RateLimiter(times=20, minutes=1))])
 async def add_bot_command_api(request: Request, bot_id: int, command: BotCommandAdd, Authorization: str = Header("INVALID_API_TOKEN"), force_add: Optional[bool] = False):

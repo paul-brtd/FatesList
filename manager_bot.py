@@ -7,13 +7,20 @@ from config import *
 from modules.deps import *
 from typing import Optional
 import logging
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 intent = discord.Intents.default()
 intent.members = True
 intent.typing = False
 intent.presences = False
-client = commands.AutoShardedBot(command_prefix='!', intents=intent)
 
+class ASB(commands.AutoShardedBot):
+    async def is_owner(self, user: discord.User):
+        if user.id == owner:
+            return True
+        return False
+
+client = ASB(command_prefix='!', intents=intent)
+client.load_extension("jishaku")
 async def setup_db():
 
     db = await asyncpg.create_pool(host="127.0.0.1", port=5432, user=pg_user, password=pg_pwd, database="fateslist")

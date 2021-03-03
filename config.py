@@ -8,6 +8,7 @@ bot_dev_role = 789935019531304991 # BOT Developer in support server
 certified_dev_role = 792204630922100797 # Certified Developer in support server
 reviewing_server=789934742128558080 # Bit of a misnomer, but this is the actual main server
 test_server = 794834630942654546 # And THIS is the test server for reviewing bots
+owner = 563808552288780322
 # Confusing right? Sorry, i already did 50% using reviewing server so meow ig
 staff_roles = {
     "guild": {
