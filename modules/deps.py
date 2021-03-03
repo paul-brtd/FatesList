@@ -104,7 +104,7 @@ async def _internal_user_fetch(userid: str, bot_only: bool) -> Optional[dict]:
             elif cache.get("valid_user") and not bot_only:
                 fetch = True
             if fetch:
-                return {"username": cache['username'], "avatar": cache['avatar'], "disc": cache["disc"], "status": cache["status"]}
+                return {"id": userid, "username": cache['username'], "avatar": cache['avatar'], "disc": cache["disc"], "status": cache["status"]}
             return None
 
     # Add ourselves to cache
@@ -149,7 +149,7 @@ async def _internal_user_fetch(userid: str, bot_only: bool) -> Optional[dict]:
     elif not bot_only and valid_user and not bot:
         fetch = True
     if fetch:
-        return {"username": username, "avatar": avatar, "disc": disc, "status": status}
+        return {"id": userid, "username": username, "avatar": avatar, "disc": disc, "status": status}
     return None
 
 async def get_user(userid: int) -> Optional[dict]:

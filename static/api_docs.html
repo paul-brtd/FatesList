@@ -20,7 +20,7 @@
 			font-family: 'Lexend Deca', sans-serif  !important;
 		}
 		.docm, pre, #resources {
-			margin-left: 100px;
+			margin-left: 70px;
 			font-size: 18px;
 		}
 		strong {
@@ -75,33 +75,48 @@
 </div>
 <h3><strong>Basic Structures/Constructs</strong></h3>
 <div style="font-size: 18px;" class="docm">
-	<strong class="doc">User</strong><span>{"username": "Dexter", "avatar": "https://cdn.discordapp.com/avatars/780079091172900884/a_67334df2dd44cfcf20e025bb8d7f7f34.gif?size=1024", "disc": "6969", "status": 2}</span>
-	<div class="table">
+   <strong class="doc">User</strong><span>{"id": 428292404160757760", "username": "Dexter", "avatar": "https://cdn.discordapp.com/avatars/.....", "disc": "6969", "status": 2}</span>
+   <div class="table">
 	<table>
 		<tr>
 			<th>Key</th>
 			<th>Description</th>
 			<th>Type</th>
 		</tr>
+                <tr>
+                        <td>username</td>
+                        <td>This is the username of the user as per the Redis cache which expires every 8 hours</td>
+                        <td>String</td>
+                </tr>
   		<tr>
-			<td>username</td>
-			<td>This is the username of the user as per the Redis cache which expires every 8 hours</td>
+			<td>id</td>
+			<td>This is the user id of the user as per the Redis cache which expires every 8 hours</td>
+			<td>String[Integer]</td>
+		</tr>
+		<tr>
+			<td>avatar</td>
+			<td>This is the avatar of the user as per the Redis cache which expires every 8 hours</td>
 			<td>String</td>
 		</tr>
 		<tr>
-    <td>type</td>
-    <td>This is the payload type which is how you are supposed to respond or extra information about the payload such as NO_AUTH or API_TOKEN.</td>
-    <td>String</td>
-  </tr>
-  <tr>
-    <td>data</td>
-    <td>If the payload is a data payload like EVENTS_V1, then this the main data sent by the payload. This key is not present on non-data payloads</td>
-    <td>Optional[String]</td>
-  </tr>
-
-</table>
-</div>
-
+			<td>disc</td>
+			<td>This is the discriminator of the user as per the Redis cache which expires every 8 hours</td>
+			<td>String[Integer]</td>
+		</tr>
+                <tr>
+                        <td>status</td>
+			<td>This is the status of the user as per the Redis cache which expires every 8 hours
+				<br/><br/>
+				0 - Unknown<br/>
+				1 - Online<br/>
+				2 - Offline<br/>
+				3 - Idle<br/>
+				4 - Do Not Disturb<br/>
+			</td>
+                        <td>Integer</td>
+                </tr>
+	</table>
+   </div>
 </div>
 <h3><strong>CSS Docs Reference</strong></h3>
 <div style="font-size: 18px;" class="docm">
