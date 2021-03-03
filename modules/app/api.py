@@ -85,11 +85,10 @@ async def edit_promotion(request: Request, bot_id: int, promo: PromoPatch, Autho
     id = await db.fetchrow("SELECT bot_id FROM bots WHERE bot_id = $1 AND api_token = $2", bot_id, str(Authorization))
     if id is None:
         return abort(401)
-    id = id["bot_id"]
-    pid = await db.fetchrow("SELECT id, events FROM api_event WHERE id = $1", promo.promo_id)
-    if eid is None:
-        return {"done":  False, "reason": "NO_MESSAGE_FOUND"}
-    await db.execute("UPDATE bot_promotions SET title = $1, info = $2 WHERE bot_id = $3", promo.title, promo.info, id)
+    pid = await db.fetchrow("SELECT id FROM bot_promotions WHERE id = $1 AND bot_id = $2", promo.promo_id, bot_id)
+    if pid is None:
+        return ORJSONResponse({"done":  False, "reason": "NO_PROMOTION_FOUND"}, status_code = 400)
+    await db.execute("UPDATE bot_promotions SET title = $1, info = $2 WHERE bot_id = $3 AND id = $4", promo.title, promo.info, bot_id, promo.promo_id)
     return {"done": True, "reason": None}
 
 @router.patch("/bots/{bot_id}/token", tags = ["API"], response_model = APIResponse)
@@ -226,7 +225,7 @@ class CommandObj(BaseModel):
     commands: list
 
 @router.get("/bots/{bot_id}/commands", tags = ["API"], response_model = CommandObj)
-async def get_promotion(request:  Request, bot_id: int):
+async def get_bot_commands_api(request:  Request, bot_id: int):
     return {"commands": (await db.fetch("SELECT id, slash, name, description, args, examples, premium_only, notes, doc_link FROM bot_commands WHERE bot_id = $1", bot_id))}
 
 

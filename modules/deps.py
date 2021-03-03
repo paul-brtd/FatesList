@@ -70,10 +70,10 @@ def get_token(length: str) -> str:
     return secure_str
 
 def human_format(num: int) -> str:
+    if abs(num) < 1000:
+        return str(abs(num))
     num = float('{:.3g}'.format(num))
     magnitude = 0
-    if abs(num) < 1000:
-        return str(num)
     while abs(num) >= 1000:
         magnitude += 1
         if magnitude == 31:
