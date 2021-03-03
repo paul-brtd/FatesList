@@ -408,7 +408,7 @@ async def get_tags_api(request: Request, name: str):
     """Gets a tag given its internal name (custom_prefix, open_source etc)"""
     if name not in TAGS.keys():
         return abort(404)
-    return {"name": name.replace("_", " ").title(), "iconify_data": TAGS[name]}
+    return {"name": name.replace("_", " ").title(), "iconify_data": TAGS[name], "id": name}
 
 
 class VanityAPI(BaseModel):
