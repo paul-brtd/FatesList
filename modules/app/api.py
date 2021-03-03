@@ -174,6 +174,8 @@ async def get_bots_api(request: Request, bot_id: int, compact: Optional[bool] = 
     if api_ret["features"] is None:
         api_ret["features"] = []
     bot_obj = await get_bot(bot_id)
+    if bot_obj is None:
+        return abort(404)
     api_ret = api_ret | bot_obj
     api_ret["main_owner"] = str(api_ret["main_owner"])
     if api_ret["extra_owners"] is None:
