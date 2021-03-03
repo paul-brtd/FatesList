@@ -409,11 +409,11 @@ $("#bot_form").submit( function(eventObj) {
   const selected_tags = []
   {% endif %}
   const myOptions = [
-      {% for tag_key, tag_val in tags_fixed.items() %}
+      {% for tag in tags_fixed %}
 
     {
-      label: '{{tag_val[0]}}',
-          value: '{{tag_key}}',
+      label: '{{tag.name}}',
+          value: '{{tag.id}}',
         },
         {% endfor %}
       ]
