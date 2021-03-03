@@ -81,7 +81,7 @@ async def edit_promotion(request: Request, bot_id: int, promo: PromoPatch, Autho
 
     """
     if len(promo.title) < 3:
-        return {"done":  False, "reason": "TEXT_TOO_SMALL"}
+        return ORJSONResponse({"done":  False, "reason": "TEXT_TOO_SMALL"}, status_code = 400)
     id = await db.fetchrow("SELECT bot_id FROM bots WHERE bot_id = $1 AND api_token = $2", bot_id, str(Authorization))
     if id is None:
         return abort(401)
