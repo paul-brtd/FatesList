@@ -358,8 +358,12 @@ async def ban_bot(request: Request, bot_id: int, ban: int = FForm(1), reason: st
 #   epoch bigint
 #);
 
+async def base_rev_bt(bot_id, event, base_dict):
+    reviews = await parse_reviews(bot_id)
+    await add_event(bot_id, "new_review", base_dict | {"reviews": reviews[0], "average_stars": reviews[1]})
+
 @router.post("/{bot_id}/reviews/new")
-async def new_reviews(request: Request, bot_id: int, rating: float = FForm(5.1), review: str = FForm("This is a placeholder review as the user has not posted anything...")):
+async def new_reviews(request: Request, bot_id: int, bt: BackgroundTasks, rating: float = FForm(5.1), review: str = FForm("This is a placeholder review as the user has not posted anything...")):
     if "userid" not in request.session.keys():
         return RedirectResponse(f"/auth/login?redirect=/bot/{bot_id}&pretty=to review this bot", status_code = 303)
     check = await db.fetchrow("SELECT bot_id FROM bot_reviews WHERE bot_id = $1 AND user_id = $2 AND reply = false", bot_id, int(request.session["userid"]))
@@ -367,12 +371,13 @@ async def new_reviews(request: Request, bot_id: int, rating: float = FForm(5.1),
         return templates.TemplateResponse("message.html", {"request": request, "message": "You have already made a review for this bot, please edit that one instead of making a new one!"})
     id = uuid.uuid4()
     await db.execute("INSERT INTO bot_reviews (id, bot_id, user_id, star_rating, review_text, epoch) VALUES ($1, $2, $3, $4, $5, $6)", id, bot_id, int(request.session["userid"]), rating, review, [time.time()])
-    reviews = await parse_reviews(bot_id)
-    await add_event(bot_id, "new_review", {"user": request.session["userid"], "reply": False, "review_id": str(id), "rating": rating, "review": review, "reviews": reviews[0], "average_stars": reviews[1]})
+    bt.add_task(base_rev_bt, bot_id, "new_review", {"user": request.session["userid"], "reply": False, "review_id": str(id), "rating": rating, "review": review, "root": None})
     return templates.TemplateResponse("message.html", {"request": request, "message": "Successfully made a review for this bot!<script>window.location.replace('/bot/" + str(bot_id) + "')</script>", "username": request.session.get("username", False), "avatar": request.session.get('avatar')}) 
 
+
+
 @router.post("/{bot_id}/reviews/{rid}/edit")
-async def edit_review(request: Request, bot_id: int, rid: uuid.UUID, rating: float = FForm(5.1), review: str = FForm("This is a placeholder review as the user has not posted anything...")):
+async def edit_review(request: Request, bot_id: int, rid: uuid.UUID, bt: BackgroundTasks, rating: float = FForm(5.1), review: str = FForm("This is a placeholder review as the user has not posted anything...")):
     if "userid" not in request.session.keys():
         return RedirectResponse(f"/auth/login?redirect=/bot/{bot_id}&pretty=to edit reviews", status_code = 303)
     guild = client.get_guild(main_server)
@@ -392,12 +397,11 @@ async def edit_review(request: Request, bot_id: int, rid: uuid.UUID, rating: flo
     else:
         epoch = [time.time()]
     await db.execute("UPDATE bot_reviews SET star_rating = $1, review_text = $2, epoch = $3 WHERE id = $4", rating, review, epoch, rid)
-    reviews = await parse_reviews(bot_id)
-    await add_event(bot_id, "edit_review", {"user": request.session["userid"], "review_id": str(rid), "rating": rating, "review": review, "reviews": reviews[0], "average_stars": reviews[1]})
+    bt.add_task(base_rev_bt, bot_id, "edit_review", {"user": request.session["userid"], "review_id": str(rid), "rating": rating, "review": review})
     return templates.TemplateResponse("message.html", {"request": request, "message": "Successfully editted your/this review for this bot!<script>window.location.replace('/bot/" + str(bot_id) + "')</script>"})
 
 @router.post("/{bot_id}/reviews/{rid}/reply")
-async def edit_review(request: Request, bot_id: int, rid: uuid.UUID, rating: float = FForm(5.1), review: str = FForm("This is a placeholder review as the user has not posted anything...")):
+async def edit_review(request: Request, bot_id: int, rid: uuid.UUID, bt: BackgroundTasks, rating: float = FForm(5.1), review: str = FForm("This is a placeholder review as the user has not posted anything...")):
     if "userid" not in request.session.keys():
         return RedirectResponse(f"/auth/login?redirect=/bot/{bot_id}&pretty=to edit reviews", status_code = 303)
     check = await db.fetchrow("SELECT replies FROM bot_reviews WHERE id = $1", rid)
@@ -408,12 +412,11 @@ async def edit_review(request: Request, bot_id: int, rid: uuid.UUID, rating: flo
     replies = check["replies"]
     replies.append(reply_id)
     await db.execute("UPDATE bot_reviews SET replies = $1 WHERE id = $2", replies, rid)
-    reviews = await parse_reviews(bot_id)
-    await add_event(bot_id, "new_review", {"user": request.session["userid"], "reply": True, "review_id": str(reply_id), "rating": rating, "review": review, "root": str(rid), "reviews": reviews[0], "average_stars": reviews[1]})
+    bt.add_task(base_rev_bt, bot_id, "new_review", {"user": request.session["userid"], "reply": True, "review_id": str(reply_id), "rating": rating, "review": review, "root": str(rid)})
     return templates.TemplateResponse("message.html", {"request": request, "message": "Successfully replied to your/this review for this bot!<script>window.location.replace('/bot/" + str(bot_id) + "')</script>"})
 
 @router.post("/{bot_id}/reviews/{rid}/delete")
-async def delete_review(request: Request, bot_id: int, rid: uuid.UUID):
+async def delete_review(request: Request, bot_id: int, rid: uuid.UUID, bt: BackgroundTasks):
     if "userid" not in request.session.keys():
         return RedirectResponse(f"/auth/login?redirect=/bot/{bot_id}&pretty=to delete reviews", status_code = 303)
     guild = client.get_guild(main_server)
@@ -432,8 +435,7 @@ async def delete_review(request: Request, bot_id: int, rid: uuid.UUID):
         if check is None:
             return templates.TemplateResponse("message.html", {"request": request, "message": "You are not allowed to delete this review"})
     await db.execute("DELETE FROM bot_reviews WHERE id = $1", rid)
-    reviews = await parse_reviews(bot_id)
-    await add_event(bot_id, "delete_review", {"user": request.session["userid"], "reply": False, "review_id": str(rid), "reviews": reviews[0], "average_stars": reviews[1]})
+    bt.add_task(base_rev_bt, bot_id, "delete_review", {"user": request.session["userid"], "reply": False, "review_id": str(rid)})
     return templates.TemplateResponse("message.html", {"request": request, "message": "Successfully deleted your/this review for this bot!<script>window.location.replace('/bot/" + str(bot_id) + "')</script>"})
 
 @router.post("/{bot_id}/reviews/{rid}/upvote")
