@@ -48,13 +48,13 @@ async def admin_api(request: Request, bt: BackgroundTasks, admin: str = FForm(""
         if users is None:
             return RedirectResponse("/admin/console", status_code = 303)
         await db.execute("UPDATE bots SET certified = true WHERE bot_id = $1", bot_id)
-        await db.execute("UPDATE users SET certified = true WHERE userid = $1", int(users["owner"]))
+        await db.execute("UPDATE users SET certified = true WHERE user_id = $1", int(users["owner"]))
         if users["extra_owners"] is None:
             eo = []
         else:
             eo = users["extra_owners"]
         for user in eo:
-            await db.execute("UPDATE users SET certified = true WHERE userid = $1", int(user))
+            await db.execute("UPDATE users SET certified = true WHERE user_id = $1", int(user))
         channel = client.get_channel(bot_logs)
         owner=str(request.session["userid"])
         await channel.send(f"<@{owner}> certified the bot <@{bot_id}>")
@@ -65,12 +65,6 @@ async def admin_api(request: Request, bt: BackgroundTasks, admin: str = FForm(""
         owner=str(request.session["userid"])
         await channel.send(f"<@{owner}> uncertified the bot <@{bot_id}>")
         return templates.TemplateResponse("message.html", {"request": request, "message": "Hey mikes, i hope it uncertified the bot!", "username": request.session.get("username", False)})
-    elif admin == "whitelist":
-        await db.execute("UPDATE bots SET autovote_whitelist = true WHERE bot_id = $1", bot_id)
-        return "Done"
-    elif admin == "unwhitelist":
-        await db.execute("UPDATE bots SET autovote_whitelist = false WHERE bot_id = $1", bot_id)
-        return "Done"
     elif admin=="reset":
         bt.add_task(stat_update_bt)        
         return templates.TemplateResponse("message.html", {"request": request, "message": "Hey mikes, i hope your wish comes true ;)", "username": request.session.get("username", False)})

@@ -36,6 +36,7 @@
                                                 <h5 style="color: black;" class="modal-title" id="{{badge_id}}Label">{{badge_dict["name"]}}</h5>
                                         </div>
                                         <div class="modal-body">
+                                del ws_events[str(bid)][key]["status"]
                                         {{badge_dict["description"]}}<br/><br/>
                                         </div>
                                 </div>
@@ -55,6 +56,7 @@
     </div>
     {% if personal %}
     <h6 class="white" style="margin-bottom: 11px;">Note that the above list of bots includes your bots in the queue and banned bots (DM/ping an admin for resubmission). These bots are hidden unless you are logged in.</h6>
+    <small class="long-desc-link">API Token (User) [DO NOT SHARE]: {{user_info.api_token}}</small>
     {%endif%}
 <script>
         function modalShow(id) {

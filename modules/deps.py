@@ -404,11 +404,6 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, review:
         ldesc = emd(markdown.markdown(bot['long_description'], extensions=["extra", "abbr", "attr_list", "def_list", "fenced_code", "footnotes", "tables", "admonition", "codehilite", "meta", "nl2br", "sane_lists", "toc", "wikilinks", "smarty", "md_in_html"]))
     else:
         ldesc = bot['long_description']
-    if not bot["js_whitelist"]:
-        cleaner = Cleaner()
-        cleaner.javascript = True # This is True because we want to activate the javascript filter 
-        cleaner.whitelist_tags = ['style']
-        ldesc = cleaner.clean_html(ldesc)
     # Take the h1...h5 anad drop it one lower
     ldesc = ldesc.replace("<h1", "<h2 style='text-align: center'").replace("<h2", "<h3").replace("<h4", "<h5").replace("<h6", "<p")
 
@@ -545,7 +540,7 @@ async def vanity_bot(vanity: str, compact = False):
         type = "profile"
     if compact:
         return type, str(t["redirect"])
-    return "/" + type + "/" + str(t["redirect"]), type
+    return int(t["redirect"]), type
 
 # WebSocket Base Code
 

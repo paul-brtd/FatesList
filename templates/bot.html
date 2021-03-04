@@ -88,7 +88,7 @@ html,body { height:100%; }
   display: none;
 }
 
-    .blackbar {background: black; border-radius: 120px 120px 0px 0px; border: hidden; margin-top: 5px; min-height: 500px; padding: 5px;}
+    .blackbar {background: black; border: hidden; margin-top: 5px; min-height: 500px; padding: 5px;}
 
 th, td {
   padding: 23px;
@@ -132,6 +132,9 @@ th {
 	{{bot.css.replace(".alert", "")}}
 
 
+textarea {
+	border-radius: 2em !important;
+}
 </style>
 {% endblock %}
 {% block content %}
@@ -183,7 +186,7 @@ th {
        {% endif %}
         {% if not bot.website or bot.website == "" or bot.website == "None" %}
         {% else %}
-	<a target=”_blank” href="{{bot.website}}"<button class="btn btn-outline-light bot-buttons-all" id="bot-buttons-website">Website</button></a>
+	<a target=”_blank” href="{{bot.website}}"><button class="btn btn-outline-light bot-buttons-all" id="bot-buttons-website">Website</button></a>
        {% endif %}
        {% if not bot.banned%}
        <a target=”_blank” href="/bot/{{bot_id}}/invite"><button class="btn btn-outline-light bot-buttons-all" id="bot-buttons-invite">Invite</button></a>
@@ -236,7 +239,7 @@ th {
 			<input class='slider bot-range-slider' type="range" name="rating" min="0.1" max="10" style="width: 100%" value='5' step='0.1' output="rating-desc"/>
 			<p id='rating-desc' style="color: white;"></p>
 			<label for="review">Please write a few words about the bot (in your opinion)</label>
-			<textarea id='bot-rating-review' name="review" type="text" class="form-control fform" style="min-height: 100px; height: 100px; border-radius: 20px 20px 20px 20px !important;" required minlength="9" placeholder="This bot is a really good bot because of X, Y and Z however...">{{review_desc}}</textarea>
+			<textarea id='bot-rating-review' name="review" type="text" class="form-control fform" style="min-height: 100px; height: 100px;" required minlength="9" placeholder="This bot is a really good bot because of X, Y and Z however...">{{review_desc}}</textarea>
 			<button type="submit" class="btn btn-outline-light">Review</button>
 		</form>
 		{% else %}

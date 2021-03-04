@@ -28,23 +28,24 @@ async def nonerouter():
     return RedirectResponse("/static/assets/img/banner.webp", status_code = 301)
 
 @router.get("/{vanity}")
-async def vanity_bot_uri(request: Request, vanity: str):
+async def vanity_bot_uri(request: Request, bt: BackgroundTasks, vanity: str):
     vurl = await vanity_bot(vanity)
     print("Vanity: ", vurl)
     if vurl is None:
         return templates.e(request, "Invalid Vanity")
     if vurl[1] == "profile":
         return abort(404)
-    return RedirectResponse(vurl[0])
+    return await render_bot(bt = bt, bot_id = vurl[0], review = False, widget = False, request = request)
 
 @router.get("/{vanity}/edit")
-async def vanity_edit(request: Request, vanity: str):
+async def vanity_edit(request: Request, vanity: str, bt: BackgroundTasks):
     vurl = await vanity_bot(vanity)
     if vurl is None:
         return templates.e(request, "Invalid Vanity")
     if vurl[1] == "profile":
         return abort(404)
-    return RedirectResponse(vurl[0] + "/edit")
+    eurl = "/".join([site_url, vurl[1], str(vurl[0]), "edit"])
+    return RedirectResponse(eurl)
 
 @router.get("/{vanity}/vote")
 async def vanity_vote(request: Request, vanity: str):
@@ -53,7 +54,8 @@ async def vanity_vote(request: Request, vanity: str):
         return templates.e(request, "Invalid Vanity")
     if vurl[1] == "profile":
         return abort(404)
-    return RedirectResponse(vurl[0] + "/vote")
+    eurl = "/".join([site_url, vurl[1], str(vurl[0]), "vote"])
+    return RedirectResponse(eurl)
 
 @router.get("/{vanity}/invite")
 async def vanity_invite(request: Request, vanity: str):
@@ -62,8 +64,8 @@ async def vanity_invite(request: Request, vanity: str):
         return templates.e(request, "Invalid Vanity")
     if vurl[1] == "profile":
         return abort(404)
-    return RedirectResponse(vurl[0] + "/invite")
-
+    eurl = "/".join([site_url, vurl[1], str(vurl[0]), "invite"])
+    return RedirectResponse(eurl)
 @router.get("/v/{a:path}")
 async def v_legacy(request: Request, a: str):
     return RedirectResponse(str(request.url).replace("/v/", "/"))
