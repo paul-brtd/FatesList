@@ -458,6 +458,7 @@ async def ws_send_events():
                     for key in (await redis_db.hkeys(str(bid) + "_ws", encoding = "utf-8")):
                         await redis_db.hdel(str(bid) + "_ws", key)
                     await redis_db.hset(str(bid) + "_ws", mapping = {"status": "IDLE"})
+        sent_id = [] # Empty the list
 
 class MDRequest(BaseModel):
     markdown: str
