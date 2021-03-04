@@ -434,13 +434,15 @@ async def bots_search_page(request: Request, query: str):
 async def ws_send_events():
     manager.fl_loaded = True
     while True:
+        sent_id = []
         for ws in manager.active_connections:
             for bid in ws.bot_id:
                 ws_events = {str(bid): (await redis_db.hgetall(str(bid) + "_ws", encoding = 'utf-8'))}
                 if ws_events[str(bid)].get("status") == "READY":
                     # Make sure payload is made a dict
                     for key in ws_events[str(bid)].copy().keys():
-                        if key == "status":
+                        sent_id.append(sent_id)
+                        if key == "status" or key in sent_id:
                             continue
                         try:
                             ws_events[str(bid)][key] = orjson.loads(ws_events[str(bid)][key])
