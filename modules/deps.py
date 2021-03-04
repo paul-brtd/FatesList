@@ -218,7 +218,7 @@ async def add_event(bot_id: int, event: str, context: dict, *, send_event = True
         cont = True
         if webh["webhook_type"].upper() == "FC":
             f = requests.post
-            json = {"event": event, "context": context, "bot_id": str(bot_id)}
+            json = {"event": event, "context": context, "bot_id": str(bot_id), "event_id": str(id)}
             headers = {"Authorization": apitok["api_token"]}
         elif webh["webhook_type"].upper() == "DISCORD" and event in "vote":
             webhook = DiscordWebhook(url=uri)
@@ -449,7 +449,7 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, review:
         return templates.e(request, "Bot Not Found")
     _tags_fixed_bot = [tag for tag in tags_fixed if tag["id"] in bot["tags"]]
     form = await Form.from_formdata(request)
-    bt.add_task(add_ws_event, bot_id, {"payload": "event", "id": str(uuid.uuid4()), "event": "view", "context": {"user": 0, "hidden": 1, "widget": str(widget)}})
+    bt.add_task(add_ws_event, bot_id, {"payload": "event", "id": str(uuid.uuid4()), "event": "view", "context": {"user": request.session.get('userid'), "widget": str(widget)}})
     if widget:
         f = "widget.html"
         reviews = [0, 1]

@@ -360,7 +360,7 @@ async def ban_bot(request: Request, bot_id: int, ban: int = FForm(1), reason: st
 
 async def base_rev_bt(bot_id, event, base_dict):
     reviews = await parse_reviews(bot_id)
-    await add_event(bot_id, "new_review", base_dict | {"reviews": reviews[0], "average_stars": reviews[1]})
+    await add_event(bot_id, event, base_dict | {"reviews": reviews[0], "average_stars": reviews[1]})
 
 @router.post("/{bot_id}/reviews/new")
 async def new_reviews(request: Request, bot_id: int, bt: BackgroundTasks, rating: float = FForm(5.1), review: str = FForm("This is a placeholder review as the user has not posted anything...")):

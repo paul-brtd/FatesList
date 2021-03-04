@@ -228,7 +228,7 @@
 <p>Identity Payloads are what you will get when you first try to connect to the WebSocket API. You must repond using a IDENTITY_RESPONSE payload with the type being API_TOKEN and the data being the <em>list</em> of API Tokens you want events for. If you do not use the correct format, a KILL_CONN payload with the type INVALID_IDENTITY_RESPONSE will be sent to you and the connection will be closed with code 4004. If none of your API Tokens match, you will get a KILL_CONN payload with the type NO_AUTH. Once connections is successful, a STATUS payload with type READY will be sent to you. From here, all transmissions other than ping become server -> client only.<br/><br/>For your reference, here is an example of a IDENTITY_RESPONSE: {"payload": "IDENTITY_RESPONSE", "type": "API_TOKEN", "data": ["TOKEN1", "TOKEN2"]}
 </p>
 <strong class="doc">Events Payload</strong><span>{"payload": "EVENTS", "type": "EVENTS_V1", "data": {"bot_id": WsEventsObject, "bot_id_2": WsEventsObject}</span>
-<p>Events Payloads are what you will get after connecting to the websocket whenever you have a new event. They will/should always have a STATUS key with the value being READY. This key is not part of the WsEventsObject and should be ignored. Additionally, you will see that the WsEventsObject will be a dictionary with the key being the event id and the value being a WsEvent and the WsEventsObject is part of a dictionary with the key being the bot_ids you connected to the WS using IDENTITY for. The type may be changed if breaking changes are made. A WsEvent has the following format (WsEventsObject is {event_id: WsEvent, event_id_2...}):</p>
+<p>Events Payloads are what you will get after connecting to the websocket whenever you have a new event. You will see that the WsEventsObject will be a dictionary with the key being the event id and the value being a WsEvent and the WsEventsObject is part of a dictionary with the key being the bot_ids you connected to the WS using IDENTITY for. The type may be changed if breaking changes are made. A WsEvent has the following format (WsEventsObject is {event_id: WsEvent, event_id_2...}):</p>
 <div class="table">
 <table>
   <tr>
@@ -254,7 +254,7 @@
 
 </table>
 </div>
-<p>For your reference, here is an example of a EVENTS payload: {"payload": "EVENTS", "type": "EVENTS_V1", "data": {"631115725876101150": {"status": "READY", "18741a69-552b-4d7d-ab0b-7ed211a22049": {"payload": "event", "event": "view", "context": {"user": 0, "hidden": 1, "widget": "False"}}}}}
+<p>For your reference, here is an example of a EVENTS payload: {"payload": "EVENTS", "type": "EVENTS_V1", "data": {"631115725876101150": {"18741a69-552b-4d7d-ab0b-7ed211a22049": {"payload": "event", "event": "view", "context": {"user": 0, "hidden": 1, "widget": "False"}}}}}
 </p>
 
 </div>

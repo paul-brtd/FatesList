@@ -439,11 +439,17 @@ async def ws_send_events():
                 ws_events = {str(bid): (await redis_db.hgetall(str(bid) + "_ws", encoding = 'utf-8'))}
                 if ws_events[str(bid)].get("status") == "READY":
                     # Make sure payload is made a dict
-                    for key in ws_events[str(bid)].keys():
+                    for key in ws_events[str(bid)].copy().keys():
+                        if key == "status":
+                            continue
                         try:
                             ws_events[str(bid)][key] = orjson.loads(ws_events[str(bid)][key])
+                            try:
+                                del ws_events[str(bid)]["status"]
+                                del ws_events[str(bid)][key]["status"]
+                            except:
+                                pass
                             del ws_events[str(bid)][key]['id']
-                            print("KEY: " + ws_events[str(bid)][key])
                         except:
                             pass
                     rc = await manager.send_personal_message({"payload": "EVENTS", "type": "EVENTS_V1", "data": ws_events}, ws)
