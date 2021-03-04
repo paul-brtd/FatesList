@@ -510,7 +510,7 @@ async def websocker_real_time_api(websocket: WebSocket):
         if websocket.api_token == [] or websocket.bot_id == []:
             await manager.send_personal_message({"payload": "KILL_CONN", "type": "NO_AUTH"}, websocket)
             return await ws_close(websocket, 4004)
-    await manager.send_personal_message({"payload": "STATUS", "type": "READY"}, websocket)
+    await manager.send_personal_message({"payload": "STATUS", "type": "READY", "data": [str(bid) for bid in websocket.bot_id]}, websocket)
     try:
         asyncio.create_task(ws_send_events())
         while True:

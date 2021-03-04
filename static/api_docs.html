@@ -75,6 +75,7 @@
 </div>
 <h3><strong>Basic Structures/Constructs</strong></h3>
 <div style="font-size: 18px;" class="docm">
+   <strong class="doc">Snowflake</strong><span>A snowflake is a Discord Snowflake in String format like "563808552288780322"</span><br/>
    <strong class="doc">User</strong><span>{"id": 428292404160757760", "username": "Dexter", "avatar": "https://cdn.discordapp.com/avatars/.....", "disc": "6969", "status": 2}</span>
    <div class="table">
 	<table>
@@ -91,7 +92,7 @@
   		<tr>
 			<td>id</td>
 			<td>This is the user id of the user as per the Redis cache which expires every 8 hours</td>
-			<td>String[Integer]</td>
+			<td>Snowflake</td>
 		</tr>
 		<tr>
 			<td>avatar</td>
@@ -180,7 +181,7 @@
   <tr>
     <td>id</td>
     <td>This is the ID of the user who voted for your bot</td>
-    <td>String</td>
+    <td>Snowflake</td>
   </tr>
   <tr>
     <td>votes</td>
@@ -193,7 +194,47 @@
     <td>Optional[Boolean]</td>
   </tr>
 </table>
-</div>	
+</div>
+<br/>
+<strong style="font-size: 20px;" class="doc">Fates Client Webhook</strong><span>Your Fates Client webhook will be sent as Events which have the below format:</span>
+<div class="table">
+<table>
+  <tr>
+    <th>Key</th>
+    <th>Description</th>
+    <th>Type</th>
+  </tr>
+  <tr>
+    <td>event</td>
+    <td>This is the event name. Here are the currently available events:
+	<br/><br/><br/>
+	add_bot - Unusable as you don't have the api token, but is there to be complete<br/><br/>
+	Context:<br/>None
+	<br/><br/><br/>
+	edit_bot - This will be sent when you or someone else edits your bot.<br/><br/>
+	Context:<br/>user - The user id (in string) who has editted your bot
+	<br/><br/><br/>
+        delete_bot - This will be sent when you or someone else deletes your bot.<br/><br/>
+        Context:<br/>user - The user id (in string) who has editted your bot
+        <br/><br/><br/>
+	view - This will be sent whenever someone views your bot. <strong>It is only sent in websockets as a WsEvent (which is an extension of an Event)</strong><br/><br/>
+	Context:<br/>user - The user id (in string) who is viewing your bot<br/>widget - Whether the user is viewing it as a widget or not. Due to our WebSocket and Redis implementation, you will get a string "True" or "False"
+    </td>
+    <td>String</td>
+  </tr>
+  <tr>
+    <td>context</td>
+    <td>This is the event context. See the event key for the full list of arguments (key value pairs) you will get for each events</td>
+    <td>Dictionary (JSON)</td>
+  </tr>
+  <tr>
+    <td>bot_id</td>
+    <td>This is the bot ID of the bot who is recieving the event. This will be a snowflake</td>
+    <td>Snowflake</td>
+  </tr>
+</table>
+</div>
+<p>For your reference, here is an example of a Event. This is also the base of the websocket WsEvent so make you understand this: {'event': 'edit_bot', 'context': {'user': '563808552288780322'}, 'bot_id': '798951566634778641'}</p>
 </div>
 <h3><strong>WebSocket Documentation</strong></h3>
 <div style="font-size: 18px;" class="docm">
@@ -225,10 +266,10 @@
 </table>
 </div>
 <strong class="doc">Identity Payload</strong><span>{"payload": "IDENTITY", "type": "API_TOKEN"}</span>
-<p>Identity Payloads are what you will get when you first try to connect to the WebSocket API. You must repond using a IDENTITY_RESPONSE payload with the type being API_TOKEN and the data being the <em>list</em> of API Tokens you want events for. If you do not use the correct format, a KILL_CONN payload with the type INVALID_IDENTITY_RESPONSE will be sent to you and the connection will be closed with code 4004. If none of your API Tokens match, you will get a KILL_CONN payload with the type NO_AUTH. Once connections is successful, a STATUS payload with type READY will be sent to you. From here, all transmissions other than ping become server -> client only.<br/><br/>For your reference, here is an example of a IDENTITY_RESPONSE: {"payload": "IDENTITY_RESPONSE", "type": "API_TOKEN", "data": ["TOKEN1", "TOKEN2"]}
+<p>Identity Payloads are what you will get when you first try to connect to the WebSocket API. You must repond using a IDENTITY_RESPONSE payload with the type being API_TOKEN and the data being the <em>list</em> of API Tokens you want events for. If you do not use the correct format, a KILL_CONN payload with the type INVALID_IDENTITY_RESPONSE will be sent to you and the connection will be closed with code 4004. If none of your API Tokens match, you will get a KILL_CONN payload with the type NO_AUTH. Once connections is successful, a STATUS payload with type READY and data being all registered bot IDs according to the API Token's you have sent will be sent to you. From here, all transmissions other than ping become server -> client only with no further interaction other than ping required.<br/><br/>For your reference, here is an example of a IDENTITY_RESPONSE: {"payload": "IDENTITY_RESPONSE", "type": "API_TOKEN", "data": ["TOKEN1", "TOKEN2"]}
 </p>
 <strong class="doc">Events Payload</strong><span>{"payload": "EVENTS", "type": "EVENTS_V1", "data": {"bot_id": WsEventsObject, "bot_id_2": WsEventsObject}</span>
-<p>Events Payloads are what you will get after connecting to the websocket whenever you have a new event. You will see that the WsEventsObject will be a dictionary with the key being the event id and the value being a WsEvent and the WsEventsObject is part of a dictionary with the key being the bot_ids you connected to the WS using IDENTITY for. The type may be changed if breaking changes are made. A WsEvent has the following format (WsEventsObject is {event_id: WsEvent, event_id_2...}):</p>
+<p>Events Payloads are what you will get after connecting to the websocket whenever you have a new event. You will see that you will get a nested JSON with the bot id as key and a WsEventsObject as value (from above, see example for clarification) which will have its keys as the event id's (views get a random id) and the value being a WsEvent (see below for what this contains)<br/><br/>The type of the Events Payload may be changed if breaking changes are made. A WsEvent similar to a Fates Client Webhook with the below format. The events you will get here are exactly what you will get via Fates Client Webhook so see that for context and everything else:</p>
 <div class="table">
 <table>
   <tr>
@@ -249,7 +290,7 @@
   <tr>
     <td>context</td>
     <td>This is the context of the event</td>
-    <td>Optional[String]</td>
+    <td>Dictionary (JSON)</td>
   </tr>
 
 </table>
