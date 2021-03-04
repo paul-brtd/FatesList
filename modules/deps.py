@@ -218,7 +218,7 @@ async def add_event(bot_id: int, event: str, context: dict, *, send_event = True
         cont = True
         if webh["webhook_type"].upper() == "FC":
             f = requests.post
-            json = {"event": event, "context": context}
+            json = {"event": event, "context": context, "bot_id": str(bot_id)}
             headers = {"Authorization": apitok["api_token"]}
         elif webh["webhook_type"].upper() == "DISCORD" and event in "vote":
             webhook = DiscordWebhook(url=uri)

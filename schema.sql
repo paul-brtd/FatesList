@@ -74,10 +74,10 @@ CREATE TABLE bot_reviews (
    flagged boolean default false,
    epoch bigint[] default '{}',
    replies uuid[] default '{}',
-   reply boolean default false
+   reply boolean default false,
 );
 
-CREATE TABLE bots_voters (
+CREATE TABLE bot_voters (
     bot_id bigint,
     userid bigint,
     timestamps bigint[]
@@ -93,17 +93,6 @@ CREATE TABLE users (
     username text
     css text default '';
 );
-
-CREATE TABLE bot_cache (
-    bot_id bigint,
-    username text,
-    avatar text,
-    epoch bigint,
-    valid boolean,
-    valid_for text
-);
-
-
 CREATE TABLE api_event (
     id uuid primary key DEFAULT uuid_generate_v4(),
     bot_id bigint,

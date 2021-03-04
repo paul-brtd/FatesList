@@ -309,7 +309,9 @@ async def delete_bot(request: Request, bot_id: int, confirmer: str = FForm("1"))
         return templates.TemplateResponse("message.html", {"request": request, "username": request.session.get("username"), "avatar": request.session.get("avatar"), "message": "Forbidden", "context": "Invalid Confirm Code. Please go back and reload the page and if the problem still persists, please report it in the support server"})
     await add_event(bot_id, "delete_bot", {"user": request.session.get('userid')})
     owner = request.session.get("userid")
-    await db.execute("DELETE FROM bots WHERE bot_id = $1", bot_id)
+    for table in "bots", "bot_voters", "bot_promotions", "bot_reviews", "api_event", "bot_maint", "bot_commands", "support_requests":
+        await db.execute(f"DELETE FROM {table} WHERE bot_id = $1", bot_id)
+    await db.execute("DELETE FROM vanity WHERE redirect = $1", bot_id)
     await channel.send(f"<@{owner}> deleted the bot <@{str(bot_id)}>.\nWe are sad to see you go...::sad::")
     return RedirectResponse("/", status_code = 303)
 
@@ -360,12 +362,13 @@ async def ban_bot(request: Request, bot_id: int, ban: int = FForm(1), reason: st
 async def new_reviews(request: Request, bot_id: int, rating: float = FForm(5.1), review: str = FForm("This is a placeholder review as the user has not posted anything...")):
     if "userid" not in request.session.keys():
         return RedirectResponse(f"/auth/login?redirect=/bot/{bot_id}&pretty=to review this bot", status_code = 303)
-    check = await db.fetchrow("SELECT bot_id FROM bot_reviews WHERE bot_id = $1 AND user_id = $2", bot_id, int(request.session["userid"]))
+    check = await db.fetchrow("SELECT bot_id FROM bot_reviews WHERE bot_id = $1 AND user_id = $2 AND reply = false", bot_id, int(request.session["userid"]))
     if check is not None:
         return templates.TemplateResponse("message.html", {"request": request, "message": "You have already made a review for this bot, please edit that one instead of making a new one!"})
     id = uuid.uuid4()
     await db.execute("INSERT INTO bot_reviews (id, bot_id, user_id, star_rating, review_text, epoch) VALUES ($1, $2, $3, $4, $5, $6)", id, bot_id, int(request.session["userid"]), rating, review, [time.time()])
-    await add_event(bot_id, "new_review", {"user": request.session["userid"], "reply": False, "id": id})
+    reviews = await parse_reviews(bot_id)
+    await add_event(bot_id, "new_review", {"user": request.session["userid"], "reply": False, "review_id": str(id), "rating": rating, "review": review, "reviews": reviews[0], "average_stars": reviews[1]})
     return templates.TemplateResponse("message.html", {"request": request, "message": "Successfully made a review for this bot!<script>window.location.replace('/bot/" + str(bot_id) + "')</script>", "username": request.session.get("username", False), "avatar": request.session.get('avatar')}) 
 
 @router.post("/{bot_id}/reviews/{rid}/edit")
@@ -388,8 +391,9 @@ async def edit_review(request: Request, bot_id: int, rid: uuid.UUID, rating: flo
         epoch = check["epoch"]
     else:
         epoch = [time.time()]
-    await add_event(bot_id, "edit_review", {"user": request.session["userid"], "id": str(id)})
     await db.execute("UPDATE bot_reviews SET star_rating = $1, review_text = $2, epoch = $3 WHERE id = $4", rating, review, epoch, rid)
+    reviews = await parse_reviews(bot_id)
+    await add_event(bot_id, "edit_review", {"user": request.session["userid"], "review_id": str(rid), "rating": rating, "review": review, "reviews": reviews[0], "average_stars": reviews[1]})
     return templates.TemplateResponse("message.html", {"request": request, "message": "Successfully editted your/this review for this bot!<script>window.location.replace('/bot/" + str(bot_id) + "')</script>"})
 
 @router.post("/{bot_id}/reviews/{rid}/reply")
@@ -403,8 +407,9 @@ async def edit_review(request: Request, bot_id: int, rid: uuid.UUID, rating: flo
     await db.execute("INSERT INTO bot_reviews (id, bot_id, user_id, star_rating, review_text, epoch, reply) VALUES ($1, $2, $3, $4, $5, $6, $7)", reply_id, bot_id, int(request.session["userid"]), rating, review, [time.time()], True)
     replies = check["replies"]
     replies.append(reply_id)
-    await add_event(bot_id, "new_review", {"user": request.session["userid"], "reply": True, "id": str(reply_id)})
     await db.execute("UPDATE bot_reviews SET replies = $1 WHERE id = $2", replies, rid)
+    reviews = await parse_reviews(bot_id)
+    await add_event(bot_id, "new_review", {"user": request.session["userid"], "reply": True, "review_id": str(reply_id), "rating": rating, "review": review, "root": str(rid), "reviews": reviews[0], "average_stars": reviews[1]})
     return templates.TemplateResponse("message.html", {"request": request, "message": "Successfully replied to your/this review for this bot!<script>window.location.replace('/bot/" + str(bot_id) + "')</script>"})
 
 @router.post("/{bot_id}/reviews/{rid}/delete")
@@ -426,8 +431,9 @@ async def delete_review(request: Request, bot_id: int, rid: uuid.UUID):
         check = await db.fetchrow("SELECT replies FROM bot_reviews WHERE id = $1 AND bot_id = $2 AND user_id = $3", rid, bot_id, int(request.session["userid"]))
         if check is None:
             return templates.TemplateResponse("message.html", {"request": request, "message": "You are not allowed to delete this review"})
-    await add_event(bot_id, "delete_review", {"user": request.session["userid"], "reply": False, "id": str(rid)})
     await db.execute("DELETE FROM bot_reviews WHERE id = $1", rid)
+    reviews = await parse_reviews(bot_id)
+    await add_event(bot_id, "delete_review", {"user": request.session["userid"], "reply": False, "review_id": str(rid), "reviews": reviews[0], "average_stars": reviews[1]})
     return templates.TemplateResponse("message.html", {"request": request, "message": "Successfully deleted your/this review for this bot!<script>window.location.replace('/bot/" + str(bot_id) + "')</script>"})
 
 @router.post("/{bot_id}/reviews/{rid}/upvote")
@@ -441,15 +447,39 @@ async def upvote_bot(request: Request, bot_id: int, rid: uuid.UUID):
     user = int(request.session.get("userid"))
     if user in bot_rev["review_upvotes"]:
         return abort(429)
+    if user in bot_rev["review_downvotes"]:
+        while True:
+            try:
+                bot_rev["review_downvotes"].remove(user)
+            except:
+                break
+    bot_rev["review_upvotes"].append(int(user))
+    await db.execute("UPDATE bot_reviews SET review_upvotes = $1, review_downvotes = $2 WHERE id = $3", bot_rev["review_upvotes"], bot_rev["review_downvotes"], rid)
+    await add_event(bot_id, "upvote_review", {"user": request.session["userid"], "review_id": str(rid), "upvotes": len(bot_rev["review_upvotes"]), "downvotes": len(bot_rev["review_downvotes"])})
+    return templates.TemplateResponse("message.html", {"request": request, "message": "Successfully upvoted this review for this bot!<script>window.location.replace('/bot/" + str(bot_id) + "')</script>"})
+
+@router.post("/{bot_id}/reviews/{rid}/downvote")
+async def downvote_bot(request: Request, bot_id: int, rid: uuid.UUID):
+    if "userid" not in request.session.keys():
+        return RedirectResponse(f"/auth/login?redirect=/bot/{bot_id}&pretty=to upvote reviews", status_code = 303)
+    bot_rev = await db.fetchrow("SELECT review_upvotes, review_downvotes FROM bot_reviews WHERE id = $1", rid)
+    if bot_rev is None:
+        return templates.e("message.html", {"request": request, "message": "You are not allowed to upvote this review (doesn't actually exist)"})
+    bot_rev = dict(bot_rev)
+    user = int(request.session.get("userid"))
+    if user in bot_rev["review_downvotes"]:
+        return abort(429)
     if user in bot_rev["review_upvotes"]:
         while True:
             try:
                 bot_rev["review_upvotes"].remove(user)
             except:
                 break
-    bot_rev["review_upvotes"].append(int(user))
+    bot_rev["review_downvotes"].append(int(user))
     await db.execute("UPDATE bot_reviews SET review_upvotes = $1, review_downvotes = $2 WHERE id = $3", bot_rev["review_upvotes"], bot_rev["review_downvotes"], rid)
-    return templates.TemplateResponse("message.html", {"request": request, "message": "Successfully upvoted this review for this bot!<script>window.location.replace('/bot/" + str(bot_id) + "')</script>"})
+    await add_event(bot_id, "downvote_review", {"user": request.session["userid"], "review_id": str(rid), "upvotes": len(bot_rev["review_upvotes"]), "downvotes": len(bot_rev["review_downvotes"])})
+    return templates.TemplateResponse("message.html", {"request": request, "message": "Successfully downvoted this review for this bot!<script>window.location.replace('/bot/" + str(bot_id) + "')</script>"})
+
 
 @router.get("/{bid}/resubmit")
 async def resubmit_bot(request: Request, bid: int):
