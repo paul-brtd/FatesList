@@ -478,7 +478,7 @@ class PrevRequest(BaseModel):
     html_long_description: bool
     data: str
 
-@router.put("/preview", tags = ["API (Other)"], response_model = MDResponse)
+@router.put("/preview", tags = ["API (Other)"], response_model = MDResponse, dependencies=[Depends(RateLimiter(times=15, minutes=2))])
 async def markdown_to_html_api(request: Request, data: PrevRequest):
     if not data.html_long_description:
         html = emd(markdown.markdown(data.data, extensions=["extra", "abbr", "attr_list", "def_list", "fenced_code", "footnotes", "tables", "admonition", "codehilite", "meta", "nl2br", "sane_lists", "toc", "wikilinks", "smarty", "md_in_html"]))

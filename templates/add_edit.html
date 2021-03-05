@@ -269,7 +269,8 @@
         id="long_description"
 	style="border-radius: 4px 4px 4px 4px !important;"
 	>{{data.long_description}}</textarea>
-      <button type="button" class="btn btn-outline-light" style="margin-bottom: 20px;" onclick="previewLongDesc()">Preview</button>
+      <button type="button" class="btn btn-outline-light" style="margin-bottom: 20px;" onclick="previewLongDesc()">Preview</button><br/>
+      <small style="font-weight: bold; font-size: 15px; color: red;">You can only preview your long description 15 times every 2 minutes unless your bot is certified as this uses the preview API</small>
       <div id="ld-preview" style="display: block; min-height: 400px; min-width: 100vh; overflow: auto; color: white; border-style: solid; border-radius: 4px 4px 4px 4px; margin-bottom: 20px; background: black; font-weight: normal; text-align: left;">
 	Your Long Description will appear here when you click the Preview button :)
       </div>
@@ -321,45 +322,24 @@ function previewLongDesc(){
         $.ajax({
            type: 'PUT',
            dataType: 'json',
+           {% if mode == "edit" %}
+	   headers: {"Authorization": "{{data.api_token}}"},
+	   {% endif %}
            url: '/api/preview',
            data: JSON.stringify({"html_long_description": html, "data": ld}),
-           success: function(responseData, textStatus) {
-               $("#ld-preview").html(responseData.html)
+	   statusCode: {
+           "200": function(data) {
+               $("#ld-preview").html(data.html)
            },
-        error: function(responseData)
-        {
-		console.log(responseData)
-        }
+           "429": function(data)
+           {
+		alert("You have been rate limited from using previews")
+           }
+	}
     });
 
 }
 window.addEventListener("load", previewLongDesc())
-function submit_bot(){
-    var form=$("#bot_form")
-    var unindexed_array = $("#bot_form").serializeArray();
-    var indexed_array = {};
-
-    $.map(unindexed_array, function(n, i){
-        indexed_array[n['name']] = n['value'];
-    });
-    $.ajax({
-        type: 'POST',
-        dataType: 'json',
-        url: '/bot/add',
-        data: JSON.stringify({"form":indexed_array,"tags":instance.value()}),
-        success: function(responseData, textStatus) {
-            // you implementation logic here
-        },
-        complete: function(textStatus) {
-
-        },
-        error: function(responseData)
-        {
-
-        }
-    });
-
-}
 
 $("#bot_form").submit( function(eventObj) {
     var input = $("<input>").attr({"type":"hidden","name":"tags"}).val(instance.value());

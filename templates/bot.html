@@ -225,11 +225,11 @@ textarea {
 	</div>
 	<div id="bot-switcher" style='margin-bottom: 3px;' class='blackbar'>
 		<div class="tab">
-			  <button id="bot-long-desc-tab-button" class="tablinks" onclick="openf(event, 'bot-long-description-container')">Description</button>
-			  <button id="bot-review-tab-button" class="tablinks" onclick="openf(event, 'bot-reviews')">Reviews</button>
-                          <button id="bot-about-tab-button" class="tablinks" onclick="openf(event, 'bot-about')">About</button>
+			  <button id="bot-long-desc-tab-button" class="tablinks" onclick="openf(event, 'bot-long-description-container', this)">Description</button>
+			  <button id="bot-review-tab-button" class="tablinks" onclick="openf(event, 'bot-reviews', this)">Reviews</button>
+                          <button id="bot-about-tab-button" class="tablinks" onclick="openf(event, 'bot-about', this)">About</button>
                           {% if staff[0] %}
-                          <button id="bot-admin-tab-button" class="tablinks" onclick="openf(event, 'bot-admin')">Admin</button>
+                          <button id="bot-admin-tab-button" class="tablinks" onclick="openf(event, 'bot-admin', this)">Admin</button>
 		          {% endif %}
 		</div>
 	<div id="bot-long-description-container" class='tabcontent'>
@@ -493,7 +493,7 @@ function parseState(v) {
 
 document.querySelector("#rating-desc-avg").innerHTML = parseState({{average_rating}}) + ", " + {{average_rating}} 
 
-function openf(evt, id) {
+function openf(evt, id, data) {
   // Declare all variables
   var i, tabcontent, tablinks;
 
@@ -512,6 +512,10 @@ function openf(evt, id) {
   // Show the current tab, and add an "active" class to the button that opened the tab
   document.getElementById(id).style.display = "block";
   evt.currentTarget.className += " active";
+  if(data.id != "bot-long-desc-tab-button")
+	window.location.hash = data.id + "-fl";
+  else 
+	window.location.hash = ""
 }
 </script>
 <script>
@@ -608,7 +612,15 @@ function openf(evt, id) {
 
 </script>	
 <script>
-document.getElementById('bot-long-desc-tab-button').click()
+if(window.location.hash == "")
+	document.querySelector('#bot-long-desc-tab-button').click()
+else
+	try {
+		document.querySelector(window.location.hash.replace("-fl", "")).click()
+	}
+	catch {
+		document.querySelector('#bot-long-desc-tab-button').click()
+	}
 </script>
 </div>
 {% endblock %} 
