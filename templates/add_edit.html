@@ -3,32 +3,11 @@
 {% endblock %} 
 {% block content %}
 
-<div
-  style="
-    border-radius: 15px;
-  "
->
-  <div
-    class="d-flex d-sm-flex d-md-flex d-lg-flex d-xl-flex flex-column justify-content-center align-items-center flex-sm-column justify-content-sm-center align-items-sm-center flex-md-column justify-content-md-center align-items-md-center flex-lg-column justify-content-lg-center align-items-lg-center flex-xl-column justify-content-xl-center align-items-xl-center"
-  >
-    <h2
-      style="
-        color: rgba(255, 255, 255, 0.87);
-        font-weight: bold;
-        margin-top: 40px;
-      "
-    >
-      Fates List
-    </h2>
-    <p
-      style="
-        color: rgba(255, 255, 255, 0.87);
-        font-weight: bold;
-        opacity: 0.78;
-        font-size: 21px;
-      "
-    >
-    {%if mode == "edit" %}Edit your bot here.{%elif mode == "add"%}Add your bot here!{% elif mode == "templ_add" %}Add your server templates here (COMING SOON)!{%endif%}
+<div style="border-radius: 15px;">
+  <div class="d-flex d-sm-flex d-md-flex d-lg-flex d-xl-flex flex-column justify-content-center align-items-center flex-sm-column justify-content-sm-center align-items-sm-center flex-md-column justify-content-md-center align-items-md-center flex-lg-column justify-content-lg-center align-items-lg-center flex-xl-column justify-content-xl-center align-items-xl-center">
+    <h2 style="color: rgba(255, 255, 255, 0.87); font-weight: bold; margin-top: 40px;">Fates List</h2>
+    <p style="color: rgba(255, 255, 255, 0.87); font-weight: bold; opacity: 0.78; font-size: 21px;">
+      {%if mode == "edit" %}Edit your bot here.{%elif mode == "add"%}Add your bot here!{% elif mode == "templ_add" %}Add your server templates here (COMING SOON)!{%endif%}
     </p>
     {% if not error %}
     {% else %}
@@ -37,14 +16,7 @@
     </div>
     {% endif %}
   </div>
-  <hr
-    style="
-      font-size: 20px;
-      border-top-width: 1px;
-      border-top-color: #eee;
-      width: 70%;
-    "
-  />
+  <hr style="font-size: 20px; border-top-width: 1px; border-top-color: #eee; width: 70%;"/>
     <div class="form-group" style="color: blue; width: 80%; margin: 0 auto; height: auto; margin-top: 30px; color: rgba(255, 255, 255, 0.87)">
         <div class="form-group" class="d-flex" style="margin: 15px auto; width: 85%;color: white; font-weight: bold; overflow-wrap: anywhere;">
    {% if mode == "edit" %}
@@ -59,15 +31,11 @@
    <button onclick='regenToken("{{data.api_token}}")' class="btn btn-outline-light">Regenerate</button>
    </section>
    {% endif %}
-  <form
-    style="height: auto; margin-top: 30px; color: rgba(255, 255, 255, 0.87); text-align: center;"
-    id="bot_form"
-    method="POST"
-  >
-    <div class="form-group">
-<div class="container">
-  <div class="row">
-	  <div class="col-lg">
+  <form style="height: auto; margin-top: 30px; color: rgba(255, 255, 255, 0.87); text-align: center;" id="bot_form" method="POST">
+   <div class="form-group">
+    <div class="container">
+      <div class="row">
+	<div class="col-lg">
     <h5 style="font-weight: bold; margin-bottom: 15px;">Basic Information</h5>
       <label
 	for="{% if mode == 'templ_add' or mode == 'templ_edit' %}template_code{% else %}bot_id{% endif %}"
@@ -125,18 +93,6 @@
         value="{{data.prefix}}"
       />
       <label
-        for="guild_count"
-        >Server Count (right now)
-      </label>
-      <input
-        class="form-control fform"
-        type="number"
-        style="
-          max-width: 320px;
-        "
-        name="guild_count"
-      />
-      <label
         for="library"
         >Library <span style="color: red; font-weight: bold" aria-hidden="true">*</span></label
       ><input
@@ -156,10 +112,8 @@
      <h5 style="font-weight: bold; margin-bottom: 15px;">Bot Settings</h5>
      {% if mode == "templ_add" or  mode == "templ_edit"%}
      {% else %}
-     <label
-        for="invite"
-        >Invite URL <span style="color: red; font-weight: bold" aria-hidden="true">*</span></label
-      ><input
+     <label for="invite">Invite URL <span style="color: red; font-weight: bold" aria-hidden="true">*</span></label>
+      <input
         required
         class="form-control fform"
         type="text"
@@ -167,43 +121,44 @@
         placeholder="https://discord.com/oauth2/authorize?client_id=12345637172158464&amp;permissions=314432&amp;scope=bot"
         minlength="10"
         value="{{data.invite}}"
-      /><label
-        for="website"
-        >Website URL</label
-      ><input
+      />
+      <label for="website">Website URL</label>
+      <input
         class="form-control fform"
         type="text"
         name="website"
         placeholder="https://support.com"
         minlength="10"
         value="{{data.website}}"
-      /><label
-        for="website"
-        >Banner URL (optimal: 255x143px)</label
-      ><input
+      />
+      <label for="website">Banner URL (optimal: 255x143px)</label>
+      <input
         class="form-control fform"
         type="text"
         name="banner"
         placeholder="https://cdn.discordapp.com/MySecretBanner.com"
         minlength="10"
         value="{% if data.banner == "none" or data.banner == "" %}{%else%}{{data.banner}}{%endif%}"
-      /><label
-        for="support"
-        >Support server</label
-      >
+      />
+      <label for="support">Support server</label>
       <input
         class="form-control fform"
         type="text"
         name="support"
         placeholder="https://discord.gg/738Hs"
         minlength="10"
-        value="{{data.support}}"
-      />
+        value="{{data.support}}"/>
+      <label for="donate">Donation Link</label>
+      <input
+      class="form-control fform"
+      type="text"
+      name="donate"
+      placeholder="https://patreon.com/foo"
+      minlength="5"
+      value="{% if data.donate %}{{data.donate}}{% endif %}"/>
       {% if mode == "edit" %}
-      <label 
-        for="style"
-      >Webhook Type</label>
-      <div style="background: white; border-radius: 100px 100px 100px 100px; padding: 8px;         margin-top: 7px; margin-bottom: 30px;">
+      <label for="style">Webhook Type</label>
+      <div style="background: white; border-radius: 100px 100px 100px 100px; padding: 8px;margin-top: 7px; margin-bottom: 30px;">
       <select name="webhook_type" class="form-control" style="text-decoration: none; background: white !important!;  padding: 3px;" id="webhook-type">
 	      <option value="VOTE" {% if data.webhook_type == "VOTE" %}selected{%endif%}>Vote Webhook</option>
               <option value="DISCORD" {% if data.webhook_type == "DISCORD" %}selected{%endif%}>Discord Integration</option>
@@ -296,7 +251,7 @@
       for="html_long_description"
       >Long Description Type</label>
       <div style="background: white; border-radius: 4px 4px 4px 4px; padding: 8px; margin-top: 7px; margin-bottom: 30px; width: 93%; margin-left: 40px;">
-      <select name="html_long_description" class="form-control" style="text-decoration: none; background: white !important!;  padding: 3px;">
+      <select id="html_long_description" name="html_long_description" class="form-control" style="text-decoration: none; background: white !important!;  padding: 3px;">
               <option value="true" {% if data.html_long_description %}selected{%endif%}>HTML</option>
               <option value="false" {% if not data.html_long_description %}selected{%endif%}>Markdown</option>
       </select>
@@ -305,7 +260,6 @@
         for="long_description"
         >Long description <span style="color: red; font-weight: bold" aria-hidden="true">*</span>
   </label><br/>
-  <small>You can use <a class="long-desc-link" href="/fates/mdparse" target="_blank">our Markdown Parser</a> to test your markdown. This is not out yet</small>
   <textarea
         class="form-control fform"
 	required
@@ -315,18 +269,16 @@
         id="long_description"
 	style="border-radius: 4px 4px 4px 4px !important;"
 	>{{data.long_description}}</textarea>
+      <button type="button" class="btn btn-outline-light" style="margin-bottom: 20px;" onclick="previewLongDesc()">Preview</button>
+      <div id="ld-preview" style="display: block; min-height: 400px; min-width: 100vh; overflow: auto; color: white; border-style: solid; border-radius: 4px 4px 4px 4px; margin-bottom: 20px; background: black; font-weight: normal; text-align: left;">
+	Your Long Description will appear here when you click the Preview button :)
+      </div>
       <label
         for="tags"
 	>Select tags for your {% if mode == "templ_add" or mode == "templ_edit" %}template{%else%}bot{%endif%}. <span style="color: red; font-weight: bold" aria-hidden="true">*</span></label
       ><span class="select_tags"></span>
       <div class="d-flex justify-content-center">
-        <button
-          class="btn btn-outline-light"
-          type="submit"
-          style="margin-top: 50px; margin-bottom: 30px"
-        >
-	{% if mode == "edit" %}Edit Bot{%else%}Add Bot{%endif%}
-        </button>
+        <button class="btn btn-outline-light" type="submit" style="margin-top: 50px; margin-bottom: 30px">{% if mode == "edit" %}Edit Bot{%else%}Add Bot{%endif%}</button>
       </div>
     </div>
     {{data.form.csrf_token}}
@@ -352,21 +304,36 @@
     <p style="margin-bottom: 3px;">Warning: This cannot be undone</p>
     <form method="POST" action="/bot/{{data.bot_id}}/delete">
 	{{data.form.csrf_token}}
-        <button
-          class="btn btn-danger"
-	  type="submit" 
-          style="margin-top: 20px; margin-bottom: 30px"
-        >
-          Delete Bot
-        </button>
+        <button class="btn btn-danger" type="submit" style="margin-top: 20px; margin-bottom: 30px">Delete Bot</button>
     	<input type="hidden" name="confirmer" value="{{epoch}}"/>
     </form>
     </div>
-			      </div>
-	      </div>
-  </div>
+</div>
+</div>
+</div>
   {% endif %}
 <script>
+function previewLongDesc(){
+	html = document.querySelector("#html_long_description").value == "true";
+	ld = document.querySelector("#long_description").value;
+	if(ld == "")
+		return
+        $.ajax({
+           type: 'PUT',
+           dataType: 'json',
+           url: '/api/preview',
+           data: JSON.stringify({"html_long_description": html, "data": ld}),
+           success: function(responseData, textStatus) {
+               $("#ld-preview").html(responseData.html)
+           },
+        error: function(responseData)
+        {
+		console.log(responseData)
+        }
+    });
+
+}
+window.addEventListener("load", previewLongDesc())
 function submit_bot(){
     var form=$("#bot_form")
     var unindexed_array = $("#bot_form").serializeArray();

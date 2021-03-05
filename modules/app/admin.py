@@ -79,7 +79,7 @@ async def stat_update_bt():
     await db.execute("UPDATE users SET vote_epoch = 0")
 
 @router.post("/review/{bot_id}")
-async def review_tool(request: Request, bot_id: int, accept: str = FForm(""), deny_reason: str = FForm("There was no reason specified. DM/Ping the mod who banned your bot to learn why it was banned")):
+async def review_tool(request: Request, bot_id: int, accept: str = FForm(""), deny_reason: str = FForm("There was no reason specified. DM/Ping the mod who banned your bot to learn why it was banned"), accept_feedback: str = FForm("There was no feedback given for this bot. It was likely a good bot, but you can ask any staff member about feedback if you wish.")):
     if "userid" not in request.session.keys():
         return RedirectResponse("/")
     guild = client.get_guild(main_server)
@@ -94,7 +94,7 @@ async def review_tool(request: Request, bot_id: int, accept: str = FForm(""), de
         await db.execute("UPDATE bots SET queue=false WHERE bot_id = $1", bot_id)
         await add_event(bot_id, "approve", {"user": request.session.get('userid')})
         channel = client.get_channel(bot_logs)
-        await channel.send(f"<@{bot_id}> by <@{str(b['owner'])}> has been approved")
+        await channel.send(f"<@{bot_id}> by <@{str(b['owner'])}> has been approved\n**Feedback:** {accept_feedback}")
         
         # Give Bot Dev Roles
         try:
@@ -126,7 +126,7 @@ async def review_tool(request: Request, bot_id: int, accept: str = FForm(""), de
         await db.execute("UPDATE bots SET queue=true, banned = false WHERE bot_id = $1", bot_id)
         await add_event(bot_id, "unverify", {"user": request.session.get('userid')})
         channel = client.get_channel(bot_logs)
-        await channel.send(f"<@{bot_id}> by <@{str(b['owner'])}> has been unverified")
+        await channel.send(f"<@{bot_id}> by <@{str(b['owner'])}> has been unverified. This is likely due to it breaking Discord ToS or our rules")
         return templates.TemplateResponse("message.html",{"request":request,"message":"Bot unverified. Please carry on with your day"})
     elif accept == "false":
         b = await db.fetchrow("SELECT owner FROM bots WHERE bot_id = $1", bot_id)
@@ -135,7 +135,7 @@ async def review_tool(request: Request, bot_id: int, accept: str = FForm(""), de
         await db.execute("UPDATE bots SET banned = true WHERE bot_id = $1", bot_id)
         await add_event(bot_id, "ban", {"user": request.session.get('userid'), "type": "deny"})
         channel = client.get_channel(bot_logs)
-        await channel.send(f"<@{bot_id}> by <@{str(b['owner'])}> has been denied for the reason: {deny_reason}")
+        await channel.send(f"<@{bot_id}> by <@{str(b['owner'])}> has been denied\n**Reason:** {deny_reason}")
         return templates.TemplateResponse("message.html",{"request":request,"message":"Bot denied. Please carry on with your day"})
     else:
         return RedirectResponse("/")

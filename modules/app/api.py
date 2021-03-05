@@ -159,11 +159,12 @@ class Bot(BaseModel):
     avatar: str
     disc: str
     status: int
+    donate: Optional[str] = None
 
 @router.get("/bots/{bot_id}", tags = ["API"], response_model = Bot, dependencies=[Depends(RateLimiter(times=20, minutes=1))])
 async def get_bots_api(request: Request, bot_id: int, compact: Optional[bool] = False, Authorization: str = Header("INVALID_API_TOKEN")):
     """Gets bot information given a bot ID. If not found, 404 will be returned. If a proper API Token is provided, sensitive information (System API Events will also be provided)"""
-    api_ret = await db.fetchrow("SELECT bot_id AS id, description, tags, html_long_description, long_description, servers AS server_count, shard_count, shards, prefix, invite, invite_amount, owner AS main_owner, extra_owners, features, bot_library AS library, queue, banned, certified, website, discord AS support, github, user_count, votes, css FROM bots WHERE bot_id = $1", bot_id)
+    api_ret = await db.fetchrow("SELECT bot_id AS id, description, tags, html_long_description, long_description, servers AS server_count, shard_count, shards, prefix, invite, invite_amount, owner AS main_owner, extra_owners, features, bot_library AS library, queue, banned, certified, website, discord AS support, github, user_count, votes, css, donate FROM bots WHERE bot_id = $1", bot_id)
     if api_ret is None:
         return abort(404)
     api_ret = dict(api_ret)
@@ -468,14 +469,25 @@ class MDResponse(BaseModel):
 
 @router.put("/md", tags = ["API (Other)"], response_model = MDResponse)
 async def markdown_to_html_api(request: Request, md: MDRequest):
-    text = emd(markdown.markdown(md.markdown, extensions=["extra", "abbr", "attr_list", "def_list", "fenced_code", "footnotes", "tables", "admonition", "codehilite", "meta", "nl2br", "sane_lists", "toc", "wikilinks", "smarty", "md_in_html"]))
-    cleaner = Cleaner()
-    cleaner.javascript = True # This is True because we want to activate the javascript filter 
-    cleaner.whitelist_tags = ['style']
-    data = cleaner.clean_html(text)
+    data = emd(markdown.markdown(md.markdown, extensions=["extra", "abbr", "attr_list", "def_list", "fenced_code", "footnotes", "tables", "admonition", "codehilite", "meta", "nl2br", "sane_lists", "toc", "wikilinks", "smarty", "md_in_html"]))
     # Take the h1...h5 anad drop it one lower
     data = data.replace("<h1", "<h2 style='text-align: center'").replace("<h2", "<h3").replace("<h4", "<h5").replace("<h6", "<p")
     return {"html": data}
+
+class PrevRequest(BaseModel):
+    html_long_description: bool
+    data: str
+
+@router.put("/preview", tags = ["API (Other)"], response_model = MDResponse)
+async def markdown_to_html_api(request: Request, data: PrevRequest):
+    if not data.html_long_description:
+        html = emd(markdown.markdown(data.data, extensions=["extra", "abbr", "attr_list", "def_list", "fenced_code", "footnotes", "tables", "admonition", "codehilite", "meta", "nl2br", "sane_lists", "toc", "wikilinks", "smarty", "md_in_html"]))
+    else:
+        html = data.data
+    # Take the h1...h5 anad drop it one lower
+    html = html.replace("<h1", "<h2 style='text-align: center'").replace("<h2", "<h3").replace("<h4", "<h5").replace("<h6", "<p").replace("<a", "<a class='long-desc-link'").replace("ajax", "").replace("http://", "https://").replace(".alert", "")
+    return {"html": html}
+
 
 async def ws_close(websocket: WebSocket, code: int):
     try:

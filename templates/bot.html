@@ -180,6 +180,10 @@ textarea {
         {% else %}
 	<a target=”_blank” href="{{bot.support}}"><button class="btn btn-outline-light bot-buttons-all" id="bot-buttons-support">Support</button></a>
        {% endif %}
+        {% if not bot.donate or bot.donate.replace(" ", "") != "" or bot.donate != "None" %}
+        {% else %}
+        <a target=”_blank” href="{{bot.donate}}"><button class="btn btn-outline-light bot-buttons-all" id="bot-buttons-donate">Donate</button></a>
+       {% endif %}
         {% if not bot.github or bot.github == "" or bot.github == "None" %}
         {% else %}
 	<a target=”_blank” href="{{bot.github}}"><button class="btn btn-outline-light bot-buttons-all" id="bot-buttons-github">Github</button></a>
@@ -229,7 +233,7 @@ textarea {
 		          {% endif %}
 		</div>
 	<div id="bot-long-description-container" class='tabcontent'>
-		<div id="bot-long-description" style="color: white; text-align: left; margin-left: 5%; margin-right: 5%; margin-top: 13px;">{{bot.long_description.replace("<script", "").replace("<a", "<a class='long-desc-link'").replace("ajax", "").replace("http://", "https://").replace(".alert", "")|safe}}</div>
+		<div id="bot-long-description" style="color: white; text-align: left; margin-left: 5%; margin-right: 5%; margin-top: 13px;">{{bot.long_description.replace("<a", "<a class='long-desc-link'").replace("ajax", "").replace("http://", "https://").replace(".alert", "")|safe}}</div>
 	</div>
         <div id="bot-reviews" class='tabcontent'>
 		<h5 class="white">Bot Reviews</h5>
@@ -403,6 +407,7 @@ textarea {
 			<form method="POST" action="/admin/review/{{bot_id}}" style="margin-bottom: 10px;">
 				{{ form.csrf_token }}
 				<input hidden name="accept" value="true"></input>
+                                <input type="text" name="accept_feedback" style="border-radius: 4px 4px 4px 4px !important;" placeholder="Enter any feedback"/>
 				<button class="btn btn-outline-light" type="submit" style="margin: 0 15px;">Accept</button>
 			</form>
                         <form method="POST" action="/admin/review/{{bot_id}}">

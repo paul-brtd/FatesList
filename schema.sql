@@ -35,8 +35,7 @@ CREATE TABLE bots (
     banned BOOLEAN DEFAULT false,
     github TEXT,
     private boolean DEFAULT false,
-    autovote_whitelist boolean DEFAULT false,
-    autovote_whitelisted_users bigint[] DEFAULT [];
+    donate text
 );
 
 CREATE TABLE bot_commands (
@@ -74,7 +73,7 @@ CREATE TABLE bot_reviews (
    flagged boolean default false,
    epoch bigint[] default '{}',
    replies uuid[] default '{}',
-   reply boolean default false,
+   reply boolean default false
 );
 
 CREATE TABLE bot_voters (
