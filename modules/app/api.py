@@ -469,17 +469,15 @@ class MDResponse(BaseModel):
 
 @router.put("/md", tags = ["API (Other)"], response_model = MDResponse)
 async def markdown_to_html_api(request: Request, md: MDRequest):
-    data = emd(markdown.markdown(md.markdown, extensions=["extra", "abbr", "attr_list", "def_list", "fenced_code", "footnotes", "tables", "admonition", "codehilite", "meta", "nl2br", "sane_lists", "toc", "wikilinks", "smarty", "md_in_html"]))
-    # Take the h1...h5 anad drop it one lower
-    data = data.replace("<h1", "<h2 style='text-align: center'").replace("<h2", "<h3").replace("<h4", "<h5").replace("<h6", "<p")
-    return {"html": data}
+    data = PrevRequest(html_long_description = False, data = md.markdown)
+    return await preview_api(request, data)
 
 class PrevRequest(BaseModel):
     html_long_description: bool
     data: str
 
 @router.put("/preview", tags = ["API (Other)"], response_model = MDResponse, dependencies=[Depends(RateLimiter(times=15, minutes=2))])
-async def markdown_to_html_api(request: Request, data: PrevRequest):
+async def preview_api(request: Request, data: PrevRequest):
     if not data.html_long_description:
         html = emd(markdown.markdown(data.data, extensions=["extra", "abbr", "attr_list", "def_list", "fenced_code", "footnotes", "tables", "admonition", "codehilite", "meta", "nl2br", "sane_lists", "toc", "wikilinks", "smarty", "md_in_html"]))
     else:
