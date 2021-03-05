@@ -89,8 +89,9 @@ CREATE TABLE users (
     description text,
     certified boolean,
     badges text[],
-    username text
-    css text default '';
+    username text,
+    css text default '',
+    banned integer default 0 -- 0 = No Ban, 1 = Global Ban
 );
 CREATE TABLE api_event (
     id uuid primary key DEFAULT uuid_generate_v4(),

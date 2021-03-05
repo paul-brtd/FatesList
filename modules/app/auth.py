@@ -36,6 +36,20 @@ async def login_confirm(request: Request, code: str):
             pass
         else:
             return RedirectResponse("/")
+        banned = await db.fetchrow("SELECT banned FROM users WHERE user_id = $1", int(userjson["id"]))
+        if banned is None:
+            banned = 0
+        else:
+            banned = banned["banned"]
+        ban_data = bans_data.get(str(banned))
+        if ban_data is None:
+            ban_data = {"type": "", "desc": ""}
+        if banned not in [1, 2]: # 1 = Global ban, 2 = Login Ban
+            pass
+        else:
+            ban_type = ban_data["type"]
+            return templates.e(request, f"You have been {ban_type} banned from Fates List<br/>", status_code = 403)
+        request.session["ban"] = banned
         request.session["code"] = access_code
         request.session["userid"] = userjson["id"]
         print(userjson)
@@ -63,6 +77,11 @@ async def login_confirm(request: Request, code: str):
             await discord_o.join_user(access_code, userjson["id"])
         if request.session.get("redirect") is not None:
             return RedirectResponse(request.session["redirect"])
+        request.session["ban_data"] = ban_data
+        if banned != 0:
+            ban_type = ban_data["type"]
+            ban_desc = ban_data["desc"]
+            return templates.e(request, main = f"<span style='color: red;'>You have been {ban_type} banned in Fates List.</span>", reason = f"You can still login however {ban_desc}. Click 'Go Back Home' to finish logging in.", status_code = 200)
         return RedirectResponse("/")
 
 @router.get("/logout")

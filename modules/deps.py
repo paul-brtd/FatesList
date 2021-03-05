@@ -663,8 +663,8 @@ class templates():
         return templates.TemplateResponse(f, arg_dict)
 
     @staticmethod
-    def e(request, reason: str, status_code: str = 404):
-        return templates.error("message.html", {"request": request, "context": reason}, status_code)
+    def e(request, reason: str, status_code: int = 404, *, main: Optional[str] = ""):
+        return templates.error("message.html", {"request": request, "message": main, "context": reason, "retmain": True}, status_code)
 
 def url_startswith(url, begin, slash = True):
     # Slash indicates whether to check /route or /route/

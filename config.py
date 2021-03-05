@@ -71,9 +71,24 @@ site_url = "https://" + site
 support_url = "https://discord.gg/PA5vjCRc5H"
 TAGS = {"music": "fa-solid:music", "moderation": "fa-solid:hammer", "economy": "fa-solid:coins", "fun": "fa-solid:heart", "anime": "fa-solid:camera", "games": "fa-solid:smile", "web_dashboard": "fa-solid:chart-bar", "logging": "fa-solid:chart-line", "game_stats": "fa-solid:chart-pie", "leveling": "fa-solid:arrow-up", "roleplay": "fa-solid:cat", "utility": "fa-solid:desktop", "social": "fa-solid:users"}
 pg_user = "postgres" # Postgres Database Username
+
+bans_data = {
+    "1": {
+        "type": "global",
+        "desc": "you cannot/will not be able to login or access the support server"
+    },
+    "2": {
+        "type": "login",
+        "desc": "you will not be able to login but should still be able to access the support server" 
+    },
+    "3": {
+        "type": "profile edit",
+        "desc": "you will not be able to edit your profile"
+    }
+}
+
 class OauthConfig:
     client_id = "798951566634778641"
     client_secret = oauth_client_secret
     scope = ["identify"]
     redirect_uri = "https://" + site + "/auth/login/confirm"
-

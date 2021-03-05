@@ -78,6 +78,29 @@ async def stat_update_bt():
     await db.execute("UPDATE bots SET votes = 0")
     await db.execute("UPDATE users SET vote_epoch = 0")
 
+@router.post("/console/ban")
+async def ban_user_admin(request: Request, user_id: int = FForm(1), ban_type: int = FForm(100)):
+    if "userid" not in request.session.keys():
+        return RedirectResponse("/")
+    guild = client.get_guild(main_server)
+    user = guild.get_member(int(request.session["userid"]))
+    try:
+        user_ban = guild.get_member(int(user_id))
+    except:
+        user_ban = None
+    s = is_staff(staff_roles, user.roles, 2)
+    if user_ban is None or user_ban.roles is None:
+        pass
+    elif is_staff(staff_roles, user_ban.roles, 2)[0] and ban_type != 0:
+        return templates.TemplateResponse("message.html", {"request": request, "message": "You cannot ban Fates List Staff..."})
+    if not s[0]:
+        return RedirectResponse("/")
+    if user_id is None or ban_type not in [0, 1, 2, 3]:
+        return RedirectResponse("/")
+    await db.execute("UPDATE users SET banned = $1 WHERE user_id = $2", ban_type, user_id)
+    return templates.TemplateResponse("message.html", {"request": request, "message": "Banned User Successfully"})
+
+
 @router.post("/review/{bot_id}")
 async def review_tool(request: Request, bot_id: int, accept: str = FForm(""), deny_reason: str = FForm("There was no reason specified. DM/Ping the mod who banned your bot to learn why it was banned"), accept_feedback: str = FForm("There was no feedback given for this bot. It was likely a good bot, but you can ask any staff member about feedback if you wish.")):
     if "userid" not in request.session.keys():
