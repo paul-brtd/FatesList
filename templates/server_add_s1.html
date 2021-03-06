@@ -1,0 +1,54 @@
+{% extends "base/base.html" %}
+
+{% block head %}
+
+{% endblock %}
+
+{% block content %}
+   <h3 style="text-align:center; color:white; font-weight:bold;">Add Server (Coming Soon)</h3>
+   <h4 style="text-align:center; color:white;" id="js_msg">We're glad you're here!<br/>If you aren't a server administrator, please go ahead and ask them to set this up.<br/><br/><span style="opacity: 0.8">Once you are ready to continue, click Continue.</span></h4>
+   <button onclick='doStep(false);' style="display: none; margin-right: 5px;" type="button" id="s1-back" class="btn btn-outline-light"><span class="iconify white" data-icon="fa-solid:arrow-left" data-inline="false" style="margin-right: 3px;"></span>Back</button>
+   <button onclick='doStep(true);' type="button" id="s1-next" class="btn btn-outline-light">Continue<span class="iconify white" data-icon="fa-solid:arrow-right" data-inline="false" style="margin-left: 3px;"></span></button>
+   <script>
+	  var cont = 0;
+	  var old_text = document.querySelector("#js_msg").innerHTML;
+	  var old_text_front = document.querySelector("#js_msg").innerHTML;
+	  function doStep(next) {
+		if(next == true) {
+			if(cont == 0) {
+				document.querySelector("#js_msg").innerHTML = "The first thing you will need to do to add your server is to add our bot to your server by clicking <a target='_blank' href='{{invite}}' class='long-desc-link'>here</a>.<br/>You must give it permission to create invites and add reactions<br/><br/><span style='opacity: 0.8'>Once you have added the bot to your server, click Continue.</span>";
+				document.querySelector("#s1-back").style.display = "inline";
+				document.querySelector("#s1-next").style.display = "inline";
+				old_text = document.querySelector("#js_msg").innerHTML;
+				cont = 1;
+			}
+			else {
+				document.querySelector("#js_msg").innerHTML = `Next, you will need to enter your servers ID. You can find this by running !id on your server with the Fates List Server Bot<br/>
+					<form method='POST'>
+						{{data.form.csrf_token}}
+						<label for="guild_id">Guild ID <span style="color: red; font-weight: bold" aria-hidden="true">*</span></label>
+						<input required class="form-control fform" type="text" minlength='17' maxlength='19' name="guild_id" placeholder="Enter the Guild's ID"/>
+						<button type='submit' class='btn btn-outline-light' style='margin-bottom: 10px;'>Check And Continue</button>
+					</form>`;
+				document.querySelector("#s1-next").style.display = "none";
+				cont = 2;
+			}
+		}
+                if(next == false) {
+                        document.querySelector("#js_msg").innerHTML = old_text;
+			if(cont == 1) {
+				document.querySelector("#js_msg").innerHTML = old_text_front;
+	                        document.querySelector("#s1-back").style.display = "none";
+			}
+			if(cont == 2) {
+				document.querySelector("#s1-next").style.display = "inline";
+			}
+			cont = cont - 1;
+                }
+	  }
+   </script>
+{% endblock %}
+{% block footer %}
+
+{% endblock %}
+

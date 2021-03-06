@@ -13,14 +13,7 @@ allowed_file_ext = [".gif", ".png", ".jpeg", ".jpg", ".webm", ".webp"]
 async def add_bot(request: Request):
     if "userid" in request.session.keys():
         form = await Form.from_formdata(request)
-        if request.method == "GET":
-            return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": {"form": form}, "error": None, "mode": "add"})
-        else:
-            owner_check = await get_user(request.session["userid"])
-            if owner_check:
-                pass
-            else:
-                return templates.TemplateResponse("message.html", {"request": request, "message": "Something has went wrong getting your account. Please join our support server and contact us there"})
+        return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": {"form": form}, "error": None, "mode": "add"})
     else:
         return RedirectResponse("/auth/login?redirect=/bot/admin/add&pretty=to add a bot")
 

@@ -45,20 +45,33 @@ def ip_check(request: Request) -> str:
         return forwarded.split(",")[0]
     return request.client.host
 
+# Setup Bots
 
+intent_main = discord.Intents.default()
+intent_main.typing = False
+intent_main.bans = False
+intent_main.emojis = False
+intent_main.integrations = False
+intent_main.webhooks = False
+intent_main.invites = False
+intent_main.voice_states = False
+intent_main.messages = False
+intent_main.members = True
+intent_main.presences = True
+builtins.client = discord.Client(intents=intent_main)
 
-intent = discord.Intents.default()
-intent.typing = False
-intent.bans = False
-intent.emojis = False
-intent.integrations = False
-intent.webhooks = False
-intent.invites = False
-intent.voice_states = False
-intent.messages = False
-intent.members = True
-intent.presences = True
-builtins.client = discord.Client(intents=intent)
+intent_server = discord.Intents.default()
+intent_server.typing = False
+intent_server.bans = False
+intent_server.emojis = False
+intent_server.integrations = False
+intent_server.webhooks = False
+intent_server.invites = True
+intent_server.voice_states = False
+intent_server.messages = False
+intent_server.members = True
+intent_server.presences = False
+builtins.client_servers = discord.Client(intents=intent_server)
 
 limiter = FastAPILimiter
 app = FastAPI(default_response_class = ORJSONResponse, docs_url = None, redoc_url = "/api/docs/endpoints")
@@ -95,6 +108,7 @@ async def startup():
     builtins.db = await setup_db()
     print("Discord init beginning")
     asyncio.create_task(client.start(TOKEN_MAIN))
+    asyncio.create_task(client_servers.start(TOKEN_SERVER))
     await asyncio.sleep(4)
     builtins.redis_db = await aioredis.create_redis_pool('redis://localhost')
     limiter.init(redis_db, identifier = rl_key_func)
@@ -109,9 +123,17 @@ async def close():
 async def on_ready():
     print(client.user, "up")
 
+@client_servers.event
+async def on_ready():
+    print(client_servers.user, "up [SERVER BOT]")
+
+
 # Tag calculation
 builtins.tags_fixed = []
 for tag in TAGS.keys():
     tags_fixed.append({"name": tag.replace("_", " ").title(), "iconify_data": TAGS[tag], "id": tag})
 
+builtins.server_tags_fixed = []
+for tag in SERVER_TAGS.keys():
+    server_tags_fixed.append({"name": tag.replace("_", " ").title(), "iconify_data": SERVER_TAGS[tag], "id": tag})
 

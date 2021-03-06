@@ -62,7 +62,6 @@ features = {
 } 
 
 site = "fateslist.xyz" # Replace this with your domain
-server_site = "serverbot.fateslist.xyz" # Same as above
 
 server_bot_invite = "https://discord.com/api/oauth2/authorize?client_id=811073947382579200&permissions=67649&scope=bot" # Ensure that it uses 67649 for perms
 
@@ -70,6 +69,9 @@ server_bot_invite = "https://discord.com/api/oauth2/authorize?client_id=81107394
 site_url = "https://" + site
 support_url = "https://discord.gg/PA5vjCRc5H"
 TAGS = {"music": "fa-solid:music", "moderation": "fa-solid:hammer", "economy": "fa-solid:coins", "fun": "fa-solid:heart", "anime": "fa-solid:camera", "games": "fa-solid:smile", "web_dashboard": "fa-solid:chart-bar", "logging": "fa-solid:chart-line", "game_stats": "fa-solid:chart-pie", "leveling": "fa-solid:arrow-up", "roleplay": "fa-solid:cat", "utility": "fa-solid:desktop", "social": "fa-solid:users"}
+SERVER_TAGS = {"music": "fa-solid:music", "moderation": "fa-solid:hammer", "economy": "fa-solid:coins", "fun": "fa-solid:heart", "anime": "fa-solid:camera", "games": "fa-solid:smile", "web_dashboard": "fa-solid:chart-bar", "logging": "fa-solid:chart-line", "game_stats": "fa-solid:chart-pie", "leveling": "fa-solid:arrow-up", "roleplay": "fa-solid:cat", "utility": "fa-solid:desktop", "social": "fa-solid:users"}
+
+
 pg_user = "postgres" # Postgres Database Username
 
 bans_data = {

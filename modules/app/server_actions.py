@@ -7,6 +7,14 @@ router = APIRouter(
 )
 
 @router.get("/admin/add")
-@csrf_protect
-async def add_server(request: Request):
-    return templates.TemplateResponse("message.html", {"request": request, "message": "Coming Soon...", "context": "Server Adding is coming soon. Please give us some time to make it better than ever."})
+async def add_server_main(request: Request):
+    return RedirectResponse("/server/admin/add/1")
+
+@router.get("/admin/add/1")
+async def add_server_step1(request: Request):
+    if "userid" in request.session.keys():
+        form = await Form.from_formdata(request)
+        return templates.TemplateResponse("server_add_s1.html", {"request": request, "tags_fixed": server_tags_fixed, "data": {"form": form}, "error": None, "step": 1, "invite": server_bot_invite})
+    else:
+        return RedirectResponse("/auth/login?redirect=/server/admin/add&pretty=to add a server")
+
