@@ -36,7 +36,7 @@ async def on_member_join(member):
     if member.bot:
         await member.add_roles(member.guild.get_role(bots_role))
 
-@client.command()
+#@client.command()
 async def approve(ctx, bot: discord.Member):
     bot_id = bot.id
     guild = client.get_guild(main_server)
@@ -52,7 +52,7 @@ async def approve(ctx, bot: discord.Member):
     else:
         await ctx.send("You don't have the permission to do this")
 
-@client.command()
+#@client.command()
 async def deny(ctx, bot: discord.Member, *, reason: Optional[str] = "There was no reason specified"):
     guild = client.get_guild(main_server)
     bot_id = bot.id

@@ -102,13 +102,14 @@ async def ban_user_admin(request: Request, user_id: int = FForm(1), ban_type: in
 
 
 @router.post("/review/{bot_id}")
-async def review_tool(request: Request, bot_id: int, accept: str = FForm(""), deny_reason: str = FForm("There was no reason specified. DM/Ping the mod who banned your bot to learn why it was banned"), accept_feedback: str = FForm("There was no feedback given for this bot. It was likely a good bot, but you can ask any staff member about feedback if you wish.")):
+async def review_tool(request: Request, bot_id: int, accept: str = FForm(""), deny_reason: str = FForm("There was no reason specified. DM/Ping the mod who banned your bot to learn why it was banned"), accept_feedback: str = FForm("There was no feedback given for this bot. It was likely a good bot, but you can ask any staff member about feedback if you wish."), unverify_reason: str = FForm("This is likely due to it breaking Discord ToS or our rules")):
     if "userid" not in request.session.keys():
         return RedirectResponse("/")
     guild = client.get_guild(main_server)
     user = guild.get_member(int(request.session["userid"]))
     s = is_staff(staff_roles, user.roles, 2)
-    if not s[0]:
+    bot = await get_bot(bot_id)
+    if not s[0] or not bot:
         return RedirectResponse("/")                
     elif accept == "true":
         b = await db.fetchrow("SELECT owner, extra_owners FROM bots WHERE bot_id = $1", bot_id)
@@ -117,7 +118,10 @@ async def review_tool(request: Request, bot_id: int, accept: str = FForm(""), de
         await db.execute("UPDATE bots SET queue=false WHERE bot_id = $1", bot_id)
         await add_event(bot_id, "approve", {"user": request.session.get('userid')})
         channel = client.get_channel(bot_logs)
-        await channel.send(f"<@{bot_id}> by <@{str(b['owner'])}> has been approved\n**Feedback:** {accept_feedback}")
+        approve_embed = discord.Embed(title="Bot Approved!", description = f"<@{bot_id}> by <@{b['owner']}> has been approved", color=0x00ff00)
+        approve_embed.add_field(name="Feedback", value=accept_feedback)
+        approve_embed.add_field(name="Link", value=f"https://fateslist.xyz/bot/{bot_id}")
+        await channel.send(embed = approve_embed)
         
         # Give Bot Dev Roles
         try:
@@ -149,7 +153,9 @@ async def review_tool(request: Request, bot_id: int, accept: str = FForm(""), de
         await db.execute("UPDATE bots SET queue=true, banned = false WHERE bot_id = $1", bot_id)
         await add_event(bot_id, "unverify", {"user": request.session.get('userid')})
         channel = client.get_channel(bot_logs)
-        await channel.send(f"<@{bot_id}> by <@{str(b['owner'])}> has been unverified. This is likely due to it breaking Discord ToS or our rules")
+        unverify_embed = discord.Embed(title="Bot Unverified!", description = f"<@{bot_id}> by <@{b['owner']}> has been unverified", color=discord.Color.red())
+        unverify_embed.add_field(name="Reason", value=unverify_reason)
+        await channel.send(embed = unverify_embed)
         return templates.TemplateResponse("message.html",{"request":request,"message":"Bot unverified. Please carry on with your day"})
     elif accept == "false":
         b = await db.fetchrow("SELECT owner FROM bots WHERE bot_id = $1", bot_id)
@@ -158,7 +164,9 @@ async def review_tool(request: Request, bot_id: int, accept: str = FForm(""), de
         await db.execute("UPDATE bots SET banned = true WHERE bot_id = $1", bot_id)
         await add_event(bot_id, "ban", {"user": request.session.get('userid'), "type": "deny"})
         channel = client.get_channel(bot_logs)
-        await channel.send(f"<@{bot_id}> by <@{str(b['owner'])}> has been denied\n**Reason:** {deny_reason}")
+        deny_embed = discord.Embed(title="Bot Denied!", description = f"<@{bot_id}> by <@{b['owner']}> has been denied", color=discord.Color.red())
+        deny_embed.add_field(name="Reason", value=deny_reason)
+        await channel.send(embed = deny_embed)
         return templates.TemplateResponse("message.html",{"request":request,"message":"Bot denied. Please carry on with your day"})
     else:
         return RedirectResponse("/")

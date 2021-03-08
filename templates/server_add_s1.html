@@ -25,7 +25,7 @@
 			}
 			else {
 				checkGuilds();
-				document.querySelector("#js_msg").innerHTML = `The list of servers with the Fates List Bot that you can manage is listed below.<br/>Only servers that you are in while logging into Fates List and you have 'Manage Server' or 'Administrator' in is listed below:<br/><div id='valid_servers'></div><button type='button' onclick='checkGuilds();' class='btn btn-outline-light' style='margin-bottom: 10px;'>Recheck</button>`;
+				document.querySelector("#js_msg").innerHTML = `The list of servers with the Fates List Bot that you can manage is listed below.<br/>Only servers that you are in while logging into Fates List and you have 'Manage Server' or 'Administrator' in is listed below:<br/><button type='button' onclick='checkGuilds();' class='btn btn-outline-light' style='margin-bottom: 10px;'>Recheck</button><div id='valid_servers'></div>`;
 				document.querySelector("#s1-next").style.display = "none";
 				cont = 2;
 			}
@@ -59,7 +59,7 @@
 			'200': function(data) {
 				server_data = ""
 				for(server in data.valid) {
-					server_data += (`<div style='background: black; display: inline-block;'><a style='color: white !important;' href='/servers/${server}/setup'><strong>${data.valid[server].name}</strong><br/><p>Server ID: ${server}</a></div><br/>`)
+					server_data += (`<div style='padding: 3px; border-radius: 4px 4px 4px 4px; background: black; display: inline-block;'><a style='color: white !important;' href='/servers/${server}/setup'><strong>${data.valid[server].name}</strong><br/><p>Server ID: ${server}</a></div><br/>`)
 				}
 				document.querySelector("#valid_servers").innerHTML = server_data
 			}

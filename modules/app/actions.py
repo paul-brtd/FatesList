@@ -102,7 +102,9 @@ async def add_bot_bt(request, bot_id, prefix, library, website, banner, support,
     owner=str(request.session["userid"])
     channel = client.get_channel(bot_logs)
     bot_name = bot_object["username"]
-    await channel.send(f"<@{owner}> added the bot <@{bot_id}>({bot_name}) to queue <@&{staff_ping_add_role}>")
+    add_embed = discord.Embed(title="New Bot!", description=f"<@{owner}> added the bot <@{bot_id}>({bot_name}) to queue!", color=0x00ff00)
+    add_embed.add_field(name="Link", value=f"https://fateslist.xyz/bot/{bot_id}")
+    await channel.send(f"<@&{staff_ping_add_role}>", embed = add_embed)
 
 @router.get("/{bid}/edit")
 @csrf_protect
@@ -231,7 +233,9 @@ async def edit_bot_bt(request, bot_id, prefix, library, website, banner, support
     await add_event(bot_id, "edit_bot", {"user": request.session['userid']})
     channel = client.get_channel(bot_logs)
     owner=str(request.session["userid"])
-    await channel.send(f"<@{owner}> edited the bot <@{bot_id}>")
+    edit_embed = discord.Embed(title="Bot Edit!", description=f"<@{owner}> has edited the bot <@{bot_id}>!", color=0x00ff00)
+    edit_embed.add_field(name="Link", value=f"https://fateslist.xyz/bot/{bot_id}")
+    await channel.send(embed = edit_embed)
 
 @router.post("/{bot_id}/vote")
 @csrf_protect
@@ -296,15 +300,17 @@ async def delete_bot(request: Request, bot_id: int, confirmer: str = FForm("1"))
     for table in "bots", "bot_voters", "bot_promotions", "bot_reviews", "api_event", "bot_maint", "bot_commands", "support_requests":
         await db.execute(f"DELETE FROM {table} WHERE bot_id = $1", bot_id)
     await db.execute("DELETE FROM vanity WHERE redirect = $1", bot_id)
-    await channel.send(f"<@{owner}> deleted the bot <@{str(bot_id)}>.\nWe are sad to see you go...::sad::")
+    delete_embed = discord.Embed(title="Bot Deleted :(", description=f"<@{owner}> has deleted the bot <@{bot_id}>!", color=discord.Color.red())
+    await channel.send(embed = delete_embed)
     return RedirectResponse("/", status_code = 303)
 
 @router.post("/{bot_id}/ban")
+@csrf_protect
 async def ban_bot(request: Request, bot_id: int, ban: int = FForm(1), reason: str = FForm('There was no reason specified')):
     guild = client.get_guild(main_server)
     channel = client.get_channel(bot_logs)
     if ban not in [0, 1]:
-        return RedirectResponse("/bot/" + str(bot_id), status_code = 303)
+        return RedirectResponse(f"/bot/{bot_id}", status_code = 303)
     if reason == "":
         reason = "There was no reason specified"
 
@@ -318,7 +324,9 @@ async def ban_bot(request: Request, bot_id: int, ban: int = FForm(1), reason: st
         else:
             return templates.TemplateResponse("message.html", {"request": request, "message": "You aren't the owner of this bot.", "context": "Only owners, admins and moderators can unban bots. Please contact them if you accidentally denied a bot.", "username": request.session.get("username", False)})
     if ban == 1:
-        await channel.send("<@" + str(bot_id) + "> has been banned for reason: " + reason)
+        ban_embed = discord.Embed(title="Bot Banned", description=f"<@{bot_id}> has been banned", color=discord.Color.red())
+        ban_embed.add_field(name="Reason", value = reason)
+        await channel.send(embed = ban_embed)
         try:
             await guild.kick((guild.get_member(bot_id)))
         except:
@@ -326,7 +334,8 @@ async def ban_bot(request: Request, bot_id: int, ban: int = FForm(1), reason: st
         await db.execute("UPDATE bots SET banned = true WHERE bot_id = $1", bot_id)
         await add_event(bot_id, "ban", {"user": request.session.get('userid')})
     else:
-        await channel.send("<@" + str(bot_id) + "> has been unbanned")
+        unban_embed = discord.Embed(title="Bot Unbanned", description=f"<@{bot_id}> has been unbanned", color=0x00ff00)
+        await channel.send(embed = unban_embed)
         await db.execute("UPDATE bots SET banned = false WHERE bot_id = $1", bot_id)
         await add_event(bot_id, "unban", {"user": request.session.get('userid')})
     return RedirectResponse("/", status_code = 303)
@@ -498,6 +507,17 @@ async def resubmit_bot(request: Request, bid: int, appeal: str = FForm("No appea
         return templates.TemplateResponse("message.html", {"request": request, "message": "This bot does not exist on our database."})
     resubmit = qtype == "on"
     reschannel = client.get_channel(appeals_channel)
-    await reschannel.send(f"**Username:** {user['username']}\n**Bot ID:** {bid}\n**Resubmission:** {resubmit}\n**Appeal/Context:** {appeal}")
+    if resubmit:
+        title = "Bot Resubmission"
+        type = "Context"
+    else:
+        title = "Ban Appeal"
+        type = "Appeal"
+    resubmit_embed = discord.Embed(title=title, color=0x00ff00)
+    resubmit_embed.add_field(name="Username", value = user['username'])
+    resubmit_embed.add_field(name="Bot ID", value = str(bid))
+    resubmit_embed.add_field(name="Resubmission", value = str(resubmit))
+    resubmit_embed.add_field(name=type, value = appeal)
+    await reschannel.send(embed = resubmit_embed)
     return templates.TemplateResponse("message.html", {"request": request, "message": "Appeal sent successfully!."})
 

@@ -403,16 +403,18 @@ textarea {
 			<div id="bot-admin" class='tabcontent white'>
                         <h6>Administrative Tasks</h6>
 			{% if staff[0] %}
-			{% if bot.queue %}
+			{% if bot.queue and not bot.banned %}
+			<p>Approve this bot?</p>
 			<form method="POST" action="/admin/review/{{bot_id}}" style="margin-bottom: 10px;">
 				{{ form.csrf_token }}
 				<input hidden name="accept" value="true"></input>
-                                <input type="text" name="accept_feedback" style="border-radius: 4px 4px 4px 4px !important;" placeholder="Enter any feedback"/>
+				<textarea name="accept_feedback" style="border-radius: 4px 4px 4px 4px !important; min-height: 10px; height: 200px; width: 100%" placeholder="Enter any feedback you have for this bot"></textarea><br/>
 				<button class="btn btn-outline-light" type="submit" style="margin: 0 15px;">Accept</button>
 			</form>
+	                <p>Deny this bot?</p>
                         <form method="POST" action="/admin/review/{{bot_id}}">
                                 {{ form.csrf_token }}
-	                        <input type="text" name="deny_reason" style="border-radius: 4px 4px 4px 4px !important;" placeholder="Enter deny reason"/>
+				<textarea name="deny_reason" style="border-radius: 4px 4px 4px 4px !important; min-height: 10px; height: 200px; width: 100%" placeholder="Enter deny reason"></textarea><br/>
                                 <input hidden name="accept" value="false"></input>
                                 <button class="btn btn-outline-light" type="submit" style="margin: 0 15px;">Deny</button>
                         </form>
@@ -420,6 +422,7 @@ textarea {
                                 <form method="POST" action="/admin/review/{{bot_id}}">
                                         {{ form.csrf_token }}
                                         <input hidden name="accept" value="unverify"></input>
+		                        <input type="text" name="unverify_reason" style="border-radius: 4px 4px 4px 4px !important;" placeholder="Enter unverify reason" required/>
                                         <button class="btn btn-outline-light" type="submit" style="margin: 0 15px; border-radius: 4px 4px 4px 4px !important;">Unverify</button>
                                 </form>
 				{% endif %}
