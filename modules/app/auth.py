@@ -34,16 +34,22 @@ async def login_post(request: Request, join_servers: str = FForm("off"), server_
         request.session["server_list"] = True
         scopes.append("guilds")
     request.session["dscopes"] = scopes
-    return RedirectResponse(discord_o.discord_login_url + discord_o.get_scopes(scopes), status_code=HTTP_303_SEE_OTHER)
+    request.session["dscopes_str"] = discord_o.get_scopes(scopes)
+    oauth_data = discord_o.get_discord_oauth(scopes)
+    request.session["state"] = oauth_data["state"]
+    return RedirectResponse(oauth_data["url"], status_code=HTTP_303_SEE_OTHER)
 
 
 @router.get("/login/confirm")
-async def login_confirm(request: Request, code: str):
+async def login_confirm(request: Request, code: str, state: str):
     if "userid" in request.session.keys():
         return RedirectResponse("/")
     else:
-        access_code = await discord_o.get_access_token(code, request.session["dscopes"])
-        userjson = await discord_o.get_user_json(access_code)
+        # Validate the state first
+        if request.session.get("state") != state:
+            return template.e(main = "Invalid State", reason = "The state returned by discord and the state we have provided does not match. Please try logging in again", status_code = 400)
+        access_token = await discord_o.get_access_token(code, request.session["dscopes"])
+        userjson = await discord_o.get_user_json(access_token["access_token"])
         if userjson["id"]:
             pass
         else:
@@ -62,7 +68,7 @@ async def login_confirm(request: Request, code: str):
             ban_type = ban_data["type"]
             return templates.e(request, f"You have been {ban_type} banned from Fates List<br/>", status_code = 403)
         request.session["ban"] = banned
-        request.session["code"] = access_code
+        request.session["access_token"] = access_token
         request.session["userid"] = userjson["id"]
         print(userjson)
         request.session["username"] = str(userjson["name"])
@@ -86,9 +92,7 @@ async def login_confirm(request: Request, code: str):
         else:
             request.session["user_css"] = user_css["css"]
         if request.session.get("join_servers"):
-            await discord_o.join_user(access_code, userjson["id"])
-        if request.session.get("server_list"):
-            request.session["servers"] = await discord_o.get_guilds(access_code)
+            await discord_o.join_user(access_token["access_token"], userjson["id"])
         if request.session.get("redirect") is not None:
             return RedirectResponse(request.session["redirect"])
         request.session["ban_data"] = ban_data

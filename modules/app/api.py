@@ -2,9 +2,8 @@ from ..deps import *
 from uuid import UUID
 from fastapi.responses import HTMLResponse
 from typing import List
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-security = HTTPBearer()
+discord_o = Oauth()
 
 router = APIRouter(
     prefix = "/api",
@@ -545,14 +544,18 @@ class ValidServer(BaseModel):
     valid: dict
 
 class ValidServerRequest(BaseModel):
-    servers: list
+    access_token_dict: dict
+    scopes: str
 
-@router.put("/users/{user_id}/valid_servers", tags = ["API (Internal)"], dependencies=[Depends(RateLimiter(times=2, minutes=5))], response_model = ValidServer)
+@router.put("/users/{user_id}/valid_servers", tags = ["API (Internal)"], dependencies=[Depends(RateLimiter(times=3, minutes=5))], response_model = ValidServer)
 async def get_valid_servers_api(request: Request, user_id: int, vsreq: ValidServerRequest):
     """Internal API to get users who have the FL Server Bot and Manage Server/Admin"""
     valid = {}
     request.session["valid_servers"] = []
-    for server in vsreq.servers:
+    access_token = await discord_o.access_token_check(vsreq.scopes, vsreq.access_token_dict)
+    request.session["access_token"] = access_token
+    servers = await discord_o.get_guilds(access_token["access_token"], permissions = [0x8, 0x20]) # Check for all guilds with 0x8 and 0x20
+    for server in servers:
         try:
             guild = client_servers.get_guild(int(server))
         except:

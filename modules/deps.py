@@ -708,7 +708,7 @@ class FLError():
                 fl_info += f"\n\nExtended output\n\nNo extended output could be logged..."
         except:
             pass
-        await site_errors.send(f"500 (Internal Server Error) at {str(request.url).replace('https://', '')}\n\n**Error**: {exc}\n**Type**: {type(exc)}\n**Data**: File will be uploaded below if we didn't run into errors collecting leogging information\n\n**Error ID**: {error_id}\n**Time When Error Happened**: {curr_time}")
+        await site_errors.send(f"500 (Internal Server Error) at {str(request.url).replace('https://', '')}\n\n**Error**: {exc}\n**Type**: {type(exc)}\n**Data**: File will be uploaded below if we didn't run into errors collecting logging information\n\n**Error ID**: {error_id}\n**Time When Error Happened**: {curr_time}")
         fl_file = discord.File(io.BytesIO(bytes(fl_info, 'utf-8')), f'{error_id}.txt')
         if fl_file is not None:
             await site_errors.send(file=fl_file)

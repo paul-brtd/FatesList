@@ -10,7 +10,7 @@
    <button onclick='doStep(false);' style="display: none; margin-right: 5px;" type="button" id="s1-back" class="btn btn-outline-light"><span class="iconify white" data-icon="fa-solid:arrow-left" data-inline="false" style="margin-right: 3px;"></span>Back</button>
    <button onclick='doStep(true);' type="button" id="s1-next" class="btn btn-outline-light">Continue<span class="iconify white" data-icon="fa-solid:arrow-right" data-inline="false" style="margin-left: 3px;"></span></button>
    <script>
-	  var servers = {{data.servers|safe}}
+	  var access_token_dict = {{data.access_token|safe}}
 	  var cont = 0;
 	  var old_text = document.querySelector("#js_msg").innerHTML;
 	  var old_text_front = document.querySelector("#js_msg").innerHTML;
@@ -24,9 +24,9 @@
 				cont = 1;
 			}
 			else {
-				checkGuilds();
 				document.querySelector("#js_msg").innerHTML = `The list of servers with the Fates List Bot that you can manage is listed below.<br/>Only servers that you are in while logging into Fates List and you have 'Manage Server' or 'Administrator' in is listed below:<br/><button type='button' onclick='checkGuilds();' class='btn btn-outline-light' style='margin-bottom: 10px;'>Recheck</button><div id='valid_servers'></div>`;
 				document.querySelector("#s1-next").style.display = "none";
+                                checkGuilds();
 				cont = 2;
 			}
 		}
@@ -43,7 +43,8 @@
                 }
 	  }
 	function checkGuilds(){
-	data = {"servers": servers}
+		document.querySelector("#valid_servers").innerHTML = "Getting Guilds... Please wait"
+		data = {"access_token_dict": access_token_dict, "scopes": '{{data.scopes}}'}
         $.ajax({
                 url: "/api/users/{{userid}}/valid_servers",
                 dataType: "json",
@@ -54,7 +55,7 @@
            	statusCode: {
                 	'429': function(data) {
 				console.log(data)
-				alert(`You are being ratelimited. You may only do two server check every five minutes. Please try again in 5-10 minutes...`)
+				alert(`You are being ratelimited. You may only do three server check every five minutes. Please try again in 5-10 minutes...`)
                 	},
 			'200': function(data) {
 				server_data = ""
