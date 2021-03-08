@@ -69,7 +69,6 @@ class Oauth():
         json = await res.json()
         return {"access_token": json.get("access_token"), "refresh_token": json.get("refresh_token"), "expires_in": json.get("expires_in"), "current_time": time.time()}
 
-
     async def get_user_json(self, access_token):
         url = self.discord_api_url+"/users/@me"
 
@@ -92,7 +91,6 @@ class Oauth():
         try:
             guilds = []
             for guild in guild_json:
-                print(guild)
                 if permissions is None:
                     guilds.append(str(guild["id"]))
                 else:
