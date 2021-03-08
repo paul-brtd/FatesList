@@ -8,13 +8,11 @@ router = APIRouter(
 
 @router.get("/admin/add")
 async def add_server_main(request: Request):
-    return RedirectResponse("/server/admin/add/1")
-
-@router.get("/admin/add/1")
-async def add_server_step1(request: Request):
     if "userid" in request.session.keys():
-        form = await Form.from_formdata(request)
-        return templates.TemplateResponse("server_add_s1.html", {"request": request, "tags_fixed": server_tags_fixed, "data": {"form": form}, "error": None, "step": 1, "invite": server_bot_invite})
+        if request.session.get("server_list"):
+            return templates.TemplateResponse("server_add_s1.html", {"request": request, "tags_fixed": server_tags_fixed, "data": {"servers": request.session["servers"]}, "error": None, "step": 1, "invite": server_bot_invite})
+        else:
+            return templates.e(request, "You must login with Server Listing enabled<br/>Please logout and login again.", status_code = 400)
     else:
         return RedirectResponse("/auth/login?redirect=/server/admin/add&pretty=to add a server")
 

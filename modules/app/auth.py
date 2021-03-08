@@ -17,20 +17,32 @@ async def login_get(request: Request, redirect: Optional[str] = None, pretty: Op
 
 @router.post("/login")
 @csrf_protect
-async def login_post(request: Request, join_servers: str = FForm("off")):
+async def login_post(request: Request, join_servers: str = FForm("off"), server_list: str = FForm("off")):
+    scopes = ["identify"]
+
+    # Join Server
     if join_servers == "off":
         request.session["join_servers"] = False
-        return RedirectResponse(discord_o.discord_login_url + discord_o.scope, status_code=HTTP_303_SEE_OTHER)
     else:
         request.session["join_servers"] = True
-        return RedirectResponse(discord_o.discord_login_url + discord_o.scope_js, status_code=HTTP_303_SEE_OTHER)
+        scopes.append("guilds.join")
+
+    # Server Lists
+    if server_list == "off":
+        request.session["server_list"] = False
+    else:
+        request.session["server_list"] = True
+        scopes.append("guilds")
+    request.session["dscopes"] = scopes
+    return RedirectResponse(discord_o.discord_login_url + discord_o.get_scopes(scopes), status_code=HTTP_303_SEE_OTHER)
+
 
 @router.get("/login/confirm")
 async def login_confirm(request: Request, code: str):
     if "userid" in request.session.keys():
         return RedirectResponse("/")
     else:
-        access_code = await discord_o.get_access_token(code)
+        access_code = await discord_o.get_access_token(code, request.session["dscopes"])
         userjson = await discord_o.get_user_json(access_code)
         if userjson["id"]:
             pass
@@ -75,6 +87,8 @@ async def login_confirm(request: Request, code: str):
             request.session["user_css"] = user_css["css"]
         if request.session.get("join_servers"):
             await discord_o.join_user(access_code, userjson["id"])
+        if request.session.get("server_list"):
+            request.session["servers"] = await discord_o.get_guilds(access_code)
         if request.session.get("redirect") is not None:
             return RedirectResponse(request.session["redirect"])
         request.session["ban_data"] = ban_data

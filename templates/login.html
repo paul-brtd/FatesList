@@ -6,29 +6,41 @@
 
 {% block content %}
 <div style="text-align: center; display: block; color: white;">
-<h3 style="font-weight: bold;">Login</h3>
-{% if perm_needed %}
-<h5><span style="color: red">Oops!</span><br/>You need to login {{perm_pretty}}</h5>
-{% endif %}
+	<h3 style="font-weight: bold;">Login</h3>
+	{% if perm_needed %}
+		<h5><span style="color: red">Oops!</span><br/>You need to login {{perm_pretty}}</h5>
+	{% endif %}
 </div>
-<form method="POST">
-    <div class="form-group" style="color: blue; display: inline-block; margin: 0 auto; height: auto; color: rgba(255, 255, 255, 0.87);">
-        <div class="form-group" class="d-flex" style="margin: 15px auto; width: 85%;color: white; font-weight: bold; overflow-wrap: anywhere;">
-	    <div class="form-group">
+<form method="POST" style="text-align: left">
+	<div style="padding: 3px; margin-left: 12%;">
 	{{form.csrf_token}}
-	<div class="custom-control custom-switch form-check" style="text-align: center; float: left; display: block; margin-bottom: 3px;"/>
-        <input type="checkbox" class="custom-control-input" tabindex="0" id="join_servers"  name="join_servers" aria-label="Join Servers" style="margin: auto !important;"/>
-	<label class="custom-control-label" for="join_servers">Join Servers -> Would you like to be added to the support server?</label>
-	</div><br/><br/>
-	    </div>
+	<div class="form-group" style="color: blue; display: block; height: auto; color: rgba(255, 255, 255, 0.87);">
+		<div class="form-group" class="d-flex" style="color: white; font-weight: bold;">
+			<div class="form-group">
+				<div style="display: block;"/>
+        				<input type="checkbox" tabindex="0" id="join_servers"  name="join_servers" aria-label="Join Servers" style="margin-right: 5px;"/>
+					<label class="custom-control-label" for="join_servers">Join Servers -> Would you like to be added to the support server?</label>
+				</div>
+			</div>
+		</div>
 	</div>
-    </div>
-    </div>
-    <div style="text-align: center; display: block;">
-	<button type="submit" class="btn btn-outline-light">Login</button>
-    </div>
+        <div class="form-group" style="color: blue; display: inline-block; height: auto; color: rgba(255, 255, 255, 0.87);">
+		<div class="form-group" class="d-flex" style="color: white; font-weight: bold;">
+			<div class="form-group">
+				<div style="display: block;"/>
+					<input type="checkbox" tabindex="0" id="server_list"  name="server_list" aria-label="Join Servers" style="margin-right: 5px;" checked="true"/>
+					<label for="server_list">Server List -> Would you like us to access your server list for server listing on Fates List.</label>
+				</div>
+			</div>
+		</div>
+	</div>
+	</div>
+	<div style="text-align: center; display: block; margin-bottom: 10px;">
+		<button type="submit" class="btn btn-outline-light">Login</button>
+	</div>
 </form>
 </div>
+<p class="white" style="text-align: center;"><em>Permission's Break Down</em><br/>We need to access your Username, Avatar And User ID in order to identify who you are on Discord so you can actually add bots.<br/>We also need to know what servers you are in if you keep server listing enabled above<br/>We also need the ability to join servers for you if you ask to be joined to the support server.</p>
 {% endblock %}
 {% block footer %}
 

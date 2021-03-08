@@ -649,6 +649,7 @@ class templates():
             arg_dict["avatar"] = request.session.get("avatar")
             arg_dict["username"] = request.session.get("username")
             arg_dict["userid"] = int(request.session.get("userid"))
+            arg_dict["user_token"] = request.session.get("token")
         else:
             arg_dict["staff"] = [False]
         print(arg_dict["staff"])

@@ -10,6 +10,7 @@
    <button onclick='doStep(false);' style="display: none; margin-right: 5px;" type="button" id="s1-back" class="btn btn-outline-light"><span class="iconify white" data-icon="fa-solid:arrow-left" data-inline="false" style="margin-right: 3px;"></span>Back</button>
    <button onclick='doStep(true);' type="button" id="s1-next" class="btn btn-outline-light">Continue<span class="iconify white" data-icon="fa-solid:arrow-right" data-inline="false" style="margin-left: 3px;"></span></button>
    <script>
+	  var servers = {{data.servers|safe}}
 	  var cont = 0;
 	  var old_text = document.querySelector("#js_msg").innerHTML;
 	  var old_text_front = document.querySelector("#js_msg").innerHTML;
@@ -23,13 +24,8 @@
 				cont = 1;
 			}
 			else {
-				document.querySelector("#js_msg").innerHTML = `Next, you will need to enter your servers ID. You can find this by running !id on your server with the Fates List Server Bot<br/>
-					<form method='POST'>
-						{{data.form.csrf_token}}
-						<label for="guild_id">Guild ID <span style="color: red; font-weight: bold" aria-hidden="true">*</span></label>
-						<input required class="form-control fform" type="text" minlength='17' maxlength='19' name="guild_id" placeholder="Enter the Guild's ID"/>
-						<button type='submit' class='btn btn-outline-light' style='margin-bottom: 10px;'>Check And Continue</button>
-					</form>`;
+				checkGuilds();
+				document.querySelector("#js_msg").innerHTML = `The list of servers with the Fates List Bot that you can manage is listed below.<br/>Only servers that you are in while logging into Fates List and you have 'Manage Server' or 'Administrator' in is listed below:<br/><div id='valid_servers'></div><button type='button' onclick='checkGuilds();' class='btn btn-outline-light' style='margin-bottom: 10px;'>Recheck</button>`;
 				document.querySelector("#s1-next").style.display = "none";
 				cont = 2;
 			}
@@ -46,6 +42,30 @@
 			cont = cont - 1;
                 }
 	  }
+	function checkGuilds(){
+	data = {"servers": servers}
+        $.ajax({
+                url: "/api/users/{{userid}}/valid_servers",
+                dataType: "json",
+                type: "PUT",
+                processData: false,
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+           	statusCode: {
+                	'429': function(data) {
+				console.log(data)
+				alert(`You are being ratelimited. You may only do two server check every five minutes. Please try again in 5-10 minutes...`)
+                	},
+			'200': function(data) {
+				server_data = ""
+				for(server in data.valid) {
+					server_data += (`<div style='background: black; display: inline-block;'><a style='color: white !important;' href='/servers/${server}/setup'><strong>${data.valid[server].name}</strong><br/><p>Server ID: ${server}</a></div><br/>`)
+				}
+				document.querySelector("#valid_servers").innerHTML = server_data
+			}
+		}
+        })
+	};
    </script>
 {% endblock %}
 {% block footer %}

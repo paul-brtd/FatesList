@@ -541,6 +541,35 @@ async def get_user_api(request: Request, user_id: int):
         return abort(404)
     return dict(user) | {"user": user_obj}
 
+class ValidServer(BaseModel):
+    valid: dict
+
+class ValidServerRequest(BaseModel):
+    servers: list
+
+@router.put("/users/{user_id}/valid_servers", tags = ["API (Internal)"], dependencies=[Depends(RateLimiter(times=2, minutes=5))], response_model = ValidServer)
+async def get_valid_servers_api(request: Request, user_id: int, vsreq: ValidServerRequest):
+    """Internal API to get users who have the FL Server Bot and Manage Server/Admin"""
+    valid = {}
+    request.session["valid_servers"] = []
+    for server in vsreq.servers:
+        try:
+            guild = client_servers.get_guild(int(server))
+        except:
+            guild = None
+        if guild is None:
+            continue
+        try:
+            member = guild.get_member(int(user_id))
+        except:
+            member = None
+        if member is None:
+            continue
+        if member.guild_permissions.administrator or member.guild_permissions.manage_guild:
+            valid = valid | {str(guild.id): {"icon": str(guild.icon_url), "name": guild.name, "member_count": guild.member_count, "created_at": guild.created_at}}
+            request.session["valid_servers"].append(str(guild.id))
+    return {"valid": valid}
+
 class UserDescEdit(BaseModel):
     description: str
 
