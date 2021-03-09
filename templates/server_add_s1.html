@@ -10,7 +10,6 @@
    <button onclick='doStep(false);' style="display: none; margin-right: 5px;" type="button" id="s1-back" class="btn btn-outline-light"><span class="iconify white" data-icon="fa-solid:arrow-left" data-inline="false" style="margin-right: 3px;"></span>Back</button>
    <button onclick='doStep(true);' type="button" id="s1-next" class="btn btn-outline-light">Continue<span class="iconify white" data-icon="fa-solid:arrow-right" data-inline="false" style="margin-left: 3px;"></span></button>
    <script>
-	  var access_token_dict = {{data.access_token|safe}}
 	  var cont = 0;
 	  var old_text = document.querySelector("#js_msg").innerHTML;
 	  var old_text_front = document.querySelector("#js_msg").innerHTML;
@@ -44,14 +43,9 @@
 	  }
 	function checkGuilds(){
 		document.querySelector("#valid_servers").innerHTML = "Getting Guilds... Please wait"
-		data = {"access_token_dict": access_token_dict, "scopes": '{{data.scopes}}'}
         $.ajax({
                 url: "/api/users/{{userid}}/valid_servers",
-                dataType: "json",
-                type: "PUT",
-                processData: false,
-                contentType: 'application/json',
-                data: JSON.stringify(data),
+                type: "GET",
            	statusCode: {
                 	'429': function(data) {
 				console.log(data)

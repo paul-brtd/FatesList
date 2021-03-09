@@ -543,16 +543,12 @@ async def get_user_api(request: Request, user_id: int):
 class ValidServer(BaseModel):
     valid: dict
 
-class ValidServerRequest(BaseModel):
-    access_token_dict: dict
-    scopes: str
-
-@router.put("/users/{user_id}/valid_servers", tags = ["API (Internal)"], dependencies=[Depends(RateLimiter(times=3, minutes=5))], response_model = ValidServer)
-async def get_valid_servers_api(request: Request, user_id: int, vsreq: ValidServerRequest):
+@router.get("/users/{user_id}/valid_servers", tags = ["API (Internal)"], dependencies=[Depends(RateLimiter(times=3, minutes=5))], response_model = ValidServer)
+async def get_valid_servers_api(request: Request, user_id: int):
     """Internal API to get users who have the FL Server Bot and Manage Server/Admin"""
     valid = {}
     request.session["valid_servers"] = []
-    access_token = await discord_o.access_token_check(vsreq.scopes, vsreq.access_token_dict)
+    access_token = await discord_o.access_token_check(request.session["dscopes_str"], request.session["access_token"])
     request.session["access_token"] = access_token
     servers = await discord_o.get_guilds(access_token["access_token"], permissions = [0x8, 0x20]) # Check for all guilds with 0x8 and 0x20
     for server in servers:
