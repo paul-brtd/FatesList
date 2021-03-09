@@ -4,18 +4,23 @@
 <script data-ad-client="ca-pub-5938555506489116" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
 <style>   
 	.btn-outline-light {margin-bottom: 39px !important;}
+	.adsbygoogle {text-align: center !important; margin-left: 30vw;}
 </style>
+
 {% endblock %}
 
 {% block content %}
-<!-- Uncomment for ads -->
-<!--
+{% if not premium %}
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-<ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-5938555506489116" data-ad-slot="7765471427" data-ad-format="auto" data-full-width-responsive="true"></ins>
-	<script>
-		     (adsbygoogle = window.adsbygoogle || []).push({});
-	</script>
-	-->
+<!-- Fates List -->
+<ins class="adsbygoogle"
+     style="display:block;width:500px;height:90px;"
+     data-ad-client="ca-pub-5938555506489116"
+     data-ad-slot="7765471427"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+{% endif %}
 <div class="index-fl">
 	<hr class="hr-is">
 	<div class="d-flex" style="margin-left: 5%;">
