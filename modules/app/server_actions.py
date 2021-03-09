@@ -10,7 +10,7 @@ router = APIRouter(
 async def add_server_main(request: Request):
     if "userid" in request.session.keys():
         if request.session.get("server_list"):
-            return templates.TemplateResponse("server_add_s1.html", {"request": request, "tags_fixed": server_tags_fixed, "data": {"access_token": request.session.get("access_token"), "scopes": request.session.get("dscopes_str")}, "error": None, "step": 1, "invite": server_bot_invite})
+            return templates.TemplateResponse("server_add_s1.html", {"request": request, "tags_fixed": server_tags_fixed, "data": {}, "error": None, "step": 1, "invite": server_bot_invite})
         else:
             return templates.e(request, "You must login with Server Listing enabled<br/>Please logout and login again.", status_code = 400)
     else:
