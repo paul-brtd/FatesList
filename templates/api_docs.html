@@ -1,24 +1,12 @@
-<!DOCTYPE html>
-<html lang="en" data-theme="light">
-<head>
-        <title>Fates List | API Docs</title>
-	<link rel="shortcut icon" href="/static/favicon.ico"/>
-	<link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin>
-   	<link href="https://fonts.googleapis.com/css2?family=Lexend+Deca&display=swap" rel="stylesheet">
-	<script src="https://code.iconify.design/1/1.0.7/iconify.min.js"></script>
+{% extends "base/base.html" %}
+
+{% block head %}
 	<style>
-		body {
+		#api_docs_body {
 			width: 100%;
-		}
-		a {
-			color: white;
-			opacity: 0.7;
-			text-decoration: none;
+			text-align: left;
 		}
 		.hr-is {font-size: 20px; border-top-width: 1px; border-top-color: #eee; width: 90%;}
-		html, pre {
-			font-family: 'Lexend Deca', sans-serif  !important;
-		}
 		.docm, pre, #resources {
 			margin-left: 15px;
 			font-size: 18px;
@@ -34,9 +22,10 @@
 			padding: 3px;
 			text-align: left !important;
 			margin-left: 15px;
-			display: inline-block;
-			border: 3px solid red;
-			border-radius: 4px 4px 4px 4px;
+			display: block;
+			border: 3px solid red !important;
+			border-radius: 4px 4px 4px 4px !important;
+			color: white !important;
 			margin-bottom: 3px;
 		}
 		.doc {
@@ -47,11 +36,13 @@
 			padding: 10px;
 			border: 1px solid white;
 			border-collapse: collapse;
+			background: black !important;
 		}
 		.table {
 			margin-top: 5px;
 			width: 45%;
 			margin-bottom: 5px;
+			background: inherit !important;
 		}
 
 		html, body {
@@ -60,8 +51,9 @@
 		}
 
 	</style>
-</head>
-<body style="background: black; color: white;">
+{% endblock %}
+{% block content %}
+<div class="white" id="api_docs_body">
 <header>
 	<span>
 		<h1 style="font-size: 36px; text-align: center; margin-bottom: 0px !important;"><strong>Fates List</strong></h1>
@@ -71,7 +63,7 @@
 </header>
 <h3><strong>Endpoints</strong></h3>
 <div style="font-size: 18px;" class="docm">
-	<p>Please see <a href="/api/docs/endpoints">API Endpoints</a> for the actual API endpoints we currently give you. Join the Support Server and Ping/DM Rootspring#6701 if you want to request a specific API Endpoint</p>
+	<p>Please see <a class="long-desc-link" href="/api/docs/endpoints">API Endpoints</a> for the actual API endpoints we currently give you. Join the Support Server and Ping/DM Rootspring#6701 if you want to request a specific API Endpoint</p>
 </div>
 <h3><strong>Basic Structures/Constructs</strong></h3>
 <div style="font-size: 18px;" class="docm">
@@ -154,7 +146,7 @@
 <br/>
 <div id="resources" style="margin-bottom: 5px;">
         <strong>Resources</strong><br/>
-	<a href="https://github.com/Fates-List/FatesList/blob/a855259f57b390e3b9c038e1c6fe5d1a1e1ab766/config_template.py#L69"><strong class="doc">Tags (names and classes)</strong></a>
+	<a class="long-desc-link" href="https://github.com/Fates-List/FatesList/blob/a855259f57b390e3b9c038e1c6fe5d1a1e1ab766/config_template.py#L69"><strong class="doc">Tags (names and classes)</strong></a>
 </div>
 <div class="alert">
 	<span class="iconify" data-icon="fa-solid:exclamation-triangle" data-inline="false"></span>
@@ -299,5 +291,9 @@
 </p>
 
 </div>
-</body>
-</html>
+</div>
+{% endblock %}
+{% block footer %}
+
+{% endblock %}
+

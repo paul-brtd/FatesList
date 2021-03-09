@@ -531,7 +531,6 @@ class User(BaseModel):
     id: int
     desription: str
 
-
 @router.get("/users/{user_id}", tags = ["API"])
 async def get_user_api(request: Request, user_id: int):
     user = await db.fetchrow("SELECT description, css, user_id AS id FROM users WHERE user_id = $1", user_id)

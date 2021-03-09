@@ -99,11 +99,17 @@ async def add_bot_api(
 async def add_bot_bt(request, bot_id, prefix, library, website, banner, support, long_description, description, selected_tags, extra_owners, creation, bot_object, invite, features, html_long_description, css, donate):
     await db.execute("INSERT INTO bots(bot_id,prefix,bot_library,invite,website,banner,discord,long_description,description,tags,owner,extra_owners,votes,servers,shard_count,created_at,api_token,features, html_long_description, css, donate) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)", bot_id, prefix, library, invite, website, banner, support, long_description, description, selected_tags, int(request.session["userid"]), extra_owners, 0, 0, 0, int(creation), get_token(132), features, html_long_description, css, donate)
     await add_event(bot_id, "add_bot", {})
-    owner=str(request.session["userid"])
+    owner = int(request.session["userid"])
     channel = client.get_channel(bot_logs)
     bot_name = bot_object["username"]
     add_embed = discord.Embed(title="New Bot!", description=f"<@{owner}> added the bot <@{bot_id}>({bot_name}) to queue!", color=0x00ff00)
     add_embed.add_field(name="Link", value=f"https://fateslist.xyz/bot/{bot_id}")
+    try:
+        member = channel.guild.get_member(owner)
+        if member is not None:
+            await member.send(embed = add_embed)
+    except:
+        pass
     await channel.send(f"<@&{staff_ping_add_role}>", embed = add_embed)
 
 @router.get("/{bid}/edit")

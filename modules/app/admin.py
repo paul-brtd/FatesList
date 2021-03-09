@@ -121,6 +121,12 @@ async def review_tool(request: Request, bot_id: int, accept: str = FForm(""), de
         approve_embed = discord.Embed(title="Bot Approved!", description = f"<@{bot_id}> by <@{b['owner']}> has been approved", color=0x00ff00)
         approve_embed.add_field(name="Feedback", value=accept_feedback)
         approve_embed.add_field(name="Link", value=f"https://fateslist.xyz/bot/{bot_id}")
+        try:
+            member = channel.guild.get_member(int(b["owner"]))
+            if member is not None:
+                await member.send(embed = approve_embed)
+        except:
+            pass
         await channel.send(embed = approve_embed)
         
         # Give Bot Dev Roles
@@ -167,6 +173,12 @@ async def review_tool(request: Request, bot_id: int, accept: str = FForm(""), de
         deny_embed = discord.Embed(title="Bot Denied!", description = f"<@{bot_id}> by <@{b['owner']}> has been denied", color=discord.Color.red())
         deny_embed.add_field(name="Reason", value=deny_reason)
         await channel.send(embed = deny_embed)
+        try:
+            member = channel.guild.get_member(int(b["owner"]))
+            if member is not None:
+                await member.send(embed = deny_embed)
+        except:
+            pass
         return templates.TemplateResponse("message.html",{"request":request,"message":"Bot denied. Please carry on with your day"})
     else:
         return RedirectResponse("/")

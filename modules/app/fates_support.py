@@ -2,7 +2,7 @@ from ..deps import *
 
 router = APIRouter(
     tags = ["Support"],
-    prefix = "/support/fates",
+    prefix = "/fates/support",
     include_in_schema = False
 )
 

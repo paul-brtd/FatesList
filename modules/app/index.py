@@ -86,4 +86,8 @@ async def stats():
 
 @router.get("/api/docs")
 async def api_docs_view(request: Request):
-    return HTMLResponse(open("static/api_docs.html").read())
+    return templates.TemplateResponse("api_docs.html", {"request": request})
+
+@router.get("/fates/tos")
+async def tos_page(request: Request):
+    return templates.TemplateResponse("tos.html", {"request": request})
