@@ -7,7 +7,7 @@
   <div class="d-flex d-sm-flex d-md-flex d-lg-flex d-xl-flex flex-column justify-content-center align-items-center flex-sm-column justify-content-sm-center align-items-sm-center flex-md-column justify-content-md-center align-items-md-center flex-lg-column justify-content-lg-center align-items-lg-center flex-xl-column justify-content-xl-center align-items-xl-center">
     <h2 style="color: rgba(255, 255, 255, 0.87); font-weight: bold; margin-top: 40px;">Fates List</h2>
     <p style="color: rgba(255, 255, 255, 0.87); font-weight: bold; opacity: 0.78; font-size: 21px;">
-      {%if mode == "edit" %}Edit your bot here.{%elif mode == "add"%}Add your bot here!{% elif mode == "templ_add" %}Add your server templates here (COMING SOON)!{%endif%}
+    	{%if mode == "edit" %}Edit your bot here.{%elif mode == "add"%}Add your bot here!{%endif%}
     </p>
     {% if not error %}
     {% else %}
@@ -38,33 +38,18 @@
 	<div class="col-lg">
     <h5 style="font-weight: bold; margin-bottom: 15px;">Basic Information</h5>
       <label
-	for="{% if mode == 'templ_add' or mode == 'templ_edit' %}template_code{% else %}bot_id{% endif %}"
-	>{% if mode == 'templ_add' or mode == 'templ_edit' %}Template Code{%else%}Bot ID{% endif %} <span style="color: red; font-weight: bold" aria-hidden="true">*</span>
+	for="bot_id"
+	>Bot ID <span style="color: red; font-weight: bold" aria-hidden="true">*</span>
       </label>
       <input
-	{% if mode == "edit" or mode == "templ_edit"%}disabled{% endif %}
+	{% if mode == "edit" %}disabled{% endif %}
         required
         class="form-control fform"
         type="number"
-        name="{% if mode == 'templ_add' or mode == 'templ_edit' %}template_code{% else %}bot_id{% endif %}"
+        name="bot_id"
         placeholder="12345678998764"
-	value="{% if mode == "templ_edit" %}{{data.code}}{% elif mode == "templ_add" %}{% else %}{{data.bot_id}}{% endif %}"
+	value="{{data.bot_id}}"
       />
-      {% if mode == "templ_add" or mode == "templ_edit"%}
-      <label
-        for="template_name"
-        >Template Name <span style="color: red; font-weight: bold" aria-hidden="true">*</span>
-      </label>
-      <input
-        required
-        class="form-control fform"
-        type="text"
-        maxlength=30
-        name="template_code"
-        placeholder="!"
-        value="{{data.name}}"
-      />
-      {% else %}
       <label
         for="extra_owners"
         >Extra Owners (Comma Seperated)</label>
@@ -106,12 +91,9 @@
         placeholder="Discord.py"
         value="{{data.library}}"
       />
-      {% endif %}
   </div>
   <div class="col-lg">
      <h5 style="font-weight: bold; margin-bottom: 15px;">Bot Settings</h5>
-     {% if mode == "templ_add" or  mode == "templ_edit"%}
-     {% else %}
      <label for="invite">Invite URL <span style="color: red; font-weight: bold" aria-hidden="true">*</span></label>
       <input
         required
@@ -205,7 +187,6 @@
       {% if data.github != None %}value="{{data.github}}"{%endif%}
     />
     {% endif %}
-    {% endif %}
      <label
         for="css"
         >Custom CSS</label
@@ -276,7 +257,7 @@
       </div>
       <label
         for="tags"
-	>Select tags for your {% if mode == "templ_add" or mode == "templ_edit" %}template{%else%}bot{%endif%}. <span style="color: red; font-weight: bold" aria-hidden="true">*</span></label
+	>Select tags for your bot <span style="color: red; font-weight: bold" aria-hidden="true">*</span></label
       ><span class="select_tags"></span>
       <div class="d-flex justify-content-center">
         <button class="btn btn-outline-light" type="submit" style="margin-top: 50px; margin-bottom: 30px">{% if mode == "edit" %}Edit Bot{%else%}Add Bot{%endif%}</button>

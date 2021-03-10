@@ -38,6 +38,18 @@ CREATE TABLE bots (
     donate text
 );
 
+CREATE TABLE bot_packs (
+   id uuid primary key DEFAULT uuid_generate_v4(),
+   icon text,
+   banner text,
+   created_at bigint,
+   owner bigint,
+   api_token text unique,
+   bots bigint[],
+   description text,
+   name text unique
+);
+
 CREATE TABLE bot_commands (
    id uuid primary key DEFAULT uuid_generate_v4(),
    bot_id bigint,

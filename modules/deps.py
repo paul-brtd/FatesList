@@ -771,3 +771,152 @@ async def add_ws_event(bot_id: int, ws_event: dict) -> None:
     curr_ws_events[ws_event["id"]] = orjson.dumps(ws_event)
     curr_ws_events["status"] = "READY"
     await redis_db.hset(str(bot_id) + "_ws", mapping = curr_ws_events)
+
+class BotActions():
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs) # Add all kwargs to function
+        if "bt" not in self.__dict__ or "user_id" not in self.__dict__:
+            raise SyntaxError()
+
+    async def base_check(self) -> str:
+        """Perform basic checks for adding/editting bots"""
+        if self.bot_id == "" or self.prefix == "" or self.invite == "" or self.description == "" or self.long_description == "" or len(self.prefix) > 9:
+            return "Please ensure you have filled out all the required fields and that your prefix is less than 9 characters."
+
+        if self.tags == "":
+            return "You must select tags for your bot"
+
+        if not self.banner.startswith("https://") and self.banner not in ["", "none"]:
+            return "Your banner does not use https://. Please change it"
+        
+        if not self.invite.startswith("https://discord.com") or "oauth" not in self.invite:
+            return "Invalid Bot Invite: Your bot invite must be in the format of https://discord.com/api/oauth2... or https://discord.com/oauth2..."
+
+        if len(self.description) > 110:
+            return "Your short description must be shorter than 110 characters"
+
+        try:
+            bot_object = await get_bot(self.bot_id)
+        except:
+            return "According to Discord's API and our cache, your bot does not exist. Please try again after 2 hours."
+
+        if not bot_object:
+            return "According to Discord's API and our cache, your bot does not exist. Please try again after 2 hours."
+
+        self.selected_tags = self.tags.split(",")
+        for test in self.selected_tags:
+            if test not in TAGS:
+                return "One of your tags doesn't exist internally. Please check your tags again"
+
+        if self.banner != "none" and self.banner != "":
+            img = await requests.get(self.banner)
+            if img.headers.get("Content-Type") is None or img.headers.get("Content-Type").split("/")[0] != "image":
+                return "Banner URL is not an image. Please make sure it is setting the proper Content-Type"
+
+        if self.donate != "" and not (self.donate.startswith("https://patreon.com") or self.donate.startswith("https://paypal.me")):
+            return "Only Patreon and Paypal.me are allowed for donation links as of right now."
+
+        if self.extra_owners == "":
+            self.extra_owners = []
+        else:
+            self.extra_owners = self.extra_owners.split(",")
+
+        try:
+            self.extra_owners = [int(id.replace(" ", "")) for id in self.extra_owners]
+        except:
+            return "One of your extra owners doesn't exist or you haven't comma-seperated them."
+
+        return None # None means success
+
+    async def edit_check(self):
+        """Perform extended checks for editting bots"""
+        check = await self.base_check() # Initial base checks
+        if check is not None:
+            return check
+
+        check = await is_bot_admin(int(self.bot_id), int(self.user_id)) # Check for owner
+        if check is None:
+            return "This bot doesn't exist in our database."
+        elif check is False:
+            return "You aren't the owner of this bot."
+
+        check = await get_user(self.user_id)
+        if check is None:
+            return "You do not exist on the Discord API. Please wait for a few hours and try again"
+
+        if self.vanity == "":
+            pass
+        else:
+            vanity_check = await db.fetchrow("SELECT type FROM vanity WHERE lower(vanity_url) = $1 AND redirect != $2", self.vanity.replace(" ", "").lower(), self.bot_id)
+            if vanity_check is not None or self.vanity.replace("", "").lower() in ["bot", "docs", "redoc", "doc", "profile", "server", "bots", "servers", "search", "invite", "discord", "login", "logout", "register", "admin"] or self.vanity.replace("", "").lower().__contains__("/"):
+                return "Your custom vanity URL is already in use or is reserved"
+
+        if self.github != "" and not self.github.startswith("https://www.github.com"):
+            return "Your github link must start with https://www.github.com"
+
+        return None # None means success
+
+    async def add_check(self):
+        """Perform extended checks for adding bots"""
+        check = await self.base_check() # Initial base checks
+        if check is not None:
+            return check
+
+        if (await db.fetchrow("SELECT bot_id FROM bots WHERE bot_id = $1", self.bot_id)) is not None:
+            return "This bot already exists on Fates List"
+
+        return None # None means success
+
+    async def add_bot(self):
+        """Add a bot"""
+        check = await self.add_check() # Perform add bot checks
+        if check is not None:
+            return check
+
+        creation = time.time()
+
+        self.bt.add_task(self.add_bot_bt, int(self.user_id), self.bot_id, self.prefix, self.library, self.website, self.banner, self.support, self.long_description, self.description, self.selected_tags, self.extra_owners, creation, self.invite, self.features, self.html_long_description, self.css, self.donate)
+        return None # None means success
+
+    async def edit_bot(self):
+        """Edit a bot"""
+        check = await self.edit_check() # Perform edit bot checks
+        if check is not None:
+            return check
+
+        creation = time.time()
+        self.bt.add_task(self.edit_bot_bt, int(self.user_id), self.bot_id, self.prefix, self.library, self.website, self.banner, self.support, self.long_description, self.description, self.selected_tags, self.extra_owners, creation, self.invite, self.webhook, self.vanity, self.github, self.features, self.html_long_description, self.webhook_type, self.css, self.donate)
+
+    @staticmethod
+    async def add_bot_bt(user_id, bot_id, prefix, library, website, banner, support, long_description, description, selected_tags, extra_owners, creation, invite, features, html_long_description, css, donate):
+        await db.execute("INSERT INTO bots(bot_id,prefix,bot_library,invite,website,banner,discord,long_description,description,tags,owner,extra_owners,votes,servers,shard_count,created_at,api_token,features, html_long_description, css, donate) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)", bot_id, prefix, library, invite, website, banner, support, long_description, description, selected_tags, user_id, extra_owners, 0, 0, 0, int(creation), get_token(132), features, html_long_description, css, donate)
+        await add_event(bot_id, "add_bot", {})
+        owner = int(user_id)
+        channel = client.get_channel(bot_logs)
+        bot_name = (await get_bot(bot_id))["username"]
+        add_embed = discord.Embed(title="New Bot!", description=f"<@{owner}> added the bot <@{bot_id}>({bot_name}) to queue!", color=0x00ff00)
+        add_embed.add_field(name="Link", value=f"https://fateslist.xyz/bot/{bot_id}")
+        try:
+            member = channel.guild.get_member(owner)
+            if member is not None:
+                await member.send(embed = add_embed)
+        except:
+            pass
+        await channel.send(f"<@&{staff_ping_add_role}>", embed = add_embed)
+
+    @staticmethod
+    async def edit_bot_bt(user_id, bot_id, prefix, library, website, banner, support, long_description, description, selected_tags, extra_owners, creation, invite, webhook, vanity, github, features, html_long_description, webhook_type, css, donate):
+        await db.execute("UPDATE bots SET bot_library=$2, webhook=$3, description=$4, long_description=$5, prefix=$6, website=$7, discord=$8, tags=$9, banner=$10, invite=$11, extra_owners = $12, github = $13, features = $14, html_long_description = $15, webhook_type = $16, css = $17, donate = $18 WHERE bot_id = $1", bot_id, library, webhook, description, long_description, prefix, website, support, selected_tags, banner, invite, extra_owners, github, features, html_long_description, webhook_type, css, donate)
+        check = await db.fetchrow("SELECT vanity FROM vanity WHERE redirect = $1", bot_id)
+        if check is None:
+            print("am here")
+            await db.execute("INSERT INTO vanity (type, vanity_url, redirect) VALUES ($1, $2, $3)", 1, vanity, bot_id)
+        else:
+            await db.execute("UPDATE vanity SET vanity_url = $1 WHERE redirect = $2", vanity, bot_id)
+        await add_event(bot_id, "edit_bot", {"user": str(user_id)})
+        channel = client.get_channel(bot_logs)
+        owner = int(user_id)
+        edit_embed = discord.Embed(title="Bot Edit!", description=f"<@{owner}> has edited the bot <@{bot_id}>!", color=0x00ff00)
+        edit_embed.add_field(name="Link", value=f"https://fateslist.xyz/bot/{bot_id}")
+        await channel.send(embed = edit_embed)
+

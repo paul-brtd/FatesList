@@ -13,7 +13,7 @@ allowed_file_ext = [".gif", ".png", ".jpeg", ".jpg", ".webm", ".webp"]
 async def add_bot(request: Request):
     if "userid" in request.session.keys():
         form = await Form.from_formdata(request)
-        return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": {"form": form}, "error": None, "mode": "add"})
+        return templates.TemplateResponse("bot_add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": {"form": form}, "error": None, "mode": "add"})
     else:
         return RedirectResponse("/auth/login?redirect=/bot/admin/add&pretty=to add a bot")
 
@@ -40,77 +40,23 @@ async def add_bot_api(
         html_long_description: str = FForm("false"),
         donate: str = FForm("")
     ):
+    if "userid" not in request.session.keys():
+        return RedirectResponse("/auth/login?redirect=/bot/admin/add&pretty=to add a bot", status_code = 303)
     banner = banner.replace("http://", "https://").replace("(", "").replace(")", "")
     html_long_description = html_long_description == "true"
     guild = client.get_guild(main_server)
     bot_dict = locals()
-    bot_dict["request"] = None
-    bot_dict["bt"] = None
     bot_dict["form"] = await Form.from_formdata(request)
     features = [f for f in bot_dict.keys() if bot_dict[f] == "on" and f in ["custom_prefix", "open_source"]]
     bot_dict["features"] = features
-    if bot_id == "" or prefix == "" or invite == "" or description == "" or long_description == "" or len(prefix) > 9:
-        return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "Please ensure you have filled out all the required fields and that your prefix is less than 9 characters.", "mode": "add"})
-    if not banner.startswith("https://") and banner not in ["", "none"]:
-        return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "Your banner does not use https://. Please change it", "mode": "add"})
-    fetch = await db.fetch("SELECT bot_id FROM bots WHERE bot_id = $1", bot_id)
-    if fetch:
-        return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "This bot already exists on Fates List", "mode": "add"})
-    if invite.startswith("https://discord.com") and "oauth" in invite:
-        pass
-    else:
-        return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "Invalid Bot Invite: Your bot invite must be in the format of https://discord.com/api/oauth2... or https://discord.com/oauth2...", "mode": "add"})
-    if len(description) > 110:
-        return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "Your short description must be shorter than 100 characters", "mode": "add"})
-    description = description.replace("\n", " ").replace("\t", " ")
-    try:
-        bot_object = await get_bot(bot_id)
-    except:
-        return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "According to Discord's API and our cache, your bot does not exist. Please try again after 2 hours.", "mode": "add"})
-    if not bot_object:
-        return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "According to Discord's API and our cache, your bot does not exist. Please try again after 2 hours.", "mode": "add"})
-    if tags == "":
-        return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "You must select tags for your bot", "mode": "add"})
-    selected_tags = tags.split(",")
-    for test in selected_tags:
-        if test in TAGS:
-            pass
-        else:
-            return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "One of your tags doesn't exist internally. Please choose a different tags", "mode": "add"})
-    img = banner
-    if img != "none" and img != "":
-        img = await requests.get(banner)
-        if img.headers.get("Content-Type") is None or img.headers.get("Content-Type").split("/")[0] != "image":
-            return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "Banner URL is not an image. Please make sure it is setting the proper Content-Type", "mode": "add"})
-    if donate != "" and not (donate.startswith("https://patreon.com") or donate.startswith("https://paypal.me")):
-        return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "Only Patreon and Paypal.me is allows for donation links", "mode": "add"})
-
-    creation = time.time()
-    if extra_owners == "":
-        extra_owners = None
-    else:
-        try:
-            extra_owners = [int(id.replace(" ", "")) for id in extra_owners.split(",")]
-        except:
-            return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "One of your extra owners doesn't exist or you haven't comma-seperated them.", "mode": "add"})
-    bt.add_task(add_bot_bt, request, bot_id, prefix, library, website, banner, support, long_description, description, selected_tags, extra_owners, creation, bot_object, invite, features, html_long_description, css, donate)
-    return RedirectResponse("/bot/" + str(bot_id), status_code = 303)
-
-async def add_bot_bt(request, bot_id, prefix, library, website, banner, support, long_description, description, selected_tags, extra_owners, creation, bot_object, invite, features, html_long_description, css, donate):
-    await db.execute("INSERT INTO bots(bot_id,prefix,bot_library,invite,website,banner,discord,long_description,description,tags,owner,extra_owners,votes,servers,shard_count,created_at,api_token,features, html_long_description, css, donate) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)", bot_id, prefix, library, invite, website, banner, support, long_description, description, selected_tags, int(request.session["userid"]), extra_owners, 0, 0, 0, int(creation), get_token(132), features, html_long_description, css, donate)
-    await add_event(bot_id, "add_bot", {})
-    owner = int(request.session["userid"])
-    channel = client.get_channel(bot_logs)
-    bot_name = bot_object["username"]
-    add_embed = discord.Embed(title="New Bot!", description=f"<@{owner}> added the bot <@{bot_id}>({bot_name}) to queue!", color=0x00ff00)
-    add_embed.add_field(name="Link", value=f"https://fateslist.xyz/bot/{bot_id}")
-    try:
-        member = channel.guild.get_member(owner)
-        if member is not None:
-            await member.send(embed = add_embed)
-    except:
-        pass
-    await channel.send(f"<@&{staff_ping_add_role}>", embed = add_embed)
+    bot_dict["user_id"] = request.session.get("userid")
+    bot_adder = BotActions(**bot_dict)
+    rc = await bot_adder.add_bot()
+    if rc is None:
+        return RedirectResponse("/bot/" + str(bot_id), status_code = 303)
+    bot_dict["tags"] = bot_dict["tags"].split(",")
+    return templates.TemplateResponse("bot_add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": rc, "mode": "add"})
+ 
 
 @router.get("/{bid}/edit")
 @csrf_protect
@@ -128,16 +74,16 @@ async def bot_edit(request: Request, bid: int):
             vanity = {"vanity": None}
         bot = dict(fetch) | dict(vanity)
         bot["form"] = form
-        return templates.TemplateResponse("add_edit.html", {"request": request, "mode": "edit", "tags_fixed": tags_fixed, "username": request.session.get("username", False),"data": bot, "avatar": request.session.get("avatar"), "epoch": time.time(), "vanity": vanity["vanity"]})
+        return templates.TemplateResponse("bot_add_edit.html", {"request": request, "mode": "edit", "tags_fixed": tags_fixed, "username": request.session.get("username", False),"data": bot, "avatar": request.session.get("avatar"), "epoch": time.time(), "vanity": vanity["vanity"]})
     else:
         return RedirectResponse("/")
 
-@router.post("/{bid}/edit")
+@router.post("/{bot_id}/edit")
 @csrf_protect
 async def bot_edit_api(
         request: Request,
         bt: BackgroundTasks,
-        bid: int,
+        bot_id: int,
         prefix: str = FForm(""),
         library: Optional[str] = FForm(""),
         invite: str = FForm(""),
@@ -158,90 +104,22 @@ async def bot_edit_api(
         html_long_description: str = FForm("false"),
         donate: str = FForm("")
     ):
+    if "userid" not in request.session.keys():
+        return RedirectResponse("/")
+    banner = banner.replace("http://", "https://").replace("(", "").replace(")", "")
     html_long_description = html_long_description == "true"
     guild = client.get_guild(main_server)
     bot_dict = locals()
-    bot_dict["request"] = None
-    bot_dict["bt"] = None
     bot_dict["form"] = await Form.from_formdata(request)
-    bot_dict["bot_id"] = bid
     features = [f for f in bot_dict.keys() if bot_dict[f] == "on" and f in ["custom_prefix", "open_source"]]
     bot_dict["features"] = features
+    bot_dict["user_id"] = request.session.get("userid")
+    bot_editor = BotActions(**bot_dict)
+    rc = await bot_editor.edit_bot()
+    if rc is None:
+        return RedirectResponse("/bot/" + str(bot_id), status_code = 303)
     bot_dict["tags"] = bot_dict["tags"].split(",")
-    banner = banner.replace("http://", "https://").replace("(", "").replace(")", "")
-    if bid == "" or prefix == "" or invite == "" or description == "" or long_description == "" or len(prefix) > 9:
-        return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "Please ensure you have filled out all the required fields and that your prefix is less than 9 characters", "mode": "edit"})
-    if not banner.startswith("https://") and banner not in ["", "none"]:
-        return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "Your banner does not use https://. Please change it", "mode": "edit"})
-    if "userid" in request.session.keys():
-        check = await is_bot_admin(int(bid), int(request.session.get("userid")))
-        if check is None:
-            return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "This bot doesn't exist in our database.", "username": request.session.get("username", False), "mode": "edit"})
-        elif check == False:
-            return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "You aren't the owner of this bot.", "username": request.session.get("username", False), "mode": "edit"})
-    else:
-        return RedirectResponse("/")
-    owner_check = await get_user(request.session["userid"])
-    if owner_check:
-        pass
-    else:
-        return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "You are either not in the support server or you do not exist on the Discord API", "username": request.session.get("username", False), "mode": "edit"})
-    if invite.startswith("https://discord.com") and "oauth" in invite:
-        pass
-    else:
-        return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "Invalid Bot Invite<br/>Your bot invite must be in the format of https://discord.com/api/oauth2... or https://discord.com/oauth2...", "username": request.session.get("username", False), "mode": "edit"})
-    description = description.replace("\n", " ").replace("\t", " ")
-    if len(description) > 110:
-        return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "Short description is too long.", "username": request.session.get("username", False), "mode": "edit"})
-    if tags == "":
-        return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "You need to select tags for your bot", "username": request.session.get("username", False), "mode": "edit"})
-    selected_tags = tags.split(",")
-    for test in selected_tags:
-        if test in TAGS:
-            pass
-        else:
-            return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "One of your bot tags didn't exist internally", "username": request.session.get("username", False), "mode": "edit"})
-    if vanity == "":
-        pass
-    else:
-        vanity_check = await db.fetchrow("SELECT type FROM vanity WHERE lower(vanity_url) = $1 AND redirect != $2", vanity.replace(" ", "").lower(), bid)
-        if vanity_check is not None or vanity.replace("", "").lower() in ["bot", "docs", "redoc", "doc", "profile", "server", "bots", "servers", "search", "invite", "discord", "login", "logout", "register", "admin"] or vanity.replace("", "").lower().__contains__("/"):
-            return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "Your custom vanity URL is already in use or is reserved", "mode": "edit"})
-    if github != "" and not github.startswith("https://www.github.com"):
-        return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "Your github link must start with https://www.github.com", "mode": "edit"})
-    img = banner
-    if img != "none" and img != "":
-        img = await requests.get(banner)
-        if img.headers.get("Content-Type") is None or img.headers.get("Content-Type").split("/")[0] != "image":
-            return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "Banner URL is not an image. Please make sure it is setting the proper Content-Type", "mode": "edit"})
-    if donate != "" and not (donate.startswith("https://patreon.com") or donate.startswith("https://paypal.me")):
-        return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "Only Patreon and Paypal.me is allows for donation links", "mode": "edit"})
-    creation = time.time()
-    if extra_owners == "":
-        extra_owners = None
-    else:
-        try:
-            extra_owners = [int(id.replace(" ", "")) for id in extra_owners.split(",")]
-        except:
-            return templates.TemplateResponse("add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": "One of your extra owners is invalid", "mode": "edit"})
-    print(features)
-    bt.add_task(edit_bot_bt, request, bid, prefix, library, website, banner, support, long_description, description, selected_tags, extra_owners, creation, invite, webhook, vanity, github, features, html_long_description, webhook_type, css, donate)
-    return templates.TemplateResponse("message.html", {"request": request, "message": "Bot has been edited.<script>window.location.replace('/bot/" + str(bid) + "')</script>", "username": request.session.get("username", False), "avatar": request.session.get('avatar')}) 
-
-async def edit_bot_bt(request, bot_id, prefix, library, website, banner, support, long_description, description, selected_tags, extra_owners, creation, invite, webhook, vanity, github, features, html_long_description, webhook_type, css, donate):
-    await db.execute("UPDATE bots SET bot_library=$2, webhook=$3, description=$4, long_description=$5, prefix=$6, website=$7, discord=$8, tags=$9, banner=$10, invite=$11, extra_owners = $12, github = $13, features = $14, html_long_description = $15, webhook_type = $16, css = $17, donate = $18 WHERE bot_id = $1", bot_id, library, webhook, description, long_description, prefix, website, support, selected_tags, banner, invite, extra_owners, github, features, html_long_description, webhook_type, css, donate)
-    check = await db.fetchrow("SELECT vanity FROM vanity WHERE redirect = $1", bot_id)
-    if check is None:
-        print("am here")
-        await db.execute("INSERT INTO vanity (type, vanity_url, redirect) VALUES ($1, $2, $3)", 1, vanity, bot_id)
-    else:
-        await db.execute("UPDATE vanity SET vanity_url = $1 WHERE redirect = $2", vanity, bot_id)
-    await add_event(bot_id, "edit_bot", {"user": request.session['userid']})
-    channel = client.get_channel(bot_logs)
-    owner=str(request.session["userid"])
-    edit_embed = discord.Embed(title="Bot Edit!", description=f"<@{owner}> has edited the bot <@{bot_id}>!", color=0x00ff00)
-    edit_embed.add_field(name="Link", value=f"https://fateslist.xyz/bot/{bot_id}")
-    await channel.send(embed = edit_embed)
+    return templates.TemplateResponse("bot_add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": rc, "mode": "edit"})
 
 @router.post("/{bot_id}/vote")
 @csrf_protect
