@@ -366,7 +366,7 @@ textarea {
 			<table style="margin: 0 auto !important;">
 			   <tr>
 				<th>Owners</th>
-                                <td><a class='long-desc-link' href="/profile/{{bot.owner}}">{{bot.owner_pretty.username}}</a>{% if bot.extra_owners == "None" or not bot.extra_owners or bot.extra_owners == [] %}{%else%}{%for bobj in bot.extra_owners %}{% if loop.index == bot.leo %} and {% else%}, {%endif%}<a class='long-desc-link' href="/profile/{{bobj[1]}}">{{bobj[0]["username"]}}</a>{%endfor%}{%endif%}</td>
+				<td><a class='long-desc-link' href="/profile/{{bot.owner}}">{{bot.owner_pretty.username}}</a>{{bot.extra_owners|safe}}</td>
 			   </tr>
 			   <tr>
 				<th>Prefix</th>
@@ -395,7 +395,7 @@ textarea {
                            {% if bot.features %}
 			   <tr>
 				<th>Features</th>
-	                        <td>{% for f in bot.features %}<a class='long-desc-link' href="/feature/{{f}}">{{f.replace("_", " ").title()}}</a>{% if loop.index == bot.fleo - 1%} and {% elif loop.index != bot.fleo%}, {%endif%}{% endfor %}
+				<td>{{bot.features|safe}}</td>
 			   </tr>
 			   {% endif %}
 			</table>

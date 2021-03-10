@@ -57,7 +57,7 @@
         class="form-control fform"
         type="text"
         name="extra_owners"
-        value="{% if data.extra_owners == [] or not data.extra_owners or data.extra_owners == "None" or data.extra_owners == ""%}{% else %}{{data.extra_owners.__str__().replace("[", "").replace("]", "").replace(" ", "")}} {% endif %}"
+	value="{{data.extra_owners}}"
         placeholder="1234567899876,1234567865432"
         minlength="10"
       />

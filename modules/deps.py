@@ -389,6 +389,10 @@ async def parse_reviews(bot_id: int, reviews: List[asyncpg.Record] = None) -> Li
         return reviews, 10.0
     return reviews, round(stars/i, 2)
 
+def replace_last(string, delimiter, replacement):
+    start, _, end = string.rpartition(delimiter)
+    return start + replacement + end
+
 # Get Bots Helper
 async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, review: bool, widget: bool):
     guild = client.get_guild(main_server)
@@ -408,7 +412,7 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, review:
     ldesc = ldesc.replace("<h1", "<h2 style='text-align: center'").replace("<h2", "<h3").replace("<h4", "<h5").replace("<h6", "<p")
 
     if widget:
-        eo = []
+        extra_owners = []
         bot_admin = False
     else:
         if bot["extra_owners"] is None:
@@ -432,14 +436,27 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, review:
     bot_info = await get_bot(bot["bot_id"])
     promos = await get_promotions(bot["bot_id"])
     maint = await in_maint(bot["bot_id"])
-    ed = [((await get_user(id)), id) for id in eo]
+
+    extra_owners_lst = [(await get_user(id)) for id in eo]
+    extra_owners = ""
+    for eo in extra_owners_lst:
+        if eo is None:
+            continue
+        extra_owners += f", <a class='long-desc-link' href='/profile/{eo['id']}'>{eo['username']}</a>"
+    if len(extra_owners_lst) > 1:
+        extra_owners = replace_last(extra_owners, ",", " and")
+    
     if bot["features"] is None:
         features = []
     else:
         features = bot["features"]
+    
+    bot_features = ", ".join([f"<a class='long-desc-link' href='/feature/{feature}'>{feature.replace('_', ' ').title()}</a>" for feature in features])
+    if len(features) > 1:
+        bot_features = replace_last(bot_features, ",", " and")
     if bot_info:
         bot = dict(bot)
-        bot = bot | {"votes": human_format(bot["votes"]), "servers": human_format(bot["servers"]), "banner": banner.replace("\"", "").replace("'", "").replace("http://", "https://").replace("(", "").replace(")", "").replace("file://", ""), "shards": human_format(bot["shard_count"]), "owner_pretty": await get_user(bot["owner"]), "extra_owners": ed, "leo": len(ed), "features": features, "fleo": len(features), "long_description": ldesc.replace("window.location", "").replace("document.ge", ""), "user": (await get_bot(bot_id))}
+        bot = bot | {"votes": human_format(bot["votes"]), "servers": human_format(bot["servers"]), "banner": banner.replace("\"", "").replace("'", "").replace("http://", "https://").replace("(", "").replace(")", "").replace("file://", ""), "shards": human_format(bot["shard_count"]), "owner_pretty": await get_user(bot["owner"]), "extra_owners": extra_owners, "features": bot_features, "long_description": ldesc.replace("window.location", "").replace("document.ge", ""), "user": (await get_bot(bot_id))}
     else:
         return templates.e(request, "Bot Not Found")
     _tags_fixed_bot = [tag for tag in tags_fixed if tag["id"] in bot["tags"]]
@@ -451,7 +468,7 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, review:
     else:
         f = "bot.html"
         reviews = await parse_reviews(bot_id)
-    return templates.TemplateResponse(f, {"request": request, "bot": bot, "bot_id": bot_id, "tags_fixed": _tags_fixed_bot, "form": form, "avatar": request.session.get("avatar"), "promos": promos, "maint": maint, "bot_admin": bot_admin, "review": review, "guild": main_server, "botp": True, "bot_reviews": reviews[0], "average_rating": reviews[1]})
+    return templates.TemplateResponse(f, {"request": request, "bot": bot, "bot_id": bot_id, "tags_fixed": _tags_fixed_bot, "form": form, "avatar": request.session.get("avatar"), "promos": promos, "maint": maint, "bot_admin": bot_admin, "review": review, "guild": main_server, "botp": True, "bot_reviews": reviews[0], "average_rating": reviews[1], "replace_last": replace_last})
 
 #    id uuid primary key DEFAULT uuid_generate_v4(),
 #   bot_id bigint not null,
