@@ -18,7 +18,13 @@ import aioredis
 from fastapi_limiter import FastAPILimiter
 from fastapi_limiter.depends import RateLimiter
 import logging
-from fastapi.exceptions import HTTPException 
+from fastapi.exceptions import HTTPException
+import stripe
+
+builtins.stripe = stripe
+builtins.stripe.api_key = stripe_secret_key
+builtins.stripe.max_network_retries = 2
+
 #logging.basicConfig(level=logging.DEBUG)
 
 # SlowAPI rl func

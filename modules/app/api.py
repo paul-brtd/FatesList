@@ -586,3 +586,42 @@ async def set_user_description_api(request: Request, user_id: int, desc: UserDes
 #
 #
 
+
+@router.post("/stripe/checkout")
+async def stripetest_post_api(request: Request, quantity: int):
+    session = stripe.checkout.Session.create(
+        payment_method_types=['card'],
+        line_items=[{
+            'price_data': {
+                'currency': 'usd',
+                'product_data': {
+                    'name': 'Coin',
+                },
+            'unit_amount': 2000,
+            },
+            'quantity': quantity,
+        }],
+        mode='payment',
+        success_url='https://fateslist.xyz/api/stripe/success',
+        cancel_url='https://fateslist.xyz/api/stripe/cancel',
+    )
+    return {"id": session.id}
+
+@router.post("/stripe/webhook")
+async def stripetest_post_pay_api(request: Request):
+    payload = await request.body()
+    print(request.headers)
+    sig_header = request.headers['stripe-signature']
+    event = None
+    print(payload)
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, stripe_webhook_secret
+        )
+    except ValueError as e:
+        return abort(400)
+
+    except stripe.error.SignatureVerificationError as e:
+        return abort(400)
+
+
