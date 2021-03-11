@@ -176,7 +176,7 @@ textarea {
 
 	</form>
 	{% endif %}
-        {% if not bot.support and bot.support != "" and bot.support != "None" %}
+        {% if not bot.support or bot.support.replace(" ", "") == "" %}
         {% else %}
 	<a target=”_blank” href="{{bot.support}}"><button class="btn btn-outline-light bot-buttons-all" id="bot-buttons-support">Support</button></a>
        {% endif %}

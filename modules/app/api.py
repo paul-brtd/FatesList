@@ -579,16 +579,8 @@ async def set_user_description_api(request: Request, user_id: int, desc: UserDes
     await db.execute("UPDATE users SET description = $1 WHERE user_id = $2", desc.description, user_id)
     return {"done": True, "reason": None}
 
-# A User object should have:
-#
-#
-#
-#
-#
-
-
-@router.post("/stripe/checkout")
-async def stripetest_post_api(request: Request, quantity: int):
+@router.post("/stripe/checkout", dependencies=[Depends(RateLimiter(times=5, minutes=7))])
+async def stripetest_post_api(request: Request, user_id: int):
     session = stripe.checkout.Session.create(
         payment_method_types=['card'],
         line_items=[{
@@ -597,13 +589,20 @@ async def stripetest_post_api(request: Request, quantity: int):
                 'product_data': {
                     'name': 'Coin',
                 },
-            'unit_amount': 2000,
+                'unit_amount': 10,
             },
-            'quantity': quantity,
+            'adjustable_quantity': {
+                'enabled': True,
+                'minimum': 10,
+            },
+            'quantity': 10,
         }],
+        metadata={
+            'user_id': user_id
+        },
         mode='payment',
-        success_url='https://fateslist.xyz/api/stripe/success',
-        cancel_url='https://fateslist.xyz/api/stripe/cancel',
+        success_url='https://fateslist.xyz/fates/stripe/success',
+        cancel_url='https://fateslist.xyz/fates/stripe/cancel',
     )
     return {"id": session.id}
 
@@ -624,4 +623,40 @@ async def stripetest_post_pay_api(request: Request):
     except stripe.error.SignatureVerificationError as e:
         return abort(400)
 
+    # Handle the checkout.session.completed event
+    if event['type'] == 'checkout.session.completed':
+        session = event['data']['object']
+        # Save an order in your database, marked as 'awaiting payment'
+        await create_order(session)
+
+        # Check if the order is already paid (e.g., from a card payment)
+        #
+        # A delayed notification payment will have an `unpaid` status, as
+        # you're still waiting for funds to be transferred from the customer's
+        # account.
+        if session.payment_status == "paid":
+            # Fulfill the purchase
+            await fulfill_order(session)
+
+    elif event['type'] == 'checkout.session.async_payment_succeeded':
+        session = event['data']['object']
+
+        # Fulfill the purchase
+        await fulfill_order(session)
+
+    elif event['type'] == 'checkout.session.async_payment_failed':
+        session = event['data']['object']
+
+        # Send an DM to the customer asking them to retry their order
+        await dm_customer_about_failed_payment(session)
+
+# TODO
+async def create_order(session):
+    print("Create order: " + str(session))
+
+async def fulfill_order(session):
+    print("Fulfill order: " + str(session))
+
+async def dm_customer_about_failed_payment(session):
+    print("DM Customer: " + str(session))
 

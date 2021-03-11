@@ -84,7 +84,7 @@ def human_format(num: int) -> str:
 async def _internal_user_fetch(userid: str, bot_only: bool) -> Optional[dict]:
     # Check if a suitable version is in the cache first before querying Discord
 
-    CACHE_VER = 5 # Current cache ver
+    CACHE_VER = 6 # Current cache ver
 
     if len(userid) not in [17, 18]:
         print("Ignoring blatantly wrong User ID")
@@ -142,6 +142,15 @@ async def _internal_user_fetch(userid: str, bot_only: bool) -> Optional[dict]:
         username = bot_obj.name
         avatar = str(bot_obj.avatar_url)
         disc = bot_obj.discriminator
+    else:
+        username = ""
+        avatar = ""
+        disc = ""
+        bot = False
+
+    if bot and valid_user:
+        asyncio.create_task(db.execute("UPDATE bots SET username_cached = $2 WHERE bot_id = $1", int(userid), username))
+
     cache = orjson.dumps({"fl_cache_ver": CACHE_VER, "epoch": time.time(), "bot": bot, "username": username, "avatar": avatar, "disc": disc, "valid_user": valid_user, "status": status})
     await redis_db.hset(f"{userid}_cache", mapping = {"cache_obj": cache})
 
@@ -525,7 +534,7 @@ async def render_search(request: Request, q: str, api: bool):
     desc = ("SELECT bot_id FROM bots WHERE (queue = false and banned = false and disabled = false) and (description ilike '%" + re.sub(r'\W+|_', ' ', q) + "%'" + es + ")")
     print(desc)
     desc = await db.fetch(desc)
-    userc = await db.fetch("SELECT bot_id FROM bot_cache WHERE username ilike '%" + re.sub(r'\W+|_', ' ', q) + "%' and valid_for ilike '%bot%'")
+    userc = await db.fetch("SELECT bot_id FROM bots WHERE username_cached ilike '%" + re.sub(r'\W+|_', ' ', q) + "%'")
     bids = list(set([id["bot_id"] for id in desc]).union(set([id["bot_id"] for id in userc])))
     print(bids, desc, userc)
     data = str(tuple([int(bid) for bid in bids])).replace("(", "").replace(")", "")

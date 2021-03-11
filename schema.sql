@@ -4,6 +4,7 @@ CREATE DATABASE fateslist;
 \c fateslist
 
 CREATE TABLE bots (
+    username_cached text DEFAULT '',
     bot_id bigint,
     votes bigint,
     servers bigint,
