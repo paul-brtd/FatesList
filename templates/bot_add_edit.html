@@ -139,16 +139,12 @@
       minlength="5"
       value="{% if data.donate %}{{data.donate}}{% endif %}"/>
       {% if mode == "edit" %}
-      <label for="style">Webhook Type</label>
-      <div style="background: white; border-radius: 100px 100px 100px 100px; padding: 8px;margin-top: 7px; margin-bottom: 30px;">
-      <select name="webhook_type" class="form-control" style="text-decoration: none; background: white !important!;  padding: 3px;" id="webhook-type">
+      <label for="webhook_type">Webhook Type (Click to change)</label>
+      <select id="webhook-type" name="webhook_type" class="form-control fform select-fl">
 	      <option value="VOTE" {% if data.webhook_type == "VOTE" %}selected{%endif%}>Vote Webhook</option>
               <option value="DISCORD" {% if data.webhook_type == "DISCORD" %}selected{%endif%}>Discord Integration</option>
-	      <!--<option value="POST" {% if data.webhook_type == "POST" %}selected{%endif%}>Generic POST Request Endpoint</option> -->
-	      <!--<option value="PUT" {% if data.webhook_type == "PUT" %}selected{%endif%}>Generic PUT Request Endpoint</option>-->
               <option value="FC" {% if data.webhook_type == "FC" %}selected{%endif%}>FatesHook (Fates Client)</option>
       </select>
-      </div>
       <label
       for="webhook"
       >Webhook</label
@@ -203,11 +199,11 @@
 <div class="container">
 <div class="row">
 <div class-"col">
-<div class="custom-control custom-switch" style="text-align: center; float: left;; display: block; margin-bottom: 3px;">
+<div class="custom-control custom-switch" style="text-align: center; float: left; display: block; margin-bottom: 3px;">
 	<input type="checkbox" class="custom-control-input" tabindex="0" id="custom_prefix" style="margin: auto !important;" name="custom_prefix" {%if data.features and "custom_prefix" in data.features %}checked aria-label="Custom Prefix Enabled"{% else %}aria-label="Custom Prefix Disabled"{% endif%}/>
 	<label class="custom-control-label" for="custom_prefix">Custom Prefix -> Can your prefix be customized/changed?</label>
 </div><br/>
-<div class="custom-control custom-switch" style="text-align: center; float: left;; display: block; margin-top: 15px;">
+<div class="custom-control custom-switch" style="text-align: center; float: left; display: block; margin-top: 15px;">
 	<input type="checkbox" class="custom-control-input" tabindex="0" id="open_source" style="margin: auto !important;" name="open_source" {%if data.features and "open_source" in data.features %}checked aria-label="Open Source Enabled"{% else %}aria-label="Open Source Disabled"{% endif %}/>
 	<label class="custom-control-label" for="open_source">Open Source -> Does your bot have it's code open to the public, preferrably on a git repository?</label>
 </div>
@@ -230,13 +226,11 @@
       />
       <label 
       for="html_long_description"
-      >Long Description Type</label>
-      <div style="background: white; border-radius: 4px 4px 4px 4px; padding: 8px; margin-top: 7px; margin-bottom: 30px; width: 93%; margin-left: 40px;">
-      <select id="html_long_description" name="html_long_description" class="form-control" style="text-decoration: none; background: white !important!;  padding: 3px;">
+      >Long Description Type (Click to change)</label>
+      <select id="html_long_description" name="html_long_description" class="form-control fform select-fl">
               <option value="true" {% if data.html_long_description %}selected{%endif%}>HTML</option>
               <option value="false" {% if not data.html_long_description %}selected{%endif%}>Markdown</option>
       </select>
-      </div>
   <label
         for="long_description"
         >Long description <span style="color: red; font-weight: bold" aria-hidden="true">*</span>
@@ -252,7 +246,7 @@
 	>{{data.long_description}}</textarea>
       <button type="button" class="btn btn-outline-light" style="margin-bottom: 20px;" onclick="previewLongDesc()">Preview</button><br/>
       <small style="font-weight: bold; font-size: 15px; color: red;">You can only preview your long description 20 times every minute unless your bot is certified as this uses the preview API</small>
-      <div id="ld-preview" style="display: block; min-height: 400px; min-width: 100vh; overflow: auto; color: white; border-style: solid; border-radius: 4px 4px 4px 4px; margin-bottom: 20px; background: black; font-weight: normal; text-align: left;">
+      <div id="ld-preview" style="display: block; min-height: 400px; overflow: auto; color: white; border-style: solid; border-radius: 4px 4px 4px 4px; margin-bottom: 20px; background: black; font-weight: normal; text-align: left;">
 	Your Long Description will appear here when you click the Preview button :)
       </div>
       <label

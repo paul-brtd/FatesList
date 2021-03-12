@@ -1,26 +1,10 @@
 {% extends "base_index.html" %}
 
 {% block head %}
-<script data-ad-client="ca-pub-5938555506489116" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-<style>   
-	.btn-outline-light {margin-bottom: 39px !important;}
-	.adsbygoogle {text-align: center !important; margin-left: 30vw;}
-</style>
 
 {% endblock %}
 
 {% block content %}
-{% if not premium %}
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-<!-- Fates List -->
-<ins class="adsbygoogle"
-     style="display:block;width:500px;height:90px;"
-     data-ad-client="ca-pub-5938555506489116"
-     data-ad-slot="7765471427"></ins>
-<script>
-     (adsbygoogle = window.adsbygoogle || []).push({});
-</script>
-{% endif %}
 <div class="index-fl">
 	<hr class="hr-is">
 	<div class="d-flex" style="margin-left: 5%;">
@@ -28,7 +12,9 @@
 		<p class="title-is">Random Bot</p>
 	</div>
 	<div id="random-section" class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center div-is">
-		<div id="random-bots">{{ botCard(random.shuffle(random_bot_initial), True) }}</div> <!-- This is where random bots will be -->
+		<div id="random-bots">
+			{{ botCard(random.choice(certified_bots), True) }}
+		</div> 
 	</div>
 	<div id="random-section-bt" class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center div-is">
 		<button class="btn btn-outline-light text-center" style="display: block;  text-align: center; justify-content: center;" onclick="randomBotRoll()">Roll</button>
@@ -63,7 +49,6 @@
 			{{ botCard(bot, False) }}
 		{% endfor %}
 	</div>
-	<script src="/static/assets/js/main.js"></script>
 	<script>
 		function randomBotRoll(){
 			$.get("{{site_url}}{{roll_api}}", function(data, status) {
@@ -101,7 +86,7 @@
 				random_bots.querySelectorAll(".bot-card-invite-link")[0].setAttribute("href", "/bot/" + data.bot_id.toString() + "/invite")
 			})
 		}
-	window.addEventListener("load", randomBotRoll())
+		window.addEventListener("load", randomBotRoll)
 	</script>
 {% endblock %}
 {% block footer %}
