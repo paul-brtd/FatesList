@@ -34,8 +34,8 @@ ALLOWED_HOSTS = ["dev.fateslist.xyz"]
 # Application definition
 
 INSTALLED_APPS = [
-    'django_better_admin_arrayfield',
-    'django.contrib.admin',
+    'material.admin',
+    'material.admin.default',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',

@@ -7,7 +7,8 @@
 #   * Remove `managed = False` lines if you wish to allow Django to create, modify, and delete the table
 # Feel free to rename the models, but don't rename db_table values or field names.
 from django.db import models
-from django_better_admin_arrayfield.models.fields import ArrayField
+from django import forms
+from django.contrib.postgres.fields import ArrayField
 from django.contrib.contenttypes.models import ContentType
 
 class ApiEvent(models.Model):
@@ -197,39 +198,46 @@ class BotVoter(models.Model):
 
 
 class Bot(models.Model):
+    """
+    This is a bot on Fates List
+    """
     bot_id = models.BigIntegerField(primary_key = True, editable = False)
-    owner = models.BigIntegerField(blank=True, null=True)
-    votes = models.BigIntegerField(blank=True, null=True)
+    prefix = models.CharField(blank=True, null=True, max_length = 9)
+    owner = models.BigIntegerField(blank=True, null=True, help_text = "Do not change a owner/perform a ownership transfer without permission from both the old and new owner")
+    votes = models.BigIntegerField(blank=True, null=True, help_text = "Changing this for no reason may/will lead to punishment such as getting kicked off the staff team or demoted or temporary forced LOA (Leave of absence)")
     servers = models.BigIntegerField(blank=True, null=True)
     shard_count = models.BigIntegerField(blank=True, null=True)
-    bot_library = models.TextField(blank=True, null=True)
-    webhook = models.TextField(blank=True, null=True)
-    description = models.TextField(blank=True, null=True)
-    long_description = models.TextField(blank=True, null=True)
-    prefix = models.TextField(blank=True, null=True)
-    api_token = models.TextField(unique=True, blank=True, null=True)
-    website = models.TextField(blank=True, null=True)
-    discord = models.TextField(blank=True, null=True)
+    bot_library = models.CharField(blank=True, null=True, max_length=32)
+    webhook = models.CharField(blank=True, null=True, max_length = 1024)
+    webhook_type = models.CharField(max_length=10, choices = (
+        ('VOTE', 'Vote'),
+        ('DISCORD', 'Discord Integration'),
+        ('FC', 'Fates Client')
+    ))
+    description = models.CharField(blank=True, null=True, max_length = 105)
+    api_token = models.TextField(unique=True, blank=True, null=True, max_length=256)
+    website = models.CharField(blank=True, null=True, max_length = 1024)
+    discord = models.CharField(blank=True, null=True, max_length=32)
     tags = ArrayField(base_field = models.TextField(), blank=False, null=False)
     certified = models.BooleanField(blank=True, null=True)
     queue = models.BooleanField(blank=True, null=True)
-    banner = models.TextField(blank=True, null=True)
+    banner = models.CharField(blank=True, null=True, max_length = 1024)
     created_at = models.BigIntegerField(blank=True, null=True)
-    invite = models.TextField(blank=True, null=True)
+    invite = models.CharField(blank=True, null=True, max_length=256)
     banned = models.BooleanField(blank=True, null=True)
     disabled = models.BooleanField(blank=True, null=True)
-    github = models.TextField(blank=True, null=True)
+    github = models.CharField(blank=True, null=True, max_length=256)
     extra_owners = ArrayField(base_field = models.BigIntegerField(), blank=True, null=True) 
     features = ArrayField(base_field = models.TextField(), blank=True, null=True)
     private = models.BooleanField(blank=True, null=True)
     html_long_description = models.BooleanField(blank=True, null=True)
     invite_amount = models.IntegerField(blank=True, null=True)
-    webhook_type = models.TextField(blank=True, null=True)
     user_count = models.BigIntegerField(blank=True, null=True)
     css = models.TextField(blank=True, null=True)
     shards = ArrayField(base_field = models.IntegerField(), blank=True, null=True)
-    donate = models.TextField(blank=True, null=True)
-    username_cached = models.TextField(blank=True, null=False)
+    donate = models.CharField(blank=True, null=True, max_length=256)
+    username_cached = models.CharField(blank=True, null=False, max_length=32, editable = False)
+    long_description = models.TextField(blank=True, null=True)
 
     class Meta:
         managed = False
@@ -239,8 +247,8 @@ class Bot(models.Model):
         return f"{self.username_cached} ({self.bot_id})"
 
 class Server(models.Model):
-    name_cached = models.TextField(blank=True, null=False)
-    guild_id = models.BigIntegerField(unique=True, primary_key = True, editable = True)
+    name_cached = models.TextField(blank=True, null=False, editable = False)
+    guild_id = models.BigIntegerField(unique=True, primary_key = True)
     votes = models.BigIntegerField(blank=True, null=True)
     webhook_type = models.TextField(blank=True, null=True)
     webhook = models.TextField(blank=True, null=True)

@@ -84,6 +84,7 @@
         required
         class="form-control fform"
         type="text"
+	maxlength="32"
         style="
           max-width: 320px;
         "
@@ -147,14 +148,15 @@
       </select>
       <label
       for="webhook"
-      >Webhook</label
-    ><input
+      >Webhook (max 1024 characters)</label>
+    <input
       id="webhook-url"
       class="form-control fform"
       type="text"
       name="webhook"
       placeholder="http://129.332.123:5000/webhook"
       minlength="3"
+      maxlength="1024"
       {% if data.webhook != None %}value="{{data.webhook}}" {%endif%}
     />
     <button type="button" style="margin-bottom: 30px; margin-top: 0px !important;" class="btn btn-outline-light" onclick="testHook(document.querySelector('#webhook-url').value, document.querySelector('#webhook-type').value)">Test Webhook</button><br/>
