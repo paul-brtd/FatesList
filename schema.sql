@@ -5,7 +5,7 @@ CREATE DATABASE fateslist;
 
 CREATE TABLE bots (
     username_cached text DEFAULT '',
-    bot_id bigint,
+    bot_id bigint not null,
     votes bigint,
     servers bigint,
     user_count bigint DEFAULT 0,
@@ -108,8 +108,8 @@ CREATE TABLE users (
 );
 CREATE TABLE api_event (
     id uuid primary key DEFAULT uuid_generate_v4(),
-    bot_id bigint,
-    events text[]
+    bot_id bigint not null,
+    events text[] not null
 );
 
 CREATE TABLE bot_promotions (
@@ -131,7 +131,7 @@ CREATE TABLE bot_maint (
 
 CREATE TABLE vanity (
     type integer, -- 1 = bot, 2 = profile, 3 =  nothing right now but may be used
-    vanity_url text, -- This is the text I wish to match
+    vanity_url text unique, -- This is the text I wish to match
     redirect bigint unique, -- What does this vanity resolve to
     redirect_text text unique-- For the future
 );

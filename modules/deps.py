@@ -873,7 +873,7 @@ class BotActions():
         if self.vanity == "":
             pass
         else:
-            vanity_check = await db.fetchrow("SELECT type FROM vanity WHERE lower(vanity_url) = $1 AND redirect != $2", self.vanity.replace(" ", "").lower(), self.bot_id)
+            vanity_check = await db.fetchrow("SELECT DISTINCT vanity_url FROM vanity WHERE lower(vanity_url) = $1 AND redirect != $2", self.vanity.replace(" ", "").lower(), self.bot_id)
             if vanity_check is not None or self.vanity.replace("", "").lower() in ["bot", "docs", "redoc", "doc", "profile", "server", "bots", "servers", "search", "invite", "discord", "login", "logout", "register", "admin"] or self.vanity.replace("", "").lower().__contains__("/"):
                 return "Your custom vanity URL is already in use or is reserved"
 
@@ -938,6 +938,8 @@ class BotActions():
             print("am here")
             await db.execute("INSERT INTO vanity (type, vanity_url, redirect) VALUES ($1, $2, $3)", 1, vanity, bot_id)
         else:
+            if vanity == '':
+                vanity = None
             await db.execute("UPDATE vanity SET vanity_url = $1 WHERE redirect = $2", vanity, bot_id)
         await add_event(bot_id, "edit_bot", {"user": str(user_id)})
         channel = client.get_channel(bot_logs)
