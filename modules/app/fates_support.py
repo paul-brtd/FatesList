@@ -24,8 +24,8 @@ async def support(request: Request):
 #    bot_id BIGINT
 #);
 
-@router.post("/request")
-@csrf_protect
+#@router.post("/request")
+#@csrf_protect
 async def support_post(request: Request, files: List[UploadFile] = File(None), enquiry_type: str = FForm("report_bot"), title: str = FForm("Untitled Request"), description: str = FForm("Untitled Request"), bot_id: int = FForm(0)):
     filenames = [f.filename for f in files]
     files = [bytes(f.file.read()) for f in files]

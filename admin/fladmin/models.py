@@ -7,7 +7,7 @@
 #   * Remove `managed = False` lines if you wish to allow Django to create, modify, and delete the table
 # Feel free to rename the models, but don't rename db_table values or field names.
 from django.db import models
-from django.contrib.postgres.fields import ArrayField
+from django_better_admin_arrayfield.models.fields import ArrayField
 from django.contrib.contenttypes.models import ContentType
 
 class ApiEvent(models.Model):
@@ -229,7 +229,7 @@ class Bot(models.Model):
     css = models.TextField(blank=True, null=True)
     shards = ArrayField(base_field = models.IntegerField(), blank=True, null=True)
     donate = models.TextField(blank=True, null=True)
-    username_cached = models.TextField(blank=True, null=True)
+    username_cached = models.TextField(blank=True, null=False)
 
     class Meta:
         managed = False
@@ -238,8 +238,9 @@ class Bot(models.Model):
     def __str__(self):
         return f"{self.username_cached} ({self.bot_id})"
 
-class Servers(models.Model):
-    guild_id = models.BigIntegerField(unique=True)
+class Server(models.Model):
+    name_cached = models.TextField(blank=True, null=False)
+    guild_id = models.BigIntegerField(unique=True, primary_key = True, editable = True)
     votes = models.BigIntegerField(blank=True, null=True)
     webhook_type = models.TextField(blank=True, null=True)
     webhook = models.TextField(blank=True, null=True)
@@ -249,7 +250,7 @@ class Servers(models.Model):
     css = models.TextField(blank=True, null=True)
     api_token = models.TextField(unique=True, blank=True, null=True)
     website = models.TextField(blank=True, null=True)
-    tags = models.TextField(blank=True, null=True)  # This field type is a guess.
+    tags = ArrayField(base_field = models.TextField(), blank=True, null=True)
     certified = models.BooleanField(blank=True, null=True)
     created_at = models.BigIntegerField(blank=True, null=True)
     banned = models.BooleanField(blank=True, null=True)
@@ -261,24 +262,11 @@ class Servers(models.Model):
         managed = False
         db_table = 'servers'
 
-
-class SupportRequests(models.Model):
-    enquiry_type = models.TextField(blank=True, null=True)
-    resolved = models.BooleanField(blank=True, null=True)
-    files = models.TextField(blank=True, null=True)  # This field type is a guess.
-    title = models.TextField(blank=True, null=True)
-    description = models.TextField(blank=True, null=True)
-    bot_id = models.BigIntegerField(blank=True, null=True)
-    id = models.UUIDField(primary_key=True)
-    filenames = models.TextField(blank=True, null=True)  # This field type is a guess.
-
-    class Meta:
-        managed = False
-        db_table = 'support_requests'
-
+    def __str__(self):
+        return f"{self.name_cached} ({self.guild_id})"
 
 class Users(models.Model):
-    user_id = models.BigIntegerField(blank=True, null=True)
+    user_id = models.BigIntegerField(blank=True, null=True, editable = False)
     api_token = models.TextField(blank=True, null=True)
     vote_epoch = models.BigIntegerField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
@@ -297,7 +285,7 @@ class Users(models.Model):
 class Vanity(models.Model):
     type = models.IntegerField(blank=True, null=True)
     vanity_url = models.TextField(blank=True, unique=True)
-    redirect = models.BigIntegerField(unique=True, blank=True, primary_key = True)
+    redirect = models.BigIntegerField(unique=True, blank=True, primary_key = True, editable = False)
     redirect_text = models.TextField(unique=True, blank=True, null=True)
 
     class Meta:

@@ -148,6 +148,7 @@ CREATE TABLE support_requests (
 );
 
 CREATE TABLE servers (
+    name_cached text not null,
     guild_id bigint not null unique,
     votes bigint,    
     webhook_type text DEFAULT 'VOTE',
