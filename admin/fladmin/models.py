@@ -12,6 +12,7 @@ from django.contrib.postgres.fields import ArrayField
 from django.contrib.contenttypes.models import ContentType
 import uuid
 
+from simple_history import register
 class ApiEvent(models.Model):
     id = models.UUIDField(primary_key=True)
     bot_id = models.BigIntegerField()
@@ -246,6 +247,8 @@ class Bot(models.Model):
 
     def __str__(self):
         return f"{self.username_cached} ({self.bot_id})"
+
+register(Bot)
 
 class Server(models.Model):
     name_cached = models.TextField(blank=True, null=False, editable = False)

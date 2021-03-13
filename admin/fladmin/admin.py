@@ -1,8 +1,10 @@
 from django.contrib import admin
 from django import forms
 from .models import *
+from simple_history.admin import SimpleHistoryAdmin
 
-class FADMIN(admin.ModelAdmin):
+
+class FADMIN(SimpleHistoryAdmin):
     pass
 
 def bot_id(obj):

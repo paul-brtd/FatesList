@@ -35,6 +35,8 @@ ALLOWED_HOSTS = ["dev.fateslist.xyz"]
 
 INSTALLED_APPS = [
     'material.admin',
+    'simple_history',
+    'django_admin_logs',
     'material.admin.default',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -53,6 +55,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'simple_history.middleware.HistoryRequestMiddleware'
 ]
 
 ROOT_URLCONF = 'fateslist_django.urls'
