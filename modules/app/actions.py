@@ -125,16 +125,20 @@ async def bot_edit_api(
     bot_dict["tags"] = bot_dict["tags"].split(",")
     return templates.TemplateResponse("bot_add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": rc, "mode": "edit"})
 
+class RC(BaseModel):
+    g_recaptcha_response: str = FForm(None)
+
 @router.post("/{bot_id}/vote")
 @csrf_protect
-async def vote_for_bot(
+async def vote_for_bot_or_die(
         request: Request,
-        bot_id: int
+        bot_id: int,
     ):
     if request.session.get("userid") is None:
         return RedirectResponse(f"/auth/login?redirect=/bot/{bot_id}&pretty=to vote for this bot", status_code = 303)
     uid = request.session.get("userid")
     ret = await vote_bot(uid = uid, username = request.session.get("username"), bot_id = bot_id, autovote = False)
+    print(ret)
     if ret == []:
         return templates.TemplateResponse("message.html", {"request": request, "message": "Successfully voted for this bot!<script>window.location.replace('/bot/" + str(bot_id) + "')</script>", "username": request.session.get("username", False), "avatar": request.session.get('avatar')})
     elif ret[0] in [404, 500]:
@@ -320,7 +324,7 @@ async def delete_review(request: Request, bot_id: int, rid: uuid.UUID, bt: Backg
     return templates.TemplateResponse("message.html", {"request": request, "message": "Successfully deleted your/this review for this bot!<script>window.location.replace('/bot/" + str(bot_id) + "')</script>"})
 
 @router.post("/{bot_id}/reviews/{rid}/upvote")
-async def upvote_bot(request: Request, bot_id: int, rid: uuid.UUID):
+async def upvote_review(request: Request, bot_id: int, rid: uuid.UUID):
     if "userid" not in request.session.keys():
         return RedirectResponse(f"/auth/login?redirect=/bot/{bot_id}&pretty=to upvote reviews", status_code = 303)
     bot_rev = await db.fetchrow("SELECT review_upvotes, review_downvotes FROM bot_reviews WHERE id = $1", rid)
@@ -342,7 +346,7 @@ async def upvote_bot(request: Request, bot_id: int, rid: uuid.UUID):
     return templates.TemplateResponse("message.html", {"request": request, "message": "Successfully upvoted this review for this bot!<script>window.location.replace('/bot/" + str(bot_id) + "')</script>"})
 
 @router.post("/{bot_id}/reviews/{rid}/downvote")
-async def downvote_bot(request: Request, bot_id: int, rid: uuid.UUID):
+async def downvote_review(request: Request, bot_id: int, rid: uuid.UUID):
     if "userid" not in request.session.keys():
         return RedirectResponse(f"/auth/login?redirect=/bot/{bot_id}&pretty=to upvote reviews", status_code = 303)
     bot_rev = await db.fetchrow("SELECT review_upvotes, review_downvotes FROM bot_reviews WHERE id = $1", rid)

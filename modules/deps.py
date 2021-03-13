@@ -493,17 +493,19 @@ async def parse_bot_list(fetch: List[asyncpg.Record]) -> list:
     for bot in fetch:
         try:
             bot_info = await get_bot(bot["bot_id"])
+            if bot_info is not None:
+                bot = dict(bot)
+                votes = bot["votes"]
+                servers = bot["servers"]
+                del bot["votes"]
+                del bot["servers"]
+                banner = bot["banner"]
+                del bot["banner"]
+                if bot_info.get("avatar") is None:
+                    bot_info["avatar"] = ""
+                lst.append({"avatar": bot_info["avatar"].replace("?size=1024", "?size=128"), "username": bot_info["username"], "votes": human_format(votes), "servers": human_format(servers), "description": bot["description"], "banner": banner.replace("\"", "").replace("'", "").replace("http://", "https://").replace("(", "").replace(")", "").replace("file://", "")} | bot)
         except:
             continue
-        if bot_info:
-            bot = dict(bot)
-            votes = bot["votes"]
-            servers = bot["servers"]
-            del bot["votes"]
-            del bot["servers"]
-            banner = bot["banner"]
-            del bot["banner"]
-            lst.append({"avatar": bot_info["avatar"].replace("?size=1024", "?size=128"), "username": bot_info["username"], "votes": human_format(votes), "servers": human_format(servers), "description": bot["description"], "banner": banner.replace("\"", "").replace("'", "").replace("http://", "https://").replace("(", "").replace(")", "").replace("file://", "")} | bot)
     return lst
 
 async def do_index_query(add_query: str) -> List[asyncpg.Record]:
@@ -680,6 +682,7 @@ class templates():
             arg_dict["staff"] = [False]
         print(arg_dict["staff"])
         arg_dict["site_url"] = site_url
+        arg_dict["recaptcha_client"] = recaptcha_client
         if status is None:
             return _templates.TemplateResponse(f, arg_dict)
         return _templates.TemplateResponse(f, arg_dict, status_code = status)

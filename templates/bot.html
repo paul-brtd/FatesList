@@ -2,7 +2,7 @@
 
 {% block head %}
 <style>
-
+<script src="https://www.google.com/recaptcha/api.js"></script>
 .bot-review-user {
 	margin-bottom: 2px;
 }
@@ -168,9 +168,9 @@ textarea {
     </div>
     <div class="d-flex justify-content-center align-items-center flex-wrap" style="width: 80%;margin: 0 auto;max-width: 1000px; margin-bottom: 3px !important;" id="bot-buttons">
 	{% if not bot.banned %}
-        <form method = "POST" action = "/bot/{{bot_id}}/vote">
+        <form method = "POST" action = "/bot/{{bot_id}}/vote" id="vote">
             {{form.csrf_token}}
-		<button type="submit" class="btn bot-buttons-all vote btn-outline-light" id="bot-buttons-vote" style="color: white !important;">
+	    <button type="submit" data-sitekey="{{recaptcha_client}}" data-callback='onSubmit' data-action='submit' class="g-recaptcha btn bot-buttons-all vote btn-outline-light" id="bot-buttons-vote" style="color: white !important;">
 			<span class="iconify" data-icon="fa-solid:thumbs-up" data-inline="false"></span><span style="margin-left: 3px;">{{bot.votes}}</span>
 		</button>
 
@@ -624,6 +624,9 @@ else
 	catch {
 		document.querySelector('#bot-long-desc-tab-button').click()
 	}
+		function onSubmit(token) {
+			document.getElementById("vote").submit();
+		}
 </script>
 </div>
 {% endblock %} 

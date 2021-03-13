@@ -47,7 +47,7 @@ async def login_confirm(request: Request, code: str, state: str):
     else:
         # Validate the state first
         if request.session.get("state") != state:
-            return template.e(main = "Invalid State", reason = "The state returned by discord and the state we have provided does not match. Please try logging in again", status_code = 400)
+            return templates.e(request = request, main = "Invalid State", reason = "The state returned by discord and the state we have provided does not match. Please try logging in again", status_code = 400)
         try:
             del request.session["state"]
         except:

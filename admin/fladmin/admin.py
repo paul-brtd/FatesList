@@ -3,9 +3,8 @@ from django import forms
 from .models import *
 from simple_history.admin import SimpleHistoryAdmin
 
-
 class FADMIN(SimpleHistoryAdmin):
-    pass
+    save_on_top = False
 
 def bot_id(obj):
     return obj.bot_id

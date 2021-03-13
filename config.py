@@ -1,4 +1,4 @@
-from config_secrets import TOKEN_MAIN, TOKEN_SERVER, pg_pwd, csrf_secret, session_key, oauth_client_secret, ratelimit_bypass_key, stripe_publishable_key, stripe_secret_key, stripe_webhook_secret
+from config_secrets import TOKEN_MAIN, TOKEN_SERVER, pg_pwd, csrf_secret, session_key, oauth_client_secret, ratelimit_bypass_key, stripe_publishable_key, stripe_secret_key, stripe_webhook_secret, recaptcha_client, recaptcha_secret
 bot_logs = 789946587203764224 # #bot-logs in support server
 appeals_channel = 813422505900376095 # #resubmissions-and-appeals in support server
 site_errors_channel = 815055552857243699 # Where to log site errors

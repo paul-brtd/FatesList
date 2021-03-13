@@ -35,7 +35,6 @@ ALLOWED_HOSTS = ["dev.fateslist.xyz"]
 
 INSTALLED_APPS = [
     'material.admin',
-    'simple_history',
     'django_admin_logs',
     'material.admin.default',
     'django.contrib.auth',
@@ -45,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.postgres',
     'fladmin',
+    'simple_history'
 ]
 
 MIDDLEWARE = [
