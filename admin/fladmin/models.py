@@ -10,6 +10,7 @@ from django.db import models
 from django import forms
 from django.contrib.postgres.fields import ArrayField
 from django.contrib.contenttypes.models import ContentType
+import uuid
 
 class ApiEvent(models.Model):
     id = models.UUIDField(primary_key=True)
@@ -201,25 +202,25 @@ class Bot(models.Model):
     """
     This is a bot on Fates List
     """
-    bot_id = models.BigIntegerField(primary_key = True, editable = False)
-    prefix = models.CharField(blank=True, null=True, max_length = 9)
-    owner = models.BigIntegerField(blank=True, null=True, help_text = "Do not change a owner/perform a ownership transfer without permission from both the old and new owner")
+    bot_id = models.BigIntegerField(primary_key = True)
+    prefix = models.CharField(blank=False, null=False, max_length = 9)
+    owner = models.BigIntegerField(blank=False, null=False, help_text = "Do not change a owner/perform a ownership transfer without permission from both the old and new owner")
     votes = models.BigIntegerField(blank=True, null=True, help_text = "Changing this for no reason may/will lead to punishment such as getting kicked off the staff team or demoted or temporary forced LOA (Leave of absence)")
     servers = models.BigIntegerField(blank=True, null=True)
     shard_count = models.BigIntegerField(blank=True, null=True)
-    bot_library = models.CharField(blank=True, null=True, max_length=32)
+    bot_library = models.CharField(blank=False, null=False, max_length=32)
     webhook = models.CharField(blank=True, null=True, max_length = 1024)
     webhook_type = models.CharField(max_length=10, choices = (
         ('VOTE', 'Vote'),
         ('DISCORD', 'Discord Integration'),
         ('FC', 'Fates Client')
     ))
-    description = models.CharField(blank=True, null=True, max_length = 105)
-    api_token = models.TextField(unique=True, blank=True, null=True, max_length=256)
+    description = models.CharField(blank=False, null=False, max_length = 105)
+    api_token = models.CharField(unique=True, blank=False, null=False, default = uuid.uuid4, max_length = 255)
     website = models.CharField(blank=True, null=True, max_length = 1024)
     discord = models.CharField(blank=True, null=True, max_length=32)
     tags = ArrayField(base_field = models.TextField(), blank=False, null=False)
-    certified = models.BooleanField(blank=True, null=True)
+    certified = models.BooleanField(blank=False, null=False)
     queue = models.BooleanField(blank=True, null=True)
     banner = models.CharField(blank=True, null=True, max_length = 1024)
     created_at = models.BigIntegerField(blank=True, null=True)
@@ -237,7 +238,7 @@ class Bot(models.Model):
     shards = ArrayField(base_field = models.IntegerField(), blank=True, null=True)
     donate = models.CharField(blank=True, null=True, max_length=256)
     username_cached = models.CharField(blank=True, null=False, max_length=32, editable = False)
-    long_description = models.TextField(blank=True, null=True)
+    long_description = models.TextField(blank=False, null=False)
 
     class Meta:
         managed = False

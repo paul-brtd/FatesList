@@ -5,4 +5,4 @@ from django.http import HttpResponse
 
 
 def index(request):
-    return HttpResponse("You likely want https://dev.fateslist.xyz instead :)")
+    return HttpResponse("Fates List Experiments")

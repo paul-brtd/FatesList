@@ -71,6 +71,14 @@ TEMPLATES = [
             ],
         },
     },
+    {
+        'BACKEND': 'django.template.backends.jinja2.Jinja2',
+        'DIRS': [],
+        'OPTIONS': {
+            'environment': 'fladmin.jinja2.environment'
+        },
+    },
+
 ]
 
 WSGI_APPLICATION = 'fateslist_django.wsgi.application'
