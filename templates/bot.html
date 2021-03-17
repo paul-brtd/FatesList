@@ -152,7 +152,7 @@ textarea {
 	</div>
 	{% elif bot.queue and not review%}
         <div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
-        <strong>This bot has not yet been verified/approved on this bot list and it may violate our rules or be a low-quality bot. Please do not invite it yet</strong>
+        <strong>This bot has not yet been verified/approved and may violate our rules and/or be low-quality or a "nuke bot". Please do not invite it until we have approved it</strong>
 	</div>
 	{% endif %}
 	{% if bot.queue and staff[0] %}
