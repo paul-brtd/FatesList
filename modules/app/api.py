@@ -579,7 +579,7 @@ async def set_user_description_api(request: Request, user_id: int, desc: UserDes
     await db.execute("UPDATE users SET description = $1 WHERE user_id = $2", desc.description, user_id)
     return {"done": True, "reason": None}
 
-@router.post("/stripe/checkout", dependencies=[Depends(RateLimiter(times=5, minutes=7))])
+@router.post("/stripe/checkout", dependencies=[Depends(RateLimiter(times=5, minutes=7))], include_in_schema = False)
 async def stripetest_post_api(request: Request, user_id: int):
     session = stripe.checkout.Session.create(
         payment_method_types=['card'],
@@ -606,7 +606,7 @@ async def stripetest_post_api(request: Request, user_id: int):
     )
     return {"id": session.id}
 
-@router.post("/stripe/webhook")
+@router.post("/stripe/webhook", include_in_schema = False)
 async def stripetest_post_pay_api(request: Request):
     payload = await request.body()
     print(request.headers)
