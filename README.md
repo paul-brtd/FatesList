@@ -38,3 +38,4 @@ BTW please add your bots there if you want to support us
 
 12. Run "./run" in the repo folder
 
+Fates List probihits the monetization or resale of coins for money
