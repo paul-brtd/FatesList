@@ -598,7 +598,8 @@ async def stripetest_post_api(request: Request, user_id: int):
             'quantity': 10,
         }],
         metadata={
-            'user_id': user_id
+            'user_id': user_id,
+            'token': get_token(256)
         },
         mode='payment',
         success_url='https://fateslist.xyz/fates/stripe/success',
@@ -626,8 +627,12 @@ async def stripetest_post_pay_api(request: Request):
     # Handle the checkout.session.completed event
     if event['type'] == 'checkout.session.completed':
         session = event['data']['object']
+        line_items = stripe.checkout.Session.list_line_items(session['id'], limit=100)
+        user_id = int(session["metadata"]["user_id"])
+        quantity = int(line_items["data"][0]["quantity"])
+        token = session["metadata"]["token"]
         # Save an order in your database, marked as 'awaiting payment'
-        await create_order(session)
+        await create_order(user_id, quantity, token)
 
         # Check if the order is already paid (e.g., from a card payment)
         #
@@ -636,13 +641,16 @@ async def stripetest_post_pay_api(request: Request):
         # account.
         if session.payment_status == "paid":
             # Fulfill the purchase
-            await fulfill_order(session)
+            await fulfill_order(user_id, quantity, token)
 
     elif event['type'] == 'checkout.session.async_payment_succeeded':
         session = event['data']['object']
-
+        line_items = stripe.checkout.Session.list_line_items(session['id'], limit=100)
+        user_id = session["metadata"]["user_id"]
+        quantity = line_items["quantity"]
+        token = session["metadata"]["token"]
         # Fulfill the purchase
-        await fulfill_order(session)
+        await fulfill_order(user_id, quantity, token)
 
     elif event['type'] == 'checkout.session.async_payment_failed':
         session = event['data']['object']
@@ -651,11 +659,12 @@ async def stripetest_post_pay_api(request: Request):
         await dm_customer_about_failed_payment(session)
 
 # TODO
-async def create_order(session):
-    print("Create order: " + str(session))
+async def create_order(user_id, quantity, token):
+    await db.execute("INSERT INTO user_payments (user_id, token, coins, paid) VALUES ($1, $2, $3, $4)", user_id, token, quantity, False)
 
-async def fulfill_order(session):
-    print("Fulfill order: " + str(session))
+async def fulfill_order(user_id, quantity, token):
+    await db.execute(f"UPDATE users SET coins = coins + {quantity} WHERE user_id = $1", user_id)
+    await db.execute("UPDATE user_payments SET paid = $1 WHERE user_id = $2 AND token = $3", True, user_id, token) 
 
 async def dm_customer_about_failed_payment(session):
     print("DM Customer: " + str(session))

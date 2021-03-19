@@ -104,8 +104,17 @@ CREATE TABLE users (
     badges text[],
     username text,
     css text default '',
-    banned integer default 0 -- 0 = No Ban, 1 = Global Ban
+    banned integer default 0, -- 0 = No Ban, 1 = Global Ban
+    coins INTEGER DEFAULT 0,
 );
+
+CREATE TABLE user_payments (
+    user_id bigint NOT NULL,
+    token TEXT NOT NULL,
+    coins INTEGER NOT NULL,
+    paid BOOLEAN DEFAULT FALSE
+);
+
 CREATE TABLE api_event (
     id uuid primary key DEFAULT uuid_generate_v4(),
     bot_id bigint not null,
