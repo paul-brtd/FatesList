@@ -652,7 +652,7 @@ async def stripetest_post_pay_api(request: Request):
         quantity = int(line_items["data"][0]["quantity"])
         token = session["metadata"]["token"]
         # Fulfill the purchase
-        await fulfill_order(user_id, quantity, token)
+        await fulfill_order(user_id, quantity, token, id, lm)
 
     elif event['type'] == 'checkout.session.async_payment_failed':
         session = event['data']['object']
