@@ -39,7 +39,7 @@ async def profile_of_user(request: Request, userid: int, personal: bool):
             personal = False
         if userobj is not None and is_staff(staff_roles, userobj.roles, 4)[0]:
             personal = True
-    base_query = a = (f"SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE (owner = {str(userid)} OR {str(userid)} = ANY(extra_owners))")
+    base_query = a = (f"SELECT description, banner, certified, votes, servers, bot_id, invite FROM bots WHERE (owner = {str(userid)} OR {str(userid)} = ANY(extra_owners))")
     if not personal:
         query = base_query + "and queue = false and banned = false and disabled = false ORDER BY votes;"
     else:
@@ -47,9 +47,9 @@ async def profile_of_user(request: Request, userid: int, personal: bool):
     fetch = await db.fetch(query)
     user_bots = await parse_bot_list(fetch)
     if personal:
-        user_info = await db.fetchrow("SELECT api_token, badges, description, certified FROM users WHERE user_id = $1", userid)
+        user_info = await db.fetchrow("SELECT api_token, badges, description, certified, coins FROM users WHERE user_id = $1", userid)
     else:
-        user_info = await db.fetchrow("SELECT badges, description, certified FROM users WHERE user_id = $1", userid)
+        user_info = await db.fetchrow("SELECT badges, description, certified FROM users, coins WHERE user_id = $1", userid)
     if user_info is None:
         return abort(404)
     guild = client.get_guild(main_server)
@@ -57,5 +57,5 @@ async def profile_of_user(request: Request, userid: int, personal: bool):
     if user_dpy is None:
         user_dpy = await client.fetch_user(int(userid))
     print(user_dpy)
-    return templates.TemplateResponse("profile.html", {"request": request, "username": request.session.get("username", False), "user_bots": user_bots, "user": user, "avatar": request.session.get("avatar"), "userid": userid, "personal": personal, "badges": get_badges(user_dpy, user_info["badges"], user_info["certified"]), "user_info": user_info})
+    return templates.TemplateResponse("profile.html", {"request": request, "username": request.session.get("username", False), "user_bots": user_bots, "user": user, "avatar": request.session.get("avatar"), "userid": userid, "personal": personal, "badges": get_badges(user_dpy, user_info["badges"], user_info["certified"]), "user_info": user_info, "coins": user_info["coins"]})
 
