@@ -28,7 +28,6 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from websockets.exceptions import ConnectionClosedOK
 import hashlib
 import aioredis
-import uvloop
 import socket
 import uuid
 import contextvars
