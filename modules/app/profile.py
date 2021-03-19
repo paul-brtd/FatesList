@@ -49,7 +49,7 @@ async def profile_of_user(request: Request, userid: int, personal: bool):
     if personal:
         user_info = await db.fetchrow("SELECT api_token, badges, description, certified, coins FROM users WHERE user_id = $1", userid)
     else:
-        user_info = await db.fetchrow("SELECT badges, description, certified FROM users, coins WHERE user_id = $1", userid)
+        user_info = await db.fetchrow("SELECT badges, description, certified, coins FROM users  WHERE user_id = $1", userid)
     if user_info is None:
         return abort(404)
     guild = client.get_guild(main_server)

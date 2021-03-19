@@ -578,7 +578,7 @@ async def set_user_description_api(request: Request, user_id: int, desc: UserDes
     await db.execute("UPDATE users SET description = $1 WHERE user_id = $2", desc.description, user_id)
     return {"done": True, "reason": None}
 
-@router.post("/stripe/checkout", dependencies=[Depends(RateLimiter(times=5, minutes=7))], tags = ["API (Internal)"])
+@router.post("/stripe/checkout", dependencies=[Depends(RateLimiter(times=6, minutes=3))], tags = ["API (Internal)"])
 async def stripetest_post_api(request: Request, user_id: int):
     session = stripe.checkout.Session.create(
         payment_method_types=['card'],
@@ -588,13 +588,13 @@ async def stripetest_post_api(request: Request, user_id: int):
                 'product_data': {
                     'name': 'Coin',
                 },
-                'unit_amount': 10,
+                'unit_amount': 50,
             },
             'adjustable_quantity': {
                 'enabled': True,
-                'minimum': 10,
+                'minimum': 3,
             },
-            'quantity': 10,
+            'quantity': 3,
         }],
         metadata={
             'user_id': user_id,
@@ -661,10 +661,22 @@ async def stripetest_post_pay_api(request: Request):
 
 async def create_order(user_id, quantity, token, id, lm):
     await db.execute("INSERT INTO user_payments (user_id, token, coins, paid, stripe_id, livemode) VALUES ($1, $2, $3, $4, $5, $6)", user_id, token, quantity, False, id, lm)
+    try:
+        guild = client.get_guild(main_server)
+        user = guild.get_member(user_id)
+        await user.send(f"You have successfully created an order for {quantity} coins! Your payment id is {id}. After stripe confirms your payment. The coins will be added to your account! DM a Fates List Admin with your payment id if you do not get the coins within an hour.")
+    except:
+        pass
 
 async def fulfill_order(user_id, quantity, token, id, lm):
     await db.execute(f"UPDATE users SET coins = coins + {quantity} WHERE user_id = $1", user_id)
     await db.execute("UPDATE user_payments SET paid = $1 WHERE user_id = $2 AND token = $3", True, user_id, token) 
+    try:
+        guild = client.get_guild(main_server)
+        user = guild.get_member(user_id)
+        await user.send(f"We have successfully fulfilled an order for {quantity} coins! Your payment id is {id}. The coins have been added to your account! DM a Fates List Admin with your payment id if you did not get the coins.")
+    except:
+        pass
 
 async def dm_customer_about_failed_payment(session):
     print("DM Customer: " + str(session))

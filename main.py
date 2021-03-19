@@ -122,7 +122,7 @@ async def startup():
 @app.on_event("shutdown")
 async def close():
     print("Closing")
-    redis_db.close()
+    await redis_db.close()
     await redis_db.wait_closed()
 
 @client.event

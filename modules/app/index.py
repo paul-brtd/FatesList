@@ -92,7 +92,7 @@ async def api_docs_view(request: Request):
 async def tos_page(request: Request):
     return templates.TemplateResponse("tos.html", {"request": request})
 
-@router.get("/fates/stripetest")
+@router.get("/coins/buy")
 async def stripetest(request: Request):
     return templates.TemplateResponse("coin_buy.html", {"request": request, "stripe_publishable_key": stripe_publishable_key})
 
