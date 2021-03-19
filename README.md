@@ -1,6 +1,6 @@
 # Fates List
 
-Licensed under the GPL3/MIT. You can use this under either
+Licensed under the MIT. You can use this under either. We will not support self hosting or copying our list whatsoever
 
 This is the source code for [Fates List](https://fateslist.xyz)
 
