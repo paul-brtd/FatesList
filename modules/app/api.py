@@ -160,7 +160,7 @@ class Bot(BaseModel):
     status: int
     donate: Optional[str] = None
 
-@router.get("/bots/{bot_id}", tags = ["API"], response_model = Bot, dependencies=[Depends(RateLimiter(times=20, minutes=1))])
+@router.get("/bots/{bot_id}", tags = ["API"], response_model = Bot, dependencies=[Depends(RateLimiter(times=5, minutes=3))])
 async def get_bots_api(request: Request, bot_id: int, compact: Optional[bool] = False, Authorization: str = Header("INVALID_API_TOKEN")):
     """Gets bot information given a bot ID. If not found, 404 will be returned. If a proper API Token is provided, sensitive information (System API Events will also be provided)"""
     api_ret = await db.fetchrow("SELECT bot_id AS id, description, tags, html_long_description, long_description, servers AS server_count, shard_count, shards, prefix, invite, invite_amount, owner AS main_owner, extra_owners, features, bot_library AS library, queue, banned, certified, website, discord AS support, github, user_count, votes, css, donate FROM bots WHERE bot_id = $1", bot_id)
@@ -437,9 +437,10 @@ async def ws_send_events():
         sent_id = []
         for ws in manager.active_connections:
             for bid in ws.bot_id:
-                ws_events = {str(bid): (await redis_db.hgetall(str(bid) + "_ws", encoding = 'utf-8'))}
-                if ws_events[str(bid)].get("status") == "READY":
+                ws_events = {str(bid): (await redis_db.hget(str(bid), key = "ws"))}
+                if ws_events[str(bid)] is not None:
                     # Make sure payload is made a dict
+                    ws_events[str(bid)] = orjson.loads(ws_events[str(bid)])
                     for key in ws_events[str(bid)].copy().keys():
                         sent_id.append(sent_id)
                         if key == "status" or key in sent_id:
@@ -455,9 +456,7 @@ async def ws_send_events():
                         except:
                             pass
                     rc = await manager.send_personal_message({"payload": "EVENTS", "type": "EVENTS_V1", "data": ws_events}, ws)
-                    for key in (await redis_db.hkeys(str(bid) + "_ws", encoding = "utf-8")):
-                        await redis_db.hdel(str(bid) + "_ws", key)
-                    await redis_db.hset(str(bid) + "_ws", mapping = {"status": "IDLE"})
+                    await redis_db.hdel(str(bid), "ws")
         sent_id = [] # Empty the list
 
 class MDRequest(BaseModel):

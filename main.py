@@ -116,7 +116,7 @@ async def startup():
     asyncio.create_task(client.start(TOKEN_MAIN))
     asyncio.create_task(client_servers.start(TOKEN_SERVER))
     await asyncio.sleep(4)
-    builtins.redis_db = await aioredis.create_redis_pool('redis://localhost')
+    builtins.redis_db = await aioredis.from_url('redis://localhost', db = 1)
     limiter.init(redis_db, identifier = rl_key_func)
 
 @app.on_event("shutdown")

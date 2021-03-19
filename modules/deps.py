@@ -35,7 +35,7 @@ from fastapi import FastAPI, Depends, Request
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.websockets import WebSocket, WebSocketDisconnect
 from websockets.exceptions import ConnectionClosedError, ConnectionClosedOK
-from aioredis.errors import ConnectionClosedError as ServerConnectionClosedError
+from aioredis.exceptions import ConnectionError as ServerConnectionClosedError
 from discord_webhook import DiscordWebhook, DiscordEmbed
 import markdown
 from modules.emd_hab import emd
@@ -90,9 +90,9 @@ async def _internal_user_fetch(userid: str, bot_only: bool) -> Optional[dict]:
         return None # This is impossible to actually exist on the discord API or on our cache
 
     # Query redis cache for some important info
-    cache_redis = await redis_db.hgetall(f"{userid}_cache", encoding = 'utf-8')
-    if cache_redis is not None and cache_redis.get("cache_obj") is not None:
-        cache = orjson.loads(cache_redis["cache_obj"])
+    cache_redis = await redis_db.hget(str(userid), key = 'cache')
+    if cache_redis is not None:
+        cache = orjson.loads(cache_redis)
         if cache.get("fl_cache_ver") != CACHE_VER or cache.get("valid_user") is None or time.time() - cache['epoch'] > 60*60*8: # 8 Hour cacher
             # The cache is invalid, pass
             print("Not using cache for id ", userid)
@@ -151,7 +151,7 @@ async def _internal_user_fetch(userid: str, bot_only: bool) -> Optional[dict]:
         asyncio.create_task(db.execute("UPDATE bots SET username_cached = $2 WHERE bot_id = $1", int(userid), username))
 
     cache = orjson.dumps({"fl_cache_ver": CACHE_VER, "epoch": time.time(), "bot": bot, "username": username, "avatar": avatar, "disc": disc, "valid_user": valid_user, "status": status})
-    await redis_db.hset(f"{userid}_cache", mapping = {"cache_obj": cache})
+    await redis_db.hset(str(userid), key = "cache", value = cache)
 
     fetch = False
     if bot_only and valid_user and bot:
@@ -793,12 +793,13 @@ async def add_ws_event(bot_id: int, ws_event: dict) -> None:
     """A WS Event must have the following format:
         - {id: Event ID, event: Event Name, context: Context, type: Event Type}
     """
-    curr_ws_events = await redis_db.hgetall(str(bot_id) + "_ws", encoding = 'utf-8')
+    curr_ws_events = await redis_db.hget(str(bot_id), key = "ws")
     if curr_ws_events is None:
         curr_ws_events = {}
-    curr_ws_events[ws_event["id"]] = orjson.dumps(ws_event)
-    curr_ws_events["status"] = "READY"
-    await redis_db.hset(str(bot_id) + "_ws", mapping = curr_ws_events)
+    else:
+        curr_ws_events = orjson.loads(curr_ws_events)
+    curr_ws_events[ws_event["id"]] = ws_event
+    await redis_db.hset(str(bot_id), key = "ws", value = orjson.dumps(curr_ws_events))
 
 class BotActions():
     def __init__(self, **kwargs):
