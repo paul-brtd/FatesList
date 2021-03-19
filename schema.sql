@@ -111,6 +111,8 @@ CREATE TABLE users (
 CREATE TABLE user_payments (
     user_id bigint NOT NULL,
     token TEXT NOT NULL,
+    stripe_id TEXT DEFAULT '',
+    livemode BOOLEAN DEFAULT FALSE,
     coins INTEGER NOT NULL,
     paid BOOLEAN DEFAULT FALSE
 );

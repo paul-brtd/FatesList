@@ -610,10 +610,8 @@ async def stripetest_post_api(request: Request, user_id: int):
 @router.post("/stripe/webhook", tags = ["API (Internal)"])
 async def stripetest_post_pay_api(request: Request):
     payload = await request.body()
-    print(request.headers)
     sig_header = request.headers['stripe-signature']
     event = None
-    print(payload)
     try:
         event = stripe.Webhook.construct_event(
             payload, sig_header, stripe_webhook_secret
@@ -627,12 +625,14 @@ async def stripetest_post_pay_api(request: Request):
     # Handle the checkout.session.completed event
     if event['type'] == 'checkout.session.completed':
         session = event['data']['object']
+        id = session["payment_intent"]
+        lm = session["livemode"]
         line_items = stripe.checkout.Session.list_line_items(session['id'], limit=100)
         user_id = int(session["metadata"]["user_id"])
         quantity = int(line_items["data"][0]["quantity"])
         token = session["metadata"]["token"]
         # Save an order in your database, marked as 'awaiting payment'
-        await create_order(user_id, quantity, token)
+        await create_order(user_id, quantity, token, id, lm)
 
         # Check if the order is already paid (e.g., from a card payment)
         #
@@ -641,10 +641,12 @@ async def stripetest_post_pay_api(request: Request):
         # account.
         if session.payment_status == "paid":
             # Fulfill the purchase
-            await fulfill_order(user_id, quantity, token)
+            await fulfill_order(user_id, quantity, token, id, lm)
 
     elif event['type'] == 'checkout.session.async_payment_succeeded':
         session = event['data']['object']
+        id = session["payment_intent"]
+        lm = session["livemode"]
         line_items = stripe.checkout.Session.list_line_items(session['id'], limit=100)
         user_id = int(session["metadata"]["user_id"])
         quantity = int(line_items["data"][0]["quantity"])
@@ -658,10 +660,10 @@ async def stripetest_post_pay_api(request: Request):
         # Send an DM to the customer asking them to retry their order
         await dm_customer_about_failed_payment(session)
 
-async def create_order(user_id, quantity, token):
-    await db.execute("INSERT INTO user_payments (user_id, token, coins, paid) VALUES ($1, $2, $3, $4)", user_id, token, quantity, False)
+async def create_order(user_id, quantity, token, id, lm):
+    await db.execute("INSERT INTO user_payments (user_id, token, coins, paid, stripe_id, livemode) VALUES ($1, $2, $3, $4, $5, $6)", user_id, token, quantity, False, id, lm)
 
-async def fulfill_order(user_id, quantity, token):
+async def fulfill_order(user_id, quantity, token, id, lm):
     await db.execute(f"UPDATE users SET coins = coins + {quantity} WHERE user_id = $1", user_id)
     await db.execute("UPDATE user_payments SET paid = $1 WHERE user_id = $2 AND token = $3", True, user_id, token) 
 
