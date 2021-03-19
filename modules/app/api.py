@@ -646,8 +646,8 @@ async def stripetest_post_pay_api(request: Request):
     elif event['type'] == 'checkout.session.async_payment_succeeded':
         session = event['data']['object']
         line_items = stripe.checkout.Session.list_line_items(session['id'], limit=100)
-        user_id = session["metadata"]["user_id"]
-        quantity = line_items["quantity"]
+        user_id = int(session["metadata"]["user_id"])
+        quantity = int(line_items["data"][0]["quantity"])
         token = session["metadata"]["token"]
         # Fulfill the purchase
         await fulfill_order(user_id, quantity, token)
@@ -658,7 +658,6 @@ async def stripetest_post_pay_api(request: Request):
         # Send an DM to the customer asking them to retry their order
         await dm_customer_about_failed_payment(session)
 
-# TODO
 async def create_order(user_id, quantity, token):
     await db.execute("INSERT INTO user_payments (user_id, token, coins, paid) VALUES ($1, $2, $3, $4)", user_id, token, quantity, False)
 
