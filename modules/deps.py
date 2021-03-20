@@ -1,84 +1,22 @@
-import string
-import secrets
-from fastapi import Request, APIRouter, BackgroundTasks, Form as FForm, Header, WebSocket, WebSocketDisconnect, File, UploadFile, Depends
-import aiohttp
-import asyncpg
-import datetime
-import random
-import math
-import time
-import uuid
-from fastapi.responses import HTMLResponse, RedirectResponse, ORJSONResponse
-from pydantic import BaseModel
-from starlette.status import HTTP_302_FOUND, HTTP_303_SEE_OTHER
-import secrets
-import string
-from modules.Oauth import Oauth
-from fastapi.templating import Jinja2Templates
-import discord
-import asyncio
-import time
-import re
-import orjson
-from starlette_wtf import CSRFProtectMiddleware, csrf_protect,StarletteForm
-import builtins
-from typing import Optional, List, Union
-from aiohttp_requests import requests
-from starlette.exceptions import HTTPException as StarletteHTTPException
-from websockets.exceptions import ConnectionClosedOK
-import hashlib
-import aioredis
-import socket
-import uuid
-import contextvars
-from fastapi import FastAPI, Depends, Request
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.websockets import WebSocket, WebSocketDisconnect
-from websockets.exceptions import ConnectionClosedError, ConnectionClosedOK
-from aioredis.exceptions import ConnectionError as ServerConnectionClosedError
-from discord_webhook import DiscordWebhook, DiscordEmbed
-import markdown
-from modules.emd_hab import emd
-from config import *
-from fastapi.exceptions import RequestValidationError, ValidationError
-from fastapi.exception_handlers import (
-    http_exception_handler,
-    request_validation_exception_handler,
-)
-from fastapi_limiter.depends import RateLimiter
-import lxml
-from lxml.html.clean import Cleaner
-import io
+from modules.imports import *
 
-def redirect(path: str) -> RedirectResponse:
-    return RedirectResponse(path, status_code=HTTP_303_SEE_OTHER)
-
-
-def abort(code: str) -> StarletteHTTPException:
-    raise StarletteHTTPException(status_code=code)
-
-
-# Secret creator
-
-
-def get_token(length: str) -> str:
-    secure_str = "".join(
-        (secrets.choice(string.ascii_letters + string.digits)
-         for i in range(length))
-    )
-    return secure_str
-
-def human_format(num: int) -> str:
-    if abs(num) < 1000:
-        return str(abs(num))
-    num = float('{:.3g}'.format(num))
-    magnitude = 0
-    while abs(num) >= 1000:
-        magnitude += 1
-        if magnitude == 31:
-            num /= 10
-        num /= 1000.0
-    return '{} {}'.format('{:f}'.format(num).rstrip('0').rstrip('.'), ['', 'K', 'M', 'B', 'T', "Quad.", "Quint.", "Sext.", "Sept.", "Oct.", "Non.", "Dec.", "Tre.", "Quat.", "quindec.", "Sexdec.", "Octodec.", "Novemdec.", "Vigint.", "Duovig.", "Trevig.", "Quattuorvig.", "Quinvig.", "Sexvig.", "Septenvig.", "Octovig.", "Nonvig.", "Trigin.", "Untrig.", "Duotrig.", "Googol."][magnitude])
+# FastAPI Limiter rl func
+async def rl_key_func(request: Request) -> str:
+    if request.headers.get("FatesList-RateLimitBypass") == ratelimit_bypass_key:
+        return get_token(32)
+    if "Authorization" in request.headers or "authorization" in request.headers:
+        try:
+            r = request.headers["Authorization"]
+        except KeyError:
+            r = request.headers["authorization"]
+        check = await db.fetchrow("SELECT bot_id, certified FROM bots WHERE api_token = $1", r)
+        if check is None:
+            return ip_check(request)
+        if check["certified"]:
+            return get_token(32)
+        return r
+    else:
+        return ip_check(request)
 
 async def _internal_user_fetch(userid: str, bot_only: bool) -> Optional[dict]:
     # Check if a suitable version is in the cache first before querying Discord
@@ -594,16 +532,17 @@ class ConnectionManager:
         except:
             pass
         self.active_connections.remove(websocket)
+
+        # Delete stale websocket credentials
         websocket.api_token = []
-        websocket.bot_id = []
-        print(self.active_connections)
+        websocket.bot_id = [] # 
 
     async def send_personal_message(self, message, websocket: WebSocket):
         i = 0
         if websocket not in self.active_connections:
             await manager.disconnect(websocket)
             return False
-        while i < 6:
+        while i < 6: # Try to send message 5 times
             try:
                 await websocket.send_json(message)
                 i = 6
@@ -652,7 +591,6 @@ async def get_events(api_token: Optional[str] = None, bot_id: Optional[str] = No
     ret = {"events": events}
     return ret
 
-
 class templates():
     @staticmethod
     def TemplateResponse(f, arg_dict):
@@ -681,7 +619,6 @@ class templates():
             arg_dict["staff"] = [False]
         print(arg_dict["staff"])
         arg_dict["site_url"] = site_url
-        arg_dict["recaptcha_client"] = recaptcha_client
         if status is None:
             return _templates.TemplateResponse(f, arg_dict)
         return _templates.TemplateResponse(f, arg_dict, status_code = status)
