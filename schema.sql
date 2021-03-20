@@ -1,7 +1,6 @@
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
 CREATE DATABASE fateslist;
 \c fateslist
+CREATE EXTENSION "uuid-ossp";
 
 CREATE TABLE bots (
     username_cached text DEFAULT '',
