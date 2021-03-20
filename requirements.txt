@@ -10,7 +10,7 @@ aiohttp
 aiohttp_requests
 starlette_wtf
 discord
-asgi-ratelimit
+fastapi-limiter
 prometheusrock
 orjson
 websockets
@@ -21,3 +21,4 @@ django-simple-history
 django-material-admin
 psycopg2
 django_admin_logs
+madkdown
