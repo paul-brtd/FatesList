@@ -16,3 +16,7 @@ orjson
 websockets
 aredis
 git+https://github.com/Python-Markdown/markdown.git
+django
+django-simple-history
+django-material-admin
+psycopg2
