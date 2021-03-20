@@ -491,7 +491,7 @@ async def ws_close(websocket: WebSocket, code: int):
     except:
         return
 
-@router.websocket("/api/ws")
+@router.websocket("/api/ws/bot")
 async def websocket_real_time_api(websocket: WebSocket):
     await manager.connect(websocket)
     if websocket.api_token == []:
@@ -526,7 +526,7 @@ async def websocket_real_time_api(websocket: WebSocket):
     except WebSocketDisconnect:
         await manager.disconnect(websocket)
 
-@router.websocket("/api/chat")
+@router.websocket("/api/ws/chat")
 async def chat_api(websocket: WebSocket):
     await manager_chat.connect(websocket)
     if websocket.chat_token == None:
