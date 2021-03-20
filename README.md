@@ -1,6 +1,6 @@
 # Fates List
 
-Licensed under the GPL3/MIT. You can use this under either
+Licensed under the MIT. We will not support self hosting or copying our list whatsoever, you are on your own and you MUST additionally give credit and change the branding.
 
 This is the source code for [Fates List](https://fateslist.xyz)
 
@@ -38,3 +38,4 @@ BTW please add your bots there if you want to support us
 
 12. Run "./run" in the repo folder
 
+Fates List probihits the monetization or resale of coins for money
