@@ -15,7 +15,6 @@ class Oauth():
     def __init__(self):
         self.client_id = OauthConfig.client_id
         self.client_secret = OauthConfig.client_secret
-        self.scope_js = "%20".join(OauthConfig.scope + ["guilds.join"])
         self.redirect_uri = OauthConfig.redirect_uri
         self.discord_login_url = "https://discord.com/api/oauth2/authorize?client_id=" + self.client_id + "&redirect_uri=" + self.redirect_uri
         self.discord_token_url = "https://discord.com/api/oauth2/token"

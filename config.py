@@ -92,5 +92,4 @@ bans_data = {
 class OauthConfig:
     client_id = "798951566634778641"
     client_secret = oauth_client_secret
-    scope = ["identify"]
     redirect_uri = "https://" + site + "/auth/login/confirm"
