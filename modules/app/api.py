@@ -491,8 +491,9 @@ async def ws_close(websocket: WebSocket, code: int):
     except:
         return
 
+@router.websocket("/api/ws") # Compatibility, will be undocumented soon
 @router.websocket("/api/ws/bot")
-async def websocket_real_time_api(websocket: WebSocket):
+async def websocket_bot(websocket: WebSocket):
     await manager.connect(websocket)
     if websocket.api_token == []:
         await manager.send_personal_message({"payload": "IDENTITY", "type": "API_TOKEN"}, websocket)
