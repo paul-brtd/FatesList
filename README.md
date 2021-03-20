@@ -26,7 +26,7 @@ BTW please add your bots there if you want to support us
 
 6. Enter Fates List directory, copy config_secrets_template.py to config_secrets.py and fill in the required information on there. You do not need to change site_url or mobile_site_url fields (site and mobile_site do need to be filled in without the https://).
 
-7. Download and install nginx, redis, python3 and PostgreSQL (using the pg_user and pg_pwd you setup in config.py). Run psql and then run \i schema.sql to setup the postgres schema
+7. Download and install nginx, redis, python3 and PostgreSQL (using the pg_user and pg_pwd you setup in config.py). Run "psql postgres" and then run \i schema.sql to setup the postgres schema
 
 8. Remove the /etc/nginx folder, then copy the nginx folder from this repo to /etc. Change the server_name values /etc/nginx/conf.d/default.conf to reflect your domain
 
