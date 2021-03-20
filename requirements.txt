@@ -20,3 +20,4 @@ django
 django-simple-history
 django-material-admin
 psycopg2
+django_admin_logs
