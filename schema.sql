@@ -105,7 +105,7 @@ CREATE TABLE users (
     username text,
     css text default '',
     banned integer default 0, -- 0 = No Ban, 1 = Global Ban
-    coins INTEGER DEFAULT 0,
+    coins INTEGER DEFAULT 0
 );
 
 CREATE TABLE user_payments (
