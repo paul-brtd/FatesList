@@ -492,7 +492,7 @@ async def ws_close(websocket: WebSocket, code: int):
         return
 
 @router.websocket("/api/ws")
-async def websocker_real_time_api(websocket: WebSocket):
+async def websocket_real_time_api(websocket: WebSocket):
     await manager.connect(websocket)
     if websocket.api_token == []:
         await manager.send_personal_message({"payload": "IDENTITY", "type": "API_TOKEN"}, websocket)
@@ -525,6 +525,60 @@ async def websocker_real_time_api(websocket: WebSocket):
             await asyncio.sleep(1) # Keep Waiting Forever
     except WebSocketDisconnect:
         await manager.disconnect(websocket)
+
+@router.websocket("/api/chat")
+async def chat_api(websocket: WebSocket):
+    await manager_chat.connect(websocket)
+    if websocket.chat_token == None:
+        await manager_chat.send_personal_message({"payload": "IDENTITY", "type": "CHAT_TOKEN,API_TOKEN_RECIPIENT"}, websocket)
+        try:
+            data = await websocket.receive_json()
+            print("HERE")
+            if data.get("payload") != "IDENTITY_RESPONSE" or data.get("type") not in ["CHAT_TOKEN", "API_TOKEN_RECIPIENT"]:
+                raise TypeError
+        except:
+            await manager_chat.send_personal_message({"payload": "KILL_CONN", "type": "INVALID_IDENTITY_RESPONSE"}, websocket)
+            return await ws_close(websocket, 4004)
+        if data.get("type") == "CHAT_TOKEN":
+            chat_token = data.get("data")
+            if chat_token is None or type(chat_token) == int:
+                await manager_chat.send_personal_message({"payload": "KILL_CONN", "type": "INVALID_IDENTITY_RESPONSE"}, websocket)
+                return await ws_close(websocket, 4004)
+            blocked = await redis_db.hget(chat_token, key = "blocked") # Check if the user was blocked
+            if blocked is None:
+                await manager_chat.send_personal_message({"payload": "KILL_CONN", "type": "NO_AUTH"}, websocket) # Invalid chat token provided
+                return await ws_close(websocket, 4004)
+            elif blocked == "global":
+                await manager_chat.send_personal_message({"payload": "KILL_CONN", "type": "CHAT_BLOCKED"}, websocket) # User blocked
+                return await ws_close(websocket, 4004)
+            websocket.sender = await redis_db.hget(chat_token, key = "sender") # Get the sender
+            websocket.receiver = await redis_db.hget(chat_token, key = "receiver")
+            websocket.chat_token = chat_token
+        elif data.get("type") == "API_TOKEN_RECIPIENT":
+            api_token = data.get("data")
+            if type(api_token) != list or type(api_token[0]) != str or type(api_token[1]) != str or len(api_token) > 2: # Format is user token, reciever id
+                await manager_chat.send_personal_message({"payload": "KILL_CONN", "type": "INVALID_IDENTITY_RESPONSE"}, websocket)
+                return await ws_close(websocket, 4004)
+            sender = await db.fetchval("SELECT user_id FROM users WHERE api_token = $1", str(api_token[0]))
+            if sender is None:
+                await manager_chat.send_personal_message({"payload": "KILL_CONN", "type": "NO_AUTH"}, websocket) # Invalid api token provided
+                return await ws_close(websocket, 4004)
+            sender = str(sender)
+            receiver = str(api_token[1])
+            ongoing_chat = await redis_db.hget(":".join([sender, receiver]), key = "ongoing")
+            if ongoing_chat is not None and ongoing_chat != "":
+                # Ongoing chat, tell client to transfer
+                await manager_chat.send_personal_message({"payload": "TRANSFER_CONN", "type": "CHAT_TOKEN", "data": ongoing_chat.decode('utf-8')}, websocket) # Chat Transfer
+                return await ws_close(websocket, 4005) # 4005 = Close
+            # Create a new chat token, hand it to user and close connection
+            chat_token = get_token(132)
+            await redis_db.hset(chat_token, mapping = {"blocked": "", "sender": sender, "receiver": receiver})
+            await redis_db.hset(":".join([sender, receiver]), key = "ongoing", value = chat_token)
+            await manager_chat.send_personal_message({"payload": "TRANSFER_CONN", "type": "CHAT_TOKEN", "data": chat_token}, websocket) # Chat Transfer
+            return await ws_close(websocket, 4005) # 4005 = Transfer
+        await manager_chat.send_personal_message({"payload": "KILL_CONN", "type": "NOT_IMPLEMENTED"}, websocket) # Chat functionality is not yet implemented
+        return await ws_close(websocket, 4006) # 4006 = Not Implemented Close
+
 
 class User(BaseModel):
     id: int

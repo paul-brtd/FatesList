@@ -513,6 +513,7 @@ class ConnectionManager:
     def __init__(self):
         self.active_connections: List[WebSocket] = []
         self.fl_loaded = False
+
     async def connect(self, websocket: WebSocket, api: bool = True):
         await websocket.accept()
         if api:
@@ -521,9 +522,11 @@ class ConnectionManager:
             except:
                 websocket.api_token = []
                 websocket.bot_id = []
+                websocket.chat_token = None
         else:
             websocket.api_token = []
             websocket.bot_id = []
+            websocket.chat_token = None
         self.active_connections.append(websocket)
 
     async def disconnect(self, websocket: WebSocket):
@@ -557,10 +560,8 @@ class ConnectionManager:
         for connection in self.active_connections:
             await connection.send_json(message)
 
-try:
-    a = builtins.manager
-except:
-    builtins.manager = ConnectionManager()
+builtins.manager = ConnectionManager()
+builtins.manager_chat = ConnectionManager()
 
 async def get_events(api_token: Optional[str] = None, bot_id: Optional[str] = None, event_id: Optional[uuid.UUID] = None):
     if api_token is None and bot_id is None:
