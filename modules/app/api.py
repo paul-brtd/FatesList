@@ -579,10 +579,8 @@ async def set_user_description_api(request: Request, user_id: int, desc: UserDes
     return {"done": True, "reason": None}
 
 @router.post("/stripe/checkout", dependencies=[Depends(RateLimiter(times=6, minutes=3))], tags = ["API (Internal)"])
-async def stripetest_post_api(request: Request, user_id: int):
-    session = stripe.checkout.Session.create(
-        payment_method_types=['card'],
-        line_items=[{
+async def stripetest_post_api(request: Request, user_id: int, discount: Optional[str] = "GENERIC_NULL_DISCOUNT"):
+    line_items = [{
             'price_data': {
                 'currency': 'usd',
                 'product_data': {
@@ -595,15 +593,32 @@ async def stripetest_post_api(request: Request, user_id: int):
                 'minimum': 3,
             },
             'quantity': 3,
-        }],
-        metadata={
+        }]
+    metadata = {
             'user_id': user_id,
             'token': get_token(256)
-        },
-        mode='payment',
-        success_url='https://fateslist.xyz/fates/stripe/success',
-        cancel_url='https://fateslist.xyz/fates/stripe/cancel',
-    )
+        }
+    try:
+        session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            line_items=line_items,
+            metadata=metadata,
+            discounts=[{
+                'coupon': f'{discount}',
+            }],
+            mode='payment',
+            success_url='https://fateslist.xyz/fates/stripe/success',
+            cancel_url='https://fateslist.xyz/fates/stripe/cancel',
+        )
+    except stripe.error.InvalidRequestError:
+        session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            line_items=line_items,
+            metadata=metadata,
+            mode='payment',
+            success_url='https://fateslist.xyz/fates/stripe/success',
+            cancel_url='https://fateslist.xyz/fates/stripe/cancel',
+        )
     return {"id": session.id}
 
 @router.post("/stripe/webhook", tags = ["API (Internal)"])

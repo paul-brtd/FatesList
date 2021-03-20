@@ -18,6 +18,10 @@ def username_cached(obj):
     return obj.username_cached
 username_cached.short_description = 'Username'
 
+def username(obj):
+    return obj.username
+username.short_description = 'Username'
+
 def vanity_url(obj):
     return obj.vanity_url
 vanity_url.short_description = "Vanity"
@@ -50,6 +54,16 @@ class BotAdmin(FADMIN):
         else: # This is an addition
             return []
 
+class UserAdmin(FADMIN):
+    search_fields = ['user_id', 'username']
+    list_display = (user_id, username)
+    def get_readonly_fields(self, request, obj=None):
+        if obj: # obj is not None, so this is an edit
+            return ['user_id',] # Return a list or tuple of readonly fields' names
+        else: # This is an addition
+            return []
+
+
 class VanityAdmin(FADMIN):
     search_fields = ['redirect', 'vanity_url', 'type']
     list_display = (redirect, vanity_url, type_vanity)
@@ -59,3 +73,4 @@ admin.site.register(Bot, BotAdmin)
 admin.site.register(BotVoter, BotVoterAdmin)
 admin.site.register(Vanity, VanityAdmin)
 admin.site.register(Server, FADMIN)
+admin.site.register(User, UserAdmin)

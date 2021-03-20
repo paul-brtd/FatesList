@@ -226,7 +226,7 @@ class Bot(models.Model):
     banner = models.CharField(blank=True, null=True, max_length = 1024)
     created_at = models.BigIntegerField(blank=True, null=True)
     invite = models.CharField(blank=True, null=True, max_length=256)
-    banned = models.BooleanField(blank=False, null=False, help_text = "Use fateslist.xyz main admin console to ban or unban bots")
+    banned = models.BooleanField(blank=False, null=False, default=False, help_text = "Use fateslist.xyz main admin console to ban or unban bots")
     disabled = models.BooleanField(blank=True, null=True, help_text = "unused")
     github = models.CharField(blank=True, null=True, max_length=256)
     extra_owners = ArrayField(base_field = models.BigIntegerField(), blank=True, null=True) 
@@ -277,13 +277,14 @@ class Server(models.Model):
     def __str__(self):
         return f"{self.name_cached} ({self.guild_id})"
 
-class Users(models.Model):
-    user_id = models.BigIntegerField(blank=True, null=True, editable = False)
+class User(models.Model):
+    user_id = models.BigIntegerField(primary_key = True)
     api_token = models.TextField(blank=True, null=True)
+    coins = models.IntegerField(blank=False, null=False, default = 0, help_text = "Changing this without permission from a higher up (Admin+) = Potential demotion that is possibly public as well. Admins can ignore this but do not abuse your power or the same will apply to you.")
     vote_epoch = models.BigIntegerField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     certified = models.BooleanField(blank=True, null=True)
-    badges = models.TextField(blank=True, null=True)  # This field type is a guess.
+    badges = ArrayField(base_field = models.TextField(), blank=True, null=True) 
     username = models.TextField(blank=True, null=True)
     avatar = models.TextField(blank=True, null=True)
     css = models.TextField(blank=True, null=True)
@@ -293,6 +294,7 @@ class Users(models.Model):
         managed = False
         db_table = 'users'
 
+register(User)
 
 class Vanity(models.Model):
     type = models.IntegerField(blank=True, null=True)
