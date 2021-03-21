@@ -692,32 +692,36 @@ class FLError():
                 exc.status_code = 422
             else:
                 exc.status_code = 500
-        if exc.status_code in [500, 501, 502, 503, 504, 507, 508, 510]:
-            asyncio.create_task(FLError.log(request, exc, error_id, curr_time))
-            return HTMLResponse(f"<strong>500 Internal Server Error</strong><br/>Fates List had a slight issue and our developers and looking into what happened<br/><br/>Error ID: {error_id}<br/>Time When Error Happened: {curr_time}", status_code=500)
-        if exc.status_code == 404:
-            if url_startswith(request.url, "/bot"):
-                msg = "Bot Not Found"
-                code = 404
-            elif url_startswith(request.url, "/profile"):
-                msg = "Profile Not Found"
-                code = 404
-            else:
-                msg = "404\nNot Found"
-                code = 404
-        elif exc.status_code == 401:
-            msg = "401\nNot Authorized"
-            code = 401
-        elif exc.status_code == 422:
-            if url_startswith(request.url, "/bot"):
-                msg = "Bot Not Found"
-                code = 404
-            elif url_startswith(request.url, "/profile"):
-                msg = "Profile Not Found"
-                code = 404
-            else:
-                msg = "Invalid Data Provided<br/>" + str(exc)
-                code = 422
+        match exc.status_code:
+            case 500:
+                asyncio.create_task(FLError.log(request, exc, error_id, curr_time))
+                return HTMLResponse(f"<strong>500 Internal Server Error</strong><br/>Fates List had a slight issue and our developers and looking into what happened<br/><br/>Error ID: {error_id}<br/>Time When Error Happened: {curr_time}", status_code=500)
+            case 404:
+                if url_startswith(request.url, "/bot"):
+                    msg = "Bot Not Found"
+                    code = 404
+                elif url_startswith(request.url, "/profile"):
+                    msg = "Profile Not Found"
+                    code = 404
+                else:
+                    msg = "404\nNot Found"
+                    code = 404
+            case 401:
+                msg = "401\nNot Authorized"
+                code = 401
+            case 422:
+                if url_startswith(request.url, "/bot"):
+                    msg = "Bot Not Found"
+                    code = 404
+                elif url_startswith(request.url, "/profile"):
+                    msg = "Profile Not Found"
+                    code = 404
+                else:
+                    msg = "Invalid Data Provided<br/>" + str(exc)
+                    code = 422
+            case _:
+                msg = "Unknown Error"
+                code = 400
 
         json = url_startswith(request.url, "/api")
         if json:

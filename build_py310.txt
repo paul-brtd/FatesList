@@ -1,0 +1,1 @@
+./configure --prefix=/python3.10 --enable-optimizations
