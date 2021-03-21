@@ -540,43 +540,49 @@ async def chat_api(websocket: WebSocket):
         except:
             await manager_chat.send_personal_message({"payload": "KILL_CONN", "type": "INVALID_IDENTITY_RESPONSE"}, websocket)
             return await ws_close(websocket, 4004)
-        if data.get("type") == "CHAT_TOKEN":
-            chat_token = data.get("data")
-            if chat_token is None or type(chat_token) == int:
+
+        match data.get("type"):
+            case "CHAT_TOKEN":
+                chat_token = data.get("data")
+                if chat_token is None or type(chat_token) == int:
+                    await manager_chat.send_personal_message({"payload": "KILL_CONN", "type": "INVALID_IDENTITY_RESPONSE"}, websocket)
+                    return await ws_close(websocket, 4004)
+                blocked = await redis_db.hget(chat_token, key = "blocked") # Check if the user was blocked
+                if blocked is None:
+                    await manager_chat.send_personal_message({"payload": "KILL_CONN", "type": "NO_AUTH"}, websocket) # Invalid chat token provided
+                    return await ws_close(websocket, 4004)
+                elif blocked == "global":
+                    await manager_chat.send_personal_message({"payload": "KILL_CONN", "type": "CHAT_BLOCKED"}, websocket) # User blocked
+                    return await ws_close(websocket, 4004)
+                websocket.sender = await redis_db.hget(chat_token, key = "sender") # Get the sender
+                websocket.receiver = await redis_db.hget(chat_token, key = "receiver")
+                websocket.chat_token = chat_token
+            case "API_TOKEN_RECIPIENT":
+                api_token = data.get("data")
+                if type(api_token) != list or type(api_token[0]) != str or type(api_token[1]) != str or len(api_token) > 2: # Format is user token, reciever id
+                    await manager_chat.send_personal_message({"payload": "KILL_CONN", "type": "INVALID_IDENTITY_RESPONSE"}, websocket)
+                    return await ws_close(websocket, 4004)
+                sender = await db.fetchval("SELECT user_id FROM users WHERE api_token = $1", str(api_token[0]))
+                if sender is None:
+                    await manager_chat.send_personal_message({"payload": "KILL_CONN", "type": "NO_AUTH"}, websocket) # Invalid api token provided
+                    return await ws_close(websocket, 4004)
+                sender = str(sender)
+                receiver = str(api_token[1])
+                ongoing_chat = await redis_db.hget(":".join([sender, receiver]), key = "ongoing")
+                if ongoing_chat is not None and ongoing_chat != "":
+                    # Ongoing chat, tell client to transfer
+                    await manager_chat.send_personal_message({"payload": "TRANSFER_CONN", "type": "CHAT_TOKEN", "data": ongoing_chat.decode('utf-8')}, websocket) # Chat Transfer
+                    return await ws_close(websocket, 4005) # 4005 = Close
+                # Create a new chat token, hand it to user and close connection
+                chat_token = get_token(132)
+                await redis_db.hset(chat_token, mapping = {"blocked": "", "sender": sender, "receiver": receiver})
+                await redis_db.hset(":".join([sender, receiver]), key = "ongoing", value = chat_token)
+                await manager_chat.send_personal_message({"payload": "TRANSFER_CONN", "type": "CHAT_TOKEN", "data": chat_token}, websocket) # Chat Transfer
+                return await ws_close(websocket, 4005) # 4005 = Transfer
+            case _:
                 await manager_chat.send_personal_message({"payload": "KILL_CONN", "type": "INVALID_IDENTITY_RESPONSE"}, websocket)
-                return await ws_close(websocket, 4004)
-            blocked = await redis_db.hget(chat_token, key = "blocked") # Check if the user was blocked
-            if blocked is None:
-                await manager_chat.send_personal_message({"payload": "KILL_CONN", "type": "NO_AUTH"}, websocket) # Invalid chat token provided
-                return await ws_close(websocket, 4004)
-            elif blocked == "global":
-                await manager_chat.send_personal_message({"payload": "KILL_CONN", "type": "CHAT_BLOCKED"}, websocket) # User blocked
-                return await ws_close(websocket, 4004)
-            websocket.sender = await redis_db.hget(chat_token, key = "sender") # Get the sender
-            websocket.receiver = await redis_db.hget(chat_token, key = "receiver")
-            websocket.chat_token = chat_token
-        elif data.get("type") == "API_TOKEN_RECIPIENT":
-            api_token = data.get("data")
-            if type(api_token) != list or type(api_token[0]) != str or type(api_token[1]) != str or len(api_token) > 2: # Format is user token, reciever id
-                await manager_chat.send_personal_message({"payload": "KILL_CONN", "type": "INVALID_IDENTITY_RESPONSE"}, websocket)
-                return await ws_close(websocket, 4004)
-            sender = await db.fetchval("SELECT user_id FROM users WHERE api_token = $1", str(api_token[0]))
-            if sender is None:
-                await manager_chat.send_personal_message({"payload": "KILL_CONN", "type": "NO_AUTH"}, websocket) # Invalid api token provided
-                return await ws_close(websocket, 4004)
-            sender = str(sender)
-            receiver = str(api_token[1])
-            ongoing_chat = await redis_db.hget(":".join([sender, receiver]), key = "ongoing")
-            if ongoing_chat is not None and ongoing_chat != "":
-                # Ongoing chat, tell client to transfer
-                await manager_chat.send_personal_message({"payload": "TRANSFER_CONN", "type": "CHAT_TOKEN", "data": ongoing_chat.decode('utf-8')}, websocket) # Chat Transfer
-                return await ws_close(websocket, 4005) # 4005 = Close
-            # Create a new chat token, hand it to user and close connection
-            chat_token = get_token(132)
-            await redis_db.hset(chat_token, mapping = {"blocked": "", "sender": sender, "receiver": receiver})
-            await redis_db.hset(":".join([sender, receiver]), key = "ongoing", value = chat_token)
-            await manager_chat.send_personal_message({"payload": "TRANSFER_CONN", "type": "CHAT_TOKEN", "data": chat_token}, websocket) # Chat Transfer
-            return await ws_close(websocket, 4005) # 4005 = Transfer
+                return await ws_close(websocket, 4006) # 4006 = Not Implemented Close
+        
         await manager_chat.send_personal_message({"payload": "KILL_CONN", "type": "NOT_IMPLEMENTED"}, websocket) # Chat functionality is not yet implemented
         return await ws_close(websocket, 4006) # 4006 = Not Implemented Close
 
@@ -692,42 +698,37 @@ async def stripetest_post_pay_api(request: Request):
         return abort(400)
 
     # Handle the checkout.session.completed event
-    if event['type'] == 'checkout.session.completed':
-        session = event['data']['object']
-        id = session["payment_intent"]
-        lm = session["livemode"]
-        line_items = stripe.checkout.Session.list_line_items(session['id'], limit=100)
-        user_id = int(session["metadata"]["user_id"])
-        quantity = int(line_items["data"][0]["quantity"])
-        token = session["metadata"]["token"]
-        # Save an order in your database, marked as 'awaiting payment'
-        await create_order(user_id, quantity, token, id, lm)
+    match event['type']:
+        case 'checkout.session.completed':
+            session = event['data']['object']
+            id = session["payment_intent"]
+            lm = session["livemode"]
+            line_items = stripe.checkout.Session.list_line_items(session['id'], limit=100)
+            user_id = int(session["metadata"]["user_id"])
+            quantity = int(line_items["data"][0]["quantity"])
+            token = session["metadata"]["token"]
+            # Save an order in your database, marked as 'awaiting payment'
+            await create_order(user_id, quantity, token, id, lm)
 
-        # Check if the order is already paid (e.g., from a card payment)
-        #
-        # A delayed notification payment will have an `unpaid` status, as
-        # you're still waiting for funds to be transferred from the customer's
-        # account.
-        if session.payment_status == "paid":
+            if session.payment_status == "paid":
+                # Fulfill the purchase
+                await fulfill_order(user_id, quantity, token, id, lm)
+
+        case 'checkout.session.async_payment_succeeded':
+            session = event['data']['object']
+            id = session["payment_intent"]
+            lm = session["livemode"]
+            line_items = stripe.checkout.Session.list_line_items(session['id'], limit=100)
+            user_id = int(session["metadata"]["user_id"])
+            quantity = int(line_items["data"][0]["quantity"])
+            token = session["metadata"]["token"]
             # Fulfill the purchase
             await fulfill_order(user_id, quantity, token, id, lm)
 
-    elif event['type'] == 'checkout.session.async_payment_succeeded':
-        session = event['data']['object']
-        id = session["payment_intent"]
-        lm = session["livemode"]
-        line_items = stripe.checkout.Session.list_line_items(session['id'], limit=100)
-        user_id = int(session["metadata"]["user_id"])
-        quantity = int(line_items["data"][0]["quantity"])
-        token = session["metadata"]["token"]
-        # Fulfill the purchase
-        await fulfill_order(user_id, quantity, token, id, lm)
-
-    elif event['type'] == 'checkout.session.async_payment_failed':
-        session = event['data']['object']
-
-        # Send an DM to the customer asking them to retry their order
-        await dm_customer_about_failed_payment(session)
+        case 'checkout.session.async_payment_failed':
+            session = event['data']['object']
+            # Send an DM to the customer asking them to retry their order
+            await dm_customer_about_failed_payment(session)
 
 async def create_order(user_id, quantity, token, id, lm):
     await db.execute("INSERT INTO user_payments (user_id, token, coins, paid, stripe_id, livemode) VALUES ($1, $2, $3, $4, $5, $6)", user_id, token, quantity, False, id, lm)
