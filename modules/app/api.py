@@ -560,10 +560,15 @@ async def chat_api_auth(websocket: WebSocket):
                     chat_token_curr = await redis_db.hget(chat_token, key = "id")
                     if chat_token_curr is None:
                         await redis_db.hset(chat_token, key = "id", value = websocket.sender)
+                        curr = await redis_db.hget(websocket.sender, key = "chat_tokens")
+                        if curr is None:
+                            await redis_db.hset(websocket.sender, key = "chat_tokens", value = chat_token)
+                        else:
+                            await redis_db.hset(websocket.sender, key = "chat_tokens", value = curr.decode("utf-8") + "," + chat_token)
                         await redis_db.hset(websocket.sender, key = "bot", value = "0") # They are not a bot as they have used a user token, this cannot change
                         flag = False
 
-                await manager_chat.send_personal_message({"payload": "TRANSFER_CONN", "type": "CHAT_TOKEN", "data": chat_token, "endpoint": "/api/ws/chat/join"}, websocket) # Chat Transfer
+                await manager_chat.send_personal_message({"payload": "TRANSFER_CONN", "type": "CHAT_TOKEN", "data": chat_token, "endpoint": "/api/ws/chat/recv"}, websocket) # Chat Transfer
                 return await ws_close(websocket, 4005) # 4005 = Transfer
             case "INSTALL_BOT":
                 api_token = data.get("data")
@@ -583,17 +588,25 @@ async def chat_api_auth(websocket: WebSocket):
                     chat_token_curr = await redis_db.hget(chat_token, key = "id")
                     if chat_token_curr is None:
                         await redis_db.hset(chat_token, key = "id", value = websocket.sender)
+                        curr = await redis_db.hget(websocket.sender, key = "chat_tokens")
+                        if curr is None:
+                            await redis_db.hset(websocket.sender, key = "chat_tokens", value = chat_token)
+                        else:
+                            await redis_db.hset(websocket.sender, key = "chat_tokens", value = curr + "," + chat_token)
                         await redis_db.hset(websocket.sender, key = "bot", value = "1") # They are a bot
                         flag = False
 
-                await manager_chat.send_personal_message({"payload": "TRANSFER_CONN", "type": "CHAT_TOKEN", "data": chat_token, "endpoint": "/api/ws/chat/main"}, websocket) # Chat Transfer
+                await manager_chat.send_personal_message({"payload": "TRANSFER_CONN", "type": "CHAT_TOKEN", "data": chat_token, "endpoint": "/api/ws/chat/recv"}, websocket) # Chat Transfer
                 return await ws_close(websocket, 4005) # 4005 = Transfer
 
             case _:
                 await manager_chat.send_personal_message({"payload": "KILL_CONN", "type": "INVALID_IDENTITY_RESPONSE"}, websocket)
                 return await ws_close(websocket, 4006) # 4006 = Not Implemented Close
 
-@router.websocket("/api/ws/chat/main")
+async def recv_global_msg(msg):
+    print(msg)
+
+@router.websocket("/api/ws/chat/recv")
 async def chat_api(websocket: WebSocket):
     await manager_chat.connect(websocket)
     if websocket.chat_token == None:
@@ -601,16 +614,40 @@ async def chat_api(websocket: WebSocket):
         try:
             chat_token = await websocket.receive_json()
             print("HERE")
-            if chat_token.get("payload") != "IDENTITY_RESPONSE" or api_token.get("type") != "CHAT_TOKEN":
+            if chat_token.get("payload") != "IDENTITY_RESPONSE" or chat_token.get("type") != "CHAT_TOKEN":
                 raise TypeError
         except:
             await manager_chat.send_personal_message({"payload": "KILL_CONN", "type": "INVALID_IDENTITY_RESPONSE"}, websocket)
             return await ws_close(websocket, 4004)
         chat_token = chat_token.get("data")
-        chat_token_curr = await redis_db.hget(chat_token, key = "id")
-        if type(chat_token) != str: # Format is user token
-            await manager_chat.send_personal_message({"payload": "KILL_CONN", "type": "INVALID_IDENTITY_RESPONSE"}, websocket) 
+        if chat_token is None or type(chat_token) != str:
+            await manager_chat.send_personal_message({"payload": "KILL_CONN", "type": "NO_AUTH"}, websocket) # Invalid api token provided
             return await ws_close(websocket, 4004)
+        chat_token_curr = await redis_db.hget(chat_token, key = "id")
+        if chat_token_curr is None:
+            await manager_chat.send_personal_message({"payload": "KILL_CONN", "type": "NO_AUTH"}, websocket) # Invalid api token provided
+            return await ws_close(websocket, 4004)
+    try:
+        messages = await redis_db.hget("global_chat", key = "message")
+        if messages is None:
+            messages = b"" # No messages
+        await manager_chat.send_personal_message({"payload": "MESSAGE", "type": "BULK", "data": messages.decode("utf-8")}, websocket) # Send all messages in bulk
+        while True:
+            pubsub = redis_db.pubsub()
+            await pubsub.subscribe("global_chat_channel")
+            async for msg in pubsub.listen():
+                print("Got msg")
+                if type(msg['data']) != bytes:
+                    continue
+                try:
+                    msg_info = orjson.loads(msg['data'].decode('utf-8'))
+                except:
+                    msg_info = {"payload": "MESSAGE", "type": "NORMAL", "data": msg['data'].decode("utf-8"), "context": {"id": ""}}
+                await manager_chat.send_personal_message(msg_info, websocket) # Send all messages in bulk
+    except Exception as e:
+        print(e)
+        await pubsub.unsubscribe()
+        await manager_chat.disconnect(websocket)
 
 class User(BaseModel):
     id: int
