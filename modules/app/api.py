@@ -431,34 +431,6 @@ async def bots_search_page(request: Request, query: str):
     """For any potential Android/iOS app, crawlers etc. Query is the query to search for"""
     return await render_search(request = request, q = query, api = True)
 
-async def ws_send_events():
-    manager.fl_loaded = True
-    while True:
-        sent_id = []
-        for ws in manager.active_connections:
-            for bid in ws.bot_id:
-                ws_events = {str(bid): (await redis_db.hget(str(bid), key = "ws"))}
-                if ws_events[str(bid)] is not None:
-                    # Make sure payload is made a dict
-                    ws_events[str(bid)] = orjson.loads(ws_events[str(bid)])
-                    for key in ws_events[str(bid)].copy().keys():
-                        sent_id.append(sent_id)
-                        if key == "status" or key in sent_id:
-                            continue
-                        try:
-                            ws_events[str(bid)][key] = orjson.loads(ws_events[str(bid)][key])
-                            try:
-                                del ws_events[str(bid)]["status"]
-                                del ws_events[str(bid)][key]["status"]
-                            except:
-                                pass
-                            del ws_events[str(bid)][key]['id']
-                        except:
-                            pass
-                    rc = await manager.send_personal_message({"payload": "EVENTS", "type": "EVENTS_V1", "data": ws_events}, ws)
-                    await redis_db.hdel(str(bid), "ws")
-        sent_id = [] # Empty the list
-
 class MDRequest(BaseModel):
     markdown: str
 
@@ -521,11 +493,35 @@ async def websocket_bot(websocket: WebSocket):
             return await ws_close(websocket, 4004)
     await manager.send_personal_message({"payload": "STATUS", "type": "READY", "data": [str(bid) for bid in websocket.bot_id]}, websocket)
     try:
-        asyncio.create_task(ws_send_events())
-        while True:
-            await asyncio.sleep(1) # Keep Waiting Forever
-    except WebSocketDisconnect:
+        ini_events = {}
+        for bot in websocket.bot_id:
+            events = await redis_db.hget(str(bot), key = "ws")
+            if events is None:
+                events = {} # Nothing
+            else:
+                try:
+                    events = orjson.loads(events)
+                except Exception as exc:
+                    print(exc)
+                    events = {}
+            ini_events[str(bot)] = events
+        await manager.send_personal_message({"payload": "EVENTS", "type": "EVENTS_V1", "data": ini_events}, websocket)
+        pubsub = redis_db.pubsub()
+        for bot in websocket.bot_id:
+            await pubsub.subscribe(str(bot))
+        async for msg in pubsub.listen():
+            print(msg)
+            if msg is None or type(msg.get("data")) != bytes:
+                continue
+            await manager.send_personal_message({"payload": "EVENTS", "type": "EVENTS_V1", "data": {msg.get("channel").decode("utf-8"): orjson.loads(msg.get("data"))}}, websocket)
+    except:
+        try:
+            await pubsub.unsubscribe()
+        except:
+            pass
         await manager.disconnect(websocket)
+
+# Chat
 
 @router.websocket("/api/ws/chat/auth")
 async def chat_api_auth(websocket: WebSocket):
@@ -603,9 +599,6 @@ async def chat_api_auth(websocket: WebSocket):
                 await manager_chat.send_personal_message({"payload": "KILL_CONN", "type": "INVALID_IDENTITY_RESPONSE"}, websocket)
                 return await ws_close(websocket, 4006) # 4006 = Not Implemented Close
 
-async def recv_global_msg(msg):
-    print(msg)
-
 @router.websocket("/api/ws/chat/recv")
 async def chat_api(websocket: WebSocket):
     await manager_chat.connect(websocket)
@@ -632,22 +625,26 @@ async def chat_api(websocket: WebSocket):
         if messages is None:
             messages = b"" # No messages
         await manager_chat.send_personal_message({"payload": "MESSAGE", "type": "BULK", "data": messages.decode("utf-8")}, websocket) # Send all messages in bulk
-        while True:
-            pubsub = redis_db.pubsub()
-            await pubsub.subscribe("global_chat_channel")
-            async for msg in pubsub.listen():
-                print("Got msg")
-                if type(msg['data']) != bytes:
-                    continue
-                try:
-                    msg_info = orjson.loads(msg['data'].decode('utf-8'))
-                except:
-                    msg_info = {"payload": "MESSAGE", "type": "NORMAL", "data": msg['data'].decode("utf-8"), "context": {"id": ""}}
-                await manager_chat.send_personal_message(msg_info, websocket) # Send all messages in bulk
+        pubsub = redis_db.pubsub()
+        await pubsub.subscribe("global_chat_channel")
+        async for msg in pubsub.listen():
+            print("Got msg")
+            if type(msg['data']) != bytes:
+                continue
+            try:
+                msg_info = orjson.loads(msg['data'].decode('utf-8'))
+            except:
+                continue
+            await manager_chat.send_personal_message(msg_info, websocket) # Send all messages in bulk
     except Exception as e:
         print(e)
         await pubsub.unsubscribe()
         await manager_chat.disconnect(websocket)
+
+async def chat_publish_message(msg):
+    pass
+
+# End Chat
 
 class User(BaseModel):
     id: int

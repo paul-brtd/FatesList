@@ -740,8 +740,11 @@ async def add_ws_event(bot_id: int, ws_event: dict) -> None:
         curr_ws_events = {}
     else:
         curr_ws_events = orjson.loads(curr_ws_events)
-    curr_ws_events[ws_event["id"]] = ws_event
-    await redis_db.hset(str(bot_id), key = "ws", value = orjson.dumps(curr_ws_events))
+    id = ws_event["id"]
+    del ws_event["id"]
+    curr_ws_events[id] = ws_event
+    await redis_db.hset(str(bot_id), key = "ws", value = orjson.dumps(curr_ws_events)) # Add it to curr_ws_events
+    await redis_db.publish(str(bot_id), orjson.dumps({id: ws_event})) # Publish it to ws_events
 
 class BotActions():
     def __init__(self, **kwargs):
