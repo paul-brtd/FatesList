@@ -74,10 +74,10 @@ async def validation_exception_handler(request, exc):
 
 print("FATES LIST: Loading Modules")
 # Include all the modules
-for f in os.listdir("modules/app"):
-    if not f.startswith("_"):
-        print("APP MODLOAD: modules.app." + f.replace(".py", ""))
-        route = importlib.import_module("modules.app." + f.replace(".py", ""))
+for f in os.listdir("modules/discord"):
+    if not f.startswith("_") or f.startswith("."):
+        print("Discord: Loading modules.discord." + f.replace(".py", ""))
+        route = importlib.import_module("modules.discord." + f.replace(".py", ""))
         app.include_router(route.router)
 
 async def setup_db():
