@@ -1,7 +1,0 @@
-aiohttp
-aiohttp_requests
-fastapi
-importlib
-requests
-uvicorn
-uvloop
