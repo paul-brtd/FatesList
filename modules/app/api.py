@@ -554,7 +554,7 @@ async def chat_api(websocket: WebSocket):
             await manager_chat.send_personal_message({"payload": "KILL_CONN", "type": "NO_AUTH"}, websocket) # Invalid api token provided
             return await ws_close(websocket, 4004)
     websocket.authorized = True
-    await manager_chat.send_personal_message({"payload": "CHAT_USER", "type": "CHAT", "data": sender}, websocket)    
+    await manager_chat.send_personal_message({"payload": "CHAT_USER", "type": "CHAT", "data": (await get_any(sender))}, websocket)    
     try:
         await redis_db.incrbyfloat(str(sender) + "_cli_count")
         messages = await redis_db.hget("global_chat", key = "message")

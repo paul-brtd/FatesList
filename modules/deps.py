@@ -18,7 +18,7 @@ async def rl_key_func(request: Request) -> str:
     else:
         return ip_check(request)
 
-async def _internal_user_fetch(userid: str, bot_only: bool) -> Optional[dict]:
+async def _internal_user_fetch(userid: str, user_type: int) -> Optional[dict]:
     # Check if a suitable version is in the cache first before querying Discord
 
     CACHE_VER = 6 # Current cache ver
@@ -38,12 +38,12 @@ async def _internal_user_fetch(userid: str, bot_only: bool) -> Optional[dict]:
         else:
             print("Using cache for id ", userid)
             fetch = False
-            if cache.get("valid_user") and bot_only and cache["bot"]:
+            if cache.get("valid_user") and ((user_type == 2 and cache["bot"]) or user_type == 3):
                 fetch = True
-            elif cache.get("valid_user") and not bot_only:
+            elif cache.get("valid_user") and user_type == 1 and not cache["bot"]:
                 fetch = True
             if fetch:
-                return {"id": userid, "username": cache['username'], "avatar": cache['avatar'], "disc": cache["disc"], "status": cache["status"]}
+                return {"id": userid, "username": cache['username'], "avatar": cache['avatar'], "disc": cache["disc"], "status": cache["status"], "bot": cache["bot"]}
             return None
 
     # Add ourselves to cache
@@ -92,19 +92,22 @@ async def _internal_user_fetch(userid: str, bot_only: bool) -> Optional[dict]:
     await redis_db.hset(str(userid), key = "cache", value = cache)
 
     fetch = False
-    if bot_only and valid_user and bot:
+    if valid_user and ((user_type == 2 and bot) or user_type == 3):
         fetch = True
-    elif not bot_only and valid_user and not bot:
+    elif user_type == 1 and valid_user and not bot:
         fetch = True
     if fetch:
-        return {"id": userid, "username": username, "avatar": avatar, "disc": disc, "status": status}
+        return {"id": userid, "username": username, "avatar": avatar, "disc": disc, "status": status, "bot": bot}
     return None
 
 async def get_user(userid: int) -> Optional[dict]:
-    return await _internal_user_fetch(str(int(userid)), False)
+    return await _internal_user_fetch(str(int(userid)), 1)
 
 async def get_bot(userid: int) -> Optional[dict]:
-    return await _internal_user_fetch(str(int(userid)), True)
+    return await _internal_user_fetch(str(int(userid)), 2)
+
+async def get_any(userid: int) -> Optional[dict]:
+    return await _internal_user_fetch(str(int(userid)), 3)
 
 # Internal backend entry to check if one role is in staff and return a dict of that entry if so
 def is_staff_internal(staff_json: dict, role: int) -> dict:
