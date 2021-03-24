@@ -635,103 +635,15 @@ async def set_user_description_api(request: Request, user_id: int, desc: UserDes
     await db.execute("UPDATE users SET description = $1 WHERE user_id = $2", desc.description, user_id)
     return {"done": True, "reason": None}
 
-@router.post("/stripe/checkout", dependencies=[Depends(RateLimiter(times=6, minutes=3))], tags = ["API (Internal)"])
-async def stripetest_post_api(request: Request, user_id: int, discount: Optional[str] = "GENERIC_NULL_DISCOUNT"):
-    line_items = [{
-            'price_data': {
-                'currency': 'usd',
-                'product_data': {
-                    'name': 'Coin',
-                },
-                'unit_amount': 50,
-            },
-            'adjustable_quantity': {
-                'enabled': True,
-                'minimum': 3,
-            },
-            'quantity': 3,
-        }]
-    metadata = {
-            'user_id': user_id,
-            'token': get_token(256)
-        }
-    try:
-        session = stripe.checkout.Session.create(
-            payment_method_types=['card'],
-            line_items=line_items,
-            metadata=metadata,
-            discounts=[{
-                'coupon': f'{discount}',
-            }],
-            mode='payment',
-            success_url='https://fateslist.xyz/fates/stripe/success',
-            cancel_url='https://fateslist.xyz/fates/stripe/cancel',
-        )
-    except stripe.error.InvalidRequestError:
-        session = stripe.checkout.Session.create(
-            payment_method_types=['card'],
-            line_items=line_items,
-            metadata=metadata,
-            mode='payment',
-            success_url='https://fateslist.xyz/fates/stripe/success',
-            cancel_url='https://fateslist.xyz/fates/stripe/cancel',
-        )
-    return {"id": session.id}
 
-@router.post("/stripe/webhook", tags = ["API (Internal)"])
-async def stripetest_post_pay_api(request: Request):
-    payload = await request.body()
-    sig_header = request.headers['stripe-signature']
-    event = None
-    try:
-        event = stripe.Webhook.construct_event(
-            payload, sig_header, stripe_webhook_secret
-        )
-    except ValueError as e:
-        return abort(400)
-
-    except stripe.error.SignatureVerificationError as e:
-        return abort(400)
-
-    # Handle the checkout.session.completed event
-    match event['type']:
-        case 'checkout.session.completed':
-            session = event['data']['object']
-            id = session["payment_intent"]
-            lm = session["livemode"]
-            line_items = stripe.checkout.Session.list_line_items(session['id'], limit=100)
-            user_id = int(session["metadata"]["user_id"])
-            quantity = int(line_items["data"][0]["quantity"])
-            token = session["metadata"]["token"]
-            # Save an order in your database, marked as 'awaiting payment'
-            await create_order(user_id, quantity, token, id, lm)
-
-            if session.payment_status == "paid":
-                # Fulfill the purchase
-                await fulfill_order(user_id, quantity, token, id, lm)
-
-        case 'checkout.session.async_payment_succeeded':
-            session = event['data']['object']
-            id = session["payment_intent"]
-            lm = session["livemode"]
-            line_items = stripe.checkout.Session.list_line_items(session['id'], limit=100)
-            user_id = int(session["metadata"]["user_id"])
-            quantity = int(line_items["data"][0]["quantity"])
-            token = session["metadata"]["token"]
-            # Fulfill the purchase
-            await fulfill_order(user_id, quantity, token, id, lm)
-
-        case 'checkout.session.async_payment_failed':
-            session = event['data']['object']
-            # Send an DM to the customer asking them to retry their order
-            await dm_customer_about_failed_payment(session)
+# Generic methods to add coins
 
 async def create_order(user_id, quantity, token, id, lm):
     await db.execute("INSERT INTO user_payments (user_id, token, coins, paid, stripe_id, livemode) VALUES ($1, $2, $3, $4, $5, $6)", user_id, token, quantity, False, id, lm)
     try:
         guild = client.get_guild(main_server)
         user = guild.get_member(user_id)
-        await user.send(f"You have successfully created an order for {quantity} coins! Your payment id is {id}. After stripe confirms your payment. The coins will be added to your account! DM a Fates List Admin with your payment id if you do not get the coins within an hour.")
+        await user.send(f"You have successfully created an order for {quantity} coins! Your payment id is {id}. After our payment processor confirms your payment. The coins will be added to your account! DM a Fates List Admin with your payment id if you do not get the coins within an hour.")
     except:
         pass
 
