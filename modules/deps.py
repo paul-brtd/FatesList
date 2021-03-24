@@ -522,11 +522,11 @@ class ConnectionManager:
             except:
                 websocket.api_token = []
                 websocket.bot_id = []
-                websocket.chat_token = None
+                websocket.authorized = False
         else:
             websocket.api_token = []
             websocket.bot_id = []
-            websocket.chat_token = None
+            websocket.authorized = False
         self.active_connections.append(websocket)
 
     async def disconnect(self, websocket: WebSocket):
