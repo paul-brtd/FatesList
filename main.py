@@ -52,7 +52,7 @@ builtins.client_servers = discord.Client(intents=intent_server)
 
 limiter = FastAPILimiter
 app = FastAPI(default_response_class = ORJSONResponse, docs_url = None, redoc_url = "/api/docs/endpoints")
-app.add_middleware(SessionMiddleware, secret_key=session_key)
+app.add_middleware(SessionMiddleware, secret_key=session_key, https_only = True, max_age = 60*60*12, session_cookie = "fateslist_session_cookie") # 1 day expiry cookie
 
 app.add_middleware(CSRFProtectMiddleware, csrf_secret=csrf_secret)
 app.add_middleware(ProxyHeadersMiddleware)
@@ -67,13 +67,16 @@ app.add_middleware(ProxyHeadersMiddleware)
 async def validation_exception_handler(request, exc):
     return await FLError.error_handler(request, exc)
 
-print("FATES LIST: Loading Modules")
+print("Loading discord modules for Fates List")
 # Include all the modules
 for f in os.listdir("modules/discord"):
     if not f.startswith("_") or f.startswith("."):
-        print("Discord: Loading modules.discord." + f.replace(".py", ""))
-        route = importlib.import_module("modules.discord." + f.replace(".py", ""))
+        path = "modules.discord." + f.replace(".py", "")
+        print("Discord: Loading " + f.replace(".py", "") + " with path " + path)
+        route = importlib.import_module(path)
         app.include_router(route.router)
+
+print("All discord modules have loaded successfully!")
 
 async def setup_db():
     db = await asyncpg.create_pool(host="127.0.0.1", port=5432, user=pg_user, password=pg_pwd, database="fateslist")
@@ -116,6 +119,7 @@ for tag in SERVER_TAGS.keys():
 
 @app.middleware("http")
 async def add_process_time_header(request: Request, call_next):
+    print(request.url)
     start_time = time.time()
     response = await call_next(request)
     process_time = time.time() - start_time
