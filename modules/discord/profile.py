@@ -22,13 +22,13 @@ async def profile_of_user(request: Request, userid: int):
     personal = False # Initially
     user = await get_user(int(userid))
     if not user:
-        return templates.e(request, "Profile Not Found", 404)
+        return await templates.e(request, "Profile Not Found", 404)
     if "userid" in request.session.keys():
         try:
             guild = client.get_guild(main_server)
             userobj = guild.get_member(int(request.session.get("userid")))
         except:
-            return templates.TemplateResponse("message.html", {"request": request, "message": "Still connecting to Discord. Please refresh in a minute or two"})
+            return await templates.TemplateResponse("message.html", {"request": request, "message": "Still connecting to Discord. Please refresh in a minute or two"})
         if userid == int(request.session["userid"]):
             personal = True
         else:
@@ -53,5 +53,5 @@ async def profile_of_user(request: Request, userid: int):
     if user_dpy is None:
         user_dpy = await client.fetch_user(int(userid))
     print(user_dpy)
-    return templates.TemplateResponse("profile.html", {"request": request, "username": request.session.get("username", False), "user_bots": user_bots, "user": user, "avatar": request.session.get("avatar"), "userid": userid, "personal": personal, "badges": get_badges(user_dpy, user_info["badges"], user_info["certified"]), "user_info": user_info, "coins": user_info["coins"]})
+    return await templates.TemplateResponse("profile.html", {"request": request, "username": request.session.get("username", False), "user_bots": user_bots, "user": user, "avatar": request.session.get("avatar"), "userid": userid, "personal": personal, "badges": get_badges(user_dpy, user_info["badges"], user_info["certified"]), "user_info": user_info, "coins": user_info["coins"]})
 

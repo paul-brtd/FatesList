@@ -348,7 +348,7 @@ class BotStats(BaseModel):
     shards: Optional[list] = None
     user_count: Optional[int] = None
 
-@router.post("/bots/{bot_id}/stats", tags = ["API"], response_model = APIResponse)
+@router.post("/bots/{bot_id}/stats", tags = ["API"], response_model = APIResponse, dependencies=[Depends(RateLimiter(times=5, minutes=1))])
 async def set_bot_stats_api(request: Request, bt: BackgroundTasks, bot_id: int, api: BotStats, Authorization: str = Header("INVALID_API_TOKEN")):
     """
     This endpoint allows you to set the guild + shard counts for your bot

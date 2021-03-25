@@ -14,7 +14,7 @@ async def rl_key_func(request: Request) -> str:
             return ip_check(request)
         if check["certified"]:
             return get_token(32)
-        return r
+        return str(check["bot_id"])
     else:
         return ip_check(request)
 
@@ -349,10 +349,10 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, review:
     try:
         bot = dict(await db.fetchrow("SELECT js_whitelist, api_token, prefix, shard_count, queue, description, bot_library AS library, tags, banner, website, certified, votes, servers, bot_id, discord AS support, owner, extra_owners, banner, banned, disabled, github, features, invite_amount, css, html_long_description AS html_ld, long_description, donate FROM bots WHERE bot_id = $1", bot_id))
     except:
-        return templates.e(request, "Bot Not Found")
+        return await templates.e(request, "Bot Not Found")
     print("Got here")
     if bot is None:
-        return templates.e(request, "Bot Not Found")
+        return await templates.e(request, "Bot Not Found")
     if not bot["html_ld"]:
         ldesc = emd(markdown.markdown(bot['long_description'], extensions=["extra", "abbr", "attr_list", "def_list", "fenced_code", "footnotes", "tables", "admonition", "codehilite", "meta", "nl2br", "sane_lists", "toc", "wikilinks", "smarty", "md_in_html"]))
     else:
@@ -407,7 +407,7 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, review:
         bot = dict(bot)
         bot = bot | {"votes": human_format(bot["votes"]), "servers": human_format(bot["servers"]), "banner": banner.replace("\"", "").replace("'", "").replace("http://", "https://").replace("(", "").replace(")", "").replace("file://", ""), "shards": human_format(bot["shard_count"]), "owner_pretty": await get_user(bot["owner"]), "extra_owners": extra_owners, "features": bot_features, "long_description": ldesc.replace("window.location", "").replace("document.ge", ""), "user": (await get_bot(bot_id))}
     else:
-        return templates.e(request, "Bot Not Found")
+        return await templates.e(request, "Bot Not Found")
     _tags_fixed_bot = [tag for tag in tags_fixed if tag["id"] in bot["tags"]]
     form = await Form.from_formdata(request)
     bt.add_task(add_ws_event, bot_id, {"payload": "event", "id": str(uuid.uuid4()), "event": "view", "context": {"user": request.session.get('userid'), "widget": str(widget)}})
@@ -417,7 +417,7 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, review:
     else:
         f = "bot.html"
         reviews = await parse_reviews(bot_id)
-    return templates.TemplateResponse(f, {"request": request, "bot": bot, "bot_id": bot_id, "tags_fixed": _tags_fixed_bot, "form": form, "avatar": request.session.get("avatar"), "promos": promos, "maint": maint, "bot_admin": bot_admin, "review": review, "guild": main_server, "botp": True, "bot_reviews": reviews[0], "average_rating": reviews[1], "replace_last": replace_last})
+    return await templates.TemplateResponse(f, {"request": request, "bot": bot, "bot_id": bot_id, "tags_fixed": _tags_fixed_bot, "form": form, "avatar": request.session.get("avatar"), "promos": promos, "maint": maint, "bot_admin": bot_admin, "review": review, "guild": main_server, "botp": True, "bot_reviews": reviews[0], "average_rating": reviews[1], "replace_last": replace_last})
 
 #    id uuid primary key DEFAULT uuid_generate_v4(),
 #   bot_id bigint not null,
@@ -459,7 +459,7 @@ async def render_index(request: Request, api: bool):
     certified_bots = await parse_bot_list((await do_index_query("and certified = true ORDER BY votes")))
     base_json = {"tags_fixed": tags_fixed, "top_voted": top_voted, "new_bots": new_bots, "certified_bots": certified_bots, "roll_api": "/api/bots/random"}
     if not api:
-        return templates.TemplateResponse("index.html", {"request": request, "random": random} | base_json)
+        return await templates.TemplateResponse("index.html", {"request": request, "random": random} | base_json)
     else:
         return base_json
 
@@ -493,7 +493,7 @@ async def render_search(request: Request, q: str, api: bool):
         fetch = await db.fetch(abc)
     search_bots = await parse_bot_list(fetch)
     if not api:
-        return templates.TemplateResponse("search.html", {"request": request, "search_bots": search_bots, "tags_fixed": tags_fixed, "query": q, "profile_search": False})
+        return await templates.TemplateResponse("search.html", {"request": request, "search_bots": search_bots, "tags_fixed": tags_fixed, "query": q, "profile_search": False})
     else:
         return {"search_bots": search_bots, "tags_fixed": tags_fixed, "query": q, "profile_search": False}
 
@@ -597,7 +597,7 @@ async def get_events(api_token: Optional[str] = None, bot_id: Optional[str] = No
 
 class templates():
     @staticmethod
-    def TemplateResponse(f, arg_dict):
+    async def TemplateResponse(f, arg_dict, not_error = True):
         guild = client.get_guild(main_server)
         try:
             request = arg_dict["request"]
@@ -610,6 +610,10 @@ class templates():
                 user = guild.get_member(int(request.session["userid"]))
             except:
                 user = None
+            banned = await db.fetchval("SELECT banned FROM users WHERE user_id = $1", int(request.session["userid"]))
+            if banned == 1 and not_error:
+                ban_type = "global"
+                return await templates.e(request, f"You have been {ban_type} banned from Fates List<br/>", status_code = 403)
             if user is not None:
                 request.session["staff"] = is_staff(staff_roles, user.roles, 2)
             else:
@@ -628,13 +632,13 @@ class templates():
         return _templates.TemplateResponse(f, arg_dict, status_code = status)
 
     @staticmethod
-    def error(f, arg_dict, status_code):
+    async def error(f, arg_dict, status_code):
         arg_dict["status_code"] = status_code
-        return templates.TemplateResponse(f, arg_dict)
+        return await templates.TemplateResponse(f, arg_dict, not_error = False)
 
     @staticmethod
-    def e(request, reason: str, status_code: int = 404, *, main: Optional[str] = ""):
-        return templates.error("message.html", {"request": request, "message": main, "context": reason, "retmain": True}, status_code)
+    async def e(request, reason: str, status_code: int = 404, *, main: Optional[str] = ""):
+        return await templates.error("message.html", {"request": request, "message": main, "context": reason, "retmain": True}, status_code)
 
 def url_startswith(url, begin, slash = True):
     # Slash indicates whether to check /route or /route/
@@ -732,7 +736,7 @@ class FLError():
                 return await http_exception_handler(request, exc)
             else:
                 return await request_validation_exception_handler(request, exc)
-        return templates.e(request, msg, code)
+        return await templates.e(request, msg, code)
 
 async def add_ws_event(bot_id: int, ws_event: dict) -> None:
     """A WS Event must have the following format:

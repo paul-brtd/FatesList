@@ -26,7 +26,7 @@ async def admin_dashboard(request:Request, stats: Optional[int] = 0):
         banned = await parse_bot_list(banned)
         queue_amount = len(queue)
         form = await Form.from_formdata(request)
-        return templates.TemplateResponse("admin_stats.html",{"request": request, "cert": certified_bots,"bots": bots, "queue_bots": queue_bots, "queue_amount": queue_amount, "admin": stats != 1 and staff[1] == 4, "mod": stats != 1 and staff[1] == 3, "owner": stats != 1 and staff[1] == 5, "bot_review": stats != 1 and staff[1] == 2, "form": form, "banned": banned, "stats": stats == 1})
+        return await templates.TemplateResponse("admin_stats.html",{"request": request, "cert": certified_bots,"bots": bots, "queue_bots": queue_bots, "queue_amount": queue_amount, "admin": stats != 1 and staff[1] == 4, "mod": stats != 1 and staff[1] == 3, "owner": stats != 1 and staff[1] == 5, "bot_review": stats != 1 and staff[1] == 2, "form": form, "banned": banned, "stats": stats == 1})
     else:
         return RedirectResponse("/", status_code = 303)
 
@@ -58,16 +58,16 @@ async def admin_api(request: Request, bt: BackgroundTasks, admin: str = FForm(""
         channel = client.get_channel(bot_logs)
         owner=str(request.session["userid"])
         await channel.send(f"<@{owner}> certified the bot <@{bot_id}>")
-        return templates.TemplateResponse("message.html", {"request": request, "message": "Hey mikes, i hope it certified the bot!", "username": request.session.get("username", False)})
+        return await templates.TemplateResponse("message.html", {"request": request, "message": "Hey mikes, i hope it certified the bot!", "username": request.session.get("username", False)})
     elif admin=="uncertify":
         await db.execute("UPDATE bots SET certified = false WHERE bot_id = $1", bot_id)
         channel = client.get_channel(bot_logs)
         owner=str(request.session["userid"])
         await channel.send(f"<@{owner}> uncertified the bot <@{bot_id}>")
-        return templates.TemplateResponse("message.html", {"request": request, "message": "Hey mikes, i hope it uncertified the bot!", "username": request.session.get("username", False)})
+        return await templates.TemplateResponse("message.html", {"request": request, "message": "Hey mikes, i hope it uncertified the bot!", "username": request.session.get("username", False)})
     elif admin=="reset":
         bt.add_task(stat_update_bt)        
-        return templates.TemplateResponse("message.html", {"request": request, "message": "Hey mikes, i hope your wish comes true ;)", "username": request.session.get("username", False)})
+        return await templates.TemplateResponse("message.html", {"request": request, "message": "Hey mikes, i hope your wish comes true ;)", "username": request.session.get("username", False)})
     else:
         return RedirectResponse("/admin/console", status_code = 303)
 
@@ -92,13 +92,13 @@ async def ban_user_admin(request: Request, user_id: int = FForm(1), ban_type: in
     if user_ban is None or user_ban.roles is None:
         pass
     elif is_staff(staff_roles, user_ban.roles, 2)[0] and ban_type != 0:
-        return templates.TemplateResponse("message.html", {"request": request, "message": "You cannot ban Fates List Staff..."})
+        return await templates.TemplateResponse("message.html", {"request": request, "message": "You cannot ban Fates List Staff..."})
     if not s[0]:
         return RedirectResponse("/")
     if user_id is None or ban_type not in [0, 1, 2, 3]:
         return RedirectResponse("/")
     await db.execute("UPDATE users SET banned = $1 WHERE user_id = $2", ban_type, user_id)
-    return templates.TemplateResponse("message.html", {"request": request, "message": "Banned User Successfully"})
+    return await templates.TemplateResponse("message.html", {"request": request, "message": "Banned User Successfully"})
 
 
 @router.post("/review/{bot_id}")
@@ -151,7 +151,7 @@ async def review_tool(request: Request, bot_id: int, accept: str = FForm(""), de
                 else:
                     await eo_member.add_roles(guild.get_role(bot_dev_role))
 
-        return templates.TemplateResponse("last.html",{"request":request,"message":"Bot accepted; You MUST Invite it by this url","username":request.session["username"],"url":f"https://discord.com/oauth2/authorize?client_id={str(bot_id)}&scope=bot&guild_id={guild.id}&disable_guild_select=true&permissions=0"})
+        return await templates.TemplateResponse("last.html",{"request":request,"message":"Bot accepted; You MUST Invite it by this url","username":request.session["username"],"url":f"https://discord.com/oauth2/authorize?client_id={str(bot_id)}&scope=bot&guild_id={guild.id}&disable_guild_select=true&permissions=0"})
     elif accept == "unverify":
         b = await db.fetchrow("SELECT owner FROM bots WHERE bot_id = $1", bot_id)
         if b is None:
@@ -162,7 +162,7 @@ async def review_tool(request: Request, bot_id: int, accept: str = FForm(""), de
         unverify_embed = discord.Embed(title="Bot Unverified!", description = f"<@{bot_id}> by <@{b['owner']}> has been unverified", color=discord.Color.red())
         unverify_embed.add_field(name="Reason", value=unverify_reason)
         await channel.send(embed = unverify_embed)
-        return templates.TemplateResponse("message.html",{"request":request,"message":"Bot unverified. Please carry on with your day"})
+        return await templates.TemplateResponse("message.html",{"request":request,"message":"Bot unverified. Please carry on with your day"})
     elif accept == "false":
         b = await db.fetchrow("SELECT owner FROM bots WHERE bot_id = $1", bot_id)
         if b is None:
@@ -179,6 +179,6 @@ async def review_tool(request: Request, bot_id: int, accept: str = FForm(""), de
                 await member.send(embed = deny_embed)
         except:
             pass
-        return templates.TemplateResponse("message.html",{"request":request,"message":"Bot denied. Please carry on with your day"})
+        return await templates.TemplateResponse("message.html",{"request":request,"message":"Bot denied. Please carry on with your day"})
     else:
         return RedirectResponse("/")

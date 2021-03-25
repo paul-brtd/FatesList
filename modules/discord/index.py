@@ -32,7 +32,7 @@ async def vanity_bot_uri(request: Request, bt: BackgroundTasks, vanity: str):
     vurl = await vanity_bot(vanity)
     print("Vanity: ", vurl)
     if vurl is None:
-        return templates.e(request, "Invalid Vanity")
+        return await templates.e(request, "Invalid Vanity")
     if vurl[1] == "profile":
         return abort(404)
     return await render_bot(bt = bt, bot_id = vurl[0], review = False, widget = False, request = request)
@@ -41,7 +41,7 @@ async def vanity_bot_uri(request: Request, bt: BackgroundTasks, vanity: str):
 async def vanity_edit(request: Request, vanity: str, bt: BackgroundTasks):
     vurl = await vanity_bot(vanity)
     if vurl is None:
-        return templates.e(request, "Invalid Vanity")
+        return await templates.e(request, "Invalid Vanity")
     if vurl[1] == "profile":
         return abort(404)
     eurl = "/".join([site_url, vurl[1], str(vurl[0]), "edit"])
@@ -51,7 +51,7 @@ async def vanity_edit(request: Request, vanity: str, bt: BackgroundTasks):
 async def vanity_vote(request: Request, vanity: str):
     vurl = await vanity_bot(vanity)
     if vurl is None:
-        return templates.e(request, "Invalid Vanity")
+        return await templates.e(request, "Invalid Vanity")
     if vurl[1] == "profile":
         return abort(404)
     eurl = "/".join([site_url, vurl[1], str(vurl[0]), "vote"])
@@ -61,7 +61,7 @@ async def vanity_vote(request: Request, vanity: str):
 async def vanity_invite(request: Request, vanity: str):
     vurl = await vanity_bot(vanity)
     if vurl is None:
-        return templates.e(request, "Invalid Vanity")
+        return await templates.e(request, "Invalid Vanity")
     if vurl[1] == "profile":
         return abort(404)
     eurl = "/".join([site_url, vurl[1], str(vurl[0]), "invite"])
@@ -78,7 +78,7 @@ async def features_view(request: Request, name: str):
     print(feature_bots)
     bots = await db.fetch(feature_bots)
     bot_obj = await parse_bot_list(bots)
-    return templates.TemplateResponse("feature.html", {"request": request, "name": name, "feature": features[name], "bots": bot_obj})
+    return await templates.TemplateResponse("feature.html", {"request": request, "name": name, "feature": features[name], "bots": bot_obj})
 
 @router.get("/fates/stats")
 async def stats():
@@ -86,13 +86,13 @@ async def stats():
 
 @router.get("/api/docs")
 async def api_docs_view(request: Request):
-    return templates.TemplateResponse("api_docs.html", {"request": request})
+    return await templates.TemplateResponse("api_docs.html", {"request": request})
 
 @router.get("/fates/tos")
 async def tos_page(request: Request):
-    return templates.TemplateResponse("tos.html", {"request": request})
+    return await templates.TemplateResponse("tos.html", {"request": request})
 
 @router.get("/coins/buy")
 async def stripetest(request: Request):
-    return templates.TemplateResponse("coin_buy.html", {"request": request, "stripe_publishable_key": stripe_publishable_key})
+    return await templates.TemplateResponse("coin_buy.html", {"request": request, "stripe_publishable_key": stripe_publishable_key})
 

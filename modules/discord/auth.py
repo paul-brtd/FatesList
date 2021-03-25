@@ -13,7 +13,7 @@ async def login_get(request: Request, redirect: Optional[str] = None, pretty: Op
     if "userid" in request.session.keys():
         return RedirectResponse("/", status_code=HTTP_303_SEE_OTHER)
     request.session["redirect"] = redirect
-    return templates.TemplateResponse("login.html", {"request": request, "form": await Form.from_formdata(request), "perm_needed": redirect is not None, "perm_pretty": pretty})
+    return await templates.TemplateResponse("login.html", {"request": request, "form": await Form.from_formdata(request), "perm_needed": redirect is not None, "perm_pretty": pretty})
 
 @router.post("/login")
 @csrf_protect
@@ -47,7 +47,7 @@ async def login_confirm(request: Request, code: str, state: str):
     else:
         # Validate the state first
         if request.session.get("state") != state:
-            return templates.e(request = request, main = "Invalid State", reason = "The state returned by discord and the state we have provided does not match. Please try logging in again", status_code = 400)
+            return await templates.e(request = request, main = "Invalid State", reason = "The state returned by discord and the state we have provided does not match. Please try logging in again", status_code = 400)
         try:
             del request.session["state"]
         except:
@@ -70,7 +70,7 @@ async def login_confirm(request: Request, code: str, state: str):
             pass
         else:
             ban_type = ban_data["type"]
-            return templates.e(request, f"You have been {ban_type} banned from Fates List<br/>", status_code = 403)
+            return await templates.e(request, f"You have been {ban_type} banned from Fates List<br/>", status_code = 403)
         request.session["ban"] = banned
         request.session["access_token"] = access_token
         request.session["userid"] = userjson["id"]
@@ -103,7 +103,7 @@ async def login_confirm(request: Request, code: str, state: str):
         if banned != 0:
             ban_type = ban_data["type"]
             ban_desc = ban_data["desc"]
-            return templates.e(request, main = f"<span style='color: red;'>You have been {ban_type} banned in Fates List.</span>", reason = f"You can still login however {ban_desc}. Click 'Go Back Home' to finish logging in.", status_code = 200)
+            return await templates.e(request, main = f"<span style='color: red;'>You have been {ban_type} banned in Fates List.</span>", reason = f"You can still login however {ban_desc}. Click 'Go Back Home' to finish logging in.", status_code = 200)
         return RedirectResponse("/")
 
 @router.get("/logout")

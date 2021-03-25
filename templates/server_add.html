@@ -54,7 +54,7 @@
 			'200': function(data) {
 				server_data = ""
 				for(server in data.valid) {
-					server_data += (`<div style='padding: 3px; border-radius: 4px 4px 4px 4px; background: black; display: inline-block;'><a style='color: white !important;' href='/servers/${server}/setup'><strong>${data.valid[server].name}</strong><br/><p>Server ID: ${server}</a></div><br/>`)
+					server_data += (`<div style='width: 500px; min-width: 500px; max-width: 500px; padding: 3px; border-style: solid; border-radius: 4px 4px 4px 4px; background: black; display: inline-block;'><a style='color: white !important;' href='/servers/${server}/setup'><strong>${data.valid[server].name}</strong><br/><p>Server ID: ${server}</a></div><br/>`)
 				}
 				document.querySelector("#valid_servers").innerHTML = server_data
 			}

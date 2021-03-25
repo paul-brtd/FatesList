@@ -56,4 +56,4 @@ async def vote_bot_get(request: Request, bot_id: int):
     if bot_obj is None:
         return abort(404)
     bot = dict(bot) | bot_obj
-    return templates.TemplateResponse("vote.html", {"request": request, "bot": bot, "form": (await Form.from_formdata(request))})
+    return await templates.TemplateResponse("vote.html", {"request": request, "bot": bot, "form": (await Form.from_formdata(request))})

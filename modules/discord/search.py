@@ -17,7 +17,7 @@ async def tags(request: Request, tag: str):
         return RedirectResponse("/")
     fetch = await db.fetch(f"SELECT description, banner,certified,votes,servers,bot_id,tags,invite FROM bots, unnest(tags) a WHERE  lower(a) = '{tag}' AND queue = false and banned = false and disabled = false ORDER BY votes DESC LIMIT 12")
     search_bots = await parse_bot_list(fetch)
-    return templates.TemplateResponse("search.html", {"request": request, "username": request.session.get("username", False), "search_bots": search_bots, "tags_fixed": tags_fixed, "avatar": request.session.get("avatar"), "profile_search": False})
+    return await templates.TemplateResponse("search.html", {"request": request, "username": request.session.get("username", False), "search_bots": search_bots, "tags_fixed": tags_fixed, "avatar": request.session.get("avatar"), "profile_search": False})
 
 @router.get("/profile")
 async def profile_search(request: Request, q: Optional[str] = None):
@@ -44,4 +44,4 @@ async def profile_search(request: Request, q: Optional[str] = None):
         print(profile_info)
         if profile_info:
             profile_obj.append({"user": profile, "avatar": profile_info["avatar"], "username": profile_info["username"], "description": profile["description"], "certified": profile["certified"] == True})
-    return templates.TemplateResponse("search.html", {"request": request, "tags_fixed": tags_fixed, "profile_search": True, "query": query, "profiles": profile_obj})
+    return await templates.TemplateResponse("search.html", {"request": request, "tags_fixed": tags_fixed, "profile_search": True, "query": query, "profiles": profile_obj})

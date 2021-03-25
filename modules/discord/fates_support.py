@@ -12,7 +12,7 @@ async def support(request: Request):
 
 @router.get("/request")
 async def support(request: Request):
-    return templates.TemplateResponse("request.html", {"request": request, "form": (await Form.from_formdata(request))})
+    return await templates.TemplateResponse("request.html", {"request": request, "form": (await Form.from_formdata(request))})
 
 # CREATE TABLE support_requests (
 #    id uuid primary key DEFAULT uuid_generate_v4(),
