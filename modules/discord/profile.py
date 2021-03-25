@@ -8,22 +8,18 @@ router = APIRouter(
 )
 
 @router.get("/me")
-@csrf_protect
-async def profile(request: Request):
-    if "userid" in request.session.keys():
-        user = await get_user(int(request.session["userid"]))
-        if not user:
-            return RedirectResponse("/")
-        return await profile_of_user(request, int(request.session["userid"]), True)
-    else:
+async def redirect_me(request: Request):
+    if "userid" not in request.session.keys():
         return RedirectResponse("/")
+    return RedirectResponse("/profile/" + request.session.get("userid"))
 
 @router.get("/{userid}")
 @csrf_protect
 async def profile_of_user_generic(request: Request, userid: int):
-    return await profile_of_user(request, userid, False)
+    return await profile_of_user(request, userid)
 
-async def profile_of_user(request: Request, userid: int, personal: bool):
+async def profile_of_user(request: Request, userid: int):
+    personal = False # Initially
     user = await get_user(int(userid))
     if not user:
         return templates.e(request, "Profile Not Found", 404)

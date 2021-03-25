@@ -256,7 +256,7 @@ background-color: blue;
 	{% if username %}<img alt="{{username}}'s Avatar" width="25px" style="border-radius: 50%; margin-right: 5px;" src="{{avatar}}">{{username}}{% else %}Not Logged In{%endif%}</span>
 	<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink-333">
           {% if username %}
-          <a class="dropdown-item" href="/profile/me">My Profile</a>
+	  <a class="dropdown-item" href="/profile/{{userid}}">My Profile</a>
           <a class="dropdown-item" href="/bot/admin/add">Add Bot</a>
 	  <!--<a class="dropdown-item" href="/template/admin/add">Add Server Template</a>-->
 	  <div class="dropdown-divider"></div>
