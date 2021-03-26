@@ -1,0 +1,1 @@
+python3.10 -m uvicorn ula.api.main:app --port 8080 --host 0.0.0.0

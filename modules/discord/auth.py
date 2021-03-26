@@ -6,7 +6,7 @@ router = APIRouter(
     include_in_schema = False
 )
 
-discord_o = Oauth()
+discord_o = Oauth(OauthConfig)
 
 @router.get("/login")
 async def login_get(request: Request, redirect: Optional[str] = None, pretty: Optional[str] = "to access this page"):

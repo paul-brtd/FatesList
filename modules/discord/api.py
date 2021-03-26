@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi.responses import HTMLResponse
 from typing import List
 
-discord_o = Oauth()
+discord_o = Oauth(OauthConfig)
 
 router = APIRouter(
     prefix = "/api",

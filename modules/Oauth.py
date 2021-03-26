@@ -12,10 +12,10 @@ def get_token(length: str) -> str:
 
 
 class Oauth():
-    def __init__(self):
-        self.client_id = OauthConfig.client_id
-        self.client_secret = OauthConfig.client_secret
-        self.redirect_uri = OauthConfig.redirect_uri
+    def __init__(self, oc: OauthConfig):
+        self.client_id = oc.client_id
+        self.client_secret = oc.client_secret
+        self.redirect_uri = oc.redirect_uri
         self.discord_login_url = "https://discord.com/api/oauth2/authorize?client_id=" + self.client_id + "&redirect_uri=" + self.redirect_uri
         self.discord_token_url = "https://discord.com/api/oauth2/token"
         self.discord_api_url = "https://discord.com/api"

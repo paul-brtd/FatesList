@@ -84,3 +84,36 @@ admin.site.register(BotVoter, BotVoterAdmin)
 admin.site.register(Vanity, VanityAdmin)
 admin.site.register(Server, FADMIN)
 admin.site.register(User, UserAdmin)
+
+# ULA
+
+from .ulaconfig import *
+
+class NGAdminBase(SimpleHistoryAdmin):
+    save_on_top = False
+
+class NGAdmin(NGAdminBase):
+    search_fields = ('url',)
+
+def url_f(obj):
+    return obj.url
+
+url_f.short_description = "Bot List URL"
+
+def method_f(obj):
+    return method[str(obj.method)]
+
+method_f.short_description = "Method"
+
+def endpoint_f(obj):
+    return feature[str(obj.feature)]
+
+endpoint_f.short_description = "Endpoint"
+
+class BLAPI(NGAdmin):
+    list_display = (url_f, endpoint_f, method_f)
+
+# Register your models here.
+admin.site.register(ULABotList, NGAdmin)
+admin.site.register(ULABotListApi, BLAPI)
+admin.site.register(ULABotListFeature, NGAdminBase)
