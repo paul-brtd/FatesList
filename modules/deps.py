@@ -891,11 +891,11 @@ class BotActions():
         check = await db.fetchrow("SELECT vanity FROM vanity WHERE redirect = $1", bot_id)
         if check is None:
             print("am here")
-            await db.execute("INSERT INTO vanity (type, vanity_url, redirect) VALUES ($1, $2, $3)", 1, vanity, bot_id)
+            if vanity != '':
+                await db.execute("INSERT INTO vanity (type, vanity_url, redirect) VALUES ($1, $2, $3)", 1, vanity, bot_id)
         else:
-            if vanity == '':
-                vanity = None
-            await db.execute("UPDATE vanity SET vanity_url = $1 WHERE redirect = $2", vanity, bot_id)
+            if vanity != '':
+                await db.execute("UPDATE vanity SET vanity_url = $1 WHERE redirect = $2", vanity, bot_id)
         await add_event(bot_id, "edit_bot", {"user": str(user_id)})
         channel = client.get_channel(bot_logs)
         owner = int(user_id)
