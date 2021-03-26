@@ -53,6 +53,12 @@ class BotAdmin(FADMIN):
             return ['bot_id',] # Return a list or tuple of readonly fields' names
         else: # This is an addition
             return []
+    def get_form(self, request, obj=None, **kwargs):
+        if not request.user.has_perm('fladmin.change_bot'):
+            self.exclude = ("api_token", )
+        form = super(BotAdmin, self).get_form(request, obj, **kwargs)
+        return form
+
 
 class UserAdmin(FADMIN):
     search_fields = ['user_id', 'username']
