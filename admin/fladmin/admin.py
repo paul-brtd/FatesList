@@ -1,9 +1,8 @@
 from django.contrib import admin
 from django import forms
 from .models import *
-from simple_history.admin import SimpleHistoryAdmin
 
-class FADMIN(SimpleHistoryAdmin):
+class FADMIN(admin.ModelAdmin):
     save_on_top = False
 
 def bot_id(obj):
@@ -89,7 +88,7 @@ admin.site.register(User, UserAdmin)
 
 from .ulaconfig import *
 
-class NGAdminBase(SimpleHistoryAdmin):
+class NGAdminBase(admin.ModelAdmin):
     save_on_top = False
 
 class NGAdmin(NGAdminBase):
@@ -117,3 +116,4 @@ class BLAPI(NGAdmin):
 admin.site.register(ULABotList, NGAdmin)
 admin.site.register(ULABotListApi, BLAPI)
 admin.site.register(ULABotListFeature, NGAdminBase)
+admin.site.register(ULAUser, NGAdminBase)

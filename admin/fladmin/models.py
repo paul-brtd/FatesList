@@ -12,7 +12,6 @@ from django.contrib.postgres.fields import ArrayField
 from django.contrib.contenttypes.models import ContentType
 import uuid
 
-from simple_history import register
 class ApiEvent(models.Model):
     id = models.UUIDField(primary_key=True)
     bot_id = models.BigIntegerField()
@@ -248,7 +247,6 @@ class Bot(models.Model):
     def __str__(self):
         return f"{self.username_cached} ({self.bot_id})"
 
-register(Bot)
 
 class Server(models.Model):
     name_cached = models.TextField(blank=True, null=False, editable = False)
@@ -294,7 +292,6 @@ class User(models.Model):
         managed = False
         db_table = 'users'
 
-register(User)
 
 class Vanity(models.Model):
     type = models.IntegerField(blank=True, null=True)
@@ -342,7 +339,6 @@ class ULABotList(models.Model):
     def __str__(self):
         return self.url
 
-register(ULABotList)
 
 class ULABotListApi(models.Model):
     id = models.AutoField(primary_key = True)
@@ -356,7 +352,6 @@ class ULABotListApi(models.Model):
         managed = False
         db_table = 'bot_list_api'
 
-register(ULABotListApi)
 
 class ULABotListFeature(models.Model):
     feature_id = models.IntegerField(primary_key = True)
@@ -372,5 +367,13 @@ class ULABotListFeature(models.Model):
     def __str__(self):
         return self.name
 
-register(ULABotListFeature)
+class ULAUser(models.Model):
+    user_id = models.BigIntegerField(primary_key = True)
+    api_token = models.TextField(unique=True)
 
+    class Meta:
+        managed = False
+        db_table = "ula_user"
+
+    def __str__(self):
+        return str(self.user_id)

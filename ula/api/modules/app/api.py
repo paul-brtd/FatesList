@@ -1,4 +1,4 @@
-from ..deps import *
+from modules.deps import *
 import config
 
 router = APIRouter(
