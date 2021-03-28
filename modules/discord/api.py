@@ -1,7 +1,8 @@
 from ..deps import *
 from uuid import UUID
 from fastapi.responses import HTMLResponse
-from typing import List
+from typing import List, Dict
+from modules.models.api import *
 
 discord_o = Oauth(OauthConfig)
 
@@ -10,52 +11,12 @@ router = APIRouter(
     include_in_schema = True
 )
 
-class PromoDelete(BaseModel):
-    promo_id: Optional[uuid.UUID] = None
-
-class Promo(BaseModel):
-    title: str
-    info: str
-    css: Optional[str] = None
-    type: int
-
-class PromoObj(BaseModel):
-    promotions: list
-
-class PromoPatch(Promo):
-    promo_id: uuid.UUID
-
-class APIResponse(BaseModel):
-    done: bool
-    reason: Optional[str] = None
-
 @router.get("/bots/{bot_id}/promotions", tags = ["API"], response_model = PromoObj)
 async def get_promotion(request:  Request, bot_id: int):
     return {"promotions": (await get_promotions(bot_id))}
 
-@router.delete("/bots/{bot_id}/promotions", tags = ["API"], response_model = APIResponse)
-async def delete_promotion(request: Request, bot_id: int, promo: PromoDelete, Authorization: str = Header("INVALID_API_TOKEN")):
-    """Deletes a promotion for a bot or deletes all promotions from a bot (WARNING: DO NOT DO THIS UNLESS YOU KNOW WHAT YOU ARE DOING).
-
-    **API Token**: You can get this by clicking your bot and clicking edit and scrolling down to API Token or clicking APIWeb
-
-    **Event ID**: This is the ID of the event you wish to delete. Not passing this will delete ALL events, so be careful
-    """
-    id = await db.fetchrow("SELECT bot_id FROM bots WHERE bot_id = $1 AND api_token = $2", bot_id, str(Authorization))
-    if id is None:
-        return abort(401)
-    id = id["bot_id"]
-    if promo.promo_id is not None:
-        eid = await db.fetchrow("SELECT id FROM bot_promotions WHERE id = $1", promo.promo_id)
-        if eid is None:
-            return {"done":  False, "reason": "NO_PROMOTION_FOUND"}
-        await db.execute("DELETE FROM bot_promotions WHERE bot_id = $1 AND id = $2", id, promo.promo_id)
-    else:
-        await db.execute("DELETE FROM bot_promotions WHERE bot_id = $1", id)
-    return {"done":  True, "reason": None}
-
-@router.put("/bots/{bot_id}/promotions", tags = ["API"], response_model = APIResponse)
-async def create_promotion(request: Request, bot_id: int, promo: Promo, Authorization: str = Header("INVALID_API_TOKEN")):
+@router.post("/bots/{bot_id}/promotions", tags = ["API"], response_model = APIResponse)
+async def add_promotion(request: Request, bot_id: int, promo: Promo, Authorization: str = Header("INVALID_API_TOKEN")):
     """Creates a promotion for a bot. Type can be 1 for announcement, 2 for promotion or 3 for generic
 
     """
@@ -90,6 +51,28 @@ async def edit_promotion(request: Request, bot_id: int, promo: PromoPatch, Autho
     await db.execute("UPDATE bot_promotions SET title = $1, info = $2 WHERE bot_id = $3 AND id = $4", promo.title, promo.info, bot_id, promo.promo_id)
     return {"done": True, "reason": None}
 
+@router.delete("/bots/{bot_id}/promotions", tags = ["API"], response_model = APIResponse)
+async def delete_promotion(request: Request, bot_id: int, promo: PromoDelete, Authorization: str = Header("INVALID_API_TOKEN")):
+    """Deletes a promotion for a bot or deletes all promotions from a bot (WARNING: DO NOT DO THIS UNLESS YOU KNOW WHAT YOU ARE DOING).
+
+    **API Token**: You can get this by clicking your bot and clicking edit and scrolling down to API Token or clicking APIWeb
+
+    **Event ID**: This is the ID of the event you wish to delete. Not passing this will delete ALL events, so be careful
+    """
+    id = await db.fetchrow("SELECT bot_id FROM bots WHERE bot_id = $1 AND api_token = $2", bot_id, str(Authorization))
+    if id is None:
+        return abort(401)
+    id = id["bot_id"]
+    if promo.promo_id is not None:
+        eid = await db.fetchrow("SELECT id FROM bot_promotions WHERE id = $1", promo.promo_id)
+        if eid is None:
+            return {"done":  False, "reason": "NO_PROMOTION_FOUND"}
+        await db.execute("DELETE FROM bot_promotions WHERE bot_id = $1 AND id = $2", id, promo.promo_id)
+    else:
+        await db.execute("DELETE FROM bot_promotions WHERE bot_id = $1", id)
+    return {"done":  True, "reason": None}
+
+
 @router.patch("/bots/{bot_id}/token", tags = ["API"], response_model = APIResponse)
 async def regenerate_token(request: Request, bot_id: int, Authorization: str = Header("INVALID_API_TOKEN")):
     """Regenerate the API token
@@ -102,17 +85,6 @@ async def regenerate_token(request: Request, bot_id: int, Authorization: str = H
     await db.execute("UPDATE bots SET api_token = $1 WHERE bot_id = $2", get_token(132), id["bot_id"])
     return {"done": True, "reason": None}
 
-class RandomBotsAPI(BaseModel):
-    bot_id: str
-    description: str
-    banner: str
-    certified: bool
-    username: str
-    avatar: str
-    servers: str
-    invite: str
-    votes: int
-
 @router.get("/bots/random", tags = ["API"], response_model = RandomBotsAPI)
 async def random_bots_api(request: Request):
     random_unp = await db.fetchrow("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE queue = false AND banned = false AND disabled = false ORDER BY RANDOM() LIMIT 1") # Unprocessed
@@ -121,44 +93,6 @@ async def random_bots_api(request: Request):
     bot["servers"] = human_format(bot["servers"])
     bot["description"] = bot["description"].replace("<", "").replace(">", "")
     return bot
-
-class Bot(BaseModel):
-    id: str
-    description: str
-    tags: list
-    html_long_description: bool
-    long_description: Optional[str] = None
-    server_count: int
-    shard_count: Optional[int] = 0
-    user_count: int
-    shards: Optional[list] = []
-    prefix: str
-    library: str
-    invite: str
-    invite_amount: int
-    main_owner: str
-    extra_owners: list
-    owners: list
-    features: list
-    queue: bool
-    banned: bool
-    certified: bool
-    website: Optional[str] = None
-    support: Optional[str] = None
-    github: Optional[str] = None
-    css: Optional[str] = None
-    votes: int
-    vanity: Optional[str] = None
-    reviews: Optional[list] = None # Compact
-    sensitive: dict
-    promotions: Optional[List[Promo]] = {}
-    maint: dict
-    average_stars: Optional[float] = None # Conpact
-    username: str
-    avatar: str
-    disc: str
-    status: int
-    donate: Optional[str] = None
 
 @router.get("/bots/{bot_id}", tags = ["API"], response_model = Bot, dependencies=[Depends(RateLimiter(times=5, minutes=3))])
 async def get_bots_api(request: Request, bot_id: int, compact: Optional[bool] = False, Authorization: str = Header("INVALID_API_TOKEN")):
@@ -195,8 +129,7 @@ async def get_bots_api(request: Request, bot_id: int, compact: Optional[bool] = 
     else:
         api_ret["sensitive"] = {}
     api_ret["promotions"] = await get_promotions(bot_id = bot_id)
-    maint = await in_maint(bot_id = bot_id)
-    api_ret["maint"] = {"status": maint[0], "reason": maint[1]}
+    api_ret["maintenance"] = await in_maint(bot_id = bot_id)
     vanity = await db.fetchrow("SELECT vanity_url FROM vanity WHERE redirect = $1", bot_id)
     if vanity is None:
         api_ret["vanity"] = None
@@ -208,28 +141,14 @@ async def get_bots_api(request: Request, bot_id: int, compact: Optional[bool] = 
         api_ret["average_stars"] = float(reviews[1])
     return api_ret
 
-class BotCommandAdd(BaseModel):
-    slash: int # 0 = no, 1 = guild, 2 = global
-    name: str
-    description: str
-    args: Optional[list] = ["<user>"]
-    examples: Optional[list] = []
-    premium_only: Optional[bool] = False
-    notes: Optional[list] = []
-    doc_link: str
-
-class APIResponseCommandAdd(APIResponse):
-    id: uuid.UUID
-
-class CommandObj(BaseModel):
-    commands: list
-
-@router.get("/bots/{bot_id}/commands", tags = ["API"], response_model = CommandObj)
+@router.get("/bots/{bot_id}/commands", tags = ["API"], response_model = BotCommands)
 async def get_bot_commands_api(request:  Request, bot_id: int):
-    return {"commands": (await db.fetch("SELECT id, slash, name, description, args, examples, premium_only, notes, doc_link FROM bot_commands WHERE bot_id = $1", bot_id))}
+    cmd = await get_bot_commands(bot_id)
+    if cmd == {}:
+        return abort(404)
+    return cmd
 
-
-@router.put("/bots/{bot_id}/commands", tags = ["API"], response_model = APIResponseCommandAdd, dependencies=[Depends(RateLimiter(times=20, minutes=1))])
+@router.post("/bots/{bot_id}/commands", tags = ["API"], response_model = BotCommandAddResponse, dependencies=[Depends(RateLimiter(times=20, minutes=1))])
 async def add_bot_command_api(request: Request, bot_id: int, command: BotCommandAdd, Authorization: str = Header("INVALID_API_TOKEN"), force_add: Optional[bool] = False):
     """
         Self explaining command. Note that if force_add is set, the API will not check if your command already exists and will forcefully add it, this may lead to duplicate commands on your bot. If ret_id is not set, you will not get the command id back in the api response
@@ -248,17 +167,6 @@ async def add_bot_command_api(request: Request, bot_id: int, command: BotCommand
     id = uuid.uuid4()
     await db.execute("INSERT INTO bot_commands (id, bot_id, slash, name, description, args, examples, premium_only, notes, doc_link) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)", id, bot_id, command.slash, command.name, command.description, command.args, command.examples, command.premium_only, command.notes, command.doc_link)
     return {"done": True, "reason": None, "id": id}
-
-class BotCommandEdit(BaseModel):
-    id: uuid.UUID
-    slash: Optional[int] = None # 0 = no, 1 = guild, 2 = global
-    name: Optional[str] = None
-    description: Optional[str] = None
-    args: Optional[list] = None
-    examples: Optional[list] = None
-    premium_only: Optional[bool] = None
-    notes: Optional[list] = None
-    doc_link: Optional[str] = None
 
 @router.patch("/bots/{bot_id}/commands", tags = ["API"], response_model = APIResponse, dependencies=[Depends(RateLimiter(times=20, minutes=1))])
 async def edit_bot_command_api(request: Request, bot_id: int, command: BotCommandEdit, Authorization: str = Header("INVALID_API_TOKEN")):
@@ -280,9 +188,6 @@ async def edit_bot_command_api(request: Request, bot_id: int, command: BotComman
     await db.execute("UPDATE bot_commands SET slash = $2, name = $3, description = $4, args = $5, examples = $6, premium_only = $7, notes = $8, doc_link = $9 WHERE id = $1", command_dict["id"], command_dict["slash"], command_dict["name"], command_dict["description"], command_dict["args"], command_dict["examples"], command_dict["premium_only"], command_dict["notes"], command_dict["doc_link"])
     return {"done": True, "reason": None}
 
-class BotCommandDelete(BaseModel):
-    id: uuid.UUID
-
 @router.delete("/bots/{bot_id}/commands", tags = ["API"], response_model = APIResponse, dependencies=[Depends(RateLimiter(times=20, minutes=1))])
 async def delete_bot_command_api(request: Request, bot_id: int, command: BotCommandDelete, Authorization: str = Header("INVALID_API_TOKEN")):
     id = await db.fetchrow("SELECT bot_id FROM bots WHERE bot_id = $1 AND api_token = $2", bot_id, str(Authorization))
@@ -290,13 +195,6 @@ async def delete_bot_command_api(request: Request, bot_id: int, command: BotComm
         return abort(401)
     await db.execute("DELETE FROM bot_commands WHERE id = $1 AND bot_id = $2", command.id, bot_id)
     return {"done": True, "reason": None}
-
-class BotVoteCheck(BaseModel):
-    votes: int
-    voted: bool
-    vote_right_now: bool
-    vote_epoch: int
-    time_to_vote: int
 
 @router.get("/bots/{bot_id}/votes", tags = ["API"], response_model = BotVoteCheck, dependencies=[Depends(RateLimiter(times=5, minutes=1))])
 async def get_votes_api(request: Request, bot_id: int, user_id: Optional[int] = None, Authorization: str = Header("INVALID_API_TOKEN")):
@@ -336,18 +234,6 @@ async def timestamped_get_votes_api(request: Request, bot_id: int, user_id: Opti
         ret[str(data["userid"])] = data["timestamps"]
     return {"user": "timestamp"} | ret
 
-# TODO
-#@router.get("/templates/{code}", tags = ["Core API"])
-#async def get_template_api(request: Request, code: str):
-#    guild =  await client.fetch_template(code).source_guild
-#    return template
-
-class BotStats(BaseModel):
-    guild_count: int
-    shard_count: Optional[int] = None
-    shards: Optional[list] = None
-    user_count: Optional[int] = None
-
 @router.post("/bots/{bot_id}/stats", tags = ["API"], response_model = APIResponse, dependencies=[Depends(RateLimiter(times=5, minutes=1))])
 async def set_bot_stats_api(request: Request, bt: BackgroundTasks, bot_id: int, api: BotStats, Authorization: str = Header("INVALID_API_TOKEN")):
     """
@@ -371,19 +257,13 @@ async def set_bot_stats_api(request: Request, bt: BackgroundTasks, bot_id: int, 
     bt.add_task(set_stats, bot_id = id["bot_id"], guild_count = api.guild_count, shard_count = shard_count, shards = shards, user_count = user_count)
     return {"done": True, "reason": None}
 
-# set_stats(*, bot_id: int, guild_count: int, shard_count: int, user_count: Optiona;int] = None):
-
-class APISMaint(BaseModel):
-    mode: int = 1
-    reason: str
-
-@router.post("/bots/{bot_id}/maintenances", tags = ["API"], response_model = APIResponse)
-async def set_maintenance_mode(request: Request, bot_id: int, api: APISMaint, Authorization: str = Header("INVALID_API_TOKEN")):
-    """This is just an endpoing for enabling or disabling maintenance mode. As of the new API Revamp, this isi the only way to add a maint
+@router.post("/bots/{bot_id}/maintenance", tags = ["API"], response_model = APIResponse)
+async def set_maintenance_mode(request: Request, bot_id: int, api: PartialBotMaint, Authorization: str = Header("INVALID_API_TOKEN")):
+    """This is just an endpoing for enabling or disabling maintenance mode. As of the new API Revamp, this is the only way to enable or disable maintenance mode as of right now
 
     **API Token**: You can get this by clicking your bot and clicking edit and scrolling down to API Token
 
-    **Mode**: Whether you want to enter or exit maintenance mode. Setting this to 1 will enable maintenance and setting this to 0 will disable maintenance mode. Different maintenance modes are planned
+    **Mode**: Whether you want to enter or exit maintenance mode. Setting this to 1 will enable maintenance, setting this to 2 will enable long-lasting maintenance mode and setting this to 0 will disable maintenance mode. More flying in soon :)
     """
     
     if api.mode not in [0, 1]:
@@ -409,12 +289,7 @@ async def get_tags_api(request: Request, name: str):
         return abort(404)
     return {"name": name.replace("_", " ").title(), "iconify_data": TAGS[name], "id": name}
 
-
-class VanityAPI(BaseModel):
-    type: str
-    redirect: str
-
-@router.get("/vanity/{vanity}", tags = ["API"], response_model = VanityAPI)
+@router.get("/vanity/{vanity}", tags = ["API"], response_model = BotVanity)
 async def get_vanity(request: Request, vanity: str):
     vb = await vanity_bot(vanity, compact = True)
     if vb is None:
@@ -431,22 +306,7 @@ async def bots_search_page(request: Request, query: str):
     """For any potential Android/iOS app, crawlers etc. Query is the query to search for"""
     return await render_search(request = request, q = query, api = True)
 
-class MDRequest(BaseModel):
-    markdown: str
-
-class MDResponse(BaseModel):
-    html: str
-
-@router.put("/md", tags = ["API (Other)"], response_model = MDResponse)
-async def markdown_to_html_api(request: Request, md: MDRequest):
-    data = PrevRequest(html_long_description = False, data = md.markdown)
-    return await preview_api(request, data)
-
-class PrevRequest(BaseModel):
-    html_long_description: bool
-    data: str
-
-@router.put("/preview", tags = ["API (Other)"], response_model = MDResponse, dependencies=[Depends(RateLimiter(times=20, minutes=1))])
+@router.post("/preview", tags = ["API (Other)"], response_model = PrevResponse, dependencies=[Depends(RateLimiter(times=20, minutes=1))])
 async def preview_api(request: Request, data: PrevRequest):
     if not data.html_long_description:
         html = emd(markdown.markdown(data.data, extensions=["extra", "abbr", "attr_list", "def_list", "fenced_code", "footnotes", "tables", "admonition", "codehilite", "meta", "nl2br", "sane_lists", "toc", "wikilinks", "smarty", "md_in_html"]))
@@ -583,20 +443,14 @@ async def chat_publish_message(msg):
 
 # End Chat
 
-class User(BaseModel):
-    id: int
-    desription: str
-
-@router.get("/users/{user_id}", tags = ["API"])
+@router.get("/users/{user_id}", tags = ["API"], response_model = User)
 async def get_user_api(request: Request, user_id: int):
-    user = await db.fetchrow("SELECT description, css, user_id AS id FROM users WHERE user_id = $1", user_id)
-    user_obj = await get_user(user_id)
+    user = await db.fetchrow("SELECT description, css FROM users WHERE user_id = $1", user_id)
     if user is None:
         return abort(404)
-    return dict(user) | {"user": user_obj}
-
-class ValidServer(BaseModel):
-    valid: dict
+    user_obj = await get_user(user_id)
+    user_ret = dict(user) | user_obj
+    return user_ret
 
 @router.get("/users/{user_id}/valid_servers", tags = ["API (Internal)"], dependencies=[Depends(RateLimiter(times=3, minutes=5))], response_model = ValidServer)
 async def get_valid_servers_api(request: Request, user_id: int):
@@ -622,14 +476,11 @@ async def get_valid_servers_api(request: Request, user_id: int):
             continue
         if member.guild_permissions.administrator or member.guild_permissions.manage_guild:
             print(guild.id)
-            guild_json = {"icon": str(guild.icon_url), "name": guild.name, "member_count": guild.member_count, "created_at": guild.created_at, "code": get_token(37)}
+            guild_json = {"icon": str(guild.icon_url), "name": guild.name, "member_count": guild.member_count, "created_at": str(guild.created_at.timestamp()), "code": get_token(37)}
             await redis_db.hset(str(guild.id), key = "cache", value = orjson.dumps(guild_json))
             valid = valid | {str(guild.id): guild_json}
     print(valid)
     return {"valid": valid}
-
-class UserDescEdit(BaseModel):
-    description: str
 
 @router.patch("/users/{user_id}/description", tags = ["API"])
 async def set_user_description_api(request: Request, user_id: int, desc: UserDescEdit, Authorization: str = Header("INVALID_API_TOKEN")):

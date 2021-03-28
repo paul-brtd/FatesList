@@ -139,7 +139,10 @@ def is_staff(staff_json: dict, roles: Union[list, int], base_perm: int) -> Union
     return False, tmp["perm"]
 
 async def add_maint(bot_id: int, type: int, reason: str):
-    return await db.execute("INSERT INTO bot_maint (bot_id, reason, type, epoch) VALUES ($1, $2, $3, $4)", bot_id, reason, type, time.time())
+    maints = await db.fetchrow("SELECT bot_id FROM bot_maint WHERE bot_id = $1", bot_id)
+    if maints is None:
+        return await db.execute("INSERT INTO bot_maint (bot_id, reason, type, epoch) VALUES ($1, $2, $3, $4)", bot_id, reason, type, time.time())
+    return await db.execute("UPDATE bot_maint SET reason = $1, type = $2, epoch = $3 WHERE bot_id = $4", reason, type, time.time(), bot_id)
 
 async def set_stats(*, bot_id: int, guild_count: int, shard_count: int, user_count: int, shards: int):
     if int(guild_count) > 300000000000 or int(shard_count) > 300000000000:
@@ -202,19 +205,12 @@ class Form(StarletteForm):
     pass
 
 async def in_maint(bot_id: str) -> Union[bool, Optional[dict]]:
-    api_data = await db.fetch("SELECT type, reason, epoch FROM bot_maint WHERE bot_id = $1", bot_id)
-    if api_data == []:
-        return False, None
-    curr_maint = None
-    for _maint in api_data:
-        if _maint["type"] != 0:
-            curr_maint = _maint
-        elif _maint["type"] == 0 and curr_maint is not None:
-            curr_maint = None
-    if curr_maint is not None:
-        return True, {"reason": curr_maint["reason"], "epoch": curr_maint["epoch"]}
-    else:
-        return False, None
+    api_data = await db.fetchrow("SELECT type, reason, epoch FROM bot_maint WHERE bot_id = $1", bot_id)
+    if api_data is None:
+        return {"type": 0, "reason": None, "epoch": None}
+    api_data = dict(api_data)
+    api_data["epoch"] = str(time.time())
+    return api_data
 
 async def is_bot_admin(bot_id: int, user_id: int):
     guild = client.get_guild(main_server)
@@ -256,6 +252,11 @@ async def get_user_token(uid: int, username: str) -> str:
             print("Updating profile")
             await db.execute("UPDATE users SET username = $1 WHERE user_id = $2", username, int(uid))
         token = token["api_token"]
+
+async def get_bot_commands(bot_id: int) -> dict:
+    cmd_raw = await db.fetch("SELECT id, slash, name, description, args, examples, premium_only, notes, doc_link FROM bot_commands WHERE bot_id = $1", bot_id)
+    cmd = {cmd_raw_obj["id"]: dict(cmd_raw_obj) for cmd_raw_obj in cmd_raw}
+    return cmd
 
 #CREATE TABLE bot_stats_votes (
 #   bot_id bigint,

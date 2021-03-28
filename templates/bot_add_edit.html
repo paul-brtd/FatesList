@@ -297,7 +297,7 @@ function previewLongDesc(){
 	if(ld == "")
 		return
         $.ajax({
-           type: 'PUT',
+           type: 'POST',
            dataType: 'json',
            {% if mode == "edit" %}
 	   headers: {"Authorization": "{{data.api_token}}"},
