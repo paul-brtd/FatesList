@@ -2,6 +2,13 @@ from typing import List, Dict
 from modules.imports import *
 import uuid
 
+class BaseUser(BaseModel):
+    id: str
+    username: str
+    avatar: str
+    disc: str
+    status: str
+
 class PromoDelete(BaseModel):
     promo_id: Optional[uuid.UUID] = None
 
@@ -28,6 +35,27 @@ class PartialBotMaint(BaseModel):
 class BotMaint(PartialBotMaint):
     epoch: Optional[str] = None
 
+BotReviewList = ForwardRef('BotReviewList')
+
+class BotReview(BaseModel):
+    id: uuid.UUID
+    reply: bool
+    user_id: str
+    star_rating: float
+    review: str
+    review_upvotes: list
+    review_downvotes: list
+    flagged: bool
+    epoch: list
+    time_past: str
+    user: BaseUser
+    replies: Optional[BotReviewList] = []
+
+class BotReviewList(BaseModel):
+    __root__: List[BotReview]
+
+BotReview.update_forward_refs()
+
 class PrevResponse(BaseModel):
     html: str
 
@@ -45,13 +73,6 @@ class RandomBotsAPI(BaseModel):
     servers: str
     invite: str
     votes: int
-
-class BaseUser(BaseModel):
-    id: str
-    username: str
-    avatar: str
-    disc: str
-    status: str
 
 class Bot(BaseUser):
     description: str
@@ -79,7 +100,7 @@ class Bot(BaseUser):
     css: Optional[str] = None
     votes: int
     vanity: Optional[str] = None
-    reviews: Optional[list] = None # Compact
+    reviews: Optional[BotReviewList] = [] # Compact
     sensitive: dict
     promotions: Optional[List[Promo]] = {}
     maintenance: BotMaint
@@ -96,7 +117,6 @@ class BotCommand(BaseModel):
     premium_only: Optional[bool] = False
     notes: Optional[list] = []
     doc_link: str
-
 
 class BotCommandAdd(BaseModel):
     slash: int # 0 = no, 1 = guild, 2 = global
