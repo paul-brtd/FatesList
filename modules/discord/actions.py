@@ -12,8 +12,7 @@ allowed_file_ext = [".gif", ".png", ".jpeg", ".jpg", ".webm", ".webp"]
 @csrf_protect
 async def add_bot(request: Request):
     if "userid" in request.session.keys():
-        form = await Form.from_formdata(request)
-        return await templates.TemplateResponse("bot_add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": {"form": form}, "error": None, "mode": "add"})
+        return await templates.TemplateResponse("bot_add_edit.html", {"request": request, "tags_fixed": tags_fixed, "error": None, "mode": "add"})
     else:
         return RedirectResponse("/auth/login?redirect=/bot/admin/add&pretty=to add a bot")
 
@@ -46,7 +45,6 @@ async def add_bot_api(
     html_long_description = html_long_description == "true"
     guild = client.get_guild(main_server)
     bot_dict = locals()
-    bot_dict["form"] = await Form.from_formdata(request)
     features = [f for f in bot_dict.keys() if bot_dict[f] == "on" and f in ["custom_prefix", "open_source"]]
     bot_dict["features"] = features
     bot_dict["user_id"] = request.session.get("userid")
@@ -67,7 +65,6 @@ async def bot_edit(request: Request, bid: int):
             return await templates.TemplateResponse("message.html", {"request": request, "message": "This bot doesn't exist in our database.", "username": request.session.get("username", False)})
         elif check == False:
             return await templates.TemplateResponse("message.html", {"request": request, "message": "You aren't the owner of this bot.", "username": request.session.get("username", False), "avatar": request.session.get("avatar")})
-        form = await Form.from_formdata(request)
         fetch = dict(await db.fetchrow("SELECT bot_id, prefix, bot_library AS library, invite, website, banner, long_description, description, tags, owner, extra_owners, webhook, webhook_type, discord AS support, api_token, banner, banned, github, features, html_long_description, css, donate FROM bots WHERE bot_id = $1", bid))
         if fetch["extra_owners"]:
             fetch["extra_owners"] = ",".join([str(eo) for eo in fetch["extra_owners"]])
@@ -77,7 +74,6 @@ async def bot_edit(request: Request, bid: int):
         if vanity is None:
             vanity = {"vanity": None}
         bot = fetch | dict(vanity)
-        bot["form"] = form
         return await templates.TemplateResponse("bot_add_edit.html", {"request": request, "mode": "edit", "tags_fixed": tags_fixed, "username": request.session.get("username", False),"data": bot, "avatar": request.session.get("avatar"), "epoch": time.time(), "vanity": vanity["vanity"]})
     else:
         return RedirectResponse("/")
@@ -114,7 +110,6 @@ async def bot_edit_api(
     html_long_description = html_long_description == "true"
     guild = client.get_guild(main_server)
     bot_dict = locals()
-    bot_dict["form"] = await Form.from_formdata(request)
     features = [f for f in bot_dict.keys() if bot_dict[f] == "on" and f in ["custom_prefix", "open_source"]]
     bot_dict["features"] = features
     bot_dict["user_id"] = request.session.get("userid")
@@ -381,8 +376,7 @@ async def resubmit_bot(request: Request, bid: int):
     user = await get_bot(bid)
     if user is None:
         return await templates.TemplateResponse("message.html", {"request": request, "message": "This bot does not exist on our database."})
-    form = await Form.from_formdata(request)
-    return await templates.TemplateResponse("resubmit.html", {"request": request, "user": user, "bot_id": bid, "form": form})
+    return await templates.TemplateResponse("resubmit.html", {"request": request, "user": user, "bot_id": bid})
 
 @router.post("/{bid}/resubmit")
 async def resubmit_bot(request: Request, bid: int, appeal: str = FForm("No appeal provided"), qtype: str = FForm("off")):

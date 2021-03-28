@@ -13,7 +13,7 @@ async def login_get(request: Request, redirect: Optional[str] = None, pretty: Op
     if "userid" in request.session.keys():
         return RedirectResponse("/", status_code=HTTP_303_SEE_OTHER)
     request.session["redirect"] = redirect
-    return await templates.TemplateResponse("login.html", {"request": request, "form": await Form.from_formdata(request), "perm_needed": redirect is not None, "perm_pretty": pretty})
+    return await templates.TemplateResponse("login.html", {"request": request, "perm_needed": redirect is not None, "perm_pretty": pretty})
 
 @router.post("/login")
 @csrf_protect

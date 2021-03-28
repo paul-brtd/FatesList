@@ -21,9 +21,9 @@ async def rl_key_func(request: Request) -> str:
 async def _internal_user_fetch(userid: str, user_type: int) -> Optional[dict]:
     # Check if a suitable version is in the cache first before querying Discord
 
-    CACHE_VER = 6 # Current cache ver
+    CACHE_VER = 10 # Current cache ver
 
-    if len(userid) not in [17, 18]:
+    if len(userid) not in [17, 18, 19, 20]: # Snowflake can be 17 - 21
         print("Ignoring blatantly wrong User ID")
         return None # This is impossible to actually exist on the discord API or on our cache
 
@@ -56,7 +56,9 @@ async def _internal_user_fetch(userid: str, user_type: int) -> Optional[dict]:
         bot_obj = await client.fetch_user(int(userid))
         valid_user = True
         bot = bot_obj.bot
-    except:
+    except Exception as ex:
+        valid_user, bot = False, False
+        print(ex)
         pass
     
     try:
@@ -72,7 +74,8 @@ async def _internal_user_fetch(userid: str, user_type: int) -> Optional[dict]:
             status = 4
         else:
             status = 0
-    except:
+    except Exception as ex:
+        print(ex)
         status = 0
 
     if valid_user:
@@ -83,10 +86,10 @@ async def _internal_user_fetch(userid: str, user_type: int) -> Optional[dict]:
         username = ""
         avatar = ""
         disc = ""
-        bot = False
 
     if bot and valid_user:
-        asyncio.create_task(db.execute("UPDATE bots SET username_cached = $2 WHERE bot_id = $1", int(userid), username))
+        print("Setting db username to " + username + " for " + str(userid))
+        await db.execute("UPDATE bots SET username_cached = $2 WHERE bot_id = $1", int(userid), username)
 
     cache = orjson.dumps({"fl_cache_ver": CACHE_VER, "epoch": time.time(), "bot": bot, "username": username, "avatar": avatar, "disc": disc, "valid_user": valid_user, "status": status})
     await redis_db.hset(str(userid), key = "cache", value = cache)
@@ -383,6 +386,7 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, review:
     except:
         banner = "none"
     bot_info = await get_bot(bot["bot_id"])
+    
     promos = await get_promotions(bot["bot_id"])
     maint = await in_maint(bot["bot_id"])
 
@@ -406,6 +410,7 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, review:
     if bot_info:
         bot = dict(bot)
         bot = bot | {"votes": human_format(bot["votes"]), "servers": human_format(bot["servers"]), "banner": banner.replace("\"", "").replace("'", "").replace("http://", "https://").replace("(", "").replace(")", "").replace("file://", ""), "shards": human_format(bot["shard_count"]), "owner_pretty": await get_user(bot["owner"]), "extra_owners": extra_owners, "features": bot_features, "long_description": ldesc.replace("window.location", "").replace("document.ge", ""), "user": (await get_bot(bot_id))}
+        #await db.execute("UPDATE bots SET username_cached = $2 WHERE bot_id = $1", int(bot_id), bot_info["username"])   
     else:
         return await templates.e(request, "Bot Not Found")
     _tags_fixed_bot = [tag for tag in tags_fixed if tag["id"] in bot["tags"]]
@@ -627,6 +632,8 @@ class templates():
             arg_dict["staff"] = [False]
         print(arg_dict["staff"])
         arg_dict["site_url"] = site_url
+        arg_dict["form"] = await Form.from_formdata(request)
+        arg_dict["data"] = arg_dict.get("data")
         if status is None:
             return _templates.TemplateResponse(f, arg_dict)
         return _templates.TemplateResponse(f, arg_dict, status_code = status)

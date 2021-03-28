@@ -69,4 +69,20 @@ async def deny(ctx, bot: discord.Member, *, reason: Optional[str] = "There was n
     else:
         await ctx.send("You don't have the permission to do this")
 
+@commands.cooldown(1, 20)
+@client.command(pass_context = True)
+async def botdev(ctx, bot: discord.Member):
+    check = await db.fetchrow("SELECT owner, extra_owners FROM bots WHERE bot_id = $1", bot.id) # Get all owners
+    try:
+        check = dict(check)
+    except:
+        return await ctx.send("The bot you are trying to register as for this role does not exist and/or does not belong to you as a owner or extra owner")
+    if check["extra_owners"] == None:
+        check["extra_owners"] = []
+
+    if check is None or (ctx.author.id != check["owner"] and ctx.author.id not in check["extra_owners"]):
+        return await ctx.send("The bot you are trying to register as for this role does not exist and/or does not belong to you as a owner or extra owner")
+    await ctx.author.add_roles(ctx.guild.get_role(bot_dev_role))
+    return await ctx.send("Added the role for you :)")
+
 client.run(TOKEN_MAIN)

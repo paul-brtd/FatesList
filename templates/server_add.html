@@ -54,13 +54,27 @@
 			'200': function(data) {
 				server_data = ""
 				for(server in data.valid) {
-					server_data += (`<div style='width: 500px; min-width: 500px; max-width: 500px; padding: 3px; border-style: solid; border-radius: 4px 4px 4px 4px; background: black; display: inline-block;'><a style='color: white !important;' href='/servers/${server}/setup'><strong>${data.valid[server].name}</strong><br/><p>Server ID: ${server}</a></div><br/>`)
+					server_data += `
+					<a style="color: white !important;" href='javascript:void' onclick='openGuild("${server}")'>
+					<div id='${server}' data-code='${data.valid[server].code}' style='width: 500px; min-width: 500px; max-width: 500px; padding: 3px; border-style: solid; border-radius: 4px 4px 4px 4px; background: black; display: inline-block;'>
+						<p><strong>${data.valid[server].name}</strong></p>
+						<br/>
+						<p>Server ID: ${server}</p>
+					</div>
+					<div style='display: none' id='form-${server}'>
+						
+					</div>
+					<br/>
+					</a>`
 				}
 				document.querySelector("#valid_servers").innerHTML = server_data
 			}
 		}
         })
 	};
+	function setupGuild(sid) {
+		alert(sid + " Not yet ready to add servers. Check back later!");
+	}
    </script>
 {% endblock %}
 {% block footer %}

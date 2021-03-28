@@ -314,7 +314,6 @@ class Vanity(models.Model):
 class DjangoContentType(ContentType):
     pass
 
-
 # ULA
 import uuid
 from .ulaconfig import *

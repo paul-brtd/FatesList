@@ -602,7 +602,8 @@ class ValidServer(BaseModel):
 async def get_valid_servers_api(request: Request, user_id: int):
     """Internal API to get users who have the FL Server Bot and Manage Server/Admin"""
     valid = {}
-    request.session["valid_servers"] = []
+    if "dscopes_str" not in request.session.keys():
+        return abort(400)
     access_token = await discord_o.access_token_check(request.session["dscopes_str"], request.session["access_token"])
     request.session["access_token"] = access_token
     servers = await discord_o.get_guilds(access_token["access_token"], permissions = [0x8, 0x20]) # Check for all guilds with 0x8 and 0x20
@@ -620,8 +621,11 @@ async def get_valid_servers_api(request: Request, user_id: int):
         if member is None:
             continue
         if member.guild_permissions.administrator or member.guild_permissions.manage_guild:
-            valid = valid | {str(guild.id): {"icon": str(guild.icon_url), "name": guild.name, "member_count": guild.member_count, "created_at": guild.created_at}}
-            request.session["valid_servers"].append(str(guild.id))
+            print(guild.id)
+            guild_json = {"icon": str(guild.icon_url), "name": guild.name, "member_count": guild.member_count, "created_at": guild.created_at, "code": get_token(37)}
+            await redis_db.hset(str(guild.id), key = "cache", value = orjson.dumps(guild_json))
+            valid = valid | {str(guild.id): guild_json}
+    print(valid)
     return {"valid": valid}
 
 class UserDescEdit(BaseModel):
