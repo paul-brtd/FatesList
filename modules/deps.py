@@ -204,10 +204,10 @@ async def add_event(bot_id: int, event: str, context: dict, *, send_event = True
 class Form(StarletteForm):
     pass
 
-async def in_maint(bot_id: str) -> Union[bool, Optional[dict]]:
+async def get_maint(bot_id: str) -> Union[bool, Optional[dict]]:
     api_data = await db.fetchrow("SELECT type, reason, epoch FROM bot_maint WHERE bot_id = $1", bot_id)
     if api_data is None:
-        return {"type": 0, "reason": None, "epoch": None}
+        return {"type": 0, "reason": None, "epoch": None, "fail": True}
     api_data = dict(api_data)
     api_data["epoch"] = str(time.time())
     return api_data
@@ -389,7 +389,7 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, review:
     bot_info = await get_bot(bot["bot_id"])
     
     promos = await get_promotions(bot["bot_id"])
-    maint = await in_maint(bot["bot_id"])
+    maint = await get_maint(bot["bot_id"])
 
     extra_owners_lst = [(await get_user(id)) for id in eo]
     extra_owners = ""

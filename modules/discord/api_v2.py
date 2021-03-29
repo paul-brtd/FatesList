@@ -103,15 +103,12 @@ async def random_bots_api(request: Request):
     return bot
 
 @router.get("/bots/{bot_id}", response_model = Bot, dependencies=[Depends(RateLimiter(times=5, minutes=3))])
-async def get_bots_api(request: Request, bot_id: int, compact: Optional[bool] = False, Authorization: str = Header("INVALID_API_TOKEN")):
+async def get_bots_api(request: Request, bot_id: int, Authorization: str = Header("INVALID_API_TOKEN")):
     """Gets bot information given a bot ID. If not found, 404 will be returned. If a proper API Token is provided, sensitive information (System API Events will also be provided)"""
     api_ret = await db.fetchrow("SELECT bot_id AS id, description, tags, html_long_description, long_description, servers AS server_count, shard_count, shards, prefix, invite, invite_amount, owner AS main_owner, extra_owners, features, bot_library AS library, queue, banned, certified, website, discord AS support, github, user_count, votes, css, donate FROM bots WHERE bot_id = $1", bot_id)
     if api_ret is None:
         return abort(404)
     api_ret = dict(api_ret)
-    if compact:
-        del api_ret["css"]
-        del api_ret["long_description"]
     if api_ret["features"] is None:
         api_ret["features"] = []
     bot_obj = await get_bot(bot_id)
@@ -136,7 +133,6 @@ async def get_bots_api(request: Request, bot_id: int, compact: Optional[bool] = 
         api_ret["sensitive"] = await get_events(bot_id = bot_id)
     else:
         api_ret["sensitive"] = {}
-    api_ret["maintenance"] = await in_maint(bot_id = bot_id)
     vanity = await db.fetchrow("SELECT vanity_url FROM vanity WHERE redirect = $1", bot_id)
     if vanity is None:
         api_ret["vanity"] = None
@@ -150,8 +146,6 @@ async def get_bot_reviews(request: Request, bot_id: int):
     if reviews[0] == []:
         return abort(404)
     return {"reviews": reviews[0], "average_stars": reviews[1]}
-
-
 
 @router.get("/bots/{bot_id}/commands", response_model = BotCommands)
 async def get_bot_commands_api(request:  Request, bot_id: int):
@@ -268,6 +262,13 @@ async def set_bot_stats_api(request: Request, bt: BackgroundTasks, bot_id: int, 
         user_count = api.user_count
     bt.add_task(set_stats, bot_id = id["bot_id"], guild_count = api.guild_count, shard_count = shard_count, shards = shards, user_count = user_count)
     return {"done": True, "reason": None}
+
+@router.get("/bots/{bot_id}/maintenance", response_model = BotMaintenance)
+async def get_maintenance_mode(request: Request, bot_id: int):
+    ret = await get_maint(bot_id = bot_id)
+    if ret.get("fail"):
+        return abort(404)
+    return ret
 
 @router.post("/bots/{bot_id}/maintenance", response_model = APIResponse)
 async def set_maintenance_mode(request: Request, bot_id: int, api: BotMaintenancePartial, Authorization: str = Header("INVALID_API_TOKEN")):
