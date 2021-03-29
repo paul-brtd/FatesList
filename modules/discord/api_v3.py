@@ -8,9 +8,11 @@ discord_o = Oauth(OauthConfig)
 
 router = APIRouter(
     prefix = "/api/v/3",
-    include_in_schema = True,
-    tags = ["API v3 (dev)"]
+    tags = ["API v3 (dev, unstable)"],
+    include_in_schema = False
 )
+
+# TODO Reclone from main api
 
 @router.get("/bots/{bot_id}/promotions", response_model = BotPromotionGet, responses = {
     404: {"model": BotPromotion_NotFound} # Promotion Not Found

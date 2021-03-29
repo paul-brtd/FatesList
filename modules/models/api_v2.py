@@ -109,7 +109,6 @@ class Bot(BaseUser):
     votes: int
     vanity: Optional[str] = None
     sensitive: dict
-    promotions: Optional[BotPromotionList] = []
     maintenance: BotMaintenance
     donate: Optional[str] = None
 

@@ -9,8 +9,10 @@ discord_o = Oauth(OauthConfig)
 router = APIRouter(
     prefix = "/api/v/2",
     include_in_schema = True,
-    tags = ["API v2 (default)"]
+    tags = ["API v2 (default, beta, freeze-soon)"]
 )
+
+# TODO Move maintenance and promotions out of get bot
 
 @router.get("/bots/{bot_id}/promotions", response_model = BotPromotionGet, responses = {
     404: {"model": BotPromotion_NotFound} # Promotion Not Found
@@ -134,7 +136,6 @@ async def get_bots_api(request: Request, bot_id: int, compact: Optional[bool] = 
         api_ret["sensitive"] = await get_events(bot_id = bot_id)
     else:
         api_ret["sensitive"] = {}
-    api_ret["promotions"] = await get_promotions(bot_id = bot_id)
     api_ret["maintenance"] = await in_maint(bot_id = bot_id)
     vanity = await db.fetchrow("SELECT vanity_url FROM vanity WHERE redirect = $1", bot_id)
     if vanity is None:
