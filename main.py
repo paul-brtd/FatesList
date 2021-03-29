@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Request, Form as FForm
+from fastapi.openapi.utils import get_openapi
 from starlette.middleware.sessions import SessionMiddleware
 from fastapi.responses import ORJSONResponse
 from fastapi.templating import Jinja2Templates
@@ -125,3 +126,18 @@ async def add_process_time_header(request: Request, call_next):
     process_time = time.time() - start_time
     response.headers["X-Process-Time"] = str(process_time)
     return response
+
+def fl_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    openapi_schema = get_openapi(
+        title="Fates List",
+        version="1.0",
+        description="Only v2 beta 1 API is supported (v1 is the old one fateslist.js currently uses)",
+        routes=app.routes,
+    )
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+#app.openapi = fl_openapi
+
