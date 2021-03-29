@@ -57,7 +57,12 @@ class BotReview(BaseModel):
 class BotReviewList(BaseModel):
     __root__: List[BotReview]
 
+class BotReviews(BaseModel):
+    reviews: BotReviewList
+    average_stars: float
+
 BotReview.update_forward_refs()
+BotReviews.update_forward_refs()
 
 class PrevResponse(BaseModel):
     html: str
@@ -103,11 +108,9 @@ class Bot(BaseUser):
     css: Optional[str] = None
     votes: int
     vanity: Optional[str] = None
-    reviews: Optional[BotReviewList] = [] # Compact
     sensitive: dict
     promotions: Optional[BotPromotionList] = []
     maintenance: BotMaintenance
-    average_stars: Optional[float] = None # Conpact
     donate: Optional[str] = None
 
 class BotCommand(BaseModel):

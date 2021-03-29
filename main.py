@@ -20,6 +20,8 @@ from fastapi_limiter import FastAPILimiter
 from fastapi_limiter.depends import RateLimiter
 import logging
 from fastapi.exceptions import HTTPException
+from starlette.datastructures import URL
+
 
 #logging.basicConfig(level=logging.DEBUG)
 
@@ -119,8 +121,15 @@ for tag in SERVER_TAGS.keys():
     server_tags_fixed.append({"name": tag.replace("_", " ").title(), "iconify_data": SERVER_TAGS[tag], "id": tag})
 
 @app.middleware("http")
-async def add_process_time_header(request: Request, call_next):
-    print(request.url)
+async def add_process_time_header_and_parse_apiver(request: Request, call_next):
+    if str(request.url).startswith(site_url + "/api/") and not str(request.url).startswith(site_url + "/api/docs") and not str(request.url).startswith(site_url + "/api/v/"):
+        if request.headers.get("FL-API-Version"):
+            api_ver = request.headers.get("FL-API-Version")
+        else:
+            api_ver = "2"
+        new_scope = request.scope
+        new_scope["path"] = new_scope["path"].replace("/api", f"/api/v/{api_ver}")
+        request.scope = new_scope
     start_time = time.time()
     response = await call_next(request)
     process_time = time.time() - start_time
@@ -133,7 +142,7 @@ def fl_openapi():
     openapi_schema = get_openapi(
         title="Fates List",
         version="1.0",
-        description="Only v2 beta 1 API is supported (v1 is the old one fateslist.js currently uses)",
+        description="Only v2 beta 2 API is supported (v1 is the old one that fateslist.js currently uses). The default API is v2. This means /api will point to this. To pin a api, either use the FL-API-Version header or directly use /api/v/{version}.",
         routes=app.routes,
     )
     app.openapi_schema = openapi_schema

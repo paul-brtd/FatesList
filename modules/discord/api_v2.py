@@ -7,9 +7,9 @@ from modules.models.api_v2 import *
 discord_o = Oauth(OauthConfig)
 
 router = APIRouter(
-    prefix = "/api",
+    prefix = "/api/v/2",
     include_in_schema = True,
-    tags = ["API (v2)"]
+    tags = ["API v2 (default)"]
 )
 
 @router.get("/bots/{bot_id}/promotions", response_model = BotPromotionGet, responses = {
@@ -141,11 +141,16 @@ async def get_bots_api(request: Request, bot_id: int, compact: Optional[bool] = 
         api_ret["vanity"] = None
     else:
         api_ret["vanity"] = vanity["vanity_url"]
-    if not compact:
-        reviews = await parse_reviews(bot_id)
-        api_ret["reviews"] = reviews[0]
-        api_ret["average_stars"] = float(reviews[1])
     return api_ret
+
+@router.get("/bots/{bot_id}/reviews", response_model = BotReviews)
+async def get_bot_reviews(request: Request, bot_id: int):
+    reviews = await parse_reviews(bot_id)
+    if reviews[0] == []:
+        return abort(404)
+    return {"reviews": reviews[0], "average_stars": reviews[1]}
+
+
 
 @router.get("/bots/{bot_id}/commands", response_model = BotCommands)
 async def get_bot_commands_api(request:  Request, bot_id: int):
@@ -329,8 +334,8 @@ async def ws_close(websocket: WebSocket, code: int):
     except:
         return
 
-@router.websocket("/api/ws") # Compatibility, will be undocumented soon
-@router.websocket("/api/ws/bot")
+@router.websocket("/api/v/2/ws") # Compatibility, will be undocumented soon
+@router.websocket("/api/v/2/ws/bot")
 async def websocket_bot(websocket: WebSocket):
     await manager.connect(websocket)
     if websocket.api_token == []:
@@ -389,7 +394,7 @@ async def websocket_bot(websocket: WebSocket):
 
 # Chat
 
-@router.websocket("/api/ws/chat")
+@router.websocket("/api/ws/v/2/chat")
 async def chat_api(websocket: WebSocket):
     await manager_chat.connect(websocket)
     if not websocket.authorized:
