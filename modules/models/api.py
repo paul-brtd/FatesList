@@ -12,27 +12,30 @@ class BaseUser(BaseModel):
 class PromoDelete(BaseModel):
     promo_id: Optional[uuid.UUID] = None
 
-class Promo(BaseModel):
+class BotPromotionPartial(BaseModel):
     title: str
     info: str
     css: Optional[str] = None
     type: int
 
-class PromoObj(BaseModel):
-    promotions: list
+class BotPromotion(BotPromotionPartial):
+    id: uuid.UUID
 
-class PromoPatch(Promo):
-    promo_id: uuid.UUID
+class BotPromotionList(BaseModel):
+    __root__: List[BotPromotion]
+
+class BotPromotionGet(BaseModel):
+    promotions: BotPromotionList
 
 class APIResponse(BaseModel):
     done: bool
     reason: Optional[str] = None
 
-class PartialBotMaint(BaseModel):
+class BotMaintenancePartial(BaseModel):
     type: int = 1
     reason: Optional[str] = None
 
-class BotMaint(PartialBotMaint):
+class BotMaintenance(BotMaintenancePartial):
     epoch: Optional[str] = None
 
 BotReviewList = ForwardRef('BotReviewList')
@@ -102,8 +105,8 @@ class Bot(BaseUser):
     vanity: Optional[str] = None
     reviews: Optional[BotReviewList] = [] # Compact
     sensitive: dict
-    promotions: Optional[List[Promo]] = {}
-    maintenance: BotMaint
+    promotions: Optional[BotPromotionList] = []
+    maintenance: BotMaintenance
     average_stars: Optional[float] = None # Conpact
     donate: Optional[str] = None
 
@@ -186,3 +189,6 @@ class ValidServer(BaseModel):
 class UserDescEdit(BaseModel):
     description: str
 
+class BotPromotion_NotFound(BaseModel):
+    detail: str = "Promotion Not Found"
+    code: int = 1001

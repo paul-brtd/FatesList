@@ -11,12 +11,17 @@ router = APIRouter(
     include_in_schema = True
 )
 
-@router.get("/bots/{bot_id}/promotions", tags = ["API"], response_model = PromoObj)
+@router.get("/bots/{bot_id}/promotions", tags = ["API"], response_model = BotPromotionGet, responses = {
+    404: {"model": BotPromotion_NotFound} # Promotion Not Found
+})
 async def get_promotion(request:  Request, bot_id: int):
-    return {"promotions": (await get_promotions(bot_id))}
+    promos = await get_promotions(bot_id)
+    if promos == []:
+        return ORJSONResponse(BotPromotion_NotFound().dict(), status_code = 404)
+    return {"promotions": promos}
 
 @router.post("/bots/{bot_id}/promotions", tags = ["API"], response_model = APIResponse)
-async def add_promotion(request: Request, bot_id: int, promo: Promo, Authorization: str = Header("INVALID_API_TOKEN")):
+async def add_promotion(request: Request, bot_id: int, promo: BotPromotionPartial, Authorization: str = Header("INVALID_API_TOKEN")):
     """Creates a promotion for a bot. Type can be 1 for announcement, 2 for promotion or 3 for generic
 
     """
@@ -32,7 +37,7 @@ async def add_promotion(request: Request, bot_id: int, promo: Promo, Authorizati
     return {"done":  True, "reason": None}
 
 @router.patch("/bots/{bot_id}/promotions", tags = ["API"], response_model = APIResponse)
-async def edit_promotion(request: Request, bot_id: int, promo: PromoPatch, Authorization: str = Header("INVALID_API_TOKEN")):
+async def edit_promotion(request: Request, bot_id: int, promo: BotPromotion, Authorization: str = Header("INVALID_API_TOKEN")):
     """Edits an promotion for a bot given its promotion ID.
 
     **API Token**: You can get this by clicking your bot and clicking edit and scrolling down to API Token or clicking APIWeb
@@ -45,10 +50,10 @@ async def edit_promotion(request: Request, bot_id: int, promo: PromoPatch, Autho
     id = await db.fetchrow("SELECT bot_id FROM bots WHERE bot_id = $1 AND api_token = $2", bot_id, str(Authorization))
     if id is None:
         return abort(401)
-    pid = await db.fetchrow("SELECT id FROM bot_promotions WHERE id = $1 AND bot_id = $2", promo.promo_id, bot_id)
+    pid = await db.fetchrow("SELECT id FROM bot_promotions WHERE id = $1 AND bot_id = $2", promo.id, bot_id)
     if pid is None:
         return ORJSONResponse({"done":  False, "reason": "NO_PROMOTION_FOUND"}, status_code = 400)
-    await db.execute("UPDATE bot_promotions SET title = $1, info = $2 WHERE bot_id = $3 AND id = $4", promo.title, promo.info, bot_id, promo.promo_id)
+    await db.execute("UPDATE bot_promotions SET title = $1, info = $2 WHERE bot_id = $3 AND id = $4", promo.title, promo.info, bot_id, promo.id)
     return {"done": True, "reason": None}
 
 @router.delete("/bots/{bot_id}/promotions", tags = ["API"], response_model = APIResponse)
@@ -258,7 +263,7 @@ async def set_bot_stats_api(request: Request, bt: BackgroundTasks, bot_id: int, 
     return {"done": True, "reason": None}
 
 @router.post("/bots/{bot_id}/maintenance", tags = ["API"], response_model = APIResponse)
-async def set_maintenance_mode(request: Request, bot_id: int, api: PartialBotMaint, Authorization: str = Header("INVALID_API_TOKEN")):
+async def set_maintenance_mode(request: Request, bot_id: int, api: BotMaintenancePartial, Authorization: str = Header("INVALID_API_TOKEN")):
     """This is just an endpoing for enabling or disabling maintenance mode. As of the new API Revamp, this is the only way to enable or disable maintenance mode as of right now
 
     **API Token**: You can get this by clicking your bot and clicking edit and scrolling down to API Token
