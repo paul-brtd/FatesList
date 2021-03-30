@@ -1,6 +1,6 @@
 uvicorn[standard]
 fastapi[all]
-aioredis
+git+https://github.com/Fates-List/aioredis-py.git
 redis
 uvloop
 jinja2
@@ -10,7 +10,7 @@ aiohttp
 aiohttp_requests
 starlette_wtf
 discord
-fastapi-limiter
+git+https://github.com/Fates-List/fastapi-limiter.git
 prometheusrock
 orjson
 websockets
