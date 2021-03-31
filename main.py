@@ -100,7 +100,6 @@ async def startup():
 async def close():
     print("Closing")
     await redis_db.close()
-    await redis_db.wait_closed()
 
 @client.event
 async def on_ready():

@@ -73,8 +73,9 @@ async def admin_api(request: Request, bt: BackgroundTasks, admin: str = FForm(""
 
 async def stat_update_bt():
     bots = await db.fetch("SELECT bot_id, votes FROM bots")
+    epoch = time.time()
     for bot in bots:
-        await db.execute("INSERT INTO bot_stats_votes_pm (bot_id, epoch, votes) VALUES ($1, $2, $3)", bot["bot_id"], time.time(), bot["votes"])
+        await db.execute("INSERT INTO bot_stats_votes_pm (bot_id, epoch, votes) VALUES ($1, $2, $3)", bot["bot_id"], epoch, bot["votes"])
     await db.execute("UPDATE bots SET votes = 0")
     await db.execute("UPDATE users SET vote_epoch = 0")
 

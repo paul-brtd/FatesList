@@ -569,6 +569,12 @@ class ConnectionManager:
         for connection in self.active_connections:
             await connection.send_json(message)
 
+async def ws_close(websocket: WebSocket, code: int):
+    try:
+        return await websocket.close(code=code)
+    except:
+        return
+
 builtins.manager = ConnectionManager()
 builtins.manager_chat = ConnectionManager()
 
