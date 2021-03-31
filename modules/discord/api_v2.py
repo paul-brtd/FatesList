@@ -22,14 +22,14 @@ async def get_promotion(request:  Request, bot_id: int):
     return {"promotions": promos}
 
 @router.post("/bots/{bot_id}/promotions", response_model = APIResponse)
-async def add_promotion(request: Request, bot_id: int, promo: BotPromotionPartial, Authorization: str = Header("INVALID_API_TOKEN")):
+async def add_promotion_api(request: Request, bot_id: int, promo: BotPromotionPartial, Authorization: str = Header("INVALID_API_TOKEN")):
     """Creates a promotion for a bot. Type can be 1 for announcement, 2 for promotion or 3 for generic
 
     """
     if len(promo.title) < 3:
         return ORJSONResponse({"done":  False, "reason": "TEXT_TOO_SMALL"}, status_code = 400)
     if promo.type not in [1, 2, 3]:
-        return ORSJONResponse({"done":  False, "reason": "INVALID_PROMO_TYPE"}, status_code = 400)
+        return ORJSONResponse({"done":  False, "reason": "INVALID_PROMO_TYPE"}, status_code = 400)
     id = await db.fetchrow("SELECT bot_id FROM bots WHERE bot_id = $1 AND api_token = $2", bot_id, str(Authorization))
     if id is None:
         return abort(401)
