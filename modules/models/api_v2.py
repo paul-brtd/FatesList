@@ -171,7 +171,7 @@ class BotVanity(BaseModel):
 
 class User(BaseUser):
     id: str
-    description: str
+    description: Optional[str] = None
     css: str
 
 class PartialServer(BaseModel):
