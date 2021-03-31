@@ -27,9 +27,9 @@ async def add_promotion(request: Request, bot_id: int, promo: BotPromotionPartia
 
     """
     if len(promo.title) < 3:
-        return {"done":  False, "reason": "TEXT_TOO_SMALL"}
+        return ORJSONResponse({"done":  False, "reason": "TEXT_TOO_SMALL"}, status_code = 400)
     if promo.type not in [1, 2, 3]:
-        return {"done":  False, "reason": "INVALID_PROMO_TYPE"}
+        return ORSJONResponse({"done":  False, "reason": "INVALID_PROMO_TYPE"}, status_code = 400)
     id = await db.fetchrow("SELECT bot_id FROM bots WHERE bot_id = $1 AND api_token = $2", bot_id, str(Authorization))
     if id is None:
         return abort(401)
@@ -58,7 +58,7 @@ async def edit_promotion(request: Request, bot_id: int, promo: BotPromotion, Aut
     return {"done": True, "reason": None}
 
 @router.delete("/bots/{bot_id}/promotions", response_model = APIResponse)
-async def delete_promotion(request: Request, bot_id: int, promo: PromoDelete, Authorization: str = Header("INVALID_API_TOKEN")):
+async def delete_promotion(request: Request, bot_id: int, promo: BotPromotionDelete, Authorization: str = Header("INVALID_API_TOKEN")):
     """Deletes a promotion for a bot or deletes all promotions from a bot (WARNING: DO NOT DO THIS UNLESS YOU KNOW WHAT YOU ARE DOING).
 
     **API Token**: You can get this by clicking your bot and clicking edit and scrolling down to API Token or clicking APIWeb
@@ -69,11 +69,11 @@ async def delete_promotion(request: Request, bot_id: int, promo: PromoDelete, Au
     if id is None:
         return abort(401)
     id = id["bot_id"]
-    if promo.promo_id is not None:
-        eid = await db.fetchrow("SELECT id FROM bot_promotions WHERE id = $1", promo.promo_id)
+    if promo.id is not None:
+        eid = await db.fetchrow("SELECT id FROM bot_promotions WHERE id = $1", promolid)
         if eid is None:
-            return {"done":  False, "reason": "NO_PROMOTION_FOUND"}
-        await db.execute("DELETE FROM bot_promotions WHERE bot_id = $1 AND id = $2", id, promo.promo_id)
+            return ORJSONResponse({"done":  False, "reason": "NO_PROMOTION_FOUND"}, status_code = 400)
+        await db.execute("DELETE FROM bot_promotions WHERE bot_id = $1 AND id = $2", id, promo.id)
     else:
         await db.execute("DELETE FROM bot_promotions WHERE bot_id = $1", id)
     return {"done":  True, "reason": None}

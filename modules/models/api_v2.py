@@ -9,8 +9,8 @@ class BaseUser(BaseModel):
     disc: str
     status: str
 
-class PromoDelete(BaseModel):
-    promo_id: Optional[uuid.UUID] = None
+class BotPromotionDelete(BaseModel):
+    id: Optional[uuid.UUID] = None
 
 class BotPromotionPartial(BaseModel):
     title: str

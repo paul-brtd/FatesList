@@ -106,6 +106,8 @@ async def review_tool(request: Request, bot_id: int, accept: str = FForm(""), de
     if "userid" not in request.session.keys():
         return RedirectResponse("/")
     guild = client.get_guild(main_server)
+    if guild is None:
+        return HTMLResponse("We are currently connecting to Discord, please wait")
     user = guild.get_member(int(request.session["userid"]))
     s = is_staff(staff_roles, user.roles, 2)
     bot = await get_bot(bot_id)
