@@ -12,8 +12,6 @@ router = APIRouter(
     tags = ["API v2 (default, beta, freeze-soon)"]
 )
 
-# TODO Move maintenance and promotions out of get bot
-
 @router.get("/bots/{bot_id}/promotions", response_model = BotPromotionGet, responses = {
     404: {"model": BotPromotion_NotFound} # Promotion Not Found
 })
