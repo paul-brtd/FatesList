@@ -7,7 +7,7 @@ class BaseUser(BaseModel):
     username: str
     avatar: str
     disc: str
-    status: str
+    status: int
 
 class BotPromotionDelete(BaseModel):
     id: Optional[uuid.UUID] = None
