@@ -7,7 +7,7 @@ from modules.models.api_v2 import *
 discord_o = Oauth(OauthConfig)
 
 router = APIRouter(
-    prefix = "/api/v/2",
+    prefix = "/api/v2",
     include_in_schema = True,
     tags = ["API v2 (default, beta, freeze-soon)"]
 )
