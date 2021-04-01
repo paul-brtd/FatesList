@@ -1,5 +1,5 @@
 from ..deps import *
-
+from modules.models.bot_actions import BotAddForm, BotEditForm
 router = APIRouter(
     prefix = "/bot",
     tags = ["Actions"],
@@ -19,42 +19,27 @@ async def add_bot(request: Request):
 
 @router.post("/admin/add")
 @csrf_protect
-async def add_bot_api(
+async def add_bot_backend(
         request: Request,
         bt: BackgroundTasks, 
-        bot_id: int = FForm(""),
-        prefix: str = FForm(""),
-        library: Optional[str] = FForm(""),
-        invite: str = FForm(""),
-        website: Optional[str] = FForm(""),
-        description: str = FForm(""),
-        tags: str = FForm(""),
-        banner: str = FForm("none"),
-        extra_owners: str = FForm(""),
-        support: Optional[str] = FForm(""),
-        long_description: str = FForm(""),
-        css: str = FForm(""),
-        custom_prefix: str = FForm("off"),
-        open_source: str = FForm("off"),
-        html_long_description: str = FForm("false"),
-        donate: str = FForm("")
+        bot: BotAddForm = Depends(BotAddForm)
     ):
     if "userid" not in request.session.keys():
         return RedirectResponse("/auth/login?redirect=/bot/admin/add&pretty=to add a bot", status_code = 303)
-    banner = banner.replace("http://", "https://").replace("(", "").replace(")", "")
-    html_long_description = html_long_description == "true"
+    banner = bot.banner.replace("http://", "https://").replace("(", "").replace(")", "")
     guild = client.get_guild(main_server)
-    bot_dict = locals()
+    bot_dict = bot.dict()
     features = [f for f in bot_dict.keys() if bot_dict[f] == "on" and f in ["custom_prefix", "open_source"]]
     bot_dict["features"] = features
     bot_dict["user_id"] = request.session.get("userid")
-    bot_adder = BotActions(**bot_dict)
+    bot_dict["bt"] = bt
+    print(bot_dict)
+    bot_adder = BotActions(bot_dict)
     rc = await bot_adder.add_bot()
     if rc is None:
-        return RedirectResponse("/bot/" + str(bot_id), status_code = 303)
+        return RedirectResponse("/bot/" + str(bot_dict["bot_id"]), status_code = 303)
     bot_dict["tags"] = bot_dict["tags"].split(",")
     return await templates.TemplateResponse("bot_add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": rc, "mode": "add"})
- 
 
 @router.get("/{bid}/edit")
 @csrf_protect
@@ -80,40 +65,23 @@ async def bot_edit(request: Request, bid: int):
 
 @router.post("/{bot_id}/edit")
 @csrf_protect
-async def bot_edit_api(
+async def bot_edit_backend(
         request: Request,
         bt: BackgroundTasks,
         bot_id: int,
-        prefix: str = FForm(""),
-        library: Optional[str] = FForm(""),
-        invite: str = FForm(""),
-        website: Optional[str] = FForm(""),
-        description: str = FForm(""),
-        tags: str = FForm(""),
-        banner: str = FForm(""),
-        extra_owners: str = FForm(""),
-        css: str = FForm(""),
-        support: Optional[str] = FForm(""),
-        long_description: str = FForm(""),
-        webhook: str = FForm(""),
-        webhook_type: str = FForm(""),
-        vanity: str = FForm(""),
-        github: str = FForm(""),
-        custom_prefix: str = FForm("off"),
-        open_source: str = FForm("off"),
-        html_long_description: str = FForm("false"),
-        donate: str = FForm("")
+        bot: BotEditForm = Depends(BotEditForm)
     ):
     if "userid" not in request.session.keys():
         return RedirectResponse("/")
-    banner = banner.replace("http://", "https://").replace("(", "").replace(")", "")
-    html_long_description = html_long_description == "true"
+    banner = bot.banner.replace("http://", "https://").replace("(", "").replace(")", "")
     guild = client.get_guild(main_server)
-    bot_dict = locals()
+    bot_dict = bot.dict()
     features = [f for f in bot_dict.keys() if bot_dict[f] == "on" and f in ["custom_prefix", "open_source"]]
     bot_dict["features"] = features
+    bot_dict["bt"] = bt
+    bot_dict["bot_id"] = bot_id
     bot_dict["user_id"] = request.session.get("userid")
-    bot_editor = BotActions(**bot_dict)
+    bot_editor = BotActions(bot_dict)
     rc = await bot_editor.edit_bot()
     if rc is None:
         return RedirectResponse("/bot/" + str(bot_id), status_code = 303)

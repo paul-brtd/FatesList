@@ -768,10 +768,10 @@ async def add_ws_event(bot_id: int, ws_event: dict) -> None:
     await redis_db.publish(str(bot_id), orjson.dumps({id: ws_event})) # Publish it to ws_events
 
 class BotActions():
-    def __init__(self, **kwargs):
-        self.__dict__.update(kwargs) # Add all kwargs to function
+    def __init__(self, bot):
+        self.__dict__.update(bot) # Add all kwargs to function
         if "bt" not in self.__dict__ or "user_id" not in self.__dict__:
-            raise SyntaxError()
+            raise SyntaxError("Background Task and User ID must be in dict")
 
     async def base_check(self) -> str:
         """Perform basic checks for adding/editting bots"""
@@ -821,6 +821,9 @@ class BotActions():
         except:
             return "One of your extra owners doesn't exist or you haven't comma-seperated them."
 
+        if self.github != "" and not self.github.startswith("https://www.github.com"):
+            return "Your github link must start with https://www.github.com"
+
         return None # None means success
 
     async def edit_check(self):
@@ -846,9 +849,6 @@ class BotActions():
             if vanity_check is not None or self.vanity.replace("", "").lower() in ["bot", "docs", "redoc", "doc", "profile", "server", "bots", "servers", "search", "invite", "discord", "login", "logout", "register", "admin"] or self.vanity.replace("", "").lower().__contains__("/"):
                 return "Your custom vanity URL is already in use or is reserved"
 
-        if self.github != "" and not self.github.startswith("https://www.github.com"):
-            return "Your github link must start with https://www.github.com"
-
         return None # None means success
 
     async def add_check(self):
@@ -870,7 +870,7 @@ class BotActions():
 
         creation = time.time()
 
-        self.bt.add_task(self.add_bot_bt, int(self.user_id), self.bot_id, self.prefix, self.library, self.website, self.banner, self.support, self.long_description, self.description, self.selected_tags, self.extra_owners, creation, self.invite, self.features, self.html_long_description, self.css, self.donate)
+        self.bt.add_task(self.add_bot_bt, int(self.user_id), self.bot_id, self.prefix, self.library, self.website, self.banner, self.support, self.long_description, self.description, self.selected_tags, self.extra_owners, creation, self.invite, self.features, self.html_long_description, self.css, self.donate, self.github)
         return None # None means success
 
     async def edit_bot(self):
@@ -883,8 +883,8 @@ class BotActions():
         self.bt.add_task(self.edit_bot_bt, int(self.user_id), self.bot_id, self.prefix, self.library, self.website, self.banner, self.support, self.long_description, self.description, self.selected_tags, self.extra_owners, creation, self.invite, self.webhook, self.vanity, self.github, self.features, self.html_long_description, self.webhook_type, self.css, self.donate)
 
     @staticmethod
-    async def add_bot_bt(user_id, bot_id, prefix, library, website, banner, support, long_description, description, selected_tags, extra_owners, creation, invite, features, html_long_description, css, donate):
-        await db.execute("INSERT INTO bots(bot_id,prefix,bot_library,invite,website,banner,discord,long_description,description,tags,owner,extra_owners,votes,servers,shard_count,created_at,api_token,features, html_long_description, css, donate) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)", bot_id, prefix, library, invite, website, banner, support, long_description, description, selected_tags, user_id, extra_owners, 0, 0, 0, int(creation), get_token(132), features, html_long_description, css, donate)
+    async def add_bot_bt(user_id, bot_id, prefix, library, website, banner, support, long_description, description, selected_tags, extra_owners, creation, invite, features, html_long_description, css, donate, github):
+        await db.execute("INSERT INTO bots(bot_id,prefix,bot_library,invite,website,banner,discord,long_description,description,tags,owner,extra_owners,votes,servers,shard_count,created_at,api_token,features, html_long_description, css, donate, github) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22)", bot_id, prefix, library, invite, website, banner, support, long_description, description, selected_tags, user_id, extra_owners, 0, 0, 0, int(creation), get_token(132), features, html_long_description, css, donate, github)
         await add_event(bot_id, "add_bot", {})
         owner = int(user_id)
         channel = client.get_channel(bot_logs)

@@ -173,7 +173,8 @@
       minlength="3"
       {% if data.vanity != None %}value="{{data.vanity}}"{%endif%}
     />
-<label
+    {% endif %}
+    <label
       for="github"
       >Github (https://www.github.com/XYZ/XYZ)</label
     ><input
@@ -184,7 +185,6 @@
       minlength="3"
       {% if data.github != None %}value="{{data.github}}"{%endif%}
     />
-    {% endif %}
      <label
         for="css"
         >Custom CSS</label
@@ -323,7 +323,7 @@ $("#bot_form").submit( function(eventObj) {
     $('#bot_form').append(input);
     return true;
 });
-  {% if mode == "edit" %}
+  {% if mode == "edit" or data.tags %}
   const selected_tags = [
       {% for tag in data.tags %}
         "{{tag}}",
