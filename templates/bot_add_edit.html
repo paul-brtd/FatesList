@@ -139,7 +139,6 @@
       placeholder="https://patreon.com/foo"
       minlength="5"
       value="{% if data.donate %}{{data.donate}}{% endif %}"/>
-      {% if mode == "edit" %}
       <label for="webhook_type">Webhook Type (Click to change)</label>
       <select id="webhook-type" name="webhook_type" class="form-control fform select-fl">
 	      <option value="VOTE" {% if data.webhook_type == "VOTE" %}selected{%endif%}>Vote Webhook</option>
@@ -159,9 +158,11 @@
       maxlength="1024"
       {% if data.webhook != None %}value="{{data.webhook}}" {%endif%}
     />
-    <button type="button" style="margin-bottom: 30px; margin-top: 0px !important;" class="btn btn-outline-light" onclick="testHook(document.querySelector('#webhook-url').value, document.querySelector('#webhook-type').value)">Test Webhook</button><br/>
-    {% endif %}
     {% if mode == "edit" %}
+    <button type="button" style="margin-bottom: 30px; margin-top: 0px !important;" class="btn btn-outline-light" onclick="testHook(document.querySelector('#webhook-url').value, document.querySelector('#webhook-type').value)">Test Webhook</button><br/>
+    {% else %}
+    <span style="margin: 3px">Testing webhooks can only be done once your bot is created</span>
+    {% endif %}
     <label
       for="vanity"
       >Vanity (https://fateslist.xyz/v/VANITY_URL)</label
@@ -173,7 +174,6 @@
       minlength="3"
       {% if data.vanity != None %}value="{{data.vanity}}"{%endif%}
     />
-    {% endif %}
     <label
       for="github"
       >Github (https://www.github.com/XYZ/XYZ)</label

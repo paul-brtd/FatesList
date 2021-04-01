@@ -33,7 +33,6 @@ async def add_bot_backend(
     bot_dict["features"] = features
     bot_dict["user_id"] = request.session.get("userid")
     bot_dict["bt"] = bt
-    print(bot_dict)
     bot_adder = BotActions(bot_dict)
     rc = await bot_adder.add_bot()
     if rc is None:
