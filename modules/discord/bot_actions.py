@@ -16,7 +16,6 @@ async def add_bot(request: Request):
     else:
         return RedirectResponse("/auth/login?redirect=/bot/admin/add&pretty=to add a bot")
 
-
 @router.post("/admin/add")
 @csrf_protect
 async def add_bot_backend(

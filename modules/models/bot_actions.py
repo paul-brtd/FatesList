@@ -10,21 +10,18 @@ def form_body(cls):
 
 class BotMeta(BaseModel):
     prefix: str
-    library: Optional[str] = None
+    library: str
     invite: str
-    website: Optional[str] = None
+    website: Optional[str] = ""
     description: str
-    tags: list
-    banner: str
+    banner: Optional[str] = ""
     extra_owners: list
-    support: Optional[str]
+    support: Optional[str] = ""
     long_description: str
-    css: str
-    custom_prefix: Optional[bool] = False
-    open_source: Optional[bool] = False
-    html_long_description: bool
-    donate: str
-    github: Optional[str]
+    css: Optional[str] = ""
+    html_long_description: Optional[bool] = True
+    donate: Optional[str] = ""
+    github: Optional[str] = ""
     webhook_type: Optional[str] = ""
     webhook: Optional[str] = ""
     vanity: Optional[str] = ""
@@ -43,8 +40,18 @@ class BotAddForm(BaseForm):
 class BotEditForm(BaseForm):
     pass
 
-class BotAdd(BotMeta):
+class BotAPIMeta(BotMeta):
+    """
+        OAuth access token is not *required* but is recommended for security
+    """
+    features: Optional[list] = []
+    tags: list
+    oauth_access_token: Optional[str] = None # Not passing this will disable oauth check
+    oauth_enforced: Optional[bool] = True # NOT RECOMMENDED, BUT ITS THERE
+    owner: str
+
+class BotAdd(BotAPIMeta):
     pass
 
-class BotEdit(BotMeta):
+class BotEdit(BotAPIMeta):
     pass

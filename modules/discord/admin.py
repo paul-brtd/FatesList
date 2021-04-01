@@ -7,10 +7,12 @@ router = APIRouter(
 )
 
 @router.get("/console")
-async def admin_dashboard(request:Request, stats: Optional[int] = 0):
+async def admin_dashboard(request: Request, stats: Optional[int] = 0):
     if "userid" in request.session.keys() or stats == 1:
         if "userid" in request.session.keys() and stats != 1:
             guild = client.get_guild(main_server)
+            if guild is None:
+                return await templates.e(request, "Connecting to Discord API, please wait")
             user = guild.get_member(int(request.session["userid"]))
             if user is None:
                 return RedirectResponse("/", status_code = 303)

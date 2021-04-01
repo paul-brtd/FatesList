@@ -70,7 +70,7 @@ class Oauth():
         return {"access_token": json.get("access_token"), "refresh_token": json.get("refresh_token"), "expires_in": json.get("expires_in"), "current_time": time.time()}
 
     async def get_user_json(self, access_token):
-        url = self.discord_api_url+"/users/@me"
+        url = self.discord_api_url + "/users/@me"
 
         headers = {
             "Authorization": f"Bearer {access_token}"
