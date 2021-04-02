@@ -4,6 +4,7 @@ from fastapi import Request
 from starlette.status import HTTP_302_FOUND, HTTP_303_SEE_OTHER
 import secrets
 import string
+from config import site_url
 
 # Some basic utility functions for Fates List (and other users as well)
 def redirect(path: str) -> RedirectResponse:
@@ -37,3 +38,22 @@ def human_format(num: int) -> str:
         num /= 1000.0
     return '{} {}'.format('{:f}'.format(num).rstrip('0').rstrip('.'), ['', 'K', 'M', 'B', 'T', "Quad.", "Quint.", "Sext.", "Sept.", "Oct.", "Non.", "Dec.", "Tre.", "Quat.", "quindec.", "Sexdec.", "Octodec.", "Novemdec.", "Vigint.", "Duovig.", "Trevig.", "Quattuorvig.", "Quinvig.", "Sexvig.", "Septenvig.", "Octovig.", "Nonvig.", "Trigin.", "Untrig.", "Duotrig.", "Googol."][magnitude])
 
+def version_scope(request, def_version):
+    if str(request.url).startswith(site_url + "/api/") and not str(request.url).startswith(site_url + "/api/docs") and not str(request.url).startswith(site_url + "/api/v") and not str(request.url).startswith(site_url + "/api/ws"):
+        if request.headers.get("FL-API-Version"):
+            api_ver = request.headers.get("FL-API-Version")
+        else:
+            api_ver = str(def_version)
+        new_scope = request.scope
+        new_scope["path"] = new_scope["path"].replace("/api", f"/api/v{api_ver}")
+    else:
+        new_scope = request.scope
+        if str(request.url).startswith(site_url + "/api/v"):
+            print(str(request.url.path))
+            api_ver = str(request.url.path).split("/")[2][1:] # Split by / and get 2nd (vX part and then get just X)
+            if api_ver == "":
+                api_ver = str(def_version)
+        else:
+            api_ver = str(def_version)
+    print(api_ver)
+    return new_scope, api_ver

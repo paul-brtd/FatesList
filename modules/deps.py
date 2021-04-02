@@ -549,6 +549,7 @@ class ConnectionManager:
         # Delete stale websocket credentials
         websocket.api_token = []
         websocket.bot_id = [] # 
+        websocket.authorized = False
 
     async def send_personal_message(self, message, websocket: WebSocket):
         i = 0

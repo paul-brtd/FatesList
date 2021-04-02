@@ -121,16 +121,7 @@ for tag in SERVER_TAGS.keys():
 
 @app.middleware("http")
 async def add_process_time_header_and_parse_apiver(request: Request, call_next):
-    if str(request.url).startswith(site_url + "/api/") and not str(request.url).startswith(site_url + "/api/docs") and not str(request.url).startswith(site_url + "/api/v"):
-        if request.headers.get("FL-API-Version"):
-            api_ver = request.headers.get("FL-API-Version")
-        else:
-            api_ver = "2"
-        new_scope = request.scope
-        new_scope["path"] = new_scope["path"].replace("/api", f"/api/v{api_ver}")
-        request.scope = new_scope
-    else:
-        api_ver = "0"
+    request.scope, api_ver = version_scope(request, 2)
     start_time = time.time()
     response = await call_next(request)
     process_time = time.time() - start_time

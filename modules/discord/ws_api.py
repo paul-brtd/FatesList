@@ -1,15 +1,29 @@
 from ..deps import *
+from modules.models.ws_api import *
 
 router = APIRouter(
-    prefix = "/api/misc",
     include_in_schema = True,
-    tags = ["API (misc) / Chat"]
+    tags = ["Websocket API"]
 ) # No arguments needed for websocket but keep for chat
 
-@router.websocket("/api/ws") # FIXME: Remove this for v2, just a compat route
-@router.websocket("/api/ws/bot") # DEFAULT: Change when new default is set
-@router.websocket("/api/v1/ws/bot")
-async def websocket_bot(websocket: WebSocket):
+bootstrap_info = {
+    "versions": ["v1"],
+    "endpoints": {
+        "v1": {
+            "bot_realtime_stats": "/api/v1/ws/bot/rtstats"
+        }
+    }
+}
+
+@router.get("/api/ws", response_model = Bootstrap, dependencies=[Depends(RateLimiter(times=5, minutes=1))])
+async def websocket_bootstrap(request: Request):
+    """
+        This is the gateway for all websockets. Use this to find which route you need or whether it is available
+    """
+    return bootstrap_info
+
+@router.websocket("/api/v1/ws/bot/rtstats")
+async def websocket_bot_rtstats_v1(websocket: WebSocket):
     await manager.connect(websocket)
     if websocket.api_token == []:
         await manager.send_personal_message({"payload": "IDENTITY", "type": "API_TOKEN"}, websocket)
@@ -67,7 +81,7 @@ async def websocket_bot(websocket: WebSocket):
 
 # Chat
 
-@router.websocket("/api/ws/v/2/chat")
+@router.websocket("/api/ws/v1/chat")
 async def chat_api(websocket: WebSocket):
     await manager_chat.connect(websocket)
     if not websocket.authorized:
