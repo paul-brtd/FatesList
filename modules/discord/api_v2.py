@@ -171,6 +171,28 @@ async def get_bot_reviews(request: Request, bot_id: int):
         return abort(404)
     return {"reviews": reviews[0], "average_stars": reviews[1]}
 
+@router.patch("/bots/{bot_id}/reviews/{rid}/upvotes")
+async def upvote_review_api(request: Request, bot_id: int, user_id: int, rid: uuid.UUID, Authorization: str = Header("INVALID_API_TOKEN")):
+    id = await user_auth(user_id, Authorization)
+    if id is None:
+        return abort(401)
+    bot_rev = await db.fetchrow("SELECT review_upvotes, review_downvotes FROM bot_reviews WHERE id = $1", rid)
+    if bot_rev is None:
+        return ORJSONResponse({"done": False, "reason": "You are not allowed to upvote this review (doesn't actually exist)"}, status_code = 404)
+    bot_rev = dict(bot_rev)
+    if user_id in bot_rev["review_upvotes"]:
+        return ORJSONResponse({"done": False, "reason": "USER_ALREADY_UPVOTED"}, status_code = 400)
+    if user_id in bot_rev["review_downvotes"]:
+        while True:
+            try:
+                bot_rev["review_downvotes"].remove(user_id)
+            except:
+                break
+    bot_rev["review_upvotes"].append(user_id)
+    await db.execute("UPDATE bot_reviews SET review_upvotes = $1, review_downvotes = $2 WHERE id = $3", bot_rev["review_upvotes"], bot_rev["review_downvotes"], rid)
+    await add_event(bot_id, "upvote_review", {"user": str(user_id), "review_id": str(rid), "upvotes": len(bot_rev["review_upvotes"]), "downvotes": len(bot_rev["review_downvotes"])})
+    return {"done": True, "reason": None}
+
 @router.get("/bots/{bot_id}/commands", response_model = BotCommands)
 async def get_bot_commands_api(request:  Request, bot_id: int):
     cmd = await get_bot_commands(bot_id)

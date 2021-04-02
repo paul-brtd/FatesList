@@ -284,28 +284,6 @@ async def delete_review(request: Request, bot_id: int, rid: uuid.UUID, bt: Backg
     bt.add_task(base_rev_bt, bot_id, "delete_review", {"user": request.session["userid"], "reply": False, "review_id": str(rid)})
     return await templates.TemplateResponse("message.html", {"request": request, "message": "Successfully deleted your/this review for this bot!<script>window.location.replace('/bot/" + str(bot_id) + "')</script>"})
 
-@router.post("/{bot_id}/reviews/{rid}/upvote")
-async def upvote_review(request: Request, bot_id: int, rid: uuid.UUID):
-    if "userid" not in request.session.keys():
-        return RedirectResponse(f"/auth/login?redirect=/bot/{bot_id}&pretty=to upvote reviews", status_code = 303)
-    bot_rev = await db.fetchrow("SELECT review_upvotes, review_downvotes FROM bot_reviews WHERE id = $1", rid)
-    if bot_rev is None:
-        return await templates.e("message.html", {"request": request, "message": "You are not allowed to upvote this review (doesn't actually exist)"})
-    bot_rev = dict(bot_rev)
-    user = int(request.session.get("userid"))
-    if user in bot_rev["review_upvotes"]:
-        return abort(429)
-    if user in bot_rev["review_downvotes"]:
-        while True:
-            try:
-                bot_rev["review_downvotes"].remove(user)
-            except:
-                break
-    bot_rev["review_upvotes"].append(int(user))
-    await db.execute("UPDATE bot_reviews SET review_upvotes = $1, review_downvotes = $2 WHERE id = $3", bot_rev["review_upvotes"], bot_rev["review_downvotes"], rid)
-    await add_event(bot_id, "upvote_review", {"user": request.session["userid"], "review_id": str(rid), "upvotes": len(bot_rev["review_upvotes"]), "downvotes": len(bot_rev["review_downvotes"])})
-    return await templates.TemplateResponse("message.html", {"request": request, "message": "Successfully upvoted this review for this bot!<script>window.location.replace('/bot/" + str(bot_id) + "')</script>"})
-
 @router.post("/{bot_id}/reviews/{rid}/downvote")
 async def downvote_review(request: Request, bot_id: int, rid: uuid.UUID):
     if "userid" not in request.session.keys():
@@ -326,7 +304,7 @@ async def downvote_review(request: Request, bot_id: int, rid: uuid.UUID):
     bot_rev["review_downvotes"].append(int(user))
     await db.execute("UPDATE bot_reviews SET review_upvotes = $1, review_downvotes = $2 WHERE id = $3", bot_rev["review_upvotes"], bot_rev["review_downvotes"], rid)
     await add_event(bot_id, "downvote_review", {"user": request.session["userid"], "review_id": str(rid), "upvotes": len(bot_rev["review_upvotes"]), "downvotes": len(bot_rev["review_downvotes"])})
-    return await templates.TemplateResponse("message.html", {"request": request, "message": "Successfully downvoted this review for this bot!<script>window.location.replace('/bot/" + str(bot_id) + "')</script>"})
+    return {"done": True, "reason": None}
 
 
 @router.get("/{bid}/resubmit")

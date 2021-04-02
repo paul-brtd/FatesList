@@ -85,7 +85,7 @@ async def login_confirm(request: Request, code: str, state: str):
             request.session["avatar"] = "https://s3.us-east-1.amazonaws.com/files.tvisha.aws/posts/crm/panel/attachments/1580985653/discord-logo.jpg"
         # 794834630942654546
         token = await get_user_token(int(userjson["id"]), request.session.get("username"))
-        request.session["token"] = token
+        request.session["user_token"] = token
         user_css = await db.fetchrow("SELECT css FROM users WHERE user_id = $1", int(request.session["userid"]))
         try:
             request.session["staff"] = is_staff(staff_roles, client.get_guild(main_server).get_member(int(request.session["userid"])).roles, 2)

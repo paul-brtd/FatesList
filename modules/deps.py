@@ -252,6 +252,7 @@ async def get_user_token(uid: int, username: str) -> str:
             print("Updating profile")
             await db.execute("UPDATE users SET username = $1 WHERE user_id = $2", username, int(uid))
         token = token["api_token"]
+        return token
 
 async def get_bot_commands(bot_id: int) -> dict:
     cmd_raw = await db.fetch("SELECT id, slash, name, description, args, examples, premium_only, notes, doc_link FROM bot_commands WHERE bot_id = $1", bot_id)
@@ -634,7 +635,7 @@ class templates():
             arg_dict["avatar"] = request.session.get("avatar")
             arg_dict["username"] = request.session.get("username")
             arg_dict["userid"] = int(request.session.get("userid"))
-            arg_dict["user_token"] = request.session.get("token")
+            arg_dict["user_token"] = request.session.get("user_token")
         else:
             arg_dict["staff"] = [False]
         print(arg_dict["staff"])

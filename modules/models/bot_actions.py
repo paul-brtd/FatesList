@@ -47,7 +47,7 @@ class BotAPIMeta(BotMeta):
     features: Optional[list] = []
     tags: list
     oauth_access_token: Optional[str] = None # Not passing this will disable oauth check
-    oauth_enforced: Optional[bool] = True # NOT RECOMMENDED, BUT ITS THERE
+    oauth_enforced: Optional[bool] = False # NOT RECOMMENDED TO SET THIS TO FALSE IF YOU ARE A AUTOMATED SERVER LIKE BOTBLOCK
     owner: str
 
 class BotAdd(BotAPIMeta):

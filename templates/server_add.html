@@ -60,8 +60,36 @@
 						<p><strong>${data.valid[server].name}</strong></p>
 						<p>Server ID: ${server}</p>
 					</div>
-					<div style='display: none' id='form-${server}'>
-						
+					</div>
+					<div style='display: none; background: black;' id='form-${server}' onclick="">
+						<label for="description">Short Description</label>
+						<input id="description-${server}" type="text" class="form-control fform" name="description" placeholder="Great server, join now!">
+						<label 
+					      	for="html_long_description"
+					      	>Long Description Type (Click to change)</label>
+						<select id="${server}-html_long_description" name="html_long_description" class="form-control fform select-fl">
+						<option value="true" selected>HTML</option>
+						<option value="false"selected>Markdown</option>
+						</select>
+
+  						<label
+					        for="long_description"
+					        >Long description <span style="color: red; font-weight: bold" aria-hidden="true">*</span>
+						  </label><br/>
+						<textarea
+					        class="form-control fform"
+					        required
+					        name="long_description"
+					        placeholder="Write about your bot using html or markdown"
+					        minlength="300"
+						id="${server}-long_description"
+					        style="border-radius: 4px 4px 4px 4px !important;"
+						></textarea>
+						<button type="button" class="btn btn-outline-light" style="margin-bottom: 20px;" onclick="previewLongDesc('${server}')">Preview</button><br/>
+						<small style="font-weight: bold; font-size: 15px; color: red;">You can only preview your long description 20 times every minute unless your bot is certified as this uses the preview API</small>
+						<div id="${server}-ld-preview" style="display: block; min-height: 400px; overflow: auto; color: white; border-style: solid; border-radius: 4px 4px 4px 4px; margin-bottom: 20px; background: black; font-weight: normal; text-align: left;">
+						Your Long Description will appear here when you click the Preview button :)
+					</div>
 					</div>
 					<br/>
 					</a>`
@@ -71,9 +99,32 @@
 		}
         })
 	};
-	function setupGuild(sid) {
-		alert(sid + " Not yet ready to add servers. Check back later!");
+	function openGuild(sid) {
+		$("#form-" + sid).show()
 	}
+
+function previewLongDesc(sid){
+	html = document.querySelector("#" + sid + "-html_long_description").value == "true";
+	ld = document.querySelector("#" + sid + "-long_description").value;
+	alert(ld)
+	if(ld == "")
+		return
+	$.ajax({
+		type: 'POST',
+		dataType: 'json',
+		url: '/api/preview',
+		data: JSON.stringify({"html_long_description": html, "data": ld}),
+		statusCode: {
+			"200": function(data) {
+				$("#" + sid + "-ld-preview").html(data.html)
+			},
+			"429": function(data) {
+				alert("You have been rate limited from using previews")
+			}
+		}
+		});
+}
+
    </script>
 {% endblock %}
 {% block footer %}
