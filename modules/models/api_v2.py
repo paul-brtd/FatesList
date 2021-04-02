@@ -190,6 +190,9 @@ class ValidServer(BaseModel):
 class UserDescEdit(BaseModel):
     description: str
 
+class BotReviewVote(BaseModel):
+    upvote: bool
+
 class BotPromotion_NotFound(BaseModel):
     detail: str = "Promotion Not Found"
     code: int = 1001

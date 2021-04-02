@@ -566,7 +566,8 @@ function openf(evt, id, data) {
 	function upvoteReview(rev_id) {
         $.ajax({
            type: 'PATCH',
-	   url: `/api/bots/{{bot_id}}/reviews/${rev_id}/upvotes?user_id={{userid}}`,
+	   url: `/api/bots/{{bot_id}}/reviews/${rev_id}/votes?user_id={{userid}}`,
+	   data: JSON.stringify({"upvote": true}),
 	   headers: {"Authorization": "{{user_token}}"},
 	   processData: false,
            contentType: 'application/json',
@@ -591,15 +592,14 @@ function openf(evt, id, data) {
 
         function downvoteReview(rev_id) {
         $.ajax({
-           type: 'POST',
-           url: `/bot/{{bot_id}}/reviews/${rev_id}/downvote`,
-           processData: false,
+           type: 'PATCH',
+	   url: `/api/bots/{{bot_id}}/reviews/${rev_id}/votes?user_id={{userid}}`,
+	   data: JSON.stringify({"upvote": false}),
+	   headers: {"Authorization": "{{user_token}}"},
+	   processData: false,
            contentType: 'application/json',
            statusCode: {
-                303: function(data) {
-                        window.location.href = data.redirect;
-                },
-                429: function(data) {
+                400: function(data) {
                         alert("You have already downvoted this review. You cannot downvote it again");
                 },
                 200: function(data) {
@@ -608,7 +608,10 @@ function openf(evt, id, data) {
                 },
                 404: function(data) {
                         alert("Review does not exist or this feature isn't done yet!")
-                }
+                },
+		401: function(data) {
+			alert("We could not authenticate you, make sure you are logged in")
+		}
            }
         });
 
