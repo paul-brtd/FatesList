@@ -352,7 +352,7 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, review:
     guild = client.get_guild(main_server)
     print("Begin rendering bots")
     try:
-        bot = dict(await db.fetchrow("SELECT js_whitelist, api_token, prefix, shard_count, queue, description, bot_library AS library, tags, banner, website, certified, votes, servers, bot_id, discord AS support, owner, extra_owners, banner, banned, disabled, github, features, invite_amount, css, html_long_description AS html_ld, long_description, donate FROM bots WHERE bot_id = $1", bot_id))
+        bot = dict(await db.fetchrow("SELECT js_whitelist, api_token, prefix, shard_count, queue, description, bot_library AS library, tags, banner, website, certified, votes, servers, bot_id, discord AS support, owner, extra_owners, banner, banned, disabled, github, features, invite_amount, css, html_long_description AS html_ld, long_description, donate, privacy_policy FROM bots WHERE bot_id = $1", bot_id))
     except:
         return await templates.e(request, "Bot Not Found")
     print("Got here")
@@ -834,6 +834,10 @@ class BotActions():
         if self.github != "" and not self.github.startswith("https://www.github.com"):
             return "Your github link must start with https://www.github.com"
 
+        self.privacy_policy = self.privacy_policy.replace("http://", "https://")
+        if self.privacy_policy != "" and not self.privacy_policy.startswith("https://"):
+            return "Your privacy policy must be a proper URL starting with https://. URLs which start with http:// will be automatically converted to HTTPS"
+
         if self.vanity == "":
             pass
         else:
@@ -880,7 +884,7 @@ class BotActions():
 
         creation = time.time()
 
-        self.bt.add_task(self.add_bot_bt, int(self.user_id), self.bot_id, self.prefix, self.library, self.website, self.banner, self.support, self.long_description, self.description, self.tags, self.extra_owners, creation, self.invite, self.features, self.html_long_description, self.css, self.donate, self.github, self.webhook, self.webhook_type, self.vanity)
+        self.bt.add_task(self.add_bot_bt, int(self.user_id), self.bot_id, self.prefix, self.library, self.website, self.banner, self.support, self.long_description, self.description, self.tags, self.extra_owners, creation, self.invite, self.features, self.html_long_description, self.css, self.donate, self.github, self.webhook, self.webhook_type, self.vanity, self.privacy_policy)
         return None # None means success
 
     async def edit_bot(self):
@@ -890,12 +894,12 @@ class BotActions():
             return check
 
         creation = time.time()
-        self.bt.add_task(self.edit_bot_bt, int(self.user_id), self.bot_id, self.prefix, self.library, self.website, self.banner, self.support, self.long_description, self.description, self.tags, self.extra_owners, creation, self.invite, self.webhook, self.vanity, self.github, self.features, self.html_long_description, self.webhook_type, self.css, self.donate)
+        self.bt.add_task(self.edit_bot_bt, int(self.user_id), self.bot_id, self.prefix, self.library, self.website, self.banner, self.support, self.long_description, self.description, self.tags, self.extra_owners, creation, self.invite, self.webhook, self.vanity, self.github, self.features, self.html_long_description, self.webhook_type, self.css, self.donate, self.privacy_policy)
 
     @staticmethod
-    async def add_bot_bt(user_id, bot_id, prefix, library, website, banner, support, long_description, description, tags, extra_owners, creation, invite, features, html_long_description, css, donate, github, webhook, webhook_type, vanity):
-        await db.execute("INSERT INTO bots(bot_id,prefix,bot_library,invite,website,banner,discord,long_description,description,tags,owner,extra_owners,votes,servers,shard_count,created_at,api_token,features, html_long_description, css, donate, github, webhook, webhook_type) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24)", bot_id, prefix, library, invite, website, banner, support, long_description, description, tags, user_id, extra_owners, 0, 0, 0, int(creation), get_token(132), features, html_long_description, css, donate, github, webhook, webhook_type)
-        if vanity != '':
+    async def add_bot_bt(user_id, bot_id, prefix, library, website, banner, support, long_description, description, tags, extra_owners, creation, invite, features, html_long_description, css, donate, github, webhook, webhook_type, vanity, privacy_policy):
+        await db.execute("INSERT INTO bots(bot_id,prefix,bot_library,invite,website,banner,discord,long_description,description,tags,owner,extra_owners,votes,servers,shard_count,created_at,api_token,features, html_long_description, css, donate, github, webhook, webhook_type, privacy_policy) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24)", bot_id, prefix, library, invite, website, banner, support, long_description, description, tags, user_id, extra_owners, 0, 0, 0, int(creation), get_token(132), features, html_long_description, css, donate, github, webhook, webhook_type, privacy_policy)
+        if vanity.replace(" ", "") != '':
             await db.execute("INSERT INTO vanity (type, vanity_url, redirect) VALUES ($1, $2, $3)", 1, vanity, bot_id)
 
         await add_event(bot_id, "add_bot", {})
@@ -913,12 +917,12 @@ class BotActions():
         await channel.send(f"<@&{staff_ping_add_role}>", embed = add_embed)
 
     @staticmethod
-    async def edit_bot_bt(user_id, bot_id, prefix, library, website, banner, support, long_description, description, tags, extra_owners, creation, invite, webhook, vanity, github, features, html_long_description, webhook_type, css, donate):
-        await db.execute("UPDATE bots SET bot_library=$2, webhook=$3, description=$4, long_description=$5, prefix=$6, website=$7, discord=$8, tags=$9, banner=$10, invite=$11, extra_owners = $12, github = $13, features = $14, html_long_description = $15, webhook_type = $16, css = $17, donate = $18 WHERE bot_id = $1", bot_id, library, webhook, description, long_description, prefix, website, support, tags, banner, invite, extra_owners, github, features, html_long_description, webhook_type, css, donate)
+    async def edit_bot_bt(user_id, bot_id, prefix, library, website, banner, support, long_description, description, tags, extra_owners, creation, invite, webhook, vanity, github, features, html_long_description, webhook_type, css, donate, privacy_policy):
+        await db.execute("UPDATE bots SET bot_library=$2, webhook=$3, description=$4, long_description=$5, prefix=$6, website=$7, discord=$8, tags=$9, banner=$10, invite=$11, extra_owners = $12, github = $13, features = $14, html_long_description = $15, webhook_type = $16, css = $17, donate = $18, privacy_policy = $19 WHERE bot_id = $1", bot_id, library, webhook, description, long_description, prefix, website, support, tags, banner, invite, extra_owners, github, features, html_long_description, webhook_type, css, donate, privacy_policy)
         check = await db.fetchrow("SELECT vanity FROM vanity WHERE redirect = $1", bot_id)
         if check is None:
             print("am here")
-            if vanity != '':
+            if vanity.replace(" ", "") != '':
                 await db.execute("INSERT INTO vanity (type, vanity_url, redirect) VALUES ($1, $2, $3)", 1, vanity, bot_id)
         else:
             if vanity == '':

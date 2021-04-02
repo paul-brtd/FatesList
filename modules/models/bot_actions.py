@@ -21,6 +21,7 @@ class BotMeta(BaseModel):
     css: Optional[str] = ""
     html_long_description: Optional[bool] = True
     donate: Optional[str] = ""
+    privacy_policy: Optional[str] = ""
     github: Optional[str] = ""
     webhook_type: Optional[str] = ""
     webhook: Optional[str] = ""

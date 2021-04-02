@@ -187,7 +187,11 @@ textarea {
         {% if not bot.github or bot.github == "" or bot.github == "None" %}
         {% else %}
 	<a target=”_blank” href="{{bot.github}}"><button class="btn btn-outline-light bot-buttons-all" id="bot-buttons-github">Github</button></a>
-       {% endif %}
+        {% endif %}
+        {% if not bot.privacy_policy or bot.privacy_policy == "" or bot.privacy_policy == "None" %}
+        {% else %}
+	<a target="_blank" href="{{bot.privacy_policy}}"><button class="btn btn-outline-light bot-buttons-all" id="bot-buttons-privacy_policy">Privacy Policy</button></a>
+	{% endif %}
         {% if not bot.website or bot.website == "" or bot.website == "None" %}
         {% else %}
 	<a target=”_blank” href="{{bot.website}}"><button class="btn btn-outline-light bot-buttons-all" id="bot-buttons-website">Website</button></a>

@@ -48,7 +48,7 @@ async def bot_edit(request: Request, bid: int):
             return await templates.TemplateResponse("message.html", {"request": request, "message": "This bot doesn't exist in our database.", "username": request.session.get("username", False)})
         elif check == False:
             return await templates.TemplateResponse("message.html", {"request": request, "message": "You aren't the owner of this bot.", "username": request.session.get("username", False), "avatar": request.session.get("avatar")})
-        fetch = dict(await db.fetchrow("SELECT bot_id, prefix, bot_library AS library, invite, website, banner, long_description, description, tags, owner, extra_owners, webhook, webhook_type, discord AS support, api_token, banner, banned, github, features, html_long_description, css, donate FROM bots WHERE bot_id = $1", bid))
+        fetch = dict(await db.fetchrow("SELECT bot_id, prefix, bot_library AS library, invite, website, banner, long_description, description, tags, owner, extra_owners, webhook, webhook_type, discord AS support, api_token, banner, banned, github, features, html_long_description, css, donate, privacy_policy FROM bots WHERE bot_id = $1", bid))
         if fetch["extra_owners"]:
             fetch["extra_owners"] = ",".join([str(eo) for eo in fetch["extra_owners"]])
         else:

@@ -174,18 +174,11 @@
       minlength="3"
       {% if data.vanity != None %}value="{{data.vanity}}"{%endif%}
     />
+    <label for="github">Github (https://www.github.com/XYZ/XYZ)</label>
+    <input class="form-control fform" type="text" name="github" placeholder="https://www.github.com/XYZ/XYZ" minlength="3" {% if data.github != None %} value="{{data.github}}" {% endif %}/>
+    <label for="privacy_policy">Privacy Policy URL</label>
+    <input class="form-control fform" type="text" name="privacy_policy" placeholder="https://..." minlength="3" {% if data.privacy_policy %} value="{{data.privacy_policy}}" {% endif %}>
     <label
-      for="github"
-      >Github (https://www.github.com/XYZ/XYZ)</label
-    ><input
-      class="form-control fform"
-      type="text"
-      name="github"
-      placeholder="https://www.github.com/XYZ/XYZ"
-      minlength="3"
-      {% if data.github != None %}value="{{data.github}}"{%endif%}
-    />
-     <label
         for="css"
         >Custom CSS</label
         ><textarea

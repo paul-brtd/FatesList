@@ -110,6 +110,7 @@ class Bot(BaseUser):
     vanity: Optional[str] = None
     sensitive: dict
     donate: Optional[str] = None
+    privacy_policy: Optional[str] = None
 
 class BotCommand(BaseModel):
     id: uuid.UUID

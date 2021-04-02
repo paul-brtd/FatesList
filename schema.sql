@@ -35,7 +35,8 @@ CREATE TABLE bots (
     banned BOOLEAN DEFAULT false,
     github TEXT,
     private boolean DEFAULT false,
-    donate text
+    donate text,
+    privacy_policy text
 );
 
 CREATE TABLE bot_packs (
