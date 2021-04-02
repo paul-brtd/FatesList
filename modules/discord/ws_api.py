@@ -10,7 +10,8 @@ bootstrap_info = {
     "versions": ["v1"],
     "endpoints": {
         "v1": {
-            "bot_realtime_stats": "/api/v1/ws/bot/rtstats"
+            "bot_realtime_stats": "/api/v1/ws/bot/rtstats",
+            "chat": "/api/v1/ws/chat"
         }
     }
 }
@@ -81,7 +82,7 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
 
 # Chat
 
-@router.websocket("/api/ws/v1/chat")
+@router.websocket("/api/v1/ws/chat")
 async def chat_api(websocket: WebSocket):
     await manager_chat.connect(websocket)
     if not websocket.authorized:
