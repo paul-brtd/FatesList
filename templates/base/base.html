@@ -5,7 +5,7 @@
 			<span class="iconify bot-card-cert" data-icon="fa-solid:certificate" data-inline="false" data-height="3em"></span>
                 {% endif %}
                 <a href="/bot/{{bot.bot_id}}" class="bot-card-view-link">
-                        <img alt="bot avatar" class="lozad bot-card-avatar" data-placeholder-background="black" data-src="{{bot.avatar}}"/>
+                        <img alt="bot avatar" class="lozad bot-card-avatar" data-placeholder-background="black" data-src="{{bot.avatar}}" width="30%"/>
                 </a>
         </div>
         <div>
@@ -241,7 +241,7 @@ background-color: blue;
 <body style="background-color: #1D1E23;">
 <header role="navigation" style="background: black; color: white;" class="navbar fixed-top navbar-full navbar-dark navigation-clean-button" aria-label="Site Navigation Menu">
    <div class="navbar-brand">
-	   <a href={% if not server %}"/"{% else %}"/server"{%endif%} class="navbar-brand"><img alt="" style="margin-right: 5px;" width="30px" src="/static/assets/img/b7e5d6e0a9f6fddb68ea920a07546e6a%20(1).png"><span class="sr-only">Toggle navigation</span>Fates List</a>
+	   <a href={% if not server %}"/"{% else %}"/server"{%endif%} class="navbar-brand"><img alt="" style="margin-right: 5px;" width="30px" src="/static/botlisticon.webp"><span class="sr-only">Toggle navigation</span>Fates List</a>
    </div>
    <div class="content-nomobile navbar-nav" style="margin-top: 1px;">
     <li class="nav-item">

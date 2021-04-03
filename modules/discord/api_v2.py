@@ -428,6 +428,9 @@ async def set_user_description_api(request: Request, user_id: int, desc: UserDes
     await db.execute("UPDATE users SET description = $1 WHERE user_id = $2", desc.description, user_id)
     return {"done": True, "reason": None}
 
+
+# TODO: Paypal
+
 # Generic methods to add coins
 
 async def create_order(user_id, quantity, token, id, lm):

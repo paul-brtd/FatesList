@@ -903,7 +903,24 @@ class BotActions():
 
     @staticmethod
     async def add_bot_bt(user_id, bot_id, prefix, library, website, banner, support, long_description, description, tags, extra_owners, creation, invite, features, html_long_description, css, donate, github, webhook, webhook_type, vanity, privacy_policy):
-        await db.execute("INSERT INTO bots(bot_id,prefix,bot_library,invite,website,banner,discord,long_description,description,tags,owner,extra_owners,votes,servers,shard_count,created_at,api_token,features, html_long_description, css, donate, github, webhook, webhook_type, privacy_policy) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24)", bot_id, prefix, library, invite, website, banner, support, long_description, description, tags, user_id, extra_owners, 0, 0, 0, int(creation), get_token(132), features, html_long_description, css, donate, github, webhook, webhook_type, privacy_policy)
+        await db.execute("""INSERT INTO bots (
+                bot_id, prefix, bot_library,
+                invite, website, banner, 
+                discord, long_description, description,
+                tags, owner, extra_owners,
+                votes, servers, shard_count,
+                created_at, api_token, features, 
+                html_long_description, css, donate,
+                github, webhook, webhook_type, 
+                privacy_policy) VALUES(
+                $1, $2, $3,
+                $4, $5, $6,
+                $7, $8, $9,
+                $10, $11, $12,
+                $13, $14, $15,
+                $16, $17, $18,
+                $19, $20, $21,
+                $22, $23, $24, $25)""", bot_id, prefix, library, invite, website, banner, support, long_description, description, tags, user_id, extra_owners, 0, 0, 0, int(creation), get_token(132), features, html_long_description, css, donate, github, webhook, webhook_type, privacy_policy)
         if vanity.replace(" ", "") != '':
             await db.execute("INSERT INTO vanity (type, vanity_url, redirect) VALUES ($1, $2, $3)", 1, vanity, bot_id)
 

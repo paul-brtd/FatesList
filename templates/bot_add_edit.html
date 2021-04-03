@@ -331,14 +331,17 @@ $("#bot_form").submit( function(eventObj) {
     {
       label: '{{tag.name}}',
           value: '{{tag.id}}',
-        },
+    },
         {% endfor %}
       ]
+  icon = document.createElement("i")
+  icon.setAttribute("data-icon", "fa-solid:times")
+  icon.classList.add("iconify")
   var instance = new SelectPure(".select_tags", {
       options: myOptions,
       autocomplete: true, // default: false
       multiple: true,
-      icon: "fa fa-times",
+      inlineIcon: icon,
       value: selected_tags,
   });
   function showToken(but) {
