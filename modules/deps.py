@@ -113,12 +113,14 @@ async def get_any(userid: int) -> Optional[dict]:
     return await _internal_user_fetch(str(int(userid)), 3)
 
 # Internal backend entry to check if one role is in staff and return a dict of that entry if so
+@jit(forceobj=True)
 def is_staff_internal(staff_json: dict, role: int) -> dict:
     for key in staff_json.keys():
         if int(role) == int(staff_json[key]["id"]):
             return staff_json[key]
     return None
 
+@jit(forceobj=True)
 def is_staff(staff_json: dict, roles: Union[list, int], base_perm: int) -> Union[bool, Optional[int]]:
     if type(roles) == list:
         max_perm = 0 # This is a cache of the max perm a user has
@@ -343,6 +345,7 @@ async def parse_reviews(bot_id: int, reviews: List[asyncpg.Record] = None) -> Li
         return reviews, 10.0
     return reviews, round(stars/i, 2)
 
+@jit
 def replace_last(string, delimiter, replacement):
     start, _, end = string.rpartition(delimiter)
     return start + replacement + end
@@ -656,6 +659,7 @@ class templates():
     async def e(request, reason: str, status_code: int = 404, *, main: Optional[str] = ""):
         return await templates.error("message.html", {"request": request, "message": main, "context": reason, "retmain": True}, status_code)
 
+@jit(forceobj=True)
 def url_startswith(url, begin, slash = True):
     # Slash indicates whether to check /route or /route/
     if slash:
@@ -664,6 +668,7 @@ def url_startswith(url, begin, slash = True):
 
 _templates = Jinja2Templates(directory="templates")
 
+@jit(forceobj=True)
 def etrace(ex):
     trace = []
     tb = ex.__traceback__
@@ -775,7 +780,7 @@ class BotActions():
         if "bt" not in self.__dict__ or "user_id" not in self.__dict__:
             raise SyntaxError("Background Task and User ID must be in dict")
 
-    async def base_check(self) -> str:
+    async def base_check(self) -> Optional[str]:
         """Perform basic checks for adding/editting bots"""
         if self.bot_id == "" or self.prefix == "" or self.invite == "" or self.description == "" or self.long_description == "" or len(self.prefix) > 9:
             return "Please ensure you have filled out all the required fields and that your prefix is less than 9 characters."

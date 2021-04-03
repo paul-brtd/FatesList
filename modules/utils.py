@@ -5,6 +5,7 @@ from starlette.status import HTTP_302_FOUND, HTTP_303_SEE_OTHER
 import secrets
 import string
 from config import site_url
+from numba import jit
 
 # Some basic utility functions for Fates List (and other users as well)
 def redirect(path: str) -> RedirectResponse:
@@ -13,11 +14,11 @@ def redirect(path: str) -> RedirectResponse:
 def abort(code: str) -> StarletteHTTPException:
     raise StarletteHTTPException(status_code=code)
 
-def get_token(length: str) -> str:
-    secure_str = "".join(
-        (secrets.choice(string.ascii_letters + string.digits)
-         for i in range(length))
-    )
+@jit(forceobj = True)
+def get_token(length: int) -> str:
+    secure_str = ""
+    for i in range(0, length):
+        secure_str += secrets.choice(string.ascii_letters + string.digits)
     return secure_str
 
 def ip_check(request: Request) -> str:
@@ -26,6 +27,7 @@ def ip_check(request: Request) -> str:
         return forwarded.split(",")[0]
     return request.client.host
 
+@jit(forceobj = True)
 def human_format(num: int) -> str:
     if abs(num) < 1000:
         return str(abs(num))

@@ -88,7 +88,7 @@ async def regenerate_token(request: Request, bot_id: int, Authorization: str = H
     id = await bot_auth(bot_id, Authorization)
     if id is None:
         return abort(401)
-    await db.execute("UPDATE bots SET api_token = $1 WHERE bot_id = $2", get_token(132), id["bot_id"])
+    await db.execute("UPDATE bots SET api_token = $1 WHERE bot_id = $2", get_token(132), id)
     return {"done": True, "reason": None}
 
 @router.get("/bots/random", response_model = RandomBotsAPI)

@@ -17,9 +17,9 @@ websockets
 aredis
 git+https://github.com/Python-Markdown/markdown.git
 django
-django-simple-history
 django-material-admin
 psycopg2
 django_admin_logs
 markdown
 stripe
+numba

@@ -43,3 +43,4 @@ from fastapi_limiter.depends import RateLimiter
 import lxml
 from lxml.html.clean import Cleaner
 import io
+from numba import jit
