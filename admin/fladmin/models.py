@@ -239,6 +239,7 @@ class Bot(models.Model):
     donate = models.CharField(blank=True, null=True, max_length=256)
     username_cached = models.CharField(blank=True, null=False, max_length=32, editable = False)
     long_description = models.TextField(blank=False, null=False)
+    privacy_policy = models.TextField(blank = True, null = True)
 
     class Meta:
         managed = False

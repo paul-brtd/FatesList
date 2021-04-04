@@ -33,6 +33,7 @@ async def on_ready():
 
 @client.event
 async def on_member_join(member):
+    print(member.guild.get_role(bots_role))
     if member.bot:
         await member.add_roles(member.guild.get_role(bots_role))
 

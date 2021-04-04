@@ -91,7 +91,7 @@ async def regenerate_token(request: Request, bot_id: int, Authorization: str = H
     await db.execute("UPDATE bots SET api_token = $1 WHERE bot_id = $2", get_token(132), id)
     return {"done": True, "reason": None}
 
-@router.get("/bots/random", response_model = RandomBotsAPI)
+@router.get("/bots/random", response_model = BotRandom)
 async def random_bots_api(request: Request):
     random_unp = await db.fetchrow("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE queue = false AND banned = false AND disabled = false ORDER BY RANDOM() LIMIT 1") # Unprocessed
     bot = (await get_bot(random_unp["bot_id"])) | dict(random_unp)
@@ -425,7 +425,7 @@ async def get_valid_servers_api(request: Request, user_id: int):
     print(valid)
     return {"valid": valid}
 
-@router.patch("/users/{user_id}/description")
+@router.patch("/users/{user_id}/description", response_model = APIResponse)
 async def set_user_description_api(request: Request, user_id: int, desc: UserDescEdit, Authorization: str = Header("INVALID_API_TOKEN")):
     id = await user_auth(user_id, Authorization)
     if id is None:

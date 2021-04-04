@@ -72,7 +72,7 @@ class PrevRequest(BaseModel):
     html_long_description: bool
     data: str
 
-class RandomBotsAPI(BaseModel):
+class BotRandom(BaseModel):
     bot_id: str
     description: str
     banner: str
