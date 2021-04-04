@@ -79,9 +79,23 @@ async def delete_promotion(request: Request, bot_id: int, promo: BotPromotionDel
         await db.execute("DELETE FROM bot_promotions WHERE bot_id = $1", id)
     return {"done":  True, "reason": None}
 
+@router.get("/bots/{bot_id}/token")
+async def get_bot_token(request: Request, bot_id: int, user_id: int, Authorization: str = Header("INVALID_API_TOKEN")):
+    """
+    Gets a bot token given a user token. 401 = Invalid API Token, 403 = Forbidden (not owner of bot or staff)
+    """
+    id = await user_auth(user_id, Authorization)
+    if id is None:
+        return abort(401)
+    bot_admin = await is_bot_admin(bot_id, user_id)
+    if not bot_admin:
+        return abort(403)
+    return await db.fetchrow("SELECT api_token FROM bots WHERE bot_id = $1", bot_id)
+
 @router.patch("/bots/{bot_id}/token", response_model = APIResponse)
 async def regenerate_bot_token(request: Request, bot_id: int, Authorization: str = Header("INVALID_API_TOKEN")):
-    """Regenerate the Bot API token
+    """
+    Regenerate the Bot API token
 
     **Bot API Token**: You can get this by clicking your bot and clicking edit and clicking Show (under API Token section)
     """
