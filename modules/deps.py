@@ -446,6 +446,7 @@ async def parse_bot_list(fetch: List[asyncpg.Record]) -> list:
             if bot_info is not None:
                 bot = dict(bot)
                 votes = bot["votes"]
+                bot["bot_id"] = str(bot["bot_id"])
                 servers = bot["servers"]
                 del bot["votes"]
                 del bot["servers"]
@@ -453,7 +454,7 @@ async def parse_bot_list(fetch: List[asyncpg.Record]) -> list:
                 del bot["banner"]
                 if bot_info.get("avatar") is None:
                     bot_info["avatar"] = ""
-                lst.append({"avatar": bot_info["avatar"].replace("?size=1024", "?size=128"), "username": bot_info["username"], "votes": human_format(votes), "servers": human_format(servers), "description": bot["description"], "banner": banner.replace("\"", "").replace("'", "").replace("http://", "https://").replace("(", "").replace(")", "").replace("file://", "")} | bot)
+                lst.append({"avatar": bot_info["avatar"].replace("?size=1024", "?size=128"), "username": bot_info["username"], "votes": human_format(votes), "servers": human_format(servers), "description": bot["description"], "banner": banner.replace("\"", "").replace("'", "").replace("http://", "https://").replace("(", "").replace(")", "").replace("file://", "")} | bot | bot_info)
         except:
             continue
     return lst
@@ -506,6 +507,32 @@ async def render_search(request: Request, q: str, api: bool):
         return await templates.TemplateResponse("search.html", {"request": request, "search_bots": search_bots, "tags_fixed": tags_fixed, "query": q, "profile_search": False})
     else:
         return {"search_bots": search_bots, "tags_fixed": tags_fixed, "query": q, "profile_search": False}
+
+async def render_profile_search(request: Request, q: str, api: bool):
+    if q is None:
+        query = ""
+    else:
+        query = q
+    try:
+        es = " OR user_id = " + str(int(query))
+    except:
+        es = ""
+    if query.replace(" ", "") != "":
+        profiles = "SELECT user_id, description, certified FROM users" # Base profile
+        if query != "":
+            profiles = profiles + (" WHERE (username ilike '%" + re.sub(r'\W+|_', ' ', query) + "%'" + es + ")")
+        profiles = await db.fetch(profiles + " LIMIT 12")
+    else:
+        profiles = []
+    profile_obj = []
+    for profile in profiles:
+        profile_info = await get_user(profile["user_id"])
+        if profile_info:
+            profile_obj.append({"banner": None, "description": profile["description"], "certified": profile["certified"] == True} | profile_info)
+    if not api:
+        return await templates.TemplateResponse("search.html", {"request": request, "tags_fixed": tags_fixed, "profile_search": True, "query": query, "profiles": profile_obj})
+    else:
+        return {"profiles": profile_obj, "tags_fixed": tags_fixed, "query": q, "profile_search": True}
 
 # Check vanity of bot 
 async def vanity_bot(vanity: str, compact = False):

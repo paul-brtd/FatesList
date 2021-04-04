@@ -21,27 +21,4 @@ async def tags(request: Request, tag: str):
 
 @router.get("/profile")
 async def profile_search(request: Request, q: Optional[str] = None):
-    if q is None:
-        query = ""
-    else:
-        query = q
-    try:
-        es = " OR user_id = " + str(int(query))
-    except:
-        es = ""
-    debug = False
-    if query.replace(" ", "") != "" or debug:
-        profiles = "SELECT user_id, description, certified FROM users" # Base profile
-        if query != "":
-            profiles = profiles + (" WHERE (username ilike '%" + re.sub(r'\W+|_', ' ', query) + "%'" + es + ")")
-        profiles = await db.fetch(profiles + " LIMIT 12")
-        print(profiles)
-    else:
-        profiles = []
-    profile_obj = []
-    for profile in profiles:
-        profile_info = await get_user(profile["user_id"])
-        print(profile_info)
-        if profile_info:
-            profile_obj.append({"user": profile, "avatar": profile_info["avatar"], "username": profile_info["username"], "description": profile["description"], "certified": profile["certified"] == True})
-    return await templates.TemplateResponse("search.html", {"request": request, "tags_fixed": tags_fixed, "profile_search": True, "query": query, "profiles": profile_obj})
+    return await render_profile_search(request = request, q = q, api = False)

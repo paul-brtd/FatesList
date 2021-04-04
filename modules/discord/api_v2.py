@@ -277,20 +277,20 @@ async def get_votes_api(request: Request, bot_id: int, user_id: Optional[int] = 
         time_to_vote = 0
     return {"votes": voter_count, "voted": voter_count != 0, "vote_epoch": vote_epoch, "time_to_vote": time_to_vote, "vote_right_now": time_to_vote == 0}
 
-@router.get("/bots/{bot_id}/votes/timestamped")
+@router.get("/bots/{bot_id}/votes/timestamped", response_model = BotVotesTimestamped)
 async def timestamped_get_votes_api(request: Request, bot_id: int, user_id: Optional[int] = None, Authorization: str = Header("INVALID_API_TOKEN")):
     """Endpoint to check amount of votes a user has with timestamps. This does not return whether a user can vote"""
     id = await bot_auth(bot_id, Authorization)
     if id is None:
         return abort(401)
     elif user_id is not None:
-        ldata = await db.fetch("SELECT userid, timestamps FROM bot_voters WHERE bot_id = $1 AND user_id = $2", int(bot_id), int(user_id))
+        ldata = await db.fetch("SELECT user_id, timestamps FROM bot_voters WHERE bot_id = $1 AND user_id = $2", int(bot_id), int(user_id))
     else:
-        ldata = await db.fetch("SELECT userid, timestamps FROM bot_voters WHERE bot_id = $1", int(bot_id))
+        ldata = await db.fetch("SELECT user_id, timestamps FROM bot_voters WHERE bot_id = $1", int(bot_id))
     ret = {}
     for data in ldata:
-        ret[str(data["userid"])] = data["timestamps"]
-    return {"user": "timestamp"} | ret
+        ret[str(data["user_id"])] = data["timestamps"]
+    return {"timestamped_votes": ret}
 
 @router.post("/bots/{bot_id}/stats", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=5, minutes=1))])
 async def set_bot_stats_api(request: Request, bt: BackgroundTasks, bot_id: int, api: BotStats, Authorization: str = Header("INVALID_API_TOKEN")):
@@ -340,14 +340,14 @@ async def set_maintenance_mode(request: Request, bot_id: int, api: BotMaintenanc
     await add_maint(id["bot_id"], api.mode, api.reason)
     return {"done": True, "reason": None}
 
-@router.get("/features/{name}")
+@router.get("/features/{name}", response_model = FLFeature)
 async def get_feature_api(request: Request, name: str):
     """Gets a feature given its internal name (custom_prefix, open_source etc)"""
     if name not in features.keys():
         return abort(404)
     return features[name]
 
-@router.get("/tags/{name}")
+@router.get("/tags/{name}", response_model = FLTag)
 async def get_tags_api(request: Request, name: str):
     """Gets a tag given its internal name (custom_prefix, open_source etc)"""
     if name not in TAGS.keys():
@@ -361,15 +361,20 @@ async def get_vanity(request: Request, vanity: str):
         return abort(404)
     return {"type": vb[0], "redirect": vb[1]}
 
-@router.get("/bots/ext/index")
-async def bots_index_page_api(request: Request):
+@router.get("/index/bots", response_model = BotIndex)
+async def bots_index_page(request: Request):
     """For any potential Android/iOS app, crawlers etc."""
     return await render_index(request = request, api = True)
 
-@router.get("/bots/ext/search")
+@router.get("/index/search", response_model = BotSearch)
 async def bots_search_page(request: Request, query: str):
     """For any potential Android/iOS app, crawlers etc. Query is the query to search for"""
     return await render_search(request = request, q = query, api = True)
+
+@router.get("/index/search/profile", response_model = ProfileSearch)
+async def profiles_search_page(request: Request, query: str):
+    """For any potential Android/iOS app, crawlers etc. Query is the query to search for"""
+    return await render_profile_search(request = request, q = query, api = True)
 
 @router.post("/preview", response_model = PrevResponse, dependencies=[Depends(RateLimiter(times=20, minutes=1))])
 async def preview_api(request: Request, data: PrevRequest):

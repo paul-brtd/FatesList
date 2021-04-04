@@ -8,6 +8,7 @@ class BaseUser(BaseModel):
     avatar: str
     disc: str
     status: int
+    bot: bool
 
 class BotPromotionDelete(BaseModel):
     id: Optional[uuid.UUID] = None
@@ -112,6 +113,17 @@ class Bot(BaseUser):
     donate: Optional[str] = None
     privacy_policy: Optional[str] = None
 
+class BotPartial(BaseUser):
+    description: str
+    servers: str
+    banner: str
+    certified: bool
+    bot_id: str
+    invite: str
+
+class BotPartialList(BaseModel):
+    __root__: List[BotPartial]
+
 class BotCommand(BaseModel):
     id: uuid.UUID
     slash: int # 0 = no, 1 = guild, 2 = global
@@ -197,3 +209,45 @@ class BotReviewVote(BaseModel):
 class BotPromotion_NotFound(BaseModel):
     detail: str = "Promotion Not Found"
     code: int = 1001
+
+class BotVotesTimestamped(BaseModel):
+    timestamped_votes: Dict[str, list]
+
+class FLFeature(BaseModel):
+    type: str
+    description: str
+
+class FLTag(BaseModel):
+    name: str
+    iconify_data: str
+    id: str
+
+class FLTags(BaseModel):
+    __root__: List[FLTag]
+
+class BotIndex(BaseModel):
+    tags_fixed: FLTags
+    top_voted: BotPartialList
+    certified_bots: BotPartialList
+    new_bots: BotPartialList
+    roll_api: str
+
+class BaseSearch(BaseModel):
+    tags_fixed: FLTags
+    query: str
+
+class BotSearch(BaseSearch):
+    search_bots: BotPartialList
+    profile_search: bool = False
+
+class ProfilePartial(BaseUser):
+    description: str
+    banner: None
+    certified: bool
+
+class ProfilePartialList(BaseModel):
+    __root__: List[ProfilePartial]
+
+class ProfileSearch(BaseSearch):
+    profiles: ProfilePartialList
+    profile_search: bool = True
