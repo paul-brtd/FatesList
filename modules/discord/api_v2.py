@@ -80,10 +80,10 @@ async def delete_promotion(request: Request, bot_id: int, promo: BotPromotionDel
     return {"done":  True, "reason": None}
 
 @router.patch("/bots/{bot_id}/token", response_model = APIResponse)
-async def regenerate_token(request: Request, bot_id: int, Authorization: str = Header("INVALID_API_TOKEN")):
-    """Regenerate the API token
+async def regenerate_bot_token(request: Request, bot_id: int, Authorization: str = Header("INVALID_API_TOKEN")):
+    """Regenerate the Bot API token
 
-    **API Token**: You can get this by clicking your bot and clicking edit and scrolling down to API Token or clicking APIWeb
+    **Bot API Token**: You can get this by clicking your bot and clicking edit and clicking Show (under API Token section)
     """
     id = await bot_auth(bot_id, Authorization)
     if id is None:
@@ -151,15 +151,44 @@ async def add_bot_api(request: Request, bt: BackgroundTasks, bot_id: int, bot: B
             return abort(401)
     if bot.oauth_enforced:
         user_json = await discord_o.get_user_json(bot.oauth_access_token)
-        if user_json.get("id") is None:
+        if user_json.get("id") is None or str(user_json.get("id")) != str(user):
             return abort(401) # OAuth abort
-    banner = bot.banner.replace("http://", "https://").replace("(", "").replace(")", "")
+    bot.banner = bot.banner.replace("http://", "https://").replace("(", "").replace(")", "")
     bot_dict = bot.dict()
     bot_dict["bot_id"] = bot_id
     bot_dict["user_id"] = bot_dict["owner"]
     bot_dict["bt"] = bt
     bot_adder = BotActions(bot_dict)
     rc = await bot_adder.add_bot()
+    if rc is None:
+        return {"done": True, "reason": f"{site_url}/bot/{bot_id}"}
+    return ORJSONResponse({"done": False, "reason": rc}, status_code = 400)
+
+@router.patch("/bots/{bot_id}", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=5, minutes=1))])
+async def edit_bot_api(request: Request, bt: BackgroundTasks, bot_id: int, bot: BotEdit, Authorization: str = Header("INVALID_API_TOKEN")):
+    """
+    Edits a bot, the owner here should be the owner editing the bot
+    """
+    if str(Authorization) == bb_edit_key:
+        bot.oauth_enforced = True # Botblock add key, enforce o0auth0
+    else:
+        try:
+            user = await user_auth(int(bot.owner), Authorization)
+        except:
+            return abort(401)
+        if user is None:
+            return abort(401)
+    if bot.oauth_enforced:
+        user_json = await discord_o.get_user_json(bot.oauth_access_token)
+        if user_json.get("id") is None or str(user_json.get("id")) != str(user):
+            return abort(401) # OAuth abort
+    bot.banner = bot.banner.replace("http://", "https://").replace("(", "").replace(")", "")
+    bot_dict = bot.dict()
+    bot_dict["bot_id"] = bot_id
+    bot_dict["user_id"] = bot_dict["owner"]
+    bot_dict["bt"] = bt
+    bot_editor = BotActions(bot_dict)
+    rc = await bot_editor.edit_bot()
     if rc is None:
         return {"done": True, "reason": f"{site_url}/bot/{bot_id}"}
     return ORJSONResponse({"done": False, "reason": rc}, status_code = 400)
@@ -431,6 +460,18 @@ async def set_user_description_api(request: Request, user_id: int, desc: UserDes
     if id is None:
         return abort(401)
     await db.execute("UPDATE users SET description = $1 WHERE user_id = $2", desc.description, user_id)
+    return {"done": True, "reason": None}
+
+@router.patch("/users/{user_id}/token", response_model = APIResponse)
+async def regenerate_user_token(request: Request, user_id: int, Authorization: str = Header("INVALID_API_TOKEN")):
+    """Regenerate the User API token
+
+    ** User API Token**: You can get this by clicking your profile and scrolling to the bottom and you will see your API Token
+    """
+    id = await user_auth(user_id, Authorization)
+    if id is None:
+        return abort(401)
+    await db.execute("UPDATE users SET api_token = $1 WHERE user_id = $2", get_token(132), id)
     return {"done": True, "reason": None}
 
 
