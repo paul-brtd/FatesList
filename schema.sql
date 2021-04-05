@@ -36,7 +36,8 @@ CREATE TABLE bots (
     github TEXT,
     private boolean DEFAULT false,
     donate text,
-    privacy_policy text
+    privacy_policy text,
+    nsfw boolean DEFAULT false
 );
 
 CREATE TABLE bot_packs (

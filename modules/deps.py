@@ -355,7 +355,7 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, review:
     guild = client.get_guild(main_server)
     print("Begin rendering bots")
     try:
-        bot = dict(await db.fetchrow("SELECT js_whitelist, api_token, prefix, shard_count, queue, description, bot_library AS library, tags, banner, website, certified, votes, servers, bot_id, discord AS support, owner, extra_owners, banner, banned, disabled, github, features, invite_amount, css, html_long_description AS html_ld, long_description, donate, privacy_policy FROM bots WHERE bot_id = $1", bot_id))
+        bot = dict(await db.fetchrow("SELECT js_whitelist, api_token, prefix, shard_count, queue, description, bot_library AS library, tags, banner, website, certified, votes, servers, bot_id, discord AS support, owner, extra_owners, banner, banned, disabled, github, features, invite_amount, css, html_long_description AS html_ld, long_description, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", bot_id))
     except:
         return await templates.e(request, "Bot Not Found")
     print("Got here")
@@ -460,7 +460,7 @@ async def parse_bot_list(fetch: List[asyncpg.Record]) -> list:
     return lst
 
 async def do_index_query(add_query: str) -> List[asyncpg.Record]:
-    base_query = "SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE queue = false AND banned = false AND disabled = false"
+    base_query = "SELECT description, banner, certified, votes, servers, bot_id, invite, nsfw FROM bots WHERE queue = false AND banned = false AND disabled = false"
     end_query = "DESC LIMIT 12"
     return await db.fetch(" ".join((base_query, add_query, end_query)))
 
@@ -500,7 +500,7 @@ async def render_search(request: Request, q: str, api: bool):
     else:
         fetch = None
     if fetch is None:
-        abc = ("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE queue = false and banned = false and disabled = false and bot_id IN (" + data + ") ORDER BY votes DESC LIMIT 12")
+        abc = ("SELECT description, banner, certified, votes, servers, bot_id, invite, nsfw FROM bots WHERE queue = false and banned = false and disabled = false and bot_id IN (" + data + ") ORDER BY votes DESC LIMIT 12")
         fetch = await db.fetch(abc)
     search_bots = await parse_bot_list(fetch)
     if not api:
@@ -804,6 +804,7 @@ async def add_ws_event(bot_id: int, ws_event: dict) -> None:
 class BotActions():
     def __init__(self, bot):
         self.__dict__.update(bot) # Add all kwargs to function
+        print(bot) # DEBUG
         if "bt" not in self.__dict__ or "user_id" not in self.__dict__:
             raise SyntaxError("Background Task and User ID must be in dict")
 
@@ -916,7 +917,7 @@ class BotActions():
 
         creation = time.time()
 
-        self.bt.add_task(self.add_bot_bt, int(self.user_id), self.bot_id, self.prefix, self.library, self.website, self.banner, self.support, self.long_description, self.description, self.tags, self.extra_owners, creation, self.invite, self.features, self.html_long_description, self.css, self.donate, self.github, self.webhook, self.webhook_type, self.vanity, self.privacy_policy)
+        self.bt.add_task(self.add_bot_bt, int(self.user_id), self.bot_id, self.prefix, self.library, self.website, self.banner, self.support, self.long_description, self.description, self.tags, self.extra_owners, creation, self.invite, self.features, self.html_long_description, self.css, self.donate, self.github, self.webhook, self.webhook_type, self.vanity, self.privacy_policy, self.nsfw)
         return None # None means success
 
     async def edit_bot(self):
@@ -926,10 +927,10 @@ class BotActions():
             return check
 
         creation = time.time()
-        self.bt.add_task(self.edit_bot_bt, int(self.user_id), self.bot_id, self.prefix, self.library, self.website, self.banner, self.support, self.long_description, self.description, self.tags, self.extra_owners, creation, self.invite, self.webhook, self.vanity, self.github, self.features, self.html_long_description, self.webhook_type, self.css, self.donate, self.privacy_policy)
+        self.bt.add_task(self.edit_bot_bt, int(self.user_id), self.bot_id, self.prefix, self.library, self.website, self.banner, self.support, self.long_description, self.description, self.tags, self.extra_owners, creation, self.invite, self.webhook, self.vanity, self.github, self.features, self.html_long_description, self.webhook_type, self.css, self.donate, self.privacy_policy, self.nsfw)
 
     @staticmethod
-    async def add_bot_bt(user_id, bot_id, prefix, library, website, banner, support, long_description, description, tags, extra_owners, creation, invite, features, html_long_description, css, donate, github, webhook, webhook_type, vanity, privacy_policy):
+    async def add_bot_bt(user_id, bot_id, prefix, library, website, banner, support, long_description, description, tags, extra_owners, creation, invite, features, html_long_description, css, donate, github, webhook, webhook_type, vanity, privacy_policy, nsfw):
         await db.execute("""INSERT INTO bots (
                 bot_id, prefix, bot_library,
                 invite, website, banner, 
@@ -939,7 +940,7 @@ class BotActions():
                 created_at, api_token, features, 
                 html_long_description, css, donate,
                 github, webhook, webhook_type, 
-                privacy_policy) VALUES(
+                privacy_policy, nsfw) VALUES(
                 $1, $2, $3,
                 $4, $5, $6,
                 $7, $8, $9,
@@ -947,7 +948,8 @@ class BotActions():
                 $13, $14, $15,
                 $16, $17, $18,
                 $19, $20, $21,
-                $22, $23, $24, $25)""", bot_id, prefix, library, invite, website, banner, support, long_description, description, tags, user_id, extra_owners, 0, 0, 0, int(creation), get_token(132), features, html_long_description, css, donate, github, webhook, webhook_type, privacy_policy)
+                $22, $23, $24, 
+                $25, $26)""", bot_id, prefix, library, invite, website, banner, support, long_description, description, tags, user_id, extra_owners, 0, 0, 0, int(creation), get_token(132), features, html_long_description, css, donate, github, webhook, webhook_type, privacy_policy, nsfw)
         if vanity.replace(" ", "") != '':
             await db.execute("INSERT INTO vanity (type, vanity_url, redirect) VALUES ($1, $2, $3)", 1, vanity, bot_id)
 
@@ -966,8 +968,8 @@ class BotActions():
         await channel.send(f"<@&{staff_ping_add_role}>", embed = add_embed)
 
     @staticmethod
-    async def edit_bot_bt(user_id, bot_id, prefix, library, website, banner, support, long_description, description, tags, extra_owners, creation, invite, webhook, vanity, github, features, html_long_description, webhook_type, css, donate, privacy_policy):
-        await db.execute("UPDATE bots SET bot_library=$2, webhook=$3, description=$4, long_description=$5, prefix=$6, website=$7, discord=$8, tags=$9, banner=$10, invite=$11, extra_owners = $12, github = $13, features = $14, html_long_description = $15, webhook_type = $16, css = $17, donate = $18, privacy_policy = $19 WHERE bot_id = $1", bot_id, library, webhook, description, long_description, prefix, website, support, tags, banner, invite, extra_owners, github, features, html_long_description, webhook_type, css, donate, privacy_policy)
+    async def edit_bot_bt(user_id, bot_id, prefix, library, website, banner, support, long_description, description, tags, extra_owners, creation, invite, webhook, vanity, github, features, html_long_description, webhook_type, css, donate, privacy_policy, nsfw):
+        await db.execute("UPDATE bots SET bot_library=$2, webhook=$3, description=$4, long_description=$5, prefix=$6, website=$7, discord=$8, tags=$9, banner=$10, invite=$11, extra_owners = $12, github = $13, features = $14, html_long_description = $15, webhook_type = $16, css = $17, donate = $18, privacy_policy = $19, nsfw = $20 WHERE bot_id = $1", bot_id, library, webhook, description, long_description, prefix, website, support, tags, banner, invite, extra_owners, github, features, html_long_description, webhook_type, css, donate, privacy_policy, nsfw)
         check = await db.fetchrow("SELECT vanity FROM vanity WHERE redirect = $1", bot_id)
         if check is None:
             print("am here")

@@ -177,6 +177,7 @@ class Bot(BaseUser):
     sensitive: dict
     donate: Optional[str] = None
     privacy_policy: Optional[str] = None
+    nsfw: bool
 
 class BotPartial(BaseUser):
     description: str
@@ -185,6 +186,7 @@ class BotPartial(BaseUser):
     certified: bool
     bot_id: str
     invite: str
+    nsfw: bool
 
 class BotPartialList(BaseModel):
     __root__: List[BotPartial]

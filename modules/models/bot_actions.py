@@ -29,6 +29,7 @@ class BotMeta(BaseModel):
     long_description: str
     css: Optional[str] = ""
     html_long_description: Optional[bool] = True
+    nsfw: Optional[bool] = False
     donate: Optional[str] = ""
     privacy_policy: Optional[str] = ""
     github: Optional[str] = ""

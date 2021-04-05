@@ -152,12 +152,18 @@ textarea {
 	</div>
 	{% elif bot.queue and not review%}
         <div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
-        <strong>This bot has not yet been verified/approved and may violate our rules and/or be low-quality or a "nuke bot". Please do not invite it until we have approved it</strong>
+        	<strong>This bot has not yet been verified/approved and may violate our rules and/or be low-quality or a "nuke bot". Please do not invite it until we have approved it</strong>
 	</div>
 	{% endif %}
 	{% if bot.queue and staff[0] %}
 	<div class="alert alert-info" style="text-align: center; justify-content: center; color: white !important;" role="alert">
-	<strong>You are in review mode. Test the bot by inviting it to the staff server by clicking the Invite button and choosing the Testing Server. Once you are done reviewing the bot, click Admin to approve/deny it</strong></div>
+		<strong>You are in review mode. Test the bot by inviting it to the staff server by clicking the Invite button and choosing the Testing Server. Once you are done reviewing the bot, click Admin to approve/deny it</strong></div>
+    	</div>
+	{% endif %}
+	{% if bot.nsfw %}
+	<div class="alert alert-info" style="text-align: center; justify-content: center; color: white !important;" role="alert">
+		<strong>This bot is primarily NSFW (Not Safe For Work), as such lots of functionality will need a NSFW channel. If the bot allows NSFW commands in non-NSFW channels, please report it using Mod Mail</strong>
+	</div>
 	{% endif %}
 	{% if maint[0] %}
 	    <div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
