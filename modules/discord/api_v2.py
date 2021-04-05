@@ -409,12 +409,12 @@ async def bots_index_page(request: Request):
     """For any potential Android/iOS app, crawlers etc."""
     return await render_index(request = request, api = True)
 
-@router.get("/index/search", response_model = BotSearch)
+@router.get("/search/bots", response_model = BotSearch)
 async def bots_search_page(request: Request, q: str):
     """For any potential Android/iOS app, crawlers etc. Q is the query to search for"""
     return await render_search(request = request, q = q, api = True)
 
-@router.get("/index/search/profile", response_model = ProfileSearch)
+@router.get("/search/profiles", response_model = ProfileSearch)
 async def profiles_search_page(request: Request, q: str):
     """For any potential Android/iOS app, crawlers etc. Q is the query to search for"""
     return await render_profile_search(request = request, q = q, api = True)

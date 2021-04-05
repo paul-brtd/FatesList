@@ -54,7 +54,7 @@ intent_server.presences = False
 builtins.client_servers = discord.Client(intents=intent_server)
 
 limiter = FastAPILimiter
-app = FastAPI(default_response_class = ORJSONResponse, docs_url = None, redoc_url = "/api/docs/endpoints")
+app = FastAPI(default_response_class = ORJSONResponse, redoc_url = "/api/docs/redoc", docs_url = "/api/docs/swagger", openapi_url = "/api/docs/openapi")
 app.add_middleware(SessionMiddleware, secret_key=session_key, https_only = True, max_age = 60*60*12, session_cookie = "fateslist_session_cookie") # 1 day expiry cookie
 
 app.add_middleware(CSRFProtectMiddleware, csrf_secret=csrf_secret)
