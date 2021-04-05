@@ -1,8 +1,17 @@
-from typing import List, Dict
-from modules.imports import *
+"""
+API v2 beta 2
+
+This is part of Fates List. You can use this in any library you wish. For best API compatibility, just plug this directly in your Fates List library. It has no dependencies other than pydantic, typing and uuid (typing and uuid is builtin)
+"""
+
+from typing import List, Dict, Optional, ForwardRef
+from pydantic import BaseModel
 import uuid
 
 class BaseUser(BaseModel):
+    """
+    Represents a base user class on Fates List.
+    """
     id: str
     username: str
     avatar: str
@@ -10,25 +19,66 @@ class BaseUser(BaseModel):
     status: int
     bot: bool
 
+    def __str__(self):
+        """
+        :return: Returns the username
+        :rtype: str
+        """
+        return self.username
+
+    def get_status(self):
+        """
+        :return: Returns a status object for the bot
+        :rtype: Status
+        """
+        return Status(status = self.status)
+
+#LIBRARY-INTERNAL
 class BotPromotionDelete(BaseModel):
+    """
+    Represents a promotion delete request. Your library should internally be using this but you shouldn't need to handle this yourself 
+    """
     id: Optional[uuid.UUID] = None
 
 class BotPromotionPartial(BaseModel):
+    """
+    Represents a partial bot promotion for creating promotions on Fates List
+
+    A partial promotion is similar to a regular promotion object but does not have an id
+    """
     title: str
     info: str
     css: Optional[str] = None
     type: int
 
 class BotPromotion(BotPromotionPartial):
+    """
+    Represents a bot promotion on Fates List
+
+    A partial promotion is similar to a regular promotion object but does not have an id
+    """
     id: uuid.UUID
 
+#LIBRARY-INTERNAL
 class BotPromotionList(BaseModel):
+    """
+    This is a list of bot promotions. This should be handled by your library 
+    """
     __root__: List[BotPromotion]
 
+#LIBRARY-INTERNAL
 class BotPromotionGet(BaseModel):
+    """
+    Represents a bot promotion response model. This should be handled by your library
+    """
     promotions: BotPromotionList
 
 class APIResponse(BaseModel):
+    """
+    Represents a "regular" API response on Fates List CRUD endpoints
+
+    You can check for success using the done boolean and reason using the reason attribute 
+    """
     done: bool
     reason: Optional[str] = None
 
@@ -56,9 +106,15 @@ class BotReview(BaseModel):
     replies: Optional[BotReviewList] = []
 
 class BotReviewList(BaseModel):
+    """
+    Represents a list of bot reviews on Fates List
+    """
     __root__: List[BotReview]
 
 class BotReviews(BaseModel):
+    """
+    Represents bot reviews and average stars of a bot on Fates List
+    """
     reviews: BotReviewList
     average_stars: float
 
@@ -66,6 +122,9 @@ BotReview.update_forward_refs()
 BotReviews.update_forward_refs()
 
 class PrevResponse(BaseModel):
+    """
+    Represents a response from the Preview API
+    """
     html: str
 
 class PrevRequest(BaseModel):
@@ -73,6 +132,9 @@ class PrevRequest(BaseModel):
     data: str
 
 class BotRandom(BaseModel):
+    """
+    Represents a random bot on Fates List
+    """
     bot_id: str
     description: str
     banner: str
@@ -84,6 +146,9 @@ class BotRandom(BaseModel):
     votes: int
 
 class Bot(BaseUser):
+    """
+    Represents a bot on Fates List
+    """
     description: str
     tags: list
     html_long_description: bool
@@ -251,3 +316,31 @@ class ProfilePartialList(BaseModel):
 class ProfileSearch(BaseSearch):
     profiles: ProfilePartialList
     profile_search: bool = True
+
+# Data Classes
+class Status():
+    """
+    Represents a status on Fates List
+    """
+    def __init__(self, status):
+        """
+        Takes in status as integer and makes a status object
+        """
+        self.status = status
+        
+    def __str__(self):
+        """
+        :return: The status in string form
+        :rtype: str
+        """
+        if self.status == 1:
+            return "online"
+        elif self.status == 2:
+            return "offline"
+        elif self.status == 3:
+            return "idle"
+        elif self.status == 4:
+            return "dnd"
+        else:
+            return "unknown"
+

@@ -18,7 +18,7 @@ import re
 import orjson
 from starlette_wtf import CSRFProtectMiddleware, csrf_protect,StarletteForm
 import builtins
-from typing import Optional, List, Union, ForwardRef
+from typing import Optional, List, Union
 from aiohttp_requests import requests
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from websockets.exceptions import ConnectionClosedOK
