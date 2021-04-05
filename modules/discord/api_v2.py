@@ -410,14 +410,14 @@ async def bots_index_page(request: Request):
     return await render_index(request = request, api = True)
 
 @router.get("/index/search", response_model = BotSearch)
-async def bots_search_page(request: Request, query: str):
-    """For any potential Android/iOS app, crawlers etc. Query is the query to search for"""
-    return await render_search(request = request, q = query, api = True)
+async def bots_search_page(request: Request, q: str):
+    """For any potential Android/iOS app, crawlers etc. Q is the query to search for"""
+    return await render_search(request = request, q = q, api = True)
 
 @router.get("/index/search/profile", response_model = ProfileSearch)
-async def profiles_search_page(request: Request, query: str):
-    """For any potential Android/iOS app, crawlers etc. Query is the query to search for"""
-    return await render_profile_search(request = request, q = query, api = True)
+async def profiles_search_page(request: Request, q: str):
+    """For any potential Android/iOS app, crawlers etc. Q is the query to search for"""
+    return await render_profile_search(request = request, q = q, api = True)
 
 @router.post("/preview", response_model = PrevResponse, dependencies=[Depends(RateLimiter(times=20, minutes=1))])
 async def preview_api(request: Request, data: PrevRequest):
