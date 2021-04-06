@@ -264,8 +264,21 @@ class PartialServer(BaseModel):
 class PartialServerDict(BaseModel):
     __root__: Dict[str, PartialServer]
 
-class ValidServer(BaseModel):
-    valid: PartialServerDict
+class AccessToken(BaseModel):
+    access_token: str
+    refresh_token: str
+    expires_in: int
+    current_time: str
+
+class ServerList(BaseModel):
+    servers: PartialServerDict
+
+class ServerListAuthed(ServerList):
+    access_token: AccessToken
+
+class ServerCheck(BaseModel):
+    scopes: str
+    access_token: AccessToken
 
 class UserDescEdit(BaseModel):
     description: str

@@ -667,6 +667,11 @@ class templates():
             arg_dict["username"] = request.session.get("username")
             arg_dict["userid"] = int(request.session.get("userid"))
             arg_dict["user_token"] = request.session.get("user_token")
+            try:
+                arg_dict["access_token"] = orjson.dumps(request.session.get("access_token")).decode("utf-8")
+            except:
+                pass
+            arg_dict["scopes"] = request.session.get("dscopes_str")
         else:
             arg_dict["staff"] = [False]
         print(arg_dict["staff"])

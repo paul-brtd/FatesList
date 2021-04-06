@@ -44,8 +44,9 @@
 	function checkGuilds(){
 		document.querySelector("#valid_servers").innerHTML = "Getting Guilds... Please wait"
         $.ajax({
-                url: "/api/users/{{userid}}/valid_servers",
-                type: "GET",
+                url: "/api/users/{{userid}}/servers/prepare",
+                type: "POST",
+		data: JSON.stringify({'scopes': "{{scopes}}", "access_token": {{access_token|safe}} }),
            	statusCode: {
                 	'429': function(data) {
 				console.log(data)
@@ -53,15 +54,15 @@
                 	},
 			'200': function(data) {
 				server_data = ""
-				for(server in data.valid) {
+				for(server in data.servers) {
 					server_data += `
 					<a style="color: white !important;" href='javascript:void' onclick='openGuild("${server}")'>
-					<div id='${server}' data-code='${data.valid[server].code}' style='width: 500px; min-width: 500px; max-width: 500px; padding: 3px; border-style: solid; border-radius: 4px 4px 4px 4px; background: black; display: inline-block;'>
-						<p><strong>${data.valid[server].name}</strong></p>
+					<div id='${server}' data-code='${data.servers[server].code}' style='width: 900px; min-width: 900px; max-width: 900px; padding: 3px; border-style: solid; border-radius: 4px 4px 4px 4px; background: black; display: inline-block;' data-hidden='true'>
+						<p><strong>${data.servers[server].name}</strong></p>
 						<p>Server ID: ${server}</p>
 					</div>
 					</div>
-					<div style='display: none; background: black;' id='form-${server}' onclick="">
+					<div style='display: none; background: black; border-radius: 10px 10px 10px 10px' id='form-${server}' onclick="">
 						<label for="description">Short Description</label>
 						<input id="description-${server}" type="text" class="form-control fform" name="description" placeholder="Great server, join now!">
 						<label 
@@ -100,11 +101,20 @@
         })
 	};
 	function openGuild(sid) {
-		$("#form-" + sid).show()
+		if($("#" + sid).attr("data-hidden") == "true"){
+			$("#form-" + sid).show()
+			$("#" + sid).attr("data-hidden", "false")
+		}
+		else {
+			$("#form-" + sid).hide()
+			$("#" + sid).attr("data-hidden", "true")
+		}
 	}
 
 function previewLongDesc(sid){
+	alert(sid);
 	html = document.querySelector("#" + sid + "-html_long_description").value == "true";
+	alert(html)
 	ld = document.querySelector("#" + sid + "-long_description").value;
 	alert(ld)
 	if(ld == "")

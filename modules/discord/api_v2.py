@@ -438,14 +438,17 @@ async def get_user_api(request: Request, user_id: int):
     user_ret = dict(user) | user_obj
     return user_ret
 
-@router.get("/users/{user_id}/valid_servers", tags = ["API (Internal)"], dependencies=[Depends(RateLimiter(times=3, minutes=5))], response_model = ValidServer, include_in_schema = False)
-async def get_valid_servers_api(request: Request, user_id: int):
-    """Internal API to get users who have the FL Server Bot and Manage Server/Admin"""
+@router.post("/users/{user_id}/servers/prepare", dependencies=[Depends(RateLimiter(times=1, seconds=30))], response_model = ServerListAuthed)
+async def prepare_servers_api(request: Request, user_id: int, data: ServerCheck):
+    """
+    Prepares a user to add servers and returns available servers for said user. Scopes must have guild permission
+
+    This request may change the access token and this should be set on the client and will be returned in the json response as well
+    """
     valid = {}
-    if "dscopes_str" not in request.session.keys():
-        return abort(400)
-    access_token = await discord_o.access_token_check(request.session["dscopes_str"], request.session["access_token"])
+    access_token = await discord_o.access_token_check(data.scopes, data.access_token.dict())
     request.session["access_token"] = access_token
+    access_token["current_time"] = str(access_token["current_time"])
     servers = await discord_o.get_guilds(access_token["access_token"], permissions = [0x8, 0x20]) # Check for all guilds with 0x8 and 0x20
     for server in servers:
         try:
@@ -466,7 +469,7 @@ async def get_valid_servers_api(request: Request, user_id: int):
             await redis_db.hset(str(guild.id), key = "cache", value = orjson.dumps(guild_json))
             valid = valid | {str(guild.id): guild_json}
     print(valid)
-    return {"valid": valid}
+    return {"servers": valid, "access_token": access_token}
 
 @router.patch("/users/{user_id}/description", response_model = APIResponse)
 async def set_user_description_api(request: Request, user_id: int, desc: UserDescEdit, Authorization: str = Header("INVALID_API_TOKEN")):

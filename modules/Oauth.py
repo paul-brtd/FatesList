@@ -47,7 +47,7 @@ class Oauth():
         return {"access_token": json.get("access_token"), "refresh_token": json.get("refresh_token"), "expires_in": json.get("expires_in"), "current_time": time.time()}
 
     async def access_token_check(self, scope: str, access_token_dict: dict) -> str:
-        if access_token_dict["current_time"] + access_token_dict["expires_in"] > time.time():
+        if float(access_token_dict["current_time"]) + float(access_token_dict["expires_in"]) > time.time():
             print("Using Old Access Token")
             return access_token_dict
         # Refresh
