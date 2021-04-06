@@ -214,7 +214,7 @@ async def get_bot_reviews(request: Request, bot_id: int):
         return abort(404)
     return {"reviews": reviews[0], "average_stars": reviews[1]}
 
-@router.patch("/bots/{bot_id}/reviews/{rid}/votes")
+@router.patch("/bots/{bot_id}/reviews/{rid}/votes", response_model = APIResponse)
 async def upvote_review_api(request: Request, bot_id: int, user_id: int, rid: uuid.UUID, vote: BotReviewVote, Authorization: str = Header("INVALID_API_TOKEN")):
     id = await user_auth(user_id, Authorization)
     if id is None:
