@@ -807,11 +807,20 @@ async def add_ws_event(bot_id: int, ws_event: dict) -> None:
     await redis_db.publish(str(bot_id), orjson.dumps({id: ws_event})) # Publish it to ws_events
 
 class BotActions():
+    class GeneratedObject():
+        """
+        Instead of crappily changing self, just use a generated object which is atleast cleaner
+        """
+        extra_owners = []
+        tags = []
+
     def __init__(self, bot):
         self.__dict__.update(bot) # Add all kwargs to function
         print(bot) # DEBUG
         if "bt" not in self.__dict__ or "user_id" not in self.__dict__:
             raise SyntaxError("Background Task and User ID must be in dict")
+
+        self.generated = self.GeneratedObject() # To keep things clean, make sure we always put changed properties in generated
 
     async def base_check(self) -> Optional[str]:
         """Perform basic checks for adding/editting bots"""
@@ -839,10 +848,12 @@ class BotActions():
             return "According to Discord's API and our cache, your bot does not exist. Please try again after 2 hours."
         
         if type(self.tags) != list:
-            self.tags = self.tags.split(",")
-        
+            self.generated.tags = self.tags.split(",")
+        else:
+            self.generated.tags = self.tags
+
         flag = False
-        for test in self.tags:
+        for test in self.generated.tags:
             if test not in TAGS:
                 return "One of your tags doesn't exist internally. Please check your tags again"
             flag = True
@@ -859,13 +870,15 @@ class BotActions():
             return "Only Patreon and Paypal.me are allowed for donation links as of right now."
 
         if self.extra_owners == "":
-            self.extra_owners = []
+            self.generated.extra_owners = []
         else:
             if type(self.extra_owners) != list:
-                self.extra_owners = self.extra_owners.split(",")
+                self.generated.extra_owners = self.extra_owners.split(",")
+            else:
+                self.generated.extra_owners = self.extra_owners
 
         try:
-            self.extra_owners = [int(id.replace(" ", "")) for id in self.extra_owners]
+            self.generated.extra_owners = [int(id.replace(" ", "")) for id in self.generated.extra_owners]
         except:
             return "One of your extra owners doesn't exist or you haven't comma-seperated them."
 
@@ -922,7 +935,7 @@ class BotActions():
 
         creation = time.time()
 
-        self.bt.add_task(self.add_bot_bt, int(self.user_id), self.bot_id, self.prefix, self.library, self.website, self.banner, self.support, self.long_description, self.description, self.tags, self.extra_owners, creation, self.invite, self.features, self.html_long_description, self.css, self.donate, self.github, self.webhook, self.webhook_type, self.vanity, self.privacy_policy, self.nsfw)
+        self.bt.add_task(self.add_bot_bt, int(self.user_id), self.bot_id, self.prefix, self.library, self.website, self.banner, self.support, self.long_description, self.description, self.generated.tags, self.generated.extra_owners, creation, self.invite, self.features, self.html_long_description, self.css, self.donate, self.github, self.webhook, self.webhook_type, self.vanity, self.privacy_policy, self.nsfw)
         return None # None means success
 
     async def edit_bot(self):
@@ -932,7 +945,8 @@ class BotActions():
             return check
 
         creation = time.time()
-        self.bt.add_task(self.edit_bot_bt, int(self.user_id), self.bot_id, self.prefix, self.library, self.website, self.banner, self.support, self.long_description, self.description, self.tags, self.extra_owners, creation, self.invite, self.webhook, self.vanity, self.github, self.features, self.html_long_description, self.webhook_type, self.css, self.donate, self.privacy_policy, self.nsfw)
+        return
+        self.bt.add_task(self.edit_bot_bt, int(self.user_id), self.bot_id, self.prefix, self.library, self.website, self.banner, self.support, self.long_description, self.description, self.generated.tags, self.generated.extra_owners, creation, self.invite, self.webhook, self.vanity, self.github, self.features, self.html_long_description, self.webhook_type, self.css, self.donate, self.privacy_policy, self.nsfw)
 
     @staticmethod
     async def add_bot_bt(user_id, bot_id, prefix, library, website, banner, support, long_description, description, tags, extra_owners, creation, invite, features, html_long_description, css, donate, github, webhook, webhook_type, vanity, privacy_policy, nsfw):
