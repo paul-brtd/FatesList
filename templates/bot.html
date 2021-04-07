@@ -376,7 +376,7 @@ textarea {
 			<table style="margin: 0 auto !important;">
 			   <tr>
 				<th>Owners</th>
-				<td><a class='long-desc-link' href="/profile/{{bot.owner}}">{{bot.owner_pretty.username}}</a>{{bot.extra_owners|safe}}</td>
+				<td>{{bot.owners_html|safe}}</td>
 			   </tr>
 			   <tr>
 				<th>Prefix</th>

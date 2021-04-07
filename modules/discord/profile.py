@@ -35,13 +35,19 @@ async def profile_of_user(request: Request, userid: int):
             personal = False
         if userobj is not None and is_staff(staff_roles, userobj.roles, 4)[0]:
             personal = True
-    base_query = a = (f"SELECT description, banner, certified, votes, servers, bot_id, invite FROM bots WHERE (owner = {str(userid)} OR {str(userid)} = ANY(extra_owners))")
-    if not personal:
-        query = base_query + "and queue = false and banned = false and disabled = false ORDER BY votes;"
-    else:
-        query = base_query + "ORDER BY votes;"
-    fetch = await db.fetch(query)
-    user_bots = await parse_bot_list(fetch)
+    bots = await db.fetch("SELECT bot_id FROM bot_owner WHERE owner = $1", userid)
+    print(bots)
+    bot_id_lst = [obj["bot_id"] for obj in bots]
+    fetchq = []
+    for bid in bot_id_lst:
+        base_query = ("SELECT description, banner, certified, votes, servers, bot_id, invite FROM bots ")
+        if not personal:
+            query = base_query + "WHERE bot_id = $1 and queue = false and banned = false and disabled = false ORDER BY votes"
+        else:
+            query = base_query + "WHERE bot_id = $1 ORDER BY votes"
+        data = await db.fetchrow(query, bid)
+        fetchq.append(data)
+    user_bots = await parse_bot_list(fetchq)
     if personal:
         user_info = await db.fetchrow("SELECT api_token, badges, description, certified, coins FROM users WHERE user_id = $1", userid)
     else:
@@ -52,6 +58,5 @@ async def profile_of_user(request: Request, userid: int):
     user_dpy = guild.get_member(int(userid))
     if user_dpy is None:
         user_dpy = await client.fetch_user(int(userid))
-    print(user_dpy)
     return await templates.TemplateResponse("profile.html", {"request": request, "username": request.session.get("username", False), "user_bots": user_bots, "user": user, "avatar": request.session.get("avatar"), "userid": userid, "personal": personal, "badges": get_badges(user_dpy, user_info["badges"], user_info["certified"]), "user_info": user_info, "coins": user_info["coins"]})
 

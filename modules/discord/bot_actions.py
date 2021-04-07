@@ -48,7 +48,12 @@ async def bot_edit(request: Request, bid: int):
             return await templates.TemplateResponse("message.html", {"request": request, "message": "This bot doesn't exist in our database.", "username": request.session.get("username", False)})
         elif check == False:
             return await templates.TemplateResponse("message.html", {"request": request, "message": "You aren't the owner of this bot.", "username": request.session.get("username", False), "avatar": request.session.get("avatar")})
-        fetch = dict(await db.fetchrow("SELECT bot_id, prefix, bot_library AS library, invite, website, banner, long_description, description, tags, owner, extra_owners, webhook, webhook_type, discord AS support, api_token, banner, banned, github, features, html_long_description, css, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", bid))
+        fetch = dict(await db.fetchrow("SELECT bot_id, prefix, bot_library AS library, invite, website, banner, long_description, description, tags, webhook, webhook_type, discord AS support, api_token, banner, banned, github, features, html_long_description, css, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", bid))
+        owners = await db.fetch("SELECT owner, main FROM bot_owner WHERE bot_id = $1", bid)
+        print(owners)
+        if owners is None:
+            return "This bot has no found owners.\nPlease contact Fates List support"
+        fetch = fetch | {"extra_owners": [obj["owner"] for obj in owners if obj["main"] is False]}
         if fetch["extra_owners"]:
             fetch["extra_owners"] = ",".join([str(eo) for eo in fetch["extra_owners"]])
         else:
@@ -150,7 +155,7 @@ async def delete_bot(request: Request, bot_id: int, confirmer: str = FForm("1"))
         return await templates.TemplateResponse("message.html", {"request": request, "username": request.session.get("username"), "avatar": request.session.get("avatar"), "message": "Forbidden", "context": "Invalid Confirm Code. Please go back and reload the page and if the problem still persists, please report it in the support server"})
     await add_event(bot_id, "delete_bot", {"user": request.session.get('userid')})
     owner = request.session.get("userid")
-    for table in "bots", "bot_voters", "bot_promotions", "bot_reviews", "api_event", "bot_maint", "bot_commands":
+    for table in "bots", "bot_voters", "bot_promotions", "bot_reviews", "api_event", "bot_maint", "bot_commands", "bot_owner":
         await db.execute(f"DELETE FROM {table} WHERE bot_id = $1", bot_id)
     await db.execute("DELETE FROM vanity WHERE redirect = $1", bot_id)
     delete_embed = discord.Embed(title="Bot Deleted :(", description=f"<@{owner}> has deleted the bot <@{bot_id}>!", color=discord.Color.red())
@@ -168,7 +173,7 @@ async def ban_bot(request: Request, bot_id: int, ban: int = FForm(1), reason: st
         reason = "There was no reason specified"
 
     if "userid" in request.session.keys():
-        check = await db.fetchrow("SELECT owner, extra_owners, banned FROM bots WHERE bot_id = $1", bot_id)
+        check = await db.fetchrow("SELECT banned FROM bots WHERE bot_id = $1", bot_id)
         if not check:
             return await templates.TemplateResponse("message.html", {"request": request, "message": "This bot doesn't exist in our database.", "username": request.session.get("username", False)})
         user = guild.get_member(int(request.session.get("userid")))

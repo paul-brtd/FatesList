@@ -28,8 +28,6 @@ CREATE TABLE bots (
     queue boolean DEFAULT true,
     banner text DEFAULT 'none'::text,
     created_at bigint,
-    owner bigint,
-    extra_owners bigint[],
     invite text,
     invite_amount integer DEFAULT 0,
     banned BOOLEAN DEFAULT false,
@@ -37,7 +35,13 @@ CREATE TABLE bots (
     private boolean DEFAULT false,
     donate text,
     privacy_policy text,
-    nsfw boolean DEFAULT false
+    nsfw boolean DEFAULT false,
+);
+
+CREATE TABLE bot_owner (
+    bot_id BIGINT not null,
+    owner BIGINT,
+    main BOOLEAN DEFAULT false
 );
 
 CREATE TABLE bot_packs (

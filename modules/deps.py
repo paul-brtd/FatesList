@@ -216,24 +216,22 @@ async def get_maint(bot_id: str) -> Union[bool, Optional[dict]]:
 
 async def is_bot_admin(bot_id: int, user_id: int):
     guild = client.get_guild(main_server)
-    check = await db.fetchrow("SELECT owner, extra_owners FROM bots WHERE bot_id = $1", bot_id)
+    check = await db.fetch("SELECT owner FROM bot_owner WHERE bot_id = $1", bot_id)
     if not check:
         return None
+    owner_lst = [obj["owner"] for obj in check]
     try:
         user = guild.get_member(user_id)
     except:
         user = None
-    if check["extra_owners"] is None:
-        eo = []
-    else:
-        eo = check["extra_owners"]
     try:
-        if check["owner"] == user_id or user_id in eo or (user is not None and is_staff(staff_roles, user.roles, 4)[0]):
+        if user_id not in owner_lst or (user is not None and is_staff(staff_roles, user.roles, 4)[0]):
             return True
         else:
             return False
     except:
         return False
+
 async def get_promotions(bot_id: int) -> list:
     api_data = await db.fetch("SELECT id, title, info, css, type FROM bot_promotions WHERE bot_id = $1", bot_id)
     return api_data
@@ -355,9 +353,12 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, review:
     guild = client.get_guild(main_server)
     print("Begin rendering bots")
     try:
-        bot = dict(await db.fetchrow("SELECT js_whitelist, api_token, prefix, shard_count, queue, description, bot_library AS library, tags, banner, website, certified, votes, servers, bot_id, discord AS support, owner, extra_owners, banner, banned, disabled, github, features, invite_amount, css, html_long_description AS html_ld, long_description, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", bot_id))
+        bot = dict(await db.fetchrow("SELECT js_whitelist, api_token, prefix, shard_count, queue, description, bot_library AS library, tags, banner, website, certified, votes, servers, bot_id, discord AS support, banner, banned, disabled, github, features, invite_amount, css, html_long_description AS html_ld, long_description, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", bot_id))
     except:
         return await templates.e(request, "Bot Not Found")
+    owners = await db.fetch("SELECT owner FROM bot_owner WHERE bot_id = $1", bot_id)
+    owner_lst = [obj["owner"] for obj in owners]
+    bot = bot | {"owners": owner_lst}
     print("Got here")
     if bot is None:
         return await templates.e(request, "Bot Not Found")
@@ -369,13 +370,8 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, review:
     ldesc = ldesc.replace("<h1", "<h2 style='text-align: center'").replace("<h2", "<h3").replace("<h4", "<h5").replace("<h6", "<p")
 
     if widget:
-        extra_owners = []
         bot_admin = False
     else:
-        if bot["extra_owners"] is None:
-            eo = []
-        else:
-            eo = bot["extra_owners"]
         if "userid" in request.session.keys():
             bot_admin = await is_bot_admin(int(bot_id), int(request.session.get("userid"))) 
         else:
@@ -383,27 +379,32 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, review:
     if not bot_admin:
         bot["api_token"] = None
     img_header_list = ["image/gif", "image/png", "image/jpeg", "image/jpg"]
-    banner = bot["banner"].replace(" ", "%20").replace("\n", "")
     try:
-        res = await requests.get(banner)
-        if response.headers['Content-Type'] not in header_list:
-            banner = "none"
+        banner = bot["banner"].replace(" ", "%20").replace("\n", "")
     except:
-        banner = "none"
+        banner = ""
     bot_info = await get_bot(bot["bot_id"])
     
     promos = await get_promotions(bot["bot_id"])
     maint = await get_maint(bot["bot_id"])
 
-    extra_owners_lst = [(await get_user(id)) for id in eo]
-    extra_owners = ""
-    for eo in extra_owners_lst:
-        if eo is None:
+    owners_lst = [(await get_user(id)) for id in owner_lst]
+    owners_html = ""
+    first_done = False
+    last_done = False
+    for i in range(0, len(owners_lst)):
+        owner = owners_lst[i]
+        if owner is None:
             continue
-        extra_owners += f", <a class='long-desc-link' href='/profile/{eo['id']}'>{eo['username']}</a>"
-    if len(extra_owners_lst) > 1:
-        extra_owners = replace_last(extra_owners, ",", " and")
-    
+        if last_done:
+            owners_html += " and "
+        elif first_done:
+            owners_html += ", "
+        owners_html += f"<a class='long-desc-link' href='/profile/{owner['id']}'>{owner['username']}</a>"
+        if i >= len(owners_lst) - 2: # Twi to get last guy
+            last_done = True
+        else:
+            first_done = True
     if bot["features"] is None:
         features = []
     else:
@@ -414,7 +415,7 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, review:
         bot_features = replace_last(bot_features, ",", " and")
     if bot_info:
         bot = dict(bot)
-        bot = bot | {"votes": human_format(bot["votes"]), "servers": human_format(bot["servers"]), "banner": banner.replace("\"", "").replace("'", "").replace("http://", "https://").replace("(", "").replace(")", "").replace("file://", ""), "shards": human_format(bot["shard_count"]), "owner_pretty": await get_user(bot["owner"]), "extra_owners": extra_owners, "features": bot_features, "long_description": ldesc.replace("window.location", "").replace("document.ge", ""), "user": (await get_bot(bot_id))}
+        bot = bot | {"votes": human_format(bot["votes"]), "servers": human_format(bot["servers"]), "banner": banner.replace("\"", "").replace("'", "").replace("http://", "https://").replace("(", "").replace(")", "").replace("file://", ""), "shards": human_format(bot["shard_count"]), "owners_html": owners_html, "features": bot_features, "long_description": ldesc.replace("window.location", "").replace("document.ge", ""), "user": (await get_bot(bot_id))}
         #await db.execute("UPDATE bots SET username_cached = $2 WHERE bot_id = $1", int(bot_id), bot_info["username"])   
     else:
         return await templates.e(request, "Bot Not Found")
@@ -480,18 +481,13 @@ async def render_search(request: Request, q: str, api: bool):
             return abort(404)
         else:
             return RedirectResponse("/")
-    try:
-        es = " OR owner = " + str(int(q)) + f" OR {str(q)} = ANY(extra_owners) OR bot_id = " + str(int(q))
-    except:
-        es = ""
-    desc = ("SELECT bot_id FROM bots WHERE (queue = false and banned = false and disabled = false) and (description ilike '%" + re.sub(r'\W+|_', ' ', q) + "%'" + es + ")")
-    print(desc)
-    desc = await db.fetch(desc)
+    desc_query = ("SELECT bot_id FROM bots WHERE (queue = false and banned = false and disabled = false) and (description ilike '%" + re.sub(r'\W+|_', ' ', q) + "%')")
+    ownerc = await db.fetch("SELECT bot_id FROM bot_owner WHERE owner::text ilike '%" + re.sub(r'\W+|_', ' ', q) + "%'")
+    desc = await db.fetch(desc_query)
+    desc = list(set([id["bot_id"] for id in desc]).union(set([id["bot_id"] for id in ownerc])))
     userc = await db.fetch("SELECT bot_id FROM bots WHERE username_cached ilike '%" + re.sub(r'\W+|_', ' ', q) + "%'")
-    bids = list(set([id["bot_id"] for id in desc]).union(set([id["bot_id"] for id in userc])))
-    print(bids, desc, userc)
+    bids = list(set(desc).union(set([id["bot_id"] for id in userc])))
     data = str(tuple([int(bid) for bid in bids])).replace("(", "").replace(")", "")
-    print("data is " + data)
     if data.replace(" ", "") in ["()", None, ",", ""]:
         fetch = []
     elif data.split(",")[-1].replace(" ", "") == "":
@@ -557,12 +553,9 @@ class ConnectionManager:
     async def connect(self, websocket: WebSocket, api: bool = True):
         await websocket.accept()
         if api:
-            try:
-                print(websocket.api_token)
-            except:
-                websocket.api_token = []
-                websocket.bot_id = []
-                websocket.authorized = False
+            websocket.api_token = []
+            websocket.bot_id = []
+            websocket.authorized = False
         else:
             websocket.api_token = []
             websocket.bot_id = []
@@ -674,7 +667,6 @@ class templates():
             arg_dict["scopes"] = request.session.get("dscopes_str")
         else:
             arg_dict["staff"] = [False]
-        print(arg_dict["staff"])
         arg_dict["site_url"] = site_url
         arg_dict["form"] = await Form.from_formdata(request)
         arg_dict["data"] = arg_dict.get("data")
@@ -816,7 +808,6 @@ class BotActions():
 
     def __init__(self, bot):
         self.__dict__.update(bot) # Add all kwargs to function
-        print(bot) # DEBUG
         if "bt" not in self.__dict__ or "user_id" not in self.__dict__:
             raise SyntaxError("Background Task and User ID must be in dict")
 
@@ -862,8 +853,11 @@ class BotActions():
             return "You must select tags for your bot"
 
         if self.banner != "none" and self.banner != "":
-            img = await requests.get(self.banner)
-            if img.headers.get("Content-Type") is None or img.headers.get("Content-Type").split("/")[0] != "image":
+            try:
+                img = await requests.get(self.banner)
+            except:
+                img = None
+            if img is None or img.headers.get("Content-Type") is None or img.headers.get("Content-Type").split("/")[0] != "image":
                 return "Banner URL is not an image. Please make sure it is setting the proper Content-Type"
 
         if self.donate != "" and not (self.donate.startswith("https://patreon.com") or self.donate.startswith("https://paypal.me")):
@@ -953,8 +947,7 @@ class BotActions():
                 bot_id, prefix, bot_library,
                 invite, website, banner, 
                 discord, long_description, description,
-                tags, owner, extra_owners,
-                votes, servers, shard_count,
+                tags, votes, servers, shard_count,
                 created_at, api_token, features, 
                 html_long_description, css, donate,
                 github, webhook, webhook_type, 
@@ -966,10 +959,13 @@ class BotActions():
                 $13, $14, $15,
                 $16, $17, $18,
                 $19, $20, $21,
-                $22, $23, $24, 
-                $25, $26)""", bot_id, prefix, library, invite, website, banner, support, long_description, description, tags, user_id, extra_owners, 0, 0, 0, int(creation), get_token(132), features, html_long_description, css, donate, github, webhook, webhook_type, privacy_policy, nsfw)
+                $22, $23, $24)""", bot_id, prefix, library, invite, website, banner, support, long_description, description, tags, 0, 0, 0, int(creation), get_token(132), features, html_long_description, css, donate, github, webhook, webhook_type, privacy_policy, nsfw)
         if vanity.replace(" ", "") != '':
             await db.execute("INSERT INTO vanity (type, vanity_url, redirect) VALUES ($1, $2, $3)", 1, vanity, bot_id)
+
+        await db.execute("INSERT INTO bot_owner (bot_id, owner, main) VALUES ($1, $2, $3)", bot_id, user_id, True)
+        for owner in extra_owners:
+            await db.execute("INSERT INTO bot_owner (bot_id, owner, main) VALUES ($1, $2, $3)", bot_id, owner, False)
 
         await add_event(bot_id, "add_bot", {})
         owner = int(user_id)
@@ -987,10 +983,19 @@ class BotActions():
 
     @staticmethod
     async def edit_bot_bt(user_id, bot_id, prefix, library, website, banner, support, long_description, description, tags, extra_owners, creation, invite, webhook, vanity, github, features, html_long_description, webhook_type, css, donate, privacy_policy, nsfw):
-        await db.execute("UPDATE bots SET bot_library=$2, webhook=$3, description=$4, long_description=$5, prefix=$6, website=$7, discord=$8, tags=$9, banner=$10, invite=$11, extra_owners = $12, github = $13, features = $14, html_long_description = $15, webhook_type = $16, css = $17, donate = $18, privacy_policy = $19, nsfw = $20 WHERE bot_id = $1", bot_id, library, webhook, description, long_description, prefix, website, support, tags, banner, invite, extra_owners, github, features, html_long_description, webhook_type, css, donate, privacy_policy, nsfw)
+        await db.execute("UPDATE bots SET bot_library=$2, webhook=$3, description=$4, long_description=$5, prefix=$6, website=$7, discord=$8, tags=$9, banner=$10, invite=$11, github = $12, features = $13, html_long_description = $14, webhook_type = $15, css = $16, donate = $17, privacy_policy = $18, nsfw = $19 WHERE bot_id = $1", bot_id, library, webhook, description, long_description, prefix, website, support, tags, banner, invite, github, features, html_long_description, webhook_type, css, donate, privacy_policy, nsfw)
+
+        current = await db.fetch("SELECT owner FROM bot_owner WHERE bot_id = $1 AND main = false", bot_id)
+        current_list =[obj["owner"] for obj in current]
+        if current_list == extra_owners:
+            pass # Ignore this
+        else:
+            await db.execute("DELETE FROM bot_owner WHERE bot_id = $1 AND main = false", bot_id)
+            for owner in extra_owners:
+                await db.execute("INSERT INTO bot_owner (bot_id, owner, main) VALUES ($1, $2, $3)", bot_id, owner, False)
+
         check = await db.fetchrow("SELECT vanity FROM vanity WHERE redirect = $1", bot_id)
         if check is None:
-            print("am here")
             if vanity.replace(" ", "") != '':
                 await db.execute("INSERT INTO vanity (type, vanity_url, redirect) VALUES ($1, $2, $3)", 1, vanity, bot_id)
         else:
