@@ -945,7 +945,6 @@ class BotActions():
             return check
 
         creation = time.time()
-        return
         self.bt.add_task(self.edit_bot_bt, int(self.user_id), self.bot_id, self.prefix, self.library, self.website, self.banner, self.support, self.long_description, self.description, self.generated.tags, self.generated.extra_owners, creation, self.invite, self.webhook, self.vanity, self.github, self.features, self.html_long_description, self.webhook_type, self.css, self.donate, self.privacy_policy, self.nsfw)
 
     @staticmethod
