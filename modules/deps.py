@@ -225,7 +225,7 @@ async def is_bot_admin(bot_id: int, user_id: int):
     except:
         user = None
     try:
-        if user_id not in owner_lst or (user is not None and is_staff(staff_roles, user.roles, 4)[0]):
+        if user_id in owner_lst or (user is not None and is_staff(staff_roles, user.roles, 4)[0]):
             return True
         else:
             return False
@@ -387,13 +387,13 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, review:
     promos = await get_promotions(bot["bot_id"])
     maint = await get_maint(bot["bot_id"])
 
-    owners_lst = [(await get_user(obj["owner"])) for obj in owners]
+    owners_lst = [(await get_user(obj["owner"])) for obj in owners if obj["owner"] is not None]
     owners_html = ""
     first_done = False
     last_done = False
     for i in range(0, len(owners_lst)):
         owner = owners_lst[i]
-        if owner is None:
+        if owner is None: 
             continue
         if last_done:
             owners_html += " and "
@@ -761,6 +761,9 @@ class FLError():
             case 401:
                 msg = "401\nNot Authorized"
                 code = 401
+            case 403:
+                msg = "401\nForbidden"
+                code = 403
             case 422:
                 if url_startswith(request.url, "/bot"):
                     msg = "Bot Not Found"

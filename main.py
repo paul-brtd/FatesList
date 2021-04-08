@@ -61,6 +61,7 @@ app.add_middleware(CSRFProtectMiddleware, csrf_secret=csrf_secret)
 app.add_middleware(ProxyHeadersMiddleware)
 
 @app.exception_handler(401)
+@app.exception_handler(403)
 @app.exception_handler(404)
 @app.exception_handler(RequestValidationError)
 @app.exception_handler(ValidationError)

@@ -27,11 +27,12 @@ def ip_check(request: Request) -> str:
         return forwarded.split(",")[0]
     return request.client.host
 
-@jit(forceobj = True)
+@jit(fastmath = True, forceobj = True)
 def human_format(num: int) -> str:
     if abs(num) < 1000:
         return str(abs(num))
-    num = float('{:.3g}'.format(num))
+    formatter = '{:.3g}'
+    num = float(formatter.format(num))
     magnitude = 0
     while abs(num) >= 1000:
         magnitude += 1
@@ -40,6 +41,7 @@ def human_format(num: int) -> str:
         num /= 1000.0
     return '{} {}'.format('{:f}'.format(num).rstrip('0').rstrip('.'), ['', 'K', 'M', 'B', 'T', "Quad.", "Quint.", "Sext.", "Sept.", "Oct.", "Non.", "Dec.", "Tre.", "Quat.", "quindec.", "Sexdec.", "Octodec.", "Novemdec.", "Vigint.", "Duovig.", "Trevig.", "Quattuorvig.", "Quinvig.", "Sexvig.", "Septenvig.", "Octovig.", "Nonvig.", "Trigin.", "Untrig.", "Duotrig.", "Googol."][magnitude])
 
+@jit(forceobj = True)
 def version_scope(request, def_version):
     if str(request.url).startswith(site_url + "/api/") and not str(request.url).startswith(site_url + "/api/docs") and not str(request.url).startswith(site_url + "/api/v") and not str(request.url).startswith(site_url + "/api/ws"):
         if request.headers.get("FL-API-Version"):
@@ -47,7 +49,7 @@ def version_scope(request, def_version):
         else:
             api_ver = str(def_version)
         new_scope = request.scope
-        new_scope["path"] = new_scope["path"].replace("/api", f"/api/v{api_ver}")
+        new_scope["path"] = new_scope["path"].replace("/api", "/api/v" + str(api_ver)) # Numba doesnt support f-string
     else:
         new_scope = request.scope
         if str(request.url).startswith(site_url + "/api/v"):

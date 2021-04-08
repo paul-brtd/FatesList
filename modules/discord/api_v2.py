@@ -105,7 +105,7 @@ async def regenerate_bot_token(request: Request, bot_id: int, Authorization: str
     await db.execute("UPDATE bots SET api_token = $1 WHERE bot_id = $2", get_token(132), id)
     return {"done": True, "reason": None}
 
-@router.get("/bots/random", response_model = BotRandom)
+@router.get("/bots/random", response_model = BotRandom, dependencies=[Depends(RateLimiter(times=7, minutes=1))])
 async def random_bots_api(request: Request):
     random_unp = await db.fetchrow("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE queue = false AND banned = false AND disabled = false ORDER BY RANDOM() LIMIT 1") # Unprocessed
     bot = (await get_bot(random_unp["bot_id"])) | dict(random_unp)

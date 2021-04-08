@@ -44,10 +44,8 @@ async def add_bot_backend(
 async def bot_edit(request: Request, bid: int):
     if "userid" in request.session.keys():
         check = await is_bot_admin(int(bid), int(request.session.get("userid")))
-        if check is None:
-            return await templates.TemplateResponse("message.html", {"request": request, "message": "This bot doesn't exist in our database.", "username": request.session.get("username", False)})
-        elif check == False:
-            return await templates.TemplateResponse("message.html", {"request": request, "message": "You aren't the owner of this bot.", "username": request.session.get("username", False), "avatar": request.session.get("avatar")})
+        if not check:
+            return abort(403)
         fetch = dict(await db.fetchrow("SELECT bot_id, prefix, bot_library AS library, invite, website, banner, long_description, description, tags, webhook, webhook_type, discord AS support, api_token, banner, banned, github, features, html_long_description, css, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", bid))
         owners = await db.fetch("SELECT owner, main FROM bot_owner WHERE bot_id = $1", bid)
         print(owners)

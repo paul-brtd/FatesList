@@ -242,10 +242,10 @@ textarea {
                           <button id="bot-admin-tab-button" class="tablinks" onclick="openf(event, 'bot-admin', this)">Admin</button>
 		          {% endif %}
 		</div>
-	<div id="bot-long-description-container" class='tabcontent'>
-		<div id="bot-long-description" style="color: white; text-align: left; margin-left: 5%; margin-right: 5%; margin-top: 13px;">{{bot.long_description.replace("<a", "<a class='long-desc-link'").replace("ajax", "").replace("http://", "https://").replace(".alert", "")|safe}}</div>
-	</div>
-        <div id="bot-reviews" class='tabcontent'>
+	<section id="bot-long-description-container" class='tabcontent'>
+		<div id="bot-long-description" style="color: white; text-align: left; margin-left: 5%; margin-right: 5%; margin-top: 13px;">{{bot.long_description.replace("<a", "<a class='long-desc-link'").replace("ajax", "").replace("http://", "https://").replace(".alert", "").replace("<!DOCTYPE", "").replace("html>", "").replace("<body", "").replace("div", "article").replace(".click", "").replace("bootstrap.min.css", "").replace("bootstrap.css", "").replace("jquery.min.js", "").replace("jquery.js", "").replace("fetch(", "")|safe}}</div>
+	</section>
+        <section id="bot-reviews" class='tabcontent'>
 		<h5 class="white">Bot Reviews</h5>
 		{% if username %}
 		<form method="POST" id="review_form" action="/bot/{{bot_id}}/reviews/new" style="width: 100%; margin-bottom: 13px;">
@@ -371,8 +371,8 @@ textarea {
 			</section>
 		{% endfor %}
 		</div>
-		</div>
-		<div id="bot-about" class='tabcontent white'>
+		</section>
+		<section id="bot-about" class='tabcontent white'>
 			<table style="margin: 0 auto !important;">
 			   <tr>
 				<th>Owners</th>
@@ -409,7 +409,7 @@ textarea {
 			   </tr>
 			   {% endif %}
 			</table>
-			</div>
+			</section>
 			<div id="bot-admin" class='tabcontent white'>
                         <h6>Administrative Tasks</h6>
 			{% if staff[0] %}
