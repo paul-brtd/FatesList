@@ -204,7 +204,6 @@ class Bot(models.Model):
     """
     bot_id = models.BigIntegerField(primary_key = True)
     prefix = models.CharField(blank=False, null=False, max_length = 9)
-    owner = models.BigIntegerField(blank=False, null=False, help_text = "Do not change a owner/perform a ownership transfer without permission from both the old and new owner")
     votes = models.BigIntegerField(blank=True, null=True, help_text = "Changing this for no reason may/will lead to punishment such as getting kicked off the staff team or demoted or temporary forced LOA (Leave of absence)")
     servers = models.BigIntegerField(blank=True, null=True)
     shard_count = models.BigIntegerField(blank=True, null=True)
@@ -228,7 +227,6 @@ class Bot(models.Model):
     banned = models.BooleanField(blank=False, null=False, default=False, help_text = "Use fateslist.xyz main admin console to ban or unban bots")
     disabled = models.BooleanField(blank=True, null=True, help_text = "unused")
     github = models.CharField(blank=True, null=True, max_length=256)
-    extra_owners = ArrayField(base_field = models.BigIntegerField(), blank=True, null=True) 
     features = ArrayField(base_field = models.TextField(), blank=True, null=True)
     private = models.BooleanField(blank=True, null=True)
     html_long_description = models.BooleanField(blank=True, null=True)
@@ -248,6 +246,15 @@ class Bot(models.Model):
     def __str__(self):
         return f"{self.username_cached} ({self.bot_id})"
 
+class BotOwner(models.Model):
+    _id = models.AutoField(primary_key = True)
+    bot_id = models.ForeignKey(Bot, on_delete = models.CASCADE, db_column = 'bot_id', blank = True) 
+    owner = models.BigIntegerField()
+    main = models.BooleanField()
+
+    class Meta:
+        managed = False
+        db_table = "bot_owner"
 
 class Server(models.Model):
     name_cached = models.TextField(blank=True, null=False, editable = False)

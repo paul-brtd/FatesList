@@ -83,6 +83,7 @@ admin.site.register(BotVoter, BotVoterAdmin)
 admin.site.register(Vanity, VanityAdmin)
 admin.site.register(Server, FADMIN)
 admin.site.register(User, UserAdmin)
+admin.site.register(BotOwner, FADMIN)
 
 # ULA
 

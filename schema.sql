@@ -39,6 +39,7 @@ CREATE TABLE bots (
 );
 
 CREATE TABLE bot_owner (
+    _id SERIAL,
     bot_id BIGINT not null,
     owner BIGINT,
     main BOOLEAN DEFAULT false
