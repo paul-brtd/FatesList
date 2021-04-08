@@ -37,7 +37,7 @@ async def add_bot_backend(
     if rc is None:
         return RedirectResponse("/bot/" + str(bot_dict["bot_id"]), status_code = 303)
     bot_dict["tags"] = bot_dict["tags"].split(",")
-    return await templates.TemplateResponse("bot_add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": rc, "mode": "add"})
+    return await templates.TemplateResponse("bot_add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": rc[0], "code": rc[1], "mode": "add"})
 
 @router.get("/{bid}/edit")
 @csrf_protect
@@ -87,7 +87,7 @@ async def bot_edit_backend(
     if rc is None:
         return RedirectResponse("/bot/" + str(bot_id), status_code = 303)
     bot_dict["tags"] = bot_dict["tags"].split(",")
-    return await templates.TemplateResponse("bot_add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": rc, "mode": "edit"})
+    return await templates.TemplateResponse("bot_add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": rc[0], "code": rc[1], "mode": "edit"})
 
 class RC(BaseModel):
     g_recaptcha_response: str = FForm(None)

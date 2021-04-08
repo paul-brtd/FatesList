@@ -180,7 +180,7 @@ async def add_bot_api(request: Request, bt: BackgroundTasks, bot_id: int, bot: B
     rc = await bot_adder.add_bot()
     if rc is None:
         return {"done": True, "reason": f"{site_url}/bot/{bot_id}"}
-    return ORJSONResponse({"done": False, "reason": rc}, status_code = 400)
+    return ORJSONResponse({"done": False, "reason": rc[0],"code": rc[1]}, status_code = 400)
 
 @router.patch("/bots/{bot_id}", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=5, minutes=1))])
 async def edit_bot_api(request: Request, bt: BackgroundTasks, bot_id: int, bot: BotEdit, Authorization: str = Header("INVALID_API_TOKEN")):
@@ -209,7 +209,7 @@ async def edit_bot_api(request: Request, bt: BackgroundTasks, bot_id: int, bot: 
     rc = await bot_editor.edit_bot()
     if rc is None:
         return {"done": True, "reason": f"{site_url}/bot/{bot_id}"}
-    return ORJSONResponse({"done": False, "reason": rc}, status_code = 400)
+    return ORJSONResponse({"done": False, "reason": rc[0], "code": rc[1]}, status_code = 400)
 
 @router.get("/bots/{bot_id}/reviews", response_model = BotReviews)
 async def get_bot_reviews(request: Request, bot_id: int):

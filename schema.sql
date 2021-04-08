@@ -44,6 +44,8 @@ CREATE TABLE bot_owner (
     main BOOLEAN DEFAULT false
 );
 
+CREATE INDEX bot_owner_index ON bot_owner (bot_id, owner, main);
+
 CREATE TABLE bot_packs (
    id uuid primary key DEFAULT uuid_generate_v4(),
    icon text,

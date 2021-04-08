@@ -81,6 +81,7 @@ class APIResponse(BaseModel):
     """
     done: bool
     reason: Optional[str] = None
+    code: Optional[int] = None
 
 class BotMaintenancePartial(BaseModel):
     type: int = 1
