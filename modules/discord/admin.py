@@ -46,15 +46,11 @@ async def admin_api(request: Request, bt: BackgroundTasks, admin: str = FForm(""
     if not is_staff(staff_roles, user.roles, 5)[0]:
         return RedirectResponse("/admin/console", status_code = 303) 
     if admin=="certify":
-        users = await db.fetchrow("SELECT owner, extra_owners FROM bots WHERE bot_id = $1", bot_id)
+        users = await db.fetchrow("SELECT owner FROM bot_owner WHERE bot_id = $1", bot_id)
         if users is None:
             return RedirectResponse("/admin/console", status_code = 303)
         await db.execute("UPDATE bots SET certified = true WHERE bot_id = $1", bot_id)
-        await db.execute("UPDATE users SET certified = true WHERE user_id = $1", int(users["owner"]))
-        if users["extra_owners"] is None:
-            eo = []
-        else:
-            eo = users["extra_owners"]
+        eo = users["owner"]
         for user in eo:
             await db.execute("UPDATE users SET certified = true WHERE user_id = $1", int(user))
         channel = client.get_channel(bot_logs)
@@ -117,17 +113,18 @@ async def review_tool(request: Request, bot_id: int, accept: str = FForm(""), de
     if not s[0] or not bot:
         return RedirectResponse("/")                
     elif accept == "true":
-        b = await db.fetchrow("SELECT owner, extra_owners FROM bots WHERE bot_id = $1", bot_id)
-        if b is None:
+        owners = await db.fetch("SELECT owner, main FROM bot_owner WHERE bot_id = $1", bot_id)
+        if owners is None:
             return RedirectResponse("/admin/console")
         await db.execute("UPDATE bots SET queue=false WHERE bot_id = $1", bot_id)
         await add_event(bot_id, "approve", {"user": request.session.get('userid')})
         channel = client.get_channel(bot_logs)
-        approve_embed = discord.Embed(title="Bot Approved!", description = f"<@{bot_id}> by <@{b['owner']}> has been approved", color=0x00ff00)
+        owner = [obj["owner"] for obj in owners if obj["main"] is True][0]
+        approve_embed = discord.Embed(title="Bot Approved!", description = f"<@{bot_id}> by <@{owner}> has been approved", color=0x00ff00)
         approve_embed.add_field(name="Feedback", value=accept_feedback)
         approve_embed.add_field(name="Link", value=f"https://fateslist.xyz/bot/{bot_id}")
         try:
-            member = channel.guild.get_member(int(b["owner"]))
+            member = channel.guild.get_member(int(owner))
             if member is not None:
                 await member.send(embed = approve_embed)
         except:
@@ -135,51 +132,40 @@ async def review_tool(request: Request, bot_id: int, accept: str = FForm(""), de
         await channel.send(embed = approve_embed)
         
         # Give Bot Dev Roles
-        try:
-            owner = guild.get_member(int(b['owner']))
-        except:
-            owner = None
-        if owner is None:
-            pass
-        else:
-            await owner.add_roles(guild.get_role(bot_dev_role))
-        if b["extra_owners"] is None:
-            pass
-        else:
-            for eo in b["extra_owners"]:
-                try:
-                    eo_member = guild.get_member(int(eo))
-                except:
-                    eo_member = None
-                if eo_member is None:
-                    pass
-                else:
-                    await eo_member.add_roles(guild.get_role(bot_dev_role))
+        for owner in owners:
+            try:
+                member = guild.get_member(int(owner))
+            except:
+                member = None
+            if member is None:
+                pass
+            else:
+                await member.add_roles(guild.get_role(bot_dev_role))
 
         return await templates.TemplateResponse("last.html",{"request":request,"message":"Bot accepted; You MUST Invite it by this url","username":request.session["username"],"url":f"https://discord.com/oauth2/authorize?client_id={str(bot_id)}&scope=bot&guild_id={guild.id}&disable_guild_select=true&permissions=0"})
     elif accept == "unverify":
-        b = await db.fetchrow("SELECT owner FROM bots WHERE bot_id = $1", bot_id)
-        if b is None:
+        owner = await db.fetchrow("SELECT owner FROM bot_owner WHERE bot_id = $1 AND main = true", bot_id)
+        if owner is None:
             return RedirectResponse("/admin/console")
         await db.execute("UPDATE bots SET queue=true, banned = false WHERE bot_id = $1", bot_id)
         await add_event(bot_id, "unverify", {"user": request.session.get('userid')})
         channel = client.get_channel(bot_logs)
-        unverify_embed = discord.Embed(title="Bot Unverified!", description = f"<@{bot_id}> by <@{b['owner']}> has been unverified", color=discord.Color.red())
+        unverify_embed = discord.Embed(title="Bot Unverified!", description = f"<@{bot_id}> by <@{owner['owner']}> has been unverified", color=discord.Color.red())
         unverify_embed.add_field(name="Reason", value=unverify_reason)
         await channel.send(embed = unverify_embed)
         return await templates.TemplateResponse("message.html",{"request":request,"message":"Bot unverified. Please carry on with your day"})
     elif accept == "false":
-        b = await db.fetchrow("SELECT owner FROM bots WHERE bot_id = $1", bot_id)
-        if b is None:
+        owner = await db.fetchrow("SELECT owner FROM bot_owner WHERE bot_id = $1 AND main = true", bot_id)
+        if owner is None:
             return RedirectResponse("/admin/console")
         await db.execute("UPDATE bots SET banned = true WHERE bot_id = $1", bot_id)
         await add_event(bot_id, "ban", {"user": request.session.get('userid'), "type": "deny"})
         channel = client.get_channel(bot_logs)
-        deny_embed = discord.Embed(title="Bot Denied!", description = f"<@{bot_id}> by <@{b['owner']}> has been denied", color=discord.Color.red())
+        deny_embed = discord.Embed(title="Bot Denied!", description = f"<@{bot_id}> by <@{owner['owner']}> has been denied", color=discord.Color.red())
         deny_embed.add_field(name="Reason", value=deny_reason)
         await channel.send(embed = deny_embed)
         try:
-            member = channel.guild.get_member(int(b["owner"]))
+            member = channel.guild.get_member(int(owner["owner"]))
             if member is not None:
                 await member.send(embed = deny_embed)
         except:
