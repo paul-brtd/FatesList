@@ -357,8 +357,7 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, review:
     except:
         return await templates.e(request, "Bot Not Found")
     owners = await db.fetch("SELECT owner FROM bot_owner WHERE bot_id = $1", bot_id)
-    owner_lst = [obj["owner"] for obj in owners]
-    bot = bot | {"owners": owner_lst}
+    bot = bot | {"owners": owners}
     print("Got here")
     if bot is None:
         return await templates.e(request, "Bot Not Found")
@@ -388,7 +387,7 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, review:
     promos = await get_promotions(bot["bot_id"])
     maint = await get_maint(bot["bot_id"])
 
-    owners_lst = [(await get_user(id)) for id in owner_lst]
+    owners_lst = [(await get_user(obj["owner"])) for obj in owners]
     owners_html = ""
     first_done = False
     last_done = False
@@ -670,6 +669,7 @@ class templates():
         arg_dict["site_url"] = site_url
         arg_dict["form"] = await Form.from_formdata(request)
         arg_dict["data"] = arg_dict.get("data")
+        arg_dict["path"] = request.url.path
         if status is None:
             return _templates.TemplateResponse(f, arg_dict)
         return _templates.TemplateResponse(f, arg_dict, status_code = status)
@@ -985,14 +985,9 @@ class BotActions():
     async def edit_bot_bt(user_id, bot_id, prefix, library, website, banner, support, long_description, description, tags, extra_owners, creation, invite, webhook, vanity, github, features, html_long_description, webhook_type, css, donate, privacy_policy, nsfw):
         await db.execute("UPDATE bots SET bot_library=$2, webhook=$3, description=$4, long_description=$5, prefix=$6, website=$7, discord=$8, tags=$9, banner=$10, invite=$11, github = $12, features = $13, html_long_description = $14, webhook_type = $15, css = $16, donate = $17, privacy_policy = $18, nsfw = $19 WHERE bot_id = $1", bot_id, library, webhook, description, long_description, prefix, website, support, tags, banner, invite, github, features, html_long_description, webhook_type, css, donate, privacy_policy, nsfw)
 
-        current = await db.fetch("SELECT owner FROM bot_owner WHERE bot_id = $1 AND main = false", bot_id)
-        current_list =[obj["owner"] for obj in current]
-        if current_list == extra_owners:
-            pass # Ignore this
-        else:
-            await db.execute("DELETE FROM bot_owner WHERE bot_id = $1 AND main = false", bot_id)
-            for owner in extra_owners:
-                await db.execute("INSERT INTO bot_owner (bot_id, owner, main) VALUES ($1, $2, $3)", bot_id, owner, False)
+        await db.execute("DELETE FROM bot_owner WHERE bot_id = $1 AND main = false", bot_id)
+        for owner in extra_owners:
+            await db.execute("INSERT INTO bot_owner (bot_id, owner, main) VALUES ($1, $2, $3)", bot_id, owner, False)
 
         check = await db.fetchrow("SELECT vanity FROM vanity WHERE redirect = $1", bot_id)
         if check is None:

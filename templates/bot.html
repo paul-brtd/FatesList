@@ -141,7 +141,7 @@ textarea {
 <div id="bot-content">
     <div class="d-flex d-xl-flex flex-column justify-content-center align-items-center justify-content-xl-center align-items-xl-center">
 
-	<img style="border-radius: 50%; width: 120px;" src="{{bot.user.avatar}}" id="bot-avatar">
+	    <img style="border-radius: 50%; width: 120px;" src="{{bot.user.avatar}}" id="bot-avatar" alt="{{bot.user.avatar}}'s avatar">
 	<h3 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;" id="bot-username">{{bot.user.username}} <span style="opacity: 0.65">({{bot.prefix}})</span></h3>
 	{% if bot.banned %}
         <div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
@@ -210,14 +210,14 @@ textarea {
         {% endif %}
     </div>
     <div style="display: inline-block; width: fit-content; height: fit-content; margin: 7px; padding: 7px;" id="bot-key-container">
-	<div id="bot-tags">
-    		<h5 style="font-weight: bold;color: rgba(255,255,255,0.87); text-align: center; margin-top: 3px;" id="bot-tags-header">Tags</h5>
+	<section id="bot-tags">
+    		<p style="font-size: 25px; font-weight: bold;color: rgba(255,255,255,0.87); text-align: center; margin-top: 3px;" id="bot-tags-header" role="heading" aria-level="3">Tags</p>
 		<div style="text-align: center;" id="bot-tags-container">
 		        <div class="d-flex flex-wrap justify-content-center align-items-center" style="width: 97%;margin: 0 auto;" id="bot-tags-container-inner">
 		        {{ tags(tags_fixed) }}
 			</div>
 		</div>
-    	</div>
+    	</section>
     {% if promos != [] or bot_admin %}
     <div id="bot-promo" style="margin-top: 30px;">
 	    <h5 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;margin-top: -13px;margin-bottom: 3px;" id="bot-promo-header">Promotions, Announcements and More!</h5>
@@ -272,7 +272,7 @@ textarea {
 		   <div class="bot-review-left">
 		   	<div class="bot-review-header" style="margin-bottom: 7px; font-weight: bold;">
 			<a href='/profile/{{rev.user_id}}' class="white" style="margin-right: 3px;">
-					<img style="border-radius: 50%; width: 24px;" src="{{rev.user.avatar}}" class="review-avatar">
+					<img style="border-radius: 50%; width: 24px;" src="{{rev.user.avatar}}" class="review-avatar" alt="{{rev.user.username}}'s avatar">
 					<span class="white" style="margin-right: 3px;">{{rev.user.username}}</span>
 					<span class="white">|</span>
 			</a>
