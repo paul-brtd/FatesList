@@ -11,7 +11,7 @@ test_server = 794834630942654546 # The test server for reviewing bots
 owner = 563808552288780322
 # Confusing right? Sorry, i already did 50% using reviewing server so meow ig
 staff_roles = {
-    "guild": {
+    "user": {
         "id": 00000000000000000,
         "perm": 1
     },

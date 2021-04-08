@@ -2,21 +2,21 @@ from modules.imports import *
 
 # FastAPI Limiter rl func
 async def rl_key_func(request: Request) -> str:
-    if request.headers.get("FatesList-RateLimitBypass") == ratelimit_bypass_key:
-        return get_token(32)
+    if request.headers.get("FatesList-RateLimitBypass") == ratelimit_bypass_key: # Check ratelimit key
+        return get_token(32) # Disable
     if "Authorization" in request.headers or "authorization" in request.headers:
-        try:
+        try: # Check for auth header
             r = request.headers["Authorization"]
         except KeyError:
             r = request.headers["authorization"]
-        check = await db.fetchrow("SELECT bot_id, certified FROM bots WHERE api_token = $1", r)
+        check = await db.fetchrow("SELECT bot_id, certified FROM bots WHERE api_token = $1", r) # Check api token
         if check is None:
-            return ip_check(request)
+            return ip_check(request) # Invalid api token, fallback to ip
         if check["certified"]:
-            return get_token(32)
-        return str(check["bot_id"])
+            return get_token(32) # Disable since certified bots are exempt
+        return str(check["bot_id"]) # Otherwise, ratelimit using bot id
     else:
-        return ip_check(request)
+        return ip_check(request) # Fallback to ip
 
 async def _internal_user_fetch(userid: str, user_type: int) -> Optional[dict]:
     # Check if a suitable version is in the cache first before querying Discord
@@ -28,57 +28,57 @@ async def _internal_user_fetch(userid: str, user_type: int) -> Optional[dict]:
         return None # This is impossible to actually exist on the discord API or on our cache
 
     # Query redis cache for some important info
-    cache_redis = await redis_db.hget(str(userid), key = 'cache')
-    if cache_redis is not None:
-        cache = orjson.loads(cache_redis)
-        if cache.get("fl_cache_ver") != CACHE_VER or cache.get("valid_user") is None or time.time() - cache['epoch'] > 60*60*8: # 8 Hour cacher
-            # The cache is invalid, pass
+    cache_redis = await redis_db.hget(str(userid), key = 'cache') # This is bot in cache
+    if cache_redis is not None: # We got a match
+        cache = orjson.loads(cache_redis) # Make it JSON
+        cache_time = time.time() - cache['epoch']
+        if cache.get("fl_cache_ver") != CACHE_VER or (cache.get("valid_user") is None and time.time() - cache_time > 60*10) or cache_time > 60*60*8: # Check for cache expiry of 8 hours for proper user, 10 minutes for invalid, proper cache version and that its a valid user
+            # The cache is invalid, pass and make discord api call
             print("Not using cache for id ", userid)
             pass
         else:
-            print("Using cache for id ", userid)
+            print("Using cache for id ", userid) # Use cache
             fetch = False
-            if cache.get("valid_user") and ((user_type == 2 and cache["bot"]) or user_type == 3):
+            if cache.get("valid_user") and ((user_type == 2 and cache["bot"]) or user_type == 3): # Valid user and bot where bot is requested or all users requested
                 fetch = True
-            elif cache.get("valid_user") and user_type == 1 and not cache["bot"]:
+            elif cache.get("valid_user") and user_type == 1 and not cache["bot"]: # Valid users and user where user is requested or all users requested
                 fetch = True
-            if fetch:
+            if fetch: # We got a match
                 return {"id": userid, "username": cache['username'], "avatar": cache['avatar'], "disc": cache["disc"], "status": cache["status"], "bot": cache["bot"]}
-            return None
+            return None # We got a bot, but not fitting in constraints
 
     # Add ourselves to cache
-    valid_user = False
-    bot = False
+    valid_user = False # Flag for valid user
+    bot = False # Flag for bot
     username, avatar, disc = None, None, None # All are none at first
 
     try:
         print(f"Making API call to get user {userid}")
-        bot_obj = await client.fetch_user(int(userid))
-        valid_user = True
-        bot = bot_obj.bot
+        bot_obj = await client.fetch_user(int(userid)) # Use fetch user to actually use HTTP api and not cache to allow bots not in guild
+        valid_user = True # It worked and didn't error, set valid_user
+        bot = bot_obj.bot # Set bot flag accordingly
     except Exception as ex:
-        valid_user, bot = False, False
+        valid_user, bot = False, False # Not a proper got, cache to avoid repitition
         print(ex)
-        pass
-    
+
     try:
-        status = str(client.get_guild(main_server).get_member(int(userid)).status)
+        status = str(client.get_guild(main_server).get_member(int(userid)).status) # Get the status by getting guild, getting member and then setting status, may fail if not in guild so catch that using try except above
         print(status)
         if status == "online":
-            status = 1
+            status = 1 # Online
         elif status == "offline":
-            status = 2
+            status = 2 # Offline
         elif status == "idle":
-            status = 3
+            status = 3 # Idle
         elif status == "dnd":
-            status = 4
+            status = 4 # Do Not Disturb
         else:
-            status = 0
+            status = 0 # Fallback status
     except Exception as ex:
         print(ex)
-        status = 0
+        status = 0 # Fallback status
 
-    if valid_user:
+    if valid_user: # Get username, avatar and disc
         username = bot_obj.name
         avatar = str(bot_obj.avatar_url)
         disc = bot_obj.discriminator
@@ -87,15 +87,15 @@ async def _internal_user_fetch(userid: str, user_type: int) -> Optional[dict]:
         avatar = ""
         disc = ""
 
-    if bot and valid_user:
+    if bot and valid_user: # Update cached username in postgres if valid username in asyncio background task
         print("Setting db username to " + username + " for " + str(userid))
-        await db.execute("UPDATE bots SET username_cached = $2 WHERE bot_id = $1", int(userid), username)
+        asyncio.create_task(db.execute("UPDATE bots SET username_cached = $2 WHERE bot_id = $1", int(userid), username))
 
-    cache = orjson.dumps({"fl_cache_ver": CACHE_VER, "epoch": time.time(), "bot": bot, "username": username, "avatar": avatar, "disc": disc, "valid_user": valid_user, "status": status})
-    await redis_db.hset(str(userid), key = "cache", value = cache)
+    cache = orjson.dumps({"fl_cache_ver": CACHE_VER, "epoch": time.time(), "bot": bot, "username": username, "avatar": avatar, "disc": disc, "valid_user": valid_user, "status": status}) # Create cache and dump it to string for caching
+    await redis_db.hset(str(userid), key = "cache", value = cache) # Add/Update redis
 
     fetch = False
-    if valid_user and ((user_type == 2 and bot) or user_type == 3):
+    if valid_user and ((user_type == 2 and bot) or user_type == 3): # Same as when cached, see that for this
         fetch = True
     elif user_type == 1 and valid_user and not bot:
         fetch = True
@@ -104,41 +104,52 @@ async def _internal_user_fetch(userid: str, user_type: int) -> Optional[dict]:
     return None
 
 async def get_user(userid: int) -> Optional[dict]:
-    return await _internal_user_fetch(str(int(userid)), 1)
+    return await _internal_user_fetch(str(int(userid)), 1) # 1 means user
 
 async def get_bot(userid: int) -> Optional[dict]:
-    return await _internal_user_fetch(str(int(userid)), 2)
+    return await _internal_user_fetch(str(int(userid)), 2) # 2 means bot
 
 async def get_any(userid: int) -> Optional[dict]:
-    return await _internal_user_fetch(str(int(userid)), 3)
+    return await _internal_user_fetch(str(int(userid)), 3) # 3 means all
+
+class Serializer(object):
+    @staticmethod
+    def serialize(object):
+        return orjson.dumps(object, default=lambda o: o.__dict__.values()[0]).decode("utr-8")
+
+class StaffMember(BaseModel, Serializer):
+    """Represents a staff member in Fates List""" 
+    name: str
+    id: int
+    perm: int
 
 # Internal backend entry to check if one role is in staff and return a dict of that entry if so
 @jit(forceobj=True)
-def is_staff_internal(staff_json: dict, role: int) -> dict:
-    for key in staff_json.keys():
-        if int(role) == int(staff_json[key]["id"]):
-            return staff_json[key]
-    return None
+def _get_staff_member(staff_json: dict, role: int) -> StaffMember:
+    for key in staff_json.keys(): # Loop through all keys in staff json
+        if int(role) == int(staff_json[key]["id"]): # Check if role matches
+            return StaffMember(name = key, id = staff_json[key]["id"], perm = staff_json[key]["perm"]) # Return the staff json role data
+    return StaffMember(name = "user", id = staff_json["user"]["id"], perm = 1) # Fallback to perm 1 user member
 
 @jit(forceobj=True)
-def is_staff(staff_json: dict, roles: Union[list, int], base_perm: int) -> Union[bool, Optional[int]]:
+def is_staff(staff_json: dict, roles: Union[list, int], base_perm: int) -> Union[bool, int, StaffMember]:
     if type(roles) == list:
         max_perm = 0 # This is a cache of the max perm a user has
-        for role in roles:
+        for role in roles: # Loop through all roles
             if type(role) == discord.Role:
                 role = role.id
-            tmp = is_staff_internal(staff_json, role)
-            if tmp is not None and tmp["perm"] > max_perm:
-                max_perm = tmp["perm"]
+            sm = _get_staff_member(staff_json, role)
+            if sm.perm > max_perm:
+                max_perm = sm.perm
         if max_perm >= base_perm:
-            return True, max_perm
-        return False, max_perm
+            return True, max_perm, sm
+        return False, max_perm, sm
     else:
-        tmp = is_staff_internal(staff_json, roles)
-        if tmp is not None and tmp["perm"] >= base_perm:
-            return True, tmp["perm"]
-        return False, tmp["perm"]
-    return False, tmp["perm"]
+        sm = _get_staff_member(staff_json, roles)
+        if sm is not None and sm.perm >= base_perm:
+            return True, sm.perm, sm
+        return False, sm.perm, sm
+    return False, sm.perm, sm
 
 async def add_maint(bot_id: int, type: int, reason: str):
     maints = await db.fetchrow("SELECT bot_id FROM bot_maint WHERE bot_id = $1", bot_id)
@@ -161,7 +172,7 @@ async def add_event(bot_id: int, event: str, context: dict, *, send_event = True
     if type(context) == dict:
         pass
     else:
-        raise KeyError
+        raise TypeError("Event must be a dict")
 
     new_event_data = [event, str(time.time()), orjson.dumps(context).decode()]
     id = uuid.uuid4()
@@ -650,7 +661,8 @@ class templates():
                 ban_type = "global"
                 return await templates.e(request, f"You have been {ban_type} banned from Fates List<br/>", status_code = 403)
             if user is not None:
-                request.session["staff"] = is_staff(staff_roles, user.roles, 2)
+                staff = is_staff(staff_roles, user.roles, 2)
+                request.session["staff"] = staff[0], staff[1], staff[2].dict()
             else:
                 pass
             arg_dict["staff"] = request.session.get("staff", [False])
@@ -712,49 +724,51 @@ def etrace(ex):
 class FLError():
     @staticmethod
     async def log(request, exc, error_id, curr_time):
-        site_errors = client.get_channel(site_errors_channel)
-        traceback = exc.__traceback__
+        traceback = exc.__traceback__ # Get traceback from exception
+        site_errors = client.get_channel(site_errors_channel) # Get site errors channel
+        if site_errors is None: # If this is None, config is wrong or we arent connected to Discord yet, in this case, raise traceback
+            raise traceback
         try:
-            fl_info = f"Error ID: {error_id}\n\nMinimal output\n\n"
-            while traceback is not None:
-                fl_info += f"{traceback.tb_frame.f_code.co_filename}: {traceback.tb_lineno}\n"
-                traceback = traceback.tb_next
+            fl_info = f"Error ID: {error_id}\n\nMinimal output\n\n" # Initial header
+            while traceback is not None: # Loop through traceback recursively
+                fl_info += f"{traceback.tb_frame.f_code.co_filename}: {traceback.tb_lineno}\n" # tb_frame.f_code.co_filename is the filename and tb_lineno is line number
+                traceback = traceback.tb_next # Get the next part of traceback 
             try:
-                fl_info += f"\n\nExtended output\n\n{etrace(exc)}"
+                fl_info += f"\n\nExtended output\n\n{etrace(exc)}" # Extended output
             except:
-                fl_info += f"\n\nExtended output\n\nNo extended output could be logged..."
+                fl_info += f"\n\nExtended output\n\nNo extended output could be logged..." # Could not log anything
         except:
             pass
-        await site_errors.send(f"500 (Internal Server Error) at {str(request.url).replace('https://', '')}\n\n**Error**: {exc}\n**Type**: {type(exc)}\n**Data**: File will be uploaded below if we didn't run into errors collecting logging information\n\n**Error ID**: {error_id}\n**Time When Error Happened**: {curr_time}")
-        fl_file = discord.File(io.BytesIO(bytes(fl_info, 'utf-8')), f'{error_id}.txt')
+        await site_errors.send(f"500 (Internal Server Error) at {str(request.url).replace('https://', '')}\n\n**Error**: {exc}\n**Type**: {type(exc)}\n**Data**: File will be uploaded below if we didn't run into errors collecting logging information\n\n**Error ID**: {error_id}\n**Time When Error Happened**: {curr_time}") # Send the 500 message to site errors
+        fl_file = discord.File(io.BytesIO(bytes(fl_info, 'utf-8')), f'{error_id}.txt') # Create a file on discord
         if fl_file is not None:
-            await site_errors.send(file=fl_file)
+            await site_errors.send(file=fl_file) # Send it
         else:
-            await site_errors.send("No extra information could be logged and/or send right now")
+            await site_errors.send("No extra information could be logged and/or send right now") # Could not send it
 
     @staticmethod
     async def error_handler(request, exc):
-        error_id = str(uuid.uuid4())
-        curr_time = str(datetime.datetime.now())
+        error_id = str(uuid.uuid4()) # Create a error id
+        curr_time = str(datetime.datetime.now()) # Get time error happened
         try:
-            status_code = exc.status_code # Check for 500 using status code presence
-        except:
-            if type(exc) == RequestValidationError:
+            status_code = exc.status_code # Check for 422 and 500 using status code presence
+        except: # 500 and 422 do not have status code
+            if type(exc) == RequestValidationError: # This is when incorrect arguments were passed (422)
                 exc.status_code = 422
-            else:
+            else: # Internal Server Error (500)
                 exc.status_code = 500
-        match exc.status_code:
+        match exc.status_code: # Python 3.10 introduced pattern matching, use that to check for http code
             case 500:
-                asyncio.create_task(FLError.log(request, exc, error_id, curr_time))
-                return HTMLResponse(f"<strong>500 Internal Server Error</strong><br/>Fates List had a slight issue and our developers and looking into what happened<br/><br/>Error ID: {error_id}<br/>Time When Error Happened: {curr_time}", status_code=500)
-            case 404:
-                if url_startswith(request.url, "/bot"):
+                asyncio.create_task(FLError.log(request, exc, error_id, curr_time)) # Try and log what happened
+                return HTMLResponse(f"<strong>500 Internal Server Error</strong><br/>Fates List had a slight issue and our developers and looking into what happened<br/><br/>Error ID: {error_id}<br/>Time When Error Happened: {curr_time}\nPlease check our support server at <a href='{support_url}'>{support_url}</a> for more information", status_code=500) # Send 500 error to user with aupport server
+            case 404: 
+                if url_startswith(request.url, "/bot"): # Bot 404
                     msg = "Bot Not Found"
                     code = 404
-                elif url_startswith(request.url, "/profile"):
+                elif url_startswith(request.url, "/profile"): # Profile 404
                     msg = "Profile Not Found"
                     code = 404
-                else:
+                else: # Regular 404
                     msg = "404\nNot Found"
                     code = 404
             case 401:
@@ -764,41 +778,41 @@ class FLError():
                 msg = "401\nForbidden"
                 code = 403
             case 422:
-                if url_startswith(request.url, "/bot"):
+                if url_startswith(request.url, "/bot"): # Bot 422 which is actually 404 to us
                     msg = "Bot Not Found"
                     code = 404
-                elif url_startswith(request.url, "/profile"):
+                elif url_startswith(request.url, "/profile"): # Profile 422 which is actually 404 to us
                     msg = "Profile Not Found"
                     code = 404
                 else:
-                    msg = "Invalid Data Provided<br/>" + str(exc)
+                    msg = "Invalid Data Provided<br/>" + str(exc) # Regular 422
                     code = 422
             case _:
-                msg = "Unknown Error"
+                msg = "Unknown Error" # Unknown error, no case for it yet
                 code = 400
 
-        json = url_startswith(request.url, "/api")
-        if json:
+        json = url_startswith(request.url, "/api") # Check if api route, return JSON if it is
+        if json: # If api route, return JSON
             if exc.status_code != 422:
-                return await http_exception_handler(request, exc)
+                return await http_exception_handler(request, exc) # 422 needs special request handler, all others can use this
             else:
-                return await request_validation_exception_handler(request, exc)
-        return await templates.e(request, msg, code)
+                return await request_validation_exception_handler(request, exc) # Other codes can use normal one, 422 needs this
+        return await templates.e(request, msg, code) # Otherwise return error
 
 async def add_ws_event(bot_id: int, ws_event: dict) -> None:
     """A WS Event must have the following format:
         - {id: Event ID, event: Event Name, context: Context, type: Event Type}
     """
-    curr_ws_events = await redis_db.hget(str(bot_id), key = "ws")
+    curr_ws_events = await redis_db.hget(str(bot_id), key = "ws") # Get all the websocket events from the ws key
     if curr_ws_events is None:
-        curr_ws_events = {}
+        curr_ws_events = {} # No ws events means empty dict
     else:
-        curr_ws_events = orjson.loads(curr_ws_events)
-    id = ws_event["id"]
-    del ws_event["id"]
-    curr_ws_events[id] = ws_event
-    await redis_db.hset(str(bot_id), key = "ws", value = orjson.dumps(curr_ws_events)) # Add it to curr_ws_events
-    await redis_db.publish(str(bot_id), orjson.dumps({id: ws_event})) # Publish it to ws_events
+        curr_ws_events = orjson.loads(curr_ws_events) # Otherwise, orjson load the current events
+    id = ws_event["id"] # Get id
+    del ws_event["id"] # Remove id
+    curr_ws_events[id] = ws_event # Add event to current ws events
+    await redis_db.hset(str(bot_id), key = "ws", value = orjson.dumps(curr_ws_events)) # Add it to redis
+    await redis_db.publish(str(bot_id), orjson.dumps({id: ws_event})) # Publish it to consumers
 
 class BotActions():
     class GeneratedObject():
@@ -972,6 +986,7 @@ class BotActions():
             member = channel.guild.get_member(owner)
             if member is not None:
                 await member.send(embed = add_embed) # Send user DM if possible
+
         except:
             pass
         await channel.send(f"<@&{staff_ping_add_role}>", embed = add_embed) # Send message with add bot ping
