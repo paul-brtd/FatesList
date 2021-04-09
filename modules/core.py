@@ -485,7 +485,7 @@ async def render_search(request: Request, q: str, api: bool):
             return abort(404)
         else:
             return RedirectResponse("/")
-    desc_query = ("SELECT bot_id FROM bots WHERE (state = 0 and banned = false and disabled = false) and (description ilike '%" + re.sub(r'\W+|_', ' ', q) + "%')")
+    desc_query = ("SELECT bot_id FROM bots WHERE state = 0 and (description ilike '%" + re.sub(r'\W+|_', ' ', q) + "%')")
     ownerc = await db.fetch("SELECT bot_id FROM bot_owner WHERE owner::text ilike '%" + re.sub(r'\W+|_', ' ', q) + "%'")
     desc = await db.fetch(desc_query)
     desc = list(set([id["bot_id"] for id in desc]).union(set([id["bot_id"] for id in ownerc])))
@@ -500,7 +500,7 @@ async def render_search(request: Request, q: str, api: bool):
     else:
         fetch = None
     if fetch is None:
-        abc = ("SELECT description, banner, certified, votes, servers, bot_id, invite, nsfw FROM bots WHERE state = 0 and banned = false and disabled = false and bot_id IN (" + data + ") ORDER BY votes DESC LIMIT 12")
+        abc = ("SELECT description, banner, certified, votes, servers, bot_id, invite, nsfw FROM bots WHERE state = 0 and bot_id IN (" + data + ") ORDER BY votes DESC LIMIT 12")
         fetch = await db.fetch(abc)
     search_bots = await parse_bot_list(fetch)
     if not api:
@@ -1083,7 +1083,7 @@ class BotListAdmin():
         owner = await self._get_main_owner()
         if owner is None:
             return False
-        await db.execute("UPDATE bots SET state = 1, banned = false WHERE bot_id = $1", self.bot_id)
+        await db.execute("UPDATE bots SET state = 1 WHERE bot_id = $1", self.bot_id)
         await add_event(self.bot_id, "unverify", {"user": self.mod})
         unverify_embed = discord.Embed(title="Bot Unverified!", description = f"<@{self.bot_id}> by <@{owner['owner']}> has been unverified", color=discord.Color.red())
         unverify_embed.add_field(name="Reason", value=reason)

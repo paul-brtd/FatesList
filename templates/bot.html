@@ -1,655 +1,660 @@
 {% extends "base/base.html" %}
 
 {% block head %}
-<style>
-<script src="https://www.google.com/recaptcha/api.js"></script>
+	<style>
 .bot-review-user {
 	margin-bottom: 2px;
 }
 
 body {
-    margin: 5%;
-    text-align: center;
-    background: #111;
-    color: #333;
+	margin: 5%;
+	text-align: center;
+	background: #111;
+	color: #333;
 }
 h1 {
-    font-size: 2em;
-    margin-bottom: .5rem;
+	font-size: 2em;
+	margin-bottom: .5rem;
 }
-html,body { height:100%; }
+html, body { 
+	height: 100%; 
+}
 
 .slider {
-  -webkit-appearance: none;
-  width: 20%;
-  height: 5px;
-  border-radius: 5px;   
-  background: #d3d3d3;
-  outline: none;
-  opacity: 0.7;
-  -webkit-transition: .2s;
-  transition: opacity .2s;
+	-webkit-appearance: none;
+	width: 20%;
+	height: 5px;
+	border-radius: 5px;   
+	background: #d3d3d3;
+	outline: none;
+	opacity: 0.7;
+	-webkit-transition: .2s;
+	transition: opacity .2s;
 }
 
 /* Mouse-over effects */
 .slider:hover {
-  opacity: 1; /* Fully shown on mouse-over */
+	opacity: 1; /* Fully shown on mouse-over */
 }
 
 .slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 25px;
-  height: 25px;
-  border-radius: 50%; 
-  background: #4CAF50;
-  cursor: pointer;
+	-webkit-appearance: none;
+	appearance: none;
+	width: 25px;
+	height: 25px;
+	border-radius: 50%; 
+	background: #4CAF50;
+	cursor: pointer;
 }
 
 .slider::-moz-range-thumb {
-  width: 25px;
-  height: 25px;
-  border-radius: 50%;
-  background: #4CAF50;
-  cursor: pointer;
+	width: 25px;
+	height: 25px;
+	border-radius: 50%;
+	background: #4CAF50;
+	cursor: pointer;
 }
 
 /* Style the tab */
 .tab {
-  text-align: center;
-  color: white !important;
-  border: none;
+	text-align: center;
+	color: white !important;
+	border: none;
 }
 
 /* Style the buttons that are used to open the tab content */
 .tab button {
-  background-color: black;
-  color: white;
-  border: none;
-  outline: none;
-  cursor: pointer;
-  padding: 14px 16px;
-  transition: 0.3s;
+	background-color: black;
+	color: white;
+	border: none;
+	outline: none;
+	cursor: pointer;
+	padding: 14px 16px;
+	transition: 0.3s;
 }
 
 /* Change background color of buttons on hover */
 .tab button:hover {
-  background-color: #2e3033;
+	background-color: #2e3033;
 }
 
 /* Create an active/current tablink class */
 .tab button.active {
-  border-bottom: solid;
-  color: white;
+	border-bottom: solid;
+	color: white;
 }
 
 /* Style the tab content */
 .tabcontent {
-  display: none;
+	display: none;
 }
 
-    .blackbar {background: black; border: hidden; margin-top: 5px; min-height: 500px; padding: 5px;}
+.blackbar {
+	background: black; 
+	border: hidden; 
+	margin-top: 5px; 
+	min-height: 500px; 
+	padding: 5px;
+}
 
 th, td {
-  padding: 23px;
-  border-bottom: solid;
-  border-width: thin;
+	padding: 23px;
+	border-bottom: solid;
+	border-width: thin;
 }
 th {
-  border-right: solid;
-  border-width: thin;
+	border-right: solid;
+	border-width: thin;
 }
 tr:last-child td {
-    border-bottom: none;
+	border-bottom: none;
 }
 tr:last-child th {
-    border-bottom: none;
+	border-bottom: none;
 }
 th {
-  text-align: left;
+	text-align: left;
 }
 
 #bot-long-description img {
-   max-width: 100%;
+	max-width: 100%;
 }
 
-    .bot-review-user {
+.bot-review-user {
 	margin-top: 5px;
 	padding-left: 3px;
 	box-sizing: border-box;
-    	/*border-left: 1px solid white !important; */ 
-    }
-    .bot-review-left {
+	/*border-left: 1px solid white !important; */ 
+}
+.bot-review-left {
 	display: inline-block;
-    }
-	.bot-buttons-all {margin-right: 15px !important;}
-	#bot-switcher {
-		border-radius: 13px;
-		margin-left: 1.1%;
-		margin-right: 1.1%
-	} /* Thanks Fearful */
+}
+.bot-buttons-all {margin-right: 15px !important;}
+#bot-switcher {
+	border-radius: 13px;
+	margin-left: 1.1%;
+	margin-right: 1.1%
+} /* Thanks Fearful */
 
-	{{bot.css.replace(".alert", "")}}
+{{bot.css.replace(".alert", "")}}
 
 
 textarea {
 	border-radius: 2em !important;
 }
-</style>
+	</style>
 {% endblock %}
 {% block content %}
-<div id="bot-content">
-    <div class="d-flex d-xl-flex flex-column justify-content-center align-items-center justify-content-xl-center align-items-xl-center">
+	<div id="bot-content">
+		<div class="d-flex d-xl-flex flex-column justify-content-center align-items-center justify-content-xl-center align-items-xl-center">
 
-	    <img style="border-radius: 50%; width: 120px;" src="{{bot.user.avatar}}" id="bot-avatar" alt="{{bot.user.avatar}}'s avatar">
-	<h3 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;" id="bot-username">{{bot.user.username}} <span style="opacity: 0.65">({{bot.prefix}})</span></h3>
-	{% if bot.state == enums.BotState.denied %}
-	<div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
-	<strong>This bot has been DENIED from this bot list for violating our rules or being a low-quality bot. Please do not invite it.</strong>	
-	{% if bot_admin %}
-		<br/><strong>Since you are the owner/extra owners of this bot, you can resubmit your bot or request a ban appeal (if your bot was banned and not denied) by clicking <a class="long-desc-link" href="/bot/{{bot.bot_id}}/resubmit">here</a></strong>
- 	{% endif %}
-	</div>
-	{% elif bot.state == enums.BotState.banned %}
-        <div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
-        <strong>This bot has been BANNED from this bot list for violating our rules or being a low-quality bot. Please do not invite it.</strong>
-	{% if bot_admin %}
-	<br/><strong>Since you are the owner/extra owners of this bot, you can resubmit your bot or request a ban appeal (if your bot was banned and not denied) by clicking <a class="long-desc-link" href="/bot/{{bot.bot_id}}/resubmit">here</a></strong>
-	{% endif %}
-	</div>
-	{% elif bot.state == enums.BotState.pending %}
-        <div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
-        	<strong>This bot has not yet been verified/approved and may violate our rules and/or be low-quality or a "nuke bot". Please do not invite it until we have approved it</strong>
-	</div>
-	{% endif %}
-	{% if bot.state == enums.BotState.pending and staff[0] %}
-	<div class="alert alert-info" style="text-align: center; justify-content: center; color: white !important;" role="alert">
-		<strong>You are in review mode. Test the bot by inviting it to the staff server by clicking the Invite button and choosing the Testing Server. Once you are done reviewing the bot, click Admin to approve/deny it</strong></div>
-    	</div>
+			<img style="border-radius: 50%; width: 120px;" src="{{bot.user.avatar}}" id="bot-avatar" alt="{{bot.user.avatar}}'s avatar">
+			<h3 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;" id="bot-username">{{bot.user.username}} <span style="opacity: 0.65">({{bot.prefix}})</span></h3>
+			{% if bot.state == enums.BotState.denied %}
+				<div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
+					<strong>This bot has been DENIED from this bot list for violating our rules or being a low-quality bot. Please do not invite it.</strong>	
+					{% if bot_admin %}
+						<br/><strong>Since you are the owner/extra owners of this bot, you can resubmit your bot or request a ban appeal (if your bot was banned and not denied) by clicking <a class="long-desc-link" href="/bot/{{bot.bot_id}}/resubmit">here</a></strong>
+		</div>
+					{% endif %}
+				</div>
+			{% elif bot.state == enums.BotState.banned %}
+				<div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
+					<strong>This bot has been BANNED from this bot list for violating our rules or being a low-quality bot. Please do not invite it.</strong>
+					{% if bot_admin %}
+						<br/><strong>Since you are the owner/extra owners of this bot, you can resubmit your bot or request a ban appeal (if your bot was banned and not denied) by clicking <a class="long-desc-link" href="/bot/{{bot.bot_id}}/resubmit">here</a></strong>
+					{% endif %}
+				</div>
+			{% elif bot.state == enums.BotState.pending %}
+				<div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
+					<strong>This bot has not yet been verified/approved and may violate our rules and/or be low-quality or a "nuke bot". Please do not invite it until we have approved it</strong>
+				</div>
+			{% endif %}
+			{% if bot.state == enums.BotState.pending and staff[0] %}
+				<div class="alert alert-info" style="text-align: center; justify-content: center; color: white !important;" role="alert">
+					<strong>You are in review mode. Test the bot by inviting it to the staff server by clicking the Invite button and choosing the Testing Server. Once you are done reviewing the bot, click Admin to approve/deny it</strong>
+				</div>
+		</div>
 	{% endif %}
 	{% if bot.nsfw %}
-	<div class="alert alert-info" style="text-align: center; justify-content: center; color: white !important;" role="alert">
-		<strong>This bot is primarily NSFW (Not Safe For Work), as such lots of functionality will need a NSFW channel. If the bot allows NSFW commands in non-NSFW channels, please report it using Mod Mail</strong>
-	</div>
+		<div class="alert alert-info" style="text-align: center; justify-content: center; color: white !important;" role="alert">
+			<strong>This bot is primarily NSFW (Not Safe For Work), as such lots of functionality will need a NSFW channel. If the bot allows NSFW commands in non-NSFW channels, please report it using Mod Mail</strong>
+		</div>
 	{% endif %}
 	{% if maint[0] %}
-	    <div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
-	    <strong>{{maint[1]["reason"]}}</strong>
-        </div>
-        {% endif %}
-        <p style="color: rgba(255,255,255,0.87); font-weight: bold; font-size: 18px;" id="bot-description">{{bot.description}}</p>
-    </div>
-    <div class="d-flex justify-content-center align-items-center flex-wrap" style="width: 80%;margin: 0 auto;max-width: 1000px; margin-bottom: 3px !important;" id="bot-buttons">
-	{% if bot.state != enums.BotState.banned %}
-        <form method = "POST" action = "/bot/{{bot_id}}/vote" id="vote">
-            {{form.csrf_token}}
-	    <button type="submit" data-sitekey="{{recaptcha_client}}" data-callback='onSubmit' data-action='submit' class="g-recaptcha btn bot-buttons-all vote btn-outline-light" id="bot-buttons-vote" style="color: white !important;">
-			<span class="iconify" data-icon="fa-solid:thumbs-up" data-inline="false"></span><span style="margin-left: 3px;">{{bot.votes}}</span>
-		</button>
-
-	</form>
-	{% endif %}
-        {% if not bot.support or bot.support.replace(" ", "") == "" %}
-        {% else %}
-	<a target=”_blank” href="{{bot.support}}"><button class="btn btn-outline-light bot-buttons-all" id="bot-buttons-support">Support</button></a>
-       {% endif %}
-        {% if not bot.donate or bot.donate.replace(" ", "") != "" or bot.donate != "None" %}
-        {% else %}
-        <a target=”_blank” href="{{bot.donate}}"><button class="btn btn-outline-light bot-buttons-all" id="bot-buttons-donate">Donate</button></a>
-       {% endif %}
-        {% if not bot.github or bot.github == "" or bot.github == "None" %}
-        {% else %}
-	<a target=”_blank” href="{{bot.github}}"><button class="btn btn-outline-light bot-buttons-all" id="bot-buttons-github">Github</button></a>
-        {% endif %}
-        {% if not bot.privacy_policy or bot.privacy_policy == "" or bot.privacy_policy == "None" %}
-        {% else %}
-	<a target="_blank" href="{{bot.privacy_policy}}"><button class="btn btn-outline-light bot-buttons-all" id="bot-buttons-privacy_policy">Privacy Policy</button></a>
-	{% endif %}
-        {% if not bot.website or bot.website == "" or bot.website == "None" %}
-        {% else %}
-	<a target=”_blank” href="{{bot.website}}"><button class="btn btn-outline-light bot-buttons-all" id="bot-buttons-website">Website</button></a>
-       {% endif %}
-       {% if not bot.banned%}
-       <a target=”_blank” href="/bot/{{bot_id}}/invite"><button class="btn btn-outline-light bot-buttons-all" id="bot-buttons-invite">Invite</button></a>
-	{% endif %}
-        {% if bot_admin %}
-	<a href="/bot/{{bot_id}}/edit"><button class="btn btn-outline-light bot-buttons-all" id="bot-buttons-edit">Edit</button></a>
-        {% endif %}
-    </div>
-    <div style="display: inline-block; width: fit-content; height: fit-content; margin: 7px; padding: 7px;" id="bot-key-container">
-	<section id="bot-tags">
-    		<p style="font-size: 25px; font-weight: bold;color: rgba(255,255,255,0.87); text-align: center; margin-top: 3px;" id="bot-tags-header" role="heading" aria-level="3">Tags</p>
-		<div style="text-align: center;" id="bot-tags-container">
-		        <div class="d-flex flex-wrap justify-content-center align-items-center" style="width: 97%;margin: 0 auto;" id="bot-tags-container-inner">
-		        {{ tags(tags_fixed) }}
-			</div>
+		<div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
+			<strong>{{maint[1]["reason"]}}</strong>
 		</div>
-    	</section>
-    {% if promos != [] or bot_admin %}
-    <div id="bot-promo" style="margin-top: 30px;">
-	    <h5 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;margin-top: -13px;margin-bottom: 3px;" id="bot-promo-header">Promotions, Announcements and More!</h5>
-	    {% if bot_admin %}
-	    <a href="javascript:void()" onclick="newPromotion('{{bot.api_token}}')" style="color: white !important; opacity: 0.8;"><span class="iconify" data-icon="fa-solid:plus" data-inline="false"></span><span style="margin-left: 3px">New Promotion (Coming Soon)</span></a>
-	    {% endif %}
-    {% endif %}
-    {% for promo in promos %}
-    	<div class="alert alert-primary" id="bot-promo-container-{{loop.index}}" class="bot-promo-container" role="alert" style='width: 90%; font-weight: bold; margin: 0 auto; height: 86%; padding: 5px; {% if not promo.css %}background-color: #111112; {%endif%} {{promo.css}} margin-bottom: 3px;'>
-        	<p style="color: white; margin-bottom: 3px; margin-left: 2px; {{promo.css}}">{{promo.title.replace("<script", "")|safe}}</p>
-		<p style="color: white; {{promo.css}}">{{promo.info}}</p>
+	{% endif %}
+	<p style="color: rgba(255,255,255,0.87); font-weight: bold; font-size: 18px;" id="bot-description">{{bot.description}}</p>
 	</div>
-    {% endfor %}
-	    </div>
+	<div class="d-flex justify-content-center align-items-center flex-wrap" style="width: 80%;margin: 0 auto;max-width: 1000px; margin-bottom: 3px !important;" id="bot-buttons">
+		{% if bot.state != enums.BotState.banned %}
+			<form method = "POST" action = "/bot/{{bot_id}}/vote" id="vote">
+				{{form.csrf_token}}
+				<button type="submit" data-sitekey="{{recaptcha_client}}" data-callback='onSubmit' data-action='submit' class="g-recaptcha btn bot-buttons-all vote btn-outline-light" id="bot-buttons-vote" style="color: white !important;">
+					<span class="iconify" data-icon="fa-solid:thumbs-up" data-inline="false"></span>
+					<span style="margin-left: 3px;">{{bot.votes}}</span>
+				</button>
+
+			</form>
+		{% endif %}
+		{% if bot.support and bot.support.replace(" ", "") %}
+			<a target=”_blank” href="{{bot.support}}"><button class="btn btn-outline-light bot-buttons-all" id="bot-buttons-support">Support</button></a>
+		{% endif %}
+		{% if bot.donate and bot.donate.replace(" ", "") %}
+			<a target=”_blank” href="{{bot.donate}}"><button class="btn btn-outline-light bot-buttons-all" id="bot-buttons-donate">Donate</button></a>
+		{% endif %}
+		{% if bot.github and bot.github.replace(" ", "") %}
+			<a target=”_blank” href="{{bot.github}}"><button class="btn btn-outline-light bot-buttons-all" id="bot-buttons-github">Github</button></a>
+		{% endif %}
+		{% if bot.privacy_policy and bot.privacy_policy.replace(" ", "") %}
+			<a target="_blank" href="{{bot.privacy_policy}}"><button class="btn btn-outline-light bot-buttons-all" id="bot-buttons-privacy_policy">Privacy Policy</button></a>
+		{% endif %}
+		{% if bot.website and bot.website.replace(" ", "") == "" %}
+			<a target=”_blank” href="{{bot.website}}"><button class="btn btn-outline-light bot-buttons-all" id="bot-buttons-website">Website</button></a>
+		{% endif %}
+		{% if bot.state != enums.BotState.banned %}
+			<a target=”_blank” href="/bot/{{bot_id}}/invite"><button class="btn btn-outline-light bot-buttons-all" id="bot-buttons-invite">Invite</button></a>
+		{% endif %}
+		{% if bot_admin %}
+			<a href="/bot/{{bot_id}}/edit"><button class="btn btn-outline-light bot-buttons-all" id="bot-buttons-edit">Edit</button></a>
+		{% endif %}
+	</div>
+	<div style="display: inline-block; width: fit-content; height: fit-content; margin: 7px; padding: 7px;" id="bot-key-container">
+		<section id="bot-tags">
+			<p style="font-size: 25px; font-weight: bold;color: rgba(255,255,255,0.87); text-align: center; margin-top: 3px;" id="bot-tags-header" role="heading" aria-level="3">Tags</p>
+			<div style="text-align: center;" id="bot-tags-container">
+				<div class="d-flex flex-wrap justify-content-center align-items-center" style="width: 97%;margin: 0 auto;" id="bot-tags-container-inner">
+					{{ tags(tags_fixed) }}
+				</div>
+			</div>
+		</section>
+		{% if promos != [] or bot_admin %}
+			<div id="bot-promo" style="margin-top: 30px;">
+				<h5 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;margin-top: -13px;margin-bottom: 3px;" id="bot-promo-header">Promotions, Announcements and More!</h5>
+				{% if bot_admin %}
+					<a href="javascript:void()" onclick="newPromotion('{{bot.api_token}}')" style="color: white !important; opacity: 0.8;"><span class="iconify" data-icon="fa-solid:plus" data-inline="false"></span><span style="margin-left: 3px">New Promotion (Coming Soon)</span></a>
+				{% endif %}
+			{% endif %}
+			{% for promo in promos %}
+				<div class="alert alert-primary" id="bot-promo-container-{{loop.index}}" class="bot-promo-container" role="alert" style='width: 90%; font-weight: bold; margin: 0 auto; height: 86%; padding: 5px; {% if not promo.css %}background-color: #111112; {%endif%} {{promo.css}} margin-bottom: 3px;'>
+					<p style="color: white; margin-bottom: 3px; margin-left: 2px; {{promo.css}}">{{promo.title.replace("<script", "")|safe}}</p>
+					<p style="color: white; {{promo.css}}">{{promo.info}}</p>
+				</div>
+			{% endfor %}
+	    	</div>
 	</div>
 	<div id="bot-switcher" style='margin-bottom: 3px;' class='blackbar'>
 		<div class="tab">
 			  <button id="bot-long-desc-tab-button" class="tablinks" onclick="openf(event, 'bot-long-description-container', this)">Description</button>
 			  <button id="bot-review-tab-button" class="tablinks" onclick="openf(event, 'bot-reviews', this)">Reviews</button>
-                          <button id="bot-about-tab-button" class="tablinks" onclick="openf(event, 'bot-about', this)">About</button>
-                          {% if staff[0] %}
-                          <button id="bot-admin-tab-button" class="tablinks" onclick="openf(event, 'bot-admin', this)">Admin</button>
-		          {% endif %}
+			  <button id="bot-about-tab-button" class="tablinks" onclick="openf(event, 'bot-about', this)">About</button>
+			  {% if staff[0] %}
+       				  <button id="bot-admin-tab-button" class="tablinks" onclick="openf(event, 'bot-admin', this)">Admin</button>
+	   		  {% endif %}
 		</div>
-	<section id="bot-long-description-container" class='tabcontent'>
-		<div id="bot-long-description" style="color: white; text-align: left; margin-left: 5%; margin-right: 5%; margin-top: 13px;">{{bot.long_description.replace("<a", "<a class='long-desc-link'").replace("ajax", "").replace("http://", "https://").replace(".alert", "").replace("<!DOCTYPE", "").replace("html>", "").replace("<body", "").replace("div", "article").replace(".click", "").replace("bootstrap.min.css", "").replace("bootstrap.css", "").replace("jquery.min.js", "").replace("jquery.js", "").replace("fetch(", "")|safe}}</div>
-	</section>
-        <section id="bot-reviews" class='tabcontent'>
-		<h5 class="white">Bot Reviews</h5>
-		{% if username %}
-		<form method="POST" id="review_form" action="/bot/{{bot_id}}/reviews/new" style="width: 100%; margin-bottom: 13px;">
-			<label for="rating">On a scale of 1 to 10, how much did you like this bot?</label><br/>
-			<input class='slider bot-range-slider' type="range" name="rating" min="0.1" max="10" style="width: 100%" value='5' step='0.1' output="rating-desc"/>
-			<p id='rating-desc' style="color: white;"></p>
-			<label for="review">Please write a few words about the bot (in your opinion)</label>
-			<textarea id='bot-rating-review' name="review" type="text" class="form-control fform" style="min-height: 100px; height: 100px;" required minlength="9" placeholder="This bot is a really good bot because of X, Y and Z however...">{{review_desc}}</textarea>
-			<button type="submit" class="btn btn-outline-light">Review</button>
-		</form>
-		{% else %}
-			<p class="white">You need to be logged in to make reviews</p>
-		{% endif %}
-		<hr class="hr-is">
-		<span style="font-size: 18px;" class="white">Reviews: {{bot_reviews.__len__()}}</span><br/>
-		<span style="font-size: 18px;" class="white">Average Rating: <i class='iconify' data-icon='fa-solid:star' data-inline='true' style="margin-right: 3px; margin-bottom: 1px;"></i>{{average_rating}}/10.0</span><br/>
-		<span class="white">
-			<input disabled class='slider' type="range" name="rating" min="0.1" max="10" value='{{average_rating}}' style="width: 100%" step='0.1' tabindex="-1"/>
-			<p id="rating-desc-avg"></p>
-		</span>
-		<div style="text-align: left;">
-		{% macro review(rev, index) %}
-		<div class="bot-review-user" style="margin-left: 2.5%; border: solid;">
-		   <div class="bot-review-left">
-		   	<div class="bot-review-header" style="margin-bottom: 7px; font-weight: bold;">
-			<a href='/profile/{{rev.user_id}}' class="white" style="margin-right: 3px;">
-					<img style="border-radius: 50%; width: 24px;" src="{{rev.user.avatar}}" class="review-avatar" alt="{{rev.user.username}}'s avatar">
-					<span class="white" style="margin-right: 3px;">{{rev.user.username}}</span>
-					<span class="white">|</span>
-			</a>
-			<a class="white" href="javascript:void" onclick="upvoteReview('{{rev.id}}')" style="margin-right: 3px;">
-				<span class="white">
-					<span class='iconify' style="margin-right: 3px; margin-bottom: 1px;" data-icon='fa-solid:angle-up' data-inline='true'></span>
-				</span>
-			</a>
-                        <span class="white" style="margin-right: 3px;">{{rev.review_upvotes.__len__() - rev.review_downvotes.__len__()}}</span>
-                        <a class="white" href="javascript:void" onclick="downvoteReview('{{rev.id}}')" style="margin-left: 3px;">
-                                <span class="white">
-                                        <span class='iconify' style="margin-right: 3px; margin-bottom: 1px;" data-icon='fa-solid:angle-down' data-inline='true'></span>
-                                </span>
-                        </a>
-                        <span class="white">|</span>
-			<span class="white" style="font-weight: bold">
-				<span class='iconify' style="margin-right: 3px; margin-bottom: 1px;" data-icon='fa-solid:star'></span>
-				<span>{{rev.star_rating}}/10.0</span>
-				<span class="white" style="margin-right: 3px;">|</span>
-			</span>
-                        <span class="white">
-                                <span class='iconify' style="margin-right: 3px; margin-bottom: 1px;" data-icon='fa-solid:reply'></span>
-			</span>
-
-                        <a class="white" style="color: white !important" href="javascript:void" onclick="replyReview(this, '{{rev.id}}')" style="margin-right: 3px;">
-				  <span class="white" style="margin-right: 3px;">Reply</span>
-                        </a>
-			{% if userid == rev.user_id or staff[0] %}
-			<span class="white">|</span>
-			{% endif %}
-                        <form method="POST" id="reviewreply-{{rev.id}}" style="display: none; width: 100%;" action="/bot/{{bot_id}}/reviews/{{rev.id}}/reply" class="white">
-                                <input type="hidden" name="id" value="{{rev.id}}" /> <!-- The ID to update -->
-                                <label for="rating">On a scale of 1 to 10, how much did you like this bot?</label><br/>
-				<input class='slider bot-range-slider' type="range" name="rating" min="0.1" max="10" step='0.1' style="width:100%;" output="rating-reply-desc-{{rev.id}}-{{index}}"/>
-				<strong><p id='rating-reply-desc-{{rev.id}}-{{index}}' style="color: white;"></p></strong>
-                                <label for="review">Please write a few words about the bot (in your opinion)</label>
-                                <textarea id='bot-rating-review' name="review" type="text" class="form-control fform" style="min-height: 100px; height: 100px;" required minlength="9" placeholder="This bot is a really good bot because of X, Y and Z however..."></textarea>
-                                <button type="submit" class="btn btn-outline-light">Reply</button>
-                        </form>
-			{% if userid == rev.user_id or staff[0] %}
-			<form method="POST" id="review-{{rev.id}}" style="display: none; width: 100%;" action="/bot/{{bot_id}}/reviews/{{rev.id}}/edit" class="white">
-				<input type="hidden" name="id" value="{{rev.id}}" /> <!-- The ID to update -->
-	                        <label for="rating">On a scale of 1 to 10, how much did you like this bot?</label><br/>
-				<input class='slider bot-range-slider' type="range" name="rating" min="0.1" max="10" value='{{rev.star_rating}}' step='0.1' style="width:100%;" output="rating-desc-{{rev.id}}-{{index}}"/>
-				<strong><p id='rating-desc-{{rev.id}}-{{index}}' style="color: white;"></p></strong>
-                        	<label for="review">Please write a few words about the bot (in your opinion)</label>
-	                        <textarea id='bot-rating-review' name="review" type="text" class="form-control fform" style="min-height: 100px; height: 100px;" required minlength="9" placeholder="This bot is a really good bot because of X, Y and Z however...">{{rev.review}}</textarea>
-	                        <button type="submit" class="btn btn-outline-light">Edit</button>
-			</form>
-			<a href='javascript:void' style='font-weight: bold; margin-left: 3px;' class="long-desc-link" onclick="botReviewEditPane(this, '{{rev.id}}')">Edit</a>
-			<a href='javascript:void' style='font-weight: bold; margin-left: 3px;' class="long-desc-link" onclick="deleteReview('{{rev.id}}')">Delete</a>
-			{% endif %}
-			</div>
-			    <span style="margin-left: 30px !important; color: white" id="review_text-{{rev.id}}">{{rev.review}}</span>
-	          	</div>
-			<div>
-		    	{% for rep in rev.replies %}
-				{{ review(rep, loop.index) }}
-			{% endfor %}
-			</div>
-		    </div>
-		    <script type="application/ld+json">
-			{
-				  "@context" : "http://schema.org",
-				  "@type" : "Product",
-			 	  "name" : "{{bot.user.username}}",
-				  "image" : "{{bot.user.avatar}}",
-				  "description": "{{bot.description}}",
-				  "sku": "{{rev.id}}",
-				  "offers": "",
-				  "aggregateRating" : {
-    				  "@type" : "AggregateRating",
-				        "bestRating" : "10",
-				  	"ratingValue" : {{rev.star_rating}},
-					 "reviewCount": 1
-			 	 },
-			  "review" : [ {
-				    "@type" : "Review",
-				    "author" : {
-				            "@type" : "Person",
-					    "name" : "{{rev.user.username}}"
-			           },
-		         	   "reviewRating" : {
-				           "bestRating" : "10",
-				           "@type" : "Rating",
-					   "ratingValue" : {{rev.star_rating}}
-				    },
-		        	 "reviewBody" : "{{rev.review}}"
-				  } ]
-			}
-		</script>
-		{% endmacro %}
-		{% for rev in bot_reviews %}
-			<section class="bot-review-root bot-review">
-			{{ review(rev, loop.index) }}
-			</section>
-		{% endfor %}
-		</div>
+		<section id="bot-long-description-container" class='tabcontent'>
+			<div id="bot-long-description" style="color: white; text-align: left; margin-left: 5%; margin-right: 5%; margin-top: 13px;">{{bot.long_description.replace("<a", "<a class='long-desc-link'").replace("ajax", "").replace("http://", "https://").replace(".alert", "").replace("<!DOCTYPE", "").replace("html>", "").replace("<body", "").replace("div", "article").replace(".click", "").replace("bootstrap.min.css", "").replace("bootstrap.css", "").replace("jquery.min.js", "").replace("jquery.js", "").replace("fetch(", "")|safe}}</div>
 		</section>
-		<section id="bot-about" class='tabcontent white'>
-			<table style="margin: 0 auto !important;">
-			   <tr>
+		<section id="bot-reviews" class='tabcontent'>
+			<h5 class="white">Bot Reviews</h5>
+			{% if username %}
+       				<form method="POST" id="review_form" action="/bot/{{bot_id}}/reviews/new" style="width: 100%; margin-bottom: 13px;">
+					<label for="rating">On a scale of 1 to 10, how much did you like this bot?</label><br/>
+					<input class='slider bot-range-slider' type="range" name="rating" min="0.1" max="10" style="width: 100%" value='5' step='0.1' output="rating-desc"/>
+					<p id='rating-desc' style="color: white;"></p>
+					<label for="review">Please write a few words about the bot (in your opinion)</label>
+					<textarea id='bot-rating-review' name="review" type="text" class="form-control fform" style="min-height: 100px; height: 100px;" required minlength="9" placeholder="This bot is a really good bot because of X, Y and Z however...">{{review_desc}}</textarea>
+					<button type="submit" class="btn btn-outline-light">Review</button>
+				</form>
+			{% else %}
+       				<p class="white">You need to be logged in to make reviews</p>
+			{% endif %}
+			<hr class="hr-is">
+			<span style="font-size: 18px;" class="white">Reviews: {{bot_reviews.__len__()}}</span><br/>
+			<span style="font-size: 18px;" class="white">Average Rating: <i class='iconify' data-icon='fa-solid:star' data-inline='true' style="margin-right: 3px; margin-bottom: 1px;"></i>{{average_rating}}/10.0</span><br/>
+			<span class="white">
+				<input disabled class='slider' type="range" name="rating" min="0.1" max="10" value='{{average_rating}}' style="width: 100%" step='0.1' tabindex="-1"/>
+				<p id="rating-desc-avg"></p>
+			</span>
+			<div style="text-align: left;">
+				{% macro review(rev, index) %}
+				<div class="bot-review-user" style="margin-left: 2.5%; border: solid;">
+		   			<div class="bot-review-left">
+						<div class="bot-review-header" style="margin-bottom: 7px; font-weight: bold;">
+							<a href='/profile/{{rev.user_id}}' class="white" style="margin-right: 3px;">
+								<img style="border-radius: 50%; width: 24px;" src="{{rev.user.avatar}}" class="review-avatar" alt="{{rev.user.username}}'s avatar">
+								<span class="white" style="margin-right: 3px;">{{rev.user.username}}</span>
+								<span class="white">|</span>
+							</a>
+							<a class="white" href="javascript:void" onclick="upvoteReview('{{rev.id}}')" style="margin-right: 3px;">
+								<span class="white">
+									<span class='iconify' style="margin-right: 3px; margin-bottom: 1px;" data-icon='fa-solid:angle-up' data-inline='true'></span>
+								</span>
+							</a>
+							<span class="white" style="margin-right: 3px;">{{rev.review_upvotes.__len__() - rev.review_downvotes.__len__()}}</span>
+							<a class="white" href="javascript:void" onclick="downvoteReview('{{rev.id}}')" style="margin-left: 3px;">
+								<span class="white">
+									<span class='iconify' style="margin-right: 3px; margin-bottom: 1px;" data-icon='fa-solid:angle-down' data-inline='true'></span>
+								</span>
+							</a>
+							<span class="white">|</span>
+							<span class="white" style="font-weight: bold">
+								<span class='iconify' style="margin-right: 3px; margin-bottom: 1px;" data-icon='fa-solid:star'></span>
+								<span>{{rev.star_rating}}/10.0</span>
+								<span class="white" style="margin-right: 3px;">|</span>
+							</span>
+							<span class="white">
+								<span class='iconify' style="margin-right: 3px; margin-bottom: 1px;" data-icon='fa-solid:reply'></span>
+							</span>
+
+							<a class="white" style="color: white !important" href="javascript:void" onclick="replyReview(this, '{{rev.id}}')" style="margin-right: 3px;">
+				  				<span class="white" style="margin-right: 3px;">Reply</span>
+							</a>
+							{% if userid == rev.user_id or staff[0] %}
+       								<span class="white">|</span>
+							{% endif %}
+							<form method="POST" id="reviewreply-{{rev.id}}" style="display: none; width: 100%;" action="/bot/{{bot_id}}/reviews/{{rev.id}}/reply" class="white">
+								<input type="hidden" name="id" value="{{rev.id}}" /> <!-- The ID to update -->
+								<label for="rating">On a scale of 1 to 10, how much did you like this bot?</label><br/>
+								<input class='slider bot-range-slider' type="range" name="rating" min="0.1" max="10" step='0.1' style="width:100%;" output="rating-reply-desc-{{rev.id}}-{{index}}"/>
+								<strong><p id='rating-reply-desc-{{rev.id}}-{{index}}' style="color: white;"></p></strong>
+								<label for="review">Please write a few words about the bot (in your opinion)</label>
+								<textarea id='bot-rating-review' name="review" type="text" class="form-control fform" style="min-height: 100px; height: 100px;" required minlength="9" placeholder="This bot is a really good bot because of X, Y and Z however..."></textarea>
+								<button type="submit" class="btn btn-outline-light">Reply</button>
+							</form>
+							{% if userid == rev.user_id or staff[0] %}
+       								<form method="POST" id="review-{{rev.id}}" style="display: none; width: 100%;" action="/bot/{{bot_id}}/reviews/{{rev.id}}/edit" class="white">
+									<input type="hidden" name="id" value="{{rev.id}}" /> <!-- The ID to update -->
+									<label for="rating">On a scale of 1 to 10, how much did you like this bot?</label><br/>
+									<input class='slider bot-range-slider' type="range" name="rating" min="0.1" max="10" value='{{rev.star_rating}}' step='0.1' style="width:100%;" output="rating-desc-{{rev.id}}-{{index}}"/>
+									<strong><p id='rating-desc-{{rev.id}}-{{index}}' style="color: white;"></p></strong>
+									<label for="review">Please write a few words about the bot (in your opinion)</label>
+									<textarea id='bot-rating-review' name="review" type="text" class="form-control fform" style="min-height: 100px; height: 100px;" required minlength="9" placeholder="This bot is a really good bot because of X, Y and Z however...">{{rev.review}}</textarea>
+									<button type="submit" class="btn btn-outline-light">Edit</button>
+								</form>
+								<a href='javascript:void' style='font-weight: bold; margin-left: 3px;' class="long-desc-link" onclick="botReviewEditPane(this, '{{rev.id}}')">Edit</a>
+								<a href='javascript:void' style='font-weight: bold; margin-left: 3px;' class="long-desc-link" onclick="deleteReview('{{rev.id}}')">Delete</a>
+							{% endif %}
+						</div>
+			    			<span style="margin-left: 30px !important; color: white" id="review_text-{{rev.id}}">{{rev.review}}</span>
+					</div>
+					<div>
+						{% for rep in rev.replies %}
+       							{{ review(rep, loop.index) }}
+						{% endfor %}
+					</div>
+		    		</div>
+		   		<script type="application/ld+json">
+			    		{
+				  		"@context" : "http://schema.org",
+				 		"@type" : "Product",
+				  		"name" : "{{bot.user.username}}",
+				  		"image" : "{{bot.user.avatar}}",
+				  		"description": "{{bot.description}}",
+				  		"sku": "{{rev.id}}",
+				  		"offers": "",
+				  		"aggregateRating" : {
+				  			"@type" : "AggregateRating",
+							"bestRating" : "10",
+							"ratingValue" : {{rev.star_rating}},
+							"reviewCount": 1
+				 		},
+			  			"review" : [ {
+							"@type" : "Review",
+				   			"author" : {
+					    			"@type" : "Person",
+					    			"name" : "{{rev.user.username}}"
+				   			},
+				   			"reviewRating" : {
+					   			"bestRating" : "10",
+					   			"@type" : "Rating",
+							 	"ratingValue" : {{rev.star_rating}}
+				    			},
+				 			"reviewBody" : "{{rev.review}}"
+				  		} ]
+					}
+		    		</script>
+		    {% endmacro %}
+		    {% for rev in bot_reviews %}
+			    <section class="bot-review-root bot-review">
+				    {{ review(rev, loop.index) }}
+			    </section>
+		    {% endfor %}
+		</div>
+	</section>
+	<section id="bot-about" class='tabcontent white'>
+		<table style="margin: 0 auto !important;">
+			<tr>
 				<th>Owners</th>
 				<td>{{bot.owners_html|safe}}</td>
-			   </tr>
-			   <tr>
+			</tr>
+			<tr>
 				<th>Prefix</th>
 				<td>{{bot.prefix}}</td>
-			   </tr>
-			   <tr>
-			   	<th>Library</th>
+			</tr>
+			<tr>
+				<th>Library</th>
 				<td>{{bot.library}}</td>
-			   </tr>
-			   <tr>
-                                <th>Servers</th>
+			</tr>
+			<tr>
+				<th>Servers</th>
 				<td>{{bot.servers}}</td>
-			   </tr>
-			   <tr>
-                                <th>Shards</th>
+			</tr>
+			<tr>
+				<th>Shards</th>
 				<td>{{bot.shards}}</td>
-			   </tr>
-			   <tr>
-                                <th>Invites</th>
-                                <td>{{bot.invite_amount}}</td>
-			   </tr>
-			   <tr>
+			</tr>
+			<tr>
+				<th>Invites</th>
+				<td>{{bot.invite_amount}}</td>
+			</tr>
+			<tr>
 				<th>Vote Page</th>
-                                <td><a class='long-desc-link' href="/bot/{{bot_id}}/vote">Click/Copy Me!</a></td>
-		 	   </tr>
-                           {% if bot.features %}
-			   <tr>
-				<th>Features</th>
-				<td>{{bot.features|safe}}</td>
-			   </tr>
-			   {% endif %}
-			</table>
-			</section>
-			<div id="bot-admin" class='tabcontent white'>
-                        <h6>Administrative Tasks</h6>
-			{% if staff[0] %}
-			{% if bot.state == enums.BotState.pending %}
-			<p>Approve this bot?</p>
-			<form method="POST" action="/admin/review/{{bot_id}}" style="margin-bottom: 10px;">
-				{{ form.csrf_token }}
-				<input hidden name="accept" value="true"></input>
-				<textarea name="accept_feedback" style="border-radius: 4px 4px 4px 4px !important; min-height: 10px; height: 200px; width: 100%" placeholder="Enter any feedback you have for this bot"></textarea><br/>
-				<button class="btn btn-outline-light" type="submit" style="margin: 0 15px;">Accept</button>
-			</form>
-	                <p>Deny this bot?</p>
-                        <form method="POST" action="/admin/review/{{bot_id}}">
-                                {{ form.csrf_token }}
-				<textarea name="deny_reason" style="border-radius: 4px 4px 4px 4px !important; min-height: 10px; height: 200px; width: 100%" placeholder="Enter deny reason"></textarea><br/>
-                                <input hidden name="accept" value="false"></input>
-                                <button class="btn btn-outline-light" type="submit" style="margin: 0 15px;">Deny</button>
-                        </form>
-				{% elif bot.state == enums.BotState.verified %}
-                                <form method="POST" action="/admin/review/{{bot_id}}">
-                                        {{ form.csrf_token }}
-                                        <input hidden name="accept" value="unverify"></input>
-		                        <input type="text" name="unverify_reason" style="border-radius: 4px 4px 4px 4px !important;" placeholder="Enter unverify reason" required/>
-                                        <button class="btn btn-outline-light" type="submit" style="margin: 0 15px; border-radius: 4px 4px 4px 4px !important;">Unverify</button>
-                                </form>
-				{% endif %}
-                <form style="text-align: center; margin: 10px;" method="POST" action="/bot/{{bot_id}}/ban">
-                {{form.csrf_token}}
-                {% if staff[0] and bot.state == enums.BotState.verified%}
-                        <input type="hidden" name="ban" value="1"/>
-                        <p style="font-weight: bold;color: rgba(255,255,255,0.87); text-align: center;">If this bot is misbehaving...</p>
-                        <input type="text" name="reason" style="border-radius: 4px 4px 4px 4px !important;" placeholder="Enter ban reason" required/>
-                        <button type="submit" class="btn btn-outline-dark" style="border-radius: 4px 4px 4px 4px !important; background-color: red; color: white !important;"><span class='iconify' style="margin-right: 3px; margin-bottom: 1px;" data-icon='fa-solid:hammer'></span>Ban</button>
-                {% elif staff[0] and (bot.banned or bot.state == enums.BotState.denied) %}
-                        <p style="font-weight: bold;color: rgba(255,255,255,0.87); text-align: center;">If this bot has learnt its lesson...</p>
-                        <input type="hidden" name="ban" value="0"/>
-                        <button type="submit" class="btn btn-outline-dark" style="background-color: red; color: white !important;"><span class='iconify' style="margin-right: 3px; margin-bottom: 1px;" data-icon='fa-solid:hammer'></span>Unban/Undeny</button>
-                {% endif %}
-        </form>
-
-			</div>
+				<td><a class='long-desc-link' href="/bot/{{bot_id}}/vote">Click/Copy Me!</a></td>
+			</tr>
+			{% if bot.features %}
+				<tr>
+					<th>Features</th>
+					<td>{{bot.features|safe}}</td>
+				</tr>
 			{% endif %}
-		</div>
+		</table>
+	</section>
+	<div id="bot-admin" class='tabcontent white'>
+		<h6>Administrative Tasks</h6>
+		{% if staff[0] %}
+			{% if bot.state == enums.BotState.pending %}
+				<p>Approve this bot?</p>
+				<form method="POST" action="/admin/review/{{bot_id}}" style="margin-bottom: 10px;">
+					{{ form.csrf_token }}
+					<input hidden name="accept" value="true"></input>
+					<textarea name="accept_feedback" style="border-radius: 4px 4px 4px 4px !important; min-height: 10px; height: 200px; width: 100%" placeholder="Enter any feedback you have for this bot"></textarea><br/>
+					<button class="btn btn-outline-light" type="submit" style="margin: 0 15px;">Accept</button>
+				</form>
+				<p>Deny this bot?</p>
+				<form method="POST" action="/admin/review/{{bot_id}}">
+					{{ form.csrf_token }}
+					<textarea name="deny_reason" style="border-radius: 4px 4px 4px 4px !important; min-height: 10px; height: 200px; width: 100%" placeholder="Enter deny reason"></textarea><br/>
+					<input hidden name="accept" value="false"></input>
+					<button class="btn btn-outline-light" type="submit" style="margin: 0 15px;">Deny</button>
+				</form>
+			{% elif bot.state == enums.BotState.verified %}
+				<form method="POST" action="/admin/review/{{bot_id}}">
+					{{ form.csrf_token }}
+					<input hidden name="accept" value="unverify"></input>
+					<input type="text" name="unverify_reason" style="border-radius: 4px 4px 4px 4px !important;" placeholder="Enter unverify reason" required/>
+					<button class="btn btn-outline-light" type="submit" style="margin: 0 15px; border-radius: 4px 4px 4px 4px !important;">Unverify</button>
+				</form>
+			{% endif %}
+			<form style="text-align: center; margin: 10px;" method="POST" action="/bot/{{bot_id}}/ban">
+				{{form.csrf_token}}
+				{% if staff[0] and bot.state == enums.BotState.verified%}
+					<input type="hidden" name="ban" value="1"/>
+					<p style="font-weight: bold;color: rgba(255,255,255,0.87); text-align: center;">If this bot is misbehaving...</p>
+					<input type="text" name="reason" style="border-radius: 4px 4px 4px 4px !important;" placeholder="Enter ban reason" required/>
+					<button type="submit" class="btn btn-outline-dark" style="border-radius: 4px 4px 4px 4px !important; background-color: red; color: white !important;"><span class='iconify' style="margin-right: 3px; margin-bottom: 1px;" data-icon='fa-solid:hammer'></span>Ban</button>
+				{% elif staff[0] and (bot.state == enums.BotState.banned or bot.state == enums.BotState.denied) %}
+					<p style="font-weight: bold;color: rgba(255,255,255,0.87); text-align: center;">If this bot has learnt its lesson/needs a second review...</p>
+					<input type="hidden" name="ban" value="0"/>
+					<button type="submit" class="btn btn-outline-dark" style="background-color: red; color: white !important;"><span class='iconify' style="margin-right: 3px; margin-bottom: 1px;" data-icon='fa-solid:hammer'></span>Unban/Undeny</button>
+				{% endif %}
+			</form>
+
 	</div>
-</div>
-<script>
-var rating = 0;
+{% endif %}
+	</div>
+	</div>
+	</div>
+	<script>
+		var rating = 0;
 // Block onload
 var x = document.getElementById("bot-long-description");
 x.addEventListener("load", myFunction);
 function myFunction(event) {
-  event.stopImmediatePropagation();
+	event.stopImmediatePropagation();
 }
 
 var slider = document.querySelectorAll(".bot-range-slider");
 // Update the current slider value (each time you drag the slider handle)
 for(var i = 0; i < slider.length; i++) {
-  output_id = slider[i].getAttribute("output")
-  document.getElementById(output_id).innerHTML = "Drag the slider to change your rating"; // Display the default slider value
-slider[i].oninput = function() {
-  output = document.getElementById(this.getAttribute("output"))
-  console.log(output)
-  state = parseState(this.value)
-  output.innerHTML = state + ", " + this.value;
-}
+	output_id = slider[i].getAttribute("output")
+	document.getElementById(output_id).innerHTML = "Drag the slider to change your rating"; // Display the default slider value
+	slider[i].oninput = function() {
+		output = document.getElementById(this.getAttribute("output"))
+		console.log(output)
+		state = parseState(this.value)
+		output.innerHTML = state + ", " + this.value;
+	}
 }
 
 function parseState(v) {
-  state = ""
-  if(v < 1)
-        state = "Atrocity"
-  else if(v < 2)
-        state = "Absymal"
-  else if(v < 3)
-        state = "Really Poor"
-  else if(v < 4)
-        state = "Poor"
-  else if(v < 5)
-        state = "Below Average"
-  else if(v < 6)
-        state = "Average"
-  else if(v < 7)
-        state = "Above Average"
-  else if(v < 8)
-        state = "Meets Expectations"
-  else if(v < 9)
-        state = "Great"
-  else if(v < 10)
-        state = "Exceeds Expectations"
-  else if(v == 10)
-        state = "Without a doubt, perfect"
-  return state
+	state = ""
+	if(v < 1)
+		state = "Atrocity"
+	else if(v < 2)
+		state = "Absymal"
+	else if(v < 3)
+		state = "Really Poor"
+	else if(v < 4)
+		state = "Poor"
+	else if(v < 5)
+		state = "Below Average"
+	else if(v < 6)
+		state = "Average"
+	else if(v < 7)
+		state = "Above Average"
+	else if(v < 8)
+		state = "Meets Expectations"
+	else if(v < 9)
+		state = "Great"
+	else if(v < 10)
+		state = "Exceeds Expectations"
+	else if(v == 10)
+		state = "Without a doubt, perfect"
+	return state
 }
 
 document.querySelector("#rating-desc-avg").innerHTML = parseState({{average_rating}}) + ", " + {{average_rating}} 
 
 function openf(evt, id, data) {
-  // Declare all variables
-  var i, tabcontent, tablinks;
+	// Declare all variables
+	var i, tabcontent, tablinks;
 
-  // Get all elements with class="tabcontent" and hide them
-  tabcontent = document.getElementsByClassName("tabcontent");
-  for (i = 0; i < tabcontent.length; i++) {
-    tabcontent[i].style.display = "none";
-  }
+	// Get all elements with class="tabcontent" and hide them
+	tabcontent = document.getElementsByClassName("tabcontent");
+	for (i = 0; i < tabcontent.length; i++) {
+		tabcontent[i].style.display = "none";
+	}
 
-  // Get all elements with class="tablinks" and remove the class "active"
-  tablinks = document.getElementsByClassName("tablinks");
-  for (i = 0; i < tablinks.length; i++) {
-    tablinks[i].className = tablinks[i].className.replace(" active", "");
-  }
+	// Get all elements with class="tablinks" and remove the class "active"
+	tablinks = document.getElementsByClassName("tablinks");
+	for (i = 0; i < tablinks.length; i++) {
+		tablinks[i].className = tablinks[i].className.replace(" active", "");
+	}
 
-  // Show the current tab, and add an "active" class to the button that opened the tab
-  document.getElementById(id).style.display = "block";
-  evt.currentTarget.className += " active";
-  if(data.id != "bot-long-desc-tab-button")
-	window.location.hash = data.id + "-fl";
-  else 
-	window.location.hash = ""
+	// Show the current tab, and add an "active" class to the button that opened the tab
+	document.getElementById(id).style.display = "block";
+	evt.currentTarget.className += " active";
+	if(data.id != "bot-long-desc-tab-button")
+		window.location.hash = data.id + "-fl";
+	else 
+		window.location.hash = ""
 }
-</script>
-<script>
-	function botReviewEditPane(el, id) {
-		rev = document.querySelector('#review-' + id)
-		if(rev.style.display == "none") {
-			rev.style.display = 'block';
-        	        document.querySelector("#review_text-" + id).style.display = "none";
-			el.innerHTML = 'Close';
+	</script>
+	<script>
+		function botReviewEditPane(el, id) {
+			rev = document.querySelector('#review-' + id)
+			if(rev.style.display == "none") {
+				rev.style.display = 'block';
+				document.querySelector("#review_text-" + id).style.display = "none";
+				el.innerHTML = 'Close';
+			}
+			else {
+				rev.style.display = 'none';
+				document.querySelector("#review_text-" + id).style.display = "block";
+				el.innerHTML = 'Edit';
+			}
 		}
-		else {
-                        rev.style.display = 'none';
-                        document.querySelector("#review_text-" + id).style.display = "block";
-			el.innerHTML = 'Edit';
-		}
+function replyReview(el, id) {
+	rev = document.querySelector('#reviewreply-' + id)
+	if(rev.style.display == "none") {
+		rev.style.display = 'block';
+		el.innerHTML = 'Close';
 	}
-        function replyReview(el, id) {
-                rev = document.querySelector('#reviewreply-' + id)
-                if(rev.style.display == "none") {
-                        rev.style.display = 'block';
-                        el.innerHTML = 'Close';
-                }
-                else {
-                        rev.style.display = 'none';
-                        el.innerHTML = 'Reply';
-                }
-        }
-
-	function deleteReview(rev_id) {
-        $.ajax({
-           type: 'POST',
-	   url: `/bot/{{bot_id}}/reviews/${rev_id}/delete`,
-           processData: false,
-           contentType: 'application/json',
-	   statusCode: {
-		303: function(data) {
-			window.location.href = data.redirect;
-		}
-	   }
-        });
-        alert("Deleted Review Successfully")
-        window.location.reload()
+	else {
+		rev.style.display = 'none';
+		el.innerHTML = 'Reply';
 	}
+}
 
-	function upvoteReview(rev_id) {
-        $.ajax({
-           type: 'PATCH',
-	   url: `/api/bots/{{bot_id}}/reviews/${rev_id}/votes?user_id={{userid}}`,
-	   data: JSON.stringify({"upvote": true}),
-	   headers: {"Authorization": "{{user_token}}"},
-	   processData: false,
-           contentType: 'application/json',
-	   statusCode: {
-		400: function(data) {
-			alert("You have already upvoted this review. You cannot upvote it again");
-		},
-		200: function(data) {
-			alert("Upvoted successfully")
-		        window.location.reload()
-		},
-		404: function(data) {
-			alert("Review does not exist or this feature isn't done yet!")
-		},
-		401: function(data) {
-			alert("We could not authenticate you, make sure you are logged in")
+function deleteReview(rev_id) {
+	$.ajax({
+		type: 'POST',
+		url: `/bot/{{bot_id}}/reviews/${rev_id}/delete`,
+		processData: false,
+		contentType: 'application/json',
+		statusCode: {
+			303: function(data) {
+				window.location.href = data.redirect;
+			}
 		}
-	   }
-        });
+	});
+	alert("Deleted Review Successfully")
+	window.location.reload()
+}
 
-	}
-
-        function downvoteReview(rev_id) {
-        $.ajax({
-           type: 'PATCH',
-	   url: `/api/bots/{{bot_id}}/reviews/${rev_id}/votes?user_id={{userid}}`,
-	   data: JSON.stringify({"upvote": false}),
-	   headers: {"Authorization": "{{user_token}}"},
-	   processData: false,
-           contentType: 'application/json',
-           statusCode: {
-                400: function(data) {
-                        alert("You have already downvoted this review. You cannot downvote it again");
-                },
-                200: function(data) {
-                        alert("Downvoted successfully")
-                        window.location.reload()
-                },
-                404: function(data) {
-                        alert("Review does not exist or this feature isn't done yet!")
-                },
-		401: function(data) {
-			alert("We could not authenticate you, make sure you are logged in")
+function upvoteReview(rev_id) {
+	$.ajax({
+		type: 'PATCH',
+		url: `/api/bots/{{bot_id}}/reviews/${rev_id}/votes?user_id={{userid}}`,
+		data: JSON.stringify({"upvote": true}),
+		headers: {"Authorization": "{{user_token}}"},
+		processData: false,
+		contentType: 'application/json',
+		statusCode: {
+			400: function(data) {
+				alert("You have already upvoted this review. You cannot upvote it again");
+			},
+			200: function(data) {
+				alert("Upvoted successfully")
+				window.location.reload()
+			},
+			404: function(data) {
+				alert("Review does not exist or this feature isn't done yet!")
+			},
+			401: function(data) {
+				alert("We could not authenticate you, make sure you are logged in")
+			}
 		}
-           }
-        });
+	});
 
-        }
+}
 
-</script>	
-<script>
-if(window.location.hash == "")
+function downvoteReview(rev_id) {
+	$.ajax({
+		type: 'PATCH',
+		url: `/api/bots/{{bot_id}}/reviews/${rev_id}/votes?user_id={{userid}}`,
+		data: JSON.stringify({"upvote": false}),
+		headers: {"Authorization": "{{user_token}}"},
+		processData: false,
+		contentType: 'application/json',
+		statusCode: {
+			400: function(data) {
+				alert("You have already downvoted this review. You cannot downvote it again");
+			},
+			200: function(data) {
+				alert("Downvoted successfully")
+				window.location.reload()
+			},
+			404: function(data) {
+				alert("Review does not exist or this feature isn't done yet!")
+			},
+			401: function(data) {
+				alert("We could not authenticate you, make sure you are logged in")
+			}
+		}
+	});
+
+}
+
+	</script>	
+	<script>
+		if(window.location.hash == "")
 	document.querySelector('#bot-long-desc-tab-button').click()
 else
 	try {
 		document.querySelector(window.location.hash.replace("-fl", "")).click()
 	}
-	catch {
-		document.querySelector('#bot-long-desc-tab-button').click()
-	}
-		function onSubmit(token) {
-			document.getElementById("vote").submit();
-		}
-</script>
-</div>
+catch {
+	document.querySelector('#bot-long-desc-tab-button').click()
+}
+function onSubmit(token) {
+	document.getElementById("vote").submit();
+}
+	</script>
+	</div>
 {% endblock %} 
 {% block footer %} 
 {% endblock %}
