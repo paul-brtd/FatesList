@@ -4,6 +4,9 @@ import uuid
 from aenum import Enum, IntEnum
 
 class Status(IntEnum):
+    """
+    Status object (See https://docs.fateslist.xyz/basics/basic-structures#status for more information)
+    """
     _init_ = 'value __doc__'
     unknown = 0, "Unknown"
     online = 1, "Online"
