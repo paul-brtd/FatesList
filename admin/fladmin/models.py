@@ -248,7 +248,7 @@ class Bot(models.Model):
 
 class BotOwner(models.Model):
     _id = models.AutoField(primary_key = True)
-    bot_id = models.ForeignKey(Bot, on_delete = models.CASCADE, db_column = 'bot_id', blank = True) 
+    bot_id = models.BigIntegerField(blank = True)
     owner = models.BigIntegerField()
     main = models.BooleanField()
 

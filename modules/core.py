@@ -137,15 +137,17 @@ def is_staff(staff_json: dict, roles: Union[list, int], base_perm: int) -> Union
         roles = [roles]
     max_perm = 0 # This is a cache of the max perm a user has
     sm = StaffMember(name = "user", id = staff_json["user"]["id"], perm = 1) # Initially
+    bak_sm = sm # Backup staff member
     for role in roles: # Loop through all roles
         if type(role) == discord.Role:
             role = role.id
         sm = _get_staff_member(staff_json, role)
         if sm.perm > max_perm:
             max_perm = sm.perm
-        if max_perm >= base_perm:
-            return True, max_perm, sm
-    return False, max_perm, sm
+            bak_sm = sm # Back it up so it doesnt get overwritten
+    if max_perm >= base_perm:
+        return True, max_perm, bak_sm # Use backup and not overwritten one
+    return False, max_perm, sm # Use normal one
 
 async def add_maint(bot_id: int, type: int, reason: str):
     maints = await db.fetchrow("SELECT bot_id FROM bot_maint WHERE bot_id = $1", bot_id)
@@ -432,6 +434,7 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, review:
         reviews = [0, 1]
     else:
         f = "bot.html"
+        print(bot_admin)
         reviews = await parse_reviews(bot_id)
     return await templates.TemplateResponse(f, {"request": request, "bot": bot, "bot_id": bot_id, "tags_fixed": _tags_fixed_bot, "form": form, "avatar": request.session.get("avatar"), "promos": promos, "maint": maint, "bot_admin": bot_admin, "review": review, "guild": main_server, "botp": True, "bot_reviews": reviews[0], "average_rating": reviews[1], "replace_last": replace_last})
 
@@ -661,7 +664,8 @@ class templates():
                 request.session["staff"] = staff[0], staff[1], staff[2].dict()
             else:
                 pass
-            arg_dict["staff"] = request.session.get("staff", [False])
+            arg_dict["staff"] = request.session.get("staff")
+            print(arg_dict["staff"])
             arg_dict["avatar"] = request.session.get("avatar")
             arg_dict["username"] = request.session.get("username")
             arg_dict["userid"] = int(request.session.get("userid"))
@@ -1046,11 +1050,11 @@ class BotListAdmin():
         if owners is None:
             return False
         await db.execute("UPDATE bots SET queue_state = 0 WHERE bot_id = $1", self.bot_id)
-        await add_event(bot_id, "approve", {"user": self.mod})
+        await add_event(self.bot_id, "approve", {"user": self.mod})
         owner = [obj["owner"] for obj in owners if obj["main"]][0]
         approve_embed = discord.Embed(title="Bot Approved!", description = f"<@{self.bot_id}> by <@{owner}> has been approved", color=0x00ff00)
         approve_embed.add_field(name="Feedback", value=feedback)
-        approve_embed.add_field(name="Link", value=f"https://fateslist.xyz/bot/{bot_id}")
+        approve_embed.add_field(name="Link", value=f"https://fateslist.xyz/bot/{self.bot_id}")
         try:
             member = self.channel.guild.get_member(int(owner))
             if member is not None:
@@ -1075,7 +1079,7 @@ class BotListAdmin():
         if owner is None:
             return False
         await db.execute("UPDATE bots SET queue_state = 1, banned = false WHERE bot_id = $1", self.bot_id)
-        await add_event(bot_id, "unverify", {"user": self.mod})
+        await add_event(self.bot_id, "unverify", {"user": self.mod})
         unverify_embed = discord.Embed(title="Bot Unverified!", description = f"<@{self.bot_id}> by <@{owner['owner']}> has been unverified", color=discord.Color.red())
         unverify_embed.add_field(name="Reason", value=reason)
         await self.channel.send(embed = unverify_embed)
@@ -1105,7 +1109,7 @@ class BotListAdmin():
         except:
             pass
         await db.execute("UPDATE bots SET banned = true WHERE bot_id = $1", self.bot_id)
-        await add_event(bot_id, "ban", {"user": self.mod})
+        await add_event(self.bot_id, "ban", {"user": self.mod})
 
     async def unban_bot(self, queue_state):
         if queue_state == 2:
@@ -1115,9 +1119,9 @@ class BotListAdmin():
             word = "unbanned"
             title = "Bot unbanned"
         unban_embed = discord.Embed(title=title, description=f"<@{self.bot_id}> has been {word}", color=0x00ff00)
-        await channel.send(embed = unban_embed)
+        await self.channel.send(embed = unban_embed)
         if queue_state == 2:
             await db.execute("UPDATE bots SET queue_state = 1 WHERE bot_id = $1", self.bot_id)
         else:
             await db.execute("UPDATE bots SET banned = false WHERE bot_id = $1", self.bot_id)
-            await add_event(bot_id, "unban", {"user": self.mod})
+            await add_event(self.bot_id, "unban", {"user": self.mod})

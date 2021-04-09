@@ -77,13 +77,16 @@ class VanityAdmin(FADMIN):
     search_fields = ['redirect', 'vanity_url', 'type']
     list_display = (redirect, vanity_url, type_vanity)
 
+class OwnerAdmin(FADMIN):
+    search_fields = ['bot_id']
+
 # Register your models here.
 admin.site.register(Bot, BotAdmin)
 admin.site.register(BotVoter, BotVoterAdmin)
 admin.site.register(Vanity, VanityAdmin)
 admin.site.register(Server, FADMIN)
 admin.site.register(User, UserAdmin)
-admin.site.register(BotOwner, FADMIN)
+admin.site.register(BotOwner, OwnerAdmin)
 
 # ULA
 

@@ -143,9 +143,12 @@ textarea {
 
 	    <img style="border-radius: 50%; width: 120px;" src="{{bot.user.avatar}}" id="bot-avatar" alt="{{bot.user.avatar}}'s avatar">
 	<h3 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;" id="bot-username">{{bot.user.username}} <span style="opacity: 0.65">({{bot.prefix}})</span></h3>
-	{% if bot.queue_state == 1 %}
+	{% if bot.queue_state == 2 %}
 	<div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
-	<strong>This bot has been DENIED from this bot list for violating our rules or being a low-quality bot. Please do not invite it.</strong>
+	<strong>This bot has been DENIED from this bot list for violating our rules or being a low-quality bot. Please do not invite it.</strong>	
+	{% if bot_admin %}
+		<br/><strong>Since you are the owner/extra owners of this bot, you can resubmit your bot or request a ban appeal (if your bot was banned and not denied) by clicking <a class="long-desc-link" href="/bot/{{bot.bot_id}}/resubmit">here</a></strong>
+ 	{% endif %}
 	</div>
 	{% elif bot.banned %}
         <div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
@@ -154,7 +157,7 @@ textarea {
 	<br/><strong>Since you are the owner/extra owners of this bot, you can resubmit your bot or request a ban appeal (if your bot was banned and not denied) by clicking <a class="long-desc-link" href="/bot/{{bot.bot_id}}/resubmit">here</a></strong>
 	{% endif %}
 	</div>
-	{% elif bot.queue_state == 1 and not review%}
+	{% elif bot.queue_state == 1 %}
         <div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
         	<strong>This bot has not yet been verified/approved and may violate our rules and/or be low-quality or a "nuke bot". Please do not invite it until we have approved it</strong>
 	</div>
