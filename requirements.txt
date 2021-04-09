@@ -23,3 +23,5 @@ django_admin_logs
 markdown
 stripe
 numba
+aenum
+numpy

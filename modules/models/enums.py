@@ -1,18 +1,20 @@
 from typing import List, Dict, Optional, ForwardRef
 from pydantic import BaseModel
 import uuid
-from enum import Enum, IntEnum
+from aenum import Enum, IntEnum
 
 class Status(IntEnum):
-    unknown = 0
-    online = 1
-    offline = 2
-    idle = 3
-    dnd = 4
+    _init_ = 'value __doc__'
+    unknown = 0, "Unknown"
+    online = 1, "Online"
+    offline = 2, "Offline"
+    idle = 3, "Idle"
+    dnd = 4, "Do Not Disturb"
 
 class BotState(IntEnum):
-    verified = 0
-    pending = 1
-    denied = 2
-    hidden = 3
-    banned = 4
+    _init_ = 'value __doc__'
+    verified = 0, "Verified"
+    pending = 1, "Pending Verification"
+    denied = 2, "Denied"
+    hidden = 3, "Hidden"
+    banned = 4, "Banned"
