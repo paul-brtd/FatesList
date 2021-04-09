@@ -258,7 +258,6 @@ async def get_user_token(uid: int, username: str) -> str:
     else:
         # Update their username if needed
         if token["username"] != username:
-            print("Updating profile")
             await db.execute("UPDATE users SET username = $1 WHERE user_id = $2", username, int(uid))
         token = token["api_token"]
         return token
@@ -360,13 +359,11 @@ def replace_last(string, delimiter, replacement):
 # Get Bots Helper
 async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, review: bool, widget: bool):
     guild = client.get_guild(main_server)
-    print("Begin rendering bots")
     try:
         bot = dict(await db.fetchrow("SELECT js_whitelist, api_token, prefix, shard_count, queue_state, description, bot_library AS library, tags, banner, website, certified, votes, servers, bot_id, discord AS support, banner, banned, disabled, github, features, invite_amount, css, html_long_description AS html_ld, long_description, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", bot_id))
     except:
         return await templates.e(request, "Bot Not Found")
     owners = await db.fetch("SELECT owner FROM bot_owner WHERE bot_id = $1", bot_id)
-    print("Got here")
     if bot is None:
         return await templates.e(request, "Bot Not Found")
     if not bot["html_ld"]:
@@ -434,7 +431,6 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, review:
         reviews = [0, 1]
     else:
         f = "bot.html"
-        print(bot_admin)
         reviews = await parse_reviews(bot_id)
     return await templates.TemplateResponse(f, {"request": request, "bot": bot, "bot_id": bot_id, "tags_fixed": _tags_fixed_bot, "form": form, "avatar": request.session.get("avatar"), "promos": promos, "maint": maint, "bot_admin": bot_admin, "review": review, "guild": main_server, "botp": True, "bot_reviews": reviews[0], "average_rating": reviews[1], "replace_last": replace_last})
 
@@ -665,7 +661,6 @@ class templates():
             else:
                 pass
             arg_dict["staff"] = request.session.get("staff")
-            print(arg_dict["staff"])
             arg_dict["avatar"] = request.session.get("avatar")
             arg_dict["username"] = request.session.get("username")
             arg_dict["userid"] = int(request.session.get("userid"))
@@ -1055,8 +1050,17 @@ class BotListAdmin():
         approve_embed = discord.Embed(title="Bot Approved!", description = f"<@{self.bot_id}> by <@{owner}> has been approved", color=0x00ff00)
         approve_embed.add_field(name="Feedback", value=feedback)
         approve_embed.add_field(name="Link", value=f"https://fateslist.xyz/bot/{self.bot_id}")
+        bot_dev = self.guild.get_role(bot_dev_role)
+        for _owner in owners:
+            try:
+                member = self.guild.get_member(int(_owner['owner']))
+                if member is not None:
+                    await member.add_roles(bot_dev)
+            except:
+                pass
+                
         try:
-            member = self.channel.guild.get_member(int(owner))
+            member = self.guild.get_member(int(owner))
             if member is not None:
                 await member.send(embed = approve_embed)
         except:
