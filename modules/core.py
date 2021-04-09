@@ -360,7 +360,7 @@ def replace_last(string, delimiter, replacement):
 async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, review: bool, widget: bool):
     guild = client.get_guild(main_server)
     try:
-        bot = dict(await db.fetchrow("SELECT js_whitelist, api_token, prefix, shard_count, queue_state, description, bot_library AS library, tags, banner, website, certified, votes, servers, bot_id, discord AS support, banner, banned, disabled, github, features, invite_amount, css, html_long_description AS html_ld, long_description, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", bot_id))
+        bot = dict(await db.fetchrow("SELECT js_whitelist, api_token, prefix, shard_count, state, description, bot_library AS library, tags, banner, website, certified, votes, servers, bot_id, discord AS support, banner, disabled, github, features, invite_amount, css, html_long_description AS html_ld, long_description, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", bot_id))
     except:
         return await templates.e(request, "Bot Not Found")
     owners = await db.fetch("SELECT owner FROM bot_owner WHERE bot_id = $1", bot_id)
@@ -465,7 +465,7 @@ async def parse_bot_list(fetch: List[asyncpg.Record]) -> list:
     return lst
 
 async def do_index_query(add_query: str) -> List[asyncpg.Record]:
-    base_query = "SELECT description, banner, certified, votes, servers, bot_id, invite, nsfw FROM bots WHERE queue_state = 0 AND banned = false AND disabled = false"
+    base_query = "SELECT description, banner, certified, votes, servers, bot_id, invite, nsfw FROM bots WHERE state = 0"
     end_query = "DESC LIMIT 12"
     return await db.fetch(" ".join((base_query, add_query, end_query)))
 
@@ -485,7 +485,7 @@ async def render_search(request: Request, q: str, api: bool):
             return abort(404)
         else:
             return RedirectResponse("/")
-    desc_query = ("SELECT bot_id FROM bots WHERE (queue_state = 0 and banned = false and disabled = false) and (description ilike '%" + re.sub(r'\W+|_', ' ', q) + "%')")
+    desc_query = ("SELECT bot_id FROM bots WHERE (state = 0 and banned = false and disabled = false) and (description ilike '%" + re.sub(r'\W+|_', ' ', q) + "%')")
     ownerc = await db.fetch("SELECT bot_id FROM bot_owner WHERE owner::text ilike '%" + re.sub(r'\W+|_', ' ', q) + "%'")
     desc = await db.fetch(desc_query)
     desc = list(set([id["bot_id"] for id in desc]).union(set([id["bot_id"] for id in ownerc])))
@@ -500,7 +500,7 @@ async def render_search(request: Request, q: str, api: bool):
     else:
         fetch = None
     if fetch is None:
-        abc = ("SELECT description, banner, certified, votes, servers, bot_id, invite, nsfw FROM bots WHERE queue_state = 0 and banned = false and disabled = false and bot_id IN (" + data + ") ORDER BY votes DESC LIMIT 12")
+        abc = ("SELECT description, banner, certified, votes, servers, bot_id, invite, nsfw FROM bots WHERE state = 0 and banned = false and disabled = false and bot_id IN (" + data + ") ORDER BY votes DESC LIMIT 12")
         fetch = await db.fetch(abc)
     search_bots = await parse_bot_list(fetch)
     if not api:
@@ -1045,7 +1045,7 @@ class BotListAdmin():
         owners = await db.fetch("SELECT owner, main FROM bot_owner WHERE bot_id = $1", self.bot_id)
         if owners is None:
             return False
-        await db.execute("UPDATE bots SET queue_state = 0 WHERE bot_id = $1", self.bot_id)
+        await db.execute("UPDATE bots SET state = 0 WHERE bot_id = $1", self.bot_id)
         await add_event(self.bot_id, "approve", {"user": self.mod})
         owner = [obj["owner"] for obj in owners if obj["main"]][0]
         approve_embed = discord.Embed(title="Bot Approved!", description = f"<@{self.bot_id}> by <@{owner}> has been approved", color=0x00ff00)
@@ -1083,7 +1083,7 @@ class BotListAdmin():
         owner = await self._get_main_owner()
         if owner is None:
             return False
-        await db.execute("UPDATE bots SET queue_state = 1, banned = false WHERE bot_id = $1", self.bot_id)
+        await db.execute("UPDATE bots SET state = 1, banned = false WHERE bot_id = $1", self.bot_id)
         await add_event(self.bot_id, "unverify", {"user": self.mod})
         unverify_embed = discord.Embed(title="Bot Unverified!", description = f"<@{self.bot_id}> by <@{owner['owner']}> has been unverified", color=discord.Color.red())
         unverify_embed.add_field(name="Reason", value=reason)
@@ -1093,7 +1093,7 @@ class BotListAdmin():
         owner = await self._get_main_owner()
         if owner is None:
             return False
-        await db.execute("UPDATE bots SET queue_state = 2 WHERE bot_id = $1", self.bot_id)
+        await db.execute("UPDATE bots SET state = 2 WHERE bot_id = $1", self.bot_id)
         await add_event(self.bot_id, "ban", {"user": self.mod, "type": "deny"})
         deny_embed = discord.Embed(title="Bot Denied!", description = f"<@{self.bot_id}> by <@{owner['owner']}> has been denied", color=discord.Color.red())
         deny_embed.add_field(name="Reason", value=reason)
@@ -1113,11 +1113,11 @@ class BotListAdmin():
             await self.guild.kick(self.guild.get_member(self.bot_id))
         except:
             pass
-        await db.execute("UPDATE bots SET banned = true WHERE bot_id = $1", self.bot_id)
+        await db.execute("UPDATE bots SET state = 4 WHERE bot_id = $1", self.bot_id)
         await add_event(self.bot_id, "ban", {"user": self.mod})
 
-    async def unban_bot(self, queue_state):
-        if queue_state == 2:
+    async def unban_bot(self, state):
+        if state == 2:
             word = "removed from the deny list"
             title = "Bot requeued"
         else:
@@ -1125,8 +1125,8 @@ class BotListAdmin():
             title = "Bot unbanned"
         unban_embed = discord.Embed(title=title, description=f"<@{self.bot_id}> has been {word}", color=0x00ff00)
         await self.channel.send(embed = unban_embed)
-        if queue_state == 2:
-            await db.execute("UPDATE bots SET queue_state = 1 WHERE bot_id = $1", self.bot_id)
+        if state == 2:
+            await db.execute("UPDATE bots SET state = 1 WHERE bot_id = $1", self.bot_id)
         else:
-            await db.execute("UPDATE bots SET banned = false WHERE bot_id = $1", self.bot_id)
+            await db.execute("UPDATE bots SET state = 0 WHERE bot_id = $1", self.bot_id)
             await add_event(self.bot_id, "unban", {"user": self.mod})

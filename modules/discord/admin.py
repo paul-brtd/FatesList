@@ -20,11 +20,11 @@ async def admin_dashboard(request: Request, stats: Optional[int] = 0):
             if not staff[0]:
                 return RedirectResponse("/", status_code = 303)
         certified_bots = len(await db.fetch("SELECT bot_id FROM bots WHERE certified = true"))
-        bots = await db.fetchrow("SELECT COUNT(1) FROM bots WHERE queue_state = 0 AND banned = false")
+        bots = await db.fetchrow("SELECT COUNT(1) FROM bots WHERE state = 0")
         bots = bots["count"]
-        queue = await db.fetch("SELECT description, banner,certified,votes,servers,bot_id,invite,banned FROM bots WHERE queue_state = 1 AND banned = false")
+        queue = await db.fetch("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE state = 1")
         print(queue)
-        banned = await db.fetch("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE banned = true OR queue_state = 2")
+        banned = await db.fetch("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE state = 4")
         queue_bots = await parse_bot_list(queue)
         banned = await parse_bot_list(banned)
         queue_amount = len(queue)

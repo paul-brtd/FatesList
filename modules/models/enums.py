@@ -10,8 +10,9 @@ class Status(IntEnum):
     idle = 3
     dnd = 4
 
-class QueueState(IntEnum):
+class BotState(IntEnum):
     verified = 0
     pending = 1
     denied = 2
     hidden = 3
+    banned = 4

@@ -107,7 +107,7 @@ async def regenerate_bot_token(request: Request, bot_id: int, Authorization: str
 
 @router.get("/bots/random", response_model = BotRandom, dependencies=[Depends(RateLimiter(times=7, minutes=1))])
 async def random_bots_api(request: Request):
-    random_unp = await db.fetchrow("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE queue_state = 0 AND banned = false AND disabled = false ORDER BY RANDOM() LIMIT 1") # Unprocessed
+    random_unp = await db.fetchrow("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE state = 0 ORDER BY RANDOM() LIMIT 1") # Unprocessed
     bot = (await get_bot(random_unp["bot_id"])) | dict(random_unp)
     bot["bot_id"] = str(bot["bot_id"])
     bot["servers"] = human_format(bot["servers"])
@@ -117,7 +117,7 @@ async def random_bots_api(request: Request):
 @router.get("/bots/{bot_id}", response_model = Bot, dependencies=[Depends(RateLimiter(times=5, minutes=3))])
 async def get_bot_api(request: Request, bot_id: int, Authorization: str = Header("INVALID_API_TOKEN")):
     """Gets bot information given a bot ID. If not found, 404 will be returned. If a proper API Token is provided, sensitive information (System API Events will also be provided)"""
-    api_ret = await db.fetchrow("SELECT bot_id AS id, description, tags, html_long_description, long_description, servers AS server_count, shard_count, shards, prefix, invite, invite_amount, features, bot_library AS library, queue_state, banned, certified, website, discord AS support, github, user_count, votes, css, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", bot_id)
+    api_ret = await db.fetchrow("SELECT bot_id AS id, description, tags, html_long_description, long_description, servers AS server_count, shard_count, shards, prefix, invite, invite_amount, features, bot_library AS library, state, certified, website, discord AS support, github, user_count, votes, css, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", bot_id)
     if api_ret is None:
         return abort(404)
     api_ret = dict(api_ret)

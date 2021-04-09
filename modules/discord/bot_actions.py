@@ -46,7 +46,7 @@ async def bot_edit(request: Request, bid: int):
         check = await is_bot_admin(int(bid), int(request.session.get("userid")))
         if not check:
             return abort(403)
-        fetch = dict(await db.fetchrow("SELECT bot_id, prefix, bot_library AS library, invite, website, banner, long_description, description, tags, webhook, webhook_type, discord AS support, api_token, banner, banned, github, features, html_long_description, css, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", bid))
+        fetch = dict(await db.fetchrow("SELECT bot_id, prefix, bot_library AS library, invite, website, banner, long_description, description, tags, webhook, webhook_type, discord AS support, api_token, banner, github, features, html_long_description, css, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", bid))
         owners = await db.fetch("SELECT owner, main FROM bot_owner WHERE bot_id = $1", bid)
         print(owners)
         if owners is None:
@@ -170,7 +170,7 @@ async def ban_bot(request: Request, bot_id: int, ban: int = FForm(1), reason: st
         reason = "There was no reason specified"
 
     if "userid" in request.session.keys():
-        check = await db.fetchrow("SELECT banned, queue_state FROM bots WHERE bot_id = $1", bot_id)
+        check = await db.fetchrow("SELECT state FROM bots WHERE bot_id = $1", bot_id)
         if not check:
             return await templates.TemplateResponse("message.html", {"request": request, "message": "This bot doesn't exist in our database.", "username": request.session.get("username", False)})
         user = guild.get_member(int(request.session.get("userid")))
@@ -183,7 +183,7 @@ async def ban_bot(request: Request, bot_id: int, ban: int = FForm(1), reason: st
         await admin_tool.ban_bot(reason)
         return "Bot Banned :)"
     else:
-        await admin_tool.unban_bot(check["queue_state"])
+        await admin_tool.unban_bot(check["state"])
         return "Bot Unbanned :)"
     return RedirectResponse("/", status_code = 303)
 

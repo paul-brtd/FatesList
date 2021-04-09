@@ -9,7 +9,7 @@ Depends: enums.py
 from typing import List, Dict, Optional, ForwardRef
 from pydantic import BaseModel
 import uuid
-from .enums import Status, QueueState
+from .enums import Status, BotState
 
 class BaseUser(BaseModel):
     """
@@ -169,8 +169,7 @@ class Bot(BaseUser):
     extra_owners: list
     owners: list
     features: list
-    queue_state: QueueState
-    banned: bool
+    state: BotState
     certified: bool
     website: Optional[str] = None
     support: Optional[str] = None

@@ -143,26 +143,26 @@ textarea {
 
 	    <img style="border-radius: 50%; width: 120px;" src="{{bot.user.avatar}}" id="bot-avatar" alt="{{bot.user.avatar}}'s avatar">
 	<h3 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;" id="bot-username">{{bot.user.username}} <span style="opacity: 0.65">({{bot.prefix}})</span></h3>
-	{% if bot.queue_state == enums.QueueState.denied %}
+	{% if bot.state == enums.BotState.denied %}
 	<div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
 	<strong>This bot has been DENIED from this bot list for violating our rules or being a low-quality bot. Please do not invite it.</strong>	
 	{% if bot_admin %}
 		<br/><strong>Since you are the owner/extra owners of this bot, you can resubmit your bot or request a ban appeal (if your bot was banned and not denied) by clicking <a class="long-desc-link" href="/bot/{{bot.bot_id}}/resubmit">here</a></strong>
  	{% endif %}
 	</div>
-	{% elif bot.banned %}
+	{% elif bot.state == enums.BotState.banned %}
         <div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
         <strong>This bot has been BANNED from this bot list for violating our rules or being a low-quality bot. Please do not invite it.</strong>
 	{% if bot_admin %}
 	<br/><strong>Since you are the owner/extra owners of this bot, you can resubmit your bot or request a ban appeal (if your bot was banned and not denied) by clicking <a class="long-desc-link" href="/bot/{{bot.bot_id}}/resubmit">here</a></strong>
 	{% endif %}
 	</div>
-	{% elif bot.queue_state == enums.QueueState.pending %}
+	{% elif bot.state == enums.BotState.pending %}
         <div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
         	<strong>This bot has not yet been verified/approved and may violate our rules and/or be low-quality or a "nuke bot". Please do not invite it until we have approved it</strong>
 	</div>
 	{% endif %}
-	{% if bot.queue_state == enums.QueueState.pending and staff[0] %}
+	{% if bot.state == enums.BotState.pending and staff[0] %}
 	<div class="alert alert-info" style="text-align: center; justify-content: center; color: white !important;" role="alert">
 		<strong>You are in review mode. Test the bot by inviting it to the staff server by clicking the Invite button and choosing the Testing Server. Once you are done reviewing the bot, click Admin to approve/deny it</strong></div>
     	</div>
@@ -180,7 +180,7 @@ textarea {
         <p style="color: rgba(255,255,255,0.87); font-weight: bold; font-size: 18px;" id="bot-description">{{bot.description}}</p>
     </div>
     <div class="d-flex justify-content-center align-items-center flex-wrap" style="width: 80%;margin: 0 auto;max-width: 1000px; margin-bottom: 3px !important;" id="bot-buttons">
-	{% if not bot.banned %}
+	{% if bot.state != enums.BotState.banned %}
         <form method = "POST" action = "/bot/{{bot_id}}/vote" id="vote">
             {{form.csrf_token}}
 	    <button type="submit" data-sitekey="{{recaptcha_client}}" data-callback='onSubmit' data-action='submit' class="g-recaptcha btn bot-buttons-all vote btn-outline-light" id="bot-buttons-vote" style="color: white !important;">
@@ -420,7 +420,7 @@ textarea {
 			<div id="bot-admin" class='tabcontent white'>
                         <h6>Administrative Tasks</h6>
 			{% if staff[0] %}
-			{% if bot.queue_state == enums.QueueState.pending and not bot.banned %}
+			{% if bot.state == enums.BotState.pending %}
 			<p>Approve this bot?</p>
 			<form method="POST" action="/admin/review/{{bot_id}}" style="margin-bottom: 10px;">
 				{{ form.csrf_token }}
@@ -435,7 +435,7 @@ textarea {
                                 <input hidden name="accept" value="false"></input>
                                 <button class="btn btn-outline-light" type="submit" style="margin: 0 15px;">Deny</button>
                         </form>
-				{% elif bot.queue_state == enums.QueueState.verified %}
+				{% elif bot.state == enums.BotState.verified %}
                                 <form method="POST" action="/admin/review/{{bot_id}}">
                                         {{ form.csrf_token }}
                                         <input hidden name="accept" value="unverify"></input>
@@ -445,12 +445,12 @@ textarea {
 				{% endif %}
                 <form style="text-align: center; margin: 10px;" method="POST" action="/bot/{{bot_id}}/ban">
                 {{form.csrf_token}}
-                {% if staff[0] and not bot.banned and bot.queue_state != enums.QueueState.denied %}
+                {% if staff[0] and bot.state == enums.BotState.verified%}
                         <input type="hidden" name="ban" value="1"/>
                         <p style="font-weight: bold;color: rgba(255,255,255,0.87); text-align: center;">If this bot is misbehaving...</p>
                         <input type="text" name="reason" style="border-radius: 4px 4px 4px 4px !important;" placeholder="Enter ban reason" required/>
                         <button type="submit" class="btn btn-outline-dark" style="border-radius: 4px 4px 4px 4px !important; background-color: red; color: white !important;"><span class='iconify' style="margin-right: 3px; margin-bottom: 1px;" data-icon='fa-solid:hammer'></span>Ban</button>
-                {% elif staff[0] and (bot.banned or bot.queue_state == enums.QueueState.denied) %}
+                {% elif staff[0] and (bot.banned or bot.state == enums.BotState.denied) %}
                         <p style="font-weight: bold;color: rgba(255,255,255,0.87); text-align: center;">If this bot has learnt its lesson...</p>
                         <input type="hidden" name="ban" value="0"/>
                         <button type="submit" class="btn btn-outline-dark" style="background-color: red; color: white !important;"><span class='iconify' style="margin-right: 3px; margin-bottom: 1px;" data-icon='fa-solid:hammer'></span>Unban/Undeny</button>

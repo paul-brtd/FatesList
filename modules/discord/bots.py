@@ -49,7 +49,7 @@ async def invite_updater_bt(bot_id, invite_amount):
 
 @router.get("/{bot_id}/vote")
 async def vote_bot_get(request: Request, bot_id: int):
-    bot = await db.fetchrow("SELECT bot_id, votes, banned, queue_state FROM bots WHERE bot_id = $1", bot_id)
+    bot = await db.fetchrow("SELECT bot_id, votes, state FROM bots WHERE bot_id = $1", bot_id)
     if bot is None:
         return abort(404)
     bot_obj = await get_bot(bot_id)

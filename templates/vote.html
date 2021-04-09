@@ -8,15 +8,15 @@
 
 	<img style="border-radius: 50%; width: 120px;" src="{{bot.avatar}}">
         <h3 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;">{{bot.username}}</h3>
-	{% if bot.queue_state == enums.QueueState.denied %}
+	{% if bot.state == enums.BotState.denied %}
         	<div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
         		<strong>This bot has been DENIED from this bot list for violating our rules or being a low-quality bot. Please do not invite it.</strong>
 		</div>
-	{% elif bot.banned %}
+	{% elif bot.state == enums.BotState.banned %}
 		<div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
 			<strong>This bot has been BANNED from this bot list for violating our rules or being a low-quality bot. Please do not invite it.</strong>
 		</div>
-	{% elif bot.queue_state == enums.QueueState.pending %}
+	{% elif bot.queue_state == enums.BotState.pending %}
         	<div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
         		<strong>This bot has not yet been verified/approved on this bot list and it may violate our rules or be a low-quality bot. Please do not invite it yet</strong>
 		</div>
