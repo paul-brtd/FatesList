@@ -36,7 +36,6 @@ async def profile_of_user(request: Request, userid: int):
         if userobj is not None and is_staff(staff_roles, userobj.roles, 4)[0]:
             personal = True
     bots = await db.fetch("SELECT bot_id FROM bot_owner WHERE owner = $1", userid)
-    print(bots)
     bot_id_lst = [obj["bot_id"] for obj in bots]
     fetchq = []
     for bid in bot_id_lst:

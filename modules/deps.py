@@ -131,25 +131,21 @@ def _get_staff_member(staff_json: dict, role: int) -> StaffMember:
             return StaffMember(name = key, id = staff_json[key]["id"], perm = staff_json[key]["perm"]) # Return the staff json role data
     return StaffMember(name = "user", id = staff_json["user"]["id"], perm = 1) # Fallback to perm 1 user member
 
-@jit(forceobj=True)
+@jit(forceobj = True)
 def is_staff(staff_json: dict, roles: Union[list, int], base_perm: int) -> Union[bool, int, StaffMember]:
-    if type(roles) == list:
-        max_perm = 0 # This is a cache of the max perm a user has
-        for role in roles: # Loop through all roles
-            if type(role) == discord.Role:
-                role = role.id
-            sm = _get_staff_member(staff_json, role)
-            if sm.perm > max_perm:
-                max_perm = sm.perm
+    if type(roles) != list and type(roles) != tuple:
+        roles = [roles]
+    max_perm = 0 # This is a cache of the max perm a user has
+    sm = StaffMember(name = "user", id = staff_json["user"]["id"], perm = 1) # Initially
+    for role in roles: # Loop through all roles
+        if type(role) == discord.Role:
+            role = role.id
+        sm = _get_staff_member(staff_json, role)
+        if sm.perm > max_perm:
+            max_perm = sm.perm
         if max_perm >= base_perm:
             return True, max_perm, sm
-        return False, max_perm, sm
-    else:
-        sm = _get_staff_member(staff_json, roles)
-        if sm is not None and sm.perm >= base_perm:
-            return True, sm.perm, sm
-        return False, sm.perm, sm
-    return False, sm.perm, sm
+    return False, max_perm, sm
 
 async def add_maint(bot_id: int, type: int, reason: str):
     maints = await db.fetchrow("SELECT bot_id FROM bot_maint WHERE bot_id = $1", bot_id)
