@@ -2,11 +2,14 @@
 API v2 beta 2
 
 This is part of Fates List. You can use this in any library you wish. For best API compatibility, just plug this directly in your Fates List library. It has no dependencies other than pydantic, typing and uuid (typing and uuid is builtin)
+
+Depends: enums.py
 """
 
 from typing import List, Dict, Optional, ForwardRef
 from pydantic import BaseModel
 import uuid
+from .enums import Status, QueueState
 
 class BaseUser(BaseModel):
     """
@@ -16,7 +19,7 @@ class BaseUser(BaseModel):
     username: str
     avatar: str
     disc: str
-    status: int
+    status: Status
     bot: bool
 
     def __str__(self):
@@ -166,7 +169,7 @@ class Bot(BaseUser):
     extra_owners: list
     owners: list
     features: list
-    queue_state: int
+    queue_state: QueueState
     banned: bool
     certified: bool
     website: Optional[str] = None

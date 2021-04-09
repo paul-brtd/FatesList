@@ -676,6 +676,7 @@ class templates():
         arg_dict["form"] = await Form.from_formdata(request)
         arg_dict["data"] = arg_dict.get("data")
         arg_dict["path"] = request.url.path
+        arg_dict["enums"] = enums
         if status is None:
             return _templates.TemplateResponse(f, arg_dict)
         return _templates.TemplateResponse(f, arg_dict, status_code = status)

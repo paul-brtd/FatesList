@@ -45,3 +45,5 @@ from lxml.html.clean import Cleaner
 import io
 from numba import jit
 from json import JSONEncoder
+from enum import Enum, IntEnum
+import modules.models.enums as enums
