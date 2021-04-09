@@ -1,4 +1,4 @@
-from ..deps import *
+from ..core import *
 from modules.models.bot_actions import BotAddForm, BotEditForm
 router = APIRouter(
     prefix = "/bot",
@@ -164,14 +164,13 @@ async def delete_bot(request: Request, bot_id: int, confirmer: str = FForm("1"))
 @csrf_protect
 async def ban_bot(request: Request, bot_id: int, ban: int = FForm(1), reason: str = FForm('There was no reason specified')):
     guild = client.get_guild(main_server)
-    channel = client.get_channel(bot_logs)
     if ban not in [0, 1]:
         return RedirectResponse(f"/bot/{bot_id}", status_code = 303)
     if reason == "":
         reason = "There was no reason specified"
 
     if "userid" in request.session.keys():
-        check = await db.fetchrow("SELECT banned FROM bots WHERE bot_id = $1", bot_id)
+        check = await db.fetchrow("SELECT banned, queue_state FROM bots WHERE bot_id = $1", bot_id)
         if not check:
             return await templates.TemplateResponse("message.html", {"request": request, "message": "This bot doesn't exist in our database.", "username": request.session.get("username", False)})
         user = guild.get_member(int(request.session.get("userid")))
@@ -179,21 +178,13 @@ async def ban_bot(request: Request, bot_id: int, ban: int = FForm(1), reason: st
             pass
         else:
             return await templates.TemplateResponse("message.html", {"request": request, "message": "You aren't the owner of this bot.", "context": "Only owners, admins and moderators can unban bots. Please contact them if you accidentally denied a bot.", "username": request.session.get("username", False)})
+    admin_tool = BotListAdmin(bot_id, int(request.session.get("userid")))
     if ban == 1:
-        ban_embed = discord.Embed(title="Bot Banned", description=f"<@{bot_id}> has been banned", color=discord.Color.red())
-        ban_embed.add_field(name="Reason", value = reason)
-        await channel.send(embed = ban_embed)
-        try:
-            await guild.kick((guild.get_member(bot_id)))
-        except:
-            pass
-        await db.execute("UPDATE bots SET banned = true WHERE bot_id = $1", bot_id)
-        await add_event(bot_id, "ban", {"user": request.session.get('userid')})
+        await admin_tool.ban_bot(reason)
+        return "Bot Banned :)"
     else:
-        unban_embed = discord.Embed(title="Bot Unbanned", description=f"<@{bot_id}> has been unbanned", color=0x00ff00)
-        await channel.send(embed = unban_embed)
-        await db.execute("UPDATE bots SET banned = false WHERE bot_id = $1", bot_id)
-        await add_event(bot_id, "unban", {"user": request.session.get('userid')})
+        await admin_tool.unban_bot(check["queue_state"])
+        return "Bot Unbanned :)"
     return RedirectResponse("/", status_code = 303)
 
 # CREATE TABLE bot_reviews (

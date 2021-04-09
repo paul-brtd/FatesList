@@ -166,7 +166,7 @@ class Bot(BaseUser):
     extra_owners: list
     owners: list
     features: list
-    queue: bool
+    queue_state: int
     banned: bool
     certified: bool
     website: Optional[str] = None

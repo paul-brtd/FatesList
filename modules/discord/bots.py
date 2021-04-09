@@ -1,4 +1,4 @@
-from ..deps import *
+from ..core import *
 import markdown
 from starlette.responses import StreamingResponse
 import io

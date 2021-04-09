@@ -1,4 +1,4 @@
-from ..deps import *
+from ..core import *
 from ..badges import *
 
 router = APIRouter(
@@ -41,7 +41,7 @@ async def profile_of_user(request: Request, userid: int):
     for bid in bot_id_lst:
         base_query = ("SELECT description, banner, certified, votes, servers, bot_id, invite FROM bots ")
         if not personal:
-            query = base_query + "WHERE bot_id = $1 and queue = false and banned = false and disabled = false ORDER BY votes"
+            query = base_query + "WHERE bot_id = $1 and queue_state = 0 and banned = false and disabled = false ORDER BY votes"
         else:
             query = base_query + "WHERE bot_id = $1 ORDER BY votes"
         data = await db.fetchrow(query, bid)

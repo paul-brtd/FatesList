@@ -1,5 +1,5 @@
 import orjson
-from .deps import *
+from .core import *
 
 def get_badges(user_dpy, blist, certified):
     print(certified, blist, user_dpy)

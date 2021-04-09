@@ -1,5 +1,4 @@
-from ..deps import *
-import markdown
+from ..core import *
 router = APIRouter(
     prefix = "/server",
     tags = ["Servers"],

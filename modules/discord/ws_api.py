@@ -1,4 +1,4 @@
-from ..deps import *
+from ..core import *
 from modules.models.ws_api import *
 
 router = APIRouter(

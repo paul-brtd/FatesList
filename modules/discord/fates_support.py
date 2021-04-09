@@ -1,4 +1,4 @@
-from ..deps import *
+from ..core import *
 
 router = APIRouter(
     tags = ["Support"],

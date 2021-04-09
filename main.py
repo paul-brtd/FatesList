@@ -11,7 +11,7 @@ from starlette_wtf import CSRFProtectMiddleware
 import builtins
 import importlib
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
-from modules.deps import *
+from modules.core import *
 from config import *
 import orjson
 import os

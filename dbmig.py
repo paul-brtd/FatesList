@@ -6,22 +6,17 @@ app = fastapi.FastAPI()
 
 async def migdb():
     db = await asyncpg.create_pool(host="127.0.0.1", port=5432, user=pg_user, password=pg_pwd, database="fateslist")
-    await db.execute("DROP TABLE bot_owner")
-    await db.execute("""
-CREATE TABLE IF NOT EXISTS bot_owner (
-bot_id BIGINT not null,
-owner BIGINT,
-main BOOLEAN DEFAULT false
-);
-    """)
-    bots = await db.fetch("SELECT owner, extra_owners, bot_id FROM bots")
+    bots = await db.fetch("SELECT queue, banned, bot_id FROM bots")
     for bot in bots:
         print(bot)
-        await db.execute("INSERT INTO bot_owner (bot_id, owner, main) VALUES ($1, $2, $3)", bot["bot_id"], bot["owner"], True)
-        if bot["extra_owners"] is None:
-            continue
-        for eo in bot["extra_owners"]:
-            await db.execute("INSERT INTO bot_owner (bot_id, owner, main) VALUES ($1, $2, $3)", bot["bot_id"], eo, False)
+        if bot["banned"]:
+            queue_state = 2
+        elif bot["queue"]:
+            queue_state = 1
+        else:
+            queue_state = 0
+        print(queue_state)
+        await db.execute("UPDATE bots SET queue_state = $1 WHERE bot_id = $2", queue_state, bot["bot_id"])
 
 @app.on_event("startup")
 async def startup():

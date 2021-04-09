@@ -143,14 +143,18 @@ textarea {
 
 	    <img style="border-radius: 50%; width: 120px;" src="{{bot.user.avatar}}" id="bot-avatar" alt="{{bot.user.avatar}}'s avatar">
 	<h3 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;" id="bot-username">{{bot.user.username}} <span style="opacity: 0.65">({{bot.prefix}})</span></h3>
-	{% if bot.banned %}
+	{% if bot.queue_state == 1 %}
+	<div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
+	<strong>This bot has been DENIED from this bot list for violating our rules or being a low-quality bot. Please do not invite it.</strong>
+	</div>
+	{% elif bot.banned %}
         <div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
-        <strong>This bot has been BANNED or DENIED from this bot list for violating our rules or being a low-quality bot. Please do not invite it.</strong>
+        <strong>This bot has been BANNED from this bot list for violating our rules or being a low-quality bot. Please do not invite it.</strong>
 	{% if bot_admin %}
 	<br/><strong>Since you are the owner/extra owners of this bot, you can resubmit your bot or request a ban appeal (if your bot was banned and not denied) by clicking <a class="long-desc-link" href="/bot/{{bot.bot_id}}/resubmit">here</a></strong>
 	{% endif %}
 	</div>
-	{% elif bot.queue and not review%}
+	{% elif bot.queue_state == 1 and not review%}
         <div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
         	<strong>This bot has not yet been verified/approved and may violate our rules and/or be low-quality or a "nuke bot". Please do not invite it until we have approved it</strong>
 	</div>
@@ -413,7 +417,7 @@ textarea {
 			<div id="bot-admin" class='tabcontent white'>
                         <h6>Administrative Tasks</h6>
 			{% if staff[0] %}
-			{% if bot.queue and not bot.banned %}
+			{% if bot.queue_state == 1 and not bot.banned %}
 			<p>Approve this bot?</p>
 			<form method="POST" action="/admin/review/{{bot_id}}" style="margin-bottom: 10px;">
 				{{ form.csrf_token }}
@@ -428,7 +432,7 @@ textarea {
                                 <input hidden name="accept" value="false"></input>
                                 <button class="btn btn-outline-light" type="submit" style="margin: 0 15px;">Deny</button>
                         </form>
-				{% elif not bot.queue %}
+				{% elif bot.queue_state == 0 %}
                                 <form method="POST" action="/admin/review/{{bot_id}}">
                                         {{ form.csrf_token }}
                                         <input hidden name="accept" value="unverify"></input>
@@ -438,15 +442,15 @@ textarea {
 				{% endif %}
                 <form style="text-align: center; margin: 10px;" method="POST" action="/bot/{{bot_id}}/ban">
                 {{form.csrf_token}}
-                {% if staff[0] and not bot.banned %}
+                {% if staff[0] and not bot.banned and bot.queue_state != 2 %}
                         <input type="hidden" name="ban" value="1"/>
                         <p style="font-weight: bold;color: rgba(255,255,255,0.87); text-align: center;">If this bot is misbehaving...</p>
                         <input type="text" name="reason" style="border-radius: 4px 4px 4px 4px !important;" placeholder="Enter ban reason" required/>
                         <button type="submit" class="btn btn-outline-dark" style="border-radius: 4px 4px 4px 4px !important; background-color: red; color: white !important;"><span class='iconify' style="margin-right: 3px; margin-bottom: 1px;" data-icon='fa-solid:hammer'></span>Ban</button>
-                {% elif staff[0] and bot.banned %}
+                {% elif staff[0] and (bot.banned or bot.queue_state == 2) %}
                         <p style="font-weight: bold;color: rgba(255,255,255,0.87); text-align: center;">If this bot has learnt its lesson...</p>
                         <input type="hidden" name="ban" value="0"/>
-                        <button type="submit" class="btn btn-outline-dark" style="background-color: red; color: white !important;"><span class='iconify' style="margin-right: 3px; margin-bottom: 1px;" data-icon='fa-solid:hammer'></span>Unban</button>
+                        <button type="submit" class="btn btn-outline-dark" style="background-color: red; color: white !important;"><span class='iconify' style="margin-right: 3px; margin-bottom: 1px;" data-icon='fa-solid:hammer'></span>Unban/Undeny</button>
                 {% endif %}
         </form>
 

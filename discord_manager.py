@@ -4,7 +4,7 @@ import asyncio
 from discord.ext import commands, tasks
 import builtins
 from config import *
-from modules.deps import *
+from modules.core import *
 from typing import Optional
 import logging
 logging.basicConfig(level=logging.INFO)

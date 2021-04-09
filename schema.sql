@@ -25,7 +25,7 @@ CREATE TABLE bots (
     discord text,
     tags text[],
     certified boolean DEFAULT false,
-    queue boolean DEFAULT true,
+    queue_state INTEGER DEFAULT 1,
     banner text DEFAULT 'none'::text,
     created_at bigint,
     invite text,
