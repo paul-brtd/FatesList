@@ -1,5 +1,6 @@
 {% extends "base/base.html" %} 
 {% block head %}
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" integrity="sha512-iBBXm8fW90+nuLcSKlbmrPcLa0OT92xO1BIsZ+ywDWZCvqsWgccV3gFoRBv0z+8dLJgyAHIhR35VZc2oM/gI1w==" crossorigin="anonymous" /> <!-- Sadly needed for things to work -->
 {% endblock %} 
 {% block content %}
 
@@ -340,14 +341,11 @@ $("#bot_form").submit( function(eventObj) {
     },
         {% endfor %}
       ]
-  icon = document.createElement("i")
-  icon.setAttribute("data-icon", "fa-solid:times")
-  icon.classList.add("iconify")
   var instance = new SelectPure(".select_tags", {
       options: myOptions,
       autocomplete: true, // default: false
       multiple: true,
-      inlineIcon: icon,
+      icon: "fas fa-times",
       value: selected_tags,
   });
   function showToken(but) {

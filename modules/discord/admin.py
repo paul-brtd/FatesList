@@ -19,17 +19,16 @@ async def admin_dashboard(request: Request, stats: Optional[int] = 0):
             staff = is_staff(staff_roles, user.roles, 2)
             if not staff[0]:
                 return RedirectResponse("/", status_code = 303)
-        certified_bots = len(await db.fetch("SELECT bot_id FROM bots WHERE certified = true"))
-        bots = await db.fetchrow("SELECT COUNT(1) FROM bots WHERE state = 0")
-        bots = bots["count"]
+        certified_amount = await db.fetchval("SELECT COUNT(1) FROM bots WHERE certified = true")
+        bot_amount = await db.fetchval("SELECT COUNT(1) FROM bots WHERE state = 0")
         queue = await db.fetch("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE state = 1")
-        print(queue)
+        denied = await db.fetch("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE state = 2")
         banned = await db.fetch("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE state = 4")
-        queue_bots = await parse_bot_list(queue)
+        queue = await parse_bot_list(queue)
         banned = await parse_bot_list(banned)
-        queue_amount = len(queue)
+        denied = await parse_bot_list(denied)
         form = await Form.from_formdata(request)
-        return await templates.TemplateResponse("admin_stats.html",{"request": request, "cert": certified_bots,"bots": bots, "queue_bots": queue_bots, "queue_amount": queue_amount, "admin": stats != 1 and staff[1] == 4, "mod": stats != 1 and staff[1] == 3, "owner": stats != 1 and staff[1] == 5, "bot_review": stats != 1 and staff[1] == 2, "form": form, "banned": banned, "stats": stats == 1})
+        return await templates.TemplateResponse("admin_stats.html",{"request": request, "certified_amount": certified_amount, "bot_amount": bot_amount, "queue": queue, "denied": denied, "banned": banned, "admin": stats != 1 and staff[1] == 4, "mod": stats != 1 and staff[1] == 3, "owner": stats != 1 and staff[1] == 5, "bot_review": stats != 1 and staff[1] == 2, "form": form, "stats": stats == 1})
     else:
         return RedirectResponse("/", status_code = 303)
 

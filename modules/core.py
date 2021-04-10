@@ -677,6 +677,7 @@ class templates():
         arg_dict["data"] = arg_dict.get("data")
         arg_dict["path"] = request.url.path
         arg_dict["enums"] = enums
+        arg_dict["len"] = len
         if status is None:
             return _templates.TemplateResponse(f, arg_dict)
         return _templates.TemplateResponse(f, arg_dict, status_code = status)
