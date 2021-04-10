@@ -220,17 +220,16 @@ class Bot(models.Model):
     discord = models.CharField(blank=True, null=True, max_length=32)
     tags = ArrayField(base_field = models.TextField(), blank=False, null=False)
     certified = models.BooleanField(blank=False, null=False)
-    queue_state = models.IntegerField(blank=False, null=False, default=1, help_text = "Use fateslist.xyz main admin console to verify bots", choices = (
+    state = models.IntegerField(blank=False, null=False, default=1, help_text = "Use fateslist.xyz main admin console to verify bots", choices = (
         (0, 'Verified'),
         (1, 'Pending Verification'),
         (2, 'Denied'),
-        (3, 'Hidden (Cannot be set in client)')
+        (3, 'Hidden (Cannot be set in client)'),
+        (4, 'Banned')
     ))
     banner = models.CharField(blank=True, null=True, max_length = 1024)
     created_at = models.BigIntegerField(blank=True, null=True)
     invite = models.CharField(blank=True, null=True, max_length=256)
-    banned = models.BooleanField(blank=False, null=False, default=False, help_text = "Use fateslist.xyz main admin console to ban or unban bots")
-    disabled = models.BooleanField(blank=True, null=True, help_text = "unused")
     github = models.CharField(blank=True, null=True, max_length=256)
     features = ArrayField(base_field = models.TextField(), blank=True, null=True)
     private = models.BooleanField(blank=True, null=True)

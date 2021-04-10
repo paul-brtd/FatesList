@@ -360,7 +360,7 @@ def replace_last(string, delimiter, replacement):
 async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, review: bool, widget: bool):
     guild = client.get_guild(main_server)
     try:
-        bot = dict(await db.fetchrow("SELECT js_whitelist, api_token, prefix, shard_count, state, description, bot_library AS library, tags, banner, website, certified, votes, servers, bot_id, discord AS support, banner, disabled, github, features, invite_amount, css, html_long_description AS html_ld, long_description, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", bot_id))
+        bot = dict(await db.fetchrow("SELECT js_whitelist, api_token, prefix, shard_count, state, description, bot_library AS library, tags, banner, website, certified, votes, servers, bot_id, discord AS support, banner, github, features, invite_amount, css, html_long_description AS html_ld, long_description, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", bot_id))
     except:
         return await templates.e(request, "Bot Not Found")
     owners = await db.fetch("SELECT owner FROM bot_owner WHERE bot_id = $1", bot_id)
