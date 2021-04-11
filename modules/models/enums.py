@@ -21,3 +21,4 @@ class BotState(IntEnum):
     denied = 2, "Denied"
     hidden = 3, "Hidden"
     banned = 4, "Banned"
+    under_review = 5, "Under Review"

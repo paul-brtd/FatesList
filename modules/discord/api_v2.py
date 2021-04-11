@@ -105,6 +105,19 @@ async def regenerate_bot_token(request: Request, bot_id: int, Authorization: str
     await db.execute("UPDATE bots SET api_token = $1 WHERE bot_id = $2", get_token(132), id)
     return {"done": True, "reason": None}
 
+@router.post("/bots/{bot_id}/under_review", response_model = APIResponse)
+async def bot_under_review_api(request: Request, bot_id: int, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
+    """
+    Put a bot in queue under review. This is internal and only meant for our test server manager bot
+    """
+    if Authorization != test_server_manager_key:
+        return abort(401)
+    check = await db.fetchrow("SELECT bot_id FROM bots WHERE bot_id = $1 AND state = 1", bot_id)
+    if check is None:
+        return abort(404)
+    await db.execute("UPDATE bots SET state = 5 WHERE bot_id = $1", bot_id)
+    return {"done": True, "reason": None}
+
 @router.get("/bots/random", response_model = BotRandom, dependencies=[Depends(RateLimiter(times=7, minutes=1))])
 async def random_bots_api(request: Request):
     random_unp = await db.fetchrow("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE state = 0 ORDER BY RANDOM() LIMIT 1") # Unprocessed

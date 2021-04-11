@@ -1,4 +1,4 @@
-from config_secrets import TOKEN_MAIN, TOKEN_SERVER, TOKEN_ULA, pg_pwd, csrf_secret, session_key, oauth_ula_client_secret, oauth_client_secret, ratelimit_bypass_key, stripe_publishable_key, stripe_secret_key, stripe_webhook_secret, recaptcha_client, recaptcha_secret, ula_session_key, bb_add_key, bb_edit_key
+from config_secrets import TOKEN_MAIN, TOKEN_SERVER, TOKEN_ULA, pg_pwd, csrf_secret, session_key, oauth_ula_client_secret, oauth_client_secret, ratelimit_bypass_key, stripe_publishable_key, stripe_secret_key, stripe_webhook_secret, recaptcha_client, recaptcha_secret, ula_session_key, bb_add_key, bb_edit_key, test_server_manager_key
 bot_logs = 789946587203764224 # #bot-logs in support server
 appeals_channel = 813422505900376095 # #resubmissions-and-appeals in support server
 site_errors_channel = 815055552857243699 # Where to log site errors

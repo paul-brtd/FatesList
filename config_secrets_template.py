@@ -1,5 +1,6 @@
 TOKEN_MAIN = ""
 TOKEN_SERVER = ""
+TOKEN_ULA = ""
 pg_pwd = "" # Postgres Database Password
 csrf_secret = ""
 session_key = ""
@@ -14,3 +15,5 @@ django_secret = ""
 recaptcha_client = ""
 recaptcha_secret = ""
 bb_add_key = ""
+bb_edit_key = ""
+test_server_manager_key = "" # Test Server Manager Bot Key

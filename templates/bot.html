@@ -165,12 +165,17 @@ textarea {
 						<br/><strong>Since you are the owner/extra owners of this bot, you can resubmit your bot or request a ban appeal (if your bot was banned and not denied) by clicking <a class="long-desc-link" href="/bot/{{bot.bot_id}}/resubmit">here</a></strong>
 					{% endif %}
 				</div>
-			{% elif bot.state == enums.BotState.pending %}
+			{% elif bot.state == enums.BotState.pending or bot.state == enums.BotState.under_review %}
 				<div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
 					<strong>This bot has not yet been verified/approved and may violate our rules and/or be low-quality or a "nuke bot". Please do not invite it until we have approved it</strong>
 				</div>
 			{% endif %}
-			{% if bot.state == enums.BotState.pending and staff[0] %}
+			{% if bot.state == enums.BotState.under_review %}
+				<div class="alert alert-info" style="text-align: center; justify-content: center; color: white !important;" role="alert">
+					<strong>This bot is currently under review now right now and will be approved (or denied) soon!</strong>
+				</div>
+			{% endif %}
+			{% if (bot.state == enums.BotState.pending or bot.state == enums.BotState.under_review) and staff[0] %}
 				<div class="alert alert-info" style="text-align: center; justify-content: center; color: white !important;" role="alert">
 					<strong>You are in review mode. Test the bot by inviting it to the staff server by clicking the Invite button and choosing the Testing Server. Once you are done reviewing the bot, click Admin to approve/deny it</strong>
 				</div>
@@ -425,7 +430,7 @@ textarea {
 	<div id="bot-admin" class='tabcontent white'>
 		<h6>Administrative Tasks</h6>
 		{% if staff[0] %}
-			{% if bot.state == enums.BotState.pending %}
+			{% if bot.state == enums.BotState.pending or bot.state == enums.BotState.under_review %}
 				<p>Approve this bot?</p>
 				<form method="POST" action="/admin/review/{{bot_id}}" style="margin-bottom: 10px;">
 					{{ form.csrf_token }}

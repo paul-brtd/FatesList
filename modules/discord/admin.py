@@ -6,6 +6,11 @@ router = APIRouter(
     include_in_schema = False
 )
 
+async def _admin_get_bot(cond: str):
+    temp = await db.fetch(f"SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE {cond}") # Get the bota
+    return await parse_bot_list(temp) # Parse it
+    
+
 @router.get("/console")
 async def admin_dashboard(request: Request, stats: Optional[int] = 0):
     if "userid" in request.session.keys() or stats == 1:
@@ -21,14 +26,12 @@ async def admin_dashboard(request: Request, stats: Optional[int] = 0):
                 return RedirectResponse("/", status_code = 303)
         certified_amount = await db.fetchval("SELECT COUNT(1) FROM bots WHERE certified = true")
         bot_amount = await db.fetchval("SELECT COUNT(1) FROM bots WHERE state = 0")
-        queue = await db.fetch("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE state = 1")
-        denied = await db.fetch("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE state = 2")
-        banned = await db.fetch("SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE state = 4")
-        queue = await parse_bot_list(queue)
-        banned = await parse_bot_list(banned)
-        denied = await parse_bot_list(denied)
+        queue = await _admin_get_bot("state = 1")
+        under_review = await _admin_get_bot("state = 5")
+        denied = await _admin_get_bot("state = 2")
+        banned = await _admin_get_bot("state = 4")
         form = await Form.from_formdata(request)
-        return await templates.TemplateResponse("admin_stats.html",{"request": request, "certified_amount": certified_amount, "bot_amount": bot_amount, "queue": queue, "denied": denied, "banned": banned, "admin": stats != 1 and staff[1] == 4, "mod": stats != 1 and staff[1] == 3, "owner": stats != 1 and staff[1] == 5, "bot_review": stats != 1 and staff[1] == 2, "form": form, "stats": stats == 1})
+        return await templates.TemplateResponse("admin_stats.html",{"request": request, "certified_amount": certified_amount, "bot_amount": bot_amount, "queue": queue, "denied": denied, "banned": banned, "under_review": under_review, "admin": stats != 1 and staff[1] == 4, "mod": stats != 1 and staff[1] == 3, "owner": stats != 1 and staff[1] == 5, "bot_review": stats != 1 and staff[1] == 2, "form": form, "stats": stats == 1})
     else:
         return RedirectResponse("/", status_code = 303)
 

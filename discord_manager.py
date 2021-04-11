@@ -82,6 +82,6 @@ async def botdev(ctx):
 @client.command(pass_context = True)
 async def bot(ctx, bot: discord.Member):
     if bot.bot:
-        await bot.add_roles
+        await bot.add_roles(ctx.guild.get_role(bot_dev_role))
 
 client.run(TOKEN_MAIN)

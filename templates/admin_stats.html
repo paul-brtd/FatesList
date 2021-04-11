@@ -17,24 +17,25 @@
 {% endmacro %}
 
 {% macro blist(name, bots) %}
-
-<div class="col-lg-6 mb-4">
-	<div class="card shadow mb-4" style="background: black !important;">
-		<div class="card-header py-3">
-			<h6 class="text-primary font-weight-bold m-0" style="color: white !important;">{{ name }}</h6>
-		</div>
-		<ul class="list-group list-group-flush" style="background: black !important;">
-		{% for bot in bots %}
-			<li class="list-group-item">
-				<div class="row align-items-center no-gutters">
-					<div class="col mr-2">
-						<h6 class="mb-0"><a href="/bot/{{bot.bot_id}}" style="color: white !important;"><strong>{{bot.username}} ({{bot.bot_id}})</strong></a></h6>
-						<span class="text-xs long-desc-link">{{bot.description}}</span>
+<div class="row">
+	<div class="col-lg-6 mb-4">
+		<div class="card shadow mb-4" style="background: black !important;">
+			<div class="card-header py-3">
+				<h6 class="text-primary font-weight-bold m-0" style="color: white !important;">{{ name }}</h6>
+			</div>
+			<ul class="list-group list-group-flush" style="background: black !important;">
+			{% for bot in bots %}
+				<li class="list-group-item">
+					<div class="row align-items-center no-gutters">
+						<div class="col mr-2">
+							<h6 class="mb-0"><a href="/bot/{{bot.bot_id}}" style="color: white !important;"><strong>{{bot.username}} ({{bot.bot_id}})</strong></a></h6>
+							<span class="text-xs long-desc-link">{{bot.description}}</span>
+						</div>
 					</div>
-				</div>
-			</li>
-		{% endfor %}
-		</ul>
+				</li>
+			{% endfor %}
+			</ul>
+		</div>
 	</div>
 </div>
 {% endmacro %}
@@ -58,16 +59,12 @@
 			   {{ statcard("Certified Bots", certified_amount, "certificate") }}
 			   {{ statcard("Banned Bots", len(banned), "hammer") }}
 			   {{ statcard("Denied Bots", len(denied), "times") }}
+			   {{ statcard("Bots Under Review", len(under_review), "cloud") }}
 		    </div>
-                    <div class="row">
-			{{ blist("Bots In Queue", queue) }} 
-		    </div>
-		    <div class="row">
-		    	{{ blist("Denied Bots", denied) }}
-		    </div>
-		    <div class="row">
-		    	{{ blist("Banned Bots", banned) }}
-		    </div>
+		    {{ blist("Bots In Queue", queue) }}
+		    {{ blist("Bots Under Review", under_review) }}
+		    {{ blist("Denied Bots", denied) }}
+		    {{ blist("Banned Bots", banned) }}
                 </div>
             </div>
         </div>
