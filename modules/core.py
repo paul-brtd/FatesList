@@ -9,10 +9,10 @@ async def rl_key_func(request: Request) -> str:
             r = request.headers["Authorization"]
         except KeyError:
             r = request.headers["authorization"]
-        check = await db.fetchrow("SELECT bot_id, certified FROM bots WHERE api_token = $1", r) # Check api token
+        check = await db.fetchrow("SELECT bot_id, state FROM bots WHERE api_token = $1", r) # Check api token
         if check is None:
             return ip_check(request) # Invalid api token, fallback to ip
-        if check["certified"]:
+        if check["state"] == 6:
             return get_token(32) # Disable since certified bots are exempt
         return str(check["bot_id"]) # Otherwise, ratelimit using bot id
     else:
@@ -360,7 +360,7 @@ def replace_last(string, delimiter, replacement):
 async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, review: bool, widget: bool):
     guild = client.get_guild(main_server)
     try:
-        bot = dict(await db.fetchrow("SELECT js_whitelist, api_token, prefix, shard_count, state, description, bot_library AS library, tags, banner, website, certified, votes, servers, bot_id, discord AS support, banner, github, features, invite_amount, css, html_long_description AS html_ld, long_description, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", bot_id))
+        bot = dict(await db.fetchrow("SELECT js_whitelist, api_token, prefix, shard_count, state, description, bot_library AS library, tags, banner, website, votes, servers, bot_id, discord AS support, banner, github, features, invite_amount, css, html_long_description AS html_ld, long_description, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", bot_id))
     except:
         return await templates.e(request, "Bot Not Found")
     owners = await db.fetch("SELECT owner FROM bot_owner WHERE bot_id = $1", bot_id)
@@ -464,15 +464,15 @@ async def parse_bot_list(fetch: List[asyncpg.Record]) -> list:
             continue
     return lst
 
-async def do_index_query(add_query: str) -> List[asyncpg.Record]:
-    base_query = "SELECT description, banner, certified, votes, servers, bot_id, invite, nsfw FROM bots WHERE state = 0"
+async def do_index_query(add_query: str, state: int = 0) -> List[asyncpg.Record]:
+    base_query = f"SELECT description, banner, state, votes, servers, bot_id, invite, nsfw FROM bots WHERE state = {state}"
     end_query = "DESC LIMIT 12"
     return await db.fetch(" ".join((base_query, add_query, end_query)))
 
 async def render_index(request: Request, api: bool):
     top_voted = await parse_bot_list((await do_index_query("ORDER BY votes")))
     new_bots = await parse_bot_list((await do_index_query("ORDER BY created_at"))) # and certified = true ORDER BY votes
-    certified_bots = await parse_bot_list((await do_index_query("and certified = true ORDER BY votes")))
+    certified_bots = await parse_bot_list((await do_index_query("ORDER BY votes", state = 6))) # State 6 is certified
     base_json = {"tags_fixed": tags_fixed, "top_voted": top_voted, "new_bots": new_bots, "certified_bots": certified_bots, "roll_api": "/api/bots/random"}
     if not api:
         return await templates.TemplateResponse("index.html", {"request": request, "random": random} | base_json)
@@ -485,7 +485,7 @@ async def render_search(request: Request, q: str, api: bool):
             return abort(404)
         else:
             return RedirectResponse("/")
-    desc_query = ("SELECT bot_id FROM bots WHERE state = 0 and (description ilike '%" + re.sub(r'\W+|_', ' ', q) + "%')")
+    desc_query = ("SELECT bot_id FROM bots WHERE (state = 0 OR state = 6) and (description ilike '%" + re.sub(r'\W+|_', ' ', q) + "%')")
     ownerc = await db.fetch("SELECT bot_id FROM bot_owner WHERE owner::text ilike '%" + re.sub(r'\W+|_', ' ', q) + "%'")
     desc = await db.fetch(desc_query)
     desc = list(set([id["bot_id"] for id in desc]).union(set([id["bot_id"] for id in ownerc])))
@@ -500,7 +500,7 @@ async def render_search(request: Request, q: str, api: bool):
     else:
         fetch = None
     if fetch is None:
-        abc = ("SELECT description, banner, certified, votes, servers, bot_id, invite, nsfw FROM bots WHERE state = 0 and bot_id IN (" + data + ") ORDER BY votes DESC LIMIT 12")
+        abc = ("SELECT description, banner, votes, servers, bot_id, invite, nsfw FROM bots WHERE (state = 0 or state = 6) and bot_id IN (" + data + ") ORDER BY votes DESC LIMIT 12")
         fetch = await db.fetch(abc)
     search_bots = await parse_bot_list(fetch)
     if not api:
@@ -518,7 +518,7 @@ async def render_profile_search(request: Request, q: str, api: bool):
     except:
         es = ""
     if query.replace(" ", "") != "":
-        profiles = "SELECT user_id, description, certified FROM users" # Base profile
+        profiles = "SELECT user_id, description FROM users" # Base profile
         if query != "":
             profiles = profiles + (" WHERE (username ilike '%" + re.sub(r'\W+|_', ' ', query) + "%'" + es + ")")
         profiles = await db.fetch(profiles + " LIMIT 12")
@@ -528,7 +528,7 @@ async def render_profile_search(request: Request, q: str, api: bool):
     for profile in profiles:
         profile_info = await get_user(profile["user_id"])
         if profile_info:
-            profile_obj.append({"banner": None, "description": profile["description"], "certified": profile["certified"] == True} | profile_info)
+            profile_obj.append({"banner": None, "description": profile["description"]}| profile_info)
     if not api:
         return await templates.TemplateResponse("search.html", {"request": request, "tags_fixed": tags_fixed, "profile_search": True, "query": query, "profiles": profile_obj})
     else:

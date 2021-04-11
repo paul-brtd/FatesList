@@ -219,13 +219,14 @@ class Bot(models.Model):
     website = models.CharField(blank=True, null=True, max_length = 1024)
     discord = models.CharField(blank=True, null=True, max_length=32)
     tags = ArrayField(base_field = models.TextField(), blank=False, null=False)
-    certified = models.BooleanField(blank=False, null=False)
     state = models.IntegerField(blank=False, null=False, default=1, help_text = "Use fateslist.xyz main admin console to verify bots", choices = (
         (0, 'Verified'),
         (1, 'Pending Verification'),
         (2, 'Denied'),
         (3, 'Hidden (Cannot be set in client)'),
-        (4, 'Banned')
+        (4, 'Banned'),
+        (5, 'Under Review'),
+        (6, 'Certified')
     ))
     banner = models.CharField(blank=True, null=True, max_length = 1024)
     created_at = models.BigIntegerField(blank=True, null=True)
@@ -293,7 +294,6 @@ class User(models.Model):
     coins = models.IntegerField(blank=False, null=False, default = 0, help_text = "Changing this without permission from a higher up (Admin+) = Potential demotion that is possibly public as well. Admins can ignore this but do not abuse your power or the same will apply to you.")
     vote_epoch = models.BigIntegerField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
-    certified = models.BooleanField(blank=True, null=True)
     badges = ArrayField(base_field = models.TextField(), blank=True, null=True) 
     username = models.TextField(blank=True, null=True)
     avatar = models.TextField(blank=True, null=True)

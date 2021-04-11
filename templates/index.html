@@ -13,7 +13,7 @@
 	</div>
 	<div id="random-section" class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center div-is">
 		<div id="random-bots">
-			{{ botCard(certified_bots[0], True) }}
+			{{ botCard(top_voted[0], True) }}
 		</div> 
 	</div>
 	<div id="random-section-bt" class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center div-is">
@@ -61,7 +61,7 @@
 				else {
 					banner = data.banner
 				}
-				if(data.certified) {
+				if(data.state == 6) { // State 6 is certified
 					certified_ico = "visible"
 				}
 				else {

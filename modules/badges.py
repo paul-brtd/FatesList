@@ -1,7 +1,8 @@
 import orjson
 from .core import *
 
-def get_badges(user_dpy, blist, certified):
+def get_badges(user_dpy, blist, bots):
+    certified = True if enums.BotState.certified in [obj["state"] for obj in bots] else False 
     print(certified, blist, user_dpy)
     if blist is None:
         blobj = []

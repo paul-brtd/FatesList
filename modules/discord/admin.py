@@ -7,7 +7,7 @@ router = APIRouter(
 )
 
 async def _admin_get_bot(cond: str):
-    temp = await db.fetch(f"SELECT description, banner,certified,votes,servers,bot_id,invite FROM bots WHERE {cond}") # Get the bota
+    temp = await db.fetch(f"SELECT description, banner,votes,servers,bot_id,invite FROM bots WHERE {cond}") # Get the bota
     return await parse_bot_list(temp) # Parse it
     
 
@@ -24,14 +24,14 @@ async def admin_dashboard(request: Request, stats: Optional[int] = 0):
             staff = is_staff(staff_roles, user.roles, 2)
             if not staff[0]:
                 return RedirectResponse("/", status_code = 303)
-        certified_amount = await db.fetchval("SELECT COUNT(1) FROM bots WHERE certified = true")
-        bot_amount = await db.fetchval("SELECT COUNT(1) FROM bots WHERE state = 0")
+        certified = await _admin_get_bot("state = 6") # State 0 and state 6 are verified and /ertified
+        bot_amount = await db.fetchval("SELECT COUNT(1) FROM bots WHERE state = 0 OR state = 6")
         queue = await _admin_get_bot("state = 1")
         under_review = await _admin_get_bot("state = 5")
         denied = await _admin_get_bot("state = 2")
         banned = await _admin_get_bot("state = 4")
         form = await Form.from_formdata(request)
-        return await templates.TemplateResponse("admin_stats.html",{"request": request, "certified_amount": certified_amount, "bot_amount": bot_amount, "queue": queue, "denied": denied, "banned": banned, "under_review": under_review, "admin": stats != 1 and staff[1] == 4, "mod": stats != 1 and staff[1] == 3, "owner": stats != 1 and staff[1] == 5, "bot_review": stats != 1 and staff[1] == 2, "form": form, "stats": stats == 1})
+        return await templates.TemplateResponse("admin_stats.html",{"request": request, "certified": certified, "bot_amount": bot_amount, "queue": queue, "denied": denied, "banned": banned, "under_review": under_review, "admin": stats != 1 and staff[1] == 4, "mod": stats != 1 and staff[1] == 3, "owner": stats != 1 and staff[1] == 5, "bot_review": stats != 1 and staff[1] == 2, "form": form, "stats": stats == 1})
     else:
         return RedirectResponse("/", status_code = 303)
 
@@ -52,16 +52,13 @@ async def admin_api(request: Request, bt: BackgroundTasks, admin: str = FForm(""
         users = await db.fetchrow("SELECT owner FROM bot_owner WHERE bot_id = $1", bot_id)
         if users is None:
             return RedirectResponse("/admin/console", status_code = 303)
-        await db.execute("UPDATE bots SET certified = true WHERE bot_id = $1", bot_id)
-        eo = users["owner"]
-        for user in eo:
-            await db.execute("UPDATE users SET certified = true WHERE user_id = $1", int(user))
+        await db.execute("UPDATE bots SET state = 6 WHERE bot_id = $1", bot_id)
         channel = client.get_channel(bot_logs)
         owner=str(request.session["userid"])
         await channel.send(f"<@{owner}> certified the bot <@{bot_id}>")
         return await templates.TemplateResponse("message.html", {"request": request, "message": "Hey mikes, i hope it certified the bot!", "username": request.session.get("username", False)})
     elif admin=="uncertify":
-        await db.execute("UPDATE bots SET certified = false WHERE bot_id = $1", bot_id)
+        await db.execute("UPDATE bots SET state = 0 WHERE bot_id = $1", bot_id)
         channel = client.get_channel(bot_logs)
         owner=str(request.session["userid"])
         await channel.send(f"<@{owner}> uncertified the bot <@{bot_id}>")

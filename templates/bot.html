@@ -445,7 +445,7 @@ textarea {
 					<input hidden name="accept" value="false"></input>
 					<button class="btn btn-outline-light" type="submit" style="margin: 0 15px;">Deny</button>
 				</form>
-			{% elif bot.state == enums.BotState.verified %}
+			{% elif bot.state == enums.BotState.verified or bot.state == enums.BotState.certified %}
 				<form method="POST" action="/admin/review/{{bot_id}}">
 					{{ form.csrf_token }}
 					<input hidden name="accept" value="unverify"></input>
@@ -455,7 +455,7 @@ textarea {
 			{% endif %}
 			<form style="text-align: center; margin: 10px;" method="POST" action="/bot/{{bot_id}}/ban">
 				{{form.csrf_token}}
-				{% if staff[0] and bot.state == enums.BotState.verified%}
+				{% if staff[0] and (bot.state == enums.BotState.verified or bot.state == enums.BotState.certified) %}
 					<input type="hidden" name="ban" value="1"/>
 					<p style="font-weight: bold;color: rgba(255,255,255,0.87); text-align: center;">If this bot is misbehaving...</p>
 					<input type="text" name="reason" style="border-radius: 4px 4px 4px 4px !important;" placeholder="Enter ban reason" required/>

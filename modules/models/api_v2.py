@@ -142,7 +142,7 @@ class BotRandom(BaseModel):
     bot_id: str
     description: str
     banner: str
-    certified: bool
+    state: int
     username: str
     avatar: str
     servers: str
@@ -170,7 +170,6 @@ class Bot(BaseUser):
     owners: list
     features: list
     state: BotState
-    certified: bool
     website: Optional[str] = None
     support: Optional[str] = None
     github: Optional[str] = None

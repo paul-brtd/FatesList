@@ -56,7 +56,7 @@
                     <div class="row" style="margin-bottom: 60px">
 			   {{ statcard("Bots In Queue", len(queue), "robot") }}
 			   {{ statcard("Bots on the list", bot_amount, "list-alt" ) }}
-			   {{ statcard("Certified Bots", certified_amount, "certificate") }}
+			   {{ statcard("Certified Bots", len(certified), "certificate") }}
 			   {{ statcard("Banned Bots", len(banned), "hammer") }}
 			   {{ statcard("Denied Bots", len(denied), "times") }}
 			   {{ statcard("Bots Under Review", len(under_review), "cloud") }}
@@ -65,6 +65,7 @@
 		    {{ blist("Bots Under Review", under_review) }}
 		    {{ blist("Denied Bots", denied) }}
 		    {{ blist("Banned Bots", banned) }}
+		    {{ blist("Certified Bots", certified) }}
                 </div>
             </div>
         </div>

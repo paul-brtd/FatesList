@@ -1,7 +1,7 @@
 {% macro botCard(bot, rand) %}
 <section class="bot-card">
         <div class="lozad bot-card-banner" data-background-image="{{bot.banner}}">
-                {% if bot.certified == True or rand %}
+                {% if bot.state == enums.BotState.certified or rand %}
 			<span class="iconify bot-card-cert" data-icon="fa-solid:certificate" data-inline="false" data-height="3em"></span>
                 {% endif %}
                 <a href="/bot/{{bot.bot_id}}" class="bot-card-view-link">
