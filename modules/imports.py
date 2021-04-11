@@ -13,7 +13,6 @@ from modules.Oauth import Oauth
 from fastapi.templating import Jinja2Templates
 import discord
 import asyncio
-import time
 import re
 import orjson
 from starlette_wtf import CSRFProtectMiddleware, csrf_protect,StarletteForm
@@ -21,7 +20,6 @@ import builtins
 from typing import Optional, List, Union
 from aiohttp_requests import requests
 from starlette.exceptions import HTTPException as StarletteHTTPException
-from websockets.exceptions import ConnectionClosedOK
 import hashlib
 import aioredis
 import socket
@@ -41,8 +39,6 @@ from fastapi.exception_handlers import (
 )
 from fastapi_limiter.depends import RateLimiter
 import lxml
-from lxml.html.clean import Cleaner
 import io
 from numba import jit
-from json import JSONEncoder
 import modules.models.enums as enums
