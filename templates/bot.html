@@ -260,7 +260,7 @@ textarea {
 	   		  {% endif %}
 		</div>
 		<section id="bot-long-description-container" class='tabcontent'>
-			<div id="bot-long-description" style="color: white; text-align: left; margin-left: 5%; margin-right: 5%; margin-top: 13px;">{{bot.long_description.replace("<a", "<a class='long-desc-link'").replace("ajax", "").replace("http://", "https://").replace(".alert", "").replace("<!DOCTYPE", "").replace("html>", "").replace("<body", "").replace("div", "article").replace(".click", "").replace("bootstrap.min.css", "").replace("bootstrap.css", "").replace("jquery.min.js", "").replace("jquery.js", "").replace("fetch(", "")|safe}}</div>
+			<div id="bot-long-description" style="color: white; text-align: left; margin-left: 5%; margin-right: 5%; margin-top: 13px;">{{bot.long_description.replace("<a", "<a class='long-desc-link ldlink'").replace("ajax", "").replace("http://", "https://").replace(".alert", "").replace("<!DOCTYPE", "").replace("html>", "").replace("<body", "").replace("div", "article").replace(".click", "").replace("bootstrap.min.css", "").replace("bootstrap.css", "").replace("jquery.min.js", "").replace("jquery.js", "").replace("fetch(", "")|safe}}</div>
 		</section>
 		<section id="bot-reviews" class='tabcontent'>
 			<h5 class="white">Bot Reviews</h5>
