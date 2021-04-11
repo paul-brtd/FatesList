@@ -9,6 +9,11 @@ certified_dev_role = 792204630922100797 # Certified Developer in support server
 main_server=789934742128558080 # Main server
 test_server = 794834630942654546 # The test server for reviewing bots
 owner = 563808552288780322
+
+# Messages
+approve_feedback = "There was no feedback given for this bot. It was likely a good bot, but you can ask any staff member about feedback if you wish"
+deny_feedback = "There was no reason specified. DM/Ping the mod who banned your bot to learn why it was banned"
+
 # Confusing right? Sorry, i already did 50% using reviewing server so meow ig
 staff_roles = {
     "user": {

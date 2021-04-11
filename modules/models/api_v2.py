@@ -322,6 +322,11 @@ class BotSearch(BaseSearch):
     search_bots: BotPartialList
     profile_search: bool = False
 
+class BotQueue(BaseModel):
+    feedback: Optional[str] = None 
+    approve: bool
+    mod: str
+
 class ProfilePartial(BaseUser):
     description: Optional[str] = None
     banner: None
@@ -333,31 +338,4 @@ class ProfilePartialList(BaseModel):
 class ProfileSearch(BaseSearch):
     profiles: ProfilePartialList
     profile_search: bool = True
-
-# Data Classes
-class Status():
-    """
-    Represents a status on Fates List
-    """
-    def __init__(self, status):
-        """
-        Takes in status as integer and makes a status object
-        """
-        self.status = status
-        
-    def __str__(self):
-        """
-        :return: The status in string form
-        :rtype: str
-        """
-        if self.status == 1:
-            return "online"
-        elif self.status == 2:
-            return "offline"
-        elif self.status == 3:
-            return "idle"
-        elif self.status == 4:
-            return "dnd"
-        else:
-            return "unknown"
 

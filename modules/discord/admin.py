@@ -101,7 +101,7 @@ async def ban_user_admin(request: Request, user_id: int = FForm(1), ban_type: in
 
 
 @router.post("/review/{bot_id}")
-async def review_tool(request: Request, bot_id: int, accept: str = FForm(""), deny_reason: str = FForm("There was no reason specified. DM/Ping the mod who banned your bot to learn why it was banned"), accept_feedback: str = FForm("There was no feedback given for this bot. It was likely a good bot, but you can ask any staff member about feedback if you wish."), unverify_reason: str = FForm("This is likely due to it breaking Discord ToS or our rules")):
+async def review_tool(request: Request, bot_id: int, accept: str = FForm(""), deny_reason: str = FForm(deny_feedback), accept_feedback: str = FForm(approve_feedback), unverify_reason: str = FForm("This is likely due to it breaking Discord ToS or our rules")):
     if "userid" not in request.session.keys():
         return RedirectResponse("/")
     guild = client.get_guild(main_server)
@@ -117,7 +117,7 @@ async def review_tool(request: Request, bot_id: int, accept: str = FForm(""), de
         rc = await admin_tool.approve_bot(accept_feedback)
         if rc is not None:
             return rc
-        return await templates.TemplateResponse("last.html",{"request":request,"message":"Bot accepted; You MUST Invite it by this url","username":request.session["username"],"url":f"https://discord.com/oauth2/authorize?client_id={str(bot_id)}&scope=bot&guild_id={guild.id}&disable_guild_select=true&permissions=0"})
+        return await templates.TemplateResponse("last.html",{"request":request,"message":"Bot accepted; You MUST Invite it by this url","username":request.session["username"],"url":f"https://discord.com/oauth2/authorize?client_id={bot_id}&scope=bot&guild_id={guild.id}&disable_guild_select=true&permissions=0"})
     elif accept == "unverify":
         rc = await admin_tool.unverify_bot(unverify_reason)
         if rc is False:

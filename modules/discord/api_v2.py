@@ -105,7 +105,7 @@ async def regenerate_bot_token(request: Request, bot_id: int, Authorization: str
     await db.execute("UPDATE bots SET api_token = $1 WHERE bot_id = $2", get_token(132), id)
     return {"done": True, "reason": None}
 
-@router.post("/bots/{bot_id}/under_review", response_model = APIResponse)
+@router.post("/bots/{bot_id}/admin/under_review", response_model = APIResponse)
 async def bot_under_review_api(request: Request, bot_id: int, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
     """
     Put a bot in queue under review. This is internal and only meant for our test server manager bot
@@ -121,6 +121,42 @@ async def bot_under_review_api(request: Request, bot_id: int, Authorization: str
     channel = client.get_channel(bot_logs)
     await channel.send(embed = embed)
     return {"done": True, "reason": None}
+
+@router.post("/bots/{bot_id}/admin/queue")
+async def bot_queue_api(request: Request, bot_id: int, data: BotQueue, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
+    """
+    Admin API to approve/verify or deny a bot on Fates List
+    """
+
+    if Authorization != test_server_manager_key:
+        return abort(401)
+    
+    try:
+        admin_tool = BotListAdmin(bot_id, int(data.mod))
+    except:
+        return ORJSONResponse({"done": False, "reason": "Invalid Moderator specified. Please contact the developers of this bot!"}, status_code = 400)
+ 
+    if not data.feedback:
+        if data.approved:
+            data.feedback = approve_feedback
+        else:
+            data.feedback = deny_feedback
+
+    if len(data.feedback) < 3:
+        return ORJSONResponse({"done": False, "reason": "Feedback must either not be provided or must be larger than 3 characters!"}, status_code = 400)
+    guild = client.get_guild(main_server)
+    user = guild.get_member(int(data.mod))
+    if user is None or not is_staff(staff_roles, user.roles, 2)[0]:
+        return ORJSONResponse({"done": False, "reason": "Invalid Moderator specified. The moderator in question does not have permission to perform this action!"}, status_code = 400)
+
+    if data.approve:
+        rc = await admin_tool.approve_bot(data.feedback)
+    else:
+        rc = await admin_tool.deny_bot(data.feedback)
+    
+    if rc is None:
+        return {"done": True, "reason": f"Bot Approved Successfully! Invite it to the main server with https://discord.com/oauth2/authorize?client_id={bot_id}&scope=bot&guild_id={guild.id}&disable_guild_select=true&permissions=0"}
+    return ORJSONResponse({"done": False, "reason": rc}, status_code = 400)
 
 @router.get("/bots/random", response_model = BotRandom, dependencies=[Depends(RateLimiter(times=7, minutes=1))])
 async def random_bots_api(request: Request):
