@@ -21,7 +21,7 @@ from fastapi_limiter.depends import RateLimiter
 import logging
 from fastapi.exceptions import HTTPException
 from starlette.datastructures import URL
-
+from http import HTTPStatus
 
 #logging.basicConfig(level=logging.DEBUG)
 
@@ -120,6 +120,9 @@ builtins.server_tags_fixed = []
 for tag in SERVER_TAGS.keys():
     server_tags_fixed.append({"name": tag.replace("_", " ").title(), "iconify_data": SERVER_TAGS[tag], "id": tag})
 
+BOLD_START =  "\033[1m"
+BOLD_END = "\033[0m"
+
 @app.middleware("http")
 async def add_process_time_header_and_parse_apiver(request: Request, call_next):
     request.scope, api_ver = version_scope(request, 2)
@@ -128,6 +131,10 @@ async def add_process_time_header_and_parse_apiver(request: Request, call_next):
     process_time = time.time() - start_time
     response.headers["X-Process-Time"] = str(process_time)
     response.headers["FL-API-Version"] = api_ver
+    
+    # Gunicorn logging is trash, lets fix that
+    query_str = f'?{request.scope["query_string"].decode("utf-8")}' if request.scope["query_string"] else ""
+    print(f"{request.client.host} - {BOLD_START}{request.method} {request.url.path}{query_str} HTTP/{request.scope['http_version']} - {response.status_code} {HTTPStatus(response.status_code).phrase}{BOLD_END}")
     return response
 
 def fl_openapi():

@@ -115,8 +115,8 @@ async def review_tool(request: Request, bot_id: int, accept: str = FForm(""), de
         return RedirectResponse("/")             
     elif accept == "true":
         rc = await admin_tool.approve_bot(accept_feedback)
-        if rc is False:
-            return RedirectResponse("/admin/console")
+        if rc is not None:
+            return rc
         return await templates.TemplateResponse("last.html",{"request":request,"message":"Bot accepted; You MUST Invite it by this url","username":request.session["username"],"url":f"https://discord.com/oauth2/authorize?client_id={str(bot_id)}&scope=bot&guild_id={guild.id}&disable_guild_select=true&permissions=0"})
     elif accept == "unverify":
         rc = await admin_tool.unverify_bot(unverify_reason)
@@ -125,8 +125,8 @@ async def review_tool(request: Request, bot_id: int, accept: str = FForm(""), de
         return await templates.TemplateResponse("message.html",{"request":request,"message":"Bot unverified. Please carry on with your day"})
     elif accept == "false":
         rc = await admin_tool.deny_bot(deny_reason)
-        if rc is False:
-            return RedirectResponse("/admin/console")
+        if rc is not None:
+            return rc
         return await templates.TemplateResponse("message.html",{"request":request,"message":"Bot denied. Please carry on with your day"})
     else:
         return RedirectResponse("/")

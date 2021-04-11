@@ -25,3 +25,4 @@ stripe
 numba
 aenum
 numpy
+gunicorn_color

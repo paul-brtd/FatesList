@@ -1035,17 +1035,24 @@ async def user_auth(user_id: int, api_token: str, fields: Optional[str] = None):
 class BotListAdmin():
     def __init__(self, bot_id, mod):
         self.bot_id = bot_id
-        self.mod = mod
+        self.mod = mod # Mod is the moderator who performed the request
         self.channel = client.get_channel(bot_logs)
         self.guild = self.channel.guild
-    
+
+        # Some messages
+        self.bot_not_found = "Bot could not be found"
+        self.must_claim = "You must claim this bot using +claim on the testing server before approving or denying it"
+
     async def _get_main_owner(self):
         return await db.fetchrow("SELECT owner FROM bot_owner WHERE bot_id = $1 AND main = true", self.bot_id)
 
     async def approve_bot(self, feedback):
         owners = await db.fetch("SELECT owner, main FROM bot_owner WHERE bot_id = $1", self.bot_id)
         if owners is None:
-            return False
+            return self.bot_not_found
+        check = await db.fetchrow("SELECT state FROM bots WHERE bot_id = $1", self.bot_id)
+        if check["state"] != enums.BotState.under_review:
+            return self.must_claim 
         await db.execute("UPDATE bots SET state = 0 WHERE bot_id = $1", self.bot_id)
         await add_event(self.bot_id, "approve", {"user": self.mod})
         owner = [obj["owner"] for obj in owners if obj["main"]][0]
@@ -1083,7 +1090,7 @@ class BotListAdmin():
     async def unverify_bot(self, reason):
         owner = await self._get_main_owner()
         if owner is None:
-            return False
+            return False # No bot found
         await db.execute("UPDATE bots SET state = 1 WHERE bot_id = $1", self.bot_id)
         await add_event(self.bot_id, "unverify", {"user": self.mod})
         unverify_embed = discord.Embed(title="Bot Unverified!", description = f"<@{self.bot_id}> by <@{owner['owner']}> has been unverified", color=discord.Color.red())
@@ -1093,7 +1100,10 @@ class BotListAdmin():
     async def deny_bot(self, reason):
         owner = await self._get_main_owner()
         if owner is None:
-            return False
+            return self.bot_not_found
+        check = await db.fetchrow("SELECT state FROM bots WHERE bot_id = $1", self.bot_id)
+        if check["state"] != enums.BotState.under_review:
+            return self.must_claim
         await db.execute("UPDATE bots SET state = 2 WHERE bot_id = $1", self.bot_id)
         await add_event(self.bot_id, "ban", {"user": self.mod, "type": "deny"})
         deny_embed = discord.Embed(title="Bot Denied!", description = f"<@{self.bot_id}> by <@{owner['owner']}> has been denied", color=discord.Color.red())

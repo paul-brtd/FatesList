@@ -21,6 +21,7 @@ def get_token(length: int) -> str:
         secure_str += secrets.choice(string.ascii_letters + string.digits)
     return secure_str
 
+@jit(forceobj = True)
 def ip_check(request: Request) -> str:
     forwarded = request.headers.get("X-Forwarded-For")
     if forwarded:
