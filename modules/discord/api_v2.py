@@ -22,7 +22,9 @@ async def get_promotion(request:  Request, bot_id: int):
         return ORJSONResponse(BotPromotion_NotFound().dict(), status_code = 404)
     return {"promotions": promos}
 
-@router.post("/bots/{bot_id}/promotions", response_model = APIResponse)
+@router.post("/bots/{bot_id}/promotions", response_model = APIResponse, responses = {
+    400: {"model": APIResponse}
+})
 async def add_promotion_api(request: Request, bot_id: int, promo: BotPromotionPartial, Authorization: str = Header("INVALID_API_TOKEN")):
     """Creates a promotion for a bot. Type can be 1 for announcement, 2 for promotion or 3 for generic
 
@@ -38,7 +40,9 @@ async def add_promotion_api(request: Request, bot_id: int, promo: BotPromotionPa
     await add_promotion(id, promo.title, promo.info, promo.css, promo.type)
     return {"done":  True, "reason": None}
 
-@router.patch("/bots/{bot_id}/promotions", response_model = APIResponse)
+@router.patch("/bots/{bot_id}/promotions", response_model = APIResponse, responses = {
+    400: {"model": APIResponse}
+})
 async def edit_promotion(request: Request, bot_id: int, promo: BotPromotion, Authorization: str = Header("INVALID_API_TOKEN")):
     """Edits an promotion for a bot given its promotion ID.
 
@@ -58,7 +62,9 @@ async def edit_promotion(request: Request, bot_id: int, promo: BotPromotion, Aut
     await db.execute("UPDATE bot_promotions SET title = $1, info = $2 WHERE bot_id = $3 AND id = $4", promo.title, promo.info, bot_id, promo.id)
     return {"done": True, "reason": None}
 
-@router.delete("/bots/{bot_id}/promotions", response_model = APIResponse)
+@router.delete("/bots/{bot_id}/promotions", response_model = APIResponse, responses = {
+    400: {"model": APIResponse}
+})
 async def delete_promotion(request: Request, bot_id: int, promo: BotPromotionDelete, Authorization: str = Header("INVALID_API_TOKEN")):
     """Deletes a promotion for a bot or deletes all promotions from a bot (WARNING: DO NOT DO THIS UNLESS YOU KNOW WHAT YOU ARE DOING).
 
@@ -110,7 +116,7 @@ async def bot_under_review_api(request: Request, bot_id: int, Authorization: str
     """
     Put a bot in queue under review. This is internal and only meant for our test server manager bot
     """
-    if Authorization != test_server_manager_key:
+    if not secure_strcmp(Authorization, test_server_manager_key):
         return abort(401)
     check = await db.fetchrow("SELECT bot_id FROM bots WHERE bot_id = $1 AND state = 1", bot_id)
     if check is None:
@@ -127,7 +133,7 @@ async def bot_queue_api(request: Request, bot_id: int, data: BotQueue, Authoriza
     """
     Admin API to approve/verify or deny a bot on Fates List
     """
-    if Authorization != test_server_manager_key:
+    if not secure_strcmp(Authorization, test_server_manager_key):
         return abort(401)
     
     try:
@@ -210,7 +216,7 @@ async def get_bot_api(request: Request, bot_id: int, Authorization: str = Header
 
 @router.post("/bots/{bot_id}", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=5, minutes=1))])
 async def add_bot_api(request: Request, bt: BackgroundTasks, bot_id: int, bot: BotAdd, Authorization: str = Header("INVALID_API_TOKEN")):
-    if str(Authorization) == bb_add_key:
+    if secure_strcmp(Authorization, bb_add_key):
         bot.oauth_enforced = True # Botblock add key, enforce oauth
     else:
         try:
@@ -239,7 +245,7 @@ async def edit_bot_api(request: Request, bt: BackgroundTasks, bot_id: int, bot: 
     """
     Edits a bot, the owner here should be the owner editing the bot
     """
-    if str(Authorization) == bb_edit_key:
+    if secure_strcmp(Authorization, bb_edit_key):
         bot.oauth_enforced = True # Botblock add key, enforce o0auth0
     else:
         try:

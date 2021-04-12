@@ -48,14 +48,12 @@ async def admin_api(request: Request, bt: BackgroundTasks, admin: str = FForm(""
         return RedirectResponse("/")
     if not is_staff(staff_roles, user.roles, 5)[0]:
         return RedirectResponse("/admin/console", status_code = 303) 
+    admin_tool = BotListAdmin(bot_id, int(request.session["userid"]))
     if admin=="certify":
-        users = await db.fetchrow("SELECT owner FROM bot_owner WHERE bot_id = $1", bot_id)
-        if users is None:
-            return RedirectResponse("/admin/console", status_code = 303)
-        await db.execute("UPDATE bots SET state = 6 WHERE bot_id = $1", bot_id)
-        channel = client.get_channel(bot_logs)
-        owner=str(request.session["userid"])
-        await channel.send(f"<@{owner}> certified the bot <@{bot_id}>")
+        rc = await admin_tool.certify_bot()
+        if rc is not None:
+            return rc
+        
         return await templates.TemplateResponse("message.html", {"request": request, "message": "Hey mikes, i hope it certified the bot!", "username": request.session.get("username", False)})
     elif admin=="uncertify":
         await db.execute("UPDATE bots SET state = 0 WHERE bot_id = $1", bot_id)

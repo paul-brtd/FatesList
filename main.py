@@ -151,5 +151,5 @@ def fl_openapi():
     app.openapi_schema = openapi_schema
     return app.openapi_schema
 
-#app.openapi = fl_openapi
+app.openapi = fl_openapi
 

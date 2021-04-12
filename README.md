@@ -6,13 +6,15 @@ This is the source code for [Fates List](https://fateslist.xyz)
 
 BTW please add your bots there if you want to support us
 
+The below deply guide is for Fates List Developers only!
+
 **How to deploy**
 
 1. Buy a domain (You will need a domain that can be added to Cloudflare in order to use Fates List. We use namecheap for this)
 
 2. Add the domain to Cloudflare (see [this](https://support.cloudflare.com/hc/en-us/articles/201720164-Creating-a-Cloudflare-account-and-adding-a-website)). Our whole website requires Cloudflare as the DNS in order to work.
 
-3. Buy a Linux VPS (You need a Linux VPS or a Linux home server with a public ip with port 443 open)
+3. Buy a Linux VPS (You need a Linux VPS or a Linux home server with a public ip with port 443 open). Install python3.10 or newer (currently only alpha is released, so use that or compile python from github)
 
  4a) In Cloudflare, create a record (A/CNAME) called @ that points to your VPS ip/hostname
 
@@ -38,6 +40,10 @@ BTW please add your bots there if you want to support us
 
 12. Run "pip3 install -r requirements.txt"
 
-13. Run "./run" in the repo folder
+13. Run "bin/run" (add .dbg for debug testing) in the repo folder. Universal List API is seperate and is under bin/runula[.dbg]
+
+14. Run Ctrl-B + D to exit the current tmux, then run tmux again to make a new tmux
+
+15. Enter the util/utilbot folder and run "python3 main.py"
 
 Fates List probihits the monetization or resale of coins for money

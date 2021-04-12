@@ -62,3 +62,31 @@ def version_scope(request, def_version):
             api_ver = str(def_version)
     print(api_ver)
     return new_scope, api_ver
+
+def force_bytes(s, encoding='utf-8', strings_only=False, errors='strict'):
+    """
+    From Django:
+        
+        Similar to smart_bytes, except that lazy instances are resolved to
+        strings, rather than kept as lazy objects.
+        If strings_only is True, don't convert (some) non-string-like objects.
+    """
+    # Handle the common case first for performance reasons.
+    if isinstance(s, bytes):
+        if encoding == 'utf-8':
+            return s
+        else: 
+            return s.decode('utf-8', errors).encode(encoding, errors)
+    if strings_only and is_protected_type(s):
+        return s
+    if isinstance(s, memoryview):
+        return bytes(s)
+    return str(s).encode(encoding, errors)
+
+def secure_strcmp(val1, val2):
+    """
+    From Django:
+    
+    Return True if the two strings are equal, False otherwise securely.
+    """
+    return secrets.compare_digest(force_bytes(val1), force_bytes(val2))

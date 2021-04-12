@@ -1,3 +1,10 @@
+"""
+Core functions of Fates List. 
+
+TODO: Finish documenting all core functions
+TODO: Move certify and uncertify into BotListAdmin class
+"""
+
 from modules.imports import *
 
 # FastAPI Limiter rl func
@@ -485,43 +492,21 @@ async def render_search(request: Request, q: str, api: bool):
             return abort(404)
         else:
             return RedirectResponse("/")
-    desc_query = ("SELECT bot_id FROM bots WHERE (state = 0 OR state = 6) and (description ilike '%" + re.sub(r'\W+|_', ' ', q) + "%')")
-    ownerc = await db.fetch("SELECT bot_id FROM bot_owner WHERE owner::text ilike '%" + re.sub(r'\W+|_', ' ', q) + "%'")
-    desc = await db.fetch(desc_query)
-    desc = list(set([id["bot_id"] for id in desc]).union(set([id["bot_id"] for id in ownerc])))
-    userc = await db.fetch("SELECT bot_id FROM bots WHERE username_cached ilike '%" + re.sub(r'\W+|_', ' ', q) + "%'")
-    bids = list(set(desc).union(set([id["bot_id"] for id in userc])))
-    data = str(tuple([int(bid) for bid in bids])).replace("(", "").replace(")", "")
-    if data.replace(" ", "") in ["()", None, ",", ""]:
-        fetch = []
-    elif data.split(",")[-1].replace(" ", "") == "":
-        data = data.replace(",", "")
-        fetch = None
-    else:
-        fetch = None
-    if fetch is None:
-        abc = ("SELECT description, banner, votes, servers, bot_id, invite, nsfw FROM bots WHERE (state = 0 or state = 6) and bot_id IN (" + data + ") ORDER BY votes DESC LIMIT 12")
-        fetch = await db.fetch(abc)
-    search_bots = await parse_bot_list(fetch)
+    bots = await db.fetch("SELECT DISTINCT bots.bot_id, bots.banner, bots.votes, bots.servers, bots.description, bots.invite, bots.nsfw FROM bots INNER JOIN bot_owner ON bots.bot_id = bot_owner.bot_id WHERE (bots.state = 0 OR bots.state = 6) and (bots.description ilike $1 OR bots.username_cached ilike $1 OR bot_owner.owner::text ilike $1) ORDER BY bots.votes LIMIT 6", f'%{q}%')
+    search_bots = await parse_bot_list(bots)
     if not api:
         return await templates.TemplateResponse("search.html", {"request": request, "search_bots": search_bots, "tags_fixed": tags_fixed, "query": q, "profile_search": False})
     else:
         return {"search_bots": search_bots, "tags_fixed": tags_fixed, "query": q, "profile_search": False}
 
 async def render_profile_search(request: Request, q: str, api: bool):
-    if q is None:
-        query = ""
-    else:
-        query = q
-    try:
-        es = " OR user_id = " + str(int(query))
-    except:
-        es = ""
-    if query.replace(" ", "") != "":
-        profiles = "SELECT user_id, description FROM users" # Base profile
-        if query != "":
-            profiles = profiles + (" WHERE (username ilike '%" + re.sub(r'\W+|_', ' ', query) + "%'" + es + ")")
-        profiles = await db.fetch(profiles + " LIMIT 12")
+    if q == "" or q is None:
+        if api:
+            return abort(404)
+        else:
+            q = ""
+    if q.replace(" ", "") != "":
+        profiles = await db.fetch("SELECT DISTINCT users.user_id, users.description FROM users INNER JOIN bot_owner ON users.user_id = bot_owner.owner INNER JOIN bots ON bot_owner.bot_id = bots.bot_id WHERE ((bots.state = 0 OR bots.state = 6) AND (bots.username_cached ilike $1 OR bots.description ilike $1 OR bots.bot_id::text ilike $1)) OR (users.username ilike $1) LIMIT 12", f'%{q}%')
     else:
         profiles = []
     profile_obj = []
@@ -530,7 +515,7 @@ async def render_profile_search(request: Request, q: str, api: bool):
         if profile_info:
             profile_obj.append({"banner": None, "description": profile["description"]}| profile_info)
     if not api:
-        return await templates.TemplateResponse("search.html", {"request": request, "tags_fixed": tags_fixed, "profile_search": True, "query": query, "profiles": profile_obj})
+        return await templates.TemplateResponse("search.html", {"request": request, "tags_fixed": tags_fixed, "profile_search": True, "query": q, "profiles": profile_obj})
     else:
         return {"profiles": profile_obj, "tags_fixed": tags_fixed, "query": q, "profile_search": True}
 
@@ -1040,22 +1025,33 @@ async def user_auth(user_id: int, api_token: str, fields: Optional[str] = None):
     return await db.fetchrow(f"SELECT user_id, {fields} FROM users WHERE user_id = $1 AND api_token = $2", user_id, str(api_token))
 
 class BotListAdmin():
+
+    # Some messages
+    bot_not_found = "Bot could not be found"
+    must_claim = "You must claim this bot using +claim on the testing server before approving or denying it"
+    good = 0x00ff00 # "Good" color for positive things
+    bad = discord.Color.red()
+
     def __init__(self, bot_id, mod):
         self.bot_id = bot_id
         self.mod = mod # Mod is the moderator who performed the request
         self.channel = client.get_channel(bot_logs)
         self.guild = self.channel.guild
 
-        # Some messages
-        self.bot_not_found = "Bot could not be found"
-        self.must_claim = "You must claim this bot using +claim on the testing server before approving or denying it"
-
     async def _get_main_owner(self):
         return await db.fetchrow("SELECT owner FROM bot_owner WHERE bot_id = $1 AND main = true", self.bot_id)
 
+    async def _give_roles(self, role, users):
+        for user in users:
+            try:
+                member = self.guild.get_member(int(user))
+                await member.add_roles(self.guild.get_role(role))
+            except:
+                pass
+
     async def approve_bot(self, feedback):
         owners = await db.fetch("SELECT owner, main FROM bot_owner WHERE bot_id = $1", self.bot_id)
-        if owners is None:
+        if not owners:
             return self.bot_not_found
         check = await db.fetchrow("SELECT state FROM bots WHERE bot_id = $1", self.bot_id)
         if check["state"] != enums.BotState.under_review:
@@ -1063,18 +1059,10 @@ class BotListAdmin():
         await db.execute("UPDATE bots SET state = 0 WHERE bot_id = $1", self.bot_id)
         await add_event(self.bot_id, "approve", {"user": self.mod})
         owner = [obj["owner"] for obj in owners if obj["main"]][0]
-        approve_embed = discord.Embed(title="Bot Approved!", description = f"<@{self.bot_id}> by <@{owner}> has been approved", color=0x00ff00)
+        approve_embed = discord.Embed(title="Bot Approved!", description = f"<@{self.bot_id}> by <@{owner}> has been approved", color = self.good)
         approve_embed.add_field(name="Feedback", value=feedback)
         approve_embed.add_field(name="Link", value=f"https://fateslist.xyz/bot/{self.bot_id}")
-        bot_dev = self.guild.get_role(bot_dev_role)
-        for _owner in owners:
-            try:
-                member = self.guild.get_member(int(_owner['owner']))
-                if member is not None:
-                    await member.add_roles(bot_dev)
-            except:
-                pass
-                
+        await self._give_roles(bot_dev_role, [owner["owner"] for owner in owners])
         try:
             member = self.guild.get_member(int(owner))
             if member is not None:
@@ -1083,24 +1071,13 @@ class BotListAdmin():
             pass
         await self.channel.send(embed = approve_embed)
 
-        # Give Bot Dev Roles
-        for owner in owners:
-            try:
-                member = guild.get_member(int(owner))
-            except:
-                member = None
-                if member is None:
-                    pass
-                else:
-                    await member.add_roles(guild.get_role(bot_dev_role))
-
     async def unverify_bot(self, reason):
         owner = await self._get_main_owner()
         if owner is None:
             return False # No bot found
         await db.execute("UPDATE bots SET state = 1 WHERE bot_id = $1", self.bot_id)
         await add_event(self.bot_id, "unverify", {"user": self.mod})
-        unverify_embed = discord.Embed(title="Bot Unverified!", description = f"<@{self.bot_id}> by <@{owner['owner']}> has been unverified", color=discord.Color.red())
+        unverify_embed = discord.Embed(title="Bot Unverified!", description = f"<@{self.bot_id}> by <@{owner['owner']}> has been unverified", color=self.bad)
         unverify_embed.add_field(name="Reason", value=reason)
         await self.channel.send(embed = unverify_embed)
 
@@ -1113,7 +1090,7 @@ class BotListAdmin():
             return self.must_claim
         await db.execute("UPDATE bots SET state = 2 WHERE bot_id = $1", self.bot_id)
         await add_event(self.bot_id, "ban", {"user": self.mod, "type": "deny"})
-        deny_embed = discord.Embed(title="Bot Denied!", description = f"<@{self.bot_id}> by <@{owner['owner']}> has been denied", color=discord.Color.red())
+        deny_embed = discord.Embed(title="Bot Denied!", description = f"<@{self.bot_id}> by <@{owner['owner']}> has been denied", color=self.bad)
         deny_embed.add_field(name="Reason", value=reason)
         await self.channel.send(embed = deny_embed)
         try:
@@ -1124,7 +1101,7 @@ class BotListAdmin():
             pass
 
     async def ban_bot(self, reason):
-        ban_embed = discord.Embed(title="Bot Banned", description=f"<@{self.bot_id}> has been banned", color=discord.Color.red())
+        ban_embed = discord.Embed(title="Bot Banned", description=f"<@{self.bot_id}> has been banned", color=self.bad)
         ban_embed.add_field(name="Reason", value = reason)
         await self.channel.send(embed = ban_embed)
         try:
@@ -1141,10 +1118,20 @@ class BotListAdmin():
         else:
             word = "unbanned"
             title = "Bot unbanned"
-        unban_embed = discord.Embed(title=title, description=f"<@{self.bot_id}> has been {word}", color=0x00ff00)
+        unban_embed = discord.Embed(title=title, description=f"<@{self.bot_id}> has been {word}", color=self.good)
         await self.channel.send(embed = unban_embed)
         if state == 2:
             await db.execute("UPDATE bots SET state = 1 WHERE bot_id = $1", self.bot_id)
         else:
             await db.execute("UPDATE bots SET state = 0 WHERE bot_id = $1", self.bot_id)
             await add_event(self.bot_id, "unban", {"user": self.mod})
+
+    async def certify_bot(self):
+        owners = await db.fetch("SELECT owner FROM bot_owner WHERE bot_id = $1", self.bot_id)
+        if not owners:
+            return "Bot Not Found"
+        await db.execute("UPDATE bots SET state = 6 WHERE bot_id = $1", self.bot_id)
+        certify_embed = discord.Embed(title = "Bot Certified", description = f"<@{self.mod}> certified the bot <@{self.bot_id}>", color = self.good)
+        certify_embed.add_field(name="Link", value=f"https://fateslist.xyz/bot/{self.bot_id}")
+        await self.channel.send(embed = certify_embed)
+        await self._give_roles(certified_dev_role, [owner["owner"] for owner in owners])

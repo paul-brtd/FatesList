@@ -7,7 +7,7 @@ class Events(Cog):
     @Cog.listener()
     async def on_member_join(self, member):
         if member.bot:
-            await member.add_roles(member.guild.get_role(client.bots_role))
+            await member.add_roles(member.guild.get_role(self.client.bots_role))
 
     @Cog.listener()
     async def on_raw_reaction_add(self, payload):
