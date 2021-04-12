@@ -97,12 +97,13 @@ CREATE TABLE bot_reviews (
 
 CREATE TABLE bot_voters (
     bot_id bigint,
-    userid bigint,
+    user_id bigint,
     timestamps bigint[]
 );
 
 CREATE TABLE users (
     user_id bigint,
+    deleted boolean default false,
     api_token text,
     vote_epoch bigint,
     description text,
