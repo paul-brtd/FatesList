@@ -218,3 +218,4 @@ CREATE TABLE ula_user (
 	user_id BIGINT NOT NULL,
 	api_token TEXT NOT NULL UNIQUE
 );
+

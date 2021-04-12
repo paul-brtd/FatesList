@@ -35,7 +35,7 @@ async def profile_of_user(request: Request, userid: int):
             personal = False
         if userobj is not None and is_staff(staff_roles, userobj.roles, 4)[0]:
             personal = True
-    bots = await db.fetch("SELECT bots.bot_id, bots.state FROM bot_owner INNER JOIN bots ON bot_owner.bot_id = bots.bot_id WHERE bot_owner.owner = $1", userid)
+    bots = await db.fetch("SELECT DISTINCT bots.bot_id, bots.state FROM bot_owner INNER JOIN bots ON bot_owner.bot_id = bots.bot_id WHERE bot_owner.owner = $1", userid)
     bot_id_lst = [obj["bot_id"] for obj in bots]
     fetchq = []
     for bid in bot_id_lst:

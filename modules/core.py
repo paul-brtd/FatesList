@@ -754,15 +754,18 @@ class FLError():
                 exc.status_code = 422
             else: # Internal Server Error (500)
                 exc.status_code = 500
+        path = str(request.url.path)
         match exc.status_code: # Python 3.10 introduced pattern matching, use that to check for http code
             case 500:
                 asyncio.create_task(FLError.log(request, exc, error_id, curr_time)) # Try and log what happened
+                if str(request.url.path).startswith("/api"):
+                    return ORJSONResponse({"done": False, "reason": f"Internal Server Error\nError ID: {error_id}\nTime when error happened: {curr_time}\nOur developers have been notified and are looking into it."}, status_code = exc.status_code)
                 return HTMLResponse(f"<strong>500 Internal Server Error</strong><br/>Fates List had a slight issue and our developers and looking into what happened<br/><br/>Error ID: {error_id}<br/>Time When Error Happened: {curr_time}\nPlease check our support server at <a href='{support_url}'>{support_url}</a> for more information", status_code=500) # Send 500 error to user with aupport server
             case 404: 
-                if url_startswith(request.url, "/bot"): # Bot 404
+                if path.startswith("/bot"): # Bot 404
                     msg = "Bot Not Found"
                     code = 404
-                elif url_startswith(request.url, "/profile"): # Profile 404
+                elif path.startswith("/profile"): # Profile 404
                     msg = "Profile Not Found"
                     code = 404
                 else: # Regular 404
@@ -775,10 +778,10 @@ class FLError():
                 msg = "401\nForbidden"
                 code = 403
             case 422:
-                if url_startswith(request.url, "/bot"): # Bot 422 which is actually 404 to us
+                if path.startswith("/bot"): # Bot 422 which is actually 404 to us
                     msg = "Bot Not Found"
                     code = 404
-                elif url_startswith(request.url, "/profile"): # Profile 422 which is actually 404 to us
+                elif path.startswith("/profile"): # Profile 422 which is actually 404 to us
                     msg = "Profile Not Found"
                     code = 404
                 else:
@@ -788,7 +791,7 @@ class FLError():
                 msg = "Unknown Error" # Unknown error, no case for it yet
                 code = 400
 
-        json = url_startswith(request.url, "/api") # Check if api route, return JSON if it is
+        json = path.startswith("/api") # Check if api route, return JSON if it is
         if json: # If api route, return JSON
             if exc.status_code != 422:
                 return await http_exception_handler(request, exc) # 422 needs special request handler, all others can use this
@@ -1028,6 +1031,10 @@ async def bot_auth(bot_id: int, api_token: str, *, fields: Optional[str] = None)
     return await db.fetchrow(f"SELECT bot_id, {fields} FROM bots WHERE bot_id = $1 AND api_token = $2", bot_id, str(api_token))
 
 async def user_auth(user_id: int, api_token: str, fields: Optional[str] = None):
+    try:
+        user_id = int(user_id)
+    except:
+        return None
     if fields is None:
         return await db.fetchval("SELECT user_id FROM users WHERE user_id = $1 AND api_token = $2", user_id, str(api_token))
     return await db.fetchrow(f"SELECT user_id, {fields} FROM users WHERE user_id = $1 AND api_token = $2", user_id, str(api_token))

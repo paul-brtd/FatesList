@@ -576,8 +576,9 @@ function replyReview(el, id) {
 
 function deleteReview(rev_id) {
 	$.ajax({
-		type: 'POST',
-		url: `/bot/{{bot_id}}/reviews/${rev_id}/delete`,
+		type: 'DELETE',
+		url: `/api/bots/{{bot_id}}/reviews/${rev_id}?user_id={{userid}}`,
+		headers: {"Authorization": "{{user_token}}"},
 		processData: false,
 		contentType: 'application/json',
 		statusCode: {
@@ -586,31 +587,30 @@ function deleteReview(rev_id) {
 			}
 		}
 	});
-	alert("Deleted Review Successfully")
+	modalShow("Success!", "Deleted Review Successfully")
 	window.location.reload()
 }
 
 function upvoteReview(rev_id) {
 	$.ajax({
 		type: 'PATCH',
-		url: `/api/bots/{{bot_id}}/reviews/${rev_id}/votes?user_id={{userid}}`,
-		data: JSON.stringify({"upvote": true}),
+		url: `/api/bots/{{bot_id}}/reviews/${rev_id}/votes`,
+		data: JSON.stringify({"upvote": true, "user_id": "{{userid}}"}),
 		headers: {"Authorization": "{{user_token}}"},
 		processData: false,
 		contentType: 'application/json',
 		statusCode: {
 			400: function(data) {
-				alert("You have already upvoted this review. You cannot upvote it again");
+				modalShow("Already Upvoted", "You have already upvoted this review. You cannot upvote it again");
 			},
 			200: function(data) {
-				alert("Upvoted successfully")
 				window.location.reload()
 			},
 			404: function(data) {
-				alert("Review does not exist or this feature isn't done yet!")
+				modalShow("404 Not Found", "Review does not exist on our database! Maybe it has been deleted?")
 			},
 			401: function(data) {
-				alert("We could not authenticate you, make sure you are logged in")
+				modalShow("Unauthorized", "We could not authenticate you, make sure you are logged in")
 			}
 		}
 	});
@@ -620,8 +620,8 @@ function upvoteReview(rev_id) {
 function downvoteReview(rev_id) {
 	$.ajax({
 		type: 'PATCH',
-		url: `/api/bots/{{bot_id}}/reviews/${rev_id}/votes?user_id={{userid}}`,
-		data: JSON.stringify({"upvote": false}),
+		url: `/api/bots/{{bot_id}}/reviews/${rev_id}/votes`,
+		data: JSON.stringify({"upvote": false, "user_id": "{{userid}}"}),
 		headers: {"Authorization": "{{user_token}}"},
 		processData: false,
 		contentType: 'application/json',

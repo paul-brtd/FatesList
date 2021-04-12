@@ -287,6 +287,7 @@ class UserDescEdit(BaseModel):
 
 class BotReviewVote(BaseModel):
     upvote: bool
+    user_id: str
 
 class BotPromotion_NotFound(BaseModel):
     detail: str = "Promotion Not Found"

@@ -120,14 +120,13 @@ async def bot_under_review_api(request: Request, bot_id: int, Authorization: str
     embed.add_field(name="Link", value=f"https://fateslist.xyz/bot/{bot_id}")
     channel = client.get_channel(bot_logs)
     await channel.send(embed = embed)
-    return {"done": True, "reason": None}
+    return {"done": True, "reason": "Claimed this bot! You are free to test it now!"}
 
-@router.post("/bots/{bot_id}/admin/queue")
+@router.patch("/bots/{bot_id}/admin/queue")
 async def bot_queue_api(request: Request, bot_id: int, data: BotQueue, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
     """
     Admin API to approve/verify or deny a bot on Fates List
     """
-
     if Authorization != test_server_manager_key:
         return abort(401)
     
@@ -137,7 +136,7 @@ async def bot_queue_api(request: Request, bot_id: int, data: BotQueue, Authoriza
         return ORJSONResponse({"done": False, "reason": "Invalid Moderator specified. Please contact the developers of this bot!"}, status_code = 400)
  
     if not data.feedback:
-        if data.approved:
+        if data.approve:
             data.feedback = approve_feedback
         else:
             data.feedback = deny_feedback
@@ -272,8 +271,9 @@ async def get_bot_reviews(request: Request, bot_id: int):
     return {"reviews": reviews[0], "average_stars": reviews[1]}
 
 @router.patch("/bots/{bot_id}/reviews/{rid}/votes", response_model = APIResponse)
-async def upvote_review_api(request: Request, bot_id: int, user_id: int, rid: uuid.UUID, vote: BotReviewVote, Authorization: str = Header("INVALID_API_TOKEN")):
-    id = await user_auth(user_id, Authorization)
+async def upvote_review_api(request: Request, bot_id: int, rid: uuid.UUID, vote: BotReviewVote, Authorization: str = Header("INVALID_API_TOKEN")):
+    id = await user_auth(vote.user_id, Authorization)
+    vote.user_id = int(vote.user_id)
     if id is None:
         return abort(401)
     bot_rev = await db.fetchrow("SELECT review_upvotes, review_downvotes FROM bot_reviews WHERE id = $1", rid)
@@ -286,17 +286,17 @@ async def upvote_review_api(request: Request, bot_id: int, user_id: int, rid: uu
     else:
         main_key = "review_downvotes"
         remove_key = "review_upvotes"
-    if user_id in bot_rev[main_key]:
+    if vote.user_id in bot_rev[main_key]:
         return ORJSONResponse({"done": False, "reason": "USER_ALREADY_VOTED"}, status_code = 400)
-    if user_id in bot_rev[remove_key]:
+    if vote.user_id in bot_rev[remove_key]:
         while True:
             try:
-                bot_rev[remove_key].remove(user_id)
+                bot_rev[remove_key].remove(vote.user_id)
             except:
                 break
-    bot_rev[main_key].append(user_id)
+    bot_rev[main_key].append(vote.user_id)
     await db.execute("UPDATE bot_reviews SET review_upvotes = $1, review_downvotes = $2 WHERE id = $3", bot_rev["review_upvotes"], bot_rev["review_downvotes"], rid)
-    await add_event(bot_id, "review_vote", {"user": str(user_id), "review_id": str(rid), "upvotes": len(bot_rev["review_upvotes"]), "downvotes": len(bot_rev["review_downvotes"]), "upvote": vote.upvote})
+    await add_event(bot_id, "review_vote", {"user": str(vote.user_id), "review_id": str(rid), "upvotes": len(bot_rev["review_upvotes"]), "downvotes": len(bot_rev["review_downvotes"]), "upvote": vote.upvote})
     return {"done": True, "reason": None}
 
 @router.get("/bots/{bot_id}/commands", response_model = BotCommands)

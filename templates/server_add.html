@@ -5,6 +5,23 @@
 {% endblock %}
 
 {% block content %}
+	<!-- Basic Modal -->
+	<div class="modal fade" id="exampleModal" tabindex="-1"  aria-labelledby="exampleModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
+				</div>
+				<div class="modal-body">
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+
    <h3 style="text-align:center; color:white; font-weight:bold;">Add Server (Coming Soon)</h3>
    <h4 style="text-align:center; color:white;" id="js_msg">We're glad you're here!<br/>If you aren't a server administrator, please go ahead and ask them to set this up.<br/><br/><span style="opacity: 0.8">Once you are ready to continue, click Continue. NOTE THAT THIS IS NOT DONE YET AND WILL NOT WORK YET, CHECK BACK SOON</span></h4>
    <button onclick='doStep(false);' style="display: none; margin-right: 5px;" type="button" id="s1-back" class="btn btn-outline-light"><span class="iconify white" data-icon="fa-solid:arrow-left" data-inline="false" style="margin-right: 3px;"></span>Back</button>
@@ -50,7 +67,7 @@
            	statusCode: {
                 	'429': function(data) {
 				console.log(data)
-				alert(`You are being ratelimited. You may only do three server check every five minutes. Please try again in 5-10 minutes...`)
+				modalShow('You are being ratelimited', `You are being ratelimited. Please try again in 30 seconds. Thank you for your patience!`)
                 	},
 			'200': function(data) {
 				server_data = ""
@@ -61,14 +78,14 @@
 						<p><strong>${data.servers[server].name}</strong></p>
 						<p>Server ID: ${server}</p>
 					</div>
-					</div>
-					<div style='display: none; background: black; border-radius: 10px 10px 10px 10px' id='form-${server}' onclick="">
+					</a>
+					<div style='display: none; background: black; border-radius: 10px 10px 10px 10px' id='form-${server}' onclick="ignoreParent(); preventDefault()">
 						<label for="description">Short Description</label>
 						<input id="description-${server}" type="text" class="form-control fform" name="description" placeholder="Great server, join now!">
 						<label 
-					      	for="html_long_description"
+						for="html_long_description-${server}"
 					      	>Long Description Type (Click to change)</label>
-						<select id="${server}-html_long_description" name="html_long_description" class="form-control fform select-fl">
+						<select id="html_long_description-${server}" name="html_long_description" class="form-control fform select-fl">
 						<option value="true" selected>HTML</option>
 						<option value="false"selected>Markdown</option>
 						</select>
@@ -80,10 +97,10 @@
 						<textarea
 					        class="form-control fform"
 					        required
-					        name="long_description"
+						name="long_description"
 					        placeholder="Write about your bot using html or markdown"
 					        minlength="300"
-						id="${server}-long_description"
+						id="long_description-${server}"
 					        style="border-radius: 4px 4px 4px 4px !important;"
 						></textarea>
 						<button type="button" class="btn btn-outline-light" style="margin-bottom: 20px;" onclick="previewLongDesc('${server}')">Preview</button><br/>
@@ -112,11 +129,11 @@
 	}
 
 function previewLongDesc(sid){
-	alert(sid);
-	html = document.querySelector("#" + sid + "-html_long_description").value == "true";
-	alert(html)
-	ld = document.querySelector("#" + sid + "-long_description").value;
-	alert(ld)
+	hldid = "#html_long_description-" + sid
+	html = document.querySelector(hldid);
+	html = html.value
+	ld = document.querySelector("#long_description-" + sid);
+	ld = ld.value;
 	if(ld == "")
 		return
 	$.ajax({

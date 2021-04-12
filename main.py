@@ -125,6 +125,8 @@ BOLD_END = "\033[0m"
 
 @app.middleware("http")
 async def add_process_time_header_and_parse_apiver(request: Request, call_next):
+    if str(request.url.path).startswith("/bots"):
+        return RedirectResponse(str(request.url.path).replace("/bots", "/bot", 1))
     request.scope, api_ver = version_scope(request, 2)
     start_time = time.time()
     response = await call_next(request)
