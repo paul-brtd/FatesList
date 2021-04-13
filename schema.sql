@@ -4,7 +4,7 @@ CREATE EXTENSION "uuid-ossp";
 
 CREATE TABLE bots (
     username_cached text DEFAULT '',
-    bot_id bigint not null,
+    bot_id bigint not null unique,
     votes bigint,
     servers bigint,
     user_count bigint DEFAULT 0,
@@ -40,7 +40,8 @@ CREATE TABLE bot_owner (
     _id SERIAL,
     bot_id BIGINT not null,
     owner BIGINT,
-    main BOOLEAN DEFAULT false
+    main BOOLEAN DEFAULT false,
+    COMSTRAINT bots_fk FOREIGN KEY (bot_id) REFERENCES bots(bot_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE INDEX bot_owner_index ON bot_owner (bot_id, owner, main);
