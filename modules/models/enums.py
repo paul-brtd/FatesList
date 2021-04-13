@@ -16,7 +16,7 @@ class Status(IntEnum):
 
 class BotState(IntEnum):
     _init_ = 'value __doc__'
-    verified = 0, "Verified"
+    approved = 0, "Verified"
     pending = 1, "Pending Verification"
     denied = 2, "Denied"
     hidden = 3, "Hidden"

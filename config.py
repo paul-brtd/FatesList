@@ -12,7 +12,7 @@ owner = 563808552288780322
 
 # Messages
 approve_feedback = "There was no feedback given for this bot. It was likely a good bot, but you can ask any staff member about feedback if you wish"
-deny_feedback = "There was no reason specified. DM/Ping the mod who banned your bot to learn why it was banned"
+deny_feedback = "There was no reason specified. DM/Ping Mod Mail to learn why"
 
 # Confusing right? Sorry, i already did 50% using reviewing server so meow ig
 staff_roles = {

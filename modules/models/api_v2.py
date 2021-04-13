@@ -151,6 +151,9 @@ class BotRandom(BaseModel):
     invite: str
     votes: int
 
+class BotUnderReview(BaseModel):
+    mod: str
+
 class Bot(BaseUser):
     """
     Represents a bot on Fates List
@@ -178,7 +181,6 @@ class Bot(BaseUser):
     css: Optional[str] = None
     votes: int
     vanity: Optional[str] = None
-    sensitive: dict
     donate: Optional[str] = None
     privacy_policy: Optional[str] = None
     nsfw: bool

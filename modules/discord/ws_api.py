@@ -7,11 +7,13 @@ router = APIRouter(
 ) # No arguments needed for websocket but keep for chat
 
 bootstrap_info = {
-    "versions": ["v1"],
+    "versions": ["v1", "v2"],
     "endpoints": {
         "v1": {
-            "bot_realtime_stats": "/api/v1/ws/bot/rtstats",
             "chat": "/api/v1/ws/chat"
+        },
+        "v2": {
+            "bot_realtime_stats": "/api/v2/ws/bot/rtstats"
         }
     }
 }
@@ -23,22 +25,22 @@ async def websocket_bootstrap(request: Request):
     """
     return bootstrap_info
 
-@router.websocket("/api/v1/ws/bot/rtstats")
+@router.websocket("/api/v2/ws/bot/rtstats")
 async def websocket_bot_rtstats_v1(websocket: WebSocket):
     await manager.connect(websocket)
     if websocket.api_token == []:
-        await manager.send_personal_message({"payload": "IDENTITY", "type": "API_TOKEN"}, websocket)
+        await manager.send_personal_message({"payload": "identity", "type": "bot_tokens"}, websocket)
         try:
             api_token = await websocket.receive_json()
             print("HERE")
-            if api_token.get("payload") != "IDENTITY_RESPONSE" or api_token.get("type") != "API_TOKEN":
+            if api_token.get("payload") != "identity_response" or api_token.get("type") != "bot_tokens":
                 raise TypeError
         except:
-            await manager.send_personal_message({"payload": "KILL_CONN", "type": "INVALID_IDENTITY_RESPONSE"}, websocket)
+            await manager.send_personal_message({"payload": "kill", "type": "invalid_response"}, websocket)
             return await ws_close(websocket, 4004)
         api_token = api_token.get("data")
         if api_token is None or type(api_token) == int or type(api_token) == str:
-            await manager.send_personal_message({"payload": "KILL_CONN", "type": "INVALID_IDENTITY_RESPONSE"}, websocket)
+            await manager.send_personal_message({"payload": "kill", "type": "invalid_response"}, websocket)
             return await ws_close(websocket, 4004)
         for bot in api_token:
             bid = await db.fetchrow("SELECT bot_id FROM bots WHERE api_token = $1", str(bot))
@@ -48,9 +50,9 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
                 websocket.api_token.append(api_token)
                 websocket.bot_id.append(bid["bot_id"])
         if websocket.api_token == [] or websocket.bot_id == []:
-            await manager.send_personal_message({"payload": "KILL_CONN", "type": "NO_AUTH"}, websocket)
+            await manager.send_personal_message({"payload": "kill", "type": "no_auth"}, websocket)
             return await ws_close(websocket, 4004)
-    await manager.send_personal_message({"payload": "STATUS", "type": "READY", "data": [str(bid) for bid in websocket.bot_id]}, websocket)
+    await manager.send_personal_message({"payload": "info", "type": "ready", "data": [str(bid) for bid in websocket.bot_id]}, websocket)
     try:
         ini_events = {}
         for bot in websocket.bot_id:
@@ -64,7 +66,7 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
                     print(exc)
                     events = {}
             ini_events[str(bot)] = events
-        await manager.send_personal_message({"payload": "EVENTS", "type": "EVENTS_V1", "data": ini_events}, websocket)
+        await manager.send_personal_message({"payload": "events", "type": "v1", "data": ini_events}, websocket)
         pubsub = redis_db.pubsub()
         for bot in websocket.bot_id:
             await pubsub.subscribe(str(bot))
@@ -72,7 +74,7 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
             print(msg)
             if msg is None or type(msg.get("data")) != bytes:
                 continue
-            await manager.send_personal_message({"payload": "EVENTS", "type": "EVENTS_V1", "data": {msg.get("channel").decode("utf-8"): orjson.loads(msg.get("data"))}}, websocket)
+            await manager.send_personal_message({"payload": "events", "type": "v1", "data": {msg.get("channel").decode("utf-8"): orjson.loads(msg.get("data"))}}, websocket)
     except:
         try:
             await pubsub.unsubscribe()

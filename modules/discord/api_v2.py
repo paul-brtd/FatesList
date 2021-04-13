@@ -112,20 +112,16 @@ async def regenerate_bot_token(request: Request, bot_id: int, Authorization: str
     return {"done": True, "reason": None, "code": 1000}
 
 @router.post("/bots/{bot_id}/admin/under_review", response_model = APIResponse)
-async def bot_under_review_api(request: Request, bot_id: int, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
+async def bot_under_review_api(request: Request, bot_id: int, data: BotUnderReview, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
     """
     Put a bot in queue under review. This is internal and only meant for our test server manager bot
     """
     if not secure_strcmp(Authorization, test_server_manager_key):
         return abort(401)
-    check = await db.fetchrow("SELECT bot_id FROM bots WHERE bot_id = $1 AND state = 1", bot_id)
-    if check is None:
-        return abort(404)
-    await db.execute("UPDATE bots SET state = 5 WHERE bot_id = $1", bot_id)
-    embed = discord.Embed(title="Bot Under Review", description = f"<@{bot_id}> is now under review and should be approved or denied soon!", color = 0x00ff00)
-    embed.add_field(name="Link", value=f"https://fateslist.xyz/bot/{bot_id}")
-    channel = client.get_channel(bot_logs)
-    await channel.send(embed = embed)
+    admin_tool = BotListAdmin(bot_id, data.mod)
+    rc = await admin_tool.claim_bot()
+    if rc is not None:
+        return abort(404) # A wrror here means 404
     return {"done": True, "reason": "Claimed this bot! You are free to test it now!", "code": 1001}
 
 @router.patch("/bots/{bot_id}/admin/queue")
@@ -160,6 +156,8 @@ async def bot_queue_api(request: Request, bot_id: int, data: BotQueue, Authoriza
         rc = await admin_tool.deny_bot(data.feedback)
     
     if rc is None:
+        if not data.approve:
+            return {"done": True, "reason": "Bot Denied Successfully!", "code": 1001}
         return {"done": True, "reason": f"Bot Approved Successfully! Invite it to the main server with https://discord.com/oauth2/authorize?client_id={bot_id}&scope=bot&guild_id={guild.id}&disable_guild_select=true&permissions=0", "code": 1001}
     return ORJSONResponse({"done": False, "reason": rc, "code": 3869}, status_code = 400)
 
@@ -175,8 +173,8 @@ async def random_bots_api(request: Request):
     return bot
 
 @router.get("/bots/{bot_id}", response_model = Bot, dependencies=[Depends(RateLimiter(times=5, minutes=3))])
-async def get_bot_api(request: Request, bot_id: int, Authorization: str = Header("BOT_TOKEN")):
-    """Gets bot information given a bot ID. If not found, 404 will be returned. If a proper API Token is provided, sensitive information (System API Events will also be provided)"""
+async def get_bot_api(request: Request, bot_id: int):
+    """Gets bot information given a bot ID. If not found, 404 will be returned."""
     api_ret = await db.fetchrow("SELECT bot_id AS id, description, tags, html_long_description, long_description, servers AS server_count, shard_count, shards, prefix, invite, invite_amount, features, bot_library AS library, state, website, discord AS support, github, user_count, votes, css, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", bot_id)
     if api_ret is None:
         return abort(404)
@@ -197,24 +195,19 @@ async def get_bot_api(request: Request, bot_id: int, Authorization: str = Header
     api_ret["extra_owners"] = [str(eo) for eo in api_ret["extra_owners"]]
     api_ret["owners"] = [api_ret["main_owner"]] + api_ret["extra_owners"]
     api_ret["id"] = str(api_ret["id"])
-    if Authorization is not None:
-        auth_check = await bot_auth(bot_id, Authorization)
-        if auth_check is None:
-            sensitive = False
-        else:
-            sensitive = True
-    else:
-        sensitive = False
-    if sensitive:
-        api_ret["sensitive"] = await get_events(bot_id = bot_id)
-    else:
-        api_ret["sensitive"] = {}
     vanity = await db.fetchrow("SELECT vanity_url FROM vanity WHERE redirect = $1", bot_id)
     if vanity is None:
         api_ret["vanity"] = None
     else:
         api_ret["vanity"] = vanity["vanity_url"]
     return api_ret
+
+@router.get("/bots/{bot_id}/events")
+async def get_bot_events_api(request: Request, bot_id: int, Authorization: str = Header("BOT_TOKEN")):
+    id = await bot_auth(bot_id, Authorization)
+    if id is None:
+        return abort(401)
+    return {"events": await get_events(bot_id = bot_id)}
 
 @router.post("/bots/{bot_id}", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=5, minutes=1))])
 async def add_bot_api(request: Request, bt: BackgroundTasks, bot_id: int, bot: BotAdd, Authorization: str = Header("USER_TOKEN_OR_BOTBLOCK_ADD_KEY")):

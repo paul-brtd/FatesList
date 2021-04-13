@@ -24,7 +24,7 @@ async def admin_dashboard(request: Request, stats: Optional[int] = 0):
             staff = is_staff(staff_roles, user.roles, 2)
             if not staff[0]:
                 return RedirectResponse("/", status_code = 303)
-        certified = await _admin_get_bot("state = 6") # State 0 and state 6 are verified and /ertified
+        certified = await _admin_get_bot("state = 6") # State 0 and state 6 are approved and certified
         bot_amount = await db.fetchval("SELECT COUNT(1) FROM bots WHERE state = 0 OR state = 6")
         queue = await _admin_get_bot("state = 1")
         under_review = await _admin_get_bot("state = 5")

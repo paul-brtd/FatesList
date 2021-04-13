@@ -184,7 +184,7 @@ async def add_event(bot_id: int, event: str, context: dict, *, send_event = True
     apitok = await db.fetchrow("SELECT api_token FROM bots WHERE bot_id = $1", bot_id)
     if apitok is None:
         return
-    asyncio.create_task(db.execute("INSERT INTO api_event (id, bot_id, events) VALUES ($1, $2, $3)", id, bot_id, new_event_data))
+    asyncio.create_task(db.execute("INSERT INTO bot_api_event (id, bot_id, events) VALUES ($1, $2, $3)", id, bot_id, new_event_data))
     webh = await db.fetchrow("SELECT webhook, webhook_type FROM bots WHERE bot_id = $1", int(bot_id))
     if webh is not None and webh["webhook"] not in ["", None] and webh["webhook_type"] is not None and send_event:
         uri = webh["webhook"]
@@ -605,13 +605,13 @@ async def get_events(api_token: Optional[str] = None, bot_id: Optional[str] = No
     uid = bid["bot_id"]
     # As a replacement/addition to webhooks, we have API events as well to allow you to quickly get old and new events with their epoch
     if event_id is not None:
-        api_data = await db.fetchrow("SELECT id, events FROM api_event WHERE bot_id = $1 AND id = $2", uid, event_id)
+        api_data = await db.fetchrow("SELECT id, events FROM bot_api_event WHERE bot_id = $1 AND id = $2", uid, event_id)
         if api_data is None:
             return {"events": []}
         event = api_data["events"]
         return {"events": [{"id": uid,  "event": event[0], "epoch": event[1], "context": event[2]}]}
 
-    api_data = await db.fetch("SELECT id, events FROM api_event WHERE bot_id = $1 ORDER BY id", uid)
+    api_data = await db.fetch("SELECT id, events FROM bot_api_event WHERE bot_id = $1 ORDER BY id", uid)
     if api_data == []:
         return {"events": []}
     events = []
@@ -1033,13 +1033,14 @@ class BotListAdmin():
 
     # Some messages
     bot_not_found = "Bot could not be found"
-    must_claim = "You must claim this bot using +claim on the testing server before approving or denying it"
+    must_claim = "You must claim this bot using +claim on the testing server before approving or denying it. If you have claimed it, make sure it is not already verified"
     good = 0x00ff00 # "Good" color for positive things
     bad = discord.Color.red()
 
     def __init__(self, bot_id, mod):
         self.bot_id = bot_id
         self.mod = mod # Mod is the moderator who performed the request
+        self.str_mod = str(mod)
         self.channel = client.get_channel(bot_logs)
         self.guild = self.channel.guild
 
@@ -1054,6 +1055,16 @@ class BotListAdmin():
             except:
                 pass
 
+    async def claim_bot(self):
+        check = await db.fetchrow("SELECT bot_id FROM bots WHERE bot_id = $2 AND state = $1", enums.BotState.pending, self.bot_id)
+        if not check:
+            return self.bot_not_found
+        await db.execute("UPDATE bots SET state = $1 WHERE bot_id = $2", enums.BotState.under_review, self.bot_id)
+        claim_embed = discord.Embed(title="Bot Under Review", description = f"<@{self.bot_id}> is now under review by <@{self.mod}> and should be approved or denied soon!", color = self.good)
+        claim_embed.add_field(name="Link", value=f"https://fateslist.xyz/bot/{self.bot_id}")
+        await add_event(self.bot_id, "claim_bot", {"user": self.str_mod})
+        await self.channel.send(embed = claim_embed)
+
     async def approve_bot(self, feedback):
         owners = await db.fetch("SELECT owner, main FROM bot_owner WHERE bot_id = $1", self.bot_id)
         if not owners:
@@ -1061,8 +1072,8 @@ class BotListAdmin():
         check = await db.fetchrow("SELECT state FROM bots WHERE bot_id = $1", self.bot_id)
         if check["state"] != enums.BotState.under_review:
             return self.must_claim 
-        await db.execute("UPDATE bots SET state = 0 WHERE bot_id = $1", self.bot_id)
-        await add_event(self.bot_id, "approve", {"user": self.mod})
+        await db.execute("UPDATE bots SET state = $1 WHERE bot_id = $2", enums.BotState.approved, self.bot_id)
+        await add_event(self.bot_id, "approve_bot", {"user": self.str_mod})
         owner = [obj["owner"] for obj in owners if obj["main"]][0]
         approve_embed = discord.Embed(title="Bot Approved!", description = f"<@{self.bot_id}> by <@{owner}> has been approved", color = self.good)
         approve_embed.add_field(name="Feedback", value=feedback)
@@ -1080,8 +1091,8 @@ class BotListAdmin():
         owner = await self._get_main_owner()
         if owner is None:
             return False # No bot found
-        await db.execute("UPDATE bots SET state = 1 WHERE bot_id = $1", self.bot_id)
-        await add_event(self.bot_id, "unverify", {"user": self.mod})
+        await db.execute("UPDATE bots SET state = $1 WHERE bot_id = $1", enums.BotState.pending, self.bot_id)
+        await add_event(self.bot_id, "unverify_bot", {"user": self.str_mod})
         unverify_embed = discord.Embed(title="Bot Unverified!", description = f"<@{self.bot_id}> by <@{owner['owner']}> has been unverified", color=self.bad)
         unverify_embed.add_field(name="Reason", value=reason)
         await self.channel.send(embed = unverify_embed)
@@ -1094,7 +1105,7 @@ class BotListAdmin():
         if check["state"] != enums.BotState.under_review:
             return self.must_claim
         await db.execute("UPDATE bots SET state = 2 WHERE bot_id = $1", self.bot_id)
-        await add_event(self.bot_id, "ban", {"user": self.mod, "type": "deny"})
+        await add_event(self.bot_id, "deny_bot", {"user": self.str_mod, "reason": reason})
         deny_embed = discord.Embed(title="Bot Denied!", description = f"<@{self.bot_id}> by <@{owner['owner']}> has been denied", color=self.bad)
         deny_embed.add_field(name="Reason", value=reason)
         await self.channel.send(embed = deny_embed)
@@ -1114,8 +1125,9 @@ class BotListAdmin():
         except:
             pass
         await db.execute("UPDATE bots SET state = 4 WHERE bot_id = $1", self.bot_id)
-        await add_event(self.bot_id, "ban", {"user": self.mod})
+        await add_event(self.bot_id, "ban_bot", {"user": self.str_mod, "reason": reason})
 
+    # Unban or requeue a bot
     async def unban_bot(self, state):
         if state == 2:
             word = "removed from the deny list"
@@ -1127,9 +1139,10 @@ class BotListAdmin():
         await self.channel.send(embed = unban_embed)
         if state == 2:
             await db.execute("UPDATE bots SET state = 1 WHERE bot_id = $1", self.bot_id)
+            await add_event(self.bot_id, "requeue_bot", {"user": self.str_mod})
         else:
             await db.execute("UPDATE bots SET state = 0 WHERE bot_id = $1", self.bot_id)
-            await add_event(self.bot_id, "unban", {"user": self.mod})
+            await add_event(self.bot_id, "unban_bot", {"user": self.str_mod})
 
     async def certify_bot(self):
         owners = await db.fetch("SELECT owner FROM bot_owner WHERE bot_id = $1", self.bot_id)
@@ -1139,4 +1152,5 @@ class BotListAdmin():
         certify_embed = discord.Embed(title = "Bot Certified", description = f"<@{self.mod}> certified the bot <@{self.bot_id}>", color = self.good)
         certify_embed.add_field(name="Link", value=f"https://fateslist.xyz/bot/{self.bot_id}")
         await self.channel.send(embed = certify_embed)
+        await add_event(self.bot_id, "certify_bot", {"user": self.str_mod})
         await self._give_roles(certified_dev_role, [owner["owner"] for owner in owners])
