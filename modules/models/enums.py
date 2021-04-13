@@ -3,6 +3,14 @@ from pydantic import BaseModel
 import uuid
 from aenum import Enum, IntEnum
 
+class UserState(IntEnum):
+    _init_ = 'value __doc__'
+    normal = 0, "Normal"
+    global_ban = 1, "Global Ban"
+    login_ban = 2, "Login Ban"
+    pedit_ban = 3, "Profile Edit Ban"
+    ddr_ban = 4, "Data Deletion Request Ban"
+
 class Status(IntEnum):
     """
     Status object (See https://docs.fateslist.xyz/basics/basic-structures#status for more information)

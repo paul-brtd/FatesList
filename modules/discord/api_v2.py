@@ -489,8 +489,8 @@ async def preview_api(request: Request, data: PrevRequest):
 
 @router.get("/users/{user_id}", response_model = User)
 async def get_user_api(request: Request, user_id: int):
-    user = await db.fetchrow("SELECT description, css FROM users WHERE user_id = $1", user_id)
-    if user is None:
+    user = await db.fetchrow("SELECT state, description, css FROM users WHERE user_id = $1", user_id)
+    if user is None or user["state"] == enums.UserState.ddr_ban:
         return abort(404)
     user_obj = await get_user(user_id)
     user_ret = dict(user) | user_obj

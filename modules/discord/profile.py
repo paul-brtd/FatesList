@@ -20,8 +20,8 @@ async def profile_of_user_generic(request: Request, user_id: int):
 
 async def profile_of_user(request: Request, user_id: int):
     personal = False # Initially
-    deleted = await db.fetchval("SELECT deleted FROM users WHERE user_id = $1", user_id)
-    if deleted:
+    state = await db.fetchval("SELECT state FROM users WHERE user_id = $1", user_id)
+    if state == enums.UserState.global_ban or state == enums.UserState.ddr_ban:
         return abort(404)
     user = await get_user(int(user_id))
     if not user:

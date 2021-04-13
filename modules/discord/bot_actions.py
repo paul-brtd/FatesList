@@ -153,7 +153,7 @@ async def delete_bot(request: Request, bot_id: int, confirmer: str = FForm("1"))
         return await templates.TemplateResponse("message.html", {"request": request, "username": request.session.get("username"), "avatar": request.session.get("avatar"), "message": "Forbidden", "context": "Invalid Confirm Code. Please go back and reload the page and if the problem still persists, please report it in the support server"})
     await add_event(bot_id, "delete_bot", {"user": request.session.get('userid')})
     owner = request.session.get("userid")
-    for table in "bots", "bot_voters", "bot_promotions", "bot_reviews", "api_event", "bot_maint", "bot_commands", "bot_owner":
+    for table in "bots", "bot_voters", "bot_promotions", "bot_reviews", "bot_api_event", "bot_maint", "bot_commands", "bot_owner":
         await db.execute(f"DELETE FROM {table} WHERE bot_id = $1", bot_id)
     await db.execute("DELETE FROM vanity WHERE redirect = $1", bot_id)
     delete_embed = discord.Embed(title="Bot Deleted :(", description=f"<@{owner}> has deleted the bot <@{bot_id}>!", color=discord.Color.red())

@@ -91,6 +91,10 @@ bans_data = {
     "3": {
         "type": "profile edit",
         "desc": "you will not be able to edit your profile"
+    },
+    "4": {
+        "type": "data deletion request",
+        "desc": "Contact modmail to be unbanned"
     }
 }
 

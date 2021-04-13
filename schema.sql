@@ -110,7 +110,7 @@ CREATE TABLE users (
     badges text[],
     username text,
     css text default '',
-    banned integer default 0, -- 0 = No Ban, 1 = Global Ban
+    state integer default 0, -- 0 = No Ban, 1 = Global Ban
     coins INTEGER DEFAULT 0
 );
 

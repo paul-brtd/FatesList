@@ -58,20 +58,16 @@ async def login_confirm(request: Request, code: str, state: str):
             pass
         else:
             return RedirectResponse("/")
-        banned = await db.fetchrow("SELECT banned FROM users WHERE user_id = $1", int(userjson["id"]))
-        if banned is None:
-            banned = 0
-        else:
-            banned = banned["banned"]
-        ban_data = bans_data.get(str(banned))
+        state = await db.fetchval("SELECT state FROM users WHERE user_id = $1", int(userjson["id"]))
+        if state is None:
+            state = enums.UserState.normal
+        ban_data = bans_data.get(str(state))
         if ban_data is None:
             ban_data = {"type": "", "desc": ""}
-        if banned not in [1, 2]: # 1 = Global ban, 2 = Login Ban
-            pass
-        else:
+        if state in [enums.UserState.global_ban, enums.UserState.login_ban, enums.UserState.ddr_ban]: # 1 = Global ban, 2 = Login Ban, 4 = DDR Ban
             ban_type = ban_data["type"]
             return await templates.e(request, f"You have been {ban_type} banned from Fates List<br/>", status_code = 403)
-        request.session["ban"] = banned
+        request.session["ban"] = state
         request.session["access_token"] = access_token
         request.session["userid"] = userjson["id"]
         print(userjson)
@@ -96,7 +92,7 @@ async def login_confirm(request: Request, code: str, state: str):
         if request.session.get("redirect") is not None:
             return RedirectResponse(request.session["redirect"])
         request.session["ban_data"] = ban_data
-        if banned != 0:
+        if state != 0:
             ban_type = ban_data["type"]
             ban_desc = ban_data["desc"]
             return await templates.e(request, main = f"<span style='color: red;'>You have been {ban_type} banned in Fates List.</span>", reason = f"You can still login however {ban_desc}. Click 'Go Back Home' to finish logging in.", status_code = 200)

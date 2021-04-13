@@ -276,7 +276,7 @@ class Server(models.Model):
     tags = ArrayField(base_field = models.TextField(), blank=True, null=True)
     certified = models.BooleanField(blank=True, null=True)
     created_at = models.BigIntegerField(blank=True, null=True)
-    banned = models.BooleanField(blank=True, null=True)
+    state = models.BooleanField(blank=True, null=True)
     invite_amount = models.IntegerField(blank=True, null=True)
     user_provided_invite = models.BooleanField(blank=True, null=True)
     invite_code = models.TextField(blank=True, null=True)
@@ -298,7 +298,7 @@ class User(models.Model):
     username = models.TextField(blank=True, null=True)
     avatar = models.TextField(blank=True, null=True)
     css = models.TextField(blank=True, null=True)
-    banned = models.IntegerField(blank=True, null=True)
+    state = models.IntegerField(blank=True, null=True)
 
     class Meta:
         managed = False
