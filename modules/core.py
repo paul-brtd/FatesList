@@ -235,7 +235,7 @@ async def is_bot_admin(bot_id: int, user_id: int):
     user = guild.get_member(user_id)
     if user is not None and is_staff(staff_roles, user.roles, 4)[0]:
         return True
-    check = await db.fetchrow("SELECT COUNT(1) FROM bot_owner WHERE bot_id = $1 AND owner = $2", bot_id, user_id)
+    check = await db.fetchval("SELECT COUNT(1) FROM bot_owner WHERE bot_id = $1 AND owner = $2", bot_id, user_id)
     if check == 0:
         return False
     return True
@@ -754,7 +754,7 @@ class FLError():
                 msg = "401\nNot Authorized"
                 code = 401
             case 403:
-                msg = "401\nForbidden"
+                msg = "403\nForbidden"
                 code = 403
             case 422:
                 if path.startswith("/bot"): # Bot 422 which is actually 404 to us
