@@ -120,12 +120,7 @@ async def get_bot(user_id: int) -> Optional[dict]:
 async def get_any(user_id: int) -> Optional[dict]:
     return await _user_fetch(str(int(user_id)), 3) # 3 means all
 
-class Serializer(object):
-    @staticmethod
-    def serialize(object):
-        return orjson.dumps(object, default=lambda o: o.__dict__.values()[0]).decode("utr-8")
-
-class StaffMember(BaseModel, Serializer):
+class StaffMember(BaseModel):
     """Represents a staff member in Fates List""" 
     name: str
     id: int
@@ -232,21 +227,18 @@ async def get_maint(bot_id: str) -> Union[bool, Optional[dict]]:
     return api_data
 
 async def is_bot_admin(bot_id: int, user_id: int):
+    try:
+        user_id = int(user_id)
+    except ValueError:
+        return False
     guild = client.get_guild(main_server)
     user = guild.get_member(user_id)
     if user is not None and is_staff(staff_roles, user.roles, 4)[0]:
         return True
-    check = await db.fetch("SELECT owner FROM bot_owner WHERE bot_id = $1", bot_id)
-    if not check:
-        return None
-    owner_lst = [obj["owner"] for obj in check]
-    try:
-        if user_id in owner_lst:
-            return True
-        else:
-            return False
-    except:
+    check = await db.fetchrow("SELECT COUNT(1) FROM bot_owner WHERE bot_id = $1 AND owner = $2", bot_id, user_id)
+    if check == 0:
         return False
+    return True
 
 async def get_promotions(bot_id: int) -> list:
     api_data = await db.fetch("SELECT id, title, info, css, type FROM bot_promotions WHERE bot_id = $1", bot_id)
@@ -900,9 +892,7 @@ class BotActions():
             return check
 
         check = await is_bot_admin(int(self.bot_id), int(self.user_id)) # Check for owner
-        if check is None:
-            return "This bot doesn't exist in our database.", 16
-        elif check is False:
+        if not check:
             return "You aren't the owner of this bot.", 17
 
         check = await get_user(self.user_id)
