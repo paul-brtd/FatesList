@@ -13,11 +13,10 @@
 	{% endif %}
 </div>
 <form method="POST" style="text-align: left">
-        <div style="text-align: center; display: block; margin-bottom: 6vh;">
-                <button type="submit" class="btn btn-outline-light btn-lg" style="margin-bottom: 100px;">Login</button>
+        <div style="text-align: center; display: block;">
+                <button type="submit" class="btn btn-outline-light btn-lg" style="margin-bottom: 20px;">Login</button>
 	</div>
 	<small>
-	<p class="white" style="text-align: center;">Advanced Permissions (Do not change if you don't know what you are doing)</p>
 	<div style="text-align: center;">
     	<div style="display: inline-block; text-align: left;">
 	<div style="padding: 3px; display: inline-block;">
@@ -26,8 +25,8 @@
 		<div class="form-group" class="d-flex" style="color: white; font-weight: bold;">
 			<div class="form-group">
 				<div style="display: block;"/>
-        				<input type="checkbox" tabindex="0" id="join_servers"  name="join_servers" aria-label="Join Servers" style="margin-right: 5px;" checked="true"/>
-					<label class="custom-control-label" for="join_servers">Join Servers -> Would you like to be added to the support server? Keep this ticked if unsure.</label>
+        				<input type="checkbox" tabindex="0" id="join_servers"  name="join_servers" aria-label="Join Servers" style="margin-right: 5px;" />
+					<label class="custom-control-label" for="join_servers">Join Servers (Join The Support Server) -> Would you like to be added to the support server? Turn this on if unsure</label>
 				</div>
 			</div>
 		</div>
@@ -42,15 +41,11 @@
 			</div>
 		</div>
 	</div>
-        <p class="white" style="text-align: center;"><em>Permission's Break Down</em><br/>We need to access your Username, Avatar And User ID in order to identify who you are on Discord so you can actually add bots.<br/>We also need to know what servers you are in if you keep server listing enabled<br/>We also need the ability to join servers for you if you ask to be joined to the support server (see below).</p>
-
 	</div>
 	</div>
 	</div>
 	</small>
 </form>
-<p class="white">Privacy</p>
-<p class="white" style="opacity: 0.8; padding: 3px; text-align: left">Your privacy matters to us. By continuing, you agree to your data being processed and/or stored for analytical purpose as per our privacy policy. The data we collect is your username, user id, avatar and current discord status (as in online or offline) and any info you submit to us. We may also log IPs for access logs and due to technical reasons, we cannot delete these easily in a data deletion request either so please use a VPN if you do not like your IP being logged by nginx. We also store timestamps of when you vote for a bot and these timestamps are exposed to bots and may be used by bot owners for their own purposes. These timestamps can be deleted by a Data Deletion Request (for more imformation, DM Mod Mail on the support server)</p>
 </div>
 {% endblock %}
 {% block footer %}
