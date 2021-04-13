@@ -69,7 +69,7 @@ livereload==2.6.3
 llvmlite==0.37.0.dev0+23.g990a0d4.dirty
 lockfile==0.12.2
 lunr==0.5.8
-lxml==4.6.2
+lxml==4.6.3
 Markdown @ git+https://github.com/Python-Markdown/markdown.git@14c2fa92302084e4850e5323ed56721e43fbbdb9
 MarkupSafe==1.1.1
 mkdocs==1.1.2
