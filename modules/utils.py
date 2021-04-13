@@ -90,3 +90,26 @@ def secure_strcmp(val1, val2):
     Return True if the two strings are equal, False otherwise securely.
     """
     return secrets.compare_digest(force_bytes(val1), force_bytes(val2))
+
+@jit(nopython = True)
+def ireplace(old, new, text):
+    """Case insensitive replace"""
+    idx = 0
+    while idx < len(text):
+        index_l = text.lower().find(old.lower(), idx)
+        if index_l == -1:
+            return text
+        text = text[:index_l] + new + text[index_l + len(old):]
+        idx = index_l + len(new) 
+    return text
+
+@jit(nopython = True)
+def ireplacem(replace_tuple, text):
+    """Calls ireplace multiple times for a replace tuple of format ((old, new), (old, new))"""
+    for replace in replace_tuple:
+        text = ireplace(replace[0], replace[1], text)
+    return text
+
+# Some replace tuples
+js_rem_tuple = (("onclick", ""), ("onhover", ""), ("script", ""), ("onload", ""))
+

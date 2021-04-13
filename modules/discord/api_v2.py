@@ -30,15 +30,15 @@ async def add_promotion_api(request: Request, bot_id: int, promo: BotPromotionPa
 
     """
     if len(promo.title) < 3:
-        return ORJSONResponse({"done":  False, "reason": "TEXT_TOO_SMALL"}, status_code = 400)
+        return ORJSONResponse({"done":  False, "reason": "TEXT_TOO_SMALL", "code": 9898}, status_code = 400)
     if promo.type not in [1, 2, 3]:
-        return ORJSONResponse({"done":  False, "reason": "INVALID_PROMO_TYPE"}, status_code = 400)
+        return ORJSONResponse({"done":  False, "reason": "INVALID_PROMO_TYPE", "code": 9897}, status_code = 400)
     id = await bot_auth(bot_id, Authorization)
     if id is None:
         return abort(401)
     id = id["bot_id"]
     await add_promotion(id, promo.title, promo.info, promo.css, promo.type)
-    return {"done":  True, "reason": None}
+    return {"done":  True, "reason": None, "code": 1000}
 
 @router.patch("/bots/{bot_id}/promotions", response_model = APIResponse, responses = {
     400: {"model": APIResponse}
@@ -52,15 +52,15 @@ async def edit_promotion(request: Request, bot_id: int, promo: BotPromotion, Aut
 
     """
     if len(promo.title) < 3:
-        return ORJSONResponse({"done":  False, "reason": "TEXT_TOO_SMALL"}, status_code = 400)
+        return ORJSONResponse({"done":  False, "reason": "TEXT_TOO_SMALL", "code": 2919}, status_code = 400)
     id = await bot_auth(bot_id, Authorization)
     if id is None:
         return abort(401)
     pid = await db.fetchrow("SELECT id FROM bot_promotions WHERE id = $1 AND bot_id = $2", promo.id, bot_id)
     if pid is None:
-        return ORJSONResponse({"done":  False, "reason": "NO_PROMOTION_FOUND"}, status_code = 400)
+        return ORJSONResponse({"done":  False, "reason": "NO_PROMOTION_FOUND", "code": 2917}, status_code = 400)
     await db.execute("UPDATE bot_promotions SET title = $1, info = $2 WHERE bot_id = $3 AND id = $4", promo.title, promo.info, bot_id, promo.id)
-    return {"done": True, "reason": None}
+    return {"done": True, "reason": None, "code": 1000}
 
 @router.delete("/bots/{bot_id}/promotions", response_model = APIResponse, responses = {
     400: {"model": APIResponse}
@@ -79,11 +79,11 @@ async def delete_promotion(request: Request, bot_id: int, promo: BotPromotionDel
     if promo.id is not None:
         eid = await db.fetchrow("SELECT id FROM bot_promotions WHERE id = $1", promolid)
         if eid is None:
-            return ORJSONResponse({"done":  False, "reason": "NO_PROMOTION_FOUND"}, status_code = 400)
+            return ORJSONResponse({"done":  False, "reason": "NO_PROMOTION_FOUND", "code": 4848}, status_code = 400)
         await db.execute("DELETE FROM bot_promotions WHERE bot_id = $1 AND id = $2", id, promo.id)
     else:
         await db.execute("DELETE FROM bot_promotions WHERE bot_id = $1", id)
-    return {"done":  True, "reason": None}
+    return {"done":  True, "reason": None, "code": 1000}
 
 @router.get("/bots/{bot_id}/token")
 async def get_bot_token(request: Request, bot_id: int, user_id: int, Authorization: str = Header("USER_TOKEN")):
@@ -109,7 +109,7 @@ async def regenerate_bot_token(request: Request, bot_id: int, Authorization: str
     if id is None:
         return abort(401)
     await db.execute("UPDATE bots SET api_token = $1 WHERE bot_id = $2", get_token(132), id)
-    return {"done": True, "reason": None}
+    return {"done": True, "reason": None, "code": 1000}
 
 @router.post("/bots/{bot_id}/admin/under_review", response_model = APIResponse)
 async def bot_under_review_api(request: Request, bot_id: int, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
@@ -126,7 +126,7 @@ async def bot_under_review_api(request: Request, bot_id: int, Authorization: str
     embed.add_field(name="Link", value=f"https://fateslist.xyz/bot/{bot_id}")
     channel = client.get_channel(bot_logs)
     await channel.send(embed = embed)
-    return {"done": True, "reason": "Claimed this bot! You are free to test it now!"}
+    return {"done": True, "reason": "Claimed this bot! You are free to test it now!", "code": 1001}
 
 @router.patch("/bots/{bot_id}/admin/queue")
 async def bot_queue_api(request: Request, bot_id: int, data: BotQueue, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
@@ -139,7 +139,7 @@ async def bot_queue_api(request: Request, bot_id: int, data: BotQueue, Authoriza
     try:
         admin_tool = BotListAdmin(bot_id, int(data.mod))
     except:
-        return ORJSONResponse({"done": False, "reason": "Invalid Moderator specified. Please contact the developers of this bot!"}, status_code = 400)
+        return ORJSONResponse({"done": False, "reason": "Invalid Moderator specified. Please contact the developers of this bot!", "code": 3839}, status_code = 400)
  
     if not data.feedback:
         if data.approve:
@@ -148,11 +148,11 @@ async def bot_queue_api(request: Request, bot_id: int, data: BotQueue, Authoriza
             data.feedback = deny_feedback
 
     if len(data.feedback) < 3:
-        return ORJSONResponse({"done": False, "reason": "Feedback must either not be provided or must be larger than 3 characters!"}, status_code = 400)
+        return ORJSONResponse({"done": False, "reason": "Feedback must either not be provided or must be larger than 3 characters!", "code": 3836}, status_code = 400)
     guild = client.get_guild(main_server)
     user = guild.get_member(int(data.mod))
     if user is None or not is_staff(staff_roles, user.roles, 2)[0]:
-        return ORJSONResponse({"done": False, "reason": "Invalid Moderator specified. The moderator in question does not have permission to perform this action!"}, status_code = 400)
+        return ORJSONResponse({"done": False, "reason": "Invalid Moderator specified. The moderator in question does not have permission to perform this action!", "code": 3867}, status_code = 400)
 
     if data.approve:
         rc = await admin_tool.approve_bot(data.feedback)
@@ -160,16 +160,18 @@ async def bot_queue_api(request: Request, bot_id: int, data: BotQueue, Authoriza
         rc = await admin_tool.deny_bot(data.feedback)
     
     if rc is None:
-        return {"done": True, "reason": f"Bot Approved Successfully! Invite it to the main server with https://discord.com/oauth2/authorize?client_id={bot_id}&scope=bot&guild_id={guild.id}&disable_guild_select=true&permissions=0"}
-    return ORJSONResponse({"done": False, "reason": rc}, status_code = 400)
+        return {"done": True, "reason": f"Bot Approved Successfully! Invite it to the main server with https://discord.com/oauth2/authorize?client_id={bot_id}&scope=bot&guild_id={guild.id}&disable_guild_select=true&permissions=0", "code": 1001}
+    return ORJSONResponse({"done": False, "reason": rc, "code": 3869}, status_code = 400)
 
 @router.get("/bots/random", response_model = BotRandom, dependencies=[Depends(RateLimiter(times=7, minutes=1))])
 async def random_bots_api(request: Request):
-    random_unp = await db.fetchrow("SELECT description, banner, state, votes, servers, bot_id, invite FROM bots WHERE state = 0 OR state = 6 ORDER BY RANDOM() LIMIT 1") # Unprocessed
-    bot = (await get_bot(random_unp["bot_id"])) | dict(random_unp)
-    bot["bot_id"] = str(bot["bot_id"])
-    bot["servers"] = human_format(bot["servers"])
-    bot["description"] = bot["description"].replace("<", "").replace(">", "")
+    random_unp = await db.fetchrow("SELECT description, banner, state, votes, servers, bot_id, invite FROM bots WHERE state = 0 OR state = 6 ORDER BY RANDOM() LIMIT 1") # Unprocessed, use the random function to get a random bot
+    bot = (await get_bot(random_unp["bot_id"])) | dict(random_unp) # Get bot from cache and add that in
+    bot["bot_id"] = str(bot["bot_id"]) # Make sure bot id is a string to prevent corruption issues
+    bot["servers"] = human_format(bot["servers"]) # Format the servers field
+    bot["description"] = ireplacem(js_rem_tuple, bot["description"]) # Prevent some basic attacks in short description
+    if bot["banner"] is None:
+        bot["banner"] = "" # Make sure banner is always a string
     return bot
 
 @router.get("/bots/{bot_id}", response_model = Bot, dependencies=[Depends(RateLimiter(times=5, minutes=3))])
@@ -237,7 +239,7 @@ async def add_bot_api(request: Request, bt: BackgroundTasks, bot_id: int, bot: B
     bot_adder = BotActions(bot_dict)
     rc = await bot_adder.add_bot()
     if rc is None:
-        return {"done": True, "reason": f"{site_url}/bot/{bot_id}"}
+        return {"done": True, "reason": f"{site_url}/bot/{bot_id}", "code": 1001}
     return ORJSONResponse({"done": False, "reason": rc[0],"code": rc[1]}, status_code = 400)
 
 @router.patch("/bots/{bot_id}", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=5, minutes=1))])
@@ -266,7 +268,7 @@ async def edit_bot_api(request: Request, bt: BackgroundTasks, bot_id: int, bot: 
     bot_editor = BotActions(bot_dict)
     rc = await bot_editor.edit_bot()
     if rc is None:
-        return {"done": True, "reason": f"{site_url}/bot/{bot_id}"}
+        return {"done": True, "reason": f"{site_url}/bot/{bot_id}", "code": 1001}
     return ORJSONResponse({"done": False, "reason": rc[0], "code": rc[1]}, status_code = 400)
 
 @router.get("/bots/{bot_id}/reviews", response_model = BotReviews)
@@ -284,7 +286,7 @@ async def upvote_review_api(request: Request, bot_id: int, rid: uuid.UUID, vote:
         return abort(401)
     bot_rev = await db.fetchrow("SELECT review_upvotes, review_downvotes FROM bot_reviews WHERE id = $1", rid)
     if bot_rev is None:
-        return ORJSONResponse({"done": False, "reason": "You are not allowed to upvote this review (doesn't actually exist)"}, status_code = 404)
+        return ORJSONResponse({"done": False, "reason": "You are not allowed to up/downvote this review (doesn't actually exist)", "code": 3836}, status_code = 404)
     bot_rev = dict(bot_rev)
     if vote.upvote:
         main_key = "review_upvotes"
@@ -293,7 +295,7 @@ async def upvote_review_api(request: Request, bot_id: int, rid: uuid.UUID, vote:
         main_key = "review_downvotes"
         remove_key = "review_upvotes"
     if vote.user_id in bot_rev[main_key]:
-        return ORJSONResponse({"done": False, "reason": "USER_ALREADY_VOTED"}, status_code = 400)
+        return ORJSONResponse({"done": False, "reason": "The user has already voted for this review", "code": 5858}, status_code = 400)
     if vote.user_id in bot_rev[remove_key]:
         while True:
             try:
@@ -303,7 +305,7 @@ async def upvote_review_api(request: Request, bot_id: int, rid: uuid.UUID, vote:
     bot_rev[main_key].append(vote.user_id)
     await db.execute("UPDATE bot_reviews SET review_upvotes = $1, review_downvotes = $2 WHERE id = $3", bot_rev["review_upvotes"], bot_rev["review_downvotes"], rid)
     await add_event(bot_id, "review_vote", {"user": str(vote.user_id), "review_id": str(rid), "upvotes": len(bot_rev["review_upvotes"]), "downvotes": len(bot_rev["review_downvotes"]), "upvote": vote.upvote})
-    return {"done": True, "reason": None}
+    return {"done": True, "reason": None, "code": 1000}
 
 @router.get("/bots/{bot_id}/commands", response_model = BotCommands)
 async def get_bot_commands_api(request:  Request, bot_id: int):
@@ -330,7 +332,7 @@ async def add_bot_command_api(request: Request, bot_id: int, command: BotCommand
             return ORJSONResponse({"done":  False, "reason": "COMMAND_ALREADY_EXISTS"}, status_code = 400)
     id = uuid.uuid4()
     await db.execute("INSERT INTO bot_commands (id, bot_id, slash, name, description, args, examples, premium_only, notes, doc_link) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)", id, bot_id, command.slash, command.name, command.description, command.args, command.examples, command.premium_only, command.notes, command.doc_link)
-    return {"done": True, "reason": None, "id": id}
+    return {"done": True, "reason": None, "id": id, "code": 1001}
 
 @router.patch("/bots/{bot_id}/commands", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=20, minutes=1))])
 async def edit_bot_command_api(request: Request, bot_id: int, command: BotCommandEdit, Authorization: str = Header("BOT_TOKEN")):
@@ -350,7 +352,7 @@ async def edit_bot_command_api(request: Request, bot_id: int, command: BotComman
         if command_dict[key] is None: 
             command_dict[key] = data[key]
     await db.execute("UPDATE bot_commands SET slash = $2, name = $3, description = $4, args = $5, examples = $6, premium_only = $7, notes = $8, doc_link = $9 WHERE id = $1", command_dict["id"], command_dict["slash"], command_dict["name"], command_dict["description"], command_dict["args"], command_dict["examples"], command_dict["premium_only"], command_dict["notes"], command_dict["doc_link"])
-    return {"done": True, "reason": None}
+    return {"done": True, "reason": None, "code": 1000}
 
 @router.delete("/bots/{bot_id}/commands", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=20, minutes=1))])
 async def delete_bot_command_api(request: Request, bot_id: int, command: BotCommandDelete, Authorization: str = Header("BOT_TOKEN")):
@@ -358,7 +360,7 @@ async def delete_bot_command_api(request: Request, bot_id: int, command: BotComm
     if id is None:
         return abort(401)
     await db.execute("DELETE FROM bot_commands WHERE id = $1 AND bot_id = $2", command.id, bot_id)
-    return {"done": True, "reason": None}
+    return {"done": True, "reason": None, "code": 1000}
 
 @router.get("/bots/{bot_id}/votes", response_model = BotVoteCheck, dependencies=[Depends(RateLimiter(times=5, minutes=1))])
 async def get_votes_api(request: Request, bot_id: int, user_id: Optional[int] = None, Authorization: str = Header("BOT_TOKEN")):
@@ -419,7 +421,7 @@ async def set_bot_stats_api(request: Request, bt: BackgroundTasks, bot_id: int, 
     else:
         user_count = api.user_count
     bt.add_task(set_stats, bot_id = id["bot_id"], guild_count = api.guild_count, shard_count = shard_count, shards = shards, user_count = user_count)
-    return {"done": True, "reason": None}
+    return {"done": True, "reason": None, "code": 1000}
 
 @router.get("/bots/{bot_id}/maintenance", response_model = BotMaintenance)
 async def get_maintenance_mode(request: Request, bot_id: int):
@@ -444,7 +446,7 @@ async def set_maintenance_mode(request: Request, bot_id: int, api: BotMaintenanc
     if id is None:
         return abort(401)
     await add_maint(id["bot_id"], api.mode, api.reason)
-    return {"done": True, "reason": None}
+    return {"done": True, "reason": None, "code": 1000}
 
 @router.get("/features/{name}", response_model = FLFeature)
 async def get_feature_api(request: Request, name: str):
@@ -542,7 +544,7 @@ async def set_user_description_api(request: Request, user_id: int, desc: UserDes
     if id is None:
         return abort(401)
     await db.execute("UPDATE users SET description = $1 WHERE user_id = $2", desc.description, user_id)
-    return {"done": True, "reason": None}
+    return {"done": True, "reason": None, "code": 1000}
 
 @router.patch("/users/{user_id}/token", response_model = APIResponse)
 async def regenerate_user_token(request: Request, user_id: int, Authorization: str = Header("USER_TOKEN")):
@@ -554,7 +556,7 @@ async def regenerate_user_token(request: Request, user_id: int, Authorization: s
     if id is None:
         return abort(401)
     await db.execute("UPDATE users SET api_token = $1 WHERE user_id = $2", get_token(132), id)
-    return {"done": True, "reason": None}
+    return {"done": True, "reason": None, "code": 1000}
 
 
 # TODO: Paypal

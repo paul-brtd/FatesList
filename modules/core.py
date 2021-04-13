@@ -664,6 +664,8 @@ class templates():
         arg_dict["path"] = request.url.path
         arg_dict["enums"] = enums
         arg_dict["len"] = len
+        arg_dict["ireplace"] = ireplace
+        arg_dict["ireplacem"] = ireplacem
         if status is None:
             return _templates.TemplateResponse(f, arg_dict)
         return _templates.TemplateResponse(f, arg_dict, status_code = status)
@@ -742,6 +744,8 @@ class FLError():
                 exc.status_code = 500
         path = str(request.url.path)
         match exc.status_code: # Python 3.10 introduced pattern matching, use that to check for http code
+            case 401:
+                return ORJSONResponse({"done": False, "reason": "Unauthorized", "code": 9999}, status_code = exc.status_code)
             case 500:
                 asyncio.create_task(FLError.log(request, exc, error_id, curr_time)) # Try and log what happened
                 if str(request.url.path).startswith("/api"):

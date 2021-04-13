@@ -81,10 +81,12 @@ class APIResponse(BaseModel):
     Represents a "regular" API response on Fates List CRUD endpoints
 
     You can check for success using the done boolean and reason using the reason attribute 
+    
+    Code is mostly random and for debugging other than 1000 and 1001 where 1000 means success and 1001 means success with message
     """
     done: bool
     reason: Optional[str] = None
-    code: Optional[int] = None
+    code: int = 1000
 
 class BotMaintenancePartial(BaseModel):
     type: int = 1
