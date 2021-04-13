@@ -9,7 +9,9 @@ Depends: enums.py
 from typing import List, Dict, Optional, ForwardRef
 from pydantic import BaseModel
 import uuid
-from .enums import Status, BotState
+import sys
+sys.path.append("modules/models") # Libraries should remove this
+import enums as enums
 
 class BaseUser(BaseModel):
     """
@@ -19,7 +21,7 @@ class BaseUser(BaseModel):
     username: str
     avatar: str
     disc: str
-    status: Status
+    status: enums.Status
     bot: bool
 
     def __str__(self):
@@ -174,7 +176,7 @@ class Bot(BaseUser):
     extra_owners: list
     owners: list
     features: list
-    state: BotState
+    state: enums.BotState
     website: Optional[str] = None
     support: Optional[str] = None
     github: Optional[str] = None
@@ -257,6 +259,7 @@ class BotVanity(BaseModel):
 
 class User(BaseUser):
     id: str
+    state: enums.UserState
     description: Optional[str] = None
     css: str
 

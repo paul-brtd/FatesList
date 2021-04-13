@@ -2,7 +2,8 @@
 Core functions of Fates List. 
 
 TODO: Finish documenting all core functions
-TODO: Move certify and uncertify into BotListAdmin class
+TODO: Move uncertify into BotListAdmin class
+TODO: Move delete_bot to BotActions class
 """
 
 from modules.imports import *
