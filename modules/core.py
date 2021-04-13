@@ -233,16 +233,15 @@ async def get_maint(bot_id: str) -> Union[bool, Optional[dict]]:
 
 async def is_bot_admin(bot_id: int, user_id: int):
     guild = client.get_guild(main_server)
+    user = guild.get_member(user_id)
+    if user is not None and is_staff(staff_roles, user.roles, 4)[0]:
+        return True
     check = await db.fetch("SELECT owner FROM bot_owner WHERE bot_id = $1", bot_id)
     if not check:
         return None
     owner_lst = [obj["owner"] for obj in check]
     try:
-        user = guild.get_member(user_id)
-    except:
-        user = None
-    try:
-        if user_id in owner_lst or (user is not None and is_staff(staff_roles, user.roles, 4)[0]):
+        if user_id in owner_lst:
             return True
         else:
             return False
@@ -543,14 +542,10 @@ class ConnectionManager:
 
     async def connect(self, websocket: WebSocket, api: bool = True):
         await websocket.accept()
-        if api:
-            websocket.api_token = []
-            websocket.bot_id = []
-            websocket.authorized = False
-        else:
-            websocket.api_token = []
-            websocket.bot_id = []
-            websocket.authorized = False
+        websocket.api_token = []
+        websocket.bot_id = []
+        websocket.authorized = False
+        websocket.manager_bot = False
         self.active_connections.append(websocket)
 
     async def disconnect(self, websocket: WebSocket):
@@ -562,7 +557,8 @@ class ConnectionManager:
 
         # Delete stale websocket credentials
         websocket.api_token = []
-        websocket.bot_id = [] # 
+        websocket.bot_id = [] # Bot ID
+        websocket.manager_bot = False
         websocket.authorized = False
 
     async def send_personal_message(self, message, websocket: WebSocket):

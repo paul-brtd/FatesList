@@ -199,6 +199,18 @@ class BotPartial(BaseUser):
 class BotPartialList(BaseModel):
     __root__: List[BotPartial]
 
+class BotEvent(BaseModel):
+    id: uuid.UUID
+    event: str
+    epoch: str
+    context: dict
+
+class BotEventList(BaseModel):
+    __root__: List[BotEvent]
+
+class BotEvents(BaseModel):
+    events: BotEventList
+
 class BotCommand(BaseModel):
     id: uuid.UUID
     slash: int # 0 = no, 1 = guild, 2 = global

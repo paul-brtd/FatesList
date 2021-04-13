@@ -44,6 +44,7 @@ async def add_bot_backend(
 async def bot_edit(request: Request, bid: int):
     if "userid" in request.session.keys():
         check = await is_bot_admin(int(bid), int(request.session.get("userid")))
+        print(check)
         if not check:
             return abort(403)
         fetch = dict(await db.fetchrow("SELECT bot_id, prefix, bot_library AS library, invite, website, banner, long_description, description, tags, webhook, webhook_type, discord AS support, api_token, banner, github, features, html_long_description, css, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", bid))
