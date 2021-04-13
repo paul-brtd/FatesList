@@ -19,7 +19,7 @@ async def rl_key_func(request: Request) -> str:
         check = await db.fetchrow("SELECT bot_id, state FROM bots WHERE api_token = $1", r) # Check api token
         if check is None:
             return ip_check(request) # Invalid api token, fallback to ip
-        if check["state"] == 6:
+        if check["state"] == enums.BotState.certified:
             return get_token(32) # Disable since certified bots are exempt
         return str(check["bot_id"]) # Otherwise, ratelimit using bot id
     else:

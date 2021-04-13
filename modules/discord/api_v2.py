@@ -25,7 +25,7 @@ async def get_promotion(request:  Request, bot_id: int):
 @router.post("/bots/{bot_id}/promotions", response_model = APIResponse, responses = {
     400: {"model": APIResponse}
 })
-async def add_promotion_api(request: Request, bot_id: int, promo: BotPromotionPartial, Authorization: str = Header("INVALID_API_TOKEN")):
+async def add_promotion_api(request: Request, bot_id: int, promo: BotPromotionPartial, Authorization: str = Header("BOT_TOKEN")):
     """Creates a promotion for a bot. Type can be 1 for announcement, 2 for promotion or 3 for generic
 
     """
@@ -43,7 +43,7 @@ async def add_promotion_api(request: Request, bot_id: int, promo: BotPromotionPa
 @router.patch("/bots/{bot_id}/promotions", response_model = APIResponse, responses = {
     400: {"model": APIResponse}
 })
-async def edit_promotion(request: Request, bot_id: int, promo: BotPromotion, Authorization: str = Header("INVALID_API_TOKEN")):
+async def edit_promotion(request: Request, bot_id: int, promo: BotPromotion, Authorization: str = Header("BOT_TOKEN")):
     """Edits an promotion for a bot given its promotion ID.
 
     **API Token**: You can get this by clicking your bot and clicking edit and scrolling down to API Token or clicking APIWeb
@@ -65,8 +65,8 @@ async def edit_promotion(request: Request, bot_id: int, promo: BotPromotion, Aut
 @router.delete("/bots/{bot_id}/promotions", response_model = APIResponse, responses = {
     400: {"model": APIResponse}
 })
-async def delete_promotion(request: Request, bot_id: int, promo: BotPromotionDelete, Authorization: str = Header("INVALID_API_TOKEN")):
-    """Deletes a promotion for a bot or deletes all promotions from a bot (WARNING: DO NOT DO THIS UNLESS YOU KNOW WHAT YOU ARE DOING).
+async def delete_promotion(request: Request, bot_id: int, promo: BotPromotionDelete, Authorization: str = Header("BOT_TOKEN")):
+    """Deletes a promotion for a bot or deletes all promotions from a bot
 
     **API Token**: You can get this by clicking your bot and clicking edit and scrolling down to API Token or clicking APIWeb
 
@@ -86,7 +86,7 @@ async def delete_promotion(request: Request, bot_id: int, promo: BotPromotionDel
     return {"done":  True, "reason": None}
 
 @router.get("/bots/{bot_id}/token")
-async def get_bot_token(request: Request, bot_id: int, user_id: int, Authorization: str = Header("INVALID_API_TOKEN")):
+async def get_bot_token(request: Request, bot_id: int, user_id: int, Authorization: str = Header("USER_TOKEN")):
     """
     Gets a bot token given a user token. 401 = Invalid API Token, 403 = Forbidden (not owner of bot or staff)
     """
@@ -99,11 +99,11 @@ async def get_bot_token(request: Request, bot_id: int, user_id: int, Authorizati
     return await db.fetchrow("SELECT api_token FROM bots WHERE bot_id = $1", bot_id)
 
 @router.patch("/bots/{bot_id}/token", response_model = APIResponse)
-async def regenerate_bot_token(request: Request, bot_id: int, Authorization: str = Header("INVALID_API_TOKEN")):
+async def regenerate_bot_token(request: Request, bot_id: int, Authorization: str = Header("BOT_TOKEN")):
     """
-    Regenerate the Bot API token
+    Regenerates the Bot token
 
-    **Bot API Token**: You can get this by clicking your bot and clicking edit and clicking Show (under API Token section)
+    **Bot Token**: You can get this by clicking your bot and clicking edit and clicking Show (under API Token section)
     """
     id = await bot_auth(bot_id, Authorization)
     if id is None:
@@ -173,7 +173,7 @@ async def random_bots_api(request: Request):
     return bot
 
 @router.get("/bots/{bot_id}", response_model = Bot, dependencies=[Depends(RateLimiter(times=5, minutes=3))])
-async def get_bot_api(request: Request, bot_id: int, Authorization: str = Header("INVALID_API_TOKEN")):
+async def get_bot_api(request: Request, bot_id: int, Authorization: str = Header("BOT_TOKEN")):
     """Gets bot information given a bot ID. If not found, 404 will be returned. If a proper API Token is provided, sensitive information (System API Events will also be provided)"""
     api_ret = await db.fetchrow("SELECT bot_id AS id, description, tags, html_long_description, long_description, servers AS server_count, shard_count, shards, prefix, invite, invite_amount, features, bot_library AS library, state, website, discord AS support, github, user_count, votes, css, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", bot_id)
     if api_ret is None:
@@ -215,7 +215,7 @@ async def get_bot_api(request: Request, bot_id: int, Authorization: str = Header
     return api_ret
 
 @router.post("/bots/{bot_id}", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=5, minutes=1))])
-async def add_bot_api(request: Request, bt: BackgroundTasks, bot_id: int, bot: BotAdd, Authorization: str = Header("INVALID_API_TOKEN")):
+async def add_bot_api(request: Request, bt: BackgroundTasks, bot_id: int, bot: BotAdd, Authorization: str = Header("USER_TOKEN_OR_BOTBLOCK_ADD_KEY")):
     if secure_strcmp(Authorization, bb_add_key):
         bot.oauth_enforced = True # Botblock add key, enforce oauth
     else:
@@ -241,7 +241,7 @@ async def add_bot_api(request: Request, bt: BackgroundTasks, bot_id: int, bot: B
     return ORJSONResponse({"done": False, "reason": rc[0],"code": rc[1]}, status_code = 400)
 
 @router.patch("/bots/{bot_id}", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=5, minutes=1))])
-async def edit_bot_api(request: Request, bt: BackgroundTasks, bot_id: int, bot: BotEdit, Authorization: str = Header("INVALID_API_TOKEN")):
+async def edit_bot_api(request: Request, bt: BackgroundTasks, bot_id: int, bot: BotEdit, Authorization: str = Header("USER_TOKEN_OR_BOTBLOCK_EDIT_KEY")):
     """
     Edits a bot, the owner here should be the owner editing the bot
     """
@@ -277,7 +277,7 @@ async def get_bot_reviews(request: Request, bot_id: int):
     return {"reviews": reviews[0], "average_stars": reviews[1]}
 
 @router.patch("/bots/{bot_id}/reviews/{rid}/votes", response_model = APIResponse)
-async def upvote_review_api(request: Request, bot_id: int, rid: uuid.UUID, vote: BotReviewVote, Authorization: str = Header("INVALID_API_TOKEN")):
+async def upvote_review_api(request: Request, bot_id: int, rid: uuid.UUID, vote: BotReviewVote, Authorization: str = Header("USER_TOKEN")):
     id = await user_auth(vote.user_id, Authorization)
     vote.user_id = int(vote.user_id)
     if id is None:
@@ -313,7 +313,7 @@ async def get_bot_commands_api(request:  Request, bot_id: int):
     return cmd
 
 @router.post("/bots/{bot_id}/commands", response_model = BotCommandAddResponse, dependencies=[Depends(RateLimiter(times=20, minutes=1))])
-async def add_bot_command_api(request: Request, bot_id: int, command: BotCommandAdd, Authorization: str = Header("INVALID_API_TOKEN"), force_add: Optional[bool] = False):
+async def add_bot_command_api(request: Request, bot_id: int, command: BotCommandAdd, Authorization: str = Header("BOT_TOKEN"), force_add: Optional[bool] = False):
     """
         Self explaining command. Note that if force_add is set, the API will not check if your command already exists and will forcefully add it, this may lead to duplicate commands on your bot. If ret_id is not set, you will not get the command id back in the api response
     """
@@ -333,7 +333,7 @@ async def add_bot_command_api(request: Request, bot_id: int, command: BotCommand
     return {"done": True, "reason": None, "id": id}
 
 @router.patch("/bots/{bot_id}/commands", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=20, minutes=1))])
-async def edit_bot_command_api(request: Request, bot_id: int, command: BotCommandEdit, Authorization: str = Header("INVALID_API_TOKEN")):
+async def edit_bot_command_api(request: Request, bot_id: int, command: BotCommandEdit, Authorization: str = Header("BOT_TOKEN")):
     if command.slash not in [0, 1, 2]:
         return ORJSONResponse({"done":  False, "reason": "UNSUPPORTED_MODE"}, status_code = 400)
 
@@ -353,7 +353,7 @@ async def edit_bot_command_api(request: Request, bot_id: int, command: BotComman
     return {"done": True, "reason": None}
 
 @router.delete("/bots/{bot_id}/commands", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=20, minutes=1))])
-async def delete_bot_command_api(request: Request, bot_id: int, command: BotCommandDelete, Authorization: str = Header("INVALID_API_TOKEN")):
+async def delete_bot_command_api(request: Request, bot_id: int, command: BotCommandDelete, Authorization: str = Header("BOT_TOKEN")):
     id = await bot_auth(bot_id, Authorization)
     if id is None:
         return abort(401)
@@ -361,7 +361,7 @@ async def delete_bot_command_api(request: Request, bot_id: int, command: BotComm
     return {"done": True, "reason": None}
 
 @router.get("/bots/{bot_id}/votes", response_model = BotVoteCheck, dependencies=[Depends(RateLimiter(times=5, minutes=1))])
-async def get_votes_api(request: Request, bot_id: int, user_id: Optional[int] = None, Authorization: str = Header("INVALID_API_TOKEN")):
+async def get_votes_api(request: Request, bot_id: int, user_id: Optional[int] = None, Authorization: str = Header("BOT_TOKEN")):
     """Endpoint to check amount of votes a user has."""
     if user_id is None:
         return dict((await db.fetchrow("SELECT votes FROM bots WHERE bot_id = $1", bot_id))) | {"vote_epoch": 0, "voted": False, "time_to_vote": 1, "vote_right_now": False}
@@ -384,7 +384,7 @@ async def get_votes_api(request: Request, bot_id: int, user_id: Optional[int] = 
     return {"votes": voter_count, "voted": voter_count != 0, "vote_epoch": vote_epoch, "time_to_vote": time_to_vote, "vote_right_now": time_to_vote == 0}
 
 @router.get("/bots/{bot_id}/votes/timestamped", response_model = BotVotesTimestamped)
-async def timestamped_get_votes_api(request: Request, bot_id: int, user_id: Optional[int] = None, Authorization: str = Header("INVALID_API_TOKEN")):
+async def timestamped_get_votes_api(request: Request, bot_id: int, user_id: Optional[int] = None, Authorization: str = Header("BOT_TOKEN")):
     """Endpoint to check amount of votes a user has with timestamps. This does not return whether a user can vote"""
     id = await bot_auth(bot_id, Authorization)
     if id is None:
@@ -399,7 +399,7 @@ async def timestamped_get_votes_api(request: Request, bot_id: int, user_id: Opti
     return {"timestamped_votes": ret}
 
 @router.post("/bots/{bot_id}/stats", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=5, minutes=1))])
-async def set_bot_stats_api(request: Request, bt: BackgroundTasks, bot_id: int, api: BotStats, Authorization: str = Header("INVALID_API_TOKEN")):
+async def set_bot_stats_api(request: Request, bt: BackgroundTasks, bot_id: int, api: BotStats, Authorization: str = Header("BOT_API_TOKEN")):
     """
     This endpoint allows you to set the guild + shard counts for your bot
     """
@@ -429,7 +429,7 @@ async def get_maintenance_mode(request: Request, bot_id: int):
     return ret
 
 @router.post("/bots/{bot_id}/maintenance", response_model = APIResponse)
-async def set_maintenance_mode(request: Request, bot_id: int, api: BotMaintenancePartial, Authorization: str = Header("INVALID_API_TOKEN")):
+async def set_maintenance_mode(request: Request, bot_id: int, api: BotMaintenancePartial, Authorization: str = Header("BOT_TOKEN")):
     """This is just an endpoing for enabling or disabling maintenance mode. As of the new API Revamp, this is the only way to enable or disable maintenance mode as of right now
 
     **API Token**: You can get this by clicking your bot and clicking edit and scrolling down to API Token
@@ -502,12 +502,15 @@ async def get_user_api(request: Request, user_id: int):
     return user_ret
 
 @router.post("/users/{user_id}/servers/prepare", dependencies=[Depends(RateLimiter(times=1, seconds=30))], response_model = ServerListAuthed)
-async def prepare_servers_api(request: Request, user_id: int, data: ServerCheck):
+async def prepare_servers_api(request: Request, user_id: int, data: ServerCheck, Authorization: str = Header("USER_TOKEN")):
     """
     Prepares a user to add servers and returns available servers for said user. Scopes must have guild permission
 
     This request may change the access token and this should be set on the client and will be returned in the json response as well
     """
+    id = await user_auth(user_id, Authorization)
+    if id is None:
+        return abort(401)
     valid = {}
     access_token = await discord_o.access_token_check(data.scopes, data.access_token.dict())
     request.session["access_token"] = access_token
@@ -535,15 +538,14 @@ async def prepare_servers_api(request: Request, user_id: int, data: ServerCheck)
     return {"servers": valid, "access_token": access_token}
 
 @router.patch("/users/{user_id}/description", response_model = APIResponse)
-async def set_user_description_api(request: Request, user_id: int, desc: UserDescEdit, Authorization: str = Header("INVALID_API_TOKEN")):
-    id = await user_auth(user_id, Authorization)
+async def set_user_description_api(request: Request, user_id: int, desc: UserDescEdit, Authorization: str = Header("USER_TOKEN")):
     if id is None:
         return abort(401)
     await db.execute("UPDATE users SET description = $1 WHERE user_id = $2", desc.description, user_id)
     return {"done": True, "reason": None}
 
 @router.patch("/users/{user_id}/token", response_model = APIResponse)
-async def regenerate_user_token(request: Request, user_id: int, Authorization: str = Header("INVALID_API_TOKEN")):
+async def regenerate_user_token(request: Request, user_id: int, Authorization: str = Header("USER_TOKEN")):
     """Regenerate the User API token
 
     ** User API Token**: You can get this by clicking your profile and scrolling to the bottom and you will see your API Token
