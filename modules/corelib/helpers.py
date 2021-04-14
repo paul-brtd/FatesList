@@ -6,6 +6,7 @@ and/or setting bot stats and voting for a bot
 from .imports import *
 from .events import *
 from .auth import *
+from .cache import *
 
 async def get_maint(bot_id: str) -> Union[bool, Optional[dict]]:
     api_data = await db.fetchrow("SELECT type, reason, epoch FROM bot_maint WHERE bot_id = $1", bot_id)
@@ -88,3 +89,53 @@ async def invite_bot(bot_id: int, bt: BackgroundTasks):
 
 async def invite_updater_bt(bot_id, invite_amount):
     return await db.execute("UPDATE bots SET invite_amount = $1 WHERE bot_id = $2", invite_amount, bot_id)
+
+# Check vanity of bot 
+async def vanity_bot(vanity: str, compact = False):
+    t = await db.fetchrow("SELECT type, redirect FROM vanity WHERE lower(vanity_url) = $1", vanity.lower())
+    if t is None:
+        return None
+    if t["type"] == 1:
+        type = "bot"
+    else:
+        type = "profile"
+    if compact:
+        return type, str(t["redirect"])
+    return int(t["redirect"]), type
+
+async def parse_index_query(fetch: List[asyncpg.Record]) -> list:
+    """
+    Parses a index query to a list of partial bots
+    """
+    lst = []
+    for bot in fetch:
+        try:
+            bot_info = await get_bot(bot["bot_id"])
+            if bot_info is not None:
+                bot = dict(bot)
+                votes = bot["votes"]
+                bot["bot_id"] = str(bot["bot_id"])
+                servers = bot["servers"]
+                del bot["votes"]
+                del bot["servers"]
+                banner = bot["banner"]
+                del bot["banner"]
+                if bot_info.get("avatar") is None:
+                    bot_info["avatar"] = ""
+                lst.append({"avatar": bot_info["avatar"].replace("?size=1024", "?size=128"), "username": bot_info["username"], "votes": human_format(votes), "servers": human_format(servers), "description": bot["description"], "banner": banner.replace("\"", "").replace("'", "").replace("http://", "https://").replace("(", "").replace(")", "").replace("file://", "")} | bot | bot_info)
+        except:
+            continue
+    return lst
+
+async def do_index_query(add_query: str = "", state: int = 0, limit: Optional[int] = 12) -> List[asyncpg.Record]:
+    """
+    Performs a 'index' query which can also be used by other things as well
+    """
+    base_query = f"SELECT description, banner, state, votes, servers, bot_id, invite, nsfw FROM bots WHERE state = {state}"
+    if limit:
+        end_query = f"DESC LIMIT {limit}"
+    else:
+        end_query = ""
+    fetch = await db.fetch(" ".join((base_query, add_query, end_query)))
+    return await parse_index_query(fetch)
+

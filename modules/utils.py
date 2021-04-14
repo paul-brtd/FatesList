@@ -117,4 +117,3 @@ def ireplacem(replace_tuple, text):
 
 # Some replace tuples
 js_rem_tuple = (("onclick", ""), ("onhover", ""), ("script", ""), ("onload", ""))
-

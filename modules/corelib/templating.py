@@ -1,5 +1,5 @@
 """
-Code for rendering templates
+Fates List Templating System
 """
 
 from .imports import *

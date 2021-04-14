@@ -77,7 +77,7 @@ async def features_view(request: Request, name: str):
     feature_bots = (f"SELECT description, banner, votes, servers, bot_id, invite FROM bots WHERE ('{str(name)}' = ANY(features)) and (state = 0 or state = 6) ORDER BY votes DESC;")
     print(feature_bots)
     bots = await db.fetch(feature_bots)
-    bot_obj = await parse_bot_list(bots)
+    bot_obj = await parse_index_query(bots)
     return await templates.TemplateResponse("feature.html", {"request": request, "name": name, "feature": features[name], "bots": bot_obj})
 
 @router.get("/fates/stats")

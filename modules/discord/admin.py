@@ -4,12 +4,7 @@ router = APIRouter(
     prefix = "/admin",
     tags = ["Admin"],
     include_in_schema = False
-)
-
-async def _admin_get_bot(cond: str):
-    temp = await db.fetch(f"SELECT description, banner,votes,servers,bot_id,invite FROM bots WHERE {cond}") # Get the bota
-    return await parse_bot_list(temp) # Parse it
-    
+)    
 
 @router.get("/console")
 async def admin_dashboard(request: Request, stats: Optional[int] = 0):
@@ -24,12 +19,12 @@ async def admin_dashboard(request: Request, stats: Optional[int] = 0):
             staff = is_staff(staff_roles, user.roles, 2)
             if not staff[0]:
                 return RedirectResponse("/", status_code = 303)
-        certified = await _admin_get_bot("state = 6") # State 0 and state 6 are approved and certified
+        certified = await do_index_query(state = 6, limit = None) # State 0 and state 6 are approved and certified
         bot_amount = await db.fetchval("SELECT COUNT(1) FROM bots WHERE state = 0 OR state = 6")
-        queue = await _admin_get_bot("state = 1")
-        under_review = await _admin_get_bot("state = 5")
-        denied = await _admin_get_bot("state = 2")
-        banned = await _admin_get_bot("state = 4")
+        queue = await do_index_query(state = 1, limit = None)
+        under_review = await do_index_query(state = 5, limit = None)
+        denied = await do_index_query(state = 2, limit = None)
+        banned = await do_index_query(state = 4, limit = None)
         form = await Form.from_formdata(request)
         return await templates.TemplateResponse("admin_stats.html",{"request": request, "certified": certified, "bot_amount": bot_amount, "queue": queue, "denied": denied, "banned": banned, "under_review": under_review, "admin": stats != 1 and staff[1] == 4, "mod": stats != 1 and staff[1] == 3, "owner": stats != 1 and staff[1] == 5, "bot_review": stats != 1 and staff[1] == 2, "form": form, "stats": stats == 1})
     else:

@@ -49,7 +49,7 @@ async def profile_of_user(request: Request, user_id: int):
             query = base_query + "WHERE bot_id = $1 ORDER BY votes"
         data = await db.fetchrow(query, bid)
         fetchq.append(data)
-    user_bots = await parse_bot_list(fetchq)
+    user_bots = await parse_index_query(fetchq)
     if personal:
         user_info = await db.fetchrow("SELECT api_token, badges, description, coins FROM users WHERE user_id = $1", user_id)
     else:
