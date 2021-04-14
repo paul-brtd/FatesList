@@ -186,6 +186,7 @@ class Bot(BaseUser):
     donate: Optional[str] = None
     privacy_policy: Optional[str] = None
     nsfw: bool
+    banner: Optional[str] = None
 
 class BotPartial(BaseUser):
     description: str

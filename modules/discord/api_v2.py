@@ -175,7 +175,7 @@ async def random_bots_api(request: Request):
 @router.get("/bots/{bot_id}", response_model = Bot, dependencies=[Depends(RateLimiter(times=5, minutes=3))])
 async def get_bot_api(request: Request, bot_id: int):
     """Gets bot information given a bot ID. If not found, 404 will be returned."""
-    api_ret = await db.fetchrow("SELECT bot_id AS id, description, tags, html_long_description, long_description, servers AS server_count, shard_count, shards, prefix, invite, invite_amount, features, bot_library AS library, state, website, discord AS support, github, user_count, votes, css, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", bot_id)
+    api_ret = await db.fetchrow("SELECT banner, bot_id AS id, description, tags, html_long_description, long_description, servers AS server_count, shard_count, shards, prefix, invite, invite_amount, features, bot_library AS library, state, website, discord AS support, github, user_count, votes, css, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", bot_id)
     if api_ret is None:
         return abort(404)
     api_ret = dict(api_ret)
@@ -202,8 +202,19 @@ async def get_bot_api(request: Request, bot_id: int):
         api_ret["vanity"] = vanity["vanity_url"]
     return api_ret
 
+@router.get("/bots/{bot_id}/raw")
+async def get_raw_bot_api(request: Request, bot_id: int, bt: BackgroundTasks):
+    """
+    Gets the raw given to the template with a few differences (bot_id being string and not int and passing auth manually to the function (coming soon) as the API aims to be as stateless as possible)
+
+    Note that you likely want the Get Bot API and not this in most cases
+
+    This API is prone to change as render_bot will keep changing
+    """
+    return await render_bot(request, bt, bot_id, api = True)
+
 @router.get("/bots/{bot_id}/events", response_model = BotEvents)
-async def get_bot_events_api(request: Request, bot_id: int, exclude: Optional[list] = Query(None), filter: Optional[list] = Query(None), Authorization: str = Header("BOT_TOKEN_OR_TEST_MANAGER_KEY")):
+async def get_bot_events_api(request: Request, bot_id: int, exclude: Optional[list] = None, filter: Optional[list] = None, Authorization: str = Header("BOT_TOKEN_OR_TEST_MANAGER_KEY")):
     print(filter, exclude)
     if secure_strcmp(Authorization, test_server_manager_key):
         pass

@@ -42,16 +42,16 @@ def gen_owner_html(owners_lst: tuple):
             first_done = True
     return owners_html
 
-async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, review: bool, widget: bool):
+async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bool):
     
-    try:
-        bot = dict(await db.fetchrow("SELECT js_whitelist, api_token, prefix, shard_count, state, description, bot_library AS library, tags, banner, website, votes, servers, bot_id, discord AS support, banner, github, features, invite_amount, css, html_long_description AS html_ld, long_description, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", bot_id))
-    except:
+    bot = await db.fetchrow("SELECT prefix, shard_count, state, description, bot_library AS library, tags, banner, website, votes, servers, bot_id, discord AS support, banner, github, features, invite_amount, css, html_long_description AS html_ld, long_description, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", bot_id)
+    if not bot:
+        if api:
+            return abort(404)
         return await templates.e(request, "Bot Not Found")
+    bot = dict(bot)
     owners = await db.fetch("SELECT owner FROM bot_owner WHERE bot_id = $1", bot_id)
     
-    if bot is None:
-        return await templates.e(request, "Bot Not Found")
 
     if bot["html_ld"]:
         ldesc = bot['long_description']
@@ -62,15 +62,14 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, review:
     long_desc_replace_tuple = (("<h1", "<h2 style='text-align: center'"), ("h2", "h3"), ("h4", "h5"), ("h6", "p"))
     ldesc = ireplacem(long_desc_replace_tuple, ldesc)
 
-    if widget:
-        bot_admin = False
+    if "userid" in request.session.keys():
+        bot_admin = await is_bot_admin(int(bot_id), int(request.session.get("userid"))) 
     else:
-        if "userid" in request.session.keys():
-            bot_admin = await is_bot_admin(int(bot_id), int(request.session.get("userid"))) 
-        else:
-            bot_admin = False
+        bot_admin = False
     if not bot_admin:
         bot["api_token"] = None
+    else:
+        bot["api_token"] = await db.fetchval("SELECT api_token FROM bots WHERE bot_id = $1", bot_id)
 
     if bot["banner"]:
         banner = bot["banner"].replace(" ", "%20").replace("\n", "")
@@ -100,14 +99,28 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, review:
         return await templates.e(request, "Bot Not Found")
     _tags_fixed_bot = [tag for tag in tags_fixed if tag["id"] in bot["tags"]]
     form = await Form.from_formdata(request)
-    bt.add_task(add_ws_event, bot_id, {"payload": "event", "id": str(uuid.uuid4()), "event": "view_bot", "context": {"user": request.session.get('userid'), "widget": widget}})
-    if widget:
-        f = "widget.html"
-        reviews = [0, 1]
+    bt.add_task(add_ws_event, bot_id, {"payload": "event", "id": str(uuid.uuid4()), "event": "view_bot", "context": {"user": request.session.get('userid'), "widget": False}})
+    reviews = await parse_reviews(bot_id)
+    data = {"bot": bot, "bot_id": bot_id, "tags_fixed": _tags_fixed_bot, "form": form, "promos": promos, "maint": maint, "bot_admin": bot_admin, "guild": main_server, "botp": True, "bot_reviews": reviews[0], "average_rating": reviews[1], "replace_last": replace_last}
+
+    if not api:
+        return await templates.TemplateResponse("bot.html", {"request": request} | data)
     else:
-        f = "bot.html"
-        reviews = await parse_reviews(bot_id)
-    return await templates.TemplateResponse(f, {"request": request, "bot": bot, "bot_id": bot_id, "tags_fixed": _tags_fixed_bot, "form": form, "avatar": request.session.get("avatar"), "promos": promos, "maint": maint, "bot_admin": bot_admin, "review": review, "guild": main_server, "botp": True, "bot_reviews": reviews[0], "average_rating": reviews[1], "replace_last": replace_last})
+        data["bot_id"] = str(bot_id)
+        return data
+
+async def render_bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, api: bool):
+    bot = await db.fetchrow("SELECT bot_id, servers, votes FROM bots WHERE bot_id = $1", bot_id)
+    if not bot:
+        if api:
+            return abort(404)
+        return "No Bot Found, cannot display wifget"
+    bot = dict(bot)
+    bot["votes"] = human_format(bot["votes"])
+    bot["servers"] = human_format(bot["servers"])
+    bt.add_task(add_ws_event, bot_id, {"payload": "event", "id": str(uuid.uuid4()), "event": "view_bot", "context": {"user": request.session.get('userid'), "widget": True}})
+    data = {"bot": bot, "user": await get_bot(bot_id)}
+    return await templates.TemplateResponse("widget.html", {"request": request} | data)
 
 async def render_search(request: Request, q: str, api: bool):
     if q == "":

@@ -35,7 +35,7 @@ async def vanity_bot_uri(request: Request, bt: BackgroundTasks, vanity: str):
         return await templates.e(request, "Invalid Vanity")
     if vurl[1] == "profile":
         return abort(404)
-    return await render_bot(bt = bt, bot_id = vurl[0], review = False, widget = False, request = request)
+    return await render_bot(bt = bt, bot_id = vurl[0], request = request, api = False)
 
 @router.get("/{vanity}/edit")
 async def vanity_edit(request: Request, vanity: str, bt: BackgroundTasks):

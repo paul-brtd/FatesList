@@ -14,11 +14,11 @@ async def bot_rdir(request: Request):
 
 @router.get("/{bot_id}")
 async def bot_index(request: Request, bot_id: int, bt: BackgroundTasks):
-    return await render_bot(request, bt, bot_id, review = False, widget = False)
+    return await render_bot(request, bt, bot_id, api = False)
 
 @router.get("/{bot_id}/widget")
 async def bot_widget(request: Request, bot_id: int, bt: BackgroundTasks):
-    return await render_bot(request, bt, bot_id, review = False, widget = True)
+    return await render_bot_widget(request, bt, bot_id, api = False)
 
 @router.get("/{bot_id}/invite")
 async def bot_invite_and_log(request: Request, bot_id: int, bt: BackgroundTasks):
