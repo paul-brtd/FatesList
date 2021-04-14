@@ -101,10 +101,10 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
     form = await Form.from_formdata(request)
     bt.add_task(add_ws_event, bot_id, {"payload": "event", "id": str(uuid.uuid4()), "event": "view_bot", "context": {"user": request.session.get('userid'), "widget": False}})
     reviews = await parse_reviews(bot_id)
-    data = {"bot": bot, "bot_id": bot_id, "tags_fixed": _tags_fixed_bot, "form": form, "promos": promos, "maint": maint, "bot_admin": bot_admin, "guild": main_server, "botp": True, "bot_reviews": reviews[0], "average_rating": reviews[1], "replace_last": replace_last}
+    data = {"bot": bot, "bot_id": bot_id, "tags_fixed": _tags_fixed_bot, "promos": promos, "maint": maint, "bot_admin": bot_admin, "guild": main_server, "botp": True, "bot_reviews": reviews[0], "average_rating": reviews[1]}
 
     if not api:
-        return await templates.TemplateResponse("bot.html", {"request": request} | data)
+        return await templates.TemplateResponse("bot.html", {"request": request, "form": Form, "replace_last": replace_last} | data)
     else:
         data["bot_id"] = str(bot_id)
         return data
