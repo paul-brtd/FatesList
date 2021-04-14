@@ -41,4 +41,5 @@ from fastapi_limiter.depends import RateLimiter
 import lxml
 import io
 from numba import jit
+from numba.typed import Dict as NDict
 import modules.models.enums as enums

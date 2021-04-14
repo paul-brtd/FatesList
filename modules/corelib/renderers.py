@@ -7,6 +7,7 @@ from .permissions import *
 from .helpers import *
 from .templating import *
 from .events import *
+from .reviews import *
 
 async def render_index(request: Request, api: bool):
     top_voted = await do_index_query(add_query = "ORDER BY votes")
@@ -19,13 +20,13 @@ async def render_index(request: Request, api: bool):
         return base_json
 
 @jit(nopython = True)
-def gen_owner_html(owner_lst: dict):
+def gen_owner_html(owners_lst: tuple):
     """
     Generate the owner html, this is JIT'd for better performance
     """
     first_done = False
     last_done = False
-    owner_html = ""
+    owners_html = ""
     for i in range(0, len(owners_lst)):
         owner = owners_lst[i]
         if owner is None: 
@@ -34,11 +35,12 @@ def gen_owner_html(owner_lst: dict):
             owners_html += " and "
         elif first_done:
             owners_html += ", "
-        owners_html += f"<a class='long-desc-link' href='/profile/{owner['id']}'>{owner['username']}</a>"
+        owners_html += "<a class='long-desc-link' href='/profile/" + owner[0] + "'>" + owner[1] + "</a>"
         if i >= len(owners_lst) - 2: # Twi to get last guy
             last_done = True
         else:
             first_done = True
+    return owners_html
 
 async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, review: bool, widget: bool):
     
@@ -80,8 +82,8 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, review:
     promos = await get_promotions(bot["bot_id"])
     maint = await get_maint(bot["bot_id"])
 
-    owners_lst = [(await get_user(obj["owner"])) for obj in owners if obj["owner"] is not None]
-    owner_html = gen_owner_html(owners_lst)
+    owners_lst = tuple([(await get_user(obj["owner"], user_only = True)) for obj in owners if obj["owner"] is not None])
+    owners_html = gen_owner_html(owners_lst)
     if bot["features"] is None:
         features = []
     else:

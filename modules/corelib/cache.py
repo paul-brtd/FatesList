@@ -1,6 +1,6 @@
 from .imports import *
 
-async def _user_fetch(user_id: str, user_type: int) -> Optional[dict]:
+async def _user_fetch(user_id: str, user_type: int, user_only: bool = False) -> Optional[dict]:
     # Check if a suitable version is in the cache first before querying Discord
 
     CACHE_VER = 10 # Current cache ver
@@ -26,6 +26,8 @@ async def _user_fetch(user_id: str, user_type: int) -> Optional[dict]:
             elif cache.get("valid_user") and user_type == 1 and not cache["bot"]: # Valid users and user where user is requested or all users requested
                 fetch = True
             if fetch: # We got a match
+                if user_only:
+                    return user_id, cache["username"]
                 return {"id": user_id, "username": cache['username'], "avatar": cache['avatar'], "disc": cache["disc"], "status": cache["status"], "bot": cache["bot"]}
             return None # We got a bot, but not fitting in constraints
 
@@ -82,14 +84,16 @@ async def _user_fetch(user_id: str, user_type: int) -> Optional[dict]:
     elif user_type == 1 and valid_user and not bot:
         fetch = True
     if fetch:
+        if user_only:
+            return user_id, username
         return {"id": user_id, "username": username, "avatar": avatar, "disc": disc, "status": status, "bot": bot}
     return None
 
-async def get_user(user_id: int) -> Optional[dict]:
-    return await _user_fetch(str(int(user_id)), 1) # 1 means user
+async def get_user(user_id: int, user_only = False) -> Optional[dict]:
+    return await _user_fetch(str(int(user_id)), 1, user_only = user_only) # 1 means user
 
-async def get_bot(user_id: int) -> Optional[dict]:
-    return await _user_fetch(str(int(user_id)), 2) # 2 means bot
+async def get_bot(user_id: int, user_only = False) -> Optional[dict]:
+    return await _user_fetch(str(int(user_id)), 2, user_only = user_only) # 2 means bot
 
-async def get_any(user_id: int) -> Optional[dict]:
-    return await _user_fetch(str(int(user_id)), 3) # 3 means all
+async def get_any(user_id: int, user_only = False) -> Optional[dict]:
+    return await _user_fetch(str(int(user_id)), 3, user_only = user_only) # 3 means all
