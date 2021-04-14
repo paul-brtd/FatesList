@@ -19,34 +19,23 @@ async def add_ws_event(bot_id: int, ws_event: dict) -> None:
     await redis_db.hset(str(bot_id), key = "ws", value = orjson.dumps(curr_ws_events)) # Add it to redis
     await redis_db.publish(str(bot_id), orjson.dumps({id: ws_event})) # Publish it to consumers
 
-async def get_events(api_token: Optional[str] = None, bot_id: Optional[str] = None, event_id: Optional[uuid.UUID] = None):
-    if api_token is None and bot_id is None:
-        return {"events": []}
-    if api_token is None:
-        bid = await db.fetchrow("SELECT bot_id, servers FROM bots WHERE bot_id = $1", bot_id)
-    else:
-        bid = await db.fetchrow("SELECT bot_id, servers FROM bots WHERE api_token = $1", api_token)
-    if bid is None:
-        return {"events": []}
-    uid = bid["bot_id"]
+async def get_events(bot_id: int, filter: list = None, exclude: list = None):
     # As a replacement/addition to webhooks, we have API events as well to allow you to quickly get old and new events with their epoch
-    if event_id is not None:
-        api_data = await db.fetchrow("SELECT id, events FROM bot_api_event WHERE bot_id = $1 AND id = $2", uid, event_id)
-        if api_data is None:
-            return {"events": []}
-        event = api_data["events"]
-        return {"events": [{"id": uid,  "event": event[0], "epoch": event[1], "context": event[2]}]}
 
-    api_data = await db.fetch("SELECT id, events FROM bot_api_event WHERE bot_id = $1 ORDER BY id", uid)
-    if api_data == []:
-        return {"events": []}
-    events = []
-    for _event in api_data:
-        event = _event["events"]
-        uid = _event["id"]
-        events.append({"id": uid,  "event": event[0], "epoch": event[1], "context": orjson.loads(event[2])})
-    ret = {"events": events}
-    return ret
+    extra = ""
+    extra_params = []
+    i = 2 # Keep track of parameters
+    if filter:
+        extra = f"AND event = ANY(${i}::text[]) "
+        extra_params.append(filter)
+        i+=1
+    elif exclude:
+        extra += f"AND event != ANY(${i}::text[])"
+        extra_params.append(exclude)
+        i+=1
+    api_data = await db.fetch(f"SELECT bot_id, epoch, event, context, id FROM bot_api_event WHERE bot_id = $1 {extra} ORDER BY epoch", bot_id, *extra_params)
+    api_data = [{"bot_id": str(obj["bot_id"]), "epoch": str(obj["epoch"]), "event": obj["event"], "context": orjson.loads(obj["context"]), "id": obj["id"]} for obj in api_data]
+    return {"events": api_data}
 
 async def add_event(bot_id: int, event: str, context: dict, *, send_event = True):
     if type(context) == dict:
@@ -54,12 +43,11 @@ async def add_event(bot_id: int, event: str, context: dict, *, send_event = True
     else:
         raise TypeError("Event must be a dict")
 
-    new_event_data = [event, str(time.time()), orjson.dumps(context).decode()]
     id = uuid.uuid4()
     apitok = await db.fetchrow("SELECT api_token FROM bots WHERE bot_id = $1", bot_id)
     if apitok is None:
         return
-    asyncio.create_task(db.execute("INSERT INTO bot_api_event (id, bot_id, events) VALUES ($1, $2, $3)", id, bot_id, new_event_data))
+    asyncio.create_task(db.execute("INSERT INTO bot_api_event (bot_id, epoch, event, context, id) VALUES ($1, $2, $3, $4, $5)", bot_id, time.time(), event, orjson.dumps(context).decode("utf-8"), id))
     webh = await db.fetchrow("SELECT webhook, webhook_type FROM bots WHERE bot_id = $1", int(bot_id))
     if webh is not None and webh["webhook"] not in ["", None] and webh["webhook_type"] is not None and send_event:
         uri = webh["webhook"]

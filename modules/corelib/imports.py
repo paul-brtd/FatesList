@@ -1,5 +1,5 @@
 # Put all needed imports here
-from fastapi import Request, APIRouter, BackgroundTasks, Form as FForm, Header, WebSocket, WebSocketDisconnect, File, UploadFile, Depends
+from fastapi import Request, APIRouter, BackgroundTasks, Form as FForm, Header, WebSocket, WebSocketDisconnect, File, UploadFile, Depends, Query
 import aiohttp
 import asyncpg
 import datetime
@@ -7,6 +7,7 @@ import random
 import math
 import time
 import uuid
+import ast
 from fastapi.responses import HTMLResponse, RedirectResponse, ORJSONResponse
 from pydantic import BaseModel
 from modules.Oauth import Oauth

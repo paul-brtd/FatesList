@@ -125,9 +125,11 @@ CREATE TABLE user_payments (
 );
 
 CREATE TABLE bot_api_event (
-    id uuid primary key DEFAULT uuid_generate_v4(),
-    bot_id bigint not null,
-    events text[] not null
+    bot_id BIGINT, 
+    epoch BIGINT, 
+    event TEXT, 
+    context JSONB, 
+    id UUID
 );
 
 CREATE TABLE bot_promotions (

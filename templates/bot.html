@@ -576,19 +576,14 @@ function replyReview(el, id) {
 
 function deleteReview(rev_id) {
 	$.ajax({
-		type: 'DELETE',
-		url: `/api/bots/{{bot_id}}/reviews/${rev_id}?user_id={{userid}}`,
+		type: 'POST',
+		url: `/bots/{{bot_id}}/reviews/${rev_id}/delete`,
 		headers: {"Authorization": "{{user_token}}"},
 		processData: false,
 		contentType: 'application/json',
-		statusCode: {
-			303: function(data) {
-				window.location.href = data.redirect;
-			}
-		}
+	
 	});
 	modalShow("Success!", "Deleted Review Successfully")
-	window.location.reload()
 }
 
 function upvoteReview(rev_id) {

@@ -203,15 +203,15 @@ async def get_bot_api(request: Request, bot_id: int):
     return api_ret
 
 @router.get("/bots/{bot_id}/events", response_model = BotEvents)
-async def get_bot_events_api(request: Request, bot_id: int, Authorization: str = Header("BOT_TOKEN_OR_TEST_MANAGER_KEY")):
-    print(Authorization)
+async def get_bot_events_api(request: Request, bot_id: int, exclude: Optional[list] = Query(None), filter: Optional[list] = Query(None), Authorization: str = Header("BOT_TOKEN_OR_TEST_MANAGER_KEY")):
+    print(filter, exclude)
     if secure_strcmp(Authorization, test_server_manager_key):
         pass
     else:
         id = await bot_auth(bot_id, Authorization)
         if id is None:
             return abort(401)
-    return await get_events(bot_id = bot_id)
+    return await get_events(bot_id = bot_id, filter = filter, exclude = exclude)
 
 @router.post("/bots/{bot_id}", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=5, minutes=1))])
 async def add_bot_api(request: Request, bt: BackgroundTasks, bot_id: int, bot: BotAdd, Authorization: str = Header("USER_TOKEN_OR_BOTBLOCK_ADD_KEY")):
