@@ -22,7 +22,7 @@
         <div class="form-group" class="d-flex" style="margin: 15px auto; width: 85%;color: white; font-weight: bold; overflow-wrap: anywhere;">
    {% if mode == "edit" %}
    <section style="border-style: solid; border-radius: 4px 4px 4px 4px; padding-left: 30px; padding: 5px;">
-    <div style="margin 15px auto">
+    <div style="margin 15px auto;">
    {% if data.vanity != None %}
     <h6 style="color: white; margin-top: 1px !important;">Vanity URL: <span style="font-size: 14px; opacity: 0.9">https://fateslist.xyz/{{data.vanity}}</span></h6>
     {% endif %}
@@ -96,9 +96,8 @@
   </div>
   <div class="col-lg">
      <h5 style="font-weight: bold; margin-bottom: 15px;">Bot Settings</h5>
-     <label for="invite">Invite URL <span style="color: red; font-weight: bold" aria-hidden="true">*</span></label>
+     <label for="invite">Invite URL (Leave blank for automatically generated)<span style="color: red; font-weight: bold" aria-hidden="true">*</span></label>
       <input
-        required
         class="form-control fform"
         type="text"
         name="invite"
