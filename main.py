@@ -69,7 +69,7 @@ app.add_middleware(ProxyHeadersMiddleware)
 @app.exception_handler(HTTPException)
 @app.exception_handler(Exception)
 async def validation_exception_handler(request, exc):
-    return await FLError.error_handler(request, exc)
+    return await WebError.error_handler(request, exc)
 
 print("Loading discord modules for Fates List")
 # Include all the modules

@@ -78,7 +78,7 @@ class VanityAdmin(FADMIN):
     list_display = (redirect, vanity_url, type_vanity)
 
 class OwnerAdmin(FADMIN):
-    search_fields = ['bot_id']
+    search_fields = ['bot_id', 'owner']
 
 # Register your models here.
 admin.site.register(Bot, BotAdmin)

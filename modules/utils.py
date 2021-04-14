@@ -103,6 +103,11 @@ def ireplace(old, new, text):
         idx = index_l + len(new) 
     return text
 
+@jit
+def replace_last(string, delimiter, replacement):
+    start, _, end = string.rpartition(delimiter)
+    return start + replacement + end
+
 @jit(nopython = True)
 def ireplacem(replace_tuple, text):
     """Calls ireplace multiple times for a replace tuple of format ((old, new), (old, new))"""

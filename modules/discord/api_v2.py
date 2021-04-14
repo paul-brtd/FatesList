@@ -204,6 +204,7 @@ async def get_bot_api(request: Request, bot_id: int):
 
 @router.get("/bots/{bot_id}/events", response_model = BotEvents)
 async def get_bot_events_api(request: Request, bot_id: int, Authorization: str = Header("BOT_TOKEN_OR_TEST_MANAGER_KEY")):
+    print(Authorization)
     if secure_strcmp(Authorization, test_server_manager_key):
         pass
     else:

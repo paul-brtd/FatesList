@@ -22,11 +22,10 @@ async def bot_widget(request: Request, bot_id: int, bt: BackgroundTasks):
 
 @router.get("/{bot_id}/invite")
 async def bot_invite_and_log(request: Request, bot_id: int, bt: BackgroundTasks):
-    bot = await db.fetchrow("SELECT invite, invite_amount FROM bots WHERE bot_id = $1", bot_id)
-    if bot is None:
+    invite = await invite_bot(bot_id, bt)
+    if invite is None:
         return abort(404)
-    bt.add_task(invite_updater_bt, bot_id, bot["invite_amount"] + 1)
-    return RedirectResponse(bot["invite"])
+    return RedirectResponse(invite)
 
 #@router.get("/{bot_id}/banner")
 async def banner(request: Request, bot_id: int):
@@ -43,9 +42,6 @@ async def banner(request: Request, bot_id: int):
         return abort(400)
     banner = await banner.read()
     return StreamingResponse(io.BytesIO(banner), media_type = img.headers.get("Content-Type"))
-
-async def invite_updater_bt(bot_id, invite_amount):
-    return await db.execute("UPDATE bots SET invite_amount = $1 WHERE bot_id = $2", invite_amount, bot_id)
 
 @router.get("/{bot_id}/vote")
 async def vote_bot_get(request: Request, bot_id: int):

@@ -18,6 +18,9 @@ bootstrap_info = {
     }
 }
 
+builtins.manager = ConnectionManager()
+builtins.manager_chat = ConnectionManager()
+
 @router.get("/api/ws", response_model = Bootstrap, dependencies=[Depends(RateLimiter(times=5, minutes=1))])
 async def websocket_bootstrap(request: Request):
     """
