@@ -1,9 +1,12 @@
 from modules.core import get_bot, get_token, add_event
 import discord
-from config import bot_logs
+from config import bot_logs, staff_ping_add_role
 import asyncio
 
 async def add_bot_backend(user_id, bot_id, prefix, library, website, banner, support, long_description, description, tags, extra_owners, creation, invite, features, html_long_description, css, donate, github, webhook, webhook_type, vanity, privacy_policy, nsfw):
+    await db.execute("DELETE FROM bots WHERE bot_id = $1", bot_id)
+    await db.execute("DELETE FROM bot_owner WHERE bot_id = $1", bot_id)
+    await db.execute("DELETE FROM vanity WHERE redirect = $1", bot_id)
     await db.execute("""INSERT INTO bots (
             bot_id, prefix, bot_library,
             invite, website, banner, 
@@ -34,12 +37,6 @@ async def add_bot_backend(user_id, bot_id, prefix, library, website, banner, sup
     await add_event(bot_id, "add_bot", {}) # Send a add_bot event to be succint and complete 
     owner = int(user_id)
     channel = client.get_channel(bot_logs)
-    while True:
-        if channel is None:
-            await asyncio.sleep(1)
-            channel = client.get_channel(bot_logs)
-        else:
-            break
     bot_name = (await get_bot(bot_id))["username"]
     add_embed = discord.Embed(title="New Bot!", description=f"<@{owner}> added the bot <@{bot_id}>({bot_name}) to queue!", color=0x00ff00)
     add_embed.add_field(name="Link", value=f"https://fateslist.xyz/bot/{bot_id}")

@@ -36,12 +36,6 @@ async def edit_bot_backend(user_id, bot_id, prefix, library, website, banner, su
                 await connection.execute("UPDATE vanity SET vanity_url = $1 WHERE redirect = $2", vanity, bot_id) # Update the vanity since bot already use it
     await add_event(bot_id, "edit_bot", {"user": str(user_id)}) # Send event
     channel = client.get_channel(bot_logs)
-    while True:
-        if channel is None:
-            await asyncio.sleep(1)
-            channel = client.get_channel(bot_logs)
-        else:
-            break
     owner = int(user_id)
     edit_embed = discord.Embed(title="Bot Edit!", description=f"<@{owner}> has edited the bot <@{bot_id}>!", color=0x00ff00)
     edit_embed.add_field(name="Link", value=f"https://fateslist.xyz/bot/{bot_id}")

@@ -1,4 +1,4 @@
-from .imports import *
+from .imports import orjson, aio_pika
 
 async def add_rmq_task(queue_name: str, data: dict):
     """
@@ -10,4 +10,3 @@ async def add_rmq_task(queue_name: str, data: dict):
         aio_pika.Message(orjson.dumps(data), delivery_mode=aio_pika.DeliveryMode.PERSISTENT),
         routing_key=queue_name
     )
-    print(" [x] Sent 'Hello World!'")

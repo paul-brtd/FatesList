@@ -22,6 +22,8 @@ class BotActions():
         rmq_dict = self.__dict__.copy()
         del rmq_dict["bt"]
         del rmq_dict["generated"]
+        del rmq_dict["custom_prefix"]
+        del rmq_dict["open_source"]
         rmq_dict["extra_owners"] = self.generated.extra_owners
         rmq_dict["tags"] = self.generated.tags
         rmq_dict["invite"] = self.generated.invite

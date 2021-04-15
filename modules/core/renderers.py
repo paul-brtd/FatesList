@@ -48,7 +48,7 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
     if not bot:
         if api:
             return abort(404)
-        return await templates.e(request, "Bot Not Found")
+        return await templates.e(request, "It might still be in our RabbitMQ queue waiting to be added to our database if you recently added it. Try reloading!", main = "Bot Not Found")
     bot = dict(bot)
     owners = await db.fetch("SELECT owner FROM bot_owner WHERE bot_id = $1", bot_id)
     
