@@ -225,7 +225,7 @@ async def get_bot_events_api(request: Request, bot_id: int, exclude: Optional[li
     return await get_events(bot_id = bot_id, filter = filter, exclude = exclude)
 
 @router.post("/bots/{bot_id}", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=5, minutes=1))])
-async def add_bot_api(request: Request, bt: BackgroundTasks, bot_id: int, bot: BotAdd, Authorization: str = Header("USER_TOKEN_OR_BOTBLOCK_ADD_KEY")):
+async def add_bot_api(request: Request, bot_id: int, bot: BotAdd, Authorization: str = Header("USER_TOKEN_OR_BOTBLOCK_ADD_KEY")):
     if secure_strcmp(Authorization, bb_add_key):
         bot.oauth_enforced = True # Botblock add key, enforce oauth
     else:
@@ -243,7 +243,6 @@ async def add_bot_api(request: Request, bt: BackgroundTasks, bot_id: int, bot: B
     bot_dict = bot.dict()
     bot_dict["bot_id"] = bot_id
     bot_dict["user_id"] = bot_dict["owner"]
-    bot_dict["bt"] = bt
     bot_adder = BotActions(bot_dict)
     rc = await bot_adder.add_bot()
     if rc is None:
@@ -251,7 +250,7 @@ async def add_bot_api(request: Request, bt: BackgroundTasks, bot_id: int, bot: B
     return ORJSONResponse({"done": False, "reason": rc[0],"code": rc[1]}, status_code = 400)
 
 @router.patch("/bots/{bot_id}", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=5, minutes=1))])
-async def edit_bot_api(request: Request, bt: BackgroundTasks, bot_id: int, bot: BotEdit, Authorization: str = Header("USER_TOKEN_OR_BOTBLOCK_EDIT_KEY")):
+async def edit_bot_api(request: Request, bot_id: int, bot: BotEdit, Authorization: str = Header("USER_TOKEN_OR_BOTBLOCK_EDIT_KEY")):
     """
     Edits a bot, the owner here should be the owner editing the bot
     """
@@ -272,7 +271,6 @@ async def edit_bot_api(request: Request, bt: BackgroundTasks, bot_id: int, bot: 
     bot_dict = bot.dict()
     bot_dict["bot_id"] = bot_id
     bot_dict["user_id"] = bot_dict["owner"]
-    bot_dict["bt"] = bt
     bot_editor = BotActions(bot_dict)
     rc = await bot_editor.edit_bot()
     if rc is None:

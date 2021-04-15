@@ -15,9 +15,6 @@ class BotActions():
 
     def __init__(self, bot):
         self.__dict__.update(bot) # Add all kwargs to function
-        if "bt" not in self.__dict__ or "user_id" not in self.__dict__:
-            raise SyntaxError("Background Task and User ID must be in dict")
-
         self.generated = self.GeneratedObject() # To keep things clean, make sure we always put changed properties in generated
 
     def gen_rabbit_dict(self):
@@ -138,8 +135,7 @@ class BotActions():
         if check is not None:
             return check # Returning a strung and not None means error to be returned to consumer
 
-        creation = time.time() # Creation Time
-
+        self.creation = time.time() # Creation Time
         await add_rmq_task("add_bot_queue", self.gen_rabbit_dict()) # Add to add bot RabbitMQ
 
     async def edit_bot(self):
