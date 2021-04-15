@@ -13,13 +13,9 @@ import importlib
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 from modules.core import *
 from config import *
-import orjson
 import os
-import aioredis
 from fastapi_limiter import FastAPILimiter
-from fastapi_limiter.depends import RateLimiter
 import logging
-from fastapi.exceptions import HTTPException
 from starlette.datastructures import URL
 from http import HTTPStatus
 
@@ -95,6 +91,10 @@ async def startup():
     await asyncio.sleep(4)
     builtins.redis_db = await aioredis.from_url('redis://localhost', db = 1)
     limiter.init(redis_db, identifier = rl_key_func)
+    builtins.rabbitmq = await aio_pika.connect_robust(
+        f"amqp://fateslist:{rabbitmq_pwd}@127.0.0.1/"
+    )
+
 
 @app.on_event("shutdown")
 async def close():

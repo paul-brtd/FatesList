@@ -21,8 +21,10 @@ import builtins
 from typing import Optional, List, Union
 from aiohttp_requests import requests
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from fastapi.exceptions import HTTPException
 import hashlib
 import aioredis
+import aio_pika
 import socket
 import contextvars
 from starlette.websockets import WebSocket, WebSocketDisconnect

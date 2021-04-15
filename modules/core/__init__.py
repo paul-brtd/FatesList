@@ -11,3 +11,4 @@ from .renderers import * # Import the renderers for bot, index etc.
 from .error import * # Import error handler
 from .reviews import * # Import review parser
 from .ratelimits import * # Import ratelimit handler
+from .rabbitmq import * # RabbitMQ

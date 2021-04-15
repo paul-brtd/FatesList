@@ -2,6 +2,7 @@ from .imports import *
 from .permissions import *
 from .events import *
 from .cache import *
+from .rabbitmq import *
 
 class BotActions():
     class GeneratedObject():
@@ -18,6 +19,16 @@ class BotActions():
             raise SyntaxError("Background Task and User ID must be in dict")
 
         self.generated = self.GeneratedObject() # To keep things clean, make sure we always put changed properties in generated
+
+    def gen_rabbit_dict(self):
+        self.creation = time.time() # Creation Time
+        rmq_dict = self.__dict__.copy()
+        del rmq_dict["bt"]
+        del rmq_dict["generated"]
+        rmq_dict["extra_owners"] = self.generated.extra_owners
+        rmq_dict["tags"] = self.generated.tags
+        rmq_dict["invite"] = self.generated.invite
+        return rmq_dict
 
     async def base_check(self) -> Optional[str]:
         """Perform basic checks for adding/editting bots. A check returning None means success, otherwise error should be returned to client"""
@@ -129,7 +140,7 @@ class BotActions():
 
         creation = time.time() # Creation Time
 
-        self.bt.add_task(self.add_bot_bt, int(self.user_id), self.bot_id, self.prefix, self.library, self.website, self.banner, self.support, self.long_description, self.description, self.generated.tags, self.generated.extra_owners, creation, self.generated.invite, self.features, self.html_long_description, self.css, self.donate, self.github, self.webhook, self.webhook_type, self.vanity, self.privacy_policy, self.nsfw) # Add bot to queue as background task
+        await add_rmq_task("add_bot_queue", self.gen_rabbit_dict()) # Add to add bot RabbitMQ
 
     async def edit_bot(self):
         """Edit a bot"""
@@ -137,91 +148,7 @@ class BotActions():
         if check is not None:
             return check
 
-        creation = time.time() # Creation Time
-        self.bt.add_task(self.edit_bot_bt, int(self.user_id), self.bot_id, self.prefix, self.library, self.website, self.banner, self.support, self.long_description, self.description, self.generated.tags, self.generated.extra_owners, creation, self.generated.invite, self.webhook, self.vanity, self.github, self.features, self.html_long_description, self.webhook_type, self.css, self.donate, self.privacy_policy, self.nsfw) # Add edit bot to queue as background task
-
-    @staticmethod
-    async def add_bot_bt(user_id, bot_id, prefix, library, website, banner, support, long_description, description, tags, extra_owners, creation, invite, features, html_long_description, css, donate, github, webhook, webhook_type, vanity, privacy_policy, nsfw):
-        await db.execute("""INSERT INTO bots (
-                bot_id, prefix, bot_library,
-                invite, website, banner, 
-                discord, long_description, description,
-                tags, votes, servers, shard_count,
-                created_at, api_token, features, 
-                html_long_description, css, donate,
-                github, webhook, webhook_type, 
-                privacy_policy, nsfw) VALUES(
-                $1, $2, $3,
-                $4, $5, $6,
-                $7, $8, $9,
-                $10, $11, $12,
-                $13, $14, $15,
-                $16, $17, $18,
-                $19, $20, $21,
-                $22, $23, $24)""", bot_id, prefix, library, invite, website, banner, support, long_description, description, tags, 0, 0, 0, int(creation), get_token(132), features, html_long_description, css, donate, github, webhook, webhook_type, privacy_policy, nsfw) # Add new bot info
-        if vanity.replace(" ", "") != '':
-            await db.execute("INSERT INTO vanity (type, vanity_url, redirect) VALUES ($1, $2, $3)", 1, vanity, bot_id) # Add new vanity if not empty string
-
-
-        async with db.acquire() as connection: # Acquire a connection
-            async with connection.transaction() as tr: # Use a transaction to prevent data loss
-                await connection.execute("INSERT INTO bot_owner (bot_id, owner, main) VALUES ($1, $2, $3)", bot_id, user_id, True) # Add new main bot owner
-                extra_owners_add = [(bot_id, owner, False) for owner in extra_owners] # Create list of extra owner tuples for executemany executemany
-                await connection.executemany("INSERT INTO bot_owner (bot_id, owner, main) VALUES ($1, $2, $3)", extra_owners_add) # Add in one step
-
-        await add_event(bot_id, "add_bot", {}) # Send a add_bot event to be succint and complete 
-        owner = int(user_id)
-        channel = client.get_channel(bot_logs)
-        bot_name = (await get_bot(bot_id))["username"]
-        add_embed = discord.Embed(title="New Bot!", description=f"<@{owner}> added the bot <@{bot_id}>({bot_name}) to queue!", color=0x00ff00)
-        add_embed.add_field(name="Link", value=f"https://fateslist.xyz/bot/{bot_id}")
-        try:
-            member = channel.guild.get_member(owner)
-            if member is not None:
-                await member.send(embed = add_embed) # Send user DM if possible
-
-        except:
-            pass
-        await channel.send(f"<@&{staff_ping_add_role}>", embed = add_embed) # Send message with add bot ping
-
-    @staticmethod
-    async def edit_bot_bt(user_id, bot_id, prefix, library, website, banner, support, long_description, description, tags, extra_owners, creation, invite, webhook, vanity, github, features, html_long_description, webhook_type, css, donate, privacy_policy, nsfw):
-        await db.execute("UPDATE bots SET bot_library=$2, webhook=$3, description=$4, long_description=$5, prefix=$6, website=$7, discord=$8, tags=$9, banner=$10, invite=$11, github = $12, features = $13, html_long_description = $14, webhook_type = $15, css = $16, donate = $17, privacy_policy = $18, nsfw = $19 WHERE bot_id = $1", bot_id, library, webhook, description, long_description, prefix, website, support, tags, banner, invite, github, features, html_long_description, webhook_type, css, donate, privacy_policy, nsfw) # Update bot with new info
-
-        async with db.acquire() as connection: # Acquire a connection
-            async with connection.transaction() as tr: # Make a transaction to afoid data loss
-                owners = await connection.fetch("SELECT owner FROM bot_owner where bot_id = $1 AND main = false", bot_id)
-                extra_owners_ignore = [] # Extra Owners to ignore because they have already been counted in the database (already extra owners)
-                extra_owners_delete = [] # Extra Owners to delete
-                extra_owners_add = [] # Extra Owners to add
-                for owner in owners: # Loop through owners and add to delete list if not in new extra owners
-                    if owner["owner"] not in extra_owners:
-                        extra_owners_delete.append((bot_id, owner["owner"]))
-                    else:
-                        extra_owners_ignore.append(owner["owner"]) # Ignore this user when adding users
-                await connection.executemany("DELETE FROM bot_owner WHERE bot_id = $1 AND owner = $2 AND main = false", extra_owners_delete) # Delete in one step
-                for owner in extra_owners:
-                    if owner not in extra_owners_ignore:
-                        extra_owners_add.append((bot_id, owner, False)) # If not in ignore list, add to add list
-                await connection.executemany("INSERT INTO bot_owner (bot_id, owner, main) VALUES ($1, $2, $3)", extra_owners_add) # Add in one step
-
-        async with db.acquire() as connection:
-            async with connection.transaction():
-                check = await connection.fetchrow("SELECT vanity FROM vanity WHERE redirect = $1", bot_id) # Check vanity existance
-                if check is None:
-                    if vanity.replace(" ", "") != '': # If not there for this bot, insert new one
-                        await connection.execute("INSERT INTO vanity (type, vanity_url, redirect) VALUES ($1, $2, $3)", 1, vanity, bot_id)
-                else:
-                    if vanity == '':
-                        vanity = None # If vanity is expty string, there is no vanity
-
-                    await connection.execute("UPDATE vanity SET vanity_url = $1 WHERE redirect = $2", vanity, bot_id) # Update the vanity since bot already use it
-        await add_event(bot_id, "edit_bot", {"user": str(user_id)}) # Send event
-        channel = client.get_channel(bot_logs)
-        owner = int(user_id)
-        edit_embed = discord.Embed(title="Bot Edit!", description=f"<@{owner}> has edited the bot <@{bot_id}>!", color=0x00ff00)
-        edit_embed.add_field(name="Link", value=f"https://fateslist.xyz/bot/{bot_id}")
-        await channel.send(embed = edit_embed) # Send message to channel
+        await add_rmq_task("edit_bot_queue", self.gen_rabbit_dict()) # Add to edit bot RabbitMQ
 
 class BotListAdmin():
 
