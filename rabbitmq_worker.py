@@ -1,12 +1,5 @@
 """
-    Deletes all user data and sets a deleted and banned flag to prevent login. Also removes user from extra owner in all bots, removes user from bot stats and vote timestamps
-
-    Usage:
-    Enter util folder using cd util/
-    Run python
-    
-    import deleteuserdata
-    deleteuserdata.run(USER_Id)
+    RabbitMQ worker
 """
 import asyncpg, asyncio, uvloop, aioredis
 import sys
