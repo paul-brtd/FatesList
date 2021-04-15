@@ -135,24 +135,14 @@ async def vote_for_bot_or_die(
 
 @router.post("/{bot_id}/delete")
 @csrf_protect
-async def delete_bot(request: Request, bot_id: int, confirmer: str = FForm("1")):
-    print(confirmer)
-    guild = client.get_guild(main_server)
-    channel = client.get_channel(bot_logs)
+async def delete_bot(request: Request, bot_id: int):
     if "userid" in request.session.keys():
         check = await is_bot_admin(int(bot_id), int(request.session.get("userid")))
         if check is None:
             return await templates.TemplateResponse("message.html", {"request": request, "message": "This bot doesn't exist in our database."})
         elif check == False:
             return await templates.TemplateResponse("message.html", {"request": request, "message": "You aren't the owner of this bot.", "context": "Only owners and admins can delete bots", "username": request.session.get("username", False)})
-    else:
-        return RedirectResponse("/", status_code = 303)
-    try:
-        if time.time() - int(float(confirmer)) > 30:
-            return await templates.TemplateResponse("message.html", {"request": request, "username": request.session.get("username"), "avatar": request.session.get("avatar"), "message": "Forbidden", "context": "You have taken too long to click the Delete Bot button and for your security, you will need to go back, refresh the page and try again"})
-    except:
-        return await templates.TemplateResponse("message.html", {"request": request, "username": request.session.get("username"), "avatar": request.session.get("avatar"), "message": "Forbidden", "context": "Invalid Confirm Code. Please go back and reload the page and if the problem still persists, please report it in the support server"})
-    await add_rmq_task("delete_bot_queue", {"user_id": int(request.session.get("userid")), "bot_id": bot_id})
+        await add_rmq_task("delete_bot_queue", {"user_id": int(request.session.get("userid")), "bot_id": bot_id})
     return RedirectResponse("/", status_code = 303)
 
 @router.post("/{bot_id}/ban")
