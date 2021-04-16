@@ -45,7 +45,7 @@ async def bot_edit(request: Request, bid: int):
         print(check)
         if not check:
             return abort(403)
-        fetch = dict(await db.fetchrow("SELECT bot_id, prefix, bot_library AS library, invite, website, banner, long_description, description, tags, webhook, webhook_type, discord AS support, api_token, banner, github, features, html_long_description, css, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", bid))
+        fetch = dict(await db.fetchrow("SELECT bot_id, prefix, bot_library AS library, invite, website, banner, long_description, description, tags, webhook, webhook_type, discord AS support, api_token, banner, github, features, long_description_type, css, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", bid))
         owners = await db.fetch("SELECT owner, main FROM bot_owner WHERE bot_id = $1", bid)
         print(owners)
         if owners is None:

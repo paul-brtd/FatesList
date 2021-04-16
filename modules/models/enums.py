@@ -31,3 +31,9 @@ class BotState(IntEnum):
     banned = 4, "Banned"
     under_review = 5, "Under Review"
     certified = 6, "Certified"
+
+class LongDescType(IntEnum):
+    _init_ = 'value __doc__'
+    html = 0, "HTML/Raw Description"
+    markdown_pymarkdown = 1, "Markdown using Python Markdown"
+    markdown_marked = 2, "Markdown using JavaScript Marked"

@@ -11,7 +11,7 @@ from pydantic import BaseModel
 import uuid
 import sys
 sys.path.append("modules/models") # Libraries should remove this
-import enums as enums
+import enums # as enums (for libraries)
 
 class BaseUser(BaseModel):
     """
@@ -162,7 +162,7 @@ class Bot(BaseUser):
     """
     description: str
     tags: list
-    html_long_description: bool
+    long_description_type: enums.LongDescType
     long_description: Optional[str] = None
     server_count: int
     shard_count: Optional[int] = 0

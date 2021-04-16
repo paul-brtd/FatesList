@@ -44,22 +44,22 @@ def gen_owner_html(owners_lst: tuple):
 
 async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bool):
     
-    bot = await db.fetchrow("SELECT prefix, shard_count, state, description, bot_library AS library, tags, banner, website, votes, servers, bot_id, discord AS support, banner, github, features, invite_amount, css, html_long_description AS html_ld, long_description, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", bot_id)
+    bot = await db.fetchrow("SELECT prefix, shard_count, state, description, bot_library AS library, tags, banner, website, votes, servers, bot_id, discord AS support, banner, github, features, invite_amount, css, long_description_type, long_description, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", bot_id)
     if not bot:
         if api:
-            return abort(404)
-        return await templates.e(request, "It might still be in our RabbitMQ queue waiting to be added to our database if you recently added it. Try reloading!", main = "Bot Not Found")
+            return abort(404) # If API, just regular 404 JSON
+        return await templates.e(request, "It might still be in our RabbitMQ queue waiting to be added to our database if you recently added it. Try reloading!", main = "Bot Not Found") # Otherwise HTML error
     bot = dict(bot)
-    owners = await db.fetch("SELECT owner FROM bot_owner WHERE bot_id = $1", bot_id)
+    owners = await db.fetch("SELECT owner FROM bot_owner WHERE bot_id = $1", bot_id) # Get all bot owners
     
 
-    if bot["html_ld"]:
-        ldesc = bot['long_description']
-    else:
+    if bot["long_description_type"] == enums.LongDescType.markdown_pymarkdown: # If we are using markdown
         ldesc = emd(markdown.markdown(bot['long_description'], extensions=["extra", "abbr", "attr_list", "def_list", "fenced_code", "footnotes", "tables", "admonition", "codehilite", "meta", "nl2br", "sane_lists", "toc", "wikilinks", "smarty", "md_in_html"]))
+    else:
+        ldesc = bot['long_description']
 
-    # Take the h1...h5 anad drop it one lower
-    long_desc_replace_tuple = (("<h1", "<h2 style='text-align: center'"), ("h2", "h3"), ("h4", "h5"), ("h6", "p"))
+        # Take the h1...h5 anad drop it one lower and fix peoples stupidity and some nice patches to the site to improve accessibility
+    long_desc_replace_tuple = (("<h1", "<h2 style='text-align: center'"), ("h2", "h3"), ("h4", "h5"), ("h6", "p"), ("<a", "<a class='long-desc-link ldlink'"), ("<!DOCTYPE", ""), ("html>", ""), ("<body", ""), ("div", "article"), (".click", ""), ("bootstrap.min.css", ""), ("bootstrap.css", ""), ("jquery.min.js", ""), ("jquery.js", ""), ("fetch(", ""))
     ldesc = ireplacem(long_desc_replace_tuple, ldesc)
 
     if "userid" in request.session.keys():
@@ -93,7 +93,7 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
         bot_features = replace_last(bot_features, ",", " and")
     if bot_info:
         bot = dict(bot)
-        bot = bot | {"votes": human_format(bot["votes"]), "servers": human_format(bot["servers"]), "banner": banner.replace("\"", "").replace("'", "").replace("http://", "https://").replace("(", "").replace(")", "").replace("file://", ""), "shards": human_format(bot["shard_count"]), "owners_html": owners_html, "features": bot_features, "long_description": ldesc.replace("window.location", "").replace("document.ge", ""), "user": (await get_bot(bot_id))}
+        bot = bot | {"votes": human_format(bot["votes"]), "servers": human_format(bot["servers"]), "banner": banner.replace("\"", "").replace("'", "").replace("http://", "https://").replace("(", "").replace(")", "").replace("file://", ""), "shards": human_format(bot["shard_count"]), "owners_html": owners_html, "features": bot_features, "long_description": ldesc.replace("window.location", "").replace("document.ge", ""), "user": (await get_bot(bot_id)), "long_description_type": bot["long_description_type"]}
         #await db.execute("UPDATE bots SET username_cached = $2 WHERE bot_id = $1", int(bot_id), bot_info["username"])   
     else:
         return await templates.e(request, "Bot Not Found")

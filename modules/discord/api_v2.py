@@ -180,7 +180,7 @@ async def random_bots_api(request: Request):
 @router.get("/bots/{bot_id}", response_model = Bot, dependencies=[Depends(RateLimiter(times=5, minutes=3))])
 async def get_bot_api(request: Request, bot_id: int):
     """Gets bot information given a bot ID. If not found, 404 will be returned."""
-    api_ret = await db.fetchrow("SELECT banner, bot_id AS id, description, tags, html_long_description, long_description, servers AS server_count, shard_count, shards, prefix, invite, invite_amount, features, bot_library AS library, state, website, discord AS support, github, user_count, votes, css, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", bot_id)
+    api_ret = await db.fetchrow("SELECT banner, bot_id AS id, description, tags, long_description_type, long_description, servers AS server_count, shard_count, shards, prefix, invite, invite_amount, features, bot_library AS library, state, website, discord AS support, github, user_count, votes, css, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", bot_id)
     if api_ret is None:
         return abort(404)
     api_ret = dict(api_ret)

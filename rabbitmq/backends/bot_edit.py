@@ -3,8 +3,8 @@ from modules.core import add_event
 from config import bot_logs
 import asyncio
 
-async def bot_edit_backend(user_id, bot_id, prefix, library, website, banner, support, long_description, description, tags, extra_owners, creation, invite, webhook, vanity, github, features, html_long_description, webhook_type, css, donate, privacy_policy, nsfw):
-    await db.execute("UPDATE bots SET bot_library=$2, webhook=$3, description=$4, long_description=$5, prefix=$6, website=$7, discord=$8, tags=$9, banner=$10, invite=$11, github = $12, features = $13, html_long_description = $14, webhook_type = $15, css = $16, donate = $17, privacy_policy = $18, nsfw = $19 WHERE bot_id = $1", bot_id, library, webhook, description, long_description, prefix, website, support, tags, banner, invite, github, features, html_long_description, webhook_type, css, donate, privacy_policy, nsfw) # Update bot with new info
+async def bot_edit_backend(user_id, bot_id, prefix, library, website, banner, support, long_description, description, tags, extra_owners, creation, invite, webhook, vanity, github, features, long_description_type, webhook_type, css, donate, privacy_policy, nsfw):
+    await db.execute("UPDATE bots SET bot_library=$2, webhook=$3, description=$4, long_description=$5, prefix=$6, website=$7, discord=$8, tags=$9, banner=$10, invite=$11, github = $12, features = $13, long_description_type = $14, webhook_type = $15, css = $16, donate = $17, privacy_policy = $18, nsfw = $19 WHERE bot_id = $1", bot_id, library, webhook, description, long_description, prefix, website, support, tags, banner, invite, github, features, long_description_type, webhook_type, css, donate, privacy_policy, nsfw) # Update bot with new info
 
     async with db.acquire() as connection: # Acquire a connection
         async with connection.transaction() as tr: # Make a transaction to afoid data loss

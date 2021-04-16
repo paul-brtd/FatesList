@@ -110,9 +110,12 @@ def replace_last(string, delimiter, replacement):
 
 @jit(nopython = True)
 def ireplacem(replace_tuple, text):
-    """Calls ireplace multiple times for a replace tuple of format ((old, new), (old, new))"""
+    """Calls ireplace multiple times for a replace tuple of format ((old, new), (old, new)). Can also support regular replace if third flag is set"""
     for replace in replace_tuple:
-        text = ireplace(replace[0], replace[1], text)
+        if text.startswith("C>"):
+            text = text.replace(replace[0], replace[1]).replace("C>", "")
+        else:
+            text = ireplace(replace[0], replace[1], text)
     return text
 
 # Some replace tuples

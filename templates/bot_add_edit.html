@@ -220,11 +220,12 @@
 	value="{{data.description}}"
       />
       <label 
-      for="html_long_description"
+      for="long_description_type"
       >Long Description Type (Click to change)</label>
-      <select id="html_long_description" name="html_long_description" class="form-control fform select-fl">
-              <option value="true" {% if data.html_long_description %}selected{%endif%}>HTML</option>
-              <option value="false" {% if not data.html_long_description %}selected{%endif%}>Markdown</option>
+      <select id="long_description_type" name="long_description_type" class="form-control fform select-fl">
+              <option value="0" {% if data.long_description_type == enums.LongDescType.html %}selected{%endif%}>HTML</option>
+	      <option value="1" {% if data.long_description_type == enums.LongDescType.markdown_pymarkdown %}selected{%endif%}>Markdown (python-markdown) - Use if unsure (faster)</option>
+	      <option value="2" {% if data.long_description_type == enums.LongDescType.markdown_marked %}selected{%endif%}>Markdown (marked) - Use if you need commonmark/GitHub markdown (slower)</option>
       </select>
       <label for="nsfw">NSFW Bot (Click to change)</label>
       <select id="nsfw" name="nsfw" class="form-control fform select-fl">
@@ -246,7 +247,7 @@
 	style="border-radius: 4px 4px 4px 4px !important;"
 	>{{data.long_description}}</textarea>
       <button type="button" class="btn btn-outline-light" style="margin-bottom: 20px;" onclick="previewLongDesc()">Preview</button><br/>
-      <small style="font-weight: bold; font-size: 15px; color: red;">You can only preview your long description 20 times every minute unless your bot is certified as this uses the preview API</small>
+      <small style="font-weight: bold; font-size: 15px; color: red;">You can only preview your long description 20 times every minute unless your bot is certified as this uses the preview API. THIS OPTION IS CURRENTLY LEGACY AND WILL BE UPDATED SOON. MARKED TYPE DOES NOT WITH THIS</small>
       <div id="ld-preview" style="display: block; min-height: 400px; overflow: auto; color: white; border-style: solid; border-radius: 4px 4px 4px 4px; margin-bottom: 20px; background: black; font-weight: normal; text-align: left;">
 	Your Long Description will appear here when you click the Preview button :)
       </div>
@@ -291,7 +292,7 @@
   {% endif %}
 <script>
 function previewLongDesc(){
-	html = document.querySelector("#html_long_description").value == "true";
+	html = document.querySelector("#long_description_type").value == "0";
 	ld = document.querySelector("#long_description").value;
 	if(ld == "")
 		return

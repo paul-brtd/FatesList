@@ -15,7 +15,7 @@ CREATE TABLE bots (
     webhook text,
     description text,
     long_description text,
-    html_long_description boolean default false,
+    long_description_type integer default 0,
     js_whitelist boolean default false,
     css text default '',
     prefix text,
