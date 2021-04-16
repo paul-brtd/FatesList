@@ -20,7 +20,6 @@ class BotActions():
     def gen_rabbit_dict(self):
         self.creation = time.time() # Creation Time
         rmq_dict = self.__dict__.copy()
-        del rmq_dict["bt"]
         del rmq_dict["generated"]
         del rmq_dict["custom_prefix"]
         del rmq_dict["open_source"]
@@ -138,7 +137,7 @@ class BotActions():
             return check # Returning a strung and not None means error to be returned to consumer
 
         self.creation = time.time() # Creation Time
-        await add_rmq_task("add_bot_queue", self.gen_rabbit_dict()) # Add to add bot RabbitMQ
+        await add_rmq_task("bot_add_queue", self.gen_rabbit_dict()) # Add to add bot RabbitMQ
 
     async def edit_bot(self):
         """Edit a bot"""
@@ -146,7 +145,7 @@ class BotActions():
         if check is not None:
             return check
 
-        await add_rmq_task("edit_bot_queue", self.gen_rabbit_dict()) # Add to edit bot RabbitMQ
+        await add_rmq_task("bot_edit_queue", self.gen_rabbit_dict()) # Add to edit bot RabbitMQ
 
 class BotListAdmin():
 

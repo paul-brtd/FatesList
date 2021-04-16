@@ -59,43 +59,42 @@ class WebError():
             else: # Internal Server Error (500)
                 exc.status_code = 500
         path = str(request.url.path)
-        match exc.status_code: # Python 3.10 introduced pattern matching, use that to check for http code
-            case 401:
-                return ORJSONResponse({"done": False, "reason": "Unauthorized", "code": 9999}, status_code = exc.status_code)
-            case 500:
-                asyncio.create_task(WebError.log(request, exc, error_id, curr_time)) # Try and log what happened
-                if str(request.url.path).startswith("/api"):
-                    return ORJSONResponse({"done": False, "reason": f"Internal Server Error\nError ID: {error_id}\nTime when error happened: {curr_time}\nOur developers have been notified and are looking into it."}, status_code = exc.status_code)
-                return HTMLResponse(f"<strong>500 Internal Server Error</strong><br/>Fates List had a slight issue and our developers and looking into what happened<br/><br/>Error ID: {error_id}<br/>Time When Error Happened: {curr_time}\nPlease check our support server at <a href='{support_url}'>{support_url}</a> for more information", status_code=500) # Send 500 error to user with aupport server
-            case 404: 
-                if path.startswith("/bot"): # Bot 404
-                    msg = "Bot Not Found"
-                    code = 404
-                elif path.startswith("/profile"): # Profile 404
-                    msg = "Profile Not Found"
-                    code = 404
-                else: # Regular 404
-                    msg = "404\nNot Found"
-                    code = 404
-            case 401:
-                msg = "401\nNot Authorized"
-                code = 401
-            case 403:
-                msg = "403\nForbidden"
-                code = 403
-            case 422:
-                if path.startswith("/bot"): # Bot 422 which is actually 404 to us
-                    msg = "Bot Not Found"
-                    code = 404
-                elif path.startswith("/profile"): # Profile 422 which is actually 404 to us
-                    msg = "Profile Not Found"
-                    code = 404
-                else:
-                    msg = "Invalid Data Provided<br/>" + str(exc) # Regular 422
-                    code = 422
-            case _:
-                msg = "Unknown Error" # Unknown error, no case for it yet
-                code = 400
+        if exc.status_code == 401:
+            return ORJSONResponse({"done": False, "reason": "Unauthorized", "code": 9999}, status_code = exc.status_code)
+        elif exc.status_code == 500:
+            asyncio.create_task(WebError.log(request, exc, error_id, curr_time)) # Try and log what happened
+            if str(request.url.path).startswith("/api"):
+                return ORJSONResponse({"done": False, "reason": f"Internal Server Error\nError ID: {error_id}\nTime when error happened: {curr_time}\nOur developers have been notified and are looking into it."}, status_code = exc.status_code)
+            return HTMLResponse(f"<strong>500 Internal Server Error</strong><br/>Fates List had a slight issue and our developers and looking into what happened<br/><br/>Error ID: {error_id}<br/>Time When Error Happened: {curr_time}\nPlease check our support server at <a href='{support_url}'>{support_url}</a> for more information", status_code=500) # Send 500 error to user with aupport server
+        elif exc.status_code == 404: 
+            if path.startswith("/bot"): # Bot 404
+                msg = "Bot Not Found"
+                code = 404
+            elif path.startswith("/profile"): # Profile 404
+                msg = "Profile Not Found"
+                code = 404
+            else: # Regular 404
+                msg = "404\nNot Found"
+                code = 404
+        elif exc.status_code == 401:
+            msg = "401\nNot Authorized"
+            code = 401
+        elif exc.status_code == 403:
+            msg = "403\nForbidden"
+            code = 403
+        elif exc.status_code == 422:
+            if path.startswith("/bot"): # Bot 422 which is actually 404 to us
+                msg = "Bot Not Found"
+                code = 404
+            elif path.startswith("/profile"): # Profile 422 which is actually 404 to us
+                msg = "Profile Not Found"
+                code = 404
+            else:
+                msg = "Invalid Data Provided<br/>" + str(exc) # Regular 422
+                code = 422
+        else:
+            msg = "Unknown Error" # Unknown error, no case for it yet
+            code = 400
 
         json = path.startswith("/api") # Check if api route, return JSON if it is
         if json: # If api route, return JSON

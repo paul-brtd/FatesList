@@ -252,7 +252,7 @@ class Bot(models.Model):
         return f"{self.username_cached} ({self.bot_id})"
 
 class BotOwner(models.Model):
-    _id = models.AutoField(primary_key = True)
+    id = models.AutoField(primary_key = True)
     bot_id = models.BigIntegerField(blank = True)
     owner = models.BigIntegerField()
     main = models.BooleanField()
@@ -309,7 +309,6 @@ class Vanity(models.Model):
     type = models.IntegerField(blank=True, null=True)
     vanity_url = models.TextField(blank=True, unique=True)
     redirect = models.BigIntegerField(unique=True, blank=True, primary_key = True, editable = False)
-    redirect_text = models.TextField(unique=True, blank=True, null=True)
 
     class Meta:
         managed = False

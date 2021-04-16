@@ -3,7 +3,7 @@ import discord
 from config import bot_logs, staff_ping_add_role
 import asyncio
 
-async def add_bot_backend(user_id, bot_id, prefix, library, website, banner, support, long_description, description, tags, extra_owners, creation, invite, features, html_long_description, css, donate, github, webhook, webhook_type, vanity, privacy_policy, nsfw):
+async def bot_add_backend(user_id, bot_id, prefix, library, website, banner, support, long_description, description, tags, extra_owners, creation, invite, features, html_long_description, css, donate, github, webhook, webhook_type, vanity, privacy_policy, nsfw):
     await db.execute("DELETE FROM bots WHERE bot_id = $1", bot_id)
     await db.execute("DELETE FROM bot_owner WHERE bot_id = $1", bot_id)
     await db.execute("DELETE FROM vanity WHERE redirect = $1", bot_id)

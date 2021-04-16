@@ -213,10 +213,10 @@ textarea {
 		{% if bot.github and bot.github.replace(" ", "") %}
 			<a target=”_blank” href="{{bot.github}}"><button class="btn btn-outline-light bot-buttons-all" id="bot-buttons-github">Github</button></a>
 		{% endif %}
-		{% if bot.privacy_policy and bot.privacy_policy.replace(" ", "") %}
+		{% if bot.privacy_policy %}
 			<a target="_blank" href="{{bot.privacy_policy}}"><button class="btn btn-outline-light bot-buttons-all" id="bot-buttons-privacy_policy">Privacy Policy</button></a>
 		{% endif %}
-		{% if bot.website and bot.website.replace(" ", "") == "" %}
+		{% if bot.website %}
 			<a target=”_blank” href="{{bot.website}}"><button class="btn btn-outline-light bot-buttons-all" id="bot-buttons-website">Website</button></a>
 		{% endif %}
 		{% if bot.state != enums.BotState.banned %}

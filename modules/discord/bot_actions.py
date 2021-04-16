@@ -20,7 +20,6 @@ async def add_bot(request: Request):
 @csrf_protect
 async def add_bot_backend(
         request: Request,
-        bt: BackgroundTasks, 
         bot: BotAddForm = Depends(BotAddForm)
     ):
     if "userid" not in request.session.keys():
@@ -31,7 +30,6 @@ async def add_bot_backend(
     features = [f for f in bot_dict.keys() if bot_dict[f] == "on" and f in ["custom_prefix", "open_source"]]
     bot_dict["features"] = features
     bot_dict["user_id"] = request.session.get("userid")
-    bot_dict["bt"] = bt
     bot_adder = BotActions(bot_dict)
     rc = await bot_adder.add_bot()
     if rc is None:
@@ -69,7 +67,6 @@ async def bot_edit(request: Request, bid: int):
 @csrf_protect
 async def bot_edit_backend(
         request: Request,
-        bt: BackgroundTasks,
         bot_id: int,
         bot: BotEditForm = Depends(BotEditForm)
     ):
@@ -80,7 +77,6 @@ async def bot_edit_backend(
     bot_dict = bot.dict()
     features = [f for f in bot_dict.keys() if bot_dict[f] == "on" and f in ["custom_prefix", "open_source"]]
     bot_dict["features"] = features
-    bot_dict["bt"] = bt
     bot_dict["bot_id"] = bot_id
     bot_dict["user_id"] = request.session.get("userid")
     bot_editor = BotActions(bot_dict)
@@ -142,7 +138,7 @@ async def delete_bot(request: Request, bot_id: int):
             return await templates.TemplateResponse("message.html", {"request": request, "message": "This bot doesn't exist in our database."})
         elif check == False:
             return await templates.TemplateResponse("message.html", {"request": request, "message": "You aren't the owner of this bot.", "context": "Only owners and admins can delete bots", "username": request.session.get("username", False)})
-        await add_rmq_task("delete_bot_queue", {"user_id": int(request.session.get("userid")), "bot_id": bot_id})
+        await add_rmq_task("bot_delete_queue", {"user_id": int(request.session.get("userid")), "bot_id": bot_id})
     return RedirectResponse("/", status_code = 303)
 
 @router.post("/{bot_id}/ban")

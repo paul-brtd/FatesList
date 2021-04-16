@@ -426,6 +426,7 @@ async def set_bot_stats_api(request: Request, bt: BackgroundTasks, bot_id: int, 
         user_count = id["user_count"]
     else:
         user_count = api.user_count
+    await add_rmq_task("bot_stats_queue", {"bot_id": id["bot_id"], "guild_count": api.guild_count, "shard_count": shard_count, "shards": shards, "user_count": user_count})
     bt.add_task(set_stats, bot_id = id["bot_id"], guild_count = api.guild_count, shard_count = shard_count, shards = shards, user_count = user_count)
     return {"done": True, "reason": None, "code": 1000}
 

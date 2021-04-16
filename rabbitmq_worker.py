@@ -11,10 +11,10 @@ import orjson
 import builtins
 
 # Import all needed backends
-from rabbitmq.backends.add_bot import add_bot_backend
-from rabbitmq.backends.edit_bot import edit_bot_backend
-from rabbitmq.backends.delete_bot import delete_bot_backend
-
+from rabbitmq.backends.bot_add import bot_add_backend
+from rabbitmq.backends.bot_edit import bot_edit_backend
+from rabbitmq.backends.bot_delete import bot_delete_backend
+from rabbitmq.backends.bot_stats import bot_stats_backend
 
 intent_main = discord.Intents.default()
 intent_main.typing = False
@@ -59,9 +59,9 @@ async def main():
             channel = client.get_channel(bot_logs)
         else:
             break
-    await new_task("edit_bot_queue", "Edit Bot")
-    await new_task("add_bot_queue", "Add Bot")
-    await new_task("delete_bot_queue", "Delete Bot")
+    await new_task("bot_edit_queue", "Edit Bot")
+    await new_task("bot_add_queue", "Add Bot")
+    await new_task("bot_delete_queue", "Delete Bot")
     print("Ready!")
 
 class BotQueueData():
@@ -69,12 +69,13 @@ class BotQueueData():
         self.__dict__.update(dict)
     
     async def add(self, queue):
-        if queue == "edit_bot_queue": # Edit Backend
-            await edit_bot_backend(int(self.user_id), self.bot_id, self.prefix, self.library, self.website, self.banner, self.support, self.long_description, self.description, self.tags, self.extra_owners, self.creation, self.invite, self.webhook, self.vanity, self.github, self.features, self.html_long_description, self.webhook_type, self.css, self.donate, self.privacy_policy, self.nsfw) # Add edit bot to queue as background task
-        elif queue == "add_bot_queue": # Add Backend
-            await add_bot_backend(int(self.user_id), self.bot_id, self.prefix, self.library, self.website, self.banner, self.support, self.long_description, self.description, self.tags, self.extra_owners, self.creation, self.invite, self.features, self.html_long_description, self.css, self.donate, self.github, self.webhook, self.webhook_type, self.vanity, self.privacy_policy, self.nsfw) # Add bot to queue as background task
-        elif queue == "delete_bot_queue":
-            await delete_bot_backend(int(self.user_id), self.bot_id)
+        if queue == "bot_edit_queue": # Edit Backend
+            await bot_edit_backend(int(self.user_id), self.bot_id, self.prefix, self.library, self.website, self.banner, self.support, self.long_description, self.description, self.tags, self.extra_owners, self.creation, self.invite, self.webhook, self.vanity, self.github, self.features, self.html_long_description, self.webhook_type, self.css, self.donate, self.privacy_policy, self.nsfw) # Add edit bot to queue as background task
+        elif queue == "bot_add_queue": # Add Backend
+            await bot_add_backend(int(self.user_id), self.bot_id, self.prefix, self.library, self.website, self.banner, self.support, self.long_description, self.description, self.tags, self.extra_owners, self.creation, self.invite, self.features, self.html_long_description, self.css, self.donate, self.github, self.webhook, self.webhook_type, self.vanity, self.privacy_policy, self.nsfw) # Add bot to queue as background task
+        elif queue == "bot_delete_queue":
+            await bot_delete_backend(int(self.user_id), self.bot_id)
+        raise ValueError("No queue found")
 
 # Run the task
 if __name__ == "__main__":
@@ -87,5 +88,8 @@ if __name__ == "__main__":
         print(" [*] Starting Fates List RabbitMQ Worker. To exit press CTRL+C")
         loop.run_forever()
     except KeyboardInterrupt:
-        asyncio.get_event_loop().run_until_complete(rabbitmq.disconnect())
+        try:
+            asyncio.get_event_loop().run_until_complete(rabbitmq.disconnect())
+        except:
+            pass
         print("RabbitMQ worker down!")

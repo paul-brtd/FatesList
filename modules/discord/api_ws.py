@@ -41,51 +41,49 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
         except:
             await manager.send_personal_message({"payload": "kill", "type": "invalid_response"}, websocket)
             return await ws_close(websocket, 4004)
-        match api_token.get("type"):
-            case "bot_tokens":
-                api_token = api_token.get("data")
-                if api_token is None or type(api_token) == int or type(api_token) == str:
-                    await manager.send_personal_message({"payload": "kill", "type": "invalid_response"}, websocket)
-                    return await ws_close(websocket, 4004)
-                for bot in api_token:
-                    bid = await db.fetchrow("SELECT bot_id FROM bots WHERE api_token = $1", str(bot))
-                    if bid:
-                        websocket.api_token.append(api_token)
-                        websocket.bot_id.append(bid["bot_id"])
-                if websocket.api_token == [] or websocket.bot_id == []:
-                    await manager.send_personal_message({"payload": "kill", "type": "no_auth"}, websocket)
-                    return await ws_close(websocket, 4004)
-                await manager.send_personal_message({"payload": "info", "type": "ready", "data": [str(bid) for bid in websocket.bot_id]}, websocket)
-            case "manager":
-                if secure_strcmp(api_token.get("data"), test_server_manager_key):
-                    websocket.manager_bot = True
-                else:
-                    await manager.send_personal_message({"payload": "kill", "type": "no_auth"}, websocket)
-                    return await ws_close(websocket, 4004)
-                await manager.send_personal_message({"payload": "info", "type": "ready", "data": None}, websocket)
+        if api_token.get("type") == "bot_tokens":
+            api_token = api_token.get("data")
+            if api_token is None or type(api_token) == int or type(api_token) == str:
+                await manager.send_personal_message({"payload": "kill", "type": "invalid_response"}, websocket)
+                return await ws_close(websocket, 4004)
+            for bot in api_token:
+                bid = await db.fetchrow("SELECT bot_id FROM bots WHERE api_token = $1", str(bot))
+                if bid:
+                    websocket.api_token.append(api_token)
+                    websocket.bot_id.append(bid["bot_id"])
+            if websocket.api_token == [] or websocket.bot_id == []:
+                await manager.send_personal_message({"payload": "kill", "type": "no_auth"}, websocket)
+                return await ws_close(websocket, 4004)
+            await manager.send_personal_message({"payload": "info", "type": "ready", "data": [str(bid) for bid in websocket.bot_id]}, websocket)
+        elif api_token.get("type") == "manager":
+            if secure_strcmp(api_token.get("data"), test_server_manager_key):
+                websocket.manager_bot = True
+            else:
+                await manager.send_personal_message({"payload": "kill", "type": "no_auth"}, websocket)
+                return await ws_close(websocket, 4004)
+            await manager.send_personal_message({"payload": "info", "type": "ready", "data": None}, websocket)
     try:
-        match websocket.manager_bot:
-            case False:
-                ini_events = {}
-                for bot in websocket.bot_id:
-                    events = await redis_db.hget(str(bot), key = "ws")
-                if events is None:
-                    events = {} # Nothing
-                else:
-                    try:
-                        events = orjson.loads(events)
-                    except Exception as exc:
-                        print(exc)
-                        events = {}
-                    ini_events[str(bot)] = events
-                await manager.send_personal_message({"payload": "events", "type": "v1", "data": ini_events}, websocket)
-                pubsub = redis_db.pubsub()
-                for bot in websocket.bot_id:
-                    await pubsub.subscribe(str(bot))
-            case True:
-                pubsub = redis_db.pubsub()
-                await pubsub.psubscribe("*")
-        
+        if not websocket.manager_bot:
+            ini_events = {}
+            for bot in websocket.bot_id:
+                events = await redis_db.hget(str(bot), key = "ws")
+            if events is None:
+                events = {} # Nothing
+            else:
+                try:
+                    events = orjson.loads(events)
+                except Exception as exc:
+                    print(exc)
+                    events = {}
+                ini_events[str(bot)] = events
+            await manager.send_personal_message({"payload": "events", "type": "v1", "data": ini_events}, websocket)
+            pubsub = redis_db.pubsub()
+            for bot in websocket.bot_id:
+                await pubsub.subscribe(str(bot))
+        else:
+            pubsub = redis_db.pubsub()
+            await pubsub.psubscribe("*")
+    
         async for msg in pubsub.listen():
             print(msg, websocket.manager_bot)
             if msg is None or type(msg.get("data")) != bytes:
@@ -118,16 +116,15 @@ async def chat_api(websocket: WebSocket):
         if data is None or type(data) != str:
             await manager_chat.send_personal_message({"payload": "KILL_CONN", "type": "NO_AUTH"}, websocket) # Invalid api token provided
             return await ws_close(websocket, 4004)
-        match identity.get("type"):
-            case "USER":
-                acc_type = 0
-                sender = await db.fetchval("SELECT user_id FROM users WHERE api_token = $1", identity.get("data"))
-            case "BOT":
-                acc_type = 1
-                sender = await db.fetchval("SELECT bot_id FROM bots WHERE api_token = $1", identity.get("data"))
-            case _:
-                await manager_chat.send_personal_message({"payload": "KILL_CONN", "type": "NOT_IMPLEMENTED"}, websocket)
-                return await ws_close(websocket, 4005) # 4005 = Not Implemented
+        if identity.get("type") == "USER":
+            acc_type = 0
+            sender = await db.fetchval("SELECT user_id FROM users WHERE api_token = $1", identity.get("data"))
+        elif identity.get("type") == "BOT" 
+            acc_type = 1
+            sender = await db.fetchval("SELECT bot_id FROM bots WHERE api_token = $1", identity.get("data"))
+        else:    
+            await manager_chat.send_personal_message({"payload": "KILL_CONN", "type": "NOT_IMPLEMENTED"}, websocket)
+            return await ws_close(websocket, 4005) # 4005 = Not Implemented
         if sender is None:
             await manager_chat.send_personal_message({"payload": "KILL_CONN", "type": "NO_AUTH"}, websocket) # Invalid api token provided
             return await ws_close(websocket, 4004)

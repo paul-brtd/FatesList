@@ -2,7 +2,7 @@ from modules.core import add_event
 from config import bot_logs
 import discord
 
-async def delete_bot_backend(user_id, bot_id):
+async def bot_delete_backend(user_id, bot_id):
     for table in "bots", "bot_voters", "bot_promotions", "bot_reviews", "bot_api_event", "bot_maint", "bot_commands", "bot_owner":
         await db.execute(f"DELETE FROM {table} WHERE bot_id = $1", bot_id)
     await db.execute("DELETE FROM vanity WHERE redirect = $1", bot_id)
