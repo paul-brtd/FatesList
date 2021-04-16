@@ -119,7 +119,7 @@ async def chat_api(websocket: WebSocket):
         if identity.get("type") == "USER":
             acc_type = 0
             sender = await db.fetchval("SELECT user_id FROM users WHERE api_token = $1", identity.get("data"))
-        elif identity.get("type") == "BOT" 
+        elif identity.get("type") == "BOT": 
             acc_type = 1
             sender = await db.fetchval("SELECT bot_id FROM bots WHERE api_token = $1", identity.get("data"))
         else:    

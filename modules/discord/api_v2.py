@@ -407,7 +407,7 @@ async def timestamped_get_votes_api(request: Request, bot_id: int, user_id: Opti
     return {"timestamped_votes": ret}
 
 @router.post("/bots/{bot_id}/stats", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=5, minutes=1))])
-async def set_bot_stats_api(request: Request, bt: BackgroundTasks, bot_id: int, api: BotStats, Authorization: str = Header("BOT_API_TOKEN")):
+async def set_bot_stats_api(request: Request, bot_id: int, api: BotStats, Authorization: str = Header("BOT_API_TOKEN")):
     """
     This endpoint allows you to set the guild + shard counts for your bot
     """
@@ -426,8 +426,7 @@ async def set_bot_stats_api(request: Request, bt: BackgroundTasks, bot_id: int, 
         user_count = id["user_count"]
     else:
         user_count = api.user_count
-    await add_rmq_task("bot_stats_queue", {"bot_id": id["bot_id"], "guild_count": api.guild_count, "shard_count": shard_count, "shards": shards, "user_count": user_count})
-    bt.add_task(set_stats, bot_id = id["bot_id"], guild_count = api.guild_count, shard_count = shard_count, shards = shards, user_count = user_count)
+    await set_stats(bot_id = id["bot_id"], guild_count = api.guild_count, shard_count = shard_count, shards = shards, user_count = user_count)
     return {"done": True, "reason": None, "code": 1000}
 
 @router.get("/bots/{bot_id}/maintenance", response_model = BotMaintenance)

@@ -39,5 +39,4 @@ async def bot_edit_backend(user_id, bot_id, prefix, library, website, banner, su
     owner = int(user_id)
     edit_embed = discord.Embed(title="Bot Edit!", description=f"<@{owner}> has edited the bot <@{bot_id}>!", color=0x00ff00)
     edit_embed.add_field(name="Link", value=f"https://fateslist.xyz/bot/{bot_id}")
-    print("Got here")
     await channel.send(embed = edit_embed) # Send message to channel

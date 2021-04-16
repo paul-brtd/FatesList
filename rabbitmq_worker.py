@@ -14,7 +14,6 @@ import builtins
 from rabbitmq.backends.bot_add import bot_add_backend
 from rabbitmq.backends.bot_edit import bot_edit_backend
 from rabbitmq.backends.bot_delete import bot_delete_backend
-from rabbitmq.backends.bot_stats import bot_stats_backend
 
 intent_main = discord.Intents.default()
 intent_main.typing = False
@@ -75,7 +74,8 @@ class BotQueueData():
             await bot_add_backend(int(self.user_id), self.bot_id, self.prefix, self.library, self.website, self.banner, self.support, self.long_description, self.description, self.tags, self.extra_owners, self.creation, self.invite, self.features, self.html_long_description, self.css, self.donate, self.github, self.webhook, self.webhook_type, self.vanity, self.privacy_policy, self.nsfw) # Add bot to queue as background task
         elif queue == "bot_delete_queue":
             await bot_delete_backend(int(self.user_id), self.bot_id)
-        raise ValueError("No queue found")
+        else:
+            raise ValueError("No queue found")
 
 # Run the task
 if __name__ == "__main__":
