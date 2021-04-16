@@ -124,8 +124,13 @@ async def bot_under_review_api(request: Request, bot_id: int, data: BotUnderRevi
         return abort(404) # A wrror here means 404
     return {"done": True, "reason": "Claimed this bot! You are free to test it now!", "code": 1001}
 
+@router.get("/admin/queue")
+async def botlist_get_queue_api(request: Request):
+    bots = await db.fetch("SELECT bot_id FROM bots WHERE state = $1", enums.BotState.pending)
+    return {"bots": [(await get_bot(bot["bot_id"])) for bot in bots]}
+
 @router.patch("/bots/{bot_id}/admin/queue")
-async def bot_queue_api(request: Request, bot_id: int, data: BotQueue, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
+async def botlist_edit_queue_api(request: Request, bot_id: int, data: BotQueue, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
     """
     Admin API to approve/verify or deny a bot on Fates List
     """

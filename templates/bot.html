@@ -149,7 +149,7 @@ textarea {
 		<div class="d-flex d-xl-flex flex-column justify-content-center align-items-center justify-content-xl-center align-items-xl-center">
 
 			<img style="border-radius: 50%; width: 120px;" src="{{bot.user.avatar}}" id="bot-avatar" alt="{{bot.user.avatar}}'s avatar">
-			<h3 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;" id="bot-username">{{bot.user.username}} <span style="opacity: 0.65">({{bot.prefix}})</span></h3>
+			<a href="/bot/{{bot_id}}/invite" class="white"><h3 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;" id="bot-username">{{bot.user.username}} <span style="opacity: 0.65">({{bot.prefix}})</span></h3></a>
 			{% if bot.state == enums.BotState.denied %}
 				<div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
 					<strong>This bot has been DENIED from this bot list for violating our rules or being a low-quality bot. Please do not invite it.</strong>	
@@ -204,6 +204,9 @@ textarea {
 
 			</form>
 		{% endif %}
+		{% if bot.state != enums.BotState.banned %}
+			<a target=”_blank” href="/bot/{{bot_id}}/invite"><button class="btn btn-outline-light bot-buttons-all" id="bot-buttons-invite">Invite</button></a>
+		{% endif %}
 		{% if bot.support and bot.support.replace(" ", "") %}
 			<a target=”_blank” href="{{bot.support}}"><button class="btn btn-outline-light bot-buttons-all" id="bot-buttons-support">Support</button></a>
 		{% endif %}
@@ -218,9 +221,6 @@ textarea {
 		{% endif %}
 		{% if bot.website %}
 			<a target=”_blank” href="{{bot.website}}"><button class="btn btn-outline-light bot-buttons-all" id="bot-buttons-website">Website</button></a>
-		{% endif %}
-		{% if bot.state != enums.BotState.banned %}
-			<a target=”_blank” href="/bot/{{bot_id}}/invite"><button class="btn btn-outline-light bot-buttons-all" id="bot-buttons-invite">Invite</button></a>
 		{% endif %}
 		{% if bot_admin %}
 			<a href="/bot/{{bot_id}}/edit"><button class="btn btn-outline-light bot-buttons-all" id="bot-buttons-edit">Edit</button></a>
