@@ -156,6 +156,14 @@ class BotRandom(BaseModel):
 class BotUnderReview(BaseModel):
     mod: str
 
+class BotOwner(BaseModel):
+    owner: str
+    user: BaseUser
+    main: bool
+
+class BotOwners(BaseModel):
+    __root__: List[BotOwner]
+
 class Bot(BaseUser):
     """
     Represents a bot on Fates List
@@ -172,9 +180,7 @@ class Bot(BaseUser):
     library: str
     invite: Optional[str] = None
     invite_amount: int
-    main_owner: str
-    extra_owners: list
-    owners: list
+    owners: BotOwners
     features: list
     state: enums.BotState
     website: Optional[str] = None

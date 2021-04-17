@@ -1,7 +1,7 @@
 from .imports import *
 
 async def rl_key_func(request: Request) -> str:
-    if request.headers.get("FatesList-RateLimitBypass") == ratelimit_bypass_key: # Check ratelimit key
+    if secure_strcmp(request.headers.get("FatesList-RateLimitBypass"), ratelimit_bypass_key): # Check ratelimit key
         return get_token(32) # Disable since bypassed
     if "Authorization" in request.headers or "authorization" in request.headers:
         try: # Check for auth header

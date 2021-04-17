@@ -185,19 +185,13 @@ async def get_bot_api(request: Request, bot_id: int):
         return abort(404)
     api_ret = dict(api_ret)
     owners = await db.fetch("SELECT owner, main FROM bot_owner WHERE bot_id = $1", bot_id)
-    api_ret["extra_owners"] = []
-    for obj in owners:
-        if obj["main"]:
-            api_ret["main_owner"] = str(obj["owner"])
-        else:
-            api_ret["extra_owners"].append(str(obj["owner"]))
+    api_ret["owners"] = [{"owner": str(obj["owner"]), "user": (await get_user(obj["owner"])), "main": obj["main"]} for obj in owners]
     if api_ret["features"] is None:
         api_ret["features"] = []
     bot_obj = await get_bot(bot_id)
     if bot_obj is None:
         return abort(404)
     api_ret = api_ret | bot_obj
-    api_ret["owners"] = [api_ret["main_owner"]] + api_ret["extra_owners"]
     api_ret["vanity"] = await db.fetchval("SELECT vanity_url FROM vanity WHERE redirect = $1", bot_id)
     return api_ret
 
