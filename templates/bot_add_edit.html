@@ -223,7 +223,7 @@
       for="long_description_type"
       >Long Description Type (Click to change)</label>
       <select id="long_description_type" name="long_description_type" class="form-control fform select-fl">
-              <option value="0" {% if data.long_description_type == enums.LongDescType.html %}selected{%endif%}>HTML - Recommended</option>
+              <option value="0" {% if data.long_description_type == enums.LongDescType.html %}selected{%endif%}>HTML/Raw - Recommended</option>
 	      <option value="1" {% if data.long_description_type == enums.LongDescType.markdown_pymarkdown %}selected{%endif%}>Markdown (python-markdown) - Recommended</option>
 	      <option value="2" {% if data.long_description_type == enums.LongDescType.markdown_marked %}selected{%endif%}>Markdown (marked) - Special cases only</option>
       </select>
@@ -269,7 +269,7 @@
 
 	function longdescfaq() {
 		modalShow("Long Description Type FAQ", `
-			HTML - Use this when your bots long description requires pure HTML, CSS and JS to run. The markdown parsers used in Fates List tend to corrupt pages mainly coded in HTML and may not work well in some contexts<br/><br/>
+			HTML/Raw - Use this when your bots long description requires pure HTML, CSS and JS to run. The markdown parsers used in Fates List tend to corrupt pages mainly coded in HTML and may not work well in some contexts<br/><br/>
 
 			Markdown (python-markdown) - Use this when you just need regular markdown with no strings attached, good speed (as it is done using very efricient algorithms on the server itself and may use Redis cache when scaling is needed) and proper support via Mod Mail<br/><br/>
 

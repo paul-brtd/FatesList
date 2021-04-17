@@ -180,13 +180,13 @@ async def random_bots_api(request: Request):
 @router.get("/bots/{bot_id}", response_model = Bot, dependencies=[Depends(RateLimiter(times=5, minutes=3))])
 async def get_bot_api(request: Request, bot_id: int):
     """Gets bot information given a bot ID. If not found, 404 will be returned."""
-    api_ret = await db.fetchrow("SELECT banner, bot_id AS id, description, tags, long_description_type, long_description, servers AS server_count, shard_count, shards, prefix, invite, invite_amount, features, bot_library AS library, state, website, discord AS support, github, user_count, votes, css, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", bot_id)
+    api_ret = await db.fetchrow("SELECT banner, description, tags, long_description_type, long_description, servers AS server_count, shard_count, shards, prefix, invite, invite_amount, features, bot_library AS library, state, website, discord AS support, github, user_count, votes, css, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", bot_id)
     if api_ret is None:
         return abort(404)
     api_ret = dict(api_ret)
     owners = await db.fetch("SELECT owner, main FROM bot_owner WHERE bot_id = $1", bot_id)
-    api_ret["main_owner"] = [obj["owner"] for obj in owners if obj["main"] is True][0]
-    api_ret["extra_owners"] = [obj["owner"] for obj in owners if obj["main"] is False]
+    api_ret["main_owner"] = [str(obj["owner"]) for obj in owners if obj["main"] is True][0]
+    api_ret["extra_owners"] = [str(obj["owner"]) for obj in owners if obj["main"] is False]
 
     if api_ret["features"] is None:
         api_ret["features"] = []
@@ -194,17 +194,8 @@ async def get_bot_api(request: Request, bot_id: int):
     if bot_obj is None:
         return abort(404)
     api_ret = api_ret | bot_obj
-    api_ret["main_owner"] = str(api_ret["main_owner"])
-    if api_ret["extra_owners"] is None:
-        api_ret["extra_owners"] = []
-    api_ret["extra_owners"] = [str(eo) for eo in api_ret["extra_owners"]]
     api_ret["owners"] = [api_ret["main_owner"]] + api_ret["extra_owners"]
-    api_ret["id"] = str(api_ret["id"])
-    vanity = await db.fetchrow("SELECT vanity_url FROM vanity WHERE redirect = $1", bot_id)
-    if vanity is None:
-        api_ret["vanity"] = None
-    else:
-        api_ret["vanity"] = vanity["vanity_url"]
+    api_ret["vanity"] = await db.fetchval("SELECT vanity_url FROM vanity WHERE redirect = $1", bot_id)
     return api_ret
 
 @router.get("/bots/{bot_id}/raw")
