@@ -219,29 +219,6 @@ async def edit_review(request: Request, bot_id: int, rid: uuid.UUID, bt: Backgro
     bt.add_task(base_rev_bt, bot_id, "new_review", {"user": request.session["userid"], "reply": True, "review_id": str(reply_id), "rating": rating, "review": review, "root": str(rid)})
     return await templates.TemplateResponse("message.html", {"request": request, "message": "Successfully replied to your/this review for this bot!<script>window.location.replace('/bot/" + str(bot_id) + "')</script>"})
 
-@router.post("/{bot_id}/reviews/{rid}/delete")
-async def delete_review(request: Request, bot_id: int, rid: uuid.UUID, bt: BackgroundTasks):
-    if "userid" not in request.session.keys():
-        return RedirectResponse(f"/auth/login?redirect=/bot/{bot_id}&pretty=to delete reviews", status_code = 303)
-    guild = client.get_guild(main_server)
-
-    user = guild.get_member(int(request.session["userid"]))
-    if user is None:
-        s = [False]
-    else:
-        s = is_staff(staff_roles, user.roles, 2)
-    if s[0]:
-        check = await db.fetchrow("SELECT replies FROM bot_reviews WHERE id = $1", rid)
-        if check is None:
-            return await templates.TemplateResponse("message.html", {"request": request, "message": "You are not allowed to delete this review (doesn't actually exist)"})
-    else:
-        check = await db.fetchrow("SELECT replies FROM bot_reviews WHERE id = $1 AND bot_id = $2 AND user_id = $3", rid, bot_id, int(request.session["userid"]))
-        if check is None:
-            return await templates.TemplateResponse("message.html", {"request": request, "message": "You are not allowed to delete this review"})
-    await db.execute("DELETE FROM bot_reviews WHERE id = $1", rid)
-    bt.add_task(base_rev_bt, bot_id, "delete_review", {"user": request.session["userid"], "reply": False, "review_id": str(rid)})
-    return await templates.TemplateResponse("message.html", {"request": request, "message": "Successfully deleted your/this review for this bot!<script>window.location.replace('/bot/" + str(bot_id) + "')</script>"})
-
 @router.get("/{bid}/resubmit")
 async def resubmit_bot(request: Request, bid: int):
     if "userid" in request.session.keys():
