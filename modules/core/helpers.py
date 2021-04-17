@@ -135,4 +135,3 @@ async def do_index_query(add_query: str = "", state: int = 0, limit: Optional[in
         end_query = ""
     fetch = await db.fetch(" ".join((base_query, add_query, end_query)))
     return await parse_index_query(fetch)
-

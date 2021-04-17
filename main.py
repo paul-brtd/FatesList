@@ -19,7 +19,7 @@ import logging
 from starlette.datastructures import URL
 from http import HTTPStatus
 
-#logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 # Setup Bots
 

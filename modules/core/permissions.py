@@ -16,7 +16,10 @@ async def is_bot_admin(bot_id: int, user_id: int):
     except ValueError:
         return False
     guild = client.get_guild(main_server)
-    user = guild.get_member(user_id)
+    try:
+        user = guild.get_member(user_id)
+    except:
+        user = None
     if user is not None and is_staff(staff_roles, user.roles, 4)[0]:
         return True
     check = await db.fetchval("SELECT COUNT(1) FROM bot_owner WHERE bot_id = $1 AND owner = $2", bot_id, user_id)

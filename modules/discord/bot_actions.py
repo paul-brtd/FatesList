@@ -168,21 +168,6 @@ async def ban_bot(request: Request, bot_id: int, ban: int = FForm(1), reason: st
         return "Bot Unbanned :)"
     return RedirectResponse("/", status_code = 303)
 
-# CREATE TABLE bot_reviews (
-#   id uuid primary key DEFAULT uuid_generate_v4(),
-#   bot_id bigint not null,
-#   star_rating float4 default 0.0,
-#   review_text text,
-#   review_upvotes integer default 0,
-#   review_downvotes integer default 0,
-#   flagged boolean default false,
-#   epoch bigint
-#);
-
-async def base_rev_bt(bot_id, event, base_dict):
-    reviews = await parse_reviews(bot_id)
-    await add_event(bot_id, event, base_dict | {"reviews": reviews[0], "average_stars": reviews[1]})
-
 @router.post("/{bot_id}/reviews/new")
 async def new_reviews(request: Request, bot_id: int, bt: BackgroundTasks, rating: float = FForm(5.1), review: str = FForm("This is a placeholder review as the user has not posted anything...")):
     if "userid" not in request.session.keys():
@@ -194,8 +179,6 @@ async def new_reviews(request: Request, bot_id: int, bt: BackgroundTasks, rating
     await db.execute("INSERT INTO bot_reviews (id, bot_id, user_id, star_rating, review_text, epoch) VALUES ($1, $2, $3, $4, $5, $6)", id, bot_id, int(request.session["userid"]), rating, review, [time.time()])
     bt.add_task(base_rev_bt, bot_id, "new_review", {"user": request.session["userid"], "reply": False, "review_id": str(id), "rating": rating, "review": review, "root": None})
     return await templates.TemplateResponse("message.html", {"request": request, "message": "Successfully made a review for this bot!<script>window.location.replace('/bot/" + str(bot_id) + "')</script>", "username": request.session.get("username", False), "avatar": request.session.get('avatar')}) 
-
-
 
 @router.post("/{bot_id}/reviews/{rid}/edit")
 async def edit_review(request: Request, bot_id: int, rid: uuid.UUID, bt: BackgroundTasks, rating: float = FForm(5.1), review: str = FForm("This is a placeholder review as the user has not posted anything...")):

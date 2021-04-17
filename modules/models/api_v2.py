@@ -150,7 +150,7 @@ class BotRandom(BaseModel):
     username: str
     avatar: str
     servers: str
-    invite: str
+    invite: Optional[str] = None
     votes: int
 
 class BotUnderReview(BaseModel):
@@ -170,7 +170,7 @@ class Bot(BaseUser):
     shards: Optional[list] = []
     prefix: str
     library: str
-    invite: str
+    invite: Optional[str] = None
     invite_amount: int
     main_owner: str
     extra_owners: list
@@ -305,9 +305,11 @@ class ServerCheck(BaseModel):
 class UserDescEdit(BaseModel):
     description: str
 
-class BotReviewVote(BaseModel):
-    upvote: bool
+class BotReviewAction(BaseModel):
     user_id: str
+
+class BotReviewVote(BotReviewAction):
+    upvote: bool
 
 class BotPromotion_NotFound(BaseModel):
     detail: str = "Promotion Not Found"
@@ -343,10 +345,16 @@ class BotSearch(BaseSearch):
     search_bots: BotPartialList
     profile_search: bool = False
 
-class BotQueue(BaseModel):
+class BotQueuePatch(BaseModel):
     feedback: Optional[str] = None 
     approve: bool
     mod: str
+
+class BotQueueList(BaseModel):
+    __root__: List[BaseUser]
+
+class BotQueueGet(BaseModel):
+    bots: BotQueueList
 
 class ProfilePartial(BaseUser):
     description: Optional[str] = None

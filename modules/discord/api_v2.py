@@ -124,13 +124,13 @@ async def bot_under_review_api(request: Request, bot_id: int, data: BotUnderRevi
         return abort(404) # A wrror here means 404
     return {"done": True, "reason": "Claimed this bot! You are free to test it now!", "code": 1001}
 
-@router.get("/admin/queue")
+@router.get("/admin/queue", response_model = BotQueueGet)
 async def botlist_get_queue_api(request: Request):
     bots = await db.fetch("SELECT bot_id FROM bots WHERE state = $1", enums.BotState.pending)
     return {"bots": [(await get_bot(bot["bot_id"])) for bot in bots]}
 
-@router.patch("/bots/{bot_id}/admin/queue")
-async def botlist_edit_queue_api(request: Request, bot_id: int, data: BotQueue, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
+@router.patch("/bots/{bot_id}/admin/queue", response_model = APIResponse)
+async def botlist_edit_queue_api(request: Request, bot_id: int, data: BotQueuePatch, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
     """
     Admin API to approve/verify or deny a bot on Fates List
     """
@@ -310,6 +310,31 @@ async def upvote_review_api(request: Request, bot_id: int, rid: uuid.UUID, vote:
     bot_rev[main_key].append(vote.user_id)
     await db.execute("UPDATE bot_reviews SET review_upvotes = $1, review_downvotes = $2 WHERE id = $3", bot_rev["review_upvotes"], bot_rev["review_downvotes"], rid)
     await add_event(bot_id, "review_vote", {"user": str(vote.user_id), "review_id": str(rid), "upvotes": len(bot_rev["review_upvotes"]), "downvotes": len(bot_rev["review_downvotes"]), "upvote": vote.upvote})
+    return {"done": True, "reason": None, "code": 1000}
+
+@router.delete("/bots/{bot_id}/reviews/{rid}", response_model = APIResponse)
+async def delete_review(request: Request, bot_id: int, rid: uuid.UUID, bt: BackgroundTasks, data: BotReviewAction, Authorization: str = Header("USER_TOKEN")):
+    id = await user_auth(data.user_id, Authorization)
+    if id is None:
+        return abort(401)
+    data.user_id = int(data.user_id)
+    guild = client.get_guild(main_server)
+    user = guild.get_member(data.user_id)
+    if user is None:
+        staff = False                    
+    else:
+        staff = is_staff(staff_roles, user.roles, 2)[0]
+    if staff:
+        check = await db.fetchrow("SELECT replies FROM bot_reviews WHERE id = $1", rid)
+        if check is None:
+            return ORJSONResponse({"done": False, "reason": "You are not allowed to delete this review", "code": 1232}, status_code = 400)
+    else:
+        check = await db.fetchrow("SELECT replies FROM bot_reviews WHERE id = $1 AND bot_id = $2 AND user_id = $3", rid, bot_id, data.user_id)
+        if check is None:
+            return ORJSONResponse({"done": False, "reason": "You are not allowed to delete this review", "code": 1232}, status_code = 400)
+
+    await db.execute("DELETE FROM bot_reviews WHERE id = $1", rid)
+    bt.add_task(base_rev_bt, bot_id, "delete_review", {"user": data.user_id, "reply": False, "review_id": str(rid)})
     return {"done": True, "reason": None, "code": 1000}
 
 @router.get("/bots/{bot_id}/commands", response_model = BotCommands)

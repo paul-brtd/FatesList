@@ -1,6 +1,6 @@
 from .imports import *
 from .cache import *
-
+from .events import *
 
 async def parse_reviews(bot_id: int, reviews: List[asyncpg.Record] = None) -> List[dict]:
     if reviews is None:
@@ -39,3 +39,7 @@ async def parse_reviews(bot_id: int, reviews: List[asyncpg.Record] = None) -> Li
     if i == 0:
         return reviews, 10.0
     return reviews, round(stars/i, 2)
+
+async def base_rev_bt(bot_id, event, base_dict):
+    reviews = await parse_reviews(bot_id)
+    await add_event(bot_id, event, base_dict | {"reviews": reviews[0], "average_stars": reviews[1]})
