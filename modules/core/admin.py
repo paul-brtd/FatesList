@@ -209,7 +209,7 @@ class BotListAdmin():
         owner = await self._get_main_owner()
         if owner is None:
             return False # No bot found
-        await db.execute("UPDATE bots SET state = $1 WHERE bot_id = $1", enums.BotState.pending, self.bot_id)
+        await db.execute("UPDATE bots SET state = $1 WHERE bot_id = $2", enums.BotState.pending, self.bot_id)
         await add_event(self.bot_id, "unverify_bot", {"user": self.str_mod})
         unverify_embed = discord.Embed(title="Bot Unverified!", description = f"<@{self.bot_id}> by <@{owner['owner']}> has been unverified", color=self.bad)
         unverify_embed.add_field(name="Reason", value=reason)

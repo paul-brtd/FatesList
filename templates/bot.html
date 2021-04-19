@@ -264,6 +264,7 @@ textarea {
 			{% if bot.long_description_type == enums.LongDescType.markdown_marked %}
        				<!-- Handle markdown -->
 				<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+				<pre style="display: none" id="marked-ld">{{bot.long_description|safe}}</pre>
 				<script>
 
 					String.prototype.replaceAll = function(strReplace, strWith) {
@@ -280,7 +281,7 @@ textarea {
 						return new_str;
 					};
 					long_desc_replace_tup = [["<a", "<a class='long-desc-link ldlink'"], ["h1", "h2 style='text-align: center'"], ["h3", "h4"], ["bootstrap.min.css", ""], ["bootstrap.css", ""], ["jquery.min.js", ""]] // Event though we are markdown, we still have some needed patches
-					var md = marked(`{{bot.long_description|safe}}`).replacem(long_desc_replace_tup) // Markdown it and apply some patches though not all used in python markdown
+					var md = marked(document.querySelector("#marked-ld").innerHTML).replacem(long_desc_replace_tup) // Markdown it and apply some patches though not all used in python markdown
 					document.querySelector("#bot-long-description").innerHTML = md;
 				</script>
 			{% endif %}
