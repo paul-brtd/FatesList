@@ -111,7 +111,7 @@ async def regenerate_bot_token(request: Request, bot_id: int, Authorization: str
     await db.execute("UPDATE bots SET api_token = $1 WHERE bot_id = $2", get_token(132), id)
     return {"done": True, "reason": None, "code": 1000}
 
-@router.post("/bots/{bot_id}/admin/under_review", response_model = APIResponse)
+@router.patch("/bots/admin/{bot_id}/under_review", response_model = APIResponse)
 async def bot_under_review_api(request: Request, bot_id: int, data: BotUnderReview, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
     """
     Put a bot in queue under review. This is internal and only meant for our test server manager bot
@@ -124,12 +124,12 @@ async def bot_under_review_api(request: Request, bot_id: int, data: BotUnderRevi
         return abort(404) # A wrror here means 404
     return {"done": True, "reason": "Claimed this bot! You are free to test it now!", "code": 1001}
 
-@router.get("/admin/queue", response_model = BotQueueGet)
+@router.get("/bots/admin/queue", response_model = BotQueueGet)
 async def botlist_get_queue_api(request: Request):
     bots = await db.fetch("SELECT bot_id FROM bots WHERE state = $1", enums.BotState.pending)
     return {"bots": [(await get_bot(bot["bot_id"])) for bot in bots]}
 
-@router.patch("/bots/{bot_id}/admin/queue", response_model = APIResponse)
+@router.patch("/bots/admin/{bot_id}/queue", response_model = APIResponse)
 async def botlist_edit_queue_api(request: Request, bot_id: int, data: BotQueuePatch, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
     """
     Admin API to approve/verify or deny a bot on Fates List
