@@ -155,6 +155,7 @@ class BotRandom(BaseModel):
 
 class BotUnderReview(BaseModel):
     mod: str
+    requeue: Optional[bool] = False
 
 class BotOwner(BaseModel):
     owner: str

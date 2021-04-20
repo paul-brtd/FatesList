@@ -34,6 +34,7 @@ CREATE TABLE bots (
     donate text,
     privacy_policy text,
     nsfw boolean DEFAULT false,
+    verifier bigint
 );
 
 CREATE TABLE bot_owner (

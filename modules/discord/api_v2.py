@@ -114,15 +114,21 @@ async def regenerate_bot_token(request: Request, bot_id: int, Authorization: str
 @router.patch("/bots/admin/{bot_id}/under_review", response_model = APIResponse)
 async def bot_under_review_api(request: Request, bot_id: int, data: BotUnderReview, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
     """
-    Put a bot in queue under review. This is internal and only meant for our test server manager bot
+    Put a bot in queue under review or back in queue. This is internal and only meant for our test server manager bot
     """
     if not secure_strcmp(Authorization, test_server_manager_key):
         return abort(401)
     admin_tool = BotListAdmin(bot_id, data.mod)
-    rc = await admin_tool.claim_bot()
+    if data.requeue:
+        state = await db.fetchval("SELECT state FROM bots WHERE bot_id = $1 AND state = $2", bot_id, enums.BotState.under_review)
+        if state is None:
+            return abort(404)
+        rc = await admin_tool.unban_requeue_bot(state)
+    else:
+        rc = await admin_tool.claim_bot()
     if rc is not None:
         return abort(404) # A wrror here means 404
-    return {"done": True, "reason": "Claimed this bot! You are free to test it now!", "code": 1001}
+    return {"done": True, "reason": None, "code": 1000}
 
 @router.get("/bots/admin/queue", response_model = BotQueueGet)
 async def botlist_get_queue_api(request: Request):

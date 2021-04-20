@@ -151,8 +151,8 @@ async def ban_bot(request: Request, bot_id: int, ban: int = FForm(1), reason: st
         reason = "There was no reason specified"
 
     if "userid" in request.session.keys():
-        check = await db.fetchrow("SELECT state FROM bots WHERE bot_id = $1", bot_id)
-        if not check:
+        check = await db.fetchval("SELECT state FROM bots WHERE bot_id = $1", bot_id)
+        if check is None:
             return await templates.TemplateResponse("message.html", {"request": request, "message": "This bot doesn't exist in our database.", "username": request.session.get("username", False)})
         user = guild.get_member(int(request.session.get("userid")))
         if is_staff(staff_roles, user.roles, 3)[0]:
@@ -164,7 +164,7 @@ async def ban_bot(request: Request, bot_id: int, ban: int = FForm(1), reason: st
         await admin_tool.ban_bot(reason)
         return "Bot Banned :)"
     else:
-        await admin_tool.unban_bot(check["state"])
+        await admin_tool.unban_requeue_bot(check)
         return "Bot Unbanned :)"
     return RedirectResponse("/", status_code = 303)
 

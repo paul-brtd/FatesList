@@ -190,7 +190,7 @@ class BotListAdmin():
         check = await db.fetchrow("SELECT state FROM bots WHERE bot_id = $1", self.bot_id)
         if check["state"] != enums.BotState.under_review:
             return self.must_claim 
-        await db.execute("UPDATE bots SET state = $1 WHERE bot_id = $2", enums.BotState.approved, self.bot_id)
+        await db.execute("UPDATE bots SET state = $1, verifier = $2 WHERE bot_id = $3", enums.BotState.approved, self.mod, self.bot_id)
         await add_event(self.bot_id, "approve_bot", {"user": self.str_mod})
         owner = [obj["owner"] for obj in owners if obj["main"]][0]
         approve_embed = discord.Embed(title="Bot Approved!", description = f"<@{self.bot_id}> by <@{owner}> has been approved", color = self.good)
@@ -222,7 +222,7 @@ class BotListAdmin():
         check = await db.fetchrow("SELECT state FROM bots WHERE bot_id = $1", self.bot_id)
         if check["state"] != enums.BotState.under_review:
             return self.must_claim
-        await db.execute("UPDATE bots SET state = 2 WHERE bot_id = $1", self.bot_id)
+        await db.execute("UPDATE bots SET state = $1, verifier = $3 WHERE bot_id = $2", enums.BotState.denied, self.mod, self.bot_id)
         await add_event(self.bot_id, "deny_bot", {"user": self.str_mod, "reason": reason})
         deny_embed = discord.Embed(title="Bot Denied!", description = f"<@{self.bot_id}> by <@{owner['owner']}> has been denied", color=self.bad)
         deny_embed.add_field(name="Reason", value=reason)
@@ -246,8 +246,8 @@ class BotListAdmin():
         await add_event(self.bot_id, "ban_bot", {"user": self.str_mod, "reason": reason})
 
     # Unban or requeue a bot
-    async def unban_bot(self, state):
-        if state == 2:
+    async def unban_requeue_bot(self, state):
+        if state == enums.BotState.under_review or state == enums.BotState.denied:
             word = "removed from the deny list"
             title = "Bot requeued"
         else:
