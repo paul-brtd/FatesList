@@ -19,9 +19,9 @@ import logging
 from starlette.datastructures import URL
 from http import HTTPStatus
 
-logging.basicConfig(level=logging.INFO)
-
 # Setup Bots
+
+# Main Bot
 
 intent_main = discord.Intents.default()
 intent_main.typing = False
@@ -36,6 +36,8 @@ intent_main.members = True
 intent_main.presences = True
 builtins.client = discord.Client(intents=intent_main)
 
+# Server Bot
+
 intent_server = discord.Intents.default()
 intent_server.typing = False
 intent_server.bans = False
@@ -49,13 +51,20 @@ intent_server.members = True
 intent_server.presences = False
 builtins.client_servers = discord.Client(intents=intent_server)
 
-limiter = FastAPILimiter
+
+# Setup FastAPI with required urls and orjson for faster json handling
 app = FastAPI(default_response_class = ORJSONResponse, redoc_url = "/api/docs/redoc", docs_url = "/api/docs/swagger", openapi_url = "/api/docs/openapi")
+
+# Setup middleware for JWT sessions
 app.add_middleware(SessionMiddleware, secret_key=session_key, https_only = True, max_age = 60*60*12, session_cookie = "fateslist_session_cookie") # 1 day expiry cookie
 
+# Setup CSRF protection
 app.add_middleware(CSRFProtectMiddleware, csrf_secret=csrf_secret)
+
+# Middleware to proxy uvicorn IP addresses
 app.add_middleware(ProxyHeadersMiddleware)
 
+# Setup exception handling
 @app.exception_handler(401)
 @app.exception_handler(403)
 @app.exception_handler(404)
@@ -68,7 +77,8 @@ async def validation_exception_handler(request, exc):
     return await WebError.error_handler(request, exc)
 
 print("Loading discord modules for Fates List")
-# Include all the modules
+
+# Include all the modules by looping through and using importlib to import them and then including them in fastapi
 for f in os.listdir("modules/discord"):
     if not f.startswith("_") or f.startswith("."):
         path = "modules.discord." + f.replace(".py", "")
@@ -79,18 +89,27 @@ for f in os.listdir("modules/discord"):
 print("All discord modules have loaded successfully!")
 
 async def setup_db():
+    """Function to setup the asyncpg connection pool"""
     db = await asyncpg.create_pool(host="127.0.0.1", port=5432, user=pg_user, password=pg_pwd, database="fateslist")
     return db
 
 @app.on_event("startup")
 async def startup():
+    """
+    On startup:
+        - Initialize the database
+        - Start the main and server bots using tokens in config_secrets.py
+        - Sleep for 4 seconds to ensure connections are made before application startup
+        - Setup Redis and initialize the ratelimiter
+        - Connect robustly to rabbitmq for add bot/edit bot/delete bot
+    """
     builtins.db = await setup_db()
     print("Discord init beginning")
     asyncio.create_task(client.start(TOKEN_MAIN))
     asyncio.create_task(client_servers.start(TOKEN_SERVER))
     await asyncio.sleep(4)
     builtins.redis_db = await aioredis.from_url('redis://localhost', db = 1)
-    limiter.init(redis_db, identifier = rl_key_func)
+    FastAPILimiter.init(redis_db, identifier = rl_key_func)
     builtins.rabbitmq = await aio_pika.connect_robust(
         f"amqp://fateslist:{rabbitmq_pwd}@127.0.0.1/"
     )
@@ -98,9 +117,11 @@ async def startup():
 
 @app.on_event("shutdown")
 async def close():
+    """Close all commections on shutdown"""
     print("Closing")
     await redis_db.close()
 
+# Two events to let us know when discord.py is up and ready
 @client.event
 async def on_ready():
     print(client.user, "up")
@@ -113,12 +134,14 @@ async def on_ready():
 # Tag calculation
 builtins.tags_fixed = []
 for tag in TAGS.keys():
+    # For every key in tag dict, create the "fixed" tag information (friendly and easy to use data for tags)
     tags_fixed.append({"name": tag.replace("_", " ").title(), "iconify_data": TAGS[tag], "id": tag})
 
 builtins.server_tags_fixed = []
 for tag in SERVER_TAGS.keys():
     server_tags_fixed.append({"name": tag.replace("_", " ").title(), "iconify_data": SERVER_TAGS[tag], "id": tag})
 
+# Two variables used in our logger
 BOLD_START =  "\033[1m"
 BOLD_END = "\033[0m"
 
@@ -126,19 +149,20 @@ BOLD_END = "\033[0m"
 async def add_process_time_header_and_parse_apiver(request: Request, call_next):
     if str(request.url.path).startswith("/bots"):
         return RedirectResponse(str(request.url.path).replace("/bots", "/bot", 1))
-    request.scope, api_ver = version_scope(request, 2)
-    start_time = time.time()
-    response = await call_next(request)
-    process_time = time.time() - start_time
-    response.headers["X-Process-Time"] = str(process_time)
-    response.headers["FL-API-Version"] = api_ver
+    request.scope, api_ver = version_scope(request, 2) # Transparently redirect /api to /api/vX excluding docs and already /api/vX'd apis
+    start_time = time.time() # Get process time start
+    response = await call_next(request) # Process request
+    process_time = time.time() - start_time # Get time taken
+    response.headers["X-Process-Time"] = str(process_time) # Record time taken
+    response.headers["FL-API-Version"] = api_ver # Record currently used api version for debug
     
-    # Gunicorn logging is trash, lets fix that
-    query_str = f'?{request.scope["query_string"].decode("utf-8")}' if request.scope["query_string"] else ""
-    print(f"{request.client.host} - {BOLD_START}{request.method} {request.url.path}{query_str} HTTP/{request.scope['http_version']} - {response.status_code} {HTTPStatus(response.status_code).phrase}{BOLD_END}")
-    return response
+    # Gunicorn logging is trash, lets fix that with custom logging
+    query_str = f'?{request.scope["query_string"].decode("utf-8")}' if request.scope["query_string"] else "" # Get query strings
+    print(f"{request.client.host} - {BOLD_START}{request.method} {request.url.path}{query_str} HTTP/{request.scope['http_version']} - {response.status_code} {HTTPStatus(response.status_code).phrase}{BOLD_END}") # Print logs like uvicorn
+    return response # Return response to user
 
 def fl_openapi():
+    """Custom OpenAPI description"""
     if app.openapi_schema:
         return app.openapi_schema
     openapi_schema = get_openapi(
@@ -150,5 +174,5 @@ def fl_openapi():
     app.openapi_schema = openapi_schema
     return app.openapi_schema
 
-app.openapi = fl_openapi
+app.openapi = fl_openapi # OpenAPI schema setup
 
