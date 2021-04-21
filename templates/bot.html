@@ -606,7 +606,9 @@ function deleteReview(rev_id) {
 		headers: {"Authorization": "{{user_token}}"},
 		processData: false,
 		contentType: 'application/json',
-	
+		statusCode: {
+			400: function(data) {alert(data.error)}
+		}	
 	});
 	modalShow("Success!", "Deleted Review Successfully")
 }
