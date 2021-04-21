@@ -37,6 +37,12 @@ CREATE TABLE bots (
     verifier bigint
 );
 
+CREATE TABLE bot_tags (
+    bot_id BIGINT NOT NULL,
+    tag TEXT NOT NULL,
+    CONSTRAINT bots_fk FOREIGN KEY (bot_id) REFERENCES bots(bot_id) ON DELETE CASCADE ON UPDATE CASCADE
+)
+
 CREATE TABLE bot_owner (
     _id SERIAL,
     bot_id BIGINT not null,
@@ -69,12 +75,14 @@ CREATE TABLE bot_commands (
    examples text[], -- examples
    premium_only boolean default false, -- premium status
    notes text[], -- notes on said command
-   doc_link text -- link to documentation of command
+   doc_link text, -- link to documentation of command
+   CONSTRAINT bots_fk FOREIGN KEY (bot_id) REFERENCES bots(bot_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE bot_stats_votes (
    bot_id bigint,
-   total_votes bigint
+   total_votes bigint,
+   CONSTRAINT bots_fk FOREIGN KEY (bot_id) REFERENCES bots(bot_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE bot_stats_votes_pm (
@@ -94,13 +102,15 @@ CREATE TABLE bot_reviews (
    flagged boolean default false,
    epoch bigint[] default '{}',
    replies uuid[] default '{}',
-   reply boolean default false
+   reply boolean default false,
+   CONSTRAINT bots_fk FOREIGN KEY (bot_id) REFERENCES bots(bot_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE bot_voters (
     bot_id bigint,
     user_id bigint,
-    timestamps bigint[]
+    timestamps bigint[],
+    CONSTRAINT bots_fk FOREIGN KEY (bot_id) REFERENCES bots(bot_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE users (
@@ -130,7 +140,8 @@ CREATE TABLE bot_api_event (
     epoch BIGINT, 
     event TEXT, 
     context JSONB, 
-    id UUID
+    id UUID,
+    CONSTRAINT bots_fk FOREIGN KEY (bot_id) REFERENCES bots(bot_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE bot_promotions (
@@ -139,7 +150,8 @@ CREATE TABLE bot_promotions (
    title text,
    info text,
    css text,
-   type integer default 3 -- 1 = announcement, 2 = promo, 3 = generic
+   type integer default 3, -- 1 = announcement, 2 = promo, 3 = generic
+   CONSTRAINT bots_fk FOREIGN KEY (bot_id) REFERENCES bots(bot_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE bot_maint (
@@ -147,7 +159,8 @@ CREATE TABLE bot_maint (
    bot_id bigint,
    reason text,
    type integer,
-   epoch bigint
+   epoch bigint,
+   CONSTRAINT bots_fk FOREIGN KEY (bot_id) REFERENCES bots(bot_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE vanity (
@@ -155,17 +168,6 @@ CREATE TABLE vanity (
     vanity_url text unique, -- This is the text I wish to match
     redirect bigint unique, -- What does this vanity resolve to
     redirect_text text unique-- For the future
-);
-
-CREATE TABLE support_requests (
-    id uuid primary key DEFAULT uuid_generate_v4(),
-    enquiry_type text,
-    resolved boolean default false,
-    files bytea[],
-    filenames TEXT[],
-    title text,
-    description text,
-    bot_id BIGINT
 );
 
 CREATE TABLE servers (

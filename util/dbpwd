@@ -1,1 +1,1 @@
-cat config_secrets.py | grep pwd
+cat config_secrets.py | grep pg_pwd

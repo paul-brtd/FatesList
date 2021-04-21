@@ -37,16 +37,21 @@ async def add_bot_backend(
     bot_dict["tags"] = bot_dict["tags"].split(",")
     return await templates.TemplateResponse("bot_add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": rc[0], "code": rc[1], "mode": "add"})
 
-@router.get("/{bid}/edit")
+@router.get("/{bot_id}/edit")
 @csrf_protect
-async def bot_edit(request: Request, bid: int):
+async def bot_edit(request: Request, bot_id: int):
     if "userid" in request.session.keys():
-        check = await is_bot_admin(int(bid), int(request.session.get("userid")))
+        check = await is_bot_admin(int(bot_id), int(request.session.get("userid")))
         print(check)
         if not check:
             return abort(403)
-        fetch = dict(await db.fetchrow("SELECT bot_id, prefix, bot_library AS library, invite, website, banner, long_description, description, tags, webhook, webhook_type, discord AS support, api_token, banner, github, features, long_description_type, css, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", bid))
-        owners = await db.fetch("SELECT owner, main FROM bot_owner WHERE bot_id = $1", bid)
+        try:
+            fetch = dict(await db.fetchrow("SELECT bot_id, prefix, bot_library AS library, invite, website, banner, long_description, description, webhook, webhook_type, discord AS support, api_token, banner, github, features, long_description_type, css, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", bot_id))
+        except:
+            return abort(404)
+        tags = await db.fetch("SELECT tag FROM bot_tags WHERE bot_id = $1", bot_id)
+        fetch = fetch | {"tags": [tag["tag"] for tag in tags]}
+        owners = await db.fetch("SELECT owner, main FROM bot_owner WHERE bot_id = $1", bot_id)
         print(owners)
         if owners is None:
             return "This bot has no found owners.\nPlease contact Fates List support"
@@ -55,7 +60,7 @@ async def bot_edit(request: Request, bid: int):
             fetch["extra_owners"] = ",".join([str(eo) for eo in fetch["extra_owners"]])
         else:
             fetch["extra_owners"] = ""
-        vanity = await db.fetchrow("SELECT vanity_url AS vanity FROM vanity WHERE redirect = $1", bid)
+        vanity = await db.fetchrow("SELECT vanity_url AS vanity FROM vanity WHERE redirect = $1", bot_id)
         if vanity is None:
             vanity = {"vanity": None}
         bot = fetch | dict(vanity)

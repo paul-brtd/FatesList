@@ -7,11 +7,12 @@ async def bot_add_backend(user_id, bot_id, prefix, library, website, banner, sup
     await db.execute("DELETE FROM bots WHERE bot_id = $1", bot_id)
     await db.execute("DELETE FROM bot_owner WHERE bot_id = $1", bot_id)
     await db.execute("DELETE FROM vanity WHERE redirect = $1", bot_id)
+    await db.execute("DELETE FROM bot_tags WHERE bot_id = $1", bot_id)
     await db.execute("""INSERT INTO bots (
             bot_id, prefix, bot_library,
             invite, website, banner, 
             discord, long_description, description,
-            tags, votes, servers, shard_count,
+            votes, servers, shard_count,
             created_at, api_token, features, 
             long_description_type, css, donate,
             github, webhook, webhook_type, 
@@ -23,7 +24,7 @@ async def bot_add_backend(user_id, bot_id, prefix, library, website, banner, sup
             $13, $14, $15,
             $16, $17, $18,
             $19, $20, $21,
-            $22, $23, $24)""", bot_id, prefix, library, invite, website, banner, support, long_description, description, tags, 0, 0, 0, int(creation), get_token(132), features, long_description_type, css, donate, github, webhook, webhook_type, privacy_policy, nsfw) # Add new bot info
+            $22, $23)""", bot_id, prefix, library, invite, website, banner, support, long_description, description, 0, 0, 0, int(creation), get_token(132), features, long_description_type, css, donate, github, webhook, webhook_type, privacy_policy, nsfw) # Add new bot info
     if vanity.replace(" ", "") != '':
         await db.execute("INSERT INTO vanity (type, vanity_url, redirect) VALUES ($1, $2, $3)", 1, vanity, bot_id) # Add new vanity if not empty string
 
@@ -33,6 +34,11 @@ async def bot_add_backend(user_id, bot_id, prefix, library, website, banner, sup
             await connection.execute("INSERT INTO bot_owner (bot_id, owner, main) VALUES ($1, $2, $3)", bot_id, user_id, True) # Add new main bot owner
             extra_owners_add = [(bot_id, owner, False) for owner in extra_owners] # Create list of extra owner tuples for executemany executemany
             await connection.executemany("INSERT INTO bot_owner (bot_id, owner, main) VALUES ($1, $2, $3)", extra_owners_add) # Add in one step
+
+    async with db.acquire() as connection: # Acquire a connection
+        async with connection.transaction() as tr: # Use transaction to prevent data loss
+            tags_add = [(bot_id, tag) for tag in tags] # Get list of bot_id, tag tuples for executemany
+            await connection.executemany("INSERT INTO bot_tags (bot_id, tag)", tags_add) # Add all the tags to the database
 
     await add_event(bot_id, "add_bot", {}) # Send a add_bot event to be succint and complete 
     owner = int(user_id)

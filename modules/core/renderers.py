@@ -44,14 +44,14 @@ def gen_owner_html(owners_lst: tuple):
 
 async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bool):
     
-    bot = await db.fetchrow("SELECT prefix, shard_count, state, description, bot_library AS library, tags, banner, website, votes, servers, bot_id, discord AS support, banner, github, features, invite_amount, css, long_description_type, long_description, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", bot_id)
-    if not bot:
+    bot = await db.fetchrow("SELECT prefix, shard_count, state, description, bot_library AS library, banner, website, votes, servers, bot_id, discord AS support, banner, github, features, invite_amount, css, long_description_type, long_description, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", bot_id)
+    tags = await db.fetch("SELECT tag FROM bot_tags WHERE bot_id = $1", bot_id)
+    if not bot or not tags:
         if api:
             return abort(404) # If API, just regular 404 JSON
         return await templates.e(request, "It might still be in our RabbitMQ queue waiting to be added to our database if you recently added it. Try reloading!", main = "Bot Not Found") # Otherwise HTML error
-    bot = dict(bot)
+    bot = dict(bot) | {"tags": [tag["tag"] for tag in tags]}
     owners = await db.fetch("SELECT owner FROM bot_owner WHERE bot_id = $1", bot_id) # Get all bot owners
-    
 
     if bot["long_description_type"] == enums.LongDescType.markdown_pymarkdown: # If we are using markdown
         ldesc = emd(markdown.markdown(bot['long_description'], extensions=["extra", "abbr", "attr_list", "def_list", "fenced_code", "footnotes", "tables", "admonition", "codehilite", "meta", "nl2br", "sane_lists", "toc", "wikilinks", "smarty", "md_in_html"]))
