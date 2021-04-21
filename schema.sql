@@ -42,7 +42,7 @@ CREATE TABLE bot_owner (
     bot_id BIGINT not null,
     owner BIGINT,
     main BOOLEAN DEFAULT false,
-    COMSTRAINT bots_fk FOREIGN KEY (bot_id) REFERENCES bots(bot_id) ON DELETE CASCADE ON UPDATE CASCADE
+    CONSTRAINT bots_fk FOREIGN KEY (bot_id) REFERENCES bots(bot_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE INDEX bot_owner_index ON bot_owner (bot_id, owner, main);

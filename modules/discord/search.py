@@ -15,7 +15,7 @@ async def search(request: Request, q: str):
 async def tags(request: Request, tag: str):
     if tag not in TAGS:
         return RedirectResponse("/")
-    fetch = await db.fetch(f"SELECT description, state, banner,votes,servers,bot_id,tags,invite FROM bots, unnest(tags) a WHERE  lower(a) = '{tag}' AND (state = 0 OR state = 6) ORDER BY votes DESC LIMIT 12")
+    fetch = await db.fetch(f"SELECT description, state, banner,votes,servers,bot_id,invite, tags FROM bots, unnest(tags) tag WHERE tag = $1 AND (state = 0 OR state = 6) ORDER BY votes DESC LIMIT 15", tag.lower())
     search_bots = await parse_index_query(fetch)
     return await templates.TemplateResponse("search.html", {"request": request, "username": request.session.get("username", False), "search_bots": search_bots, "tags_fixed": tags_fixed, "avatar": request.session.get("avatar"), "profile_search": False})
 

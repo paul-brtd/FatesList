@@ -128,7 +128,7 @@ async def render_search(request: Request, q: str, api: bool):
             return abort(404)
         else:
             return RedirectResponse("/")
-    bots = await db.fetch("SELECT DISTINCT bots.bot_id, bots.banner, bots.votes, bots.servers, bots.description, bots.invite, bots.nsfw FROM bots INNER JOIN bot_owner ON bots.bot_id = bot_owner.bot_id WHERE (bots.state = 0 OR bots.state = 6) and (bots.description ilike $1 OR bots.username_cached ilike $1 OR bot_owner.owner::text ilike $1) ORDER BY bots.votes LIMIT 6", f'%{q}%')
+    bots = await db.fetch("SELECT DISTINCT bots.bot_id, bots.state, bots.banner, bots.votes, bots.servers, bots.description, bots.invite, bots.nsfw FROM bots INNER JOIN bot_owner ON bots.bot_id = bot_owner.bot_id WHERE (bots.state = 0 OR bots.state = 6) and (bots.description ilike $1 OR bots.username_cached ilike $1 OR bot_owner.owner::text ilike $1) ORDER BY bots.votes LIMIT 6", f'%{q}%')
     search_bots = await parse_index_query(bots)
     if not api:
         return await templates.TemplateResponse("search.html", {"request": request, "search_bots": search_bots, "tags_fixed": tags_fixed, "query": q, "profile_search": False})

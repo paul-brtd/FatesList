@@ -148,6 +148,7 @@ class BotActions():
         await add_rmq_task("bot_edit_queue", self.gen_rabbit_dict()) # Add to edit bot RabbitMQ
 
 class BotListAdmin():
+    """Class to control and handle bots"""
 
     # Some messages
     bot_not_found = "Bot could not be found"
@@ -156,16 +157,18 @@ class BotListAdmin():
     bad = discord.Color.red()
 
     def __init__(self, bot_id, mod):
-        self.bot_id = bot_id
+        self.bot_id = bot_id # The bot id to handle
         self.mod = mod # Mod is the moderator who performed the request
-        self.str_mod = str(mod)
-        self.channel = client.get_channel(bot_logs)
-        self.guild = self.channel.guild
+        self.str_mod = str(mod) # Rhe moderator in string form for quicker and easier access
+        self.channel = client.get_channel(bot_logs) # Bot log channel cached so we don't need to ask Discord
+        self.guild = self.channel.guild # Alias to make guild sending easier
 
     async def _get_main_owner(self):
-        return await db.fetchrow("SELECT owner FROM bot_owner WHERE bot_id = $1 AND main = true", self.bot_id)
+        """Internal function to get the main owner"""
+        return await db.fetchval("SELECT owner FROM bot_owner WHERE bot_id = $1 AND main = true", self.bot_id) # Return main owner from database
 
     async def _give_roles(self, role, users):
+        """Internal function to give a role to a list of users"""
         for user in users:
             try:
                 member = self.guild.get_member(int(user))
@@ -174,14 +177,14 @@ class BotListAdmin():
                 pass
 
     async def claim_bot(self):
-        check = await db.fetchrow("SELECT bot_id FROM bots WHERE bot_id = $2 AND state = $1", enums.BotState.pending, self.bot_id)
+        check = await db.fetchrow("SELECT bot_id FROM bots WHERE bot_id = $2 AND state = $1", enums.BotState.pending, self.bot_id) # Before claiming, make sure it is pending and exists first
         if not check:
             return self.bot_not_found
-        await db.execute("UPDATE bots SET state = $1 WHERE bot_id = $2", enums.BotState.under_review, self.bot_id)
-        claim_embed = discord.Embed(title="Bot Under Review", description = f"<@{self.bot_id}> is now under review by <@{self.mod}> and should be approved or denied soon!", color = self.good)
-        claim_embed.add_field(name="Link", value=f"https://fateslist.xyz/bot/{self.bot_id}")
-        await add_event(self.bot_id, "claim_bot", {"user": self.str_mod})
-        await self.channel.send(embed = claim_embed)
+        await db.execute("UPDATE bots SET state = $1 WHERE bot_id = $2", enums.BotState.under_review, self.bot_id) # Set it to under review in database
+        claim_embed = discord.Embed(title="Bot Under Review", description = f"<@{self.bot_id}> is now under review by <@{self.mod}> and should be approved or denied soon!", color = self.good) # Create claim embed
+        claim_embed.add_field(name="Link", value=f"https://fateslist.xyz/bot/{self.bot_id}") # Add link to bot page
+        await add_event(self.bot_id, "claim_bot", {"user": self.str_mod}) # Add the api event
+        await self.channel.send(embed = claim_embed) # Send it to the channel
 
     async def approve_bot(self, feedback):
         owners = await db.fetch("SELECT owner, main FROM bot_owner WHERE bot_id = $1", self.bot_id)
@@ -211,7 +214,7 @@ class BotListAdmin():
             return False # No bot found
         await db.execute("UPDATE bots SET state = $1 WHERE bot_id = $2", enums.BotState.pending, self.bot_id)
         await add_event(self.bot_id, "unverify_bot", {"user": self.str_mod})
-        unverify_embed = discord.Embed(title="Bot Unverified!", description = f"<@{self.bot_id}> by <@{owner['owner']}> has been unverified", color=self.bad)
+        unverify_embed = discord.Embed(title="Bot Unverified!", description = f"<@{self.bot_id}> by <@{owner}> has been unverified", color=self.bad)
         unverify_embed.add_field(name="Reason", value=reason)
         await self.channel.send(embed = unverify_embed)
 
@@ -222,13 +225,13 @@ class BotListAdmin():
         check = await db.fetchrow("SELECT state FROM bots WHERE bot_id = $1", self.bot_id)
         if check["state"] != enums.BotState.under_review:
             return self.must_claim
-        await db.execute("UPDATE bots SET state = $1, verifier = $3 WHERE bot_id = $2", enums.BotState.denied, self.mod, self.bot_id)
+        await db.execute("UPDATE bots SET state = $1, verifier = $2 WHERE bot_id = $3", enums.BotState.denied, self.mod, self.bot_id)
         await add_event(self.bot_id, "deny_bot", {"user": self.str_mod, "reason": reason})
-        deny_embed = discord.Embed(title="Bot Denied!", description = f"<@{self.bot_id}> by <@{owner['owner']}> has been denied", color=self.bad)
+        deny_embed = discord.Embed(title="Bot Denied!", description = f"<@{self.bot_id}> by <@{owner}> has been denied", color=self.bad)
         deny_embed.add_field(name="Reason", value=reason)
         await self.channel.send(embed = deny_embed)
         try:
-            member = self.guild.get_member(int(owner["owner"]))
+            member = self.guild.get_member(int(owner))
             if member is not None:
                 await member.send(embed = deny_embed)
         except:
