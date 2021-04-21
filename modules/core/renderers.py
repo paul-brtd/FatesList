@@ -19,7 +19,7 @@ async def render_index(request: Request, api: bool):
     else:
         return base_json
 
-@jit(nopython = True)
+#@jit(nopython = True)
 def gen_owner_html(owners_lst: tuple):
     """
     Generate the owner html, this is JIT'd for better performance

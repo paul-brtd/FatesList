@@ -14,21 +14,18 @@ def redirect(path: str) -> RedirectResponse:
 def abort(code: str) -> StarletteHTTPException:
     raise StarletteHTTPException(status_code=code)
 
-@jit(forceobj = True)
 def get_token(length: int) -> str:
     secure_str = ""
     for i in range(0, length):
         secure_str += secrets.choice(string.ascii_letters + string.digits)
     return secure_str
 
-@jit(forceobj = True)
 def ip_check(request: Request) -> str:
     forwarded = request.headers.get("X-Forwarded-For")
     if forwarded:
         return forwarded.split(",")[0]
     return request.client.host
 
-@jit(fastmath = True, forceobj = True)
 def human_format(num: int) -> str:
     if abs(num) < 1000:
         return str(abs(num))
@@ -42,7 +39,6 @@ def human_format(num: int) -> str:
         num /= 1000.0
     return '{} {}'.format('{:f}'.format(num).rstrip('0').rstrip('.'), ['', 'K', 'M', 'B', 'T', "Quad.", "Quint.", "Sext.", "Sept.", "Oct.", "Non.", "Dec.", "Tre.", "Quat.", "quindec.", "Sexdec.", "Octodec.", "Novemdec.", "Vigint.", "Duovig.", "Trevig.", "Quattuorvig.", "Quinvig.", "Sexvig.", "Septenvig.", "Octovig.", "Nonvig.", "Trigin.", "Untrig.", "Duotrig.", "Googol."][magnitude])
 
-@jit(forceobj = True)
 def version_scope(request, def_version):
     if str(request.url).startswith(site_url + "/api/") and not str(request.url).startswith(site_url + "/api/docs") and not str(request.url).startswith(site_url + "/api/v") and not str(request.url).startswith(site_url + "/api/ws"):
         if request.headers.get("FL-API-Version"):
@@ -91,7 +87,7 @@ def secure_strcmp(val1, val2):
     """
     return secrets.compare_digest(force_bytes(val1), force_bytes(val2))
 
-@jit(nopython = True)
+#@jit(nopython = True)
 def ireplace(old, new, text):
     """Case insensitive replace"""
     idx = 0
@@ -103,12 +99,11 @@ def ireplace(old, new, text):
         idx = index_l + len(new) 
     return text
 
-@jit
 def replace_last(string, delimiter, replacement):
     start, _, end = string.rpartition(delimiter)
     return start + replacement + end
 
-@jit(nopython = True)
+#@jit(nopython = True)
 def ireplacem(replace_tuple, text):
     """Calls ireplace multiple times for a replace tuple of format ((old, new), (old, new)). Can also support regular replace if third flag is set"""
     for replace in replace_tuple:

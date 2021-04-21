@@ -120,6 +120,8 @@ async def close():
     """Close all commections on shutdown"""
     print("Closing")
     await redis_db.close()
+    await rabbitmq.close()
+    await db.close()
 
 # Two events to let us know when discord.py is up and ready
 @client.event
