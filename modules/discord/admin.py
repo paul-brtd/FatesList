@@ -25,8 +25,10 @@ async def admin_dashboard(request: Request, stats: Optional[int] = 0):
         under_review = await do_index_query(state = 5, limit = None)
         denied = await do_index_query(state = 2, limit = None)
         banned = await do_index_query(state = 4, limit = None)
-        form = await Form.from_formdata(request)
-        return await templates.TemplateResponse("admin_stats.html",{"request": request, "certified": certified, "bot_amount": bot_amount, "queue": queue, "denied": denied, "banned": banned, "under_review": under_review, "admin": stats != 1 and staff[1] == 4, "mod": stats != 1 and staff[1] == 3, "owner": stats != 1 and staff[1] == 5, "bot_review": stats != 1 and staff[1] == 2, "form": form, "stats": stats == 1})
+        data = {"certified": certified, "bot_amount": bot_amount, "queue": queue, "denied": denied, "banned": banned, "under_review": under_review, "admin": stats != 1 and staff[1] == 4, "mod": stats != 1 and staff[1] == 3, "owner": stats != 1 and staff[1] == 5, "bot_review": stats != 1 and staff[1] == 2, "stats": stats == 1}
+        if str(request.url.path).startswith("/api"):
+            return data
+        return await templates.TemplateResponse("admin_stats.html", {"request": request} | data)
     else:
         return RedirectResponse("/", status_code = 303)
 

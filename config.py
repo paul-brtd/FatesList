@@ -1,5 +1,6 @@
 from config_secrets import *
 bot_logs = 789946587203764224 # #bot-logs in support server
+server_logs = 834881399168827392 # Server logs in support server
 appeals_channel = 813422505900376095 # #resubmissions-and-appeals in support server
 site_errors_channel = 815055552857243699 # Where to log site errors
 bots_role = 789934898408194059 # BOTS role in support server

@@ -178,11 +178,10 @@ CREATE TABLE servers (
     webhook text,
     description text,
     long_description text,
-    html_long_description boolean default false,
+    long_description_type integer default 0,
     css text default '',
     api_token text unique,
     website text,
-    tags text[],
     certified boolean DEFAULT false,
     created_at bigint,
     banned BOOLEAN DEFAULT false,
@@ -190,6 +189,13 @@ CREATE TABLE servers (
     user_provided_invite boolean,
     invite_code text
 )
+
+CREATE TABLE server_tags (
+    guild_id bigint not null,
+    tag text,
+    CONSTRAINT guilds_fk FOREIGN KEY (guild_id) REFERENCES servers(guild_id) ON DELETE CASCADE ON UPDATE CASCADE
+)
+
 CREATE TABLE bot_list (
 	icon TEXT,
 	url TEXT NOT NULL UNIQUE,

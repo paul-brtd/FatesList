@@ -92,8 +92,10 @@
 						<small style="font-weight: bold; font-size: 15px; color: red;">You can only preview your long description 20 times every minute unless you are certified as this uses the preview API</small>
 						<div id="${server}-ld-preview" style="display: block; min-height: 400px; overflow: auto; color: white; border-style: solid; border-radius: 4px 4px 4px 4px; margin-bottom: 20px; background: black; font-weight: normal; text-align: left;">
 						Your Long Description will appear here when you click the Preview button :)
-						</div>
-						<button class="btn btn-outline-light" onclick="addGuily('${server}')" style="margin-bottom: 3px;">Add Server</button>
+					</div>
+					<label for="tags-${server}">Type tags (comma seperated)</label><br/>
+					<input id="tags-${server}" type="text" class="form-control fform" name="tags-${server}" placeholder="moderation, music"/><br/>
+					<button id="submit-${server}" class="btn btn-outline-light" onclick="addGuild('${server}')" style="margin-bottom: 3px;">Add Server</button>
 					</div>
 					<br/>
 					</a>`
@@ -115,7 +117,7 @@
 	}
 
 function previewLongDesc(gid){
-	html = document.querySelector("#html-long-description-" + gid).value;
+	html = document.querySelector("#html_long_description-" + gid).value;
 	ld = document.querySelector("#long_description-" + gid).value;
 	if(ld == "")
 		return
@@ -134,28 +136,54 @@ function previewLongDesc(gid){
 		}
 		});
 	}
-	function addGuild(gid) {
-		html = document.querySelector("#html-long-description-" + gid).value;
-		ld = document.querySelector("#long_description-" + gid).value; // Long Description
-		if(ld.length < 50)
-			modalShow("Long Description Is Too Short", "Please fix your long description!")
-		code = $("#" + gid).attr("data-code")
-		sd = document.querySelector("#description-" + gid).value;
-		$.ajax({
-			type: 'POST',
-			dataType: 'json',
-			url: '/api/v2/servers/' + gid,
-			data: JSON.stringify({"code": code, "html_long_description": html, "long_description": ld, "description": sd}),
-			headers: {"Authorization": "{{user_token}}"},
-			statusCode: {
-				"200": function(data) {
-					alert("Success")
-				},
-				"404": function(data) {
-					alert("Coming soon")
-				}
+
+function addGuild(gid) {
+	document.querySelector("#submit-" + gid).innerHTML = "Adding Server..."	
+	html = document.querySelector("#html_long_description-" + gid).value;
+	if(html == "true")
+		type = 0
+	else
+		type = 1
+	ld = document.querySelector("#long_description-" + gid).value; // Long Description
+	tags = document.querySelector("#tags-" + gid).value;
+	tags_list = tags.replaceAll(" ", "").split(",")
+	if(tags_list.length < 3) {
+		modalShow("Too Few Tags", "Please type at least three tags")
+		document.querySelector("#submit-" + gid).innerHTML = "Add Server"
+		return
+	}
+	if(ld.length < 50) {
+		modalShow("Long Description Is Too Short", "Please fix your long description!")
+		document.querySelector("#submit-" + gid).innerHTML = "Add Server"
+		return
+	}
+	code = $("#" + gid).attr("data-code")
+	sd = document.querySelector("#description-" + gid).value;
+	if(sd.length < 20) {
+		modalShow("Short Description Is Too Short", "Please fix your long description!")
+		document.querySelector("#submit-" + gid).innerHTML = "Add Server"
+		return
+	}
+	$.ajax({
+		type: 'POST',
+		dataType: 'json',
+		url: '/api/v2/servers/' + gid + "?user_id={{userid}}",
+		data: JSON.stringify({"code": code, "long_description_type": type, "long_description": ld, "description": sd, "tags": tags_list}),
+		headers: {"Authorization": "{{user_token}}"},
+		statusCode: {
+			"200": function(data) {
+				alert("Success")
+			},
+			"404": function(data) {
+				document.querySelector("#submit-" + gid).innerHTML = "Add Server"
+				alert("Coming soon")
+			},
+			"400": function(data) {
+				document.querySelector("#submit-" + gid).innerHTML = "Add Server"
+				modalShow("Error", data.responseJSON.reason);
 			}
-		});
+		}
+	});
 	}
    </script>
 {% endblock %}

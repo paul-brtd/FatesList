@@ -20,6 +20,7 @@ from fastapi_limiter import FastAPILimiter
 import logging
 from starlette.datastructures import URL
 from http import HTTPStatus
+from copy import deepcopy
 
 # Setup Bots
 
@@ -40,16 +41,7 @@ builtins.client = discord.Client(intents=intent_main)
 
 # Server Bot
 
-intent_server = discord.Intents.default()
-intent_server.typing = False
-intent_server.bans = False
-intent_server.emojis = False
-intent_server.integrations = False
-intent_server.webhooks = False
-intent_server.invites = True
-intent_server.voice_states = False
-intent_server.messages = False
-intent_server.members = True
+intent_server = deepcopy(intent_main)
 intent_server.presences = False
 builtins.client_servers = discord.Client(intents=intent_server)
 

@@ -20,12 +20,6 @@ def get_token(length: int) -> str:
         secure_str += secrets.choice(string.ascii_letters + string.digits)
     return secure_str
 
-def ip_check(request: Request) -> str:
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        return forwarded.split(",")[0]
-    return request.client.host
-
 def human_format(num: int) -> str:
     if abs(num) < 1000:
         return str(abs(num))

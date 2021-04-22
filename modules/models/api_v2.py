@@ -375,3 +375,9 @@ class ProfileSearch(BaseSearch):
     profiles: ProfilePartialList
     profile_search: bool = True
 
+class ServersAdd(BaseModel):
+    code: str
+    description: str
+    long_description_type: enums.LongDescType
+    long_description: str
+    tags: list
