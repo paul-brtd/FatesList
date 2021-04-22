@@ -199,9 +199,9 @@ class BotPartial(BaseUser):
     description: str
     servers: str
     banner: str
-    certified: bool
+    state: enums.BotState
     bot_id: str
-    invite: str
+    invite: Optional[str] = None
     nsfw: bool
 
 class BotPartialList(BaseModel):

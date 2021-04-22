@@ -1,6 +1,8 @@
 from fastapi import FastAPI, Request, Form as FForm
 from fastapi.openapi.utils import get_openapi
-from starlette.middleware.sessions import SessionMiddleware
+from starlette_session import SessionMiddleware
+from starlette_session.backends import BackendType
+#from starlette.middleware.sessions import SessionMiddleware
 from fastapi.responses import ORJSONResponse
 from fastapi.templating import Jinja2Templates
 import asyncpg
@@ -55,9 +57,6 @@ builtins.client_servers = discord.Client(intents=intent_server)
 # Setup FastAPI with required urls and orjson for faster json handling
 app = FastAPI(default_response_class = ORJSONResponse, redoc_url = "/api/docs/redoc", docs_url = "/api/docs/swagger", openapi_url = "/api/docs/openapi")
 
-# Setup middleware for JWT sessions
-app.add_middleware(SessionMiddleware, secret_key=session_key, https_only = True, max_age = 60*60*12, session_cookie = "fateslist_session_cookie") # 1 day expiry cookie
-
 # Setup CSRF protection
 app.add_middleware(CSRFProtectMiddleware, csrf_secret=csrf_secret)
 
@@ -100,7 +99,7 @@ async def startup():
         - Initialize the database
         - Start the main and server bots using tokens in config_secrets.py
         - Sleep for 4 seconds to ensure connections are made before application startup
-        - Setup Redis and initialize the ratelimiter
+        - Setup Redis and initialize the ratelimiter and caching system
         - Connect robustly to rabbitmq for add bot/edit bot/delete bot
     """
     builtins.db = await setup_db()
@@ -109,6 +108,7 @@ async def startup():
     asyncio.create_task(client_servers.start(TOKEN_SERVER))
     await asyncio.sleep(4)
     builtins.redis_db = await aioredis.from_url('redis://localhost', db = 1)
+    app.add_middleware(SessionMiddleware, backend_type = BackendType.aioRedis, backend_client = redis_db, secret_key=session_key, https_only = True, max_age = 60*60*12, cookie_name = "session") # 1 day expiry cookie
     FastAPILimiter.init(redis_db, identifier = rl_key_func)
     builtins.rabbitmq = await aio_pika.connect_robust(
         f"amqp://fateslist:{rabbitmq_pwd}@127.0.0.1/"

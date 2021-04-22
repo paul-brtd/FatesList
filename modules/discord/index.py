@@ -12,7 +12,7 @@ router = APIRouter(
 @router.delete("/")
 @router.put("/")
 @router.head("/")
-async def index_fend(request: Request):
+async def index_fend(request: Request, response: Response):
     return await render_index(request = request, api = False)
 
 @router.get("/legal")
