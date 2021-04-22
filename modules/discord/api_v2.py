@@ -118,6 +118,10 @@ async def bot_under_review_api(request: Request, bot_id: int, data: BotUnderRevi
     """
     if not secure_strcmp(Authorization, test_server_manager_key):
         return abort(401)
+    guild = client.get_guild(main_server)
+    user = guild.get_member(int(data.mod))
+    if user is None or not is_staff(staff_roles, user.roles, 2)[0]:
+        return ORJSONResponse({"done": False, "reason": "Invalid Moderator specified. The moderator in question does not have permission to perform this action!", "code": 9867}, status_code = 400)
     admin_tool = BotListAdmin(bot_id, data.mod)
     if data.requeue:
         state = await db.fetchval("SELECT state FROM bots WHERE bot_id = $1 AND state = $2", bot_id, enums.BotState.under_review)
@@ -127,7 +131,7 @@ async def bot_under_review_api(request: Request, bot_id: int, data: BotUnderRevi
     else:
         rc = await admin_tool.claim_bot()
     if rc is not None:
-        return abort(404) # A wrror here means 404
+        return ORJSONResponse({"done": False, "reason": rc, "code": 4646}, status_code = 400)
     return {"done": True, "reason": None, "code": 1000}
 
 @router.get("/bots/admin/queue", response_model = BotQueueGet)

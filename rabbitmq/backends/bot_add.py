@@ -4,6 +4,7 @@ from config import bot_logs, staff_ping_add_role
 import asyncio
 
 async def bot_add_backend(user_id, bot_id, prefix, library, website, banner, support, long_description, description, tags, extra_owners, creation, invite, features, long_description_type, css, donate, github, webhook, webhook_type, vanity, privacy_policy, nsfw):
+    print(bot_id)
     await db.execute("DELETE FROM bots WHERE bot_id = $1", bot_id)
     await db.execute("DELETE FROM bot_owner WHERE bot_id = $1", bot_id)
     await db.execute("DELETE FROM vanity WHERE redirect = $1", bot_id)
@@ -38,7 +39,7 @@ async def bot_add_backend(user_id, bot_id, prefix, library, website, banner, sup
     async with db.acquire() as connection: # Acquire a connection
         async with connection.transaction() as tr: # Use transaction to prevent data loss
             tags_add = [(bot_id, tag) for tag in tags] # Get list of bot_id, tag tuples for executemany
-            await connection.executemany("INSERT INTO bot_tags (bot_id, tag)", tags_add) # Add all the tags to the database
+            await connection.executemany("INSERT INTO bot_tags (bot_id, tag) VALUES ($1, $2)", tags_add) # Add all the tags to the database
 
     await add_event(bot_id, "add_bot", {}) # Send a add_bot event to be succint and complete 
     owner = int(user_id)

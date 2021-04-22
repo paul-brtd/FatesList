@@ -158,7 +158,7 @@ class BotListAdmin():
 
     def __init__(self, bot_id, mod):
         self.bot_id = bot_id # The bot id to handle
-        self.mod = mod # Mod is the moderator who performed the request
+        self.mod = int(mod) # Mod is the moderator who performed the request
         self.str_mod = str(mod) # Rhe moderator in string form for quicker and easier access
         self.channel = client.get_channel(bot_logs) # Bot log channel cached so we don't need to ask Discord
         self.guild = self.channel.guild # Alias to make guild sending easier
