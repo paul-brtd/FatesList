@@ -17,7 +17,7 @@ router = APIRouter(
 @router.get("/admin/console")
 async def botlist_admin_console_api(request: Request):
     """API to get raw admin console info"""
-    return await admin_dashboard(request, stats = 1)
+    return await admin_dashboard(request, stats = 1) # Just directly render the admin dashboard. It knows what to do
 
 
 @router.get("/bots/{bot_id}/promotions", response_model = BotPromotionGet, responses = {
@@ -609,7 +609,6 @@ async def guild_add_api(request: Request, guild_id: int, user_id: int, data: Ser
         return ORJSONResponse({"done": False, "reason": "Your long  description must be at least 50 characters long", "code": 4495}, status_code = 400)
     await add_rmq_task("server_add_queue", {"guild_id": guild_id, "guild_data": guild_data, "data": data.dict(), "user_id": user_id})
 
-
 @router.patch("/users/{user_id}/description", response_model = APIResponse)
 async def set_user_description_api(request: Request, user_id: int, desc: UserDescEdit, Authorization: str = Header("USER_TOKEN")):
     id = await user_auth(user_id, Authorization)
@@ -633,7 +632,7 @@ async def regenerate_user_token(request: Request, user_id: int, Authorization: s
 
 # TODO: Paypal
 
-# Generic methods to add coins
+# Generic methods to add coins for future paypal integration
 
 async def create_order(user_id, quantity, token, id, lm):
     await db.execute("INSERT INTO user_payments (user_id, token, coins, paid, stripe_id, livemode) VALUES ($1, $2, $3, $4, $5, $6)", user_id, token, quantity, False, id, lm)

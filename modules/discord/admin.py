@@ -7,30 +7,26 @@ router = APIRouter(
 )    
 
 @router.get("/console")
-async def admin_dashboard(request: Request, stats: Optional[int] = 0):
-    if "userid" in request.session.keys() or stats == 1:
-        if "userid" in request.session.keys() and stats != 1:
+async def admin_dashboard(request: Request):
+    if request.session.get("userid"):
+        try:
             guild = client.get_guild(main_server)
-            if guild is None:
-                return await templates.e(request, "Connecting to Discord API, please wait")
-            user = guild.get_member(int(request.session["userid"]))
-            if user is None:
-                return RedirectResponse("/", status_code = 303)
+            user = guild.get_member(int(request.session.get("userid")))
             staff = is_staff(staff_roles, user.roles, 2)
-            if not staff[0]:
-                return RedirectResponse("/", status_code = 303)
-        certified = await do_index_query(state = 6, limit = None) # State 0 and state 6 are approved and certified
-        bot_amount = await db.fetchval("SELECT COUNT(1) FROM bots WHERE state = 0 OR state = 6")
-        queue = await do_index_query(state = 1, limit = None)
-        under_review = await do_index_query(state = 5, limit = None)
-        denied = await do_index_query(state = 2, limit = None)
-        banned = await do_index_query(state = 4, limit = None)
-        data = {"certified": certified, "bot_amount": bot_amount, "queue": queue, "denied": denied, "banned": banned, "under_review": under_review, "admin": stats != 1 and staff[1] == 4, "mod": stats != 1 and staff[1] == 3, "owner": stats != 1 and staff[1] == 5, "bot_review": stats != 1 and staff[1] == 2, "stats": stats == 1}
-        if str(request.url.path).startswith("/api"):
-            return data
-        return await templates.TemplateResponse("admin_stats.html", {"request": request} | data)
+        except:
+            staff = [False, 0, StaffMember(name = "user", id = 0, perm = 0)]
     else:
-        return RedirectResponse("/", status_code = 303)
+        staff = [False, 0, StaffMember(name = "user", id = 0, perm = 0)]
+    certified = await do_index_query(state = 6, limit = None) # State 0 and state 6 are approved and certified
+    bot_amount = await db.fetchval("SELECT COUNT(1) FROM bots WHERE state = 0 OR state = 6")
+    queue = await do_index_query(state = 1, limit = None)
+    under_review = await do_index_query(state = 5, limit = None)
+    denied = await do_index_query(state = 2, limit = None)
+    banned = await do_index_query(state = 4, limit = None)
+    data = {"certified": certified, "bot_amount": bot_amount, "queue": queue, "denied": denied, "banned": banned, "under_review": under_review, "admin": staff[1] == 4, "mod": staff[1] == 3, "owner": staff[1] == 5, "bot_review": staff[1] == 2, "perm": staff[2].name}
+    if str(request.url.path).startswith("/api"): # Check for API
+        return data # Return JSON if so
+    return await templates.TemplateResponse("admin.html", {"request": request} | data) # Otherwise, render the template
 
 @router.post("/console")
 @csrf_protect

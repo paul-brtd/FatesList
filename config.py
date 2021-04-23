@@ -15,12 +15,15 @@ owner = 563808552288780322
 approve_feedback = "There was no feedback given for this bot. It was likely a good bot, but you can ask any staff member about feedback if you wish"
 deny_feedback = "There was no reason specified. DM/Ping Mod Mail to learn why"
 
-# Confusing right? Sorry, i already did 50% using reviewing server so meow ig
 staff_roles = {
     "user": {
         "id": 00000000000000000,
-        "perm": 1
+        "perm": 0
     },
+    "auditor": {
+        "id": 000000000000000000,
+        "perm": 1
+    }, # Unused
     "bot_review": {
         "id": 789941907563216897,
         "perm": 2
