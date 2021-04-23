@@ -24,7 +24,7 @@ staff_roles = {
         "id": 000000000000000000,
         "perm": 1
     }, # Unused
-    "bot_review": {
+    "bot_reviewer": {
         "id": 789941907563216897,
         "perm": 2
     },
