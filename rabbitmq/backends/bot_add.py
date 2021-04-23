@@ -41,7 +41,7 @@ async def bot_add_backend(user_id, bot_id, prefix, library, website, banner, sup
             tags_add = [(bot_id, tag) for tag in tags] # Get list of bot_id, tag tuples for executemany
             await connection.executemany("INSERT INTO bot_tags (bot_id, tag) VALUES ($1, $2)", tags_add) # Add all the tags to the database
 
-    await add_event(bot_id, "add_bot", {}) # Send a add_bot event to be succint and complete 
+    await bot_add_event(bot_id, "add_bot", {}) # Send a add_bot event to be succint and complete 
     owner = int(user_id)
     channel = client.get_channel(bot_logs)
     bot_name = (await get_bot(bot_id))["username"]

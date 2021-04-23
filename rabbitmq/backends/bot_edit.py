@@ -53,7 +53,7 @@ async def bot_edit_backend(user_id, bot_id, prefix, library, website, banner, su
                     vanity = None # If vanity is expty string, there is no vanity
 
                 await connection.execute("UPDATE vanity SET vanity_url = $1 WHERE redirect = $2", vanity, bot_id) # Update the vanity since bot already use it
-    await add_event(bot_id, "edit_bot", {"user": str(user_id)}) # Send event
+    await bot_add_event(bot_id, "edit_bot", {"user": str(user_id)}) # Send event
     channel = client.get_channel(bot_logs)
     owner = int(user_id)
     edit_embed = discord.Embed(title="Bot Edit!", description=f"<@{owner}> has edited the bot <@{bot_id}>!", color=0x00ff00)

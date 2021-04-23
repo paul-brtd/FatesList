@@ -68,11 +68,12 @@
 						<label for="description">Short Description</label>
 						<input id="description-${server}" type="text" class="form-control fform" name="description" placeholder="Great server, join now!">
 						<label 
-						for="html_long_description-${server}"
+						for="long_description_type-${server}"
 					      	>Long Description Type (Click to change)</label>
-						<select id="html_long_description-${server}" name="html_long_description" class="form-control fform select-fl">
-						<option value="true" selected>HTML</option>
-						<option value="false"selected>Markdown</option>
+						<select id="long_description_type-${server}" name="long_description_type" class="form-control fform select-fl">
+						<option value="0">HTML - Recommended</option>
+						<option value="1">Markdown (python-markdown) - Recommended</option>
+						<option value="2">Markdown (marked) - Special Cases Only</option>
 						</select>
 
   						<label
@@ -117,7 +118,7 @@
 	}
 
 function previewLongDesc(gid){
-	html = document.querySelector("#html_long_description-" + gid).value;
+	html = document.querySelector("#long_description_type-" + gid).value;
 	ld = document.querySelector("#long_description-" + gid).value;
 	if(ld == "")
 		return
@@ -125,7 +126,7 @@ function previewLongDesc(gid){
 		type: 'POST',
 		dataType: 'json',
 		url: '/api/v2/preview',
-		data: JSON.stringify({"html_long_description": html, "data": ld}),
+		data: JSON.stringify({"html_long_description": html == "0", "data": ld}),
 		statusCode: {
 			"200": function(data) {
 				$("#" + gid + "-ld-preview").html(data.html)
@@ -139,11 +140,7 @@ function previewLongDesc(gid){
 
 function addGuild(gid) {
 	document.querySelector("#submit-" + gid).innerHTML = "Adding Server..."	
-	html = document.querySelector("#html_long_description-" + gid).value;
-	if(html == "true")
-		type = 0
-	else
-		type = 1
+	html = document.querySelector("#long_description_type-" + gid).value;
 	ld = document.querySelector("#long_description-" + gid).value; // Long Description
 	tags = document.querySelector("#tags-" + gid).value;
 	tags_list = tags.replaceAll(" ", "").split(",")
@@ -153,14 +150,14 @@ function addGuild(gid) {
 		return
 	}
 	if(ld.length < 50) {
-		modalShow("Long Description Is Too Short", "Please fix your long description!")
+		modalShow("Long Description Is Too Short", "Please fix your long description to be below 50 characters!")
 		document.querySelector("#submit-" + gid).innerHTML = "Add Server"
 		return
 	}
 	code = $("#" + gid).attr("data-code")
 	sd = document.querySelector("#description-" + gid).value;
-	if(sd.length < 20) {
-		modalShow("Short Description Is Too Short", "Please fix your long description!")
+																    if(sd.length < 20 || sd.length > 101) {
+		modalShow("Short Description Is Too Short (or too long)", "Please fix your short description to be between 20 and 101 characters!")
 		document.querySelector("#submit-" + gid).innerHTML = "Add Server"
 		return
 	}
@@ -168,7 +165,7 @@ function addGuild(gid) {
 		type: 'POST',
 		dataType: 'json',
 		url: '/api/v2/servers/' + gid + "?user_id={{userid}}",
-		data: JSON.stringify({"code": code, "long_description_type": type, "long_description": ld, "description": sd, "tags": tags_list}),
+		data: JSON.stringify({"code": code, "long_description_type": html, "long_description": ld, "description": sd, "tags": tags_list}),
 		headers: {"Authorization": "{{user_token}}"},
 		statusCode: {
 			"200": function(data) {

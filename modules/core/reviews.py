@@ -42,4 +42,4 @@ async def parse_reviews(bot_id: int, reviews: List[asyncpg.Record] = None) -> Li
 
 async def base_rev_bt(bot_id, event, base_dict):
     reviews = await parse_reviews(bot_id)
-    await add_event(bot_id, event, base_dict | {"reviews": reviews[0], "average_stars": reviews[1]})
+    await bot_add_event(bot_id, event, base_dict | {"reviews": reviews[0], "average_stars": reviews[1]})

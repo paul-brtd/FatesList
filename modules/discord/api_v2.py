@@ -234,7 +234,7 @@ async def get_bot_events_api(request: Request, bot_id: int, exclude: Optional[li
         id = await bot_auth(bot_id, Authorization)
         if id is None:
             return abort(401)
-    return await get_events(bot_id = bot_id, filter = filter, exclude = exclude)
+    return await bot_get_events(bot_id = bot_id, filter = filter, exclude = exclude)
 
 @router.post("/bots/{bot_id}", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=5, minutes=1))])
 async def add_bot_api(request: Request, bot_id: int, bot: BotAdd, Authorization: str = Header("USER_TOKEN_OR_BOTBLOCK_ADD_KEY")):
@@ -322,7 +322,7 @@ async def upvote_review_api(request: Request, bot_id: int, rid: uuid.UUID, vote:
                 break
     bot_rev[main_key].append(vote.user_id)
     await db.execute("UPDATE bot_reviews SET review_upvotes = $1, review_downvotes = $2 WHERE id = $3", bot_rev["review_upvotes"], bot_rev["review_downvotes"], rid)
-    await add_event(bot_id, "review_vote", {"user": str(vote.user_id), "review_id": str(rid), "upvotes": len(bot_rev["review_upvotes"]), "downvotes": len(bot_rev["review_downvotes"]), "upvote": vote.upvote})
+    await bot_add_event(bot_id, "review_vote", {"user": str(vote.user_id), "review_id": str(rid), "upvotes": len(bot_rev["review_upvotes"]), "downvotes": len(bot_rev["review_downvotes"]), "upvote": vote.upvote})
     return {"done": True, "reason": None, "code": 1000}
 
 @router.delete("/bots/{bot_id}/reviews/{rid}", response_model = APIResponse)

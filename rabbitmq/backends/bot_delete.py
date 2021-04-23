@@ -15,6 +15,6 @@ async def bot_delete_backend(user_id, bot_id):
     await db.executemany("UPDATE bot_packs SET bots = $2 WHERE id = $1", pack_bot_delete)
 
     delete_embed = discord.Embed(title="Bot Deleted :(", description=f"<@{user_id}> has deleted the bot <@{bot_id}>!", color=discord.Color.red())
-    await add_event(bot_id, "delete_bot", {"user": user_id})    
+    await bot_add_event(bot_id, "delete_bot", {"user": user_id})    
     channel = client.get_channel(bot_logs)
     await channel.send(embed = delete_embed)

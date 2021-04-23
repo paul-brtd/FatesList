@@ -28,14 +28,12 @@ async def is_bot_admin(bot_id: int, user_id: int):
     return True
 
 # Internal backend entry to check if one role is in staff and return a dict of that entry if so
-@jit(forceobj=True)
 def _get_staff_member(staff_json: dict, role: int) -> StaffMember:
     for key in staff_json.keys(): # Loop through all keys in staff json
         if int(role) == int(staff_json[key]["id"]): # Check if role matches
             return StaffMember(name = key, id = staff_json[key]["id"], perm = staff_json[key]["perm"]) # Return the staff json role data
     return StaffMember(name = "user", id = staff_json["user"]["id"], perm = 1) # Fallback to perm 1 user member
 
-@jit(forceobj = True)
 def is_staff(staff_json: dict, roles: Union[list, int], base_perm: int) -> Union[bool, int, StaffMember]:
     if type(roles) != list and type(roles) != tuple:
         roles = [roles]

@@ -74,7 +74,7 @@ async def vote_bot(uid: int, bot_id: int, username, autovote: bool) -> Optional[
     else:
         await db.execute("UPDATE bot_stats_votes SET total_votes = total_votes + 1 WHERE bot_id = $1", int(bot_id))
 
-    event_id = asyncio.create_task(add_event(bot_id, "vote", {"username": username, "user_id": str(uid), "votes": b['votes'] + 1}))
+    event_id = asyncio.create_task(bot_add_event(bot_id, "vote", {"username": username, "user_id": str(uid), "votes": b['votes'] + 1}))
     return []
 
 async def invite_bot(bot_id: int):
