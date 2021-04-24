@@ -56,9 +56,22 @@
     </div>
     {% if personal %}
     <h6 class="white" style="margin-bottom: 11px;">Note that the above list of bots includes your bots in the queue and banned bots (DM/ping an admin for resubmission). These bots are hidden unless you are logged in.</h6>
-    <small class="long-desc-link">API Token (User) [DO NOT SHARE]: {{user_info.api_token}}</small>
+    <small id="user_tok" class="long-desc-link" style="display: none; margin-bottom: 5px;">API Token (User) [DO NOT SHARE]: {{user_info.api_token}}</small>
+    <button class="btn btn-outline-light" style="margin-bottom: 15px" onclick="showToken(this)">Show API Token (User)</button><br/>
+    <p></p>
     {%endif%}
-<script>
+    <script>
+	function showToken(but) {
+		usertok = document.querySelector("#user_tok");
+		if(usertok.style.display == "none") {	
+			usertok.style.display = "block";
+			but.innerHTML = "Hide API Token"
+		}
+		else {
+			usertok.style.display = "none";
+			but.innerHTML = "Show API Token (User)"
+		}
+	}		
         function modalShow(id) {
                         $(id).modal()
         }

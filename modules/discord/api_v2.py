@@ -297,12 +297,12 @@ async def get_bot_reviews(request: Request, bot_id: int):
     return {"reviews": reviews[0], "average_stars": reviews[1]}
 
 @router.patch("/bots/{bot_id}/reviews/{rid}/votes", response_model = APIResponse)
-async def upvote_review_api(request: Request, bot_id: int, rid: uuid.UUID, vote: BotReviewVote, Authorization: str = Header("USER_TOKEN")):
+async def vote_review_api(request: Request, bot_id: int, rid: uuid.UUID, vote: BotReviewVote, Authorization: str = Header("USER_TOKEN")):
     id = await user_auth(vote.user_id, Authorization)
     vote.user_id = int(vote.user_id)
     if id is None:
         return abort(401)
-    bot_rev = await db.fetchrow("SELECT review_upvotes, review_downvotes FROM bot_reviews WHERE id = $1", rid)
+    bot_rev = await db.fetchrow("SELECT review_upvotes, review_downvotes, star_rating, reply, review_text FROM bot_reviews WHERE id = $1", rid)
     if bot_rev is None:
         return ORJSONResponse({"done": False, "reason": "You are not allowed to up/downvote this review (doesn't actually exist)", "code": 3836}, status_code = 404)
     bot_rev = dict(bot_rev)
@@ -322,7 +322,7 @@ async def upvote_review_api(request: Request, bot_id: int, rid: uuid.UUID, vote:
                 break
     bot_rev[main_key].append(vote.user_id)
     await db.execute("UPDATE bot_reviews SET review_upvotes = $1, review_downvotes = $2 WHERE id = $3", bot_rev["review_upvotes"], bot_rev["review_downvotes"], rid)
-    await bot_add_event(bot_id, "review_vote", {"user": str(vote.user_id), "review_id": str(rid), "upvotes": len(bot_rev["review_upvotes"]), "downvotes": len(bot_rev["review_downvotes"]), "upvote": vote.upvote})
+    await bot_add_event(bot_id, "vote_review", {"user": (await get_user(vote.user_id)), "id": str(rid), "star_rating": bot_rev["star_rating"], "reply": bot_rev["reply"], "review": bot_rev["review_text"], "upvotes": len(bot_rev["review_upvotes"]), "downvotes": len(bot_rev["review_downvotes"]), "upvote": vote.upvote})
     return {"done": True, "reason": None, "code": 1000}
 
 @router.delete("/bots/{bot_id}/reviews/{rid}", response_model = APIResponse)
@@ -345,9 +345,9 @@ async def delete_review(request: Request, bot_id: int, rid: uuid.UUID, bt: Backg
         check = await db.fetchrow("SELECT replies FROM bot_reviews WHERE id = $1 AND bot_id = $2 AND user_id = $3", rid, bot_id, data.user_id)
         if check is None:
             return ORJSONResponse({"done": False, "reason": "You are not allowed to delete this review", "code": 1232}, status_code = 400)
-
+    event_data = await db.fetchrow("SELECT reply, review_text, star_rating FROM bot_reviews WHERE id = $1", rid) # Information needed to send an event
     await db.execute("DELETE FROM bot_reviews WHERE id = $1", rid)
-    bt.add_task(base_rev_bt, bot_id, "delete_review", {"user": data.user_id, "reply": False, "review_id": str(rid)})
+    bt.add_task(base_rev_bt, bot_id, "delete_review", {"user": (await get_user(int(data.user_id))), "reply": event_data["reply"], "id": str(rid), "star_rating": event_data["star_rating"], "review": event_data["review_text"]})
     return {"done": True, "reason": None, "code": 1000}
 
 @router.get("/bots/{bot_id}/commands", response_model = BotCommands)
@@ -546,7 +546,7 @@ async def get_user_api(request: Request, user_id: int):
     user_ret = dict(user) | user_obj
     return user_ret
 
-@router.post("/users/{user_id}/servers/prepare", dependencies=[Depends(RateLimiter(times=1, seconds=30))], response_model = ServerListAuthed)
+@router.post("/users/{user_id}/servers/prepare", dependencies=[Depends(RateLimiter(times=3, seconds=35))], response_model = ServerListAuthed)
 async def prepare_servers_api(request: Request, user_id: int, data: ServerCheck, Authorization: str = Header("USER_TOKEN")):
     """
     Prepares a user to add servers and returns available servers for said user. Scopes must have guild permission
