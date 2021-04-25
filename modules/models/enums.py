@@ -37,3 +37,9 @@ class LongDescType(IntEnum):
     html = 0, "HTML/Raw Description"
     markdown_pymarkdown = 1, "Markdown using Python Markdown"
     markdown_marked = 2, "Markdown using JavaScript Marked"
+
+class Vanity(IntEnum):
+    _init_ = "value __doc__"
+    server = 0, "Server"
+    bot = 1, "Bot"
+    profile = 2, "Profile"

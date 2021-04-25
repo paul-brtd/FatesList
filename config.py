@@ -15,6 +15,10 @@ owner = 563808552288780322
 approve_feedback = "There was no feedback given for this bot. It was likely a good bot, but you can ask any staff member about feedback if you wish"
 deny_feedback = "There was no reason specified. DM/Ping Mod Mail to learn why"
 
+# Banned in vanity
+
+reserved_vanity = ["bot", "docs", "redoc", "doc", "profile", "server", "bots", "servers", "search", "invite", "discord", "login", "logout", "register", "admin", "console", "fuck", "support"]
+
 staff_roles = {
     "user": {
         "id": 00000000000000000,

@@ -299,9 +299,9 @@ async def get_bot_reviews(request: Request, bot_id: int):
 @router.patch("/bots/{bot_id}/reviews/{rid}/votes", response_model = APIResponse)
 async def vote_review_api(request: Request, bot_id: int, rid: uuid.UUID, vote: BotReviewVote, Authorization: str = Header("USER_TOKEN")):
     id = await user_auth(vote.user_id, Authorization)
-    vote.user_id = int(vote.user_id)
     if id is None:
         return abort(401)
+    vote.user_id = int(vote.user_id)
     bot_rev = await db.fetchrow("SELECT review_upvotes, review_downvotes, star_rating, reply, review_text FROM bot_reviews WHERE id = $1", rid)
     if bot_rev is None:
         return ORJSONResponse({"done": False, "reason": "You are not allowed to up/downvote this review (doesn't actually exist)", "code": 3836}, status_code = 404)

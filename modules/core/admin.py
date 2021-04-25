@@ -40,7 +40,13 @@ class BotActions():
             return "Your banner does not use https://. Please change it", 3 # Check banner and ensure HTTPS
         
         if self.invite:
-            if not self.invite.startswith("https://discord.com") or "oauth" not in self.invite:
+            if self.invite.startswith("P:"): # Check if perm auto is specified
+                perm_num = self.invite.split(":")[1]
+                try:
+                    perm_num = int(perm_num)
+                except ValueError:
+                    return "Invalid Bot Invite: Your permission number must be a integer", 4 # Invalid Invite
+            elif not self.invite.startswith("https://discord.com") or "oauth" not in self.invite:
                 return "Invalid Bot Invite: Your bot invite must be in the format of https://discord.com/api/oauth2... or https://discord.com/oauth2...", 4 # Invalid Invite
             self.generated.invite = self.invite # By default, this is None but if explicitly set, use that
 
@@ -104,7 +110,7 @@ class BotActions():
             pass
         else:
             vanity_check = await db.fetchrow("SELECT DISTINCT vanity_url FROM vanity WHERE lower(vanity_url) = $1 AND redirect != $2", self.vanity.replace(" ", "").lower(), self.bot_id) # Get distinct vanitiss
-            if vanity_check is not None or self.vanity.replace("", "").lower() in ["bot", "docs", "redoc", "doc", "profile", "server", "bots", "servers", "search", "invite", "discord", "login", "logout", "register", "admin"] or self.vanity.replace("", "").lower().__contains__("/"): # Check if reserved or in use
+            if vanity_check is not None or self.vanity.replace("", "").lower() in reserved_vanity or "/" in self.vanity.replace("", "").lower(): # Check if reserved or in use
                 return "Your custom vanity URL is already in use or is reserved", 15
 
     async def edit_check(self):

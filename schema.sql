@@ -114,8 +114,8 @@ CREATE TABLE bot_voters (
 );
 
 CREATE TABLE users (
+    id SERIAL,
     user_id bigint,
-    deleted boolean default false,
     api_token text,
     vote_epoch bigint,
     description text,
@@ -164,6 +164,7 @@ CREATE TABLE bot_maint (
 );
 
 CREATE TABLE vanity (
+    id SERIAL,
     type integer, -- 1 = bot, 2 = profile, 3 =  nothing right now but may be used
     vanity_url text unique, -- This is the text I wish to match
     redirect bigint unique, -- What does this vanity resolve to

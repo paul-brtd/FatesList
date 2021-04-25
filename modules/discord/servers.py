@@ -7,5 +7,4 @@ router = APIRouter(
 
 @router.get("/")
 async def server_rdir(request: Request):
-    return RedirectResponse("/")
-
+    pass

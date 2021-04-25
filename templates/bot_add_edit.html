@@ -96,16 +96,17 @@
   </div>
   <div class="col-lg">
      <h5 style="font-weight: bold; margin-bottom: 15px;">Bot Settings</h5>
-     <label for="invite">Invite URL (Leave blank for automatically generated)</label>
+     <label for="invite">Invite URL (Leave blank for automatic)</label>
       <input
         class="form-control fform"
         type="text"
         name="invite"
         placeholder="https://discord.com/oauth2/authorize?client_id=12345637172158464&amp;permissions=314432&amp;scope=bot"
-        minlength="10"
+        minlength="3"
 	value="{% if data.invite %}{{data.invite}}{% endif %}"
-      />
-      <label for="website">Website URL</label>
+       />
+      <small style="margin-bottom: 5px;"><strong>You can use P:PERM_NUMBER instead of providing a Invite URL if your Bot ID and Client ID are the same</strong></small>
+      <label style="margin-top: 3px;" for="website">Website URL</label>
       <input
         class="form-control fform"
         type="text"

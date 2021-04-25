@@ -8,11 +8,10 @@
 
             <h2 style="font-weight: bold;font-size: 67px;color: rgba(255,255,255,0.87);">Fates List</h2>
             <p style="font-weight: bold;opacity: 0.82;font-size: 20px;color: rgba(255,255,255,0.87);">Find the best bots for your servers.</p>
-        </div><div class="search_wrap search_wrap_3">
-    <div class="search_box is-mobile is-centered">
+    <div class="is-centered">
         {% if not profile_search %}
         <form method="GET" action="/search/t">
-                <input type="text" class="form-control fform search" placeholder="Search for bots (ENTER to search)" name="q" value="{{query}}" aria-label="Search for something..">
+                <input type="text" class="form-control fform search" placeholder="Search for bots (ENTER to search)" name="q" value="{{query}}" aria-label="Search for something.." style="width: 90%">
         </form>
         <span style="margin-bottom: 10px; font-size: 14.5px; display: block; font-weight: bold; text-align: center; color: white;">Want to search by profile? Try <a href="/search/profile" style="opacity: 0.8; color: white;">Profile Search</a></span>
         {% else %}

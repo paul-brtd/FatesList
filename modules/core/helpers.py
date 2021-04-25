@@ -81,21 +81,25 @@ async def invite_bot(bot_id: int):
     bot = await db.fetchrow("SELECT invite, invite_amount FROM bots WHERE bot_id = $1", bot_id)
     if bot is None:
         return None
-    if bot["invite"] is None:
-        perm = 0
+    if bot["invite"] is None or bot["invite"].startswith("P:"):
+        perm = bot["invite"].split(":")[1] if bot["invite"].startswith("P:") else 0
         return f"https://discord.com/api/oauth2/authorize?client_id={bot_id}&permissions={perm}&scope=bot%20applications.commands"
     await db.execute("UPDATE bots SET invite_amount = $1 WHERE bot_id = $2", bot["invite_amount"] + 1, bot_id)
     return bot["invite"]
 
 # Check vanity of bot 
-async def vanity_bot(vanity: str, compact = False):
-    t = await db.fetchrow("SELECT type, redirect FROM vanity WHERE lower(vanity_url) = $1", vanity.lower())
-    if t is None:
+async def vanity_bot(vanity: str, compact = False) -> Optional[str]:
+    """Checks and returns the vanity of the bot, otherwise returns None"""
+
+    if vanity in reserved_vanity: # Check if vanity is reserved and if so, return None
         return None
-    if t["type"] == 1:
-        type = "bot"
-    else:
-        type = "profile"
+
+    t = await db.fetchrow("SELECT type, redirect FROM vanity WHERE lower(vanity_url) = $1", vanity.lower()) # Check vanity against database
+    if t is None:
+        return None # No vanity found
+    
+    type = enums.Vanity(t["type"]).name # Get type using Vanity enum
+    
     if compact:
         return type, str(t["redirect"])
     return int(t["redirect"]), type

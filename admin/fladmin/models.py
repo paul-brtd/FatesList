@@ -218,7 +218,6 @@ class Bot(models.Model):
     api_token = models.CharField(unique=True, blank=False, null=False, default = uuid.uuid4, max_length = 255)
     website = models.CharField(blank=True, null=True, max_length = 1024)
     discord = models.CharField(blank=True, null=True, max_length=32)
-    tags = ArrayField(base_field = models.TextField(), blank=False, null=False)
     state = models.IntegerField(blank=False, null=False, default=1, help_text = "Use fateslist.xyz main admin console to verify bots", choices = (
         (0, 'Verified'),
         (1, 'Pending Verification'),
@@ -234,7 +233,7 @@ class Bot(models.Model):
     github = models.CharField(blank=True, null=True, max_length=256)
     features = ArrayField(base_field = models.TextField(), blank=True, null=True)
     private = models.BooleanField(blank=True, null=True)
-    html_long_description = models.BooleanField(blank=True, null=False)
+    long_description_type = models.IntegerField(blank=True, null=False)
     invite_amount = models.IntegerField(blank=True, null=True)
     user_count = models.BigIntegerField(blank=True, null=True)
     css = models.TextField(blank=True, null=True)
@@ -269,11 +268,10 @@ class Server(models.Model):
     webhook = models.TextField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     long_description = models.TextField(blank=True, null=True)
-    html_long_description = models.BooleanField(blank=True, null=True)
+    long_description_type = models.IntegerField(blank=True, null=True)
     css = models.TextField(blank=True, null=True)
     api_token = models.TextField(unique=True, blank=True, null=True)
     website = models.TextField(blank=True, null=True)
-    tags = ArrayField(base_field = models.TextField(), blank=True, null=True)
     certified = models.BooleanField(blank=True, null=True)
     created_at = models.BigIntegerField(blank=True, null=True)
     state = models.BooleanField(blank=True, null=True)

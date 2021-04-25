@@ -2,7 +2,8 @@ from fastapi import FastAPI, Request, Form as FForm
 from fastapi.openapi.utils import get_openapi
 from starlette_session import SessionMiddleware
 from starlette_session.backends import BackendType
-#from starlette.middleware.sessions import SessionMiddleware
+
+# Other Deps
 from fastapi.responses import ORJSONResponse
 from fastapi.templating import Jinja2Templates
 import asyncpg
@@ -21,6 +22,7 @@ import logging
 from starlette.datastructures import URL
 from http import HTTPStatus
 from copy import deepcopy
+from starlette.routing import Mount
 
 # Setup Bots
 
@@ -141,8 +143,10 @@ BOLD_END = "\033[0m"
 
 @app.middleware("http")
 async def add_process_time_header_and_parse_apiver(request: Request, call_next):
-    if str(request.url.path).startswith("/bots"):
-        return RedirectResponse(str(request.url.path).replace("/bots", "/bot", 1))
+    if str(request.url.path).startswith("/bots/"):
+        request.scope["path"] = str(request.url.path).replace("/bots", "/bot", 1)
+    if str(request.url.path) in ["/servers/", "/servers"]:
+        request.scope["path"] = "/servers/index"
     request.scope, api_ver = version_scope(request, 2) # Transparently redirect /api to /api/vX excluding docs and already /api/vX'd apis
     start_time = time.time() # Get process time start
     response = await call_next(request) # Process request
