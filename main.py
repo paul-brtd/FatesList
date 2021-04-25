@@ -24,8 +24,8 @@ from starlette.routing import Mount
 import sentry_sdk
 from starlette.requests import ClientDisconnect
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
-sentry_sdk.init("https://7b4d3edee4ee43b8b0a33e2bdd344ca6@o578682.ingest.sentry.io/5735055")
 
+sentry_sdk.init(sentry_dsn)
 # Setup Bots
 
 # Main Bot
