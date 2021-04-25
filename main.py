@@ -2,8 +2,6 @@ from fastapi import FastAPI, Request, Form as FForm
 from fastapi.openapi.utils import get_openapi
 from starlette_session import SessionMiddleware
 from starlette_session.backends import BackendType
-
-# Other Deps
 from fastapi.responses import ORJSONResponse
 from fastapi.templating import Jinja2Templates
 import asyncpg
@@ -23,6 +21,10 @@ from starlette.datastructures import URL
 from http import HTTPStatus
 from copy import deepcopy
 from starlette.routing import Mount
+import sentry_sdk
+from starlette.requests import ClientDisconnect
+from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
+sentry_sdk.init("https://7b4d3edee4ee43b8b0a33e2bdd344ca6@o578682.ingest.sentry.io/5735055")
 
 # Setup Bots
 
@@ -50,6 +52,9 @@ builtins.client_servers = discord.Client(intents=intent_server)
 
 # Setup FastAPI with required urls and orjson for faster json handling
 app = FastAPI(default_response_class = ORJSONResponse, redoc_url = "/api/docs/redoc", docs_url = "/api/docs/swagger", openapi_url = "/api/docs/openapi")
+
+# Add Sentry
+app.add_middleware(SentryAsgiMiddleware)
 
 # Setup CSRF protection
 app.add_middleware(CSRFProtectMiddleware, csrf_secret=csrf_secret)
@@ -104,7 +109,7 @@ async def startup():
     builtins.redis_db = await aioredis.from_url('redis://localhost', db = 1)
     app.add_middleware(SessionMiddleware, backend_type = BackendType.aioRedis, backend_client = redis_db, secret_key=session_key, https_only = True, max_age = 60*60*12, cookie_name = "session") # 1 day expiry cookie
     FastAPILimiter.init(redis_db, identifier = rl_key_func)
-    builtins.rabbitmq = await aio_pika.connect_robust(
+    builtins.rabbitmq_db = await aio_pika.connect_robust(
         f"amqp://fateslist:{rabbitmq_pwd}@127.0.0.1/"
     )
 
@@ -114,7 +119,7 @@ async def close():
     """Close all commections on shutdown"""
     print("Closing")
     await redis_db.close()
-    await rabbitmq.close()
+    await rabbitmq_db.close()
     await db.close()
 
 # Two events to let us know when discord.py is up and ready
@@ -142,14 +147,27 @@ BOLD_START =  "\033[1m"
 BOLD_END = "\033[0m"
 
 @app.middleware("http")
-async def add_process_time_header_and_parse_apiver(request: Request, call_next):
+async def fateslist_request_handler(request: Request, call_next):
+    """
+        Simple middleware to:
+            - Handle API version and internally redirect by changing ASGI scope at request.scope
+            - Transparently redirect /bots to /bot and /servers to /servers/index by changing ASGI scope (no 303 since thats bad UX)
+            - Set and record the process time for analytics
+    """
     if str(request.url.path).startswith("/bots/"):
         request.scope["path"] = str(request.url.path).replace("/bots", "/bot", 1)
     if str(request.url.path) in ["/servers/", "/servers"]:
         request.scope["path"] = "/servers/index"
     request.scope, api_ver = version_scope(request, 2) # Transparently redirect /api to /api/vX excluding docs and already /api/vX'd apis
     start_time = time.time() # Get process time start
-    response = await call_next(request) # Process request
+    try:
+        response = await asyncio.shield(call_next(request)) # Process request
+    except ClientDisconnect:
+        try:
+            request._is_disconnected = False
+        except:
+            print("Disconnected")
+        response = await asyncio.shield(call_next(request))
     process_time = time.time() - start_time # Get time taken
     response.headers["X-Process-Time"] = str(process_time) # Record time taken
     response.headers["FL-API-Version"] = api_ver # Record currently used api version for debug

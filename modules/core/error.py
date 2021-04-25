@@ -5,22 +5,8 @@ Fates List Error System
 from .imports import *
 from .templating import *
 
-@jit(forceobj=True)
 def etrace(ex):
-    trace = []
-    tb = ex.__traceback__
-    while tb is not None:
-        trace.append({
-            "filename": tb.tb_frame.f_code.co_filename,
-            "name": tb.tb_frame.f_code.co_name,
-            "lineno": tb.tb_lineno
-        })
-        tb = tb.tb_next
-    return str({
-        'type': type(ex).__name__,
-        'message': str(ex),
-        'trace': trace
-    })
+     return "".join(tblib.format_exception(ex)) # COMPAT: Python 3.10 only
 
 class WebError():
     @staticmethod
@@ -30,14 +16,8 @@ class WebError():
         if site_errors is None: # If this is None, config is wrong or we arent connected to Discord yet, in this case, raise traceback
             raise traceback
         try:
-            fl_info = f"Error ID: {error_id}\n\nMinimal output\n\n" # Initial header
-            while traceback is not None: # Loop through traceback recursively
-                fl_info += f"{traceback.tb_frame.f_code.co_filename}: {traceback.tb_lineno}\n" # tb_frame.f_code.co_filename is the filename and tb_lineno is line number
-                traceback = traceback.tb_next # Get the next part of traceback 
-            try:
-                fl_info += f"\n\nExtended output\n\n{etrace(exc)}" # Extended output
-            except:
-                fl_info += f"\n\nExtended output\n\nNo extended output could be logged..." # Could not log anything
+            fl_info = f"Error ID: {error_id}\n\n" # Initial header
+            fl_info += etrace(exc)
         except:
             pass
         await site_errors.send(f"500 (Internal Server Error) at {str(request.url).replace('https://', '')}\n\n**Error**: {exc}\n**Type**: {type(exc)}\n**Data**: File will be uploaded below if we didn't run into errors collecting logging information\n\n**Error ID**: {error_id}\n**Time When Error Happened**: {curr_time}") # Send the 500 message to site errors
@@ -65,7 +45,8 @@ class WebError():
             asyncio.create_task(WebError.log(request, exc, error_id, curr_time)) # Try and log what happened
             if str(request.url.path).startswith("/api"):
                 return ORJSONResponse({"done": False, "reason": f"Internal Server Error\nError ID: {error_id}\nTime when error happened: {curr_time}\nOur developers have been notified and are looking into it."}, status_code = exc.status_code)
-            return HTMLResponse(f"<strong>500 Internal Server Error</strong><br/>Fates List had a slight issue and our developers and looking into what happened<br/><br/>Error ID: {error_id}<br/>Time When Error Happened: {curr_time}\nPlease check our support server at <a href='{support_url}'>{support_url}</a> for more information", status_code=500) # Send 500 error to user with aupport server
+            tb_full = "".join(tblib.format_exception(exc)) # COMPAT: Python 3.10 only
+            return HTMLResponse(f"<strong>500 Internal Server Error</strong><br/>Fates List had a slight issue and our developers and looking into what happened<br/><br/>Error ID: {error_id}<br/><br/>Please check our support server at <a href='{support_url}'>{support_url}</a> for more information<br/><br/>Please send the below traceback if asked:<br/><br/><pre>{tb_full}</pre>Time When Error Happened: {curr_time}<br/>", status_code=500) # Send 500 error to user with support server
         elif exc.status_code == 404: 
             if path.startswith("/bot"): # Bot 404
                 msg = "Bot Not Found"

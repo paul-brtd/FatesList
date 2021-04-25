@@ -180,6 +180,7 @@ class Bot(BaseUser):
     prefix: str
     library: str
     invite: Optional[str] = None
+    invite_link: str
     invite_amount: int
     owners: BotOwners
     features: list

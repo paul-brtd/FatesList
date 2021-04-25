@@ -25,13 +25,15 @@ async def add_bot_backend(
     if "userid" not in request.session.keys():
         return RedirectResponse("/auth/login?redirect=/bot/admin/add&pretty=to add a bot", status_code = 303)
     banner = bot.banner.replace("http://", "https://").replace("(", "").replace(")", "")
-    guild = client.get_guild(main_server)
     bot_dict = bot.dict()
     features = [f for f in bot_dict.keys() if bot_dict[f] == "on" and f in ["custom_prefix", "open_source"]]
     bot_dict["features"] = features
     bot_dict["user_id"] = request.session.get("userid")
     bot_adder = BotActions(bot_dict)
-    rc = await bot_adder.add_bot()
+    try:
+        rc = await asyncio.shield(bot_adder.add_bot())
+    except:
+        rc = await asyncio.shield(bot_adder.add_bot())
     if rc is None:
         return RedirectResponse("/bot/" + str(bot_dict["bot_id"]), status_code = 303)
     bot_dict["tags"] = bot_dict["tags"].split(",")

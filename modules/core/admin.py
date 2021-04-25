@@ -41,7 +41,7 @@ class BotActions():
         
         if self.invite:
             if self.invite.startswith("P:"): # Check if perm auto is specified
-                perm_num = self.invite.split(":")[1]
+                perm_num = self.invite.split(":")[1].split("|")[0]
                 try:
                     perm_num = int(perm_num)
                 except ValueError:

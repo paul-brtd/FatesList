@@ -44,6 +44,8 @@ def gen_owner_html(owners_lst: tuple):
 
 async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bool):
     
+    if bot_id >= 9223372036854775807: # Max size of bigint
+        return abort(404)
     bot = await db.fetchrow("SELECT prefix, shard_count, state, description, bot_library AS library, banner, website, votes, servers, bot_id, discord AS support, banner, github, features, invite_amount, css, long_description_type, long_description, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", bot_id)
     tags = await db.fetch("SELECT tag FROM bot_tags WHERE bot_id = $1", bot_id)
     if not bot or not tags:

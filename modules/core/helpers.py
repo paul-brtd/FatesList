@@ -77,14 +77,15 @@ async def vote_bot(uid: int, bot_id: int, username, autovote: bool) -> Optional[
     event_id = asyncio.create_task(bot_add_event(bot_id, "vote", {"username": username, "user_id": str(uid), "votes": b['votes'] + 1}))
     return []
 
-async def invite_bot(bot_id: int):
+async def invite_bot(bot_id: int, api = False):
     bot = await db.fetchrow("SELECT invite, invite_amount FROM bots WHERE bot_id = $1", bot_id)
     if bot is None:
         return None
     if bot["invite"] is None or bot["invite"].startswith("P:"):
-        perm = bot["invite"].split(":")[1] if bot["invite"].startswith("P:") else 0
+        perm = bot["invite"].split(":")[1].split("|")[0] if bot["invite"] and bot["invite"].startswith("P:") else 0
         return f"https://discord.com/api/oauth2/authorize?client_id={bot_id}&permissions={perm}&scope=bot%20applications.commands"
-    await db.execute("UPDATE bots SET invite_amount = $1 WHERE bot_id = $2", bot["invite_amount"] + 1, bot_id)
+    if not api:
+        await db.execute("UPDATE bots SET invite_amount = $1 WHERE bot_id = $2", bot["invite_amount"] + 1, bot_id)
     return bot["invite"]
 
 # Check vanity of bot 

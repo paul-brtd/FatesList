@@ -5,6 +5,10 @@ router = APIRouter(
     include_in_schema = False
 )
 
+@router.get("/err/err")
+async def error():
+    return int("haha")
+
 # We want to handle any request method to index page
 @router.get("/")
 @router.post("/")

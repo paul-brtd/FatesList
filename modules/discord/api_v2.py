@@ -207,6 +207,7 @@ async def get_bot_api(request: Request, bot_id: int):
     api_ret["owners"] = [{"owner": str(obj["owner"]), "user": (await get_user(obj["owner"])), "main": obj["main"]} for obj in owners]
     if api_ret["features"] is None:
         api_ret["features"] = []
+    api_ret["invite_link"] = await invite_bot(bot_id, api = True)
     bot_obj = await get_bot(bot_id)
     if bot_obj is None:
         return abort(404)
