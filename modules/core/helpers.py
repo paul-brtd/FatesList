@@ -44,28 +44,27 @@ async def add_promotion(bot_id: int, title: str, info: str, css: str, type: int)
 
 async def vote_bot(uid: int, bot_id: int, username, autovote: bool) -> Optional[list]:
     await get_user_token(uid, username) # Make sure we have a user profile first
-    epoch = await db.fetchrow("SELECT vote_epoch FROM users WHERE user_id = $1", int(uid))
+    epoch = await db.fetchval("SELECT vote_epoch FROM users WHERE user_id = $1", int(uid))
     if epoch is None:
-        return [500]
-    epoch = epoch["vote_epoch"]
-    if autovote:
-        WT = 60*60*11 # Autovote Wait Time
+        pass
     else:
-        WT = 60*60*8 # Wait Time
-    if time.time() - epoch < WT:
-        return [401, str(WT - (time.time() - epoch))]
-    b = await db.fetchrow("SELECT webhook, votes FROM bots WHERE bot_id = $1", int(bot_id))
-    voters = await db.fetchrow("SELECT timestamps FROM bot_voters WHERE bot_id = $1 AND user_id = $2", int(bot_id), int(uid))
-    if b is None:
+        if autovote:
+            WT = datetime.timedelta(hours = 11) # Autovote Wait Time
+        else:
+            WT = datetime.timedelta(hours = 8) # Wait Time
+        if datetime.datetime.now(epoch.tzinfo) - epoch < WT: # Subtract the two times
+            return [401, WT - (datetime.datetime.now(epoch.tzinfo) - epoch)]
+    votes = await db.fetchval("SELECT votes FROM bots WHERE bot_id = $1", int(bot_id))
+    ts = await db.fetchval("SELECT timestamps FROM bot_voters WHERE bot_id = $1 AND user_id = $2", int(bot_id), int(uid))
+    if votes is None:
         return [404]
-    if voters is None:
-        await db.execute("INSERT INTO bot_voters (user_id, bot_id, timestamps) VALUES ($1, $2, $3)", int(uid), int(bot_id), [int(time.time())])
+    if ts is None:
+        await db.execute("INSERT INTO bot_voters (user_id, bot_id) VALUES ($1, $2)", int(uid), int(bot_id))
     else:
-        voters["timestamps"].append(int(time.time()))
-        ts = voters["timestamps"]
+        ts.append(datetime.datetime.now())
         await db.execute("UPDATE bot_voters SET timestamps = $1 WHERE bot_id = $2 AND user_id = $3", ts, int(bot_id), int(uid))
     await db.execute("UPDATE bots SET votes = votes + 1 WHERE bot_id = $1", int(bot_id))
-    await db.execute("UPDATE users SET vote_epoch = $1 WHERE user_id = $2", time.time(), int(uid))
+    await db.execute("UPDATE users SET vote_epoch = NOW() WHERE user_id = $1", int(uid))
 
     # Update bot_stats
     check = await db.fetchrow("SELECT bot_id FROM bot_stats_votes WHERE bot_id = $1", int(bot_id))
@@ -74,7 +73,7 @@ async def vote_bot(uid: int, bot_id: int, username, autovote: bool) -> Optional[
     else:
         await db.execute("UPDATE bot_stats_votes SET total_votes = total_votes + 1 WHERE bot_id = $1", int(bot_id))
 
-    event_id = asyncio.create_task(bot_add_event(bot_id, "vote", {"username": username, "user_id": str(uid), "votes": b['votes'] + 1}))
+    event_id = asyncio.create_task(bot_add_event(bot_id, "vote", {"username": username, "user_id": str(uid), "votes": votes + 1}))
     return []
 
 async def invite_bot(bot_id: int, api = False):

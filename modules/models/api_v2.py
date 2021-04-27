@@ -12,6 +12,7 @@ import uuid
 import sys
 sys.path.append("modules/models") # Libraries should remove this
 import enums # as enums (for libraries)
+import datetime
 
 class BaseUser(BaseModel):
     """
@@ -328,8 +329,14 @@ class BotPromotion_NotFound(BaseModel):
     detail: str = "Promotion Not Found"
     code: int = 1001
 
+class Timestamp(BaseModel):
+    __root__: int
+
+class TimestampList(BaseModel):
+    __root__: List[Timestamp]
+
 class BotVotesTimestamped(BaseModel):
-    timestamped_votes: Dict[str, list]
+    timestamped_votes: Dict[str, TimestampList]
 
 class FLFeature(BaseModel):
     type: str

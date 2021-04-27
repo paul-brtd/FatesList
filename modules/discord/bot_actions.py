@@ -112,7 +112,7 @@ async def vote_for_bot_or_die(
     elif ret[0] in [404, 500]:
         return abort(ret[0])
     elif ret[0] == 401:
-        wait_time = int(float(ret[1]))
+        wait_time = round(ret[1].total_seconds())
         wait_time_hr = wait_time//(60*60)
         wait_time_mp = (wait_time - (wait_time_hr*60*60)) # Minutes
         wait_time_min = wait_time_mp//60

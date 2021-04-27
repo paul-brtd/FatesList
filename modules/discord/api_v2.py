@@ -446,15 +446,21 @@ async def get_votes_api(request: Request, bot_id: int, user_id: Optional[int] = 
     if voters is None:
         return {"votes": 0, "voted": False, "vote_epoch": 0, "time_to_vote": 0, "vote_right_now": True}
     voter_count = len(voters["timestamps"])
-    vote_epoch = await db.fetchrow("SELECT vote_epoch FROM users WHERE user_id = $1", user_id)
-    if vote_epoch is None:
-        vote_epoch = 0
+    vote_epoch = await db.fetchval("SELECT vote_epoch FROM users WHERE user_id = $1", user_id)
+    if vote_epoch is not None:
+        WT = datetime.timedelta(hours = 8) # Wait Time
+        time_to_vote = WT - (datetime.datetime.now(vote_epoch.tzinfo) - vote_epoch)
+        if time_to_vote.total_seconds() < 0:
+            time_to_vote = 0
     else:
-        vote_epoch = vote_epoch["vote_epoch"]
-    WT = 60*60*8 # Wait Time
-    time_to_vote = WT - (time.time() - vote_epoch)
-    if time_to_vote < 0:
+        vote_epoch = 0
         time_to_vote = 0
+    
+    if type(time_to_vote) == datetime.timedelta:
+        time_to_vote = round(time_to_vote.total_seconds())
+    if type(vote_epoch) == datetime.datetime:
+        vote_epoch = round(vote_epoch.timestamp())
+
     return {"votes": voter_count, "voted": voter_count != 0, "vote_epoch": vote_epoch, "time_to_vote": time_to_vote, "vote_right_now": time_to_vote == 0}
 
 @router.get("/bots/{bot_id}/votes/timestamped", response_model = BotVotesTimestamped)
@@ -469,7 +475,7 @@ async def timestamped_get_votes_api(request: Request, bot_id: int, user_id: Opti
         ldata = await db.fetch("SELECT user_id, timestamps FROM bot_voters WHERE bot_id = $1", int(bot_id))
     ret = {}
     for data in ldata:
-        ret[str(data["user_id"])] = data["timestamps"]
+        ret[str(data["user_id"])] = [round(ts.timestamp()) for ts in data["timestamps"]]
     return {"timestamped_votes": ret}
 
 @router.post("/bots/{bot_id}/stats", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=5, minutes=1))])

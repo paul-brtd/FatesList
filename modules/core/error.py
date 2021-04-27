@@ -14,7 +14,7 @@ class WebError():
         traceback = exc.__traceback__ # Get traceback from exception
         site_errors = client.get_channel(site_errors_channel) # Get site errors channel
         if site_errors is None: # If this is None, config is wrong or we arent connected to Discord yet, in this case, raise traceback
-            raise traceback
+            raise exc
         try:
             fl_info = f"Error ID: {error_id}\n\n" # Initial header
             fl_info += etrace(exc)
