@@ -50,9 +50,10 @@
         <div class="d-flex flex-column" id="content-wrapper">
             <div id="content">
                 <div class="container-fluid">
-					<h3 class="text-dark mb-0" style="color: rgb(255,255,255)!important;">Fates List Admin Console</h3>
-					<h4 class="text-dark mb-0" style="color: rgb(255,255,255)!important;">{{perm.replace("_", " ").title()}}</h4> <!-- Get permission, replace underscore with space for title and make it a title -->
-					<div class="row" style="margin-bottom: 60px">
+			<h3 class="text-dark mb-0" style="color: rgb(255,255,255)!important;">Fates List Admin Console</h3>
+			<h4 class="text-dark mb-0" style="color: rgb(255,255,255)!important; opacity: 0.8">Dont worry if you can see this page. The Admin Console is globally visible for transparency.</h4>
+			<h4 class="text-dark mb-0" style="color: rgb(255,255,255)!important;">{{perm.replace("_", " ").title()}}</h4> <!-- Get permission, replace underscore with space for title and make it a title -->
+			<div class="row" style="margin-bottom: 60px">
 			   {{ statcard("Bots In Queue", len(queue), "robot") }}
 			   {{ statcard("Bots on the list", bot_amount, "list-alt" ) }}
 			   {{ statcard("Certified Bots", len(certified), "certificate") }}
