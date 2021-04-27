@@ -153,8 +153,13 @@ class BotRandom(BaseModel):
     invite: Optional[str] = None
     votes: int
 
-class BotUnderReview(BaseModel):
+class BotListAdminRoute(BaseModel):
     mod: str
+
+class BotTransfer(BotListAdminRoute):
+    new_owner: str
+
+class BotUnderReview(BotListAdminRoute):
     requeue: Optional[bool] = False
 
 class BotOwner(BaseModel):
@@ -353,10 +358,9 @@ class BotSearch(BaseSearch):
     search_bots: BotPartialList
     profile_search: bool = False
 
-class BotQueuePatch(BaseModel):
+class BotQueuePatch(BotListAdminRoute):
     feedback: Optional[str] = None 
     approve: bool
-    mod: str
 
 class BotQueueList(BaseModel):
     __root__: List[BaseUser]

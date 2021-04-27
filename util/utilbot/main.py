@@ -7,6 +7,8 @@ import aerich
 import sys
 import asyncpg
 import asyncio
+import aioredis
+import builtins
 sys.path.append("../..")
 from config import pg_user, pg_pwd, TOKEN_MAIN, bots_role, bot_dev_role, owner
 intents = discord.Intents.default()
@@ -29,6 +31,7 @@ client.bot_dev_role = bot_dev_role
 
 async def setup_db():
     fldb = await asyncpg.create_pool(host="127.0.0.1", port=5432, user=pg_user, password=pg_pwd, database="fateslist")
+    builtins.redis_db = await aioredis.from_url('redis://localhost', db = 1)
     return fldb
 
 async def init():

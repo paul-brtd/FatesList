@@ -44,6 +44,21 @@ class Manager(Cog):
         await ctx.author.add_roles(ctx.guild.get_role(self.client.bot_dev_role))
         return await ctx.send("Added the role for you :)")
 
+    @is_owner()
+    @command(pass_context = True)
+    async def botinserver(self, ctx):
+        bots = []
+        bot_lst = await self.client.fldb.fetch("SELECT bot_id, state FROM bots WHERE state = 0 OR state = 6")
+        for bot in bot_lst:
+            obj = ctx.guild.get_member(bot["bot_id"])
+            if obj is not None:
+                continue
+            obj = await get_bot(bot["bot_id"])
+            if obj is None:
+                continue
+            bots.append(str(bot["bot_id"]) + " - " + f"\nCertified: {bot['state'] == 6}\nInvite: https://discord.com/api/oauth2/authorize?client_id={bot['bot_id']}&permission=0&scope=bot")
+        iob = io.BytesIO("\n".join(bots).encode("utf-8"))
+        await ctx.send(file = File(filename = "bis.txt", fp = iob))
     @command(pass_context = True)
     async def bot(self, ctx, bot: Member):
         if bot.bot:

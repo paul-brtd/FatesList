@@ -50,11 +50,11 @@ async def bot_add_event(bot_id: int, event: str, context: dict, *, send_event = 
     asyncio.create_task(db.execute("INSERT INTO bot_api_event (bot_id, epoch, event, context, id) VALUES ($1, $2, $3, $4, $5)", bot_id, time.time(), event, orjson.dumps(context).decode("utf-8"), id))
     webh = await db.fetchrow("SELECT webhook, webhook_type FROM bots WHERE bot_id = $1", int(bot_id))
     if webh and send_event:
-        asyncio.create_task(_event_webhook_sender(webh["webhook"], webh["webhook_type"], api_token, bot_id, "bot", event, context))
+        asyncio.create_task(_event_webhook_sender(webh["webhook"], webh["webhook_type"], api_token, bot_id, "bot", event, context, id))
     asyncio.create_task(bot_add_ws_event(bot_id, {"payload": "event", "id": str(id), "event": event, "context": context}))
     return id
 
-async def _event_webhook_sender(webhook_url, webhook_type, api_token, id, webhook_target, event, context):
+async def _event_webhook_sender(webhook_url, webhook_type, api_token, id, webhook_target, event, context, event_id):
     """
         Internal function to send webhooks
 
@@ -65,14 +65,14 @@ async def _event_webhook_sender(webhook_url, webhook_type, api_token, id, webhoo
         webhook_target - Either "bot" or "guild"
         event - The event name
         context - The context/main body of the event in question
-    
+        event_id - The event ID in question
     """
     key = webhook_target + "_id"
     if webhook_url not in ["", None] and webhook_type is not None:
         cont = True
         if webhook_type.upper() == "FC":
             f = requests.post
-            json = {"event": event, "context": context, key: id, "event_id": str(id), "type": webhook_target}
+            json = {"event": event, "context": context, key: id, "event_id": str(event_id), "type": webhook_target}
             headers = {"Authorization": api_token}
         elif webhook_type.upper() == "DISCORD" and event in "vote" and webhook_target == "bot":
             webhook = DiscordWebhook(url=uri)

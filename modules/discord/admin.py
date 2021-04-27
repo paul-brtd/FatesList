@@ -87,7 +87,7 @@ async def ban_user_admin(request: Request, user_id: int = FForm(1), ban_type: in
         return RedirectResponse("/")
     if user_id is None or ban_type not in [0, 1, 2, 3]:
         return RedirectResponse("/")
-    await db.execute("UPDATE users SET banned = $1 WHERE user_id = $2", ban_type, user_id)
+    await db.execute("UPDATE users SET state = $1 WHERE user_id = $2", ban_type, user_id)
     return await templates.TemplateResponse("message.html", {"request": request, "message": "Banned User Successfully"})
 
 

@@ -1,12 +1,12 @@
 from config_secrets import *
-bot_logs = 789946587203764224 # #bot-logs in support server
-server_logs = 834881399168827392 # Server logs in support server
-appeals_channel = 813422505900376095 # #resubmissions-and-appeals in support server
-site_errors_channel = 815055552857243699 # Where to log site errors
-bots_role = 789934898408194059 # BOTS role in support server
-staff_ping_add_role=815174404932894731
-bot_dev_role = 789935019531304991 # BOT Developer in support server
-certified_dev_role = 792204630922100797 # Certified Developer in support server
+bot_logs = 836326348326043648 # #bot-logs in support server
+server_logs = 836331039693340712 # Server logs in support server
+appeals_channel = 836326351387623454 # #resubmissions-and-appeals in support server
+site_errors_channel = 836324560218488843 # Where to log site errors
+bots_role = 836326315946672158 # BOTS role in support server
+staff_ping_add_role=836326316188893275
+bot_dev_role = 836326314344185876 # BOT Developer in support server
+certified_dev_role = 836326313283026995 # Certified Developer in support server
 main_server=789934742128558080 # Main server
 test_server = 794834630942654546 # The test server for reviewing bots
 owner = 563808552288780322
@@ -29,19 +29,19 @@ staff_roles = {
         "perm": 1
     }, # Unused
     "bot_reviewer": {
-        "id": 789941907563216897,
+        "id": 836326311147864104,
         "perm": 2
     },
     "mod": {
-        "id": 789935016690843708,
+        "id": 836326309528600627,
         "perm": 3
     },
     "admin": {
-        "id": 789935015131742228,
+        "id": 836326305666039848,
         "perm": 4,
     },
     "owner": {
-        "id": 789935014275317780,
+        "id": 836326299223195738,
         "perm": 5,
     }
 }
@@ -80,7 +80,7 @@ server_bot_invite = "https://discord.com/api/oauth2/authorize?client_id=81107394
 
 # This value below dont need to be changed
 site_url = "https://" + site
-support_url = "https://discord.gg/PA5vjCRc5H"
+support_url = "https://discord.gg/cMAnfu8AJB"
 TAGS = {"music": "fa-solid:music", "moderation": "fa-solid:hammer", "economy": "fa-solid:coins", "fun": "fa-solid:heart", "anime": "fa-solid:camera", "games": "fa-solid:smile", "web_dashboard": "fa-solid:chart-bar", "logging": "fa-solid:chart-line", "game_stats": "fa-solid:chart-pie", "leveling": "fa-solid:arrow-up", "roleplay": "fa-solid:cat", "utility": "fa-solid:desktop", "social": "fa-solid:users"}
 SERVER_TAGS = {"music": "fa-solid:music", "moderation": "fa-solid:hammer", "economy": "fa-solid:coins", "fun": "fa-solid:heart", "anime": "fa-solid:camera", "games": "fa-solid:smile", "web_dashboard": "fa-solid:chart-bar", "logging": "fa-solid:chart-line", "game_stats": "fa-solid:chart-pie", "leveling": "fa-solid:arrow-up", "roleplay": "fa-solid:cat", "utility": "fa-solid:desktop", "social": "fa-solid:users"}
 

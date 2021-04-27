@@ -9,6 +9,10 @@ router = APIRouter(
 async def error():
     return int("haha")
 
+@router.get("/discord")
+def reroute_support():
+    return RedirectResponse("/fates/support/invite")
+
 # We want to handle any request method to index page
 @router.get("/")
 @router.post("/")

@@ -274,10 +274,29 @@ class BotListAdmin():
     async def certify_bot(self):
         owners = await db.fetch("SELECT owner FROM bot_owner WHERE bot_id = $1", self.bot_id)
         if not owners:
-            return "Bot Not Found"
+            return self.bot_not_found
         await db.execute("UPDATE bots SET state = 6 WHERE bot_id = $1", self.bot_id)
         certify_embed = discord.Embed(title = "Bot Certified", description = f"<@{self.mod}> certified the bot <@{self.bot_id}>", color = self.good)
         certify_embed.add_field(name="Link", value=f"https://fateslist.xyz/bot/{self.bot_id}")
         await self.channel.send(embed = certify_embed)
         await bot_add_event(self.bot_id, "certify_bot", {"user": self.str_mod})
         await self._give_roles(certified_dev_role, [owner["owner"] for owner in owners])
+
+    async def transfer_bot(self, new_owner):
+        owner = await self._get_main_owner()
+        if owner is None:
+            return self.bot_not_found
+        await db.execute("UPDATE bot_owner SET owner = $1 WHERE bot_id = $2 AND main = true", new_owner, self.bot_id) 
+        # Remove bot developer role
+        member = self.guild.get_member(owner)
+        if member is not None:
+            await member.remove_roles(self.guild.get_role(bot_dev_role))
+        
+        new_member = self.guild.get_member(new_owner)
+        if new_member is not None:
+            await new_member.add_roles(self.guild.get_role(bot_dev_role))
+
+        embed = discord.Embed(title="Ownership Transfer", description = f"<@{self.mod}> has transferred ownership of the bot <@{self.bot_id}> from <@{owner}> to <@{new_owner}>", color=self.good)
+        embed.add_field(name="Link", value=f"https://fateslist.xyz/bot/{self.bot_id}")
+        await self.channel.send(embed = embed)
+        await bot_add_event(self.bot_id, "transfer_bot", {"user": self.str_mod, "old_owner": str(owner), "new_owner": str(new_owner)})

@@ -141,16 +141,38 @@ async def bot_under_review_api(request: Request, bot_id: int, data: BotUnderRevi
         return ORJSONResponse({"done": False, "reason": rc, "code": 4646}, status_code = 400)
     return {"done": True, "reason": None, "code": 1000}
 
+@router.patch("/bots/admin/{bot_id}/main_owner", response_model = APIResponse)
+async def transfer_bot_api(request: Request, bot_id: int, data: BotTransfer, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
+    if not secure_strcmp(Authorization, test_server_manager_key):
+        return abort(401)
+    guild = client.get_guild(main_server)
+    try:
+        user = guild.get_member(int(data.mod))
+    except ValueError:
+        user = None
+    if user is None or not is_staff(staff_roles, user.roles, 4)[0]:
+        return ORJSONResponse({"done": False, "reason": "Invalid Moderator specified. The moderator in question does not have permission to perform this action!", "code": 8826}, status_code = 400)
+    try:
+        new_owner = await get_user(int(data.new_owner))
+    except:
+        new_owner = None
+    if new_owner is None:
+        return ORJSONResponse({"done": False, "reason": "Invalid new owner specified.", "code": 8827}, status_code = 400)
+    admin_tool = BotListAdmin(bot_id, int(data.mod))
+    rc = await admin_tool.transfer_bot(int(data.new_owner))
+    if rc is None:
+        return {"done": True, "reason": "Bot Transferred Successfully!", "code": 1001}
+    return ORJSONResponse({"done": False, "reason": rc, "code": 3869}, status_code = 400)
+
 @router.get("/bots/admin/queue", response_model = BotQueueGet)
 async def botlist_get_queue_api(request: Request):
+    """Admin API to get the bot queue"""
     bots = await db.fetch("SELECT bot_id FROM bots WHERE state = $1", enums.BotState.pending)
     return {"bots": [(await get_bot(bot["bot_id"])) for bot in bots]}
 
 @router.patch("/bots/admin/{bot_id}/queue", response_model = APIResponse)
 async def botlist_edit_queue_api(request: Request, bot_id: int, data: BotQueuePatch, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
-    """
-    Admin API to approve/verify or deny a bot on Fates List
-    """
+    """Admin API to approve/verify or deny a bot on Fates List"""
     if not secure_strcmp(Authorization, test_server_manager_key):
         return abort(401)
     
@@ -168,7 +190,10 @@ async def botlist_edit_queue_api(request: Request, bot_id: int, data: BotQueuePa
     if len(data.feedback) < 3:
         return ORJSONResponse({"done": False, "reason": "Feedback must either not be provided or must be larger than 3 characters!", "code": 3836}, status_code = 400)
     guild = client.get_guild(main_server)
-    user = guild.get_member(int(data.mod))
+    try:
+        user = guild.get_member(int(data.mod))
+    except ValueError:
+        user = None
     if user is None or not is_staff(staff_roles, user.roles, 2)[0]:
         return ORJSONResponse({"done": False, "reason": "Invalid Moderator specified. The moderator in question does not have permission to perform this action!", "code": 3867}, status_code = 400)
 
@@ -186,7 +211,10 @@ async def botlist_edit_queue_api(request: Request, bot_id: int, data: BotQueuePa
 @router.get("/bots/random", response_model = BotRandom, dependencies=[Depends(RateLimiter(times=7, minutes=1))])
 async def random_bots_api(request: Request):
     random_unp = await db.fetchrow("SELECT description, banner, state, votes, servers, bot_id, invite FROM bots WHERE state = 0 OR state = 6 ORDER BY RANDOM() LIMIT 1") # Unprocessed, use the random function to get a random bot
-    bot = (await get_bot(random_unp["bot_id"])) | dict(random_unp) # Get bot from cache and add that in
+    try:
+        bot = (await get_bot(random_unp["bot_id"])) | dict(random_unp) # Get bot from cache and add that in
+    except:
+        return await random_bots_api(request) 
     bot["bot_id"] = str(bot["bot_id"]) # Make sure bot id is a string to prevent corruption issues
     bot["servers"] = human_format(bot["servers"]) # Format the servers field
     bot["description"] = ireplacem(js_rem_tuple, bot["description"]) # Prevent some basic attacks in short description

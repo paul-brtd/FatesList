@@ -1,4 +1,4 @@
-from modules.core import get_bot, get_token, add_event
+from modules.core import get_bot, get_token, bot_add_event
 import discord
 from config import bot_logs, staff_ping_add_role
 import asyncio
