@@ -111,11 +111,3 @@ class OauthConfig:
     client_secret = oauth_client_secret
     redirect_uri = "https://" + site + "/auth/login/confirm"
 
-class ULAOauthConfig:
-    client_id = "733766762658529360"
-    client_secret = oauth_ula_client_secret
-    redirect_uri = "https://ula.fateslist.xyz/login/confirm"
-
-# ULA 
-
-ula_api_url = "https://ulapi.fateslist.xyz"
