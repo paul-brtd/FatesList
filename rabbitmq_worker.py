@@ -36,7 +36,6 @@ builtins.client = discord.Client(intents=intent_main)
 
 intent_server = deepcopy(intent_main)
 intent_server.presences = False
-print(intent_server.presences)
 
 builtins.client_server = discord.Client(intents=intent_server)
 
@@ -89,7 +88,7 @@ class BotQueueData():
         elif queue == "bot_delete_queue":
             await bot_delete_backend(int(self.user_id), self.bot_id)
         elif queue == "server_add_queue":
-            await server_add_backend(self.user_id, self.guild_id, self.guild_data["name"], self.data["description"], self.data["long_description_type"], self.data["long_description"], self.data["tags"])
+            await server_add_backend(self.user_id, self.guild_id, self.data["name"], self.description, self.long_description_type, self.long_description, self.tags, self.vanity)
         else:
             raise ValueError("No queue found")
 

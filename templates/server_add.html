@@ -65,7 +65,9 @@
 					</div>
 					</a>
 					<div style='display: none; background: black; border-radius: 10px 10px 10px 10px' id='form-${server}' onclick="ignoreParent(); preventDefault()">
-						<label for="description">Short Description</label>
+						<label for="vanity-${server}">Vanity URL (optional)</label>
+						<input id="vanity-${server}" type="text" class="form-control fform" placeholder = "amongus">
+						<label for="description-${server}">Short Description</label>
 						<input id="description-${server}" type="text" class="form-control fform" name="description" placeholder="Great server, join now!">
 						<label 
 						for="long_description_type-${server}"
@@ -143,6 +145,7 @@ function previewLongDesc(gid){
 	html = document.querySelector("#long_description_type-" + gid).value;
 	ld = document.querySelector("#long_description-" + gid).value; // Long Description
 	tags = document.querySelector("#tags-" + gid).value;
+	vanity = document.querySelector("#vanity-" + gid).value;	
 	tags_list = tags.replaceAll(" ", "").split(",")
 	if(tags_list.length < 3) {
 		modalShow("Too Few Tags", "Please type at least three tags")
@@ -165,7 +168,7 @@ function previewLongDesc(gid){
 		type: 'POST',
 		dataType: 'json',
 		url: '/api/v2/servers/' + gid + "?user_id={{userid}}",
-		data: JSON.stringify({"code": code, "long_description_type": html, "long_description": ld, "description": sd, "tags": tags_list}),
+		data: JSON.stringify({"code": code, "long_description_type": html, "long_description": ld, "description": sd, "tags": tags_list, "vanity": vanity}),
 		headers: {"Authorization": "{{user_token}}"},
 		statusCode: {
 			"200": function(data) {
@@ -178,6 +181,10 @@ function previewLongDesc(gid){
 			"400": function(data) {
 				document.querySelector("#submit-" + gid).innerHTML = "Add Server"
 				modalShow("Error", data.responseJSON.reason);
+			},
+			"422": function(data) {
+				document.querySelector("#submit-" + gid).innerHTML = "Add Server"
+				modalShow("Oops!", "We are still updating this to make it compatible with our API. Please join the support server and ask for help there! Thanks")
 			}
 		}
 	});

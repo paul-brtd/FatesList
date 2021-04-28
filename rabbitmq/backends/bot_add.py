@@ -1,4 +1,5 @@
 from modules.core import get_bot, get_token, bot_add_event
+from modules.models import enums
 import discord
 from config import bot_logs, staff_ping_add_role
 import asyncio
@@ -27,7 +28,7 @@ async def bot_add_backend(user_id, bot_id, prefix, library, website, banner, sup
             $19, $20, $21,
             $22)""", bot_id, prefix, library, invite, website, banner, support, long_description, description, 0, 0, 0, get_token(132), features, long_description_type, css, donate, github, webhook, webhook_type, privacy_policy, nsfw) # Add new bot info
     if vanity.replace(" ", "") != '':
-        await db.execute("INSERT INTO vanity (type, vanity_url, redirect) VALUES ($1, $2, $3)", 1, vanity, bot_id) # Add new vanity if not empty string
+        await db.execute("INSERT INTO vanity (type, vanity_url, redirect) VALUES ($1, $2, $3)", enums.Vanity.bot, vanity, bot_id) # Add new vanity if not empty string
 
 
     async with db.acquire() as connection: # Acquire a connection

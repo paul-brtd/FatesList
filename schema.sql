@@ -25,7 +25,7 @@ CREATE TABLE bots (
     website text,
     discord text,
     tags text[],
-    state INTEGER DEFAULT 1,
+    state integer DEFAULT 1,
     banner text DEFAULT 'none'::text,
     created_at timestamptz DEFAULT NOW(),
     invite text,
@@ -52,7 +52,7 @@ CREATE TABLE bot_owner (
     CONSTRAINT bots_fk FOREIGN KEY (bot_id) REFERENCES bots(bot_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-CREATE INDEX bot_owner_index ON bot_owner (bot_id, owner, main);
+CREATE INDEX bot_owner_index ON bot_owner USING COLUMNSTORE(bot_id, owner, main);
 
 CREATE TABLE bot_packs (
    id uuid primary key DEFAULT uuid_generate_v4(),
@@ -166,7 +166,7 @@ CREATE TABLE bot_maint (
 
 CREATE TABLE vanity (
     id SERIAL,
-    type integer, -- 1 = bot, 2 = profile, 3 =  nothing right now but may be used
+    type integer, -- 1 = bot, 2 = profile, 3 = server
     vanity_url text unique, -- This is the text I wish to match
     redirect bigint unique, -- What does this vanity resolve to
     redirect_text text unique-- For the future
@@ -185,11 +185,11 @@ CREATE TABLE servers (
     api_token text unique,
     website text,
     certified boolean DEFAULT false,
-    created_at bigint,
-    banned BOOLEAN DEFAULT false,
+    created_at timestamptz,
     invite_amount integer DEFAULT 0,
     user_provided_invite boolean,
-    invite_code text
+    invite_code text,
+    state int default 0
 )
 
 CREATE TABLE server_tags (

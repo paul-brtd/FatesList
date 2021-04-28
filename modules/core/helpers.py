@@ -69,7 +69,7 @@ async def vote_bot(uid: int, bot_id: int, username, autovote: bool) -> Optional[
     # Update bot_stats
     check = await db.fetchrow("SELECT bot_id FROM bot_stats_votes WHERE bot_id = $1", int(bot_id))
     if check is None:
-        await db.execute("INSERT INTO bot_stats_votes (bot_id, total_votes) VALUES ($1, $2)", int(bot_id), b["votes"] + 1)
+        await db.execute("INSERT INTO bot_stats_votes (bot_id, total_votes) VALUES ($1, $2)", int(bot_id), votes + 1)
     else:
         await db.execute("UPDATE bot_stats_votes SET total_votes = total_votes + 1 WHERE bot_id = $1", int(bot_id))
 
@@ -99,7 +99,6 @@ async def vanity_bot(vanity: str, compact = False) -> Optional[str]:
         return None # No vanity found
     
     type = enums.Vanity(t["type"]).name # Get type using Vanity enum
-    
     if compact:
         return type, str(t["redirect"])
     return int(t["redirect"]), type
@@ -140,3 +139,12 @@ async def do_index_query(add_query: str = "", state: int = 0, limit: Optional[in
     print(base_query, add_query, end_query)
     fetch = await db.fetch(" ".join((base_query, add_query, end_query)))
     return await parse_index_query(fetch)
+
+async def vanity_check(id, vanity):
+    """Check if a vanity exists or not given a id and a vanity"""
+    if vanity.replace(" ", "") == "":
+        return False
+    vanity_check = await db.fetchrow("SELECT DISTINCT vanity_url FROM vanity WHERE lower(vanity_url) = $1 AND redirect != $2", vanity.replace(" ", "").lower(), id) # Get distinct vanitiss
+    if vanity_check is not None or vanity.replace("", "").lower() in reserved_vanity or "/" in vanity.replace("", "").lower():
+        return True
+    return False

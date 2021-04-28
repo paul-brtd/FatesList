@@ -618,31 +618,22 @@ async def prepare_servers_api(request: Request, user_id: int, data: ServerCheck,
     return {"servers": valid, "access_token": access_token}
 
 @router.post("/servers/{guild_id}")
-async def guild_add_api(request: Request, guild_id: int, user_id: int, data: ServersAdd, Authorization: str = Header("USER_TOKEN")):
+async def add_guild_api(request: Request, guild_id: int, user_id: int, data: ServersAdd, Authorization: str = Header("USER_TOKEN")):
     id = await user_auth(user_id, Authorization)
     if id is None:
         return abort(401)
-    check = await db.fetchrow("SELECT guild_id from servers WHERE guild_id = $1", guild_id)
-    if check is not None:
-        return abort(404)
     guild_data = await redis_db.hget(str(guild_id), key = "cache")
     if guild_data is None:
+        print(guild_data)
         return abort(404)
     guild_data = orjson.loads(guild_data)
     if guild_data["code"] != data.code:
         return ORJSONResponse({"done": False, "reason": "Bad code provided", "code": 6767}, status_code = 400)
-    tags = []
-    for tag in data.tags:
-        if tag not in tags:
-            tags.append(tag.lower().replace(" ", "_"))
-    if len(tags) < 3:
-        return ORJSONResponse({"done": False, "reason": "You must select at least three tags for your server", "code": 4747}, status_code = 400)
-    print(data.description, data.dict())
-    if len(data.description) > 101 or len(data.description) < 20:
-        return ORJSONResponse({"done": False, "reason": "Your short description must be between 20 and 101 characters long", "code": 4475}, status_code = 400)
-    if len(data.long_description) < 50:
-        return ORJSONResponse({"done": False, "reason": "Your long  description must be at least 50 characters long", "code": 4495}, status_code = 400)
-    await add_rmq_task("server_add_queue", {"guild_id": guild_id, "guild_data": guild_data, "data": data.dict(), "user_id": user_id})
+    server_actions = ServerActions(data.dict() | {"data": guild_data, "guild_id": guild_id, "user_id": user_id})
+    rc = await server_actions.add_server()
+    if rc is None:
+        return {"done": True, "reacon": None, "code": 1000}
+    return ORJSONResponse({"done": False, "reason": rc[0], "code": rc[1]}, status_code = 400)
 
 @router.patch("/users/{user_id}/description", response_model = APIResponse)
 async def set_user_description_api(request: Request, user_id: int, desc: UserDescEdit, Authorization: str = Header("USER_TOKEN")):

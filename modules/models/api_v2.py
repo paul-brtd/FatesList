@@ -392,4 +392,5 @@ class ServersAdd(BaseModel):
     description: str
     long_description_type: enums.LongDescType
     long_description: str
-    tags: list
+    tags: List[str]
+    vanity: str

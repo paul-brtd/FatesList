@@ -3,18 +3,17 @@ from .permissions import *
 from .events import *
 from .cache import *
 from .rabbitmq import *
+from .helpers import *
 
 class BotActions():
     class GeneratedObject():
-        """
-        Instead of crappily changing self, just use a generated object which is at least cleaner
-        """
+        """Instead of crappily changing self, just use a generated object which is at least cleaner"""
         extra_owners = []
         tags = []
         invite = None
 
     def __init__(self, bot):
-        self.__dict__.update(bot) # Add all kwargs to function
+        self.__dict__.update(bot) # Add all kwargs to class
         self.generated = self.GeneratedObject() # To keep things clean, make sure we always put changed properties in generated
 
     def gen_rabbit_dict(self):
@@ -104,13 +103,9 @@ class BotActions():
         self.privacy_policy = self.privacy_policy.replace("http://", "https://") # Force https on privacy policy
         if self.privacy_policy != "" and not self.privacy_policy.startswith("https://"): # Make sure we actually have a HTTPS privacy policy
             return "Your privacy policy must be a proper URL starting with https://. URLs which start with http:// will be automatically converted to HTTPS", 14
-
-        if self.vanity == "": # Check if vanity is already being used or is reserved
-            pass
-        else:
-            vanity_check = await db.fetchrow("SELECT DISTINCT vanity_url FROM vanity WHERE lower(vanity_url) = $1 AND redirect != $2", self.vanity.replace(" ", "").lower(), self.bot_id) # Get distinct vanitiss
-            if vanity_check is not None or self.vanity.replace("", "").lower() in reserved_vanity or "/" in self.vanity.replace("", "").lower(): # Check if reserved or in use
-                return "Your custom vanity URL is already in use or is reserved", 15
+        check = await vanity_check(self.bot_id, self.vanity) # Check if vanity is already being used or is reserved
+        if check:
+            return "Your custom vanity URL is already in use or is reserved", 15
 
     async def edit_check(self):
         """Perform extended checks for editting bots"""
@@ -298,3 +293,51 @@ class BotListAdmin():
         embed.add_field(name="Link", value=f"https://fateslist.xyz/bot/{self.bot_id}")
         await self.channel.send(embed = embed)
         await bot_add_event(self.bot_id, "transfer_bot", {"user": self.str_mod, "old_owner": str(owner), "new_owner": str(new_owner)})
+
+
+class ServerActions():
+    class GeneratedObject():
+        """Instead of crappily changing self, just use a generated object which is at least cleaner"""
+        tags = []
+
+    def __init__(self, guild):
+        self.__dict__.update(guild) # Add kwargs to class
+        self.generated = self.GeneratedObject() # To keep things clean, make sure we always put changed properties in generated
+
+    def gen_rabbit_dict(self):
+        rmq_dict = self.__dict__.copy()
+        del rmq_dict["generated"]
+        rmq_dict["tags"] = self.generated.tags
+        return rmq_dict
+
+    async def base_check(self) -> Optional[str]:
+        self.generated.tags = []
+        for tag in self.tags:
+            if tag not in self.generated.tags:
+                self.generated.tags.append(tag.lower().replace(" ", "_"))
+        if len(self.generated.tags) < 3:
+            return "You must select at least three tags for your server", 1
+        if len(self.description) > 101 or len(self.description) < 20:
+            return "Your short description must be between 20 and 101 characters long", 2
+        if len(self.long_description) < 50:
+            return "Your long description must be at least 50 characters long", 3
+
+        check = await vanity_check(self.guild_id, self.vanity) # Check if vanity is already being used or is reserved
+        if check:
+            return "Your custom vanity URL is already in use or is reserved", 4
+
+    async def add_check(self):
+        """Perform extended checks for adding servers"""
+        check = await self.base_check() # Initial base checks
+        if check is not None:
+            return check # Base check erroring means return base check without continuing as string return means error
+        if (await db.fetchrow("SELECT guild_id FROM servers WHERE guild_id = $1", self.guild_id)) is not None:
+            return "This server already exists on Fates List", 5 # Dont add servers which already exist
+
+    async def add_server(self):
+        """Add a server"""
+        check = await self.add_check() # Perform add bot checks
+        if check is not None:
+            return check # Returning a strung and not None means error to be returned to consumer
+
+        await add_rmq_task("server_add_queue", self.gen_rabbit_dict()) # Add to add bot RabbitMQ
