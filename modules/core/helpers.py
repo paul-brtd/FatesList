@@ -134,8 +134,9 @@ async def do_index_query(add_query: str = "", state: int = 0, limit: Optional[in
     """
     base_query = f"SELECT description, banner, state, votes, servers, bot_id, invite, nsfw FROM bots WHERE state = {state}"
     if limit:
-        end_query = f"DESC LIMIT {limit}"
+        end_query = f"LIMIT {limit}"
     else:
         end_query = ""
+    print(base_query, add_query, end_query)
     fetch = await db.fetch(" ".join((base_query, add_query, end_query)))
     return await parse_index_query(fetch)

@@ -19,10 +19,10 @@ async def admin_dashboard(request: Request):
         staff = [False, 0, StaffMember(name = "user", id = 0, perm = 0)]
     certified = await do_index_query(state = 6, limit = None) # State 0 and state 6 are approved and certified
     bot_amount = await db.fetchval("SELECT COUNT(1) FROM bots WHERE state = 0 OR state = 6")
-    queue = await do_index_query(state = 1, limit = None)
-    under_review = await do_index_query(state = 5, limit = None)
-    denied = await do_index_query(state = 2, limit = None)
-    banned = await do_index_query(state = 4, limit = None)
+    queue = await do_index_query(state = 1, limit = None, add_query = "ORDER BY created_at DESC")
+    under_review = await do_index_query(state = 5, limit = None, add_query = "ORDER BY created_at DESC")
+    denied = await do_index_query(state = 2, limit = None, add_query = "ORDER BY created_at DESC")
+    banned = await do_index_query(state = 4, limit = None, add_query = "ORDER BY created_at DESC")
     data = {"certified": certified, "bot_amount": bot_amount, "queue": queue, "denied": denied, "banned": banned, "under_review": under_review, "admin": staff[1] == 4, "mod": staff[1] == 3, "owner": staff[1] == 5, "bot_review": staff[1] == 2, "perm": staff[2].name}
     if str(request.url.path).startswith("/api"): # Check for API
         return data # Return JSON if so

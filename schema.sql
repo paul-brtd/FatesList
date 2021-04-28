@@ -27,7 +27,7 @@ CREATE TABLE bots (
     tags text[],
     state INTEGER DEFAULT 1,
     banner text DEFAULT 'none'::text,
-    created_at bigint,
+    created_at timestamptz DEFAULT NOW(),
     invite text,
     invite_amount integer DEFAULT 0,
     github TEXT,

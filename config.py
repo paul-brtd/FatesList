@@ -2,7 +2,7 @@ from config_secrets import *
 bot_logs = 836326348326043648 # #bot-logs in support server
 server_logs = 836331039693340712 # Server logs in support server
 appeals_channel = 836326351387623454 # #resubmissions-and-appeals in support server
-site_errors_channel = 836324560218488843 # Where to log site errors
+site_errors_channel = 836326323281592330 # Where to log site errors
 bots_role = 836326315946672158 # BOTS role in support server
 staff_ping_add_role=836326316188893275
 bot_dev_role = 836326314344185876 # BOT Developer in support server
@@ -66,7 +66,7 @@ special_badges = {
 features = {
     "custom_prefix": {
         "type": "positive",
-        "description": "A bot with Custom Prefix supports changing of the bot's prefix and is hence considered positive by Fates List"
+        "description": "A bot with Custom Prefix supports changing of the bots prefix and is considered positive by Fates List"
     },
     "open_source": {
         "type": "positive",

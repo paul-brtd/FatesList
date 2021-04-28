@@ -82,9 +82,7 @@ async def v_legacy(request: Request, a: str):
 async def features_view(request: Request, name: str):
     if name not in features.keys():
         return abort(404)
-    feature_bots = (f"SELECT description, banner, votes, servers, bot_id, invite FROM bots WHERE ('{str(name)}' = ANY(features)) and (state = 0 or state = 6) ORDER BY votes DESC;")
-    print(feature_bots)
-    bots = await db.fetch(feature_bots)
+    bots = await db.fetch("SELECT description, banner, votes, servers, bot_id, invite, state FROM bots, unnest(features) feature WHERE feature = $1 and (state = 0 or state = 6) ORDER BY votes DESC LIMIT 12", name)
     bot_obj = await parse_index_query(bots)
     return await templates.TemplateResponse("feature.html", {"request": request, "name": name, "feature": features[name], "bots": bot_obj})
 

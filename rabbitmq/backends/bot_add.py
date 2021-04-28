@@ -3,7 +3,7 @@ import discord
 from config import bot_logs, staff_ping_add_role
 import asyncio
 
-async def bot_add_backend(user_id, bot_id, prefix, library, website, banner, support, long_description, description, tags, extra_owners, creation, invite, features, long_description_type, css, donate, github, webhook, webhook_type, vanity, privacy_policy, nsfw):
+async def bot_add_backend(user_id, bot_id, prefix, library, website, banner, support, long_description, description, tags, extra_owners, invite, features, long_description_type, css, donate, github, webhook, webhook_type, vanity, privacy_policy, nsfw):
     print(bot_id)
     await db.execute("DELETE FROM bots WHERE bot_id = $1", bot_id)
     await db.execute("DELETE FROM bot_owner WHERE bot_id = $1", bot_id)
@@ -14,10 +14,10 @@ async def bot_add_backend(user_id, bot_id, prefix, library, website, banner, sup
             invite, website, banner, 
             discord, long_description, description,
             votes, servers, shard_count,
-            created_at, api_token, features, 
-            long_description_type, css, donate,
-            github, webhook, webhook_type, 
-            privacy_policy, nsfw) VALUES(
+            api_token, features, long_description_type, 
+            css, donate, github, 
+            webhook, webhook_type, privacy_policy, 
+            nsfw) VALUES(
             $1, $2, $3,
             $4, $5, $6,
             $7, $8, $9,
@@ -25,7 +25,7 @@ async def bot_add_backend(user_id, bot_id, prefix, library, website, banner, sup
             $13, $14, $15,
             $16, $17, $18,
             $19, $20, $21,
-            $22, $23)""", bot_id, prefix, library, invite, website, banner, support, long_description, description, 0, 0, 0, int(creation), get_token(132), features, long_description_type, css, donate, github, webhook, webhook_type, privacy_policy, nsfw) # Add new bot info
+            $22)""", bot_id, prefix, library, invite, website, banner, support, long_description, description, 0, 0, 0, get_token(132), features, long_description_type, css, donate, github, webhook, webhook_type, privacy_policy, nsfw) # Add new bot info
     if vanity.replace(" ", "") != '':
         await db.execute("INSERT INTO vanity (type, vanity_url, redirect) VALUES ($1, $2, $3)", 1, vanity, bot_id) # Add new vanity if not empty string
 
