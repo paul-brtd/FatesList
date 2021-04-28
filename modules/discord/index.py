@@ -44,7 +44,7 @@ async def vanity_bot_uri(request: Request, bt: BackgroundTasks, vanity: str):
     if vurl[1] == "bot":
         return await render_bot(bt = bt, bot_id = vurl[0], request = request, api = False)
     else:
-        return "Work In Progress :)"
+        return await templates.e(request, f"This is a {vurl[1]}. This is a work in progress :)", status_code = 400)
 
 @router.get("/{vanity}/edit")
 async def vanity_edit(request: Request, vanity: str, bt: BackgroundTasks):
