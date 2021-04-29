@@ -626,7 +626,8 @@ function upvoteReview(rev_id) {
 				modalShow("Already Upvoted", "You have already upvoted this review. You cannot upvote it again");
 			},
 			200: function(data) {
-				window.location.reload()
+				modalShow("Success!", "Successfully upvoted this review")
+				setTimeout(() => window.location.reload(), 1500)
 			},
 			404: function(data) {
 				modalShow("404 Not Found", "Review does not exist on our database! Maybe it has been deleted?")
@@ -649,11 +650,11 @@ function downvoteReview(rev_id) {
 		contentType: 'application/json',
 		statusCode: {
 			400: function(data) {
-				alert("You have already downvoted this review. You cannot downvote it again");
+				modalShow("Already Downvoted", "You have already downvoted this review. You cannot downvote it again");
 			},
 			200: function(data) {
-				alert("Downvoted successfully")
-				window.location.reload()
+				modalShow("Success!", "Successfully downvoted this review")
+				setTimeout(() => window.location.reload(), 1500)
 			},
 			404: function(data) {
 				alert("Review does not exist or this feature isn't done yet!")

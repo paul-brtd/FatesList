@@ -171,7 +171,9 @@ async def fateslist_request_handler(request: Request, call_next):
     process_time = time.time() - start_time # Get time taken
     response.headers["X-Process-Time"] = str(process_time) # Record time taken
     response.headers["FL-API-Version"] = api_ver # Record currently used api version for debug
-    
+    # Fuck CORS
+    response.headers["Access-Control-Allow-Origin"] = request.headers.get('Origin') if request.headers.get('Origin') else "*"
+    response.headers["Access-Control-Allow-Credentials"] = "true"
     # Gunicorn logging is trash, lets fix that with custom logging
     query_str = f'?{request.scope["query_string"].decode("utf-8")}' if request.scope["query_string"] else "" # Get query strings
     print(f"{request.client.host} - {BOLD_START}{request.method} {request.url.path}{query_str} HTTP/{request.scope['http_version']} - {response.status_code} {HTTPStatus(response.status_code).phrase}{BOLD_END}") # Print logs like uvicorn

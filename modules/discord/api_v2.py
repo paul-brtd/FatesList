@@ -243,6 +243,10 @@ async def get_bot_api(request: Request, bot_id: int):
     api_ret["vanity"] = await db.fetchval("SELECT vanity_url FROM vanity WHERE redirect = $1", bot_id)
     return api_ret
 
+@router.get("/bots/{bot_id}/widget")
+async def bot_widget_api(request: Request, bot_id: int, bt: BackgroundTasks):
+    return await render_bot_widget(request, bt, bot_id, api = True)
+
 @router.get("/bots/{bot_id}/raw")
 async def get_raw_bot_api(request: Request, bot_id: int, bt: BackgroundTasks):
     """

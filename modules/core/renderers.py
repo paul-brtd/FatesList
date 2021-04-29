@@ -122,6 +122,8 @@ async def render_bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, 
     bot["servers"] = human_format(bot["servers"])
     bt.add_task(bot_add_ws_event, bot_id, {"payload": "event", "id": str(uuid.uuid4()), "event": "view_bot", "context": {"user": request.session.get('userid'), "widget": True}})
     data = {"bot": bot, "user": await get_bot(bot_id)}
+    if api:
+        return data
     return await templates.TemplateResponse("widget.html", {"request": request} | data)
 
 async def render_search(request: Request, q: str, api: bool):

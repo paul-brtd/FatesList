@@ -3,6 +3,7 @@ Handle API Events, webhooks and websockets
 """
 
 from .imports import *
+from .cache import get_user, get_bot
 
 async def bot_add_ws_event(bot_id: int, ws_event: dict) -> None:
     """A WS Event must have the following format:
@@ -75,7 +76,7 @@ async def _event_webhook_sender(webhook_url, webhook_type, api_token, id, webhoo
             json = {"event": event, "context": context, key: id, "event_id": str(event_id), "type": webhook_target}
             headers = {"Authorization": api_token}
         elif webhook_type.upper() == "DISCORD" and event in "vote" and webhook_target == "bot":
-            webhook = DiscordWebhook(url=uri)
+            webhook = DiscordWebhook(url=webhook_url)
             user = await get_user(int(context["user_id"])) # Get the user
             bot = await get_bot(id) # Get the bot
             embed = DiscordEmbed(
