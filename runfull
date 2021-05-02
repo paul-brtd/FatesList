@@ -1,0 +1,4 @@
+#!/bin/bash
+tmux new-session -d -s main 'bin/run.dbg'
+tmux new-session -d -s admin_legacy 'cd admin && ./runprod'
+tmux new-session -d -s rabbit 'python3.10 rabbitmq_worker.py'

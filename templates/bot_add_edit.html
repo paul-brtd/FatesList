@@ -105,7 +105,7 @@
         minlength="3"
 	value="{% if data.invite %}{{data.invite}}{% endif %}"
        />
-      <small style="margin-bottom: 5px;"><strong>You can use P:PERM_NUMBER instead of providing a Invite URL if your Bot ID and Client ID are the same</strong></small>
+      <small style="margin-bottom: 5px;"><strong>You can use P:PERM_NUMBER instead of providing a Invite URL if your Bot ID and Client ID are the same</strong></small><br/>
       <label style="margin-top: 3px;" for="website">Website URL</label>
       <input
         class="form-control fform"
@@ -331,7 +331,6 @@ function previewLongDesc(){
     });
 
 }
-window.addEventListener("load", previewLongDesc())
 
 $("#bot_form").submit( function(eventObj) {
     var input = $("<input>").attr({"type":"hidden","name":"tags"}).val(instance.value());

@@ -167,7 +167,7 @@ async def transfer_bot_api(request: Request, bot_id: int, data: BotTransfer, Aut
 @router.get("/bots/admin/queue", response_model = BotQueueGet)
 async def botlist_get_queue_api(request: Request):
     """Admin API to get the bot queue"""
-    bots = await db.fetch("SELECT bot_id FROM bots WHERE state = $1", enums.BotState.pending)
+    bots = await db.fetch("SELECT bot_id FROM bots WHERE state = $1 ORDER BY created_at ASC", enums.BotState.pending)
     return {"bots": [(await get_bot(bot["bot_id"])) for bot in bots]}
 
 @router.patch("/bots/admin/{bot_id}/queue", response_model = APIResponse)
