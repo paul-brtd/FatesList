@@ -226,7 +226,7 @@
       <select id="long_description_type" name="long_description_type" class="form-control fform select-fl">
               <option value="0" {% if data.long_description_type == enums.LongDescType.html %}selected{%endif%}>HTML/Raw - Recommended</option>
 	      <option value="1" {% if data.long_description_type == enums.LongDescType.markdown_pymarkdown %}selected{%endif%}>Markdown (python-markdown) - Recommended</option>
-	      <option value="2" {% if data.long_description_type == enums.LongDescType.markdown_marked %}selected{%endif%}>Markdown (marked) - Special cases only</option>
+	      <option value="2" {% if data.long_description_type == enums.LongDescType.markdown_marked %}selected{%endif%}>Markdown (marked) - Beta</option>
       </select>
       <button type="button" class="btn btn-outline-light" onclick="longdescfaq();">Help me decide</button><br/><br/>
       <label for="nsfw">NSFW Bot (Click to change)</label>
@@ -274,7 +274,7 @@
 
 			Markdown (python-markdown) - Use this when you just need regular markdown with no strings attached, good speed (as it is done using very efricient algorithms on the server itself and may use Redis cache when scaling is needed) and proper support via Mod Mail<br/><br/>
 
-			Markdown (marked) - Use this when you need extra features not provided by python-markdown (it likely is supported or you can request me to make a extension if it is small over Mod Mail). This is only needed in very special use cases you likely don't fit under at all. Support for this over Mod Mail is more limited than python-markdown and it is slower as well.
+			Markdown (marked) - Beta feature to use marked to parse markdown. Might be buggy but has better markdown compatibility.
 		`)
 	};
 

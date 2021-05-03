@@ -102,6 +102,16 @@ async def startup():
         - Connect robustly to rabbitmq for add bot/edit bot/delete bot
     """
     builtins.db = await setup_db()
+
+    # Set bot tags
+    tags_db = await db.fetch("SELECT id, icon FROM bot_list_tags WHERE type = 0 or type = 2")
+    tags =  {}
+    for tag in tags_db:
+        tags = tags | {tag["id"]: tag["icon"]}
+    builtins.tags_fixed = calc_tags(tags)
+    print(tags_fixed, tags)
+    builtins.TAGS = tags
+
     print("Discord init beginning")
     asyncio.create_task(client.start(TOKEN_MAIN))
     asyncio.create_task(client_servers.start(TOKEN_SERVER))
@@ -131,12 +141,13 @@ async def on_ready():
 async def on_ready():
     print(client_servers.user, "up [SERVER BOT]")
 
-
-# Tag calculation
-builtins.tags_fixed = []
-for tag in TAGS.keys():
-    # For every key in tag dict, create the "fixed" tag information (friendly and easy to use data for tags)
-    tags_fixed.append({"name": tag.replace("_", " ").title(), "iconify_data": TAGS[tag], "id": tag})
+def calc_tags(TAGS):
+    # Tag calculation
+    tags_fixed = []
+    for tag in TAGS.keys():
+        # For every key in tag dict, create the "fixed" tag information (friendly and easy to use data for tags)
+        tags_fixed.append({"name": tag.replace("_", " ").title(), "iconify_data": TAGS[tag], "id": tag})
+    return tags_fixed
 
 builtins.server_tags_fixed = []
 for tag in SERVER_TAGS.keys():
