@@ -214,7 +214,7 @@ async def edit_review(request: Request, bot_id: int, rid: uuid.UUID, bt: Backgro
 @router.post("/{bot_id}/reviews/{rid}/reply")
 async def edit_review(request: Request, bot_id: int, rid: uuid.UUID, bt: BackgroundTasks, rating: float = FForm(5.1), review: str = FForm("This is a placeholder review as the user has not posted anything...")):
     if "userid" not in request.session.keys():
-        return RedirectResponse(f"/auth/login?redirect=/bot/{bot_id}&pretty=to edit reviews", status_code = 303)
+        return RedirectResponse(f"/auth/login?redirect=/bot/{bot_id}&pretty=to reply to reviews", status_code = 303)
     check = await db.fetchrow("SELECT replies FROM bot_reviews WHERE id = $1", rid)
     if check is None:
         return await templates.TemplateResponse("message.html", {"request": request, "message": "You are not allowed to reply to this review (doesn't actually exist)"})

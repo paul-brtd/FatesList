@@ -14,6 +14,10 @@ router = APIRouter(
     tags = ["API v2 (default, beta, freeze-soon)"]
 )
 
+@router.get("/uptime")
+async def uptime(request: Request):
+    return {"uptime": time.time() - boot_time, "pid": os.getpid()}
+
 @router.get("/admin/console")
 async def botlist_admin_console_api(request: Request):
     """API to get raw admin console info"""

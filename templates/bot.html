@@ -70,7 +70,6 @@ html, body {
 	outline: none;
 	cursor: pointer;
 	padding: 14px 16px;
-	transition: 0.3s;
 }
 
 /* Change background color of buttons on hover */
@@ -230,7 +229,7 @@ textarea {
 		<section id="bot-tags">
 			<p style="font-size: 25px; font-weight: bold;color: rgba(255,255,255,0.87); text-align: center; margin-top: 3px;" id="bot-tags-header" role="heading" aria-level="3">Tags</p>
 			<div style="text-align: center;" id="bot-tags-container">
-				<div class="d-flex flex-wrap justify-content-center align-items-center" style="width: 97%;margin: 0 auto;" id="bot-tags-container-inner">
+				<div class="d-flex flex-wrap justify-content-center align-items-center" style="margin: 0 auto;" id="bot-tags-container-inner">
 					{{ tags(tags_fixed) }}
 				</div>
 			</div>
@@ -313,7 +312,7 @@ textarea {
 		   			<div class="bot-review-left">
 						<div class="bot-review-header" style="margin-bottom: 7px; font-weight: bold;">
 							<a href='/profile/{{rev.user_id}}' class="white" style="margin-right: 3px;">
-								<img style="border-radius: 50%; width: 24px;" src="{{rev.user.avatar}}" class="review-avatar" alt="{{rev.user.username}}'s avatar">
+								<img style="border-radius: 50%; width: 24px;" src="{{rev.user.avatar.replace('.gif', '.webp')}}" class="review-avatar" alt="{{rev.user.username}}'s avatar">
 								<span class="white" style="margin-right: 3px;">{{rev.user.username}}</span>
 								<span class="white">|</span>
 							</a>

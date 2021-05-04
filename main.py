@@ -24,6 +24,9 @@ from starlette.routing import Mount
 import sentry_sdk
 from starlette.requests import ClientDisconnect
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
+import time
+
+builtins.boot_time = time.time()
 
 sentry_sdk.init(sentry_dsn)
 # Setup Bots
