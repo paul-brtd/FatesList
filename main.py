@@ -104,6 +104,8 @@ async def startup():
         - Setup Redis and initialize the ratelimiter and caching system
         - Connect robustly to rabbitmq for add bot/edit bot/delete bot
     """
+    builtins.up = False
+
     builtins.db = await setup_db()
 
     # Set bot tags
@@ -125,7 +127,7 @@ async def startup():
     builtins.rabbitmq_db = await aio_pika.connect_robust(
         f"amqp://fateslist:{rabbitmq_pwd}@127.0.0.1/"
     )
-
+    builtins.up = True
 
 @app.on_event("shutdown")
 async def close():

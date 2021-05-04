@@ -32,7 +32,6 @@ import contextvars
 from starlette.websockets import WebSocket, WebSocketDisconnect
 from websockets.exceptions import ConnectionClosedError, ConnectionClosedOK
 from aioredis.exceptions import ConnectionError as ServerConnectionClosedError
-from discord_webhook import DiscordWebhook, DiscordEmbed
 import markdown
 from modules.emd_hab import emd
 from config import *

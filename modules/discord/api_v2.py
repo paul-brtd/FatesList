@@ -5,8 +5,11 @@ from typing import List, Dict
 from modules.models.api_v2 import *
 from modules.models.bot_actions import BotAdd, BotEdit
 from modules.discord.admin import admin_dashboard
+from lxml.html.clean import Cleaner
 
 discord_o = Oauth(OauthConfig)
+
+cleaner = Cleaner(remove_unknown_tags=False)
 
 router = APIRouter(
     prefix = "/api/v2",
@@ -14,9 +17,17 @@ router = APIRouter(
     tags = ["API v2 (default, beta, freeze-soon)"]
 )
 
-@router.get("/uptime")
-async def uptime(request: Request):
-    return {"uptime": time.time() - boot_time, "pid": os.getpid()}
+@router.get("/blstats", response_model = BotListStats)
+async def botlist_stats_api(request: Request):
+    """
+        Returns uptime and stats about the list.
+
+        uptime - The current uptime for the given worker
+        pid - The pid of the worker you are connected to
+        up - Whether the databases are up on this worker
+        dup - Whether we have connected to discord on this worker
+    """
+    return {"uptime": time.time() - boot_time, "pid": os.getpid(), "up": up, "dup": (client.user is not None)}
 
 @router.get("/admin/console")
 async def botlist_admin_console_api(request: Request):
@@ -221,7 +232,7 @@ async def random_bots_api(request: Request):
         return await random_bots_api(request) 
     bot["bot_id"] = str(bot["bot_id"]) # Make sure bot id is a string to prevent corruption issues
     bot["servers"] = human_format(bot["servers"]) # Format the servers field
-    bot["description"] = ireplacem(js_rem_tuple, bot["description"]) # Prevent some basic attacks in short description
+    bot["description"] = cleaner.clean_html(bot["description"]) # Prevent some basic attacks in short description
     if bot["banner"] is None:
         bot["banner"] = "" # Make sure banner is always a string
     return bot

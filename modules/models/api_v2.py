@@ -39,6 +39,12 @@ class BaseUser(BaseModel):
         """
         return Status(status = self.status)
 
+class BotListStats(BaseModel):
+    uptime: float
+    pid: int
+    up: bool
+    dup: bool
+
 #LIBRARY-INTERNAL
 class BotPromotionDelete(BaseModel):
     """

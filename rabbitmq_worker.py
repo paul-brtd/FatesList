@@ -16,6 +16,7 @@ from rabbitmq.backends.bot_add import bot_add_backend
 from rabbitmq.backends.bot_edit import bot_edit_backend
 from rabbitmq.backends.bot_delete import bot_delete_backend
 from rabbitmq.backends.server_add import server_add_backend
+from rabbitmq.backends.events_webhook import events_webhook_backend
 
 # Setup main bot
 
@@ -74,6 +75,7 @@ async def main():
     await new_task("bot_add_queue", "Add Bot")
     await new_task("bot_delete_queue", "Delete Bot")
     await new_task("server_add_queue", "Add Server")
+    await new_task("events_webhook_queue", "Event Webhook")
     print("Ready!")
 
 class BotQueueData():
@@ -89,6 +91,8 @@ class BotQueueData():
             await bot_delete_backend(int(self.user_id), self.bot_id)
         elif queue == "server_add_queue":
             await server_add_backend(self.user_id, self.guild_id, self.data["name"], self.description, self.long_description_type, self.long_description, self.tags, self.vanity)
+        elif queue == "events_webhook_queue":
+            await events_webhook_backend(self.webhook_url, self.webhook_type, self.api_token, self.id, self.webhook_target, self.event, self.context, self.event_id)
         else:
             raise ValueError("No queue found")
 
