@@ -559,12 +559,13 @@ async def get_tags_api(request: Request, name: str):
         return abort(404)
     return {"name": name.replace("_", " ").title(), "iconify_data": TAGS[name], "id": name}
 
-@router.get("/vanity/{vanity}", response_model = BotVanity)
-async def get_vanity(request: Request, vanity: str):
-    vb = await vanity_bot(vanity, compact = True)
+@router.get("/code/{vanity}", response_model = BotVanity)
+async def get_vanity_api(request: Request, vanity: str):
+    vb = await vanity_bot(vanity)
+    print(vanity, vb)
     if vb is None:
         return abort(404)
-    return {"type": vb[0], "redirect": vb[1]}
+    return {"type": vb[1], "redirect": str(vb[0])}
 
 @router.get("/index/bots", response_model = BotIndex)
 async def bots_index_page(request: Request):

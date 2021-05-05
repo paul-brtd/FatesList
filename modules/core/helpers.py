@@ -88,7 +88,7 @@ async def invite_bot(bot_id: int, api = False):
     return bot["invite"]
 
 # Check vanity of bot 
-async def vanity_bot(vanity: str, compact = False) -> Optional[str]:
+async def vanity_bot(vanity: str) -> Optional[str]:
     """Checks and returns the vanity of the bot, otherwise returns None"""
 
     if vanity in reserved_vanity: # Check if vanity is reserved and if so, return None
@@ -99,8 +99,6 @@ async def vanity_bot(vanity: str, compact = False) -> Optional[str]:
         return None # No vanity found
     
     type = enums.Vanity(t["type"]).name # Get type using Vanity enum
-    if compact:
-        return type, str(t["redirect"])
     return int(t["redirect"]), type
 
 async def parse_index_query(fetch: List[asyncpg.Record]) -> list:
