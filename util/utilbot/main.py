@@ -1,7 +1,6 @@
 import discord
 from discord.ext.commands import Bot, AutoShardedBot
 import aiosqlite # For repl
-from tortoise import Tortoise, run_async
 import os
 import aerich
 import sys
@@ -34,27 +33,15 @@ async def setup_db():
     builtins.redis_db = await aioredis.from_url('redis://localhost', db = 1)
     return fldb
 
-async def init():
-    # Here we create a SQLite DB using file "db.sqlite3"
-    #  also specify the app name of "models"
-    #  which contain models from "models"
-    await Tortoise.init(
-        
-        db_url=f'sqlite://prod.db',
-        modules={'models': ['models']}
-    )
-    await Tortoise.generate_schemas()
-    
 @client.event
 async def on_ready():
     print(client.user)
-    await init()
     client.fldb = await setup_db()
     try:
         while True:
             await asyncio.sleep(3)
     except:
-        await Tortoise.close_connections()
+        await redis_db.close()
 
 # Add in all cogs
 for f in os.listdir("cogs"):

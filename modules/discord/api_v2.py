@@ -146,7 +146,7 @@ async def bot_under_review_api(request: Request, bot_id: int, data: BotUnderRevi
         return ORJSONResponse({"done": False, "reason": "Invalid Moderator specified. The moderator in question does not have permission to perform this action!", "code": 9867}, status_code = 400)
     admin_tool = BotListAdmin(bot_id, data.mod)
     if data.requeue:
-        state = await db.fetchval("SELECT state FROM bots WHERE bot_id = $1 AND state = $2", bot_id, enums.BotState.under_review)
+        state = await db.fetchval("SELECT state FROM bots WHERE bot_id = $1 AND (state != $2 AND state != $3 AND state != $4)", bot_id, enums.BotState.under_review, enums.BotState.approved, enums.BotState.certified)
         if state is None:
             return abort(404)
         rc = await admin_tool.unban_requeue_bot(state)
@@ -223,7 +223,7 @@ async def botlist_edit_queue_api(request: Request, bot_id: int, data: BotQueuePa
         return {"done": True, "reason": f"Bot Approved Successfully! Invite it to the main server with https://discord.com/oauth2/authorize?client_id={bot_id}&scope=bot&guild_id={guild.id}&disable_guild_select=true&permissions=0", "code": 1001}
     return ORJSONResponse({"done": False, "reason": rc, "code": 3869}, status_code = 400)
 
-@router.get("/bots/random", response_model = BotRandom, dependencies=[Depends(RateLimiter(times=7, minutes=1))])
+@router.get("/bots/random", response_model = BotRandom, dependencies=[Depends(RateLimiter(times=7, seconds=5))])
 async def random_bots_api(request: Request):
     random_unp = await db.fetchrow("SELECT description, banner, state, votes, servers, bot_id, invite FROM bots WHERE state = 0 OR state = 6 ORDER BY RANDOM() LIMIT 1") # Unprocessed, use the random function to get a random bot
     try:

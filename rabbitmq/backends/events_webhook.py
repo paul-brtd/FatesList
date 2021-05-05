@@ -2,7 +2,7 @@ import orjson
 from aiohttp_requests import requests
 import asyncio
 from discord_webhook import DiscordWebhook, DiscordEmbed
-from modules.core import get_bot, get_token, bot_add_event
+from modules.core import get_bot, get_user, get_token, bot_add_event
 from termcolor import colored, cprint
 
 async def events_webhook_backend(webhook_url, webhook_type, api_token, id, webhook_target, event, context, event_id):

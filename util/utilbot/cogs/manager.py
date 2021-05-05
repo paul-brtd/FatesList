@@ -4,37 +4,6 @@ class Manager(Cog):
     def __init__(self, client):
         self.client = client
 
-    @command(pass_context = True)
-    @has_guild_permissions(manage_roles = True)
-    async def reactrole(self, ctx, message: Message, role: Role, emoji: PartialEmoji):
-        reactions = await models.Reaction.filter(emoji_id = emoji.id, message_id = message.id, channel_id = message.channel.id)
-        if len(reactions) != 0:
-            return await ctx.send("Reaction role already exists. Use delreactrole to remove it.")
-        react_role = models.Reaction(channel_id = message.channel.id, message_id = message.id, role_id = role.id, emoji_id = emoji.id)
-        await react_role.save()
-        await message.add_reaction(emoji)
-        await ctx.send("Setup reaction for this message successfully")
-    
-    @command(pass_context = True)
-    @has_guild_permissions(manage_roles = True)
-    async def delreactrole(self, ctx, message: Message, emoji: PartialEmoji = None):
-        if emoji is None:
-            emoji_kw = {}
-        else:
-            emoji_kw = {"emoji_id": emoji.id}
-        reactions = await models.Reaction.filter(**emoji_kw, message_id = message.id, channel_id = message.channel.id)
-        i = 0
-        for reaction in reactions:
-            try:
-                channel = ctx.guild.get_channel(reaction.channel_id)
-                msg = await channel.fetch_message(reaction.message_id)
-                await msg.clear_reaction(emoji)
-            except:
-                pass
-            await reaction.delete()
-            i+=1
-        return await ctx.send(f"Removed {i} reaction roles for this message")
-
     @cooldown(1, 20)
     @command(pass_context = True)
     async def botdev(self, ctx):
@@ -59,6 +28,7 @@ class Manager(Cog):
             bots.append(str(bot["bot_id"]) + " - " + f"\nCertified: {bot['state'] == 6}\nInvite: https://discord.com/api/oauth2/authorize?client_id={bot['bot_id']}&permission=0&scope=bot")
         iob = io.BytesIO("\n".join(bots).encode("utf-8"))
         await ctx.send(file = File(filename = "bis.txt", fp = iob))
+    
     @command(pass_context = True)
     async def bot(self, ctx, bot: Member):
         if bot.bot:

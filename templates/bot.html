@@ -1,7 +1,7 @@
 {% extends "base/base.html" %}
 
 {% block head %}
-<link rel="stylesheet" href="/static/assets/css/botpage.css"/>
+<link rel="stylesheet" href="/static/assets/css/bots.css"/>
 <style>
 {{ireplace(".alert", "", bot.css)}}
 </style>
@@ -115,6 +115,7 @@
 		<div class="tab">
 			  <button id="bot-long-desc-tab-button" class="tablinks" onclick="openf(event, 'bot-long-description-container', this)">Description</button>
 			  <button id="bot-review-tab-button" class="tablinks" onclick="openf(event, 'bot-reviews', this)">Reviews</button>
+			  <button id="bot-commands-tab-button" class="tablinks coming-soon" onclick="openf(event, 'bot-commands', this)">Commands</button>
 			  <button id="bot-about-tab-button" class="tablinks" onclick="openf(event, 'bot-about', this)">About</button>
 			  {% if staff[0] %}
        				  <button id="bot-admin-tab-button" class="tablinks" onclick="openf(event, 'bot-admin', this)">Admin</button>
@@ -179,15 +180,11 @@
 								<span class="white">|</span>
 							</a>
 							<a class="white" href="javascript:void" onclick="upvoteReview('{{rev.id}}')" style="margin-right: 3px;">
-								<span class="white">
-									<span class='iconify' style="margin-right: 3px; margin-bottom: 1px;" data-icon='fa-solid:angle-up' data-inline='true'></span>
-								</span>
+									<span class='iconify white' style="margin-right: 3px; margin-bottom: 1px;" data-icon='fa-solid:angle-up' data-inline='true'></span>
 							</a>
 							<span class="white" style="margin-right: 3px;">{{rev.review_upvotes.__len__() - rev.review_downvotes.__len__()}}</span>
 							<a class="white" href="javascript:void" onclick="downvoteReview('{{rev.id}}')" style="margin-left: 3px;">
-								<span class="white">
-									<span class='iconify' style="margin-right: 3px; margin-bottom: 1px;" data-icon='fa-solid:angle-down' data-inline='true'></span>
-								</span>
+									<span class='iconify white' style="margin-right: 3px; margin-bottom: 1px;" data-icon='fa-solid:angle-down' data-inline='true'></span>
 							</a>
 							<span class="white">|</span>
 							<span class="white" style="font-weight: bold">
@@ -195,10 +192,7 @@
 								<span>{{rev.star_rating}}/10.0</span>
 								<span class="white" style="margin-right: 3px;">|</span>
 							</span>
-							<span class="white">
-								<span class='iconify' style="margin-right: 3px; margin-bottom: 1px;" data-icon='fa-solid:reply'></span>
-							</span>
-
+								<span class='iconify white' style="margin-right: 3px; margin-bottom: 1px;" data-icon='fa-solid:reply'></span>
 							<a class="white" style="color: white !important" href="javascript:void" onclick="replyReview(this, '{{rev.id}}')" style="margin-right: 3px;">
 				  				<span class="white" style="margin-right: 3px;">Reply</span>
 							</a>
@@ -209,7 +203,7 @@
 								<input type="hidden" name="id" value="{{rev.id}}" /> <!-- The ID to update -->
 								<label for="rating">On a scale of 1 to 10, how much did you like this bot?</label><br/>
 								<input class='slider bot-range-slider' type="range" name="rating" min="0.1" max="10" step='0.1' style="width:100%;" output="rating-reply-desc-{{rev.id}}-{{index}}"/>
-								<strong><p id='rating-reply-desc-{{rev.id}}-{{index}}' style="color: white;"></p></strong>
+								<p id='rating-reply-desc-{{rev.id}}-{{index}}' style="color: white;"></p>
 								<label for="review">Please write a few words about the bot (in your opinion)</label>
 								<textarea id='bot-rating-review' name="review" type="text" class="form-control fform" style="min-height: 100px; height: 100px;" required minlength="9" placeholder="This bot is a really good bot because of X, Y and Z however..."></textarea>
 								<button type="submit" class="btn btn-outline-light">Reply</button>
@@ -266,13 +260,31 @@
 				  		} ]
 					}
 		    		</script>
-		    {% endmacro %}
-		    {% for rev in bot_reviews %}
+			{% endmacro %}
+		    <p class="white text-center" id="rendering">Rendering Reviews</p>
+		    <div id="defer" hidden>
+			    {% for rev in bot_reviews %}
 			    <section class="bot-review-root bot-review">
 				    {{ review(rev, loop.index) }}
 			    </section>
-		    {% endfor %}
+			    {% endfor %}
+		    </div>
+		    <script defer>
+			function hideRenderMsg() {
+			    document.querySelector("#rendering").style.display = "none";
+			}
+			function asyncReviewLoader() {
+			    $("#defer").removeAttr("hidden");
+			    setTimeout(hideRenderMsg, 500)
+			}
+			$(document).ready(function(){
+				setTimeout(asyncReviewLoader, 300);
+		    	});
+		    </script>
 		</div>
+	</section>
+	<section id="bot-commands" class="tabcontent white">
+		<p style="font-size: 30px;">Coming soon<span class="iconify" data-icon="icomoon-free:happy2" style="margin-left: 3px"></span></p>
 	</section>
 	<section id="bot-about" class='tabcontent white'>
 		<table style="margin: 0 auto !important;">
@@ -286,7 +298,7 @@
 			</tr>
 			<tr>
 				<th>Library</th>
-				<td>{{bot.library}}</td>
+				<td>{{bot.library.lower()}}</td>
 			</tr>
 			<tr>
 				<th>Servers</th>

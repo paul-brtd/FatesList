@@ -41,7 +41,7 @@ intent_server.presences = False
 builtins.client_server = discord.Client(intents=intent_server)
 
 async def new_task(queue_name, friendly_name):
-    _channel = await rabbitmq.channel()
+    _channel = await rabbitmq_db.channel()
     _queue = await _channel.declare_queue(queue_name, durable = True) # Function to handle our queue
     
     async def _task(message: IncomingMessage):
@@ -59,7 +59,7 @@ async def main():
     """
     asyncio.create_task(client.start(TOKEN_MAIN))
     asyncio.create_task(client_server.start(TOKEN_SERVER))
-    builtins.rabbitmq = await connect_robust(
+    builtins.rabbitmq_db = await connect_robust(
         f"amqp://fateslist:{rabbitmq_pwd}@127.0.0.1/"
     )
     builtins.db = await asyncpg.create_pool(host="127.0.0.1", port=5432, user=pg_user, password=pg_pwd, database="fateslist")

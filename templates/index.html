@@ -52,6 +52,10 @@
 	<script>
 		function randomBotRoll(){
 			$.get("{{site_url}}{{roll_api}}", function(data, status) {
+				if(status == 429) {
+					modalShow("You are rolling too fast!", `Please wait ${data.headers['Retry-After']} seconds`)
+					return
+				}
 				random_bots = document.querySelector("#random-bots")
 				
 				// Get banner
