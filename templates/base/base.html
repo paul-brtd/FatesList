@@ -49,7 +49,7 @@
 <html lang="en" data-theme="light">
 <head>
 
-<script src="https://code.iconify.design/1/1.0.7/iconify.min.js" async></script>
+<script src="https://code.iconify.design/1/1.0.7/iconify.min.js"></script>
 {% if not botp %}
 <!-- Primary Meta Tags -->
 <title>Fates List | Discord Bot List</title>
@@ -108,9 +108,11 @@
     <link rel="preconnect" href="https://cdn.jsdelivr.net/" crossorigin>
     <link rel="shortcut icon" href="/static/favicon.ico"/>
     <!-- Material CSS -->
-    <link href="https://cdn.jsdelivr.net/gh/djibe/material@4.6.0-rc1/css/material.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/gh/djibe/material@4.6.0-rc1/css/material.min.css" rel="stylesheet" defer />
 <!-- Base Styles -->
 <style>
+html, body {overflow-x: hidden !important;}
+
 .btn-no {border: none !important; outline: none !important;}
 .fform {
         background: #ffffff !important;

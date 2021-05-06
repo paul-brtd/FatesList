@@ -10,6 +10,9 @@ discord_o = Oauth(OauthConfig)
 
 @router.get("/login")
 async def login_get(request: Request, redirect: Optional[str] = None, pretty: Optional[str] = "to access this page"):
+    if redirect:
+        if not redirect.startswith("/") and not redirect.startswith("https://fateslist.xyz"):
+            return ORJSONResponse({"detail": "Invalid redirect. You may only redirect to pages on Fates List"}, status_code = 400)
     if "userid" in request.session.keys():
         return RedirectResponse("/", status_code=HTTP_303_SEE_OTHER)
     request.session["redirect"] = redirect

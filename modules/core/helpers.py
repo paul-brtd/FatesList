@@ -120,7 +120,7 @@ async def parse_index_query(fetch: List[asyncpg.Record]) -> list:
                 del bot["banner"]
                 if bot_info.get("avatar") is None:
                     bot_info["avatar"] = ""
-                lst.append({"avatar": bot_info["avatar"].replace("?size=1024", "?size=128"), "username": bot_info["username"], "votes": human_format(votes), "servers": human_format(servers), "description": bot["description"], "banner": banner.replace("\"", "").replace("'", "").replace("http://", "https://").replace("(", "").replace(")", "").replace("file://", "")} | bot | bot_info)
+                lst.append({"avatar": bot_info["avatar"].replace("?size=1024", "?size=128"), "username": bot_info["username"], "votes": human_format(votes), "servers": human_format(servers), "description": bot["description"], "banner": banner.replace("\"", "").replace("'", "").replace("http://", "https://").replace("file://", "")} | bot | bot_info)
         except:
             continue
     return lst
