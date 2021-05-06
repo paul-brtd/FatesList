@@ -1,7 +1,7 @@
 {% extends "base/base.html" %}
 
 {% block head %}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Fates-List/FatesList@main/static/assets/css/bots.min.css"/>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Fates-List/FatesList@main/static/assets/css/bots.min.css" media="none" onload="if(media!='all')media='all'"/>
 <style>
 {{ireplace(".alert", "", bot.css)}}
 </style>
