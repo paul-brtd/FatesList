@@ -99,6 +99,7 @@ async def startup():
     """
     On startup:
         - Initialize the database
+        - Get bot and server tags
         - Start the main and server bots using tokens in config_secrets.py
         - Sleep for 4 seconds to ensure connections are made before application startup
         - Setup Redis and initialize the ratelimiter and caching system
@@ -114,7 +115,6 @@ async def startup():
     for tag in tags_db:
         tags = tags | {tag["id"]: tag["icon"]}
     builtins.tags_fixed = calc_tags(tags)
-    print(tags_fixed, tags)
     builtins.TAGS = tags
 
     print("Discord init beginning")

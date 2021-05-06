@@ -26,7 +26,7 @@ def gen_owner_html(owners_lst: tuple):
     """
     first_done = False
     last_done = False
-    owners_html = ""
+    owners_html = '<span class="iconify" data-icon="mdi-crown" data-inline="false"></span>' # First owner will always be main and hence should have the crown
     for i in range(0, len(owners_lst)):
         owner = owners_lst[i]
         if owner is None: 
@@ -53,7 +53,7 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
             return abort(404) # If API, just regular 404 JSON
         return await templates.e(request, "It might still be in our RabbitMQ queue waiting to be added to our database if you recently added it. Try reloading!", main = "Bot Not Found") # Otherwise HTML error
     bot = dict(bot) | {"tags": [tag["tag"] for tag in tags]}
-    owners = await db.fetch("SELECT owner FROM bot_owner WHERE bot_id = $1", bot_id) # Get all bot owners
+    owners = await db.fetch("SELECT DISTINCT owner, main FROM bot_owner WHERE bot_id = $1 ORDER BY main DESC", bot_id) # Get all bot owners
 
     if bot["long_description_type"] == enums.LongDescType.markdown_pymarkdown: # If we are using markdown
         ldesc = emd(markdown.markdown(bot['long_description'], extensions=["extra", "abbr", "attr_list", "def_list", "fenced_code", "footnotes", "tables", "admonition", "codehilite", "meta", "nl2br", "sane_lists", "toc", "wikilinks", "smarty", "md_in_html"]))

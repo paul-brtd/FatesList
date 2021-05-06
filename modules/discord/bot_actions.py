@@ -48,7 +48,7 @@ async def bot_edit(request: Request, bot_id: int):
         if not check:
             return abort(403)
         try:
-            fetch = dict(await db.fetchrow("SELECT bot_id, prefix, bot_library AS library, invite, website, banner, long_description, description, webhook, webhook_type, discord AS support, api_token, banner, github, features, long_description_type, css, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", bot_id))
+            fetch = dict(await db.fetchrow("SELECT bot_id, prefix, bot_library AS library, invite, website, banner, long_description, description, webhook, webhook_secret, webhook_type, discord AS support, api_token, banner, github, features, long_description_type, css, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", bot_id))
         except:
             return abort(404)
         tags = await db.fetch("SELECT tag FROM bot_tags WHERE bot_id = $1", bot_id)

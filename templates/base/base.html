@@ -38,9 +38,7 @@
 {% endmacro %}
 {% macro tags(tags_fixed) %}
 	{% for tag in tags_fixed %}
-		<div id="tags-{{tag.id}}">
-			<button id="tags-{{tag.id}}-button" class="btn d-flex btn-sm justify-content-center align-items-center btn-outline-light" style="margin-bottom: 4px !important; margin-left: 6px;" onclick="location.href='/search/tags?tag={{tag.id}}'" title="{{tag.name}}"><span class="iconify" data-icon="{{tag.iconify_data}}" data-inline="false" aria-hidden="true"></span><span style="margin-left: 3px; font-size: 13px;"><strong>{{tag.name}}</strong></span></button>
-		</div>
+	<button id="tags-{{tag.id}}" class="btn d-flex btn-sm justify-content-center align-items-center btn-outline-light" style="margin-bottom: 4px !important; margin-left: 6px;" onclick="location.href='/search/tags?tag={{tag.id}}'" title="{{tag.name}}"><span class="iconify" data-icon="{{tag.iconify_data}}" data-inline="false" aria-hidden="true"></span><span style="margin-left: 3px; font-size: 13px;"><strong>{{tag.name}}</strong></span></button>
 	{% endfor %}
 {% endmacro %}
 

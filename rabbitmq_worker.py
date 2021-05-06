@@ -84,15 +84,15 @@ class BotQueueData():
 
     async def add(self, queue):
         if queue == "bot_edit_queue": # Edit Backend
-            await bot_edit_backend(int(self.user_id), self.bot_id, self.prefix, self.library, self.website, self.banner, self.support, self.long_description, self.description, self.tags, self.extra_owners, self.invite, self.webhook, self.vanity, self.github, self.features, self.long_description_type, self.webhook_type, self.css, self.donate, self.privacy_policy, self.nsfw) # Add edit bot to queue as background task
+            await bot_edit_backend(int(self.user_id), self.bot_id, self.prefix, self.library, self.website, self.banner, self.support, self.long_description, self.description, self.tags, self.extra_owners, self.invite, self.webhook, self.vanity, self.github, self.features, self.long_description_type, self.webhook_type, self.webhook_secret, self.css, self.donate, self.privacy_policy, self.nsfw) # Add edit bot to queue as background task
         elif queue == "bot_add_queue": # Add Backend
-            await bot_add_backend(int(self.user_id), self.bot_id, self.prefix, self.library, self.website, self.banner, self.support, self.long_description, self.description, self.tags, self.extra_owners, self.invite, self.features, self.long_description_type, self.css, self.donate, self.github, self.webhook, self.webhook_type, self.vanity, self.privacy_policy, self.nsfw) # Add bot to queue as background task
+            await bot_add_backend(int(self.user_id), self.bot_id, self.prefix, self.library, self.website, self.banner, self.support, self.long_description, self.description, self.tags, self.extra_owners, self.invite, self.features, self.long_description_type, self.css, self.donate, self.github, self.webhook, self.webhook_type, self.webhook_secret, self.vanity, self.privacy_policy, self.nsfw) # Add bot to queue as background task
         elif queue == "bot_delete_queue":
             await bot_delete_backend(int(self.user_id), self.bot_id)
         elif queue == "server_add_queue":
             await server_add_backend(self.user_id, self.guild_id, self.data["name"], self.description, self.long_description_type, self.long_description, self.tags, self.vanity)
         elif queue == "events_webhook_queue":
-            await events_webhook_backend(self.webhook_url, self.webhook_type, self.api_token, self.id, self.webhook_target, self.event, self.context, self.event_id)
+            await events_webhook_backend(self.webhook_url, self.webhook_type, self.api_token, self.id, self.webhook_target, self.event, self.context, self.event_id, self.webhook_secret)
         else:
             raise ValueError("No queue found")
 

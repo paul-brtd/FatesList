@@ -14,6 +14,7 @@ CREATE TABLE bots (
     bot_library text,
     webhook_type text DEFAULT 'VOTE',
     webhook text,
+    webhook_secret text,
     description text,
     long_description text,
     long_description_type integer default 0,

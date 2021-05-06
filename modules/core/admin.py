@@ -11,6 +11,7 @@ class BotActions():
         extra_owners = []
         tags = []
         invite = None
+        webhook_secret = None
 
     def __init__(self, bot):
         self.__dict__.update(bot) # Add all kwargs to class
@@ -21,9 +22,9 @@ class BotActions():
         del rmq_dict["generated"]
         del rmq_dict["custom_prefix"]
         del rmq_dict["open_source"]
-        rmq_dict["extra_owners"] = self.generated.extra_owners
-        rmq_dict["tags"] = self.generated.tags
-        rmq_dict["invite"] = self.generated.invite
+        for key in self.generated.__dict__.keys():
+            rmq_dict[key] = self.generated.__dict__[key]
+        print(rmq_dict)
         return rmq_dict
 
     async def base_check(self) -> Optional[str]:
@@ -106,6 +107,10 @@ class BotActions():
         check = await vanity_check(self.bot_id, self.vanity) # Check if vanity is already being used or is reserved
         if check:
             return "Your custom vanity URL is already in use or is reserved", 15
+        if self.webhook_secret:
+            if len(self.webhook_secret) < 8:
+                return "Your webhook secret must be at least 8 characters long", 16
+            self.generated.webhook_secret = self.webhook_secret
 
     async def edit_check(self):
         """Perform extended checks for editting bots"""

@@ -3,30 +3,8 @@ from modules.core import bot_add_event
 from config import bot_logs
 import asyncio
 
-"""
-    For later (if more scaling is required):
-
-        Use this to make bot owners in db. Use similar for bot tags
-
-            owners = await connection.fetch("SELECT owner FROM bot_owner where bot_id = $1 AND main = false", bot_id)
-            extra_owners_ignore = [] # Extra Owners to ignore because they have already been counted in the database (already extra owners)
-            extra_owners_delete = [] # Extra Owners to delete
-            extra_owners_add = [] # Extra Owners to add
-            for owner in owners: # Loop through owners and add to delete list if not in new extra owners
-                if owner["owner"] not in extra_owners:
-                    extra_owners_delete.append((bot_id, owner["owner"]))
-                else:
-                    extra_owners_ignore.append(owner["owner"]) # Ignore this user when adding users
-            await connection.executemany("DELETE FROM bot_owner WHERE bot_id = $1 AND owner = $2 AND main = false", extra_owners_delete) # Delete in one step
-            for owner in extra_owners:
-                if owner not in extra_owners_ignore:
-                    extra_owners_add.append((bot_id, owner, False)) # If not in ignore list, add to add list
-            await connection.executemany("INSERT INTO bot_owner (bot_id, owner, main) VALUES ($1, $2, $3)", extra_owners_add) # Add in one step
-"""
-
-
-async def bot_edit_backend(user_id, bot_id, prefix, library, website, banner, support, long_description, description, tags, extra_owners, invite, webhook, vanity, github, features, long_description_type, webhook_type, css, donate, privacy_policy, nsfw):
-    await db.execute("UPDATE bots SET bot_library=$2, webhook=$3, description=$4, long_description=$5, prefix=$6, website=$7, discord=$8, banner=$9, invite=$10, github = $11, features = $12, long_description_type = $13, webhook_type = $14, css = $15, donate = $16, privacy_policy = $17, nsfw = $18 WHERE bot_id = $1", bot_id, library, webhook, description, long_description, prefix, website, support, banner, invite, github, features, long_description_type, webhook_type, css, donate, privacy_policy, nsfw) # Update bot with new info
+async def bot_edit_backend(user_id, bot_id, prefix, library, website, banner, support, long_description, description, tags, extra_owners, invite, webhook, vanity, github, features, long_description_type, webhook_type, webhook_secret, css, donate, privacy_policy, nsfw):
+    await db.execute("UPDATE bots SET bot_library=$2, webhook=$3, description=$4, long_description=$5, prefix=$6, website=$7, discord=$8, banner=$9, invite=$10, github = $11, features = $12, long_description_type = $13, webhook_type = $14, css = $15, donate = $16, privacy_policy = $17, nsfw = $18, webhook_secret = $19 WHERE bot_id = $1", bot_id, library, webhook, description, long_description, prefix, website, support, banner, invite, github, features, long_description_type, webhook_type, css, donate, privacy_policy, nsfw, webhook_secret) # Update bot with new info
 
     async with db.acquire() as connection: # Acquire a connection
         async with connection.transaction() as tr: # Make a transaction to avoid data loss

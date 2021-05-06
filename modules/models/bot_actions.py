@@ -40,6 +40,7 @@ class BotMeta(BaseModel):
     github: Optional[str] = ""
     webhook_type: Optional[str] = ""
     webhook: Optional[str] = ""
+    webhook_secret: Optional[str] = ""
     vanity: Optional[str] = ""
 
 class BaseForm(BotMeta):
