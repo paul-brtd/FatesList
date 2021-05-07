@@ -44,6 +44,8 @@ class BotListStats(BaseModel):
     pid: int
     up: bool
     dup: bool
+    bot_count: int
+    bot_count_total: int
 
 #LIBRARY-INTERNAL
 class BotPromotionDelete(BaseModel):
@@ -162,6 +164,9 @@ class BotRandom(BaseModel):
 
 class BotListAdminRoute(BaseModel):
     mod: str
+
+class BotStateUpdate(BaseModel):
+    state: enums.BotState
 
 class BotTransfer(BotListAdminRoute):
     new_owner: str

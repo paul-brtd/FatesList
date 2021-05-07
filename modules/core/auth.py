@@ -1,6 +1,9 @@
 from .imports import *
 
 async def bot_auth(bot_id: int, api_token: str, *, fields: Optional[str] = None):
+    if secure_strcmp(api_token, root_key):
+        token = await db.fetchval("SELECT api_token FROM bots WHERE bot_id = $1", bot_id)
+        return await bot_auth(bot_id, token, fielda = fields)
     if fields is None:
         return await db.fetchval("SELECT bot_id FROM bots WHERE bot_id = $1 AND api_token = $2", bot_id, str(api_token))
     return await db.fetchrow(f"SELECT bot_id, {fields} FROM bots WHERE bot_id = $1 AND api_token = $2", bot_id, str(api_token))
@@ -10,6 +13,9 @@ async def user_auth(user_id: int, api_token: str, fields: Optional[str] = None):
         user_id = int(user_id)
     except:
         return None
+    if secure_strcmp(api_token, root_key):
+        token = await db,fetchval("SELECT api_token FROM users WHERE api_token = $1", user_id)
+        return await user_auth(user_id, token, fields = fields)
     if fields is None:
         return await db.fetchval("SELECT user_id FROM users WHERE user_id = $1 AND api_token = $2", user_id, str(api_token))
     return await db.fetchrow(f"SELECT user_id, {fields} FROM users WHERE user_id = $1 AND api_token = $2", user_id, str(api_token))

@@ -12,4 +12,5 @@ recaptcha_secret = "" # Recaptxha secret
 bb_add_key = "" # Botblock add bot key
 bb_edit_key = "" # Botblock edit bot key
 test_server_manager_key = "" # Test server manager bot (+approve, +claim etc) key
+root_key = "" # This gives almost 100% control over api so keep it safe
 rabbitmq_pwd = "" # RabbitMQ password

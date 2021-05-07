@@ -402,7 +402,8 @@ $("#bot_form").submit( function(eventObj) {
 	if(type != "VOTE")
 		return alert("Only Vote Webhook is currently supported for testing")
         json = JSON.stringify({"id": 112233445566778899, "votes": 11, "test": true})
-	headers = {"Authorization": "{{data.api_token}}"}
+	api_token = "{{data.api_token}}"
+	headers = {"Authorization": api_token}
 	$.ajax({
 		url: url,
 		dataType: "json",

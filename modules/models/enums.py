@@ -31,6 +31,7 @@ class BotState(IntEnum):
     banned = 4, "Banned"
     under_review = 5, "Under Review"
     certified = 6, "Certified"
+    archived = 7, "Archived"
 
 class LongDescType(IntEnum):
     _init_ = 'value __doc__'

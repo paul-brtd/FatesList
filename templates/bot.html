@@ -17,9 +17,9 @@
 					<strong>This bot has been DENIED from this bot list for violating our rules or being a low-quality bot. Please do not invite it.</strong>	
 					{% if bot_admin %}
 						<br/><strong>Since you are the owner/extra owners of this bot, you can resubmit your bot or request a ban appeal (if your bot was banned and not denied) by clicking <a class="long-desc-link" href="/bot/{{bot.bot_id}}/resubmit">here</a></strong>
-		</div>
-					{% endif %}
 				</div>
+			{% endif %}
+			</div>
 			{% elif bot.state == enums.BotState.banned %}
 				<div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
 					<strong>This bot has been BANNED from this bot list for violating our rules or being a low-quality bot. Please do not invite it.</strong>
@@ -35,6 +35,11 @@
 			{% if bot.state == enums.BotState.under_review %}
 				<div class="alert alert-info" style="text-align: center; justify-content: center; color: white !important;" role="alert">
 					<strong>This bot is currently under review now right now and will be approved (or denied) soon!</strong>
+				</div>
+			{% endif %}
+			{% if bot.state == enums.BotState.archived %}
+				<div class="alert alert-info" style="text-align: center; justify-content: center; color: white !important;" role="alert">
+					<strong>This bot has been archived by its owner and may not be working anymore</strong>
 				</div>
 			{% endif %}
 			{% if (bot.state == enums.BotState.pending or bot.state == enums.BotState.under_review) and staff[0] %}

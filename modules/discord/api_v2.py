@@ -6,7 +6,7 @@ from modules.models.api_v2 import *
 from modules.models.bot_actions import BotAdd, BotEdit
 from modules.discord.admin import admin_dashboard
 from lxml.html.clean import Cleaner
-
+from modules.badges import get_badges
 discord_o = Oauth(OauthConfig)
 
 cleaner = Cleaner(remove_unknown_tags=False)
@@ -26,8 +26,15 @@ async def botlist_stats_api(request: Request):
         pid - The pid of the worker you are connected to
         up - Whether the databases are up on this worker
         dup - Whether we have connected to discord on this worker
+        bot_count_total - The bot count of the list
+        bot_count - The approved and certified bots on the list
     """
-    return {"uptime": time.time() - boot_time, "pid": os.getpid(), "up": up, "dup": (client.user is not None)}
+    if up:
+        bot_count_total = await db.fetchval("SELECT COUNT(1) FROM bots")
+        bot_count = await db.fetchval("SELECT COUNT(1) FROM bots WHERE state = 0 OR state = 6")
+    else:
+        bot_count = 0
+    return {"uptime": time.time() - boot_time, "pid": os.getpid(), "up": up, "dup": (client.user is not None), "bot_count": bot_count, "bot_count_total": bot_count_total}
 
 @router.get("/admin/console")
 async def botlist_admin_console_api(request: Request):
@@ -133,12 +140,18 @@ async def regenerate_bot_token(request: Request, bot_id: int, Authorization: str
     await db.execute("UPDATE bots SET api_token = $1 WHERE bot_id = $2", get_token(132), id)
     return {"done": True, "reason": None, "code": 1000}
 
+@router.patch("/bots/admin/{bot_id}/state")
+async def bot_root_update_api(request: Request, bot_id: int, data: BotStateUpdate, Authorization: str = Header("ROOT_KEY")):
+    """Root API to update a bots state. Needs the root key"""
+    if not secure_strcmp(Authorization, root_key):
+        return abort(401)
+    await db.execute("UPDATE bots SET state = $1 WHERE bot_id = $2", data.state, bot_id)
+    return {"done": True, "reason": None, "code": 1000}
+
 @router.patch("/bots/admin/{bot_id}/under_review", response_model = APIResponse)
 async def bot_under_review_api(request: Request, bot_id: int, data: BotUnderReview, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
-    """
-    Put a bot in queue under review or back in queue. This is internal and only meant for our test server manager bot
-    """
-    if not secure_strcmp(Authorization, test_server_manager_key):
+    """Put a bot in queue under review or back in queue. This is internal and only meant for our test server manager bot"""
+    if not secure_strcmp(Authorization, test_server_manager_key) and not secure_strcmp(Authorization, root_key):
         return abort(401)
     guild = client.get_guild(main_server)
     user = guild.get_member(int(data.mod))
@@ -158,7 +171,7 @@ async def bot_under_review_api(request: Request, bot_id: int, data: BotUnderRevi
 
 @router.patch("/bots/admin/{bot_id}/main_owner", response_model = APIResponse)
 async def transfer_bot_api(request: Request, bot_id: int, data: BotTransfer, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
-    if not secure_strcmp(Authorization, test_server_manager_key):
+    if not secure_strcmp(Authorization, test_server_manager_key) and not secure_strcmp(Authorization, root_key):
         return abort(401)
     guild = client.get_guild(main_server)
     try:
@@ -188,7 +201,7 @@ async def botlist_get_queue_api(request: Request):
 @router.patch("/bots/admin/{bot_id}/queue", response_model = APIResponse)
 async def botlist_edit_queue_api(request: Request, bot_id: int, data: BotQueuePatch, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
     """Admin API to approve/verify or deny a bot on Fates List"""
-    if not secure_strcmp(Authorization, test_server_manager_key):
+    if not secure_strcmp(Authorization, test_server_manager_key) and not secure_strcmp(Authorization, root_key):
         return abort(401)
     
     try:
@@ -592,14 +605,31 @@ async def preview_api(request: Request, data: PrevRequest):
     html = html.replace("<h1", "<h2 style='text-align: center'").replace("<h2", "<h3").replace("<h4", "<h5").replace("<h6", "<p").replace("<a", "<a class='long-desc-link'").replace("ajax", "").replace("http://", "https://").replace(".alert", "")
     return {"html": html}
 
-@router.get("/users/{user_id}", response_model = User)
+@router.get("/users/{user_id}")
 async def get_user_api(request: Request, user_id: int):
-    user = await db.fetchrow("SELECT state, description, css FROM users WHERE user_id = $1", user_id)
+    user = await db.fetchrow("SELECT badges, state, description, css FROM users WHERE user_id = $1", user_id)
     if user is None or user["state"] == enums.UserState.ddr_ban:
         return abort(404)
     user_obj = await get_user(user_id)
-    user_ret = dict(user) | user_obj
-    return user_ret
+    if user_obj is None:
+        return abort(404)
+    user_ret = dict(user)
+    badges = user_ret["badges"]
+    del user_ret["badges"]
+    bots = await db.fetch("SELECT bots.description, bots.banner, bots.state, bots.votes, bots.servers, bots.bot_id, bots.invite, bots.nsfw, bot_owner.main FROM bots INNER JOIN bot_owner ON bot_owner.bot_id = bots.bot_id WHERE bot_owner.owner = $1", user_id)
+    approved_bots = [obj for obj in bots if obj["state"] in (0, 6)]
+    certified_bots = [obj for obj in bots if obj["state"] == 6]
+    guild = client.get_guild(main_server)
+    if guild is None:
+        return abort(503)
+    user_dpy = guild.get_member(int(user_id))
+    if user_dpy is None:
+        user_dpy = await client.fetch_user(user_id)
+    if user_dpy is None: # Still connecting to dpy or whatever
+        badges = None # Still not prepared to deal with it since we havent connected to discord yet 
+    else:
+        badges = get_badges(user_dpy, badges, approved_bots)
+    return {"bots": bots, "approved_bots": approved_bots, "certified_bots": certified_bots, "bot_developer": approved_bots != [], "certified_developer": certified_bots != [], "profile": user_ret, "badges": badges, "defunct": user_dpy is None} | user_obj
 
 @router.post("/users/{user_id}/servers/prepare", dependencies=[Depends(RateLimiter(times=3, seconds=35))], response_model = ServerListAuthed)
 async def prepare_servers_api(request: Request, user_id: int, data: ServerCheck, Authorization: str = Header("USER_TOKEN")):
