@@ -1,0 +1,12 @@
+site_name: Fates List Docs
+site_url: https://fateslist.xyz
+repo_name: GitHub
+repo_url: https://github.com/Fates-List/FatesList
+remote_branch: main
+theme:
+        name: material
+        logo: https://fateslist.xyz/static/botlisticon.webp
+        palette:
+                primary: black
+        features:
+                navigation.sections
