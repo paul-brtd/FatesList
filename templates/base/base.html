@@ -1,47 +1,5 @@
-{% macro botCard(bot, rand) %}
-<section class="bot-card">
-        <div class="lozad bot-card-banner" data-background-image="{{bot.banner}}">
-                {% if bot.state == enums.BotState.certified or rand %}
-			<span class="iconify bot-card-cert" data-icon="fa-solid:certificate" data-inline="false" data-height="3em"></span>
-                {% endif %}
-                <a href="/bot/{{bot.bot_id}}" class="bot-card-view-link">
-                        <img alt="bot avatar" class="lozad bot-card-avatar" data-placeholder-background="black" data-src="{{bot.avatar}}" width="30%"/>
-                </a>
-        </div>
-        <div>
-		<a href="/bot/{{bot.bot_id}}" class="bot-card-view-link">
-                <div class="bot-card-username">
-                        <p class="text-nowrap text-break text-center bot-card-username-txt white-bold">{{bot.username}}</p>
-                </div>
-		</a>
-        </div>
-        <p class="bot-card-description">
-                <strong class="bot-card-description-txt" style="overflow-wrap: anywhere;">{{bot.description}}</strong>
-        </p>
-        <div class="d-flex bot-card-footer">
-                <div class="bot-card-footer-stats">
-                        <p class="text-center white-bold">
-				<span class="iconify i-m3" data-icon="fa-solid:server" data-inline="false"></span><span style="margin-left: 3px;" class="bot-servers">{{bot.servers}}</span>
-			</p>
-                </div>
-                <div class="bot-card-footer-stats">
-                        <p class="text-center white-bold">
-				<span class="iconify i-m3" data-icon="fa-solid:thumbs-up" data-inline="false"></span><span style="margin-left: 3px;" class="bot-votes">{{bot.votes}}</span>
-			</p>
-                </div>
-        </div>
-        <div class="bot-card-actions">
-                <a role="button" aria-label="View" href="/bot/{{bot.bot_id}}" class="btn btn-outline-light bot-card-actions-link bot-card-view-link">View</a>
-                <a role="button" aria-label="Invite" href="/bot/{{bot.bot_id}}/invite" class="btn btn-outline-light bot-card-actions-link bot-card-invite-link" style="margin-left: 6.5%;" target="_blank">Invite</a>
-        </div>
-</section>
-{% endmacro %}
-{% macro tags(tags_fixed) %}
-	{% for tag in tags_fixed %}
-	<button id="tags-{{tag.id}}" class="btn d-flex btn-sm justify-content-center align-items-center btn-outline-light" style="margin-bottom: 4px !important; margin-left: 6px;" onclick="location.href='/search/tags?tag={{tag.id}}'" title="{{tag.name}}"><span class="iconify" data-icon="{{tag.iconify_data}}" data-inline="false" aria-hidden="true"></span><span style="margin-left: 3px; font-size: 13px;"><strong>{{tag.name}}</strong></span></button>
-	{% endfor %}
-{% endmacro %}
-
+{% extends 'base/macros.html' %}
+{% block html %}
 <!-- Begin HTML -->
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
@@ -187,3 +145,4 @@
   });
 </script>
 </html>
+{% endblock %}

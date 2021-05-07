@@ -14,7 +14,7 @@
 <h5 style="text-align:center; color:white;">Some popular bots with this feature</h5>
     <div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center" id="tt-1" style="width: 90%;margin: 30px 5%;">
         {% for bot in bots %}
-        	{{ botCard(bot, False) }}
+        	{{ flCard(bot, False, 'bot') }}
 	{% endfor %}
     </div>
 {% endblock %}

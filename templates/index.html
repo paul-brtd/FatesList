@@ -13,7 +13,7 @@
 	</div>
 	<div id="random-section" class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center div-is">
 		<div id="random-bots">
-			{{ botCard(top_voted[0], True) }}
+			{{ flCard(top_voted[0], True, 'bot') }}
 		</div> 
 	</div>
 	<div id="random-section-bt" class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center div-is">
@@ -26,7 +26,7 @@
 	</div>
 	<div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center div-is" id="tt-2">
         	{% for bot in certified_bots %}
-			{{ botCard(bot, False) }}
+			{{ flCard(bot, False, 'bot') }}
 		{% endfor %}
 	</div>
 	<hr class="hr-is">
@@ -36,7 +36,7 @@
 	</div>
 	<div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center div-is" id="tt-1">
 		{% for bot in top_voted %}
-			{{ botCard(bot, False) }}
+			{{ flCard(bot, False, 'bot') }}
 		{% endfor %}
 	</div>
 	<hr class="hr-is">
@@ -46,7 +46,7 @@
 	</div>
 	<div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center" id="tt" style="width: 90%;margin: 30px 5%;">
 		{% for bot in new_bots %}
-			{{ botCard(bot, False) }}
+			{{ flCard(bot, False, 'bot') }}
 		{% endfor %}
 	</div>
 	<script>

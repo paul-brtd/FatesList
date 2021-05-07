@@ -128,7 +128,7 @@ CREATE TABLE users (
     user_id bigint,
     api_token text,
     vote_epoch timestamptz,
-    description text,
+    description text DEFAULT 'This user prefers to be an enigma',
     badges text[],
     username text,
     css text default '',
