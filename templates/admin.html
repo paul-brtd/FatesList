@@ -1,0 +1,121 @@
+{% macro statcard(name, count, icon) %}
+<div class="col-md-6 col-xl-3 mb-4">
+	<div class="card shadow border-left-info py-2" style="background: black !important;">
+		<div class="card-body">
+			<div class="row align-items-center no-gutters">
+				<div class="col mr-2">
+					<div class="text-uppercase text-success font-weight-bold text-xs mb-1" style="color: white !important;"><span>{{ name }}</span></div>
+					<div class="text-dark font-weight-bold h5 mb-0" style="color: white !important;"><span>{{ count }}</span></div>
+				</div>
+				<div class="col-auto" style="color: white !important;">
+					<span class="iconify" data-icon="fa-solid:{{icon}}" data-inline="false" data-height="3em"></span>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+{% endmacro %}
+
+{% macro blist(name, bots) %}
+<div class="row">
+	<div class="col-lg-6 mb-4">
+		<div class="card shadow mb-4" style="background: black !important;">
+			<div class="card-header py-3">
+				<h6 class="text-primary font-weight-bold m-0" style="color: white !important;">{{ name }}</h6>
+			</div>
+			<ul class="list-group list-group-flush" style="background: black !important;">
+			{% for bot in bots %}
+				<li class="list-group-item">
+					<div class="row align-items-center no-gutters">
+						<div class="col mr-2">
+							<h6 class="mb-0"><a href="/bot/{{bot.bot_id}}" style="color: white !important;"><strong>{{loop.index}}. {{bot.username}} ({{bot.bot_id}})</strong></a></h6>
+							<span class="text-xs long-desc-link">{{bot.description}}</span>
+						</div>
+					</div>
+				</li>
+			{% endfor %}
+			</ul>
+		</div>
+	</div>
+</div>
+{% endmacro %}
+
+
+{% extends "base/base.html" %} 
+{% block head %} 
+{% endblock %} 
+{% block content %}
+    
+    <div id="wrapper" style="text-align: left;">
+        <div class="d-flex flex-column" id="content-wrapper">
+            <div id="content">
+                <div class="container-fluid">
+			<h3 class="text-dark mb-0" style="color: rgb(255,255,255)!important;">Fates List Admin Console</h3>
+			<h4 class="text-dark mb-0" style="color: rgb(255,255,255)!important; opacity: 0.8">Dont worry if you can see this page. The Admin Console is globally visible for transparency.</h4>
+			<h4 class="text-dark mb-0" style="color: rgb(255,255,255)!important;">{{perm.replace("_", " ").title()}}</h4> <!-- Get permission, replace underscore with space for title and make it a title -->
+			<div class="row" style="margin-bottom: 60px">
+			   {{ statcard("Bots In Queue", len(queue), "robot") }}
+			   {{ statcard("Bots on the list", bot_amount, "list-alt" ) }}
+			   {{ statcard("Certified Bots", len(certified), "certificate") }}
+			   {{ statcard("Banned Bots", len(banned), "hammer") }}
+			   {{ statcard("Denied Bots", len(denied), "times") }}
+			   {{ statcard("Bots Under Review", len(under_review), "cloud") }}
+		    </div>
+		    {{ blist("Bots In Queue", queue) }}
+		    {{ blist("Bots Under Review", under_review) }}
+		    {{ blist("Denied Bots", denied) }}
+		    {{ blist("Banned Bots", banned) }}
+		    {{ blist("Certified Bots", certified) }}
+                </div>
+            </div>
+        </div>
+        {% if staff[0] and not stats %}
+        <div style="width: 80%;margin: 0 auto;;">
+            <h3 class="text-center" style="color: rgba(241,241,241,0.87);">Admin Functions</h3>
+	    <h4 class="white">You currently may perform the below actions</h4>
+	    {% if owner %}
+	    <form method="POST">
+                {{form.csrf_token}}
+                <input type="hidden" name="admin" value="certify"></input>
+                <div class="input-group">
+                    <div class="input-group-prepend"><span class="input-group-text" style="background: #00000000;color: rgba(255,255,255,0.87);">Certify a bot</span></div><input class="form-control" type="number" style="background: #ffffff;" name="bot_id">
+                    <div class="input-group-append"><button class="btn btn-outline-light" type="submit">Submit</button></div>
+                </div>
+            </form>
+
+            <form method="POST">
+                {{form.csrf_token}}
+                <input type="hidden" name="admin" value="uncertify"></input>
+                <div class="input-group" style="margin: 50px 0;">
+                    <div class="input-group-prepend"><span class="input-group-text" style="background: #00000000;color: rgba(255,255,255,0.87);">Uncertify a bot</span></div><input class="form-control" type="number" style="background: #ffffff;" name="bot_id">
+                    <div class="input-group-append"><button class="btn btn-outline-light" type="submit">Submit</button></div>
+                </div>
+            </form>
+        <form method="POST">
+            {{form.csrf_token}}
+            <input type="hidden" name="admin" value="reset"></input>
+            <div class="input-group" style="margin: 50px 0;">
+                <div class="input-group-prepend"><span class="input-group-text" style="background: #00000000;color: rgba(255,255,255,0.87);">Reset Votes(Also add a wish to the box ;))</span></div><input class="form-control" type="text" required style="background: #ffffff;" name="nn">
+                <div class="input-group-append"><button class="btn btn-outline-light" type="submit">Submit</button></div>
+            </div>
+        </form>
+	{% endif %}
+	{% if staff[1] > 2 %}
+	<form method="POST" style="width: 100%;" action="/admin/console/ban">
+            {{form.csrf_token}}
+	    <input type="hidden" name="admin" value="ban"></input>
+	    <label for="ban_type">Ban/Unban A User</label>
+	    <select name="ban_type" style="width: 100%;">
+		    <option value="0">Unban</option>
+		    <option value="1">Global Ban</option>
+		    <option value="2">Login Ban</option>
+		    <option value="3" selected>Profile Edit Ban</option>
+	    </select>
+	    <input type="number" minlength="17" maxlength="18" name="user_id" placeholder="User ID" class="fform" style="width: 100%;"></input>
+	    <div class="input-group-append"><button class="btn btn-outline-light" type="submit">Submit</button></div>
+	</form>
+	{% endif %}
+        </div>
+        {% endif %}
+    </div>
+    {% endblock %} {% block footer %} {% endblock %}

@@ -1,0 +1,101 @@
+{% extends "base/base.html" %}
+
+{% block head %}
+<style>
+input[type='file']{
+  color:blue;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div
+  style="
+    border-radius: 15px;
+  "
+>
+  <div
+    class="d-flex d-sm-flex d-md-flex d-lg-flex d-xl-flex flex-column justify-content-center align-items-center flex-sm-column justify-content-sm-center align-items-sm-center flex-md-column justify-content-md-center align-items-md-center flex-lg-column justify-content-lg-center align-items-lg-center flex-xl-column justify-content-xl-center align-items-xl-center"
+  >
+    <h2
+      style="
+        color: rgba(255, 255, 255, 0.87);
+        font-weight: bold;
+        margin-top: 40px;
+      "
+    >
+      Fates List
+    </h2>
+    <p
+      style="
+        color: rgba(255, 255, 255, 0.87);
+        font-weight: bold;
+        opacity: 0.78;
+        font-size: 21px;
+      "
+    >
+    Beep Boop! Lets edit your profile
+    </p>
+    {% if not error %}
+    {% else %}
+    <div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
+            <strong>{{error|safe}}</strong>
+    </div>
+    {% endif %}
+  </div>
+  <hr
+    style="
+      font-size: 20px;
+      border-top-width: 1px;
+      border-top-color: #eee;
+      width: 70%;
+    "
+  />
+    <div class="form-group" style="color: blue; width: 80%; margin: 0 auto; height: auto; margin-top: 30px; color: rgba(255, 255, 255, 0.87)">
+        <div class="form-group" class="d-flex" style="margin: 15px auto; width: 85%;color: white; font-weight: bold; overflow-wrap: anywhere;">
+
+  <form
+    style="height: auto; margin-top: 30px; color: rgba(255, 255, 255, 0.87); text-align: center;"
+    id="bot_form"
+    method="POST"
+  >
+    <div class="form-group">
+<div class="container">
+      <label
+        for="favorite_bot"
+        >Favorite Bot On Fates List (Bot ID)</span>
+      </label>
+      <input
+        class="form-control fform"
+        type="number"
+	maxlength="19"
+        name="favorite_bot"
+        placeholder="1234567890123456"
+      />
+  <div class="row">
+          <div class="col-lg">
+     <h5 style="font-weight: bold; margin-bottom: 15px;">General Information About You</h5>
+      <label
+        for="biography"
+        >Profile Biography/Description
+      </label>
+      <textarea
+        required
+        class="form-control fform"
+        type="text"
+        name="biography"
+        placeholder="John Doe is practicing Vote Manipulation!"
+	></textarea>
+	  </div>
+   <div class="col-lg">
+     <h5 style="font-weight: bold; margin-bottom: 15px;">Extras...</h5>
+     <h6>Coming soon...</h6>
+	  </div>
+  </div>
+  {{form.csrf_token}}
+  <button type="submit" class="btn btn-outline-light" style="margin-top: 30px;">Edit</button>
+</form>
+{% endblock %}
+{% block footer %}
+
+{% endblock %}

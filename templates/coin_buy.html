@@ -1,0 +1,54 @@
+{% extends "base/base.html" %}
+
+{% block head %}
+<script src="https://js.stripe.com/v3/"></script>
+{% endblock %}
+
+{% block content %}
+   <h3 style="text-align:center; color:white; font-weight:bold;margin-top:10%">Buy Coins!</h3>
+   <h4 style="text-align:center; color:white;">All information typed here is sent directly to Stripe, our payment processor and is not saved on our servers. Don't believe us? You can check the source code as well!</h4>
+    <input id="coupon-code" type="text" placeholder="Coupon Code" />
+    <button id="checkout-button" class="btn btn-outline-light">Buy With Stripe</button>
+    <script type="text/javascript">
+      // Create an instance of the Stripe object with your publishable API key
+      var stripe = Stripe(
+
+'{{stripe_publishable_key}}'
+);
+      var checkoutButton = document.getElementById('checkout-button');
+
+      checkoutButton.addEventListener('click', function() {
+        // Create a new Checkout Session
+	discount_code = document.querySelector("#coupon-code").value;
+	if(discount_code == "") {
+		val = "GENERIC_CODE"
+	}
+	else {
+		val = discount_code
+	}
+	fetch('/api/stripe/checkout?user_id={{userid}}&discount=' + val, {
+          method: 'POST',
+        })
+        .then(function(response) {
+          return response.json();
+        })
+        .then(function(session) {
+          return stripe.redirectToCheckout({ sessionId: session.id });
+        })
+        .then(function(result) {
+          // If `redirectToCheckout` fails due to a browser or network
+          // error, you should display the localized error message to your
+          // customer using `error.message`.
+          if (result.error) {
+            alert(result.error.message);
+          }
+        })
+        .catch(function(error) {
+          console.error('Error:', error);
+        });
+      });
+    </script>
+{% endblock %}
+{% block footer %}
+
+{% endblock %}

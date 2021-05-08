@@ -1,0 +1,59 @@
+{% macro flCard(data, rand, type) %}
+    <!--Get type of card and parse it-->
+    {% if type == 'bot' %}
+        {% set id = data.bot_id %}
+    {% elif type == 'profile' %} 
+        {% set id = data.id %}
+    {% endif %}
+
+    <section class="bot-card">
+        <div class="lozad bot-card-banner" data-background-image="{{data.banner}}">
+            {% if type == 'bot' and (data.state == enums.BotState.certified or rand) %}
+			    <span class="iconify bot-card-cert" data-icon="fa-solid:certificate" data-inline="false" data-height="3em"></span>
+            {% endif %}
+            <a href="/{{type}}/{{id}}" class="bot-card-view-link">
+                    <img alt="bot avatar" class="lozad bot-card-avatar" data-placeholder-background="black" data-src="{{data.avatar}}" width="30%"/>
+            </a>
+        </div>
+        <div>
+		<a href="/{{type}}/{{id}}" class="bot-card-view-link">
+                <div class="bot-card-username">
+                        <p class="text-nowrap text-break text-center bot-card-username-txt white-bold">{{data.username}}</p>
+                </div>
+		</a>
+        </div>
+        <p class="bot-card-description">
+                <strong class="bot-card-description-txt" style="overflow-wrap: anywhere;">{{data.description}}</strong>
+        </p>
+        {% if type == 'bot' or type == 'server' %}
+            <div class="d-flex bot-card-footer">
+                {% if type == 'bot' %}
+                    <div class="bot-card-footer-stats">
+                        <p class="text-center white-bold">
+				            <span class="iconify i-m3" data-icon="fa-solid:server" data-inline="false"></span><span style="margin-left: 3px;" class="bot-servers">{{data.servers}}</span>
+			            </p>
+                    </div>
+                {% endif %}
+                <div class="bot-card-footer-stats">
+                    <p class="text-center white-bold">
+				        <span class="iconify i-m3" data-icon="fa-solid:thumbs-up" data-inline="false"></span><span style="margin-left: 3px;" class="bot-votes">{{data.votes}}</span>
+			        </p>
+                </div>
+            </div>
+        {% endif %}
+        <div class="bot-card-actions">
+            <a role="button" aria-label="View" href="/{{type}}/{{id}}" class="btn btn-outline-light bot-card-actions-link bot-card-view-link">View</a>
+            {% if type != 'profile' %}
+                <a role="button" aria-label="Invite" href="/{{type}}/{{id}}/invite" class="btn btn-outline-light bot-card-actions-link bot-card-invite-link" style="margin-left: 6.5%;" target="_blank">Invite</a>
+            {% endif %}
+        </div>
+    </section>
+{% endmacro %}
+{% macro tags(tags_fixed) %}
+	{% for tag in tags_fixed %}
+	<button id="tags-{{tag.id}}" class="btn d-flex btn-sm justify-content-center align-items-center btn-outline-light" style="margin-bottom: 4px !important; margin-left: 6px;" onclick="location.href='/search/tags?tag={{tag.id}}'" title="{{tag.name}}"><span class="iconify" data-icon="{{tag.iconify_data}}" data-inline="false" aria-hidden="true"></span><span style="margin-left: 3px; font-size: 13px;"><strong>{{tag.name}}</strong></span></button>
+	{% endfor %}
+{% endmacro %}
+
+{% block html %}
+{% endblock %}

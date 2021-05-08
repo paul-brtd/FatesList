@@ -1,0 +1,99 @@
+{% extends "base_index.html" %}
+
+{% block head %}
+
+{% endblock %}
+
+{% block content %}
+<div class="index-fl">
+	<hr class="hr-is">
+	<div class="d-flex" style="margin-left: 5%;">
+		<span class="iconify white" data-icon="fa-solid:search" data-inline="false" data-height="3em"></span>
+		<p class="title-is">Random Bot</p>
+	</div>
+	<div id="random-section" class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center div-is">
+		<div id="random-bots">
+			{{ flCard(top_voted[0], True, 'bot') }}
+		</div> 
+	</div>
+	<div id="random-section-bt" class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center div-is">
+		<button class="btn btn-outline-light text-center" style="display: block;  text-align: center; justify-content: center;" onclick="randomBotRoll()">Roll</button>
+	</div>
+	<hr class="hr-is">
+	<div class="d-flex" style="margin-left: 5%;">
+                <span class="iconify white" data-icon="fa-solid:certificate" data-inline="false" data-height="3em"></span>
+		<p class="title-is">Certified Bots</p>
+	</div>
+	<div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center div-is" id="tt-2">
+        	{% for bot in certified_bots %}
+			{{ flCard(bot, False, 'bot') }}
+		{% endfor %}
+	</div>
+	<hr class="hr-is">
+	<div class="d-flex" style="margin-left: 5%;">
+		<span class="iconify white" data-icon="fa-solid:sort-amount-up" data-inline="false" data-height="3em"></span>
+		<p class="title-is">Top Voted</p>
+	</div>
+	<div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center div-is" id="tt-1">
+		{% for bot in top_voted %}
+			{{ flCard(bot, False, 'bot') }}
+		{% endfor %}
+	</div>
+	<hr class="hr-is">
+	<div class="d-flex" style="margin-left: 5%;">
+		<span class="iconify white" data-icon="fa-solid:plus" data-inline="false" data-height="3em"></span>
+		<p class="title-is">New Bots</p>
+	</div>
+	<div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center" id="tt" style="width: 90%;margin: 30px 5%;">
+		{% for bot in new_bots %}
+			{{ flCard(bot, False, 'bot') }}
+		{% endfor %}
+	</div>
+	<script>
+		function randomBotRoll(){
+			$.get("{{site_url}}{{roll_api}}", function(data, status) {
+				if(status == 429) {
+					modalShow("You are rolling too fast!", `Please wait ${data.headers['Retry-After']} seconds`)
+					return
+				}
+				random_bots = document.querySelector("#random-bots")
+				
+				// Get banner
+				if(data.banner == "" || data.banner == "none") {
+					banner = "/static/assets/img/banner.webp"
+				}
+				else {
+					banner = data.banner
+				}
+				if(data.state == 6) { // State 6 is certified
+					certified_ico = "visible"
+				}
+				else {
+					certified_ico = "hidden"
+				}
+				banner_dom = random_bots.querySelectorAll(".bot-card-banner")[0] // Banner
+				banner_dom.setAttribute("data-background-image", banner)
+				random_bots.querySelectorAll(".bot-card-cert")[0].style.visibility = certified_ico // Certified
+				avatar_dom = random_bots.querySelectorAll(".bot-card-avatar")[0] // Avatar
+				avatar_dom.setAttribute("data-src", data.avatar)
+				avatar_dom.setAttribute("data-loaded", "false") // Lozad Reload Avatar
+                                banner_dom.setAttribute("data-loaded", "false") // Lozad Reload Banner
+				observer.observe() // Lozad Reobserve
+				view_links = random_bots.querySelectorAll(".bot-card-view-link")
+				for(let i = 0; i < view_links.length; i++) {
+					view_links[i].setAttribute("href", "/bot/" + data.bot_id.toString())
+				}
+				username_dom = random_bots.querySelectorAll(".bot-card-username-txt")[0].innerHTML = data.username
+                                random_bots.querySelectorAll(".bot-card-description-txt")[0].innerHTML = data.description
+				random_bots.querySelectorAll(".bot-servers")[0].innerHTML = data.servers
+                                random_bots.querySelectorAll(".bot-votes")[0].innerHTML = data.votes
+				random_bots.querySelectorAll(".bot-card-invite-link")[0].setAttribute("href", "/bot/" + data.bot_id.toString() + "/invite")
+			})
+		}
+		window.addEventListener("load", randomBotRoll)
+	</script>
+{% endblock %}
+{% block footer %}
+
+{% endblock %}
+

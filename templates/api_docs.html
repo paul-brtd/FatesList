@@ -1,0 +1,298 @@
+{% extends "base/base.html" %}
+
+{% block head %}
+	<style>
+		#api_docs_body {
+			width: 100%;
+			text-align: left;
+		}
+		.hr-is {font-size: 20px; border-top-width: 1px; border-top-color: #eee; width: 90%;}
+		.docm, pre, #resources {
+			margin-left: 15px;
+			font-size: 18px;
+		}
+		strong {
+			margin-right: 5px;
+		}
+		h3 {
+			font-size: 24px;
+			text-align: center;
+		}
+		.alert {
+			padding: 3px;
+			text-align: left !important;
+			margin-left: 15px;
+			display: block;
+			border: 3px solid red !important;
+			border-radius: 4px 4px 4px 4px !important;
+			color: white !important;
+			margin-bottom: 3px;
+		}
+		.doc {
+			margin-right: 10px;
+			margin-bottom: 5px;
+		}
+		table, th, tr, td {
+			padding: 10px;
+			border: 1px solid white;
+			border-collapse: collapse;
+			background: black !important;
+			max-width: 100%;
+		}
+		.table {
+			margin-top: 5px;
+			width: 45%;
+			margin-bottom: 5px;
+			background: inherit !important;
+		}
+
+		html, body {
+		}
+
+	</style>
+{% endblock %}
+{% block content %}
+<div class="white" id="api_docs_body">
+<header>
+	<span>
+		<h1 style="font-size: 36px; text-align: center; margin-bottom: 0px !important;"><strong>Fates List</strong></h1>
+		<h2 style="text-align: center; font-weight: normal; font-size: 16px;">API Docs</h2>
+		<hr class="hr-is"/>
+	</span>
+</header>
+<h3><strong>Endpoints</strong></h3>
+<div style="font-size: 18px;" class="docm">
+	<p>Please see <a class="long-desc-link" href="/api/docs/redoc">API Endpoints</a> for the actual API endpoints we currently give you. Join the Support Server and Ping/DM Rootspring#6701 if you want to request a specific API Endpoint</p>
+</div>
+<h3><strong>Basic Structures/Constructs</strong></h3>
+<div style="font-size: 18px;" class="docm">
+   <strong class="doc">Snowflake</strong><span>A snowflake is a Discord Snowflake in String format like "563808552288780322"</span><br/>
+   <strong class="doc">User</strong><span>{"id": 428292404160757760", "username": "Dexter", "avatar": "https://cdn.discordapp.com/avatars/.....", "disc": "6969", "status": 2}</span>
+   <div class="table">
+	<table>
+		<tr>
+			<th>Key</th>
+			<th>Description</th>
+			<th>Type</th>
+		</tr>
+                <tr>
+                        <td>username</td>
+                        <td>This is the username of the user as per the Redis cache which expires every 8 hours</td>
+                        <td>String</td>
+                </tr>
+  		<tr>
+			<td>id</td>
+			<td>This is the user id of the user as per the Redis cache which expires every 8 hours</td>
+			<td>Snowflake</td>
+		</tr>
+		<tr>
+			<td>avatar</td>
+			<td>This is the avatar of the user as per the Redis cache which expires every 8 hours</td>
+			<td>String</td>
+		</tr>
+		<tr>
+			<td>disc</td>
+			<td>This is the discriminator of the user as per the Redis cache which expires every 8 hours</td>
+			<td>String[Integer]</td>
+		</tr>
+                <tr>
+                        <td>status</td>
+			<td>This is the status of the user as per the Redis cache which expires every 8 hours
+				<br/><br/>
+				0 - Unknown<br/>
+				1 - Online<br/>
+				2 - Offline<br/>
+				3 - Idle<br/>
+				4 - Do Not Disturb<br/>
+			</td>
+                        <td>Integer</td>
+                </tr>
+	</table>
+   </div>
+</div>
+<h3><strong>CSS Docs Reference</strong></h3>
+<div style="font-size: 18px;" class="docm">
+	<strong class="doc">#bot-content</strong><span>The entire div your bot page is in</span><br/>
+	<strong class="doc">#bot-avatar</strong><span>The bots avatar. This is an img tag</span><br/>
+	<strong class="doc">#bot-username</strong><span>The bots username. This is a h3</span><br/>
+	<strong class="doc">#bot-description</strong><span>Your bots short description. This is an h3 tag</span><br/>
+	<strong class="doc">#bot-buttons</strong><span>The Edit, Invite etc. buttons. If you want to change an individual button, .bot-buttons-button_name</span><br/>
+	<strong class="doc" style="font-size: 16px">Button Names</strong><span>support, github, website, invite, vote, edit</span><br/>
+        <strong class="doc">#bot-key-container</strong><span>The div containing tags and promotions both</span><br/>
+	<strong class="doc">#bot-tags</strong><span>The div containing all your tags and the header</span><br/>
+	<strong class="doc">#bot-tags-header</strong><span>The "Tags" part of the tags. This is a h5</span><br/>
+	<strong class="doc">#bot-tags-container</strong><span>The div that contains just the tags, not the header</span><br/>
+	<strong class="doc">#bot-tags-container-inner</strong><span>The div inside bot-tags-container to help position the tags</span><br/>
+	<strong class="doc">#bot-tags-TAG</strong><span>This is the div for the TAG (replace TAG with the tag, see "Resources" for the full list of tag names)</span><br/>
+	<strong class="doc">#bot-tags-TAG-button</strong><span>The actual TAG (replace TAG with the tag). This is a button tag</span><br/>
+	<strong class="doc">#bot-promo</strong><span>This is the div containing all promotions</span><br/>
+	<strong class="doc">#bot-promo-header</strong><span>This is the header of all the promotions (the Special Promotions/Events)</span><br/>
+	<strong class="doc">.bot-promo-container</strong><span>This is the container for a promo</span><br/>
+	<strong class="doc">#bot-promo-container-INDEX</strong><span>This is one promo based on jinja2 loop.index which is a number going from 0 to the N-1th promo index</span><br/>
+	<strong class="doc">#bot-long-description</strong><span>This is the bots long description, it is in a div tag. All links are given the long-desc-link class</span><br/>
+	<strong class="doc">#bot-long-description-container</strong><span>The container around the long description</span><br/>
+	<strong class="doc">#bot-switcher</strong><span>This is the bot switcher (The Description, Review and About buttons)</span><br/>
+	<strong class="doc">#bot-long-desc-tab-button</strong><span>The long description tab. This is also the default tag</span><br/>
+	<strong class="doc">#bot-review-tab-button</strong><span>The review tab</span><br/>
+	<strong class="doc">#bot-about-tab-button</strong><span>The about tab</span><br/>
+	<strong class="doc">#bot-admin-tab-button</strong><span>The admin tab</span><br/>
+	<strong class="doc">#review_form</strong><span>This is the review form. It is internal and is only being documented to be complete. Do not change this unless absolutely needed</span><br/>
+	<strong class="doc">.bot-review-header</strong><span>This is the review header (The place with stars and the reviewer and the edit button)</span><br/>
+	<strong class="doc">#bot-reviews</strong><span>The bot review container</span><br/>
+	<strong class="doc">.bot-range-slider</strong><span>The slider for the bot reviews</span><br/>
+	<strong class="doc">Buttons</strong><span>.btn, .btn-primary etc.</span><br/>
+</div>
+<br/>
+<div id="resources" style="margin-bottom: 5px;">
+        <strong>Resources</strong><br/>
+	<a class="long-desc-link" href="https://github.com/Fates-List/FatesList/blob/a855259f57b390e3b9c038e1c6fe5d1a1e1ab766/config_template.py#L69"><strong class="doc">Tags (names and classes)</strong></a>
+</div>
+<div class="alert">
+	<span class="iconify" data-icon="fa-solid:exclamation-triangle" data-inline="false"></span>
+	<strong>Important Note</strong>
+	<p>There are some things that are not allowed to edit. Below is a list of the currently not allowed elements:</p>
+	<p style="margin-left: 30px;"><em><strong>.alert</strong></em></p>
+	<span>Things that are not allowed to edit are naively replaced meaning all places where you use them in custom CSS will be removed</span>
+</div>
+<h3><strong>Webhook Documentation</strong></h3>
+	<div class="alert">
+		<span class="iconify" data-icon="fa-solid:exclamation-triangle" data-inline="false"></span>
+		<strong>There are many types of webhooks in Fates List. Please choose the one you use carefully</strong><br/><br/>
+		<strong>All Fates List webhooks (excl. Discord Integration) will have a Authorization header with your API Token so you can validate the request.</strong>
+	</div>
+<div style="font-size: 18px;" class="docm">
+<strong style="font-size: 20px;" class="doc">Vote Webhook</strong><span>Your vote webhook will be sent in this format:</span>
+<div class="table">
+<table>
+  <tr>
+    <th>Key</th>
+    <th>Description</th>
+    <th>Type</th>
+  </tr>
+  <tr>
+    <td>id</td>
+    <td>This is the ID of the user who voted for your bot</td>
+    <td>Snowflake</td>
+  </tr>
+  <tr>
+    <td>votes</td>
+    <td>This is how many votes your bot now has</td>
+    <td>Integer</td>
+  </tr>
+  <tr>
+    <td>test</td>
+    <td>This key is only returned if you are testing your webhook. It will always be true if sent. Use this to check for test webhook or not.</td>
+    <td>Optional[Boolean]</td>
+  </tr>
+</table>
+</div>
+<br/>
+<strong style="font-size: 20px;" class="doc">Fates Client Webhook</strong><span>Your Fates Client webhook will be sent as Events which have the below format:</span>
+<div class="table">
+<table>
+  <tr>
+    <th>Key</th>
+    <th>Description</th>
+    <th>Type</th>
+  </tr>
+  <tr>
+    <td>event</td>
+    <td>This is the event name. Here are the currently available events:
+	<br/><br/><br/>
+	add_bot - Unusable as you don't have the api token, but is there to be complete<br/><br/>
+	Context:<br/>None
+	<br/><br/><br/>
+	edit_bot - This will be sent when you or someone else edits your bot.<br/><br/>
+	Context:<br/>user - The user id (in string) who has editted your bot
+	<br/><br/><br/>
+        delete_bot - This will be sent when you or someone else deletes your bot.<br/><br/>
+        Context:<br/>user - The user id (in string) who has editted your bot
+        <br/><br/><br/>
+	view - This will be sent whenever someone views your bot. <strong>It is only sent in websockets as a WsEvent (which is an extension of an Event)</strong><br/><br/>
+	Context:<br/>user - The user id (in string) who is viewing your bot<br/>widget - Whether the user is viewing it as a widget or not. Due to our WebSocket and Redis implementation, you will get a string "True" or "False"
+    </td>
+    <td>String</td>
+  </tr>
+  <tr>
+    <td>context</td>
+    <td>This is the event context. See the event key for the full list of arguments (key value pairs) you will get for each events</td>
+    <td>Dictionary (JSON)</td>
+  </tr>
+  <tr>
+    <td>bot_id</td>
+    <td>This is the bot ID of the bot who is recieving the event. This will be a snowflake</td>
+    <td>Snowflake</td>
+  </tr>
+</table>
+</div>
+<p>For your reference, here is an example of a Event. This is also the base of the websocket WsEvent so make you understand this: {'event': 'edit_bot', 'context': {'user': '563808552288780322'}, 'bot_id': '798951566634778641'}</p>
+</div>
+<h3><strong>WebSocket Documentation</strong></h3>
+<div style="font-size: 18px;" class="docm">
+<p>Fates List offers a WebSocket API at /api/ws for getting real time stats on your bot. This is the only way to get view events (and potentially other events). All things sent must be as payloads, which are JSONs with a special format. See below for more information</p>
+<p>Upon attempting to connect to /api/ws, you must communicate using payloads. After authentication, the transmissions become one way from server to your client. The below table explains the payload format:</p>
+<div class="table">
+<table>
+  <tr>
+    <th>Key</th>
+    <th>Description</th>
+    <th>Type</th>
+  </tr>
+  <tr>
+    <td>payload</td>
+    <td>This is a payload which is essentially what is being sent to you. This can be a IDENTITY, STATUS, KILL_CONN or EVENTS but this may change in the future</td>
+    <td>String</td>
+  </tr>
+  <tr>
+    <td>type</td>
+    <td>This is the payload type which is how you are supposed to respond or extra information about the payload such as NO_AUTH or API_TOKEN.</td>
+    <td>String</td>
+  </tr>
+  <tr>
+    <td>data</td>
+    <td>If the payload is a data payload like EVENTS_V1, then this the main data sent by the payload. This key is not present on non-data payloads</td>
+    <td>Optional[String]</td>
+  </tr>
+
+</table>
+</div>
+<strong class="doc">Identity Payload</strong><span>{"payload": "IDENTITY", "type": "API_TOKEN"}</span>
+<p>Identity Payloads are what you will get when you first try to connect to the WebSocket API. You must repond using a IDENTITY_RESPONSE payload with the type being API_TOKEN and the data being the <em>list</em> of API Tokens you want events for. If you do not use the correct format, a KILL_CONN payload with the type INVALID_IDENTITY_RESPONSE will be sent to you and the connection will be closed with code 4004. If none of your API Tokens match, you will get a KILL_CONN payload with the type NO_AUTH. Once connections is successful, a STATUS payload with type READY and data being all registered bot IDs according to the API Token's you have sent will be sent to you. From here, all transmissions other than ping become server -> client only with no further interaction other than ping required.<br/><br/>For your reference, here is an example of a IDENTITY_RESPONSE: {"payload": "IDENTITY_RESPONSE", "type": "API_TOKEN", "data": ["TOKEN1", "TOKEN2"]}
+</p>
+<strong class="doc">Events Payload</strong><span>{"payload": "EVENTS", "type": "EVENTS_V1", "data": {"bot_id": WsEventsObject, "bot_id_2": WsEventsObject}</span>
+<p>Events Payloads are what you will get after connecting to the websocket whenever you have a new event. You will see that you will get a nested JSON with the bot id as key and a WsEventsObject as value (from above, see example for clarification) which will have its keys as the event id's (views get a random id) and the value being a WsEvent (see below for what this contains)<br/><br/>The type of the Events Payload may be changed if breaking changes are made. A WsEvent similar to a Fates Client Webhook with the below format. The events you will get here are exactly what you will get via Fates Client Webhook so see that for context and everything else:</p>
+<div class="table">
+<table>
+  <tr>
+    <th>Key</th>
+    <th>Description</th>
+    <th>Type</th>
+  </tr>
+  <tr>
+    <td>payload</td>
+    <td>This is a payload of the event which is essentially what is being sent to you. This will always be 'event' in a WsEvent</td>
+    <td>String['event']</td>
+  </tr>
+  <tr>
+    <td>event</td>
+    <td>This is the type of WebSocket event you are getting</td>
+    <td>String</td>
+  </tr>
+  <tr>
+    <td>context</td>
+    <td>This is the context of the event</td>
+    <td>Dictionary (JSON)</td>
+  </tr>
+
+</table>
+</div>
+<p>For your reference, here is an example of a EVENTS payload: {"payload": "EVENTS", "type": "EVENTS_V1", "data": {"631115725876101150": {"18741a69-552b-4d7d-ab0b-7ed211a22049": {"payload": "event", "event": "view", "context": {"user": 0, "hidden": 1, "widget": "False"}}}}}
+</p>
+
+</div>
+</div>
+{% endblock %}
+{% block footer %}
+
+{% endblock %}
+

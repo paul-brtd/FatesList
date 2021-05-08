@@ -1,0 +1,7 @@
+tunnel: 41170468-c58d-48de-92e6-4be1fa434deb
+credentials-file: /home/meow/.cloudflared/41170468-c58d-48de-92e6-4be1fa434deb.json
+
+ingress:
+        - hostname: staff.fateslist.xyz
+          service: http://127.0.0.1:10000
+        - service: https://example.com

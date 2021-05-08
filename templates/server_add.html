@@ -1,0 +1,197 @@
+{% extends "base/base.html" %}
+
+{% block head %}
+
+{% endblock %}
+
+{% block content %}
+
+   <h3 style="text-align:center; color:white; font-weight:bold;">Add Server (Coming Soon)</h3>
+   <h4 style="text-align:center; color:white;" id="js_msg">We're glad you're here!<br/>If you aren't a server administrator, please go ahead and ask them to set this up.<br/><br/><span style="opacity: 0.8">Once you are ready to continue, click Continue. NOTE THAT THIS IS NOT DONE YET AND WILL NOT WORK YET, CHECK BACK SOON</span></h4>
+   <button onclick='doStep(false);' style="display: none; margin-right: 5px;" type="button" id="s1-back" class="btn btn-outline-light"><span class="iconify white" data-icon="fa-solid:arrow-left" data-inline="false" style="margin-right: 3px;"></span>Back</button>
+   <button onclick='doStep(true);' type="button" id="s1-next" class="btn btn-outline-light">Continue<span class="iconify white" data-icon="fa-solid:arrow-right" data-inline="false" style="margin-left: 3px;"></span></button>
+   <script>
+	  var cont = 0;
+	  var old_text = document.querySelector("#js_msg").innerHTML;
+	  var old_text_front = document.querySelector("#js_msg").innerHTML;
+	  function doStep(next) {
+		if(next == true) {
+			if(cont == 0) {
+				document.querySelector("#js_msg").innerHTML = "The first thing you will need to do to add your server is to add our bot to your server by clicking <a target='_blank' href='{{invite}}' class='long-desc-link'>here</a>.<br/>You must give it permission to create invites and add reactions<br/><br/><span style='opacity: 0.8'>Once you have added the bot to your server, click Continue.</span>";
+				document.querySelector("#s1-back").style.display = "inline";
+				document.querySelector("#s1-next").style.display = "inline";
+				old_text = document.querySelector("#js_msg").innerHTML;
+				cont = 1;
+			}
+			else {
+				document.querySelector("#js_msg").innerHTML = `The list of servers with the Fates List Bot that you can manage is listed below.<br/>Only servers that you are in while logging into Fates List and you have 'Manage Server' or 'Administrator' in is listed below:<br/><button type='button' onclick='checkGuilds();' class='btn btn-outline-light' style='margin-bottom: 10px;'>Recheck</button><div id='valid_servers'></div>`;
+				document.querySelector("#s1-next").style.display = "none";
+                                checkGuilds();
+				cont = 2;
+			}
+		}
+                if(next == false) {
+                        document.querySelector("#js_msg").innerHTML = old_text;
+			if(cont == 1) {
+				document.querySelector("#js_msg").innerHTML = old_text_front;
+	                        document.querySelector("#s1-back").style.display = "none";
+			}
+			if(cont == 2) {
+				document.querySelector("#s1-next").style.display = "inline";
+			}
+			cont = cont - 1;
+                }
+	  }
+	function checkGuilds(){
+		document.querySelector("#valid_servers").innerHTML = "Getting Guilds... Please wait"
+        $.ajax({
+                url: "/api/users/{{userid}}/servers/prepare",
+                type: "POST",
+		data: JSON.stringify({'scopes': "{{scopes}}", "access_token": {{access_token|safe}} }),
+		headers: {"Authorization": "{{user_token}}"},
+           	statusCode: {
+                	'429': function(data) {
+				console.log(data)
+				modalShow('You are being ratelimited', `You are being ratelimited. Please try again in 30 seconds. Thank you for your patience!`)
+                	},
+			'200': function(data) {
+				server_data = ""
+				for(server in data.servers) {
+					server_data += `
+					<a style="color: white !important;" href='javascript:void' onclick='openGuild("${server}")'>
+					<div id='${server}' data-code='${data.servers[server].code}' style='width: 900px; min-width: 900px; max-width: 900px; padding: 3px; border-style: solid; border-radius: 4px 4px 4px 4px; background: black; display: inline-block;' data-hidden='true'>
+						<p><strong>${data.servers[server].name}</strong></p>
+						<p>Server ID: ${server}</p>
+					</div>
+					</a>
+					<div style='display: none; background: black; border-radius: 10px 10px 10px 10px' id='form-${server}' onclick="ignoreParent(); preventDefault()">
+						<label for="vanity-${server}">Vanity URL (optional)</label>
+						<input id="vanity-${server}" type="text" class="form-control fform" placeholder = "amongus">
+						<label for="description-${server}">Short Description</label>
+						<input id="description-${server}" type="text" class="form-control fform" name="description" placeholder="Great server, join now!">
+						<label 
+						for="long_description_type-${server}"
+					      	>Long Description Type (Click to change)</label>
+						<select id="long_description_type-${server}" name="long_description_type" class="form-control fform select-fl">
+						<option value="0">HTML - Recommended</option>
+						<option value="1">Markdown (python-markdown) - Recommended</option>
+						<option value="2">Markdown (marked) - Special Cases Only</option>
+						</select>
+
+  						<label
+					        for="long_description"
+					        >Long description <span style="color: red; font-weight: bold" aria-hidden="true">*</span>
+						  </label><br/>
+						<textarea
+					        class="form-control fform"
+					        required
+						name="long_description"
+					        placeholder="Write about your bot using html or markdown"
+					        minlength="300"
+						id="long_description-${server}"
+					        style="border-radius: 4px 4px 4px 4px !important;"
+						></textarea>
+						<button type="button" class="btn btn-outline-light" style="margin-bottom: 20px;" onclick="previewLongDesc('${server}')">Preview</button><br/>
+						<small style="font-weight: bold; font-size: 15px; color: red;">You can only preview your long description 20 times every minute unless you are certified as this uses the preview API</small>
+						<div id="${server}-ld-preview" style="display: block; min-height: 400px; overflow: auto; color: white; border-style: solid; border-radius: 4px 4px 4px 4px; margin-bottom: 20px; background: black; font-weight: normal; text-align: left;">
+						Your Long Description will appear here when you click the Preview button :)
+					</div>
+					<label for="tags-${server}">Type tags (comma seperated)</label><br/>
+					<input id="tags-${server}" type="text" class="form-control fform" name="tags-${server}" placeholder="moderation, music"/><br/>
+					<button id="submit-${server}" class="btn btn-outline-light" onclick="addGuild('${server}')" style="margin-bottom: 3px;">Add Server</button>
+					</div>
+					<br/>
+					</a>`
+				}
+				document.querySelector("#valid_servers").innerHTML = server_data
+			}
+		}
+        })
+	};
+	function openGuild(gid) {
+		if($("#" + gid).attr("data-hidden") == "true"){
+			$("#form-" + gid).show()
+			$("#" + gid).attr("data-hidden", "false")
+		}
+		else {
+			$("#form-" + gid).hide()
+			$("#" + gid).attr("data-hidden", "true")
+		}
+	}
+
+function previewLongDesc(gid){
+	html = document.querySelector("#long_description_type-" + gid).value;
+	ld = document.querySelector("#long_description-" + gid).value;
+	if(ld == "")
+		return
+	$.ajax({
+		type: 'POST',
+		dataType: 'json',
+		url: '/api/v2/preview',
+		data: JSON.stringify({"html_long_description": html == "0", "data": ld}),
+		statusCode: {
+			"200": function(data) {
+				$("#" + gid + "-ld-preview").html(data.html)
+			},
+			"429": function(data) {
+				modalShow("Ratelimited", "You have been rate limited from using previews")
+			}
+		}
+		});
+	}
+
+	function addGuild(gid) {
+	document.querySelector("#submit-" + gid).innerHTML = "Adding Server..."	
+	html = document.querySelector("#long_description_type-" + gid).value;
+	ld = document.querySelector("#long_description-" + gid).value; // Long Description
+	tags = document.querySelector("#tags-" + gid).value;
+	vanity = document.querySelector("#vanity-" + gid).value;	
+	tags_list = tags.replaceAll(" ", "").split(",")
+	if(tags_list.length < 3) {
+		modalShow("Too Few Tags", "Please type at least three tags")
+		document.querySelector("#submit-" + gid).innerHTML = "Add Server"
+		return
+	}
+	if(ld.length < 50) {
+		modalShow("Long Description Is Too Short", "Please fix your long description to be below 50 characters!")
+		document.querySelector("#submit-" + gid).innerHTML = "Add Server"
+		return
+	}
+	code = $("#" + gid).attr("data-code")
+	sd = document.querySelector("#description-" + gid).value;
+																    if(sd.length < 20 || sd.length > 101) {
+		modalShow("Short Description Is Too Short (or too long)", "Please fix your short description to be between 20 and 101 characters!")
+		document.querySelector("#submit-" + gid).innerHTML = "Add Server"
+		return
+	}
+	$.ajax({
+		type: 'POST',
+		dataType: 'json',
+		url: '/api/v2/servers/' + gid + "?user_id={{userid}}",
+		data: JSON.stringify({"code": code, "long_description_type": html, "long_description": ld, "description": sd, "tags": tags_list, "vanity": vanity}),
+		headers: {"Authorization": "{{user_token}}"},
+		statusCode: {
+			"200": function(data) {
+				alert("Success")
+			},
+			"404": function(data) {
+				document.querySelector("#submit-" + gid).innerHTML = "Add Server"
+				alert("Coming soon")
+			},
+			"400": function(data) {
+				document.querySelector("#submit-" + gid).innerHTML = "Add Server"
+				modalShow("Error", data.responseJSON.reason);
+			},
+			"422": function(data) {
+				document.querySelector("#submit-" + gid).innerHTML = "Add Server"
+				modalShow("Oops!", "We are still updating this to make it compatible with our API. Please join the support server and ask for help there! Thanks")
+			}
+		}
+	});
+	}
+   </script>
+{% endblock %}
+{% block footer %}
+
+{% endblock %}
+
