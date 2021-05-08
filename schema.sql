@@ -148,7 +148,7 @@ CREATE TABLE user_payments (
 CREATE TABLE bot_api_event (
     bot_id BIGINT, 
     epoch BIGINT, 
-    event TEXT, 
+    event INTEGER, 
     context JSONB, 
     id UUID,
     CONSTRAINT bots_fk FOREIGN KEY (bot_id) REFERENCES bots(bot_id) ON DELETE CASCADE ON UPDATE CASCADE

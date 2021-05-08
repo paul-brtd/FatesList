@@ -8,15 +8,14 @@ from .rabbitmq import *
 
 async def bot_add_ws_event(bot_id: int, ws_event: dict) -> None:
     """A WS Event must have the following format:
-        - {id: Event ID, event: Event Name, context: Context, type: Event Type}
+        - {event: Event Type, context: Context}
     """
     curr_ws_events = await redis_db.hget(str(bot_id), key = "ws") # Get all the websocket events from the ws key
     if curr_ws_events is None:
         curr_ws_events = {} # No ws events means empty dict
     else:
         curr_ws_events = orjson.loads(curr_ws_events) # Otherwise, orjson load the current events
-    id = ws_event["id"] # Get id
-    del ws_event["id"] # Remove id
+    id = str(uuid.uuid4()) # Get id
     curr_ws_events[id] = ws_event # Add event to current ws events
     await redis_db.hset(str(bot_id), key = "ws", value = orjson.dumps(curr_ws_events)) # Add it to redis
     await redis_db.publish(str(bot_id), orjson.dumps({id: ws_event})) # Publish it to consumers

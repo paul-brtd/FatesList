@@ -49,10 +49,10 @@ async def admin_api(request: Request, bt: BackgroundTasks, admin: str = FForm(""
         
         return await templates.TemplateResponse("message.html", {"request": request, "message": "Hey mikes, i hope it certified the bot!", "username": request.session.get("username", False)})
     elif admin=="uncertify":
-        await db.execute("UPDATE bots SET state = 0 WHERE bot_id = $1", bot_id)
-        channel = client.get_channel(bot_logs)
-        owner=str(request.session["userid"])
-        await channel.send(f"<@{owner}> uncertified the bot <@{bot_id}>")
+        rc = await admin_tool.uncertify_bot()
+        if rc is not None:
+            return rc
+
         return await templates.TemplateResponse("message.html", {"request": request, "message": "Hey mikes, i hope it uncertified the bot!", "username": request.session.get("username", False)})
     elif admin=="reset":
         bt.add_task(stat_update_bt)        

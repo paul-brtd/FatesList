@@ -22,7 +22,7 @@ async def bot_widget(request: Request, bot_id: int, bt: BackgroundTasks):
 
 @router.get("/{bot_id}/invite")
 async def bot_invite_and_log(request: Request, bot_id: int):
-    invite = await invite_bot(bot_id)
+    invite = await invite_bot(bot_id, user_id = str(request.session.get("userid")))
     if invite is None:
         return abort(404)
     return RedirectResponse(invite)

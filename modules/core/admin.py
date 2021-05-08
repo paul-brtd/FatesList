@@ -187,7 +187,7 @@ class BotListAdmin():
         await db.execute("UPDATE bots SET state = $1 WHERE bot_id = $2", enums.BotState.under_review, self.bot_id) # Set it to under review in database
         claim_embed = discord.Embed(title="Bot Under Review", description = f"<@{self.bot_id}> is now under review by <@{self.mod}> and should be approved or denied soon!", color = self.good) # Create claim embed
         claim_embed.add_field(name="Link", value=f"https://fateslist.xyz/bot/{self.bot_id}") # Add link to bot page
-        await bot_add_event(self.bot_id, "claim_bot", {"user": self.str_mod}) # Add the api event
+        await bot_add_event(self.bot_id, enums.APIEvents.bot_claim, {"user": self.str_mod}) # Add the api event
         await self.channel.send(embed = claim_embed) # Send it to the channel
 
     async def approve_bot(self, feedback):
@@ -198,7 +198,7 @@ class BotListAdmin():
         if check["state"] != enums.BotState.under_review:
             return self.must_claim 
         await db.execute("UPDATE bots SET state = $1, verifier = $2 WHERE bot_id = $3", enums.BotState.approved, self.mod, self.bot_id)
-        await bot_add_event(self.bot_id, "approve_bot", {"user": self.str_mod})
+        await bot_add_event(self.bot_id, enums.APIEvents.bot_approve, {"user": self.str_mod})
         owner = [obj["owner"] for obj in owners if obj["main"]][0]
         approve_embed = discord.Embed(title="Bot Approved!", description = f"<@{self.bot_id}> by <@{owner}> has been approved", color = self.good)
         approve_embed.add_field(name="Feedback", value=feedback)
@@ -217,7 +217,7 @@ class BotListAdmin():
         if owner is None:
             return False # No bot found
         await db.execute("UPDATE bots SET state = $1 WHERE bot_id = $2", enums.BotState.pending, self.bot_id)
-        await bot_add_event(self.bot_id, "unverify_bot", {"user": self.str_mod})
+        await bot_add_event(self.bot_id, enums.APIEvents.bot_unverify, {"user": self.str_mod})
         unverify_embed = discord.Embed(title="Bot Unverified!", description = f"<@{self.bot_id}> by <@{owner}> has been unverified", color=self.bad)
         unverify_embed.add_field(name="Reason", value=reason)
         await self.channel.send(embed = unverify_embed)
@@ -230,7 +230,7 @@ class BotListAdmin():
         if check["state"] != enums.BotState.under_review:
             return self.must_claim
         await db.execute("UPDATE bots SET state = $1, verifier = $2 WHERE bot_id = $3", enums.BotState.denied, self.mod, self.bot_id)
-        await bot_add_event(self.bot_id, "deny_bot", {"user": self.str_mod, "reason": reason})
+        await bot_add_event(self.bot_id, enums.APIEvents.bot_deny, {"user": self.str_mod, "reason": reason})
         deny_embed = discord.Embed(title="Bot Denied!", description = f"<@{self.bot_id}> by <@{owner}> has been denied", color=self.bad)
         deny_embed.add_field(name="Reason", value=reason)
         await self.channel.send(embed = deny_embed)
@@ -250,7 +250,7 @@ class BotListAdmin():
         except:
             pass
         await db.execute("UPDATE bots SET state = 4 WHERE bot_id = $1", self.bot_id)
-        await bot_add_event(self.bot_id, "ban_bot", {"user": self.str_mod, "reason": reason})
+        await bot_add_event(self.bot_id, enums.APIEvents.bot_ban, {"user": self.str_mod, "reason": reason})
 
     # Unban or requeue a bot
     async def unban_requeue_bot(self, state):
@@ -264,10 +264,10 @@ class BotListAdmin():
         await self.channel.send(embed = unban_embed)
         if state == 2:
             await db.execute("UPDATE bots SET state = 1 WHERE bot_id = $1", self.bot_id)
-            await bot_add_event(self.bot_id, "requeue_bot", {"user": self.str_mod})
+            await bot_add_event(self.bot_id, enums.APIEvents.bot_requeue, {"user": self.str_mod})
         else:
             await db.execute("UPDATE bots SET state = 0 WHERE bot_id = $1", self.bot_id)
-            await bot_add_event(self.bot_id, "unban_bot", {"user": self.str_mod})
+            await bot_add_event(self.bot_id, enums.APIEvents.bot_unban, {"user": self.str_mod})
 
     async def certify_bot(self):
         owners = await db.fetch("SELECT owner FROM bot_owner WHERE bot_id = $1", self.bot_id)
@@ -277,8 +277,18 @@ class BotListAdmin():
         certify_embed = discord.Embed(title = "Bot Certified", description = f"<@{self.mod}> certified the bot <@{self.bot_id}>", color = self.good)
         certify_embed.add_field(name="Link", value=f"https://fateslist.xyz/bot/{self.bot_id}")
         await self.channel.send(embed = certify_embed)
-        await bot_add_event(self.bot_id, "certify_bot", {"user": self.str_mod})
+        await bot_add_event(self.bot_id, enums.APIEvents.bot_certify, {"user": self.str_mod})
         await self._give_roles(certified_dev_role, [owner["owner"] for owner in owners])
+
+    async def uncertify_bot(self):
+        owners = await db.fetch("SELECT owner FROM bot_owner WHERE bot_id = $1", self.bot_id)
+        if not owners:
+            return self.bot_not_found
+        await db.execute("UPDATE bots SET state = 6 WHERE bot_id = $1", self.bot_id)
+        uncertify_embed = discord.Embed(title = "Bot Uncertified", description = f"<@{self.mod}> uncertified the bot <@{self.bot_id}>", color = self.bad)
+        uncertify_embed.add_field(name="Link", value=f"https://fateslist.xyz/bot/{self.bot_id}")
+        await self.channel.send(embed = uncertify_embed)
+        await bot_add_event(self.bot_id, enums.APIEvents.bot_uncertify, {"user": self.str_mod})
 
     async def transfer_bot(self, new_owner):
         owner = await self._get_main_owner()
@@ -297,7 +307,7 @@ class BotListAdmin():
         embed = discord.Embed(title="Ownership Transfer", description = f"<@{self.mod}> has transferred ownership of the bot <@{self.bot_id}> from <@{owner}> to <@{new_owner}>", color=self.good)
         embed.add_field(name="Link", value=f"https://fateslist.xyz/bot/{self.bot_id}")
         await self.channel.send(embed = embed)
-        await bot_add_event(self.bot_id, "transfer_bot", {"user": self.str_mod, "old_owner": str(owner), "new_owner": str(new_owner)})
+        await bot_add_event(self.bot_id, enums.APIEvents.bot_transfer, {"user": self.str_mod, "old_owner": str(owner), "new_owner": str(new_owner)})
 
 
 class ServerActions():

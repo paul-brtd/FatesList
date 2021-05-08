@@ -36,7 +36,7 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
         try:
             api_token = await websocket.receive_json()
             print("HERE")
-            if api_token.get("payload") != "identity_response" or api_token.get("type") not in ["bot_tokens", "manager"]:
+            if api_token.get("payload") != "identity_res" or api_token.get("type") not in ["bot_tokens", "manager"]:
                 raise TypeError
         except:
             await manager.send_personal_message({"payload": "kill", "type": "invalid_response"}, websocket)

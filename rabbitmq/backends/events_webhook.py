@@ -4,6 +4,8 @@ import asyncio
 from discord_webhook import DiscordWebhook, DiscordEmbed
 from modules.core import get_bot, get_user, get_token, bot_add_event
 from termcolor import colored, cprint
+import modules.models.enums as enums
+
 
 async def events_webhook_backend(webhook_url, webhook_type, api_token, id, webhook_target, event, context, event_id, webhook_secret):
     """
@@ -27,7 +29,7 @@ async def events_webhook_backend(webhook_url, webhook_type, api_token, id, webho
             f = requests.post
             json = {"event": event, "context": context, key: id, "event_id": str(event_id), "type": webhook_target}
             headers = {"Authorization": webhook_key}
-        elif webhook_type.upper() == "DISCORD" and event in "vote" and webhook_target == "bot":
+        elif webhook_type.upper() == "DISCORD" and event == enums.APIEvent.bot_vote:
             webhook = DiscordWebhook(url=webhook_url)
             user = await get_user(int(context["user_id"])) # Get the user
             bot = await get_bot(id) # Get the bot
@@ -39,7 +41,7 @@ async def events_webhook_backend(webhook_url, webhook_type, api_token, id, webho
             webhook.add_embed(embed)
             response = webhook.execute()
             cont = False
-        elif webhook_type.upper() == "VOTE" and event == "vote":
+        elif webhook_type.upper() == "VOTE" and event == enums.APIEvent.bot_vote:
             f = requests.post
             json = {"id": str(context["user_id"]), "votes": context["votes"]}
             headers = {"Authorization": webhook_key}

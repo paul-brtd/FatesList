@@ -385,7 +385,7 @@ async def vote_review_api(request: Request, bot_id: int, rid: uuid.UUID, vote: B
                 break
     bot_rev[main_key].append(vote.user_id)
     await db.execute("UPDATE bot_reviews SET review_upvotes = $1, review_downvotes = $2 WHERE id = $3", bot_rev["review_upvotes"], bot_rev["review_downvotes"], rid)
-    await bot_add_event(bot_id, "vote_review", {"user": (await get_user(vote.user_id)), "id": str(rid), "star_rating": bot_rev["star_rating"], "reply": bot_rev["reply"], "review": bot_rev["review_text"], "upvotes": len(bot_rev["review_upvotes"]), "downvotes": len(bot_rev["review_downvotes"]), "upvote": vote.upvote})
+    await bot_add_event(bot_id, enums.APIEvents.review_vote, {"user": vote.user_id, "id": str(rid), "star_rating": bot_rev["star_rating"], "reply": bot_rev["reply"], "review": bot_rev["review_text"], "upvotes": len(bot_rev["review_upvotes"]), "downvotes": len(bot_rev["review_downvotes"]), "upvote": vote.upvote})
     return {"done": True, "reason": None, "code": 1000}
 
 @router.delete("/bots/{bot_id}/reviews/{rid}", response_model = APIResponse)
@@ -397,7 +397,7 @@ async def delete_review(request: Request, bot_id: int, rid: uuid.UUID, bt: Backg
     guild = client.get_guild(main_server)
     user = guild.get_member(data.user_id)
     if user is None:
-        staff = False                    
+        staff = False 
     else:
         staff = is_staff(staff_roles, user.roles, 2)[0]
     if staff:
@@ -410,7 +410,7 @@ async def delete_review(request: Request, bot_id: int, rid: uuid.UUID, bt: Backg
             return ORJSONResponse({"done": False, "reason": "You are not allowed to delete this review", "code": 1232}, status_code = 400)
     event_data = await db.fetchrow("SELECT reply, review_text, star_rating FROM bot_reviews WHERE id = $1", rid) # Information needed to send an event
     await db.execute("DELETE FROM bot_reviews WHERE id = $1", rid)
-    bt.add_task(base_rev_bt, bot_id, "delete_review", {"user": (await get_user(int(data.user_id))), "reply": event_data["reply"], "id": str(rid), "star_rating": event_data["star_rating"], "review": event_data["review_text"]})
+    bt.add_task(base_rev_bt, bot_id, enums.APIEvent.review_delete, {"user": (await get_user(int(data.user_id))), "reply": event_data["reply"], "id": str(rid), "star_rating": event_data["star_rating"], "review": event_data["review_text"]})
     return {"done": True, "reason": None, "code": 1000}
 
 @router.get("/bots/{bot_id}/commands", response_model = BotCommands)
@@ -438,6 +438,7 @@ async def add_bot_command_api(request: Request, bot_id: int, command: BotCommand
             return ORJSONResponse({"done":  False, "reason": "COMMAND_ALREADY_EXISTS"}, status_code = 400)
     id = uuid.uuid4()
     await db.execute("INSERT INTO bot_commands (id, bot_id, slash, name, description, args, examples, premium_only, notes, doc_link) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)", id, bot_id, command.slash, command.name, command.description, command.args, command.examples, command.premium_only, command.notes, command.doc_link)
+    await bot_add_event(bot_id, enums.APIEvents.command_add, {"user": None, "id": id})
     return {"done": True, "reason": None, "id": id, "code": 1001}
 
 @router.patch("/bots/{bot_id}/commands", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=20, minutes=1))])
@@ -458,6 +459,7 @@ async def edit_bot_command_api(request: Request, bot_id: int, command: BotComman
         if command_dict[key] is None: 
             command_dict[key] = data[key]
     await db.execute("UPDATE bot_commands SET slash = $2, name = $3, description = $4, args = $5, examples = $6, premium_only = $7, notes = $8, doc_link = $9 WHERE id = $1", command_dict["id"], command_dict["slash"], command_dict["name"], command_dict["description"], command_dict["args"], command_dict["examples"], command_dict["premium_only"], command_dict["notes"], command_dict["doc_link"])
+    await bot_add_event(bot_id, enums.APIEvents.command_edit, {"user": None, "id": command.id})
     return {"done": True, "reason": None, "code": 1000}
 
 @router.delete("/bots/{bot_id}/commands", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=20, minutes=1))])
@@ -466,6 +468,7 @@ async def delete_bot_command_api(request: Request, bot_id: int, command: BotComm
     if id is None:
         return abort(401)
     await db.execute("DELETE FROM bot_commands WHERE id = $1 AND bot_id = $2", command.id, bot_id)
+    await bot_add_event(bot_id, enums.APIEvents.command_delete, {"user": None, "id": command.id})
     return {"done": True, "reason": None, "code": 1000}
 
 @router.get("/bots/{bot_id}/votes", response_model = BotVoteCheck, dependencies=[Depends(RateLimiter(times=5, minutes=1))])

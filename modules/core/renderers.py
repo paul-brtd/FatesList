@@ -101,7 +101,7 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
         return await templates.e(request, "Bot Not Found")
     _tags_fixed_bot = [tag for tag in tags_fixed if tag["id"] in bot["tags"]]
     form = await Form.from_formdata(request)
-    bt.add_task(bot_add_ws_event, bot_id, {"payload": "event", "id": str(uuid.uuid4()), "event": "view_bot", "context": {"user": request.session.get('userid'), "widget": False}})
+    bt.add_task(bot_add_ws_event, bot_id, {"event": enums.APIEvents.bot_view, "context": {"user": request.session.get('userid'), "widget": False}})
     reviews = await parse_reviews(bot_id)
     data = {"bot": bot, "bot_id": bot_id, "tags_fixed": _tags_fixed_bot, "promos": promos, "maint": maint, "bot_admin": bot_admin, "guild": main_server, "botp": True, "bot_reviews": reviews[0], "average_rating": reviews[1]}
 
