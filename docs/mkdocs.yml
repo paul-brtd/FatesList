@@ -5,16 +5,29 @@ repo_url: https://github.com/Fates-List/FatesList
 remote_branch: main
 edit_uri: edit/main/docs/docs
 theme:
-        name: material
-        logo: https://fateslist.xyz/static/botlisticon.webp
-        palette:
-                primary: black
-        features:
-                - navigation.sections
-                - navigation.tabs
+  name: material
+  logo: https://fateslist.xyz/static/botlisticon.webp
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: black
+      toggle:
+        icon: material/weather-sunny
+        name: "Switch to Dark Mode"                                                                      
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: black                
+      toggle:                                                                            
+        icon: material/weather-night
+        name: "Switch to Light Mode"
+
 markdown_extensions:
-        - admonition
-        - pymdownx.superfences
+  - admonition
+  - pymdownx.superfences
+
 plugins:
-        - git-revision-date
-        - git-revision-date-localized
+  - git-revision-date
+  - git-revision-date-localized
+  - search:
+      lang: en
+      prebuild_index: true
