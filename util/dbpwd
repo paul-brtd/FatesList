@@ -1,1 +1,0 @@
-cat config_secrets.py | grep pg_pwd
