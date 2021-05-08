@@ -1,3 +1,5 @@
+import uvloop
+uvloop.install()
 from fastapi import FastAPI, Request, Form as FForm
 from fastapi.openapi.utils import get_openapi
 from starlette_session import SessionMiddleware

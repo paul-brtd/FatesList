@@ -7,7 +7,7 @@ This is the source code for [Fates List](https://fateslist.xyz/)
 BTW please add your bots there if you want to support us
 
 !!! danger
-    Fates List is very very difficult to self host. It also needs a huge amount of moving parts. **This page is only meant for people developing Fates List**
+    Fates List is extremely difficult to the point of almost impossible (without knowledge in python) to self host. It requires Ubuntu 20.04+ (support for Windows and MacOS will never be happening since we do not use it). It also needs a huge amount of moving parts. **This page is only meant for people developing Fates List**
 
 **How to deploy**
 
