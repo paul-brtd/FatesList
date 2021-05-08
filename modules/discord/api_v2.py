@@ -11,13 +11,15 @@ discord_o = Oauth(OauthConfig)
 
 cleaner = Cleaner(remove_unknown_tags=False)
 
+API_VERSION = 2 # This is the API version
+
 router = APIRouter(
-    prefix = "/api/v2",
+    prefix = f"/api/v{API_VERSION}",
     include_in_schema = True,
-    tags = ["API v2 (default, beta, freeze-soon)"]
+    tags = [f"API v{API_VERSION} (default, beta)"]
 )
 
-@router.get("/blstats", response_model = BotListStats)
+@router.get("/blstats", response_model = BotListStats, tags = [f"Core (API v{API_VERSION})"])
 async def botlist_stats_api(request: Request):
     """
         Returns uptime and stats about the list.
@@ -510,7 +512,7 @@ async def timestamped_get_votes_api(request: Request, bot_id: int, user_id: Opti
         ret[str(data["user_id"])] = [round(ts.timestamp()) for ts in data["timestamps"]]
     return {"timestamped_votes": ret}
 
-@router.post("/bots/{bot_id}/stats", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=5, minutes=1))])
+@router.post("/bots/{bot_id}/stats", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=5, minutes=1))], tags = [f"Core (API v{API_VERSION})"])
 async def set_bot_stats_api(request: Request, bot_id: int, api: BotStats, Authorization: str = Header("BOT_API_TOKEN")):
     """
     This endpoint allows you to set the guild + shard counts for your bot

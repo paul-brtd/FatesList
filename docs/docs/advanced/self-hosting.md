@@ -7,7 +7,7 @@ This is the source code for [Fates List](https://fateslist.xyz/)
 BTW please add your bots there if you want to support us
 
 !!! danger
-    Fates List is very very difficult to self host. It also needs a huge amount of moving parts.
+    Fates List is very very difficult to self host. It also needs a huge amount of moving parts. **This page is only meant for people developing Fates List**
 
 **How to deploy**
 

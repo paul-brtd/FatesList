@@ -26,7 +26,7 @@ async def bot_add_backend(user_id, bot_id, prefix, library, website, banner, sup
             $13, $14, $15,
             $16, $17, $18,
             $19, $20, $21,
-            $22)""", bot_id, prefix, library, invite, website, banner, support, long_description, description, 0, 0, 0, get_token(132), features, long_description_type, css, donate, github, webhook, webhook_type, webhook_secret, privacy_policy, nsfw) # Add new bot info
+            $22, $23)""", bot_id, prefix, library, invite, website, banner, support, long_description, description, 0, 0, 0, get_token(132), features, long_description_type, css, donate, github, webhook, webhook_type, webhook_secret, privacy_policy, nsfw) # Add new bot info
     if vanity.replace(" ", "") != '':
         await db.execute("INSERT INTO vanity (type, vanity_url, redirect) VALUES ($1, $2, $3)", enums.Vanity.bot, vanity, bot_id) # Add new vanity if not empty string
 

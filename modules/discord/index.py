@@ -93,7 +93,7 @@ async def stats():
 
 @router.get("/api/docs")
 async def api_docs_view(request: Request):
-    return await templates.TemplateResponse("api_docs.html", {"request": request})
+    return RedirectResponse("https://apidocs.fateslist.xyz")
 
 @router.get("/fates/tos")
 async def tos_page(request: Request):

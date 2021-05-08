@@ -20,7 +20,7 @@ async def admin_dashboard(request: Request):
     certified = await do_index_query(state = 6, limit = None) # State 0 and state 6 are approved and certified
     bot_amount = await db.fetchval("SELECT COUNT(1) FROM bots WHERE state = 0 OR state = 6")
     queue = await do_index_query(state = 1, limit = None, add_query = "ORDER BY created_at ASC")
-    under_review = await do_index_query(state = 5, limit = None, add_query = "ORDER BY created_at ASC")
+    under_review = await do_index_query(state = enums.BotState.under_review, limit = None, add_query = "ORDER BY created_at ASC")
     denied = await do_index_query(state = 2, limit = None, add_query = "ORDER BY created_at ASC")
     banned = await do_index_query(state = 4, limit = None, add_query = "ORDER BY created_at ASC")
     data = {"certified": certified, "bot_amount": bot_amount, "queue": queue, "denied": denied, "banned": banned, "under_review": under_review, "admin": staff[1] == 4, "mod": staff[1] == 3, "owner": staff[1] == 5, "bot_review": staff[1] == 2, "perm": staff[2].name}

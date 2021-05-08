@@ -3,6 +3,7 @@ site_url: https://fateslist.xyz
 repo_name: GitHub
 repo_url: https://github.com/Fates-List/FatesList
 remote_branch: main
+edit_uri: edit/main/docs/docs
 theme:
         name: material
         logo: https://fateslist.xyz/static/botlisticon.webp
@@ -14,3 +15,6 @@ theme:
 markdown_extensions:
         - admonition
         - pymdownx.superfences
+plugins:
+        - git-revision-date
+        - git-revision-date-localized
