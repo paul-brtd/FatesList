@@ -21,15 +21,16 @@ async def events_webhook_backend(webhook_url, webhook_type, api_token, id, webho
         event_id - The event ID in question
         webhook_secret - The webhook secret
     """
+    event_type = enums.APIEventTypes.bot if webhook_target == "bot" else enums.APIEventTypes.server
     webhook_key = webhook_secret if webhook_secret else api_token
     key = webhook_target + "_id"
-    if webhook_url not in ["", None] and webhook_type is not None:
+    if webhook_url not in ["", None] and webhook_type is not None and (webhook_url.startswith("http://") or webhook_url.startswith("https://")):
         cont = True
         if webhook_type.upper() == "FC":
             f = requests.post
-            json = {"event": event, "context": context, key: id, "event_id": str(event_id), "type": webhook_target}
+            json = {"event": event, "context": context, key: id, "event_id": str(event_id), "type": event_type}
             headers = {"Authorization": webhook_key}
-        elif webhook_type.upper() == "DISCORD" and event == enums.APIEvent.bot_vote:
+        elif webhook_type.upper() == "DISCORD" and event == enums.APIEvents.bot_vote:
             webhook = DiscordWebhook(url=webhook_url)
             user = await get_user(int(context["user_id"])) # Get the user
             bot = await get_bot(id) # Get the bot
@@ -41,16 +42,18 @@ async def events_webhook_backend(webhook_url, webhook_type, api_token, id, webho
             webhook.add_embed(embed)
             response = webhook.execute()
             cont = False
-        elif webhook_type.upper() == "VOTE" and event == enums.APIEvent.bot_vote:
+        elif webhook_type.upper() == "VOTE" and event == enums.APIEvents.bot_vote:
             f = requests.post
-            json = {"id": str(context["user_id"]), "votes": context["votes"]}
+            json = {"id": str(context["user"]), "votes": context["votes"]}
             headers = {"Authorization": webhook_key}
         else:
             cont = False
         if cont:
-            json = json | {"payload": "event", "mode": webhook_type.upper()}
+            if not json.get("context"):
+                json["context"] = {}    
+            json["context"]["mode"] = webhook_type.upper()
             cprint(f"Method Given: {webhook_type.upper()}", "blue")
-            cprint(f"JSON: {json}\nFunction: {f}\nURL: {webhook_url}\nHeaders: {headers}\nID: {context.get('user_id')}, {context.get('mod')}\nBot ID: {id}", "blue")
+            cprint(f"JSON: {json}\nFunction: {f}\nURL: {webhook_url}\nHeaders: {headers}\nID: {context.get('user_id')}, {context.get('mod')}, {context.get('user')}\nBot ID: {id}", "blue")
             
             # Webhook sending with 7 retries
             flagged = True # Are we 'flagged' for not yet sending webhook, default should be True 

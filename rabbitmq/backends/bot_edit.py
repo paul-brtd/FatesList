@@ -1,6 +1,6 @@
 import discord
 from modules.core import bot_add_event
-import modules.model.enums as enums
+import modules.models.enums as enums
 from config import bot_logs
 import asyncio
 

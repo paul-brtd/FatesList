@@ -12,8 +12,8 @@ bootstrap_info = {
         "v1": {
             "chat": "/api/v1/ws/chat"
         },
-        "v2": {
-            "bot_realtime_stats": "/api/v2/ws/bot/rtstats"
+        "v3": {
+            "bot_realtime_stats": "/apiws/bot/rtstats"
         }
     }
 }
@@ -28,40 +28,48 @@ async def websocket_bootstrap(request: Request):
     """
     return bootstrap_info
 
-@router.websocket("/api/v2/ws/bot/rtstats")
+@router.websocket("/apiws/bot/rtstats")
 async def websocket_bot_rtstats_v1(websocket: WebSocket):
     await manager.connect(websocket)
     if websocket.api_token == [] and not websocket.manager_bot:
-        await manager.send_personal_message({"payload": "identity", "type": "bot_tokens,manager"}, websocket)
+        await manager.send_personal_message({"event": enums.APIEvents.ws_identity, "type": [enums.APIEventTypes.auth_token, enums.APIEventTypes.auth_manager_key]}, websocket)
         try:
             api_token = await websocket.receive_json()
             print("HERE")
-            if api_token.get("payload") != "identity_res" or api_token.get("type") not in ["bot_tokens", "manager"]:
+            if api_token.get("event") != enums.APIEvents.ws_identity_res or api_token["type"] not in [enums.APIEventTypes.auth_token, enums.APIEventTypes.auth_manager_key]:
                 raise TypeError
         except:
-            await manager.send_personal_message({"payload": "kill", "type": "invalid_response"}, websocket)
+            await manager.send_personal_message({"event": enums.APIEvents.ws_kill, "type": enums.APIEventTypes.ws_invalid}, websocket)
             return await ws_close(websocket, 4004)
-        if api_token.get("type") == "bot_tokens":
-            api_token = api_token.get("data")
-            if api_token is None or type(api_token) == int or type(api_token) == str:
-                await manager.send_personal_message({"payload": "kill", "type": "invalid_response"}, websocket)
-                return await ws_close(websocket, 4004)
-            for bot in api_token:
-                bid = await db.fetchrow("SELECT bot_id FROM bots WHERE api_token = $1", str(bot))
-                if bid:
-                    websocket.api_token.append(api_token)
-                    websocket.bot_id.append(bid["bot_id"])
-            if websocket.api_token == [] or websocket.bot_id == []:
-                await manager.send_personal_message({"payload": "kill", "type": "no_auth"}, websocket)
-                return await ws_close(websocket, 4004)
-            await manager.send_personal_message({"payload": "info", "type": "ready", "data": [str(bid) for bid in websocket.bot_id]}, websocket)
-        elif api_token.get("type") == "manager":
-            if secure_strcmp(api_token.get("data"), test_server_manager_key):
-                websocket.manager_bot = True
-            else:
-                await manager.send_personal_message({"payload": "kill", "type": "no_auth"}, websocket)
-                return await ws_close(websocket, 4004)
-            await manager.send_personal_message({"payload": "info", "type": "ready", "data": None}, websocket)
+        match api_token["type"]:
+            case enums.APIEventTypes.auth_token:
+                try:
+                    api_token = api_token["context"]["api_token"]
+                except:
+                    await manager.send_personal_message({"event": enums.APIEvents.ws_kill, "type": enums.APIEventTypes.ws_invalid}, websocket)
+                if api_token is None or type(api_token) == int or type(api_token) == str:
+                    await manager.send_personal_message({"event": enums.APIEvents.ws_kill, "type": enums.APIEventTypes.ws_invalid}, websocket)
+                    return await ws_close(websocket, 4004)
+                for bot in api_token:
+                    bid = await db.fetchrow("SELECT bot_id FROM bots WHERE api_token = $1", str(bot))
+                    if bid:
+                        websocket.api_token.append(api_token)
+                        websocket.bot_id.append(bid["bot_id"])
+                if websocket.api_token == [] or websocket.bot_id == []:
+                    await manager.send_personal_message({"event": enums.APIEvents.ws_kill, "type": enums.APIEventTypes.ws_no_auth}, websocket)
+                    return await ws_close(websocket, 4004)
+                await manager.send_personal_message({"event": enums.APIEvents.ws_status, "type": enums.APIEventTypes.ws_ready, "context": {"bots": [str(bid) for bid in websocket.bot_id]}}, websocket)
+            case enums.APIEventTypes.auth_manager_key:
+                try:
+                    if secure_strcmp(api_token["context"]["key"], test_server_manager_key) or secure_strcmp(api_token["context"]["key"], root_key):
+                        websocket.manager_bot = True
+                    else:
+                        await manager.send_personal_message({"event": enums.APIEvents.ws_kill, "type": enums.APIEventTypes.ws_no_auth}, websocket)
+                        return await ws_close(websocket, 4004)
+                except:
+                    await manager.send_personal_message({"event": enums.APIEvents.ws_kill, "type": enums.APIEventTypes.ws_invalid}, websocket)
+                    return await ws_close(websocket, 4004)
+                await manager.send_personal_message({"event": enums.APIEvents.ws_status, "type": enums.APIEventTypes.ws_ready, "context": None}, websocket)
     try:
         if not websocket.manager_bot:
             ini_events = {}
@@ -76,7 +84,7 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
                     print(exc)
                     events = {}
                 ini_events[str(bot)] = events
-            await manager.send_personal_message({"payload": "events", "type": "v1", "data": ini_events}, websocket)
+            await manager.send_personal_message({"event": enums.APIEvents.ws_event, "type": enums.APIEventTypes.ws_event_multi, "context": ini_events}, websocket)
             pubsub = redis_db.pubsub()
             for bot in websocket.bot_id:
                 await pubsub.subscribe(str(bot))
@@ -88,7 +96,7 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
             print(msg, websocket.manager_bot)
             if msg is None or type(msg.get("data")) != bytes:
                 continue
-            await manager.send_personal_message({"payload": "events", "type": "v1", "data": {msg.get("channel").decode("utf-8"): orjson.loads(msg.get("data"))}}, websocket)
+            await manager.send_personal_message({"event": enums.APIEvents.ws_event, "type": enums.APIEventTypes.ws_event_single, "context": {msg.get("channel").decode("utf-8"): orjson.loads(msg.get("data"))}}, websocket)
     except:
         try:
             await pubsub.unsubscribe()

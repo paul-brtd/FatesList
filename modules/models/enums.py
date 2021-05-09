@@ -81,3 +81,20 @@ class APIEvents(IntEnum):
     server_ban = 74, "Server Ban Event"
     server_hide = 75, "Server Hide Event" # Whenever someone hides their server
     server_archive = 76, "Server Archive Event" # When someone archives their server
+    ws_identity = 90, "Websocket Identity Event"
+    ws_identity_res = 91, "Websocket Identity Response Event"
+    ws_kill = 92, "Websocket Kill Event"
+    ws_status = 93, "Websocket Status Event"
+    ws_event = 94, "Websocket Event"
+
+class APIEventTypes(IntEnum):
+    _init_ = "value __doc__"
+    ws_invalid = 0, "Websocket Invalid Response"
+    ws_no_auth = 1, "Websocket No Authentication"
+    ws_ready = 3, "Websocket Ready"
+    ws_event_single = 4, "Single Websocket Event"
+    ws_event_multi = 5, "Mutliple Websocket Events"
+    bot = 10, "Bot"
+    server = 11, "Server"
+    auth_token = 20, "Token Auth"
+    auth_manager_key = 21, "Manager Auth"
