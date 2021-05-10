@@ -168,7 +168,7 @@
        				<p class="white">You need to be logged in to make reviews</p>
 			{% endif %}
 			<hr class="hr-is">
-			<span style="font-size: 18px;" class="white">Reviews: {{bot_reviews.__len__()}}</span><br/>
+			<span style="font-size: 18px;" class="white">Showing reviews {{(review_page-1)*per_page + 1}} to {{(review_page-1)*per_page + bot_reviews.__len__()}} of {{total_reviews}} total reviews</span><br/>
 			<span style="font-size: 18px;" class="white">Average Rating: <i class='iconify' data-icon='fa-solid:star' data-inline='true' style="margin-right: 3px; margin-bottom: 1px;"></i>{{average_rating}}/10.0</span><br/>
 			<span class="white">
 				<input disabled class='slider' type="range" name="rating" min="0.1" max="10" value='{{average_rating}}' style="width: 100%" step='0.1' tabindex="-1"/>
@@ -182,7 +182,6 @@
 							<a href='/profile/{{rev.user_id}}' class="white" style="margin-right: 3px;">
 								<img style="border-radius: 50%; width: 24px;" data-src="{{rev.user.avatar.replace('.gif', '.webp')}}" class="lozad review-avatar" alt="{{rev.user.username}}'s avatar">
 								<span class="white" style="margin-right: 3px;">{{rev.user.username}}</span>
-								<span class="white">|</span>
 							</a>
 							<a class="white" href="javascript:void" onclick="upvoteReview('{{rev.id}}')" style="margin-right: 3px;">
 									<span class='iconify white' style="margin-right: 3px; margin-bottom: 1px;" data-icon='fa-solid:angle-up' data-inline='true'></span>
@@ -191,7 +190,6 @@
 							<a class="white" href="javascript:void" onclick="downvoteReview('{{rev.id}}')" style="margin-left: 3px;">
 									<span class='iconify white' style="margin-right: 3px; margin-bottom: 1px;" data-icon='fa-solid:angle-down' data-inline='true'></span>
 							</a>
-							<span class="white">|</span>
 							<span class="white" style="font-weight: bold">
 								<span class='iconify' style="margin-right: 3px; margin-bottom: 1px;" data-icon='fa-solid:star'></span>
 								<span>{{rev.star_rating}}/10.0</span>
@@ -207,6 +205,7 @@
 							{% endif %}
 							</div>
 							<span style="margin-left: 30px !important; color: white" id="review_text-{{rev.id}}">{{rev.review}}</span>
+							{% if username %}
 							<form method="POST" id="reviewreply-{{rev.id}}" style="display: none; width: 100%;" action="/bot/{{bot_id}}/reviews/{{rev.id}}/reply" class="white">
 								<input type="hidden" name="id" value="{{rev.id}}" /> <!-- The ID to update -->
 								<label for="rating">On a scale of 1 to 10, how much did you like this bot?</label><br/>
@@ -216,6 +215,7 @@
 								<textarea id='bot-rating-review' name="review" type="text" class="form-control fform" style="min-height: 100px; height: 100px;" required minlength="9" placeholder="This bot is a really good bot because of X, Y and Z however..."></textarea>
 								<button type="submit" class="btn btn-outline-light">Reply</button>
 							</form>
+							{% endif %}
 							{% if userid == rev.user_id or staff[0] %}
        								<form method="POST" id="review-{{rev.id}}" style="display: none; width: 100%;" action="/bot/{{bot_id}}/reviews/{{rev.id}}/edit" class="white">
 									<input type="hidden" name="id" value="{{rev.id}}" /> <!-- The ID to update -->
@@ -273,7 +273,12 @@
 			    <section class="bot-review-root bot-review">
 				    {{ review(rev, loop.index) }}
 			    </section>
-			    {% endfor %}
+		    	    {% endfor %}
+		    <div class="text-center">
+		    {% for page in range(1, total_review_pages + 1) %} 
+			    <a href="https://fateslist.xyz/bot/{{bot_id}}?rev_page={{page}}#bot-review-tab-button-fl" id="review-page-{{page}}" class="white review-pages" style="font-size: large;">{{page}}</a>
+		    {% endfor %}
+		    </div>
 		    </article>
 		    <script defer>
 			function hideRenderMsg() {
@@ -286,7 +291,7 @@
 			}
 			$(document).ready(function(){
 				setTimeout(asyncReviewLoader, 300);
-		    	});
+			});
 		    </script>
 		</div>
 	</section>

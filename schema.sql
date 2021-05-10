@@ -125,7 +125,7 @@ CREATE TABLE bot_voters (
 
 CREATE TABLE users (
     id SERIAL,
-    user_id bigint,
+    user_id bigint not null unique,
     api_token text,
     vote_epoch timestamptz,
     description text DEFAULT 'This user prefers to be an enigma',
@@ -134,6 +134,15 @@ CREATE TABLE users (
     css text default '',
     state integer default 0, -- 0 = No Ban, 1 = Global Ban
     coins INTEGER DEFAULT 0
+);
+
+CREATE TABLE user_reminders (
+    user_id BIGINT NOT NULL
+    bot_id BIGINT NOT NULL,
+    resolved BOOLEAN DEFAULT false,
+    remind_time timestamptz NOT NULL DEFAULT NOW() + interval '8 hours',
+    CONSTRAINT users_fk FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT bots_fk FOREIGN KEY (bot_id) REFERENCES bots(bot_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE user_payments (

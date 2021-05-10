@@ -13,8 +13,8 @@ async def bot_rdir(request: Request):
     return RedirectResponse("/")
 
 @router.get("/{bot_id}")
-async def bot_index(request: Request, bot_id: int, bt: BackgroundTasks):
-    return await render_bot(request, bt, bot_id, api = False)
+async def bot_index(request: Request, bot_id: int, bt: BackgroundTasks, rev_page: int = 1):
+    return await render_bot(request, bt, bot_id, api = False, rev_page = rev_page)
 
 @router.get("/{bot_id}/widget")
 async def bot_widget(request: Request, bot_id: int, bt: BackgroundTasks):

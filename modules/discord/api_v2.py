@@ -636,6 +636,22 @@ async def get_user_api(request: Request, user_id: int):
         badges = get_badges(user_dpy, badges, approved_bots)
     return {"bots": bots, "approved_bots": approved_bots, "certified_bots": certified_bots, "bot_developer": approved_bots != [], "certified_developer": certified_bots != [], "profile": user_ret, "badges": badges, "defunct": user_dpy is None} | user_obj
 
+@router.patch("/users/{user_id}/bots/{bot_id}/reminders")
+async def set_vote_reminder(request: Request, user_id: int, bot_id: int, data: VoteReminderPatch, Authorization: str = Header("USER_TOKEN")):
+    id = await user_auth(user_id, Authorization)
+    if id is None:
+        return abort(401)
+    if data.remind:
+        check = await db.fetchval("SELECT DISTINCT bot_id FROM user_reminders WHERE user_id = $1 AND bot_id = $2", user_id, bot_id)
+        if check == 0:
+            await db.execute("INSERT INTO user_reminders (user_id, bot_id) VALUES ($1, $2)", user_id, bot_id)
+            return {"done": True, "reason": None, "code": 1000}
+        else:
+            return ORJSONResponse({"done": False, "reason": "User already signed up for vote reminders", "code": 37373}, status_code = 400)
+    else:
+        await db.execute("DELETE FROM user_reminders WHERE user_id = $1 AND bot_id = $2", user_id, bot_id)
+        return {"done": True, "reason": None, "code": 1000}
+
 @router.post("/users/{user_id}/servers/prepare", dependencies=[Depends(RateLimiter(times=3, seconds=35))], response_model = ServerListAuthed)
 async def prepare_servers_api(request: Request, user_id: int, data: ServerCheck, Authorization: str = Header("USER_TOKEN")):
     """

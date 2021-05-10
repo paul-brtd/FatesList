@@ -86,6 +86,7 @@ class APIEvents(IntEnum):
     ws_kill = 92, "Websocket Kill Event"
     ws_status = 93, "Websocket Status Event"
     ws_event = 94, "Websocket Event"
+    vote_reminder = 110, "Vote Reminder"
 
 class APIEventTypes(IntEnum):
     _init_ = "value __doc__"

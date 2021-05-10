@@ -182,6 +182,9 @@ class BotOwner(BaseModel):
 class BotOwners(BaseModel):
     __root__: List[BotOwner]
 
+class VoteReminderPatch(BaseModel):
+    remind: bool
+
 class Bot(BaseUser):
     """
     Represents a bot on Fates List

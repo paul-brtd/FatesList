@@ -38,7 +38,7 @@ async def bot_get_events(bot_id: int, filter: list = None, exclude: list = None)
     api_data = [{"bot_id": str(obj["bot_id"]), "epoch": str(obj["epoch"]), "event": obj["event"], "context": orjson.loads(obj["context"]), "id": obj["id"]} for obj in api_data]
     return {"events": api_data}
 
-async def bot_add_event(bot_id: int, event: str, context: dict, *, send_event = True):
+async def bot_add_event(bot_id: int, event: int, context: dict, *, send_event = True):
     if type(context) == dict:
         pass
     else:

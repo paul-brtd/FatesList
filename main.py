@@ -27,6 +27,7 @@ import sentry_sdk
 from starlette.requests import ClientDisconnect
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 import time
+from fastapi_utils.tasks import repeat_every
 
 builtins.boot_time = time.time()
 
@@ -106,6 +107,7 @@ async def startup():
         - Sleep for 4 seconds to ensure connections are made before application startup
         - Setup Redis and initialize the ratelimiter and caching system
         - Connect robustly to rabbitmq for add bot/edit bot/delete bot
+        - Start repeated task for vote reminder posting
     """
     builtins.up = False
 
@@ -130,6 +132,15 @@ async def startup():
         f"amqp://fateslist:{rabbitmq_pwd}@127.0.0.1/"
     )
     builtins.up = True
+    await vote_reminder()
+
+@repeat_every(seconds=60)
+async def vote_reminder():
+    reminders = await db.fetch("SELECT user_id, bot_id FROM user_reminders WHERE remind_time >= NOW() WHERE resolved = false")
+    for reminder in reminders:
+        print(reminder)
+        await bot_add_event(reminder["bot_id"], enums.APIEvents.vote_reminder, {"user": str(reminder["user_id"])})
+        await db.execute("UPDATE user_reminders SET resolved = true WHERE user_id = $1 AND bot_id = $2", reminder["user_id"], reminder["bot_id"])
 
 @app.on_event("shutdown")
 async def close():
