@@ -82,10 +82,19 @@ class BotPromotionList(BaseModel):
 
 #LIBRARY-INTERNAL
 class BotPromotionGet(BaseModel):
-    """
-    Represents a bot promotion response model. This should be handled by your library
-    """
+    """Represents a bot promotion response model. This should be handled by your library"""
     promotions: BotPromotionList
+
+class BasePager(BaseModel):
+    """Information given by the API for pagination"""
+    total_count: int
+    total_pages: int
+    per_page: int
+    from_: int
+    to: int
+
+    class Config:
+        fields = {'from_': 'from'}
 
 class APIResponse(BaseModel):
     """
@@ -129,11 +138,10 @@ class BotReviewList(BaseModel):
     __root__: List[BotReview]
 
 class BotReviews(BaseModel):
-    """
-    Represents bot reviews and average stars of a bot on Fates List
-    """
+    """Represents bot reviews and average stars of a bot on Fates List"""
     reviews: BotReviewList
     average_stars: float
+    pager: BasePager
 
 BotReview.update_forward_refs()
 BotReviews.update_forward_refs()
