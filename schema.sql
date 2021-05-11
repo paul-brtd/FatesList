@@ -3,6 +3,7 @@ CREATE DATABASE fateslist;
 CREATE EXTENSION "uuid-ossp";
 
 CREATE TABLE bots (
+    id SERIAL,
     username_cached text DEFAULT '',
     bot_id bigint not null unique,
     votes bigint,
@@ -18,7 +19,6 @@ CREATE TABLE bots (
     description text,
     long_description text,
     long_description_type integer default 0,
-    js_whitelist boolean default false,
     css text default '',
     prefix text,
     features TEXT[] DEFAULT '{}',
@@ -32,7 +32,6 @@ CREATE TABLE bots (
     invite text,
     invite_amount integer DEFAULT 0,
     github TEXT,
-    private boolean DEFAULT false,
     donate text,
     privacy_policy text,
     nsfw boolean DEFAULT false,

@@ -38,7 +38,7 @@ class BotMeta(BaseModel):
     donate: Optional[str] = ""
     privacy_policy: Optional[str] = ""
     github: Optional[str] = ""
-    webhook_type: Optional[str] = ""
+    webhook_type: Optional[int] = 0
     webhook: Optional[str] = ""
     webhook_secret: Optional[str] = ""
     vanity: Optional[str] = ""

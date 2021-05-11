@@ -51,3 +51,16 @@ async def ws_close(websocket: WebSocket, code: int):
         return await websocket.close(code=code)
     except:
         return
+
+def ws_identity_payload():
+    return {"e": enums.APIEvents.ws_identity, "t": [enums.APIEventTypes.auth_token, enums.APIEventTypes.auth_manager_key], "ts": time.time()}
+
+async def ws_kill(manager: ConnectionManager, websocket: Websocket, type, code):
+    await manager.send_personal_message({"e": enums.APIEvents.ws_kill, "t": type, "ts": time.time()}, websocket)
+    return await ws_close(code = code)
+
+async def ws_kill_invalid(manager: ConnectionManager, websocket: Websocket):
+    return await ws_kill(manager, websocket, enums.APIEventTypes.ws_invalid, 4000)
+
+async def ws_kill_no_auth(manager: ConnectionManager, websocket: Websocket):
+    return await ws_kill(manager, websocket, enums.APIEventTypes.ws_no_auth, 4004)

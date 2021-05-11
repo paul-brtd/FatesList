@@ -154,7 +154,7 @@
 			{% endif %}
 		</section>
 		<section id="bot-reviews" class='tabcontent'>
-			<h5 class="white">Bot Reviews</h5>
+			<h6 style="font-size: 18px;" class="white">Bot Reviews</h6>
 			{% if username %}
        				<form method="POST" id="review_form" action="/bot/{{bot_id}}/reviews/new" style="width: 100%; margin-bottom: 13px;">
 					<label for="rating">On a scale of 1 to 10, how much did you like this bot?</label><br/>
@@ -171,9 +171,9 @@
 			{% if total_reviews %}
 				<span style="font-size: 18px;" class="white">Showing reviews {{(review_page-1)*per_page + 1}} to {{(review_page-1)*per_page + bot_reviews.__len__()}} of {{total_reviews}} total reviews</span><br/>
 			{% endif %}
-			<span style="font-size: 18px;" class="white">Average Rating: <i class='iconify' data-icon='fa-solid:star' data-inline='true' style="margin-right: 3px; margin-bottom: 1px;"></i>{{average_rating}}/10.0</span><br/>
+			<label for="rating-avg" style="font-size: 18px;" class="white">Average Rating: <i class='iconify' data-icon='fa-solid:star' data-inline='true' style="margin-right: 3px; margin-bottom: 1px;"></i>{{average_rating}}/10.0</label><br/>
 			<span class="white">
-				<input disabled class='slider' type="range" name="rating" min="0.1" max="10" value='{{average_rating}}' style="width: 100%" step='0.1' tabindex="-1"/>
+				<input disabled id="rating-avg" class='slider' type="range" name="rating" min="0.1" max="10" value='{{average_rating}}' style="width: 100%" step='0.1' tabindex="-1"/>
 				<p id="rating-desc-avg"></p>
 			</span>
 			<div style="text-align: left;">
@@ -181,17 +181,14 @@
 				<div class="bot-review-user" style="margin-left: 2.5%; border: solid;">
 		   			<div class="bot-review-left">
 						<div class="bot-review-header" style="margin-bottom: 7px; font-weight: bold;">
-							<a href='/profile/{{rev.user_id}}' class="white" style="margin-right: 3px;">
+							<a href='/profile/{{rev.user_id}}' class="white">
 								<img style="border-radius: 50%; width: 24px;" data-src="{{rev.user.avatar.replace('.gif', '.webp')}}" class="lozad review-avatar" alt="{{rev.user.username}}'s avatar">
-								<span class="white" style="margin-right: 3px;">{{rev.user.username}}</span>
+								<span class="white">{{rev.user.username}}</span>
 							</a>
-							<a class="white" href="javascript:void" onclick="upvoteReview('{{rev.id}}')" style="margin-right: 3px;">
-									<span class='iconify white' style="margin-right: 3px; margin-bottom: 1px;" data-icon='fa-solid:angle-up' data-inline='true'></span>
-							</a>
-							<span class="white" style="margin-right: 3px;">{{rev.review_upvotes.__len__() - rev.review_downvotes.__len__()}}</span>
-							<a class="white" href="javascript:void" onclick="downvoteReview('{{rev.id}}')" style="margin-left: 3px;">
-									<span class='iconify white' style="margin-right: 3px; margin-bottom: 1px;" data-icon='fa-solid:angle-down' data-inline='true'></span>
-							</a>
+							<span style="margin-right: 6px"></span>
+							<span class='iconify white' style="margin-right: 3px;" data-icon='fa-solid:angle-up' onclick="upvoteReview('{{rev.id}}')" data-inline='false'></span>
+							<span class="white">{{rev.review_upvotes.__len__() - rev.review_downvotes.__len__()}}</span>
+							<span class='iconify white' onclick="downvoteReview('{{rev.id}}')" style="margin-left: 3px; margin-right: 3px;" data-icon='fa-solid:angle-down' data-inline='false'></span>
 							<span class="white" style="font-weight: bold">
 								<span class='iconify' style="margin-right: 3px; margin-bottom: 1px;" data-icon='fa-solid:star'></span>
 								<span>{{rev.star_rating}}/10.0</span>

@@ -11,6 +11,12 @@ class UserState(IntEnum):
     pedit_ban = 3, "Profile Edit Ban"
     ddr_ban = 4, "Data Deletion Request Ban"
 
+class WebhookType(IntEnum):
+    _init_ = 'value __doc__'
+    vote = 0, "Vote Webhook"
+    discord = 1, "Discord Integration"
+    fc = 2, "Fates Client"
+
 class Status(IntEnum):
     """
     Status object (See https://docs.fateslist.xyz/basics/basic-structures#status for more information)
@@ -95,7 +101,10 @@ class APIEventTypes(IntEnum):
     ws_ready = 3, "Websocket Ready"
     ws_event_single = 4, "Single Websocket Event"
     ws_event_multi = 5, "Mutliple Websocket Events"
-    bot = 10, "Bot"
-    server = 11, "Server"
     auth_token = 20, "Token Auth"
     auth_manager_key = 21, "Manager Auth"
+
+class ObjTypes(IntEnum):
+    _init_ = "value __doc__"
+    bot = 0, "Bot"
+    server = 1, "Server"

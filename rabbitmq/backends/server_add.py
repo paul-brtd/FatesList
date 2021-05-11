@@ -2,7 +2,9 @@ import discord
 from modules.models import enums
 from config import server_logs
 
-async def server_add_backend(user_id, guild_id, guild_name, description, long_description_type, long_description, tags, vanity):
+async def server_add_backend(user_id, guild_id, data, description, long_description_type, long_description, tags, vanity, **kwargs):
+    guild_id = int(guild_id)
+    guild_name = data.get("name")
     await db.execute("DELETE FROM servers WHERE guild_id = $1", guild_id)
     await db.execute("DELETE FROM vanity WHERE redirect = $1", guild_id)
     await db.execute("INSERT INTO servers (guild_id, name_cached, description, long_description_type, long_description) VALUES ($1, $2, $3, $4, $5)", guild_id, guild_name, description, long_description_type, long_description)

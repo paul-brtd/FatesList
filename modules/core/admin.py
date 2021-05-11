@@ -15,6 +15,7 @@ class BotActions():
 
     def __init__(self, bot):
         self.__dict__.update(bot) # Add all kwargs to class
+        print("Request Acknowledged")
         self.generated = self.GeneratedObject() # To keep things clean, make sure we always put changed properties in generated
 
     def gen_rabbit_dict(self):
