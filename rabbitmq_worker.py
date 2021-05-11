@@ -64,7 +64,7 @@ async def new_task(queue_name, friendly_name):
                 _ret = eval(op)
                 if isinstance(_ret, Exception):
                     cprint(_ret, "red")
-            rc.append(rc if serialized(rc) else str(rc))
+                rc.append(_ret if serialized(_ret) else str(_ret))
 
         else:
             # Normally handle rabbitmq task
