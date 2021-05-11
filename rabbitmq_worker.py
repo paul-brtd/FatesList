@@ -45,22 +45,48 @@ async def new_task(queue_name, friendly_name):
     _channel = await rabbitmq_db.channel()
     _queue = await _channel.declare_queue(queue_name, durable = True) # Function to handle our queue
     
+    def serialized(obj):
+        try:
+            orjson.dumps({"rc": obj})
+            return True
+        except:
+            return False
+
     async def _task(message: IncomingMessage):
         """RabbitMQ Queue Function"""
         print(f"{friendly_name} called")
-        _task_handler = TaskHandler(orjson.loads(message.body), queue_name)
-        rc = await _task_handler.handle()
-        if rc:
-            cprint(rc, "red")
-        else:
-            message.ack()
+        _json = orjson.loads(message.body)
+        
+        if _json["meta"].get("op"):
+            # Handle admin operations
+            rc = []
+            for op in _json["meta"]["op"]:
+                _ret = eval(op)
+                if isinstance(_ret, Exception):
+                    cprint(_ret, "red")
+            rc.append(rc if serialized(rc) else str(rc))
 
+        else:
+            # Normally handle rabbitmq task
+            _task_handler = TaskHandler(_json, queue_name)
+            rc = await _task_handler.handle()
+            rc = rc if serialized(rc) else str(rc)
+        
+        _ret = {"ret": rc, "err": False} # Result to return
+        if rc and isinstance(rc, Exception):
+            cprint(rc, "red")
+            _ret["err"] = True # Mark the error
+        
+        if _json["meta"].get("ret"):
+            await redis_db.set(f"rabbit-{_json['meta'].get('ret')}", orjson.dumps(_ret)) # Save return code in redis
+
+        if not _ret["err"]: # If no errors recorded
+            message.ack()
+        
     await _queue.consume(_task)
 
 async def main():
-    """
-    Main worker function
-    """
+    """Main worker function"""
     asyncio.create_task(client.start(TOKEN_MAIN))
     asyncio.create_task(client_server.start(TOKEN_SERVER))
     builtins.rabbitmq_db = await connect_robust(
