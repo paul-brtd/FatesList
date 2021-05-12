@@ -23,7 +23,7 @@ async def add_rmq_task(queue_name: str, data: dict, **meta):
     channel = await rabbitmq_db.channel()
     await channel.set_qos(prefetch_count=1)
     await channel.default_exchange.publish(
-        aio_pika.Message(orjson.dumps({"ctx": data, "meta": meta}), delivery_mode=aio_pika.DeliveryMode.PERSISTENT, headers = {"w_auth": worker_key}),
+        aio_pika.Message(orjson.dumps({"ctx": data, "meta": meta}), delivery_mode=aio_pika.DeliveryMode.PERSISTENT, headers = {"auth": worker_key}),
         routing_key=queue_name
     )
 

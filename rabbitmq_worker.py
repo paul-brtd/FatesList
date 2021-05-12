@@ -74,12 +74,12 @@ async def new_task(queue_name, friendly_name):
             cprint(f"Invalid auth for {friendly_name}", "red")
             message.ack()
             return # No vlie auth sent
-        if not secure_strcmp(_headers.get("w_auth"), worker_key):
+        if not secure_strcmp(_headers.get("auth"), worker_key):
             cprint(f"Invalid auth for {friendly_name} and JSON of {_json}", "red")
             message.ack()
             return # No valid auth sent
 
-        if _json["meta"].get("op"):
+        if queue_name == "_admin" and _json["meta"].get("op"):
             # Handle admin operations
             rc = []
             err = []
