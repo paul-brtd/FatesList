@@ -42,8 +42,7 @@ def gen_owner_html(owners_lst: tuple):
             first_done = True
     return owners_html
 
-async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bool, rev_page: int = 1):
-    
+async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bool, rev_page: int = 1, csrf_protect: CsrfProtect = None):
     if bot_id >= 9223372036854775807: # Max size of bigint
         return abort(404)
     bot = await db.fetchrow("SELECT prefix, shard_count, state, description, bot_library AS library, banner, website, votes, servers, bot_id, discord AS support, banner, github, features, invite_amount, css, long_description_type, long_description, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", bot_id)
@@ -100,13 +99,12 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
     else:
         return await templates.e(request, "Bot Not Found")
     _tags_fixed_bot = [tag for tag in tags_fixed if tag["id"] in bot["tags"]]
-    form = await Form.from_formdata(request)
     bt.add_task(bot_add_ws_event, bot_id, {"e": enums.APIEvents.bot_view, "ctx": {"user": request.session.get('userid'), "widget": False}, "ts": time.time()})
     reviews = await parse_reviews(bot_id, page = rev_page)
     data = {"bot": bot, "bot_id": bot_id, "tags_fixed": _tags_fixed_bot, "promos": promos, "maint": maint, "bot_admin": bot_admin, "guild": main_server, "botp": True, "bot_reviews": reviews[0], "average_rating": reviews[1], "total_reviews": reviews[2], "review_page": rev_page, "total_review_pages": reviews[3], "per_page": reviews[4]}
 
     if not api:
-        return await templates.TemplateResponse("bot.html", {"request": request, "form": Form, "replace_last": replace_last} | data)
+        return await templates.TemplateResponse("bot.html", {"request": request, "replace_last": replace_last, "csrf_protect": csrf_protect} | data)
     else:
         data["bot_id"] = str(bot_id)
         return data

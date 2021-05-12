@@ -14,7 +14,6 @@ async def redirect_me(request: Request):
     return RedirectResponse("/profile/" + request.session.get("userid"))
 
 @router.get("/{user_id}")
-@csrf_protect
 async def profile_of_user_generic(request: Request, user_id: int):
     return await profile_of_user(request, user_id)
 

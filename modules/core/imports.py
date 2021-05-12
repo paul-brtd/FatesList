@@ -18,7 +18,6 @@ import discord
 import asyncio
 import re
 import orjson
-from starlette_wtf import CSRFProtectMiddleware, csrf_protect,StarletteForm
 import builtins
 from typing import Optional, List, Union
 from aiohttp_requests import requests

@@ -63,7 +63,6 @@
 	<div class="d-flex justify-content-center align-items-center flex-wrap" style="width: 80%;margin: 0 auto;max-width: 1000px; margin-bottom: 3px !important;" id="bot-buttons">
 		{% if bot.state != enums.BotState.banned %}
 			<form method = "POST" action = "/bot/{{bot_id}}/vote" id="vote">
-				{{form.csrf_token}}
 				<button type="submit" data-sitekey="{{recaptcha_client}}" data-callback='onSubmit' data-action='submit' class="g-recaptcha btn bot-buttons-all vote btn-outline-light" id="bot-buttons-vote" style="color: white !important;">
 					<span class="iconify" data-icon="fa-solid:thumbs-up" data-inline="false"></span>
 					<span style="margin-left: 3px;">{{bot.votes}}</span>
@@ -341,28 +340,24 @@
 			{% if bot.state == enums.BotState.pending or bot.state == enums.BotState.under_review %}
 				<p>Approve this bot?</p>
 				<form method="POST" action="/admin/review/{{bot_id}}" style="margin-bottom: 10px;">
-					{{ form.csrf_token }}
 					<input hidden name="accept" value="true"></input>
 					<textarea name="accept_feedback" style="border-radius: 4px 4px 4px 4px !important; min-height: 10px; height: 200px; width: 100%" placeholder="Enter any feedback you have for this bot"></textarea><br/>
 					<button class="btn btn-outline-light" type="submit" style="margin: 0 15px;">Accept</button>
 				</form>
 				<p>Deny this bot?</p>
 				<form method="POST" action="/admin/review/{{bot_id}}">
-					{{ form.csrf_token }}
 					<textarea name="deny_reason" style="border-radius: 4px 4px 4px 4px !important; min-height: 10px; height: 200px; width: 100%" placeholder="Enter deny reason"></textarea><br/>
 					<input hidden name="accept" value="false"></input>
 					<button class="btn btn-outline-light" type="submit" style="margin: 0 15px;">Deny</button>
 				</form>
 			{% elif bot.state == enums.BotState.approved or bot.state == enums.BotState.certified %}
 				<form method="POST" action="/admin/review/{{bot_id}}">
-					{{ form.csrf_token }}
 					<input hidden name="accept" value="unverify"></input>
 					<input type="text" name="unverify_reason" style="border-radius: 4px 4px 4px 4px !important;" placeholder="Enter unverify reason" required/>
 					<button class="btn btn-outline-light" type="submit" style="margin: 0 15px; border-radius: 4px 4px 4px 4px !important;">Unverify</button>
 				</form>
 			{% endif %}
 			<form style="text-align: center; margin: 10px;" method="POST" action="/bot/{{bot_id}}/ban">
-				{{form.csrf_token}}
 				{% if staff[0] and (bot.state == enums.BotState.approved or bot.state == enums.BotState.certified) %}
 					<input type="hidden" name="ban" value="1"/>
 					<p style="font-weight: bold;color: rgba(255,255,255,0.87); text-align: center;">If this bot is misbehaving...</p>

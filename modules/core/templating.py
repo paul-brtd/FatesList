@@ -5,10 +5,6 @@ Fates List Templating System
 from .imports import *
 from .permissions import *
 
-# Needed for rendering templates with CSRF
-class Form(StarletteForm):
-    pass
-
 _templates = Jinja2Templates(directory="templates") # Setup templates folder
 
 
@@ -50,7 +46,6 @@ class templates():
         else:
             arg_dict["staff"] = [False]
         arg_dict["site_url"] = site_url
-        arg_dict["form"] = await Form.from_formdata(request)
         arg_dict["data"] = arg_dict.get("data")
         arg_dict["path"] = request.url.path
         arg_dict["enums"] = enums
@@ -58,8 +53,12 @@ class templates():
         arg_dict["ireplace"] = ireplace
         arg_dict["ireplacem"] = ireplacem
         if status is None:
-            return _templates.TemplateResponse(f, arg_dict)
-        return _templates.TemplateResponse(f, arg_dict, status_code = status)
+            ret = _templates.TemplateResponse(f, arg_dict)
+        else:
+            ret = _templates.TemplateResponse(f, arg_dict, status_code = status)
+        if "csrf_protect" in arg_dict.keys():
+            arg_dict["csrf_protect"].set_csrf_cookie(ret)
+        return ret
 
     @staticmethod
     async def error(f, arg_dict, status_code):

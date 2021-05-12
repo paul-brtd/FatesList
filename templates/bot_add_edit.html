@@ -270,7 +270,6 @@
         <button class="btn btn-outline-light" type="submit" style="margin-top: 50px; margin-bottom: 30px">{% if mode == "edit" %}Edit Bot{%else%}Add Bot{%endif%}</button>
       </div>
     </div>
-    {{form.csrf_token}}
   </form>
    </div>
 
@@ -305,7 +304,6 @@
     <h6 style="margin-top: 30px;">Delete Bot</h6>
     <p style="margin-bottom: 3px;">Warning: This cannot be undone</p>
     <form method="POST" action="/bot/{{data.bot_id}}/delete">
-	{{form.csrf_token}}
         <button class="btn btn-danger" type="submit" style="margin-top: 20px; margin-bottom: 30px">Delete Bot</button>
     	<input type="hidden" name="confirmer" value="{{epoch}}"/>
     </form>

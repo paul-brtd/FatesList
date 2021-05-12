@@ -9,7 +9,6 @@ router = APIRouter(
 allowed_file_ext = [".gif", ".png", ".jpeg", ".jpg", ".webm", ".webp"]
 
 @router.get("/admin/add")
-@csrf_protect
 async def add_bot(request: Request):
     if "userid" in request.session.keys():
         return await templates.TemplateResponse("bot_add_edit.html", {"request": request, "tags_fixed": tags_fixed, "error": None, "mode": "add"})
@@ -17,10 +16,9 @@ async def add_bot(request: Request):
         return RedirectResponse("/auth/login?redirect=/bot/admin/add&pretty=to add a bot")
 
 @router.post("/admin/add")
-@csrf_protect
 async def add_bot_backend(
         request: Request,
-        bot: BotAddForm = Depends(BotAddForm)
+        bot: BotAddForm = Depends(BotAddForm),
     ):
     if "userid" not in request.session.keys():
         return RedirectResponse("/auth/login?redirect=/bot/admin/add&pretty=to add a bot", status_code = 303)
@@ -40,8 +38,7 @@ async def add_bot_backend(
     return await templates.TemplateResponse("bot_add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": rc[0], "code": rc[1], "mode": "add"})
 
 @router.get("/{bot_id}/edit")
-@csrf_protect
-async def bot_edit(request: Request, bot_id: int):
+async def bot_edit(request: Request, bot_id: int, csrf_protect: CsrfProtect = Depends()):
     if "userid" in request.session.keys():
         check = await is_bot_admin(int(bot_id), int(request.session.get("userid")))
         print(check)
@@ -66,17 +63,18 @@ async def bot_edit(request: Request, bot_id: int):
         if vanity is None:
             vanity = {"vanity": None}
         bot = fetch | dict(vanity)
-        return await templates.TemplateResponse("bot_add_edit.html", {"request": request, "mode": "edit", "tags_fixed": tags_fixed, "username": request.session.get("username", False),"data": bot, "avatar": request.session.get("avatar"), "epoch": time.time(), "vanity": vanity["vanity"]})
+        return await templates.TemplateResponse("bot_add_edit.html", {"request": request, "mode": "edit", "tags_fixed": tags_fixed, "username": request.session.get("username", False),"data": bot, "avatar": request.session.get("avatar"), "epoch": time.time(), "vanity": vanity["vanity"], "csrf_protect": csrf_protect})
     else:
         return RedirectResponse("/")
 
 @router.post("/{bot_id}/edit")
-@csrf_protect
 async def bot_edit_backend(
         request: Request,
         bot_id: int,
-        bot: BotEditForm = Depends(BotEditForm)
+        bot: BotEditForm = Depends(BotEditForm),
+        csrf_protect: CsrfProtect = Depends()
     ):
+    verify_csrf(request, csrf_protect)
     if "userid" not in request.session.keys():
         return RedirectResponse("/")
     banner = bot.banner.replace("http://", "https://").replace("(", "").replace(")", "")
@@ -91,17 +89,19 @@ async def bot_edit_backend(
     if rc is None:
         return RedirectResponse("/bot/" + str(bot_id), status_code = 303)
     bot_dict["tags"] = bot_dict["tags"].split(",")
-    return await templates.TemplateResponse("bot_add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": rc[0], "code": rc[1], "mode": "edit"})
+    return await templates.TemplateResponse("bot_add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": rc[0], "code": rc[1], "mode": "edit", "csrf_protect": csrf_protect})
 
 class RC(BaseModel):
     g_recaptcha_response: str = FForm(None)
 
 @router.post("/{bot_id}/vote")
-@csrf_protect
 async def vote_for_bot_or_die(
         request: Request,
         bot_id: int,
+        csrf_protect: CsrfProtect = Depends()
     ):
+    verify_csrf(request, csrf_protect)
+    print("Got here")
     if request.session.get("userid") is None:
         return RedirectResponse(f"/auth/login?redirect=/bot/{bot_id}&pretty=to vote for this bot", status_code = 303)
     uid = request.session.get("userid")
@@ -137,7 +137,6 @@ async def vote_for_bot_or_die(
         return ret
 
 @router.post("/{bot_id}/delete")
-@csrf_protect
 async def delete_bot(request: Request, bot_id: int):
     if "userid" in request.session.keys():
         check = await is_bot_admin(int(bot_id), int(request.session.get("userid")))
@@ -149,7 +148,6 @@ async def delete_bot(request: Request, bot_id: int):
     return RedirectResponse("/", status_code = 303)
 
 @router.post("/{bot_id}/ban")
-@csrf_protect
 async def ban_bot(request: Request, bot_id: int, ban: int = FForm(1), reason: str = FForm('There was no reason specified')):
     guild = client.get_guild(main_server)
     if ban not in [0, 1]:

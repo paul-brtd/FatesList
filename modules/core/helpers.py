@@ -8,6 +8,9 @@ from .events import *
 from .auth import *
 from .cache import *
 
+def verify_csrf(request, csrf_protect):
+    csrf_protect.validate_csrf_in_cookies(request)
+
 async def get_maint(bot_id: str) -> Union[bool, Optional[dict]]:
     api_data = await db.fetchrow("SELECT type, reason, epoch FROM bot_maint WHERE bot_id = $1", bot_id)
     if api_data is None:
@@ -43,6 +46,7 @@ async def add_promotion(bot_id: int, title: str, info: str, css: str, type: int)
     return await db.execute("INSERT INTO bot_promotions (bot_id, title, info, css, type) VALUES ($1, $2, $3, $4, $5)", bot_id, title, info, css, type)
 
 async def vote_bot(uid: int, bot_id: int, username, autovote: bool) -> Optional[list]:
+    print("Here on voter")
     await get_user_token(uid, username) # Make sure we have a user profile first
     epoch = await db.fetchval("SELECT vote_epoch FROM users WHERE user_id = $1", int(uid))
     if epoch is None:

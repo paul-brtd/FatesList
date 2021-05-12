@@ -29,7 +29,6 @@ async def admin_dashboard(request: Request):
     return await templates.TemplateResponse("admin.html", {"request": request} | data) # Otherwise, render the template
 
 @router.post("/console")
-@csrf_protect
 async def admin_api(request: Request, bt: BackgroundTasks, admin: str = FForm(""), bot_id: int = FForm(0)):
     print(bot_id)
     try:
@@ -108,7 +107,7 @@ async def review_tool(request: Request, bot_id: int, accept: str = FForm(""), de
         rc = await admin_tool.approve_bot(accept_feedback)
         if rc is not None:
             return rc
-        return await templates.TemplateResponse("last.html",{"request":request,"message":"Bot accepted; You MUST Invite it by this url","username":request.session["username"],"url":f"https://discord.com/oauth2/authorize?client_id={bot_id}&scope=bot&guild_id={guild.id}&disable_guild_select=true&permissions=0"})
+        return await templates.TemplateResponse("message.html",{"request":request, "message": f"Bot accepted; You MUST Invite it by clicking <a href='https://discord.com/oauth2/authorize?client_id={bot_id}&scope=bot&guild_id={guild.id}&disable_guild_select=true&permissions=0' class='long-desc-link'>here</a>"})
     elif accept == "unverify":
         rc = await admin_tool.unverify_bot(unverify_reason)
         if rc is False:

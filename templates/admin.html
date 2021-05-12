@@ -75,7 +75,6 @@
 	    <h4 class="white">You currently may perform the below actions</h4>
 	    {% if owner %}
 	    <form method="POST">
-                {{form.csrf_token}}
                 <input type="hidden" name="admin" value="certify"></input>
                 <div class="input-group">
                     <div class="input-group-prepend"><span class="input-group-text" style="background: #00000000;color: rgba(255,255,255,0.87);">Certify a bot</span></div><input class="form-control" type="number" style="background: #ffffff;" name="bot_id">
@@ -84,7 +83,6 @@
             </form>
 
             <form method="POST">
-                {{form.csrf_token}}
                 <input type="hidden" name="admin" value="uncertify"></input>
                 <div class="input-group" style="margin: 50px 0;">
                     <div class="input-group-prepend"><span class="input-group-text" style="background: #00000000;color: rgba(255,255,255,0.87);">Uncertify a bot</span></div><input class="form-control" type="number" style="background: #ffffff;" name="bot_id">
@@ -92,7 +90,6 @@
                 </div>
             </form>
         <form method="POST">
-            {{form.csrf_token}}
             <input type="hidden" name="admin" value="reset"></input>
             <div class="input-group" style="margin: 50px 0;">
                 <div class="input-group-prepend"><span class="input-group-text" style="background: #00000000;color: rgba(255,255,255,0.87);">Reset Votes(Also add a wish to the box ;))</span></div><input class="form-control" type="text" required style="background: #ffffff;" name="nn">
@@ -102,7 +99,6 @@
 	{% endif %}
 	{% if staff[1] > 2 %}
 	<form method="POST" style="width: 100%;" action="/admin/console/ban">
-            {{form.csrf_token}}
 	    <input type="hidden" name="admin" value="ban"></input>
 	    <label for="ban_type">Ban/Unban A User</label>
 	    <select name="ban_type" style="width: 100%;">

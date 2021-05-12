@@ -19,7 +19,6 @@ async def login_get(request: Request, redirect: Optional[str] = None, pretty: Op
     return await templates.TemplateResponse("login.html", {"request": request, "perm_needed": redirect is not None, "perm_pretty": pretty})
 
 @router.post("/login")
-@csrf_protect
 async def login_post(request: Request, join_servers: str = FForm("off"), server_list: str = FForm("off")):
     scopes = ["identify"]
 
@@ -39,7 +38,6 @@ async def login_post(request: Request, join_servers: str = FForm("off"), server_
     request.session["dscopes"] = scopes
     request.session["dscopes_str"] = discord_o.get_scopes(scopes)
     oauth_data = discord_o.get_discord_oauth(scopes)
-    request.session["state"] = oauth_data["state"]
     return RedirectResponse(oauth_data["url"], status_code=HTTP_303_SEE_OTHER)
 
 
@@ -48,13 +46,6 @@ async def login_confirm(request: Request, code: str, state: str):
     if "userid" in request.session.keys():
         return RedirectResponse("/")
     else:
-        # Validate the state first
-        if request.session.get("state") != state:
-            return await templates.e(request = request, main = "Invalid State", reason = "The state returned by discord and the state we have provided does not match. Please try logging in again", status_code = 400)
-        try:
-            del request.session["state"]
-        except:
-            pass
         access_token = await discord_o.get_access_token(code, request.session["dscopes"])
         userjson = await discord_o.get_user_json(access_token["access_token"])
         if userjson["id"]:
@@ -102,7 +93,6 @@ async def login_confirm(request: Request, code: str, state: str):
         return RedirectResponse("/")
 
 @router.get("/logout")
-@csrf_protect
 async def logout(request: Request):
     request.session.clear()
     return RedirectResponse("/")

@@ -2,15 +2,13 @@ import uvloop
 uvloop.install()
 from fastapi import FastAPI, Request, Form as FForm
 from fastapi.openapi.utils import get_openapi
-from starlette_session import SessionMiddleware
-from starlette_session.backends import BackendType
+from starlette.middleware.sessions import SessionMiddleware
 from fastapi.responses import ORJSONResponse
 from fastapi.templating import Jinja2Templates
 import asyncpg
 from pydantic import BaseModel
 import discord
 import asyncio
-from starlette_wtf import CSRFProtectMiddleware
 import builtins
 import importlib
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
@@ -28,6 +26,7 @@ from starlette.requests import ClientDisconnect
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 import time
 from fastapi_utils.tasks import repeat_every
+from fastapi_csrf_protect import CsrfProtect
 
 builtins.boot_time = time.time()
 
@@ -63,10 +62,14 @@ app = FastAPI(default_response_class = ORJSONResponse, redoc_url = "/api/docs/re
 app.add_middleware(SentryAsgiMiddleware)
 
 # Setup CSRF protection
-app.add_middleware(CSRFProtectMiddleware, csrf_secret=csrf_secret)
+class CsrfSettings(BaseModel):
+    secret_key: str = csrf_secret
 
-# Middleware to proxy uvicorn IP addresses
-app.add_middleware(ProxyHeadersMiddleware)
+@CsrfProtect.load_config
+def get_csrf_config():
+    return CsrfSettings()
+
+builtins.CsrfProtect = CsrfProtect
 
 # Setup exception handling
 @app.exception_handler(401)
@@ -126,7 +129,7 @@ async def startup():
     asyncio.create_task(client_servers.start(TOKEN_SERVER))
     await asyncio.sleep(4)
     builtins.redis_db = await aioredis.from_url('redis://localhost', db = 1)
-    app.add_middleware(SessionMiddleware, backend_type = BackendType.aioRedis, backend_client = redis_db, secret_key=session_key, https_only = True, max_age = 60*60*12, cookie_name = "session") # 1 day expiry cookie
+    app.add_middleware(SessionMiddleware, secret_key=session_key, https_only = True, max_age = 60*60*12) # 1 day expiry cookie
     FastAPILimiter.init(redis_db, identifier = rl_key_func)
     builtins.rabbitmq_db = await aio_pika.connect_robust(
         f"amqp://fateslist:{rabbitmq_pwd}@127.0.0.1/"
@@ -183,6 +186,7 @@ async def fateslist_request_handler(request: Request, call_next):
             - Transparently redirect /bots to /bot and /servers to /servers/index by changing ASGI scope (no 303 since thats bad UX)
             - Set and record the process time for analytics
     """
+    print(request.headers.get("X-Forwarded-For"))
     if str(request.url.path).startswith("/bots/"):
         request.scope["path"] = str(request.url.path).replace("/bots", "/bot", 1)
     if str(request.url.path) in ["/servers/", "/servers"]:
@@ -203,10 +207,13 @@ async def fateslist_request_handler(request: Request, call_next):
     # Fuck CORS
     response.headers["Access-Control-Allow-Origin"] = request.headers.get('Origin') if request.headers.get('Origin') else "*"
     response.headers["Access-Control-Allow-Credentials"] = "true"
+    asyncio.create_task(print_req(request, response))
+    return response
+
+async def print_req(request, response):
     # Gunicorn logging is trash, lets fix that with custom logging
     query_str = f'?{request.scope["query_string"].decode("utf-8")}' if request.scope["query_string"] else "" # Get query strings
     print(f"{request.client.host} - {BOLD_START}{request.method} {request.url.path}{query_str} HTTP/{request.scope['http_version']} - {response.status_code} {HTTPStatus(response.status_code).phrase}{BOLD_END}") # Print logs like uvicorn
-    return response # Return response to user
 
 def fl_openapi():
     """Custom OpenAPI description"""

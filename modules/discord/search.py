@@ -11,7 +11,6 @@ async def search(request: Request, q: str):
     return await render_search(request = request, q = q, api = False)
 
 @router.get("/tags")
-@csrf_protect
 async def tags(request: Request, tag: str):
     if tag not in TAGS:
         return RedirectResponse("/")
