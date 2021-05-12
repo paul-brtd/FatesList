@@ -1,4 +1,5 @@
 from deps import *
+from modules.core import *
 
 class Manager(Cog):
     def __init__(self, client):
@@ -28,11 +29,18 @@ class Manager(Cog):
             bots.append(str(bot["bot_id"]) + " - " + f"\nCertified: {bot['state'] == 6}\nInvite: https://discord.com/api/oauth2/authorize?client_id={bot['bot_id']}&permission=0&scope=bot")
         iob = io.BytesIO("\n".join(bots).encode("utf-8"))
         await ctx.send(file = File(filename = "bis.txt", fp = iob))
-    
+
+    @is_owner()
     @command(pass_context = True)
-    async def bot(self, ctx, bot: Member):
-        if bot.bot:
-            await bot.add_roles(ctx.guild.get_role(self.client.bots_role))
+    async def rmq(self, ctx, *, cmd: str):
+        cmd = cmd.replace("```", "").lstrip()
+        status, _ret = await add_rmq_task_with_ret("_admin", {}, op = cmd)
+        if not status:
+            await ctx.send(f"Failed to get message from workwr (likely busy). Return UUID is {_ret} and return prefix is rabbit-")
+        
+        err = _ret["err"]
+        ret = "\n\n\n".join([f"Error: {_ret['err'][i]}\n\nReturn\n\n{_ret['ret'][i]}" for i in range(0, len(_ret["err"]))])
+        await ctx.send(f"```{ret}```")
 
 def setup(client):
     client.add_cog(Manager(client))

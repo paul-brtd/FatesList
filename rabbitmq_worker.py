@@ -1,7 +1,5 @@
-"""
-    RabbitMQ worker
-"""
-import asyncpg, asyncio, uvloop, aioredis
+"""RabbitMQ worker"""
+import asyncpg, asyncio, uvloop, aioredis, os, importlib
 import sys
 sys.path.append("..")
 from config import *
@@ -11,7 +9,7 @@ import orjson
 import builtins
 from copy import deepcopy
 from termcolor import colored, cprint
-
+from modules.utils import secure_strcmp
 # Import all needed backends
 from rabbitmq.backends.bot_add import bot_add_backend
 from rabbitmq.backends.bot_edit import bot_edit_backend
@@ -56,12 +54,25 @@ async def new_task(queue_name, friendly_name):
         """RabbitMQ Queue Function"""
         print(f"{friendly_name} called")
         _json = orjson.loads(message.body)
-        
+        if not secure_strcmp(_json["meta"].get("auth"), worker_key):
+            cprint(f"Invalid auth for {friendly_name} and JSON of {_json}", "red")
+            message.ack()
+            return # No valid auth sent
+
         if _json["meta"].get("op"):
             # Handle admin operations
             rc = []
-            for op in _json["meta"]["op"]:
-                _ret = eval(op)
+            err = []
+            ops = _json["meta"]["op"]
+            if type(ops) == str:
+                ops = [ops]
+            for op in ops:
+                try:
+                    _ret = eval(op)
+                    err.append(False)
+                except Exception as exc:
+                    _ret = f"{type(exc).__name__}: {exc}"
+                    err.append(True)
                 if isinstance(_ret, Exception):
                     cprint(_ret, "red")
                 rc.append(_ret if serialized(_ret) else str(_ret))
@@ -71,19 +82,34 @@ async def new_task(queue_name, friendly_name):
             _task_handler = TaskHandler(_json, queue_name)
             rc = await _task_handler.handle()
             rc = rc if serialized(rc) else str(rc)
-        
-        _ret = {"ret": rc, "err": False} # Result to return
+            err = False # Initially until we find exception
+
+        _ret = {"ret": rc, "err": err} # Result to return
         if rc and isinstance(rc, Exception):
             cprint(rc, "red")
+            _ret["ret"] = f"{type(rc).__name__}: {rc}"
             _ret["err"] = True # Mark the error
-        
+            stats.err_msgs.append(message) # Mark the failed message so we can ack it later
+
         if _json["meta"].get("ret"):
             await redis_db.set(f"rabbit-{_json['meta'].get('ret')}", orjson.dumps(_ret)) # Save return code in redis
 
-        if not _ret["err"]: # If no errors recorded
+        if queue_name == "_admin" or not _ret["err"]: # If no errors recorded
             message.ack()
         
     await _queue.consume(_task)
+
+class Stats():
+    def __init__(self):
+        self.errors = 0 # Amount of errors
+        self.exc = [] # Exceptions
+        self.err_msgs = [] # All messages that failed
+
+    def __str__(self):
+        s = []
+        for k in self.__dict__.keys():
+            s.append(f"{k}: {self.__dict__[k]}")
+        return "\n".join(s)
 
 async def main():
     """Main worker function"""
@@ -94,6 +120,7 @@ async def main():
     )
     builtins.db = await asyncpg.create_pool(host="127.0.0.1", port=5432, user=pg_user, password=pg_pwd, database="fateslist")
     builtins.redis_db = await aioredis.from_url('redis://localhost', db = 1)
+    builtins.stats = Stats()
     channel = None
     while True: # Wait for discord.py before running tasks
         if channel is None:
@@ -126,8 +153,10 @@ class TaskHandler():
     async def handle(self):
         try:
             handle_func = self.handlers[self.queue]
-            await handle_func(**self.ctx)
+            return await handle_func(**self.ctx)
         except Exception as exc:
+            stats.errors += 1 # Record new error
+            stats.excs.append(exc)
             return exc
 
 # Run the task
