@@ -9,17 +9,18 @@ router = APIRouter(
 discord_o = Oauth(OauthConfig)
 
 @router.get("/login")
-async def login_get(request: Request, redirect: Optional[str] = None, pretty: Optional[str] = "to access this page"):
+async def login_get(request: Request, redirect: Optional[str] = None, pretty: Optional[str] = "to access this page", csrf_protect: CsrfProtect = Depends()):
     if redirect:
         if not redirect.startswith("/") and not redirect.startswith("https://fateslist.xyz"):
             return ORJSONResponse({"detail": "Invalid redirect. You may only redirect to pages on Fates List"}, status_code = 400)
     if "userid" in request.session.keys():
         return RedirectResponse("/", status_code=HTTP_303_SEE_OTHER)
     request.session["redirect"] = redirect
-    return await templates.TemplateResponse("login.html", {"request": request, "perm_needed": redirect is not None, "perm_pretty": pretty})
+    return await templates.TemplateResponse("login.html", {"request": request, "perm_needed": redirect is not None, "perm_pretty": pretty, "csrf_protect": csrf_protect})
 
 @router.post("/login")
-async def login_post(request: Request, join_servers: str = FForm("off"), server_list: str = FForm("off")):
+async def login_post(request: Request, join_servers: str = FForm("off"), server_list: str = FForm("off"), csrf_protect: CsrfProtect = Depends()):
+    verify_csrf(request, csrf_protect)
     scopes = ["identify"]
 
     # Join Server
@@ -35,18 +36,15 @@ async def login_post(request: Request, join_servers: str = FForm("off"), server_
     else:
         request.session["server_list"] = True
         scopes.append("guilds")
-    request.session["dscopes"] = scopes
-    request.session["dscopes_str"] = discord_o.get_scopes(scopes)
     oauth_data = discord_o.get_discord_oauth(scopes)
     return RedirectResponse(oauth_data["url"], status_code=HTTP_303_SEE_OTHER)
-
 
 @router.get("/login/confirm")
 async def login_confirm(request: Request, code: str, state: str):
     if "userid" in request.session.keys():
         return RedirectResponse("/")
     else:
-        access_token = await discord_o.get_access_token(code, request.session["dscopes"])
+        access_token = await discord_o.get_access_token(code, state)
         userjson = await discord_o.get_user_json(access_token["access_token"])
         if userjson["id"]:
             pass

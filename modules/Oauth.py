@@ -27,7 +27,7 @@ class Oauth():
         if type(scopes) == list:
             scopes = self.get_scopes(scopes)
         state = get_token(101)
-        return {"state": state, "url": f"{self.discord_login_url}&state={state}&response_type=code&scope={scopes}"}
+        return {"state": scopes, "url": f"{self.discord_login_url}&state={scopes}&response_type=code&scope={scopes}"}
 
     async def get_access_token(self, code, scope) -> dict:
         payload = {
