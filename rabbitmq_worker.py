@@ -1,5 +1,7 @@
 """RabbitMQ worker"""
 import asyncpg, asyncio, uvloop, aioredis, os, importlib
+import nest_asyncio
+nest_asyncio.apply()
 import sys
 sys.path.append("..")
 from config import *
@@ -38,6 +40,9 @@ intent_server = deepcopy(intent_main)
 intent_server.presences = False
 
 builtins.client_server = discord.Client(intents=intent_server)
+
+async def dbg_test():
+    return "HELLO"
 
 async def new_task(queue_name, friendly_name):
     _channel = await rabbitmq_db.channel()
