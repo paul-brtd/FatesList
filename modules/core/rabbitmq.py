@@ -9,7 +9,6 @@ import asyncio
 RMQ_META = {
     "pv": 1, # Protocol Version
     "dbg": True, # Debug Mode
-    "auth": worker_key, # Worker Key for auth
     "worker": None, # For when we do multi server rabbit
     "op": None, # Any operations that we should run in list format
     "ret": None # The UUID to save returned values to on Redis if wanted
@@ -24,7 +23,7 @@ async def add_rmq_task(queue_name: str, data: dict, **meta):
     channel = await rabbitmq_db.channel()
     await channel.set_qos(prefetch_count=1)
     await channel.default_exchange.publish(
-    aio_pika.Message(orjson.dumps({"ctx": data, "meta": meta}), delivery_mode=aio_pika.DeliveryMode.PERSISTENT),
+        aio_pika.Message(orjson.dumps({"ctx": data, "meta": meta}), delivery_mode=aio_pika.DeliveryMode.PERSISTENT, headers = {"w_auth": worker_key}),
         routing_key=queue_name
     )
 

@@ -44,6 +44,16 @@ builtins.client_server = discord.Client(intents=intent_server)
 async def dbg_test():
     return "HELLO"
 
+def handle_await(code):
+    if "await " not in code:
+        return code.replace("return ", "ret = ")
+    return f"""
+async def task_runner():
+    {code.lstrip()}
+
+ret = asyncio.run(task_runner())
+"""
+
 async def new_task(queue_name, friendly_name):
     _channel = await rabbitmq_db.channel()
     _queue = await _channel.declare_queue(queue_name, durable = True) # Function to handle our queue
@@ -59,7 +69,12 @@ async def new_task(queue_name, friendly_name):
         """RabbitMQ Queue Function"""
         print(f"{friendly_name} called")
         _json = orjson.loads(message.body)
-        if not secure_strcmp(_json["meta"].get("auth"), worker_key):
+        _headers = message.headers
+        if not _headers:
+            cprint(f"Invalid auth for {friendly_name}", "red")
+            message.ack()
+            return # No vlie auth sent
+        if not secure_strcmp(_headers.get("w_auth"), worker_key):
             cprint(f"Invalid auth for {friendly_name} and JSON of {_json}", "red")
             message.ack()
             return # No valid auth sent
@@ -73,17 +88,17 @@ async def new_task(queue_name, friendly_name):
                 ops = [ops]
             for op in ops:
                 try:
+                    op = handle_await(op)
                     loc = {}
-                    exec(op, globals(), loc)
+                    exec(op.lstrip(), globals() | locals(), loc)
                     _ret = loc["ret"] if loc.get("ret") else loc # Get return stuff
                     if not loc:
                         _ret = None # No return or anything
                     err.append(False)
                 except Exception as exc:
+                    cprint(exc, "red")
                     _ret = f"{type(exc).__name__}: {exc}"
                     err.append(True)
-                if isinstance(_ret, Exception):
-                    cprint(_ret, "red")
                 rc.append(_ret if serialized(_ret) else str(_ret))
 
         else:
