@@ -47,9 +47,10 @@ async def dbg_test():
 def handle_await(code):
     if "await " not in code:
         return code.replace("return ", "ret = ")
+    code = "".join(["    " + txt.lstrip() + "\n" for txt in code.lstrip().split('\n')])
     return f"""
 async def task_runner():
-    {code.lstrip()}
+{code}
 
 ret = asyncio.run(task_runner())
 """
