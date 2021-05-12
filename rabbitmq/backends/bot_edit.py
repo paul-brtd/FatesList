@@ -10,16 +10,22 @@ async def bot_edit_backend(user_id, bot_id, prefix, library, website, banner, su
     async with db.acquire() as connection: # Acquire a connection
         async with connection.transaction() as tr: # Make a transaction to avoid data loss
             await db.execute("DELETE FROM bot_owner WHERE bot_id = $1 AND main = false", bot_id) # Delete all extra owners
+            done = []
             for owner in extra_owners:
+                if owner in done:
+                    continue
                 await db.execute("INSERT INTO bot_owner (bot_id, owner, main) VALUES ($1, $2, $3)", bot_id, owner, False)
-
+                done.append(owner)
 
     async with db.acquire() as connection: # Acquire a connection
         async with connection.transaction() as tr: # Make a transaction to avoid data loss
             await db.execute("DELETE FROM bot_tags WHERE bot_id = $1", bot_id) # Delete all bot tags
+            done = []
             for tag in tags:
+                if tag in done:
+                    continue
                 await db.execute("INSERT INTO bot_tags (bot_id, tag) VALUES ($1, $2)", bot_id, tag) # Insert new bot tags
-
+                done.append(tag)
 
     async with db.acquire() as connection:
         async with connection.transaction():

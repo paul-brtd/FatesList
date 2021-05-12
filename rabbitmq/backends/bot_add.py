@@ -36,12 +36,23 @@ async def bot_add_backend(user_id, bot_id, prefix, library, website, banner, sup
     async with db.acquire() as connection: # Acquire a connection
         async with connection.transaction() as tr: # Use a transaction to prevent data loss
             await connection.execute("INSERT INTO bot_owner (bot_id, owner, main) VALUES ($1, $2, $3)", bot_id, user_id, True) # Add new main bot owner
-            extra_owners_add = [(bot_id, owner, False) for owner in extra_owners] # Create list of extra owner tuples for executemany executemany
+            extra_owners_fixed = []
+            for owner in extra_owners:
+                if owner in extra_owners_fixed:
+                    continue
+                extra_owners_fixed.append(owner)
+            extra_owners_add = [(bot_id, owner, False) for owner in extra_owners_fixed] # Create list of extra owner tuples for executemany executemany
             await connection.executemany("INSERT INTO bot_owner (bot_id, owner, main) VALUES ($1, $2, $3)", extra_owners_add) # Add in one step
 
     async with db.acquire() as connection: # Acquire a connection
         async with connection.transaction() as tr: # Use transaction to prevent data loss
-            tags_add = [(bot_id, tag) for tag in tags] # Get list of bot_id, tag tuples for executemany
+            tags_fixed = []
+            for tag in tags:
+                if tag in tags_fixed:
+                    continue
+                tags_fixed.append(tag)
+            tags_add = [(bot_id, tag) for tag in tags_fixed] # Get list of bot_id, tag tuples for executemany
+            
             await connection.executemany("INSERT INTO bot_tags (bot_id, tag) VALUES ($1, $2)", tags_add) # Add all the tags to the database
 
     await bot_add_event(bot_id, enums.APIEvents.bot_add, {}) # Send a add_bot event to be succint and complete 
