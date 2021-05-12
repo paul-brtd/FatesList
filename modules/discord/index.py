@@ -36,13 +36,13 @@ async def nonerouter():
     return RedirectResponse("/static/assets/img/banner.webp", status_code = 301)
 
 @router.get("/{vanity}")
-async def vanity_bot_uri(request: Request, bt: BackgroundTasks, vanity: str):
+async def vanity_bot_uri(request: Request, bt: BackgroundTasks, vanity: str, csrf_protect: CsrfProtect = Depends()):
     vurl = await vanity_bot(vanity)
     print("Vanity: ", vurl)
     if vurl is None:
         return await templates.e(request, "Invalid Vanity")
     if vurl[1] == "bot":
-        return await render_bot(bt = bt, bot_id = vurl[0], request = request, api = False)
+        return await render_bot(bt = bt, bot_id = vurl[0], request = request, api = False, csrf_protect = csrf_protect)
     else:
         return await templates.e(request, f"This is a {vurl[1]}. This is a work in progress :)", status_code = 400)
 

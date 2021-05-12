@@ -56,7 +56,7 @@ class templates():
             ret = _templates.TemplateResponse(f, arg_dict)
         else:
             ret = _templates.TemplateResponse(f, arg_dict, status_code = status)
-        if "csrf_protect" in arg_dict.keys():
+        if arg_dict.get("csrf_protect"):
             arg_dict["csrf_protect"].set_csrf_cookie(ret)
         return ret
 
