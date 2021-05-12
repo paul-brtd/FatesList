@@ -73,7 +73,11 @@ async def new_task(queue_name, friendly_name):
                 ops = [ops]
             for op in ops:
                 try:
-                    _ret = eval(op)
+                    loc = {}
+                    exec(op, globals(), loc)
+                    _ret = loc["ret"] if loc.get("ret") else loc # Get return stuff
+                    if not loc:
+                        _ret = None # No return or anything
                     err.append(False)
                 except Exception as exc:
                     _ret = f"{type(exc).__name__}: {exc}"
