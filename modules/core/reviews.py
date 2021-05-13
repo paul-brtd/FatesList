@@ -52,6 +52,3 @@ async def parse_reviews(bot_id: int, rev_id: uuid.uuid4 = None, page: int = None
     print(total_rev["count"]/per_page)
     return reviews, total_rev["avg"], total_rev["count"], int(math.ceil(total_rev["count"]/per_page)), per_page
 
-async def base_rev_bt(bot_id, event, base_dict):
-    reviews = await parse_reviews(bot_id)
-    await bot_add_event(bot_id, event, base_dict | {"reviews": reviews[0], "average_stars": reviews[1]})

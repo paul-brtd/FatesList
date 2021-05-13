@@ -182,7 +182,7 @@ async def new_reviews(request: Request, bot_id: int, bt: BackgroundTasks, rating
         return await templates.TemplateResponse("message.html", {"request": request, "message": "You have already made a review for this bot, please edit that one instead of making a new one!"})
     id = uuid.uuid4()
     await db.execute("INSERT INTO bot_reviews (id, bot_id, user_id, star_rating, review_text, epoch) VALUES ($1, $2, $3, $4, $5, $6)", id, bot_id, int(request.session["userid"]), rating, review, [time.time()])
-    await base_rev_bt(bot_id, enums.APIEvents.review_add, {"user": str(request.session["userid"]), "reply": False, "id": str(id), "star_rating": rating, "review": review, "root": None})
+    await bot_add_event(bot_id, enums.APIEvents.review_add, {"user": str(request.session["userid"]), "reply": False, "id": str(id), "star_rating": rating, "review": review, "root": None})
     return await templates.TemplateResponse("message.html", {"request": request, "message": "Successfully made a review for this bot!<script>window.location.replace('/bot/" + str(bot_id) + "')</script>", "username": request.session.get("username", False), "avatar": request.session.get('avatar')}) 
 
 @router.post("/{bot_id}/reviews/{rid}/edit")
@@ -206,7 +206,7 @@ async def edit_review(request: Request, bot_id: int, rid: uuid.UUID, bt: Backgro
     else:
         epoch = [time.time()]
     await db.execute("UPDATE bot_reviews SET star_rating = $1, review_text = $2, epoch = $3 WHERE id = $4", rating, review, epoch, rid)
-    bt.add_task(base_rev_bt, bot_id, enums.APIEvents.review_edit, {"user": request.session["userid"], "id": str(rid), "star_rating": rating, "review": review, "reply": check["reply"]})
+    await bot_add_event(bot_id, enums.APIEvents.review_edit, {"user": str(request.session["userid"]), "id": str(rid), "star_rating": rating, "review": review, "reply": check["reply"]})
     return await templates.TemplateResponse("message.html", {"request": request, "message": "Successfully editted your/this review for this bot!<script>window.location.replace('/bot/" + str(bot_id) + "')</script>"})
 
 @router.post("/{bot_id}/reviews/{rid}/reply")
@@ -221,7 +221,7 @@ async def edit_review(request: Request, bot_id: int, rid: uuid.UUID, bt: Backgro
     replies = check["replies"]
     replies.append(reply_id)
     await db.execute("UPDATE bot_reviews SET replies = $1 WHERE id = $2", replies, rid)
-    bt.add_task(base_rev_bt, bot_id, enums.APIEvents.review_add, {"user": request.session["userid"], "reply": True, "id": str(reply_id), "star_rating": rating, "review": review, "root": str(rid)})
+    await bot_add_event(bot_id, enums.APIEvents.review_add, {"user": str(request.session["userid"]), "reply": True, "id": str(reply_id), "star_rating": rating, "review": review, "root": str(rid)})
     return await templates.TemplateResponse("message.html", {"request": request, "message": "Successfully replied to your/this review for this bot!<script>window.location.replace('/bot/" + str(bot_id) + "')</script>"})
 
 @router.get("/{bid}/resubmit")
