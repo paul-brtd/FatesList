@@ -8,7 +8,7 @@ CREATE TABLE bots (
     bot_id bigint not null unique,
     votes bigint,
     servers bigint,
-    last_stats_post timestamptz NOW(),
+    last_stats_post timestamptz DEFAULT NOW(),
     user_count bigint DEFAULT 0,
     shard_count bigint,
     shards integer[] DEFAULT '{}',
