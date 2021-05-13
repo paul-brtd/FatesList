@@ -12,6 +12,7 @@ import builtins
 from copy import deepcopy
 from termcolor import colored, cprint
 from modules.utils import secure_strcmp
+from modules.core import *
 
 # Import all needed backends
 from rabbitmq.backends.bot_add import bot_add_backend
