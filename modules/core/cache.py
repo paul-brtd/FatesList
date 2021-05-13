@@ -73,7 +73,10 @@ async def _user_fetch(user_id: str, user_type: int, user_only: bool = False) -> 
 
     if bot and valid_user: # Update cached username in postgres if valid username in asyncio background task
         print("Setting db username to " + username + " for " + str(user_id))
-        asyncio.create_task(db.execute("UPDATE bots SET username_cached = $2 WHERE bot_id = $1", int(user_id), username))
+        try:
+            await db.execute("UPDATE bots SET username_cached = $2 WHERE bot_id = $1", int(user_id), username)
+        except:
+            pass # Sometimes this cannot be done
 
     cache = orjson.dumps({"fl_cache_ver": CACHE_VER, "epoch": time.time(), "bot": bot, "username": username, "avatar": avatar, "disc": disc, "valid_user": valid_user, "status": status}) # Create cache and dump it to string for caching
     await redis_db.hset(str(user_id), key = "cache", value = cache) # Add/Update redis

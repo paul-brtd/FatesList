@@ -93,7 +93,7 @@ async def new_task(queue_name, friendly_name):
                     op = handle_await(op)
                     loc = {}
                     exec(op.lstrip(), globals() | locals(), loc)
-                    _ret = loc["ret"] if loc.get("ret") else loc # Get return stuff
+                    _ret = loc["ret"] if loc.get("ret") is not None else loc # Get return stuff
                     if not loc:
                         _ret = None # No return or anything
                     err.append(False)

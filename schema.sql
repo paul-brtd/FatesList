@@ -159,6 +159,7 @@ CREATE TABLE bot_api_event (
     event INTEGER, 
     context JSONB, 
     id UUID,
+    posted BOOLEAN DEFAULT FALSE,
     CONSTRAINT bots_fk FOREIGN KEY (bot_id) REFERENCES bots(bot_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 

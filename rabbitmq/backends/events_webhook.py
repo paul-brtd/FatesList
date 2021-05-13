@@ -71,3 +71,4 @@ async def events_webhook_backend(webhook_url, webhook_type, api_token, id, webho
                     flagged = False
                 flagged = False
                 sent+=1
+            await db.execute("UPDATE bot_api_event SET posted = true WHERE id = $1", event_id)

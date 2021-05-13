@@ -1,5 +1,5 @@
 from discord.ext.commands import Cog, command, has_guild_permissions, bot_has_guild_permissions, cooldown, is_owner
-from discord import Role, Member, User, Embed, Color, Message, Reaction, Emoji, PartialEmoji, AuditLogAction, File
+from discord import Role, Member, User, Embed, Color, Message, Reaction, Emoji, PartialEmoji, AuditLogAction, File as DFile
 from discord.ext import tasks
 import sys
 sys.path.append("../..")
