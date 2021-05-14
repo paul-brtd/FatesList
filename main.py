@@ -147,10 +147,11 @@ async def vote_reminder():
 @app.on_event("shutdown")
 async def close():
     """Close all commections on shutdown"""
-    print("Closing")
+    logger.info("Killing Fates List")
     await redis_db.close()
     await rabbitmq_db.close()
     await db.close()
+    logger.info("Killed")
 
 # Two events to let us know when discord.py is up and ready
 @client.event

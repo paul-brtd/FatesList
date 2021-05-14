@@ -45,10 +45,12 @@ async def add_promotion(bot_id: int, title: str, info: str, css: str, type: int)
     info = info.replace("</style", "").replace("<script", "")
     return await db.execute("INSERT INTO bot_promotions (bot_id, title, info, css, type) VALUES ($1, $2, $3, $4, $5)", bot_id, title, info, css, type)
 
-async def vote_bot(uid: int, bot_id: int, username, autovote: bool) -> Optional[list]:
-    await get_user_token(uid, username) # Make sure we have a user profile first
-    epoch = await db.fetchval("SELECT vote_epoch FROM users WHERE user_id = $1", int(uid))
-    if epoch is None:
+async def vote_bot(user_id: int, bot_id: int, username: str, autovote: bool, test: bool) -> Optional[list]:
+    if not test:
+        await get_user_token(user_id, username) # Make sure we have a user profile first
+
+    epoch = await db.fetchval("SELECT vote_epoch FROM users WHERE user_id = $1", user_id)
+    if not epoch or test:
         pass
     else:
         if autovote:
@@ -57,27 +59,28 @@ async def vote_bot(uid: int, bot_id: int, username, autovote: bool) -> Optional[
             WT = datetime.timedelta(hours = 8) # Wait Time
         if datetime.datetime.now(epoch.tzinfo) - epoch < WT: # Subtract the two times
             return [401, WT - (datetime.datetime.now(epoch.tzinfo) - epoch)]
-    votes = await db.fetchval("SELECT votes FROM bots WHERE bot_id = $1", int(bot_id))
-    ts = await db.fetchval("SELECT timestamps FROM bot_voters WHERE bot_id = $1 AND user_id = $2", int(bot_id), int(uid))
-    if votes is None:
-        return [404]
-    if ts is None:
-        await db.execute("INSERT INTO bot_voters (user_id, bot_id) VALUES ($1, $2)", int(uid), int(bot_id))
-    else:
-        ts.append(datetime.datetime.now())
-        await db.execute("UPDATE bot_voters SET timestamps = $1 WHERE bot_id = $2 AND user_id = $3", ts, int(bot_id), int(uid))
-    await db.execute("UPDATE bots SET votes = votes + 1 WHERE bot_id = $1", int(bot_id))
-    await db.execute("UPDATE users SET vote_epoch = NOW() WHERE user_id = $1", int(uid))
+    if not test:
+        votes = await db.fetchval("SELECT votes FROM bots WHERE bot_id = $1", bot_id)
+        ts = await db.fetchval("SELECT timestamps FROM bot_voters WHERE bot_id = $1 AND user_id = $2", bot_id, user_id)
+        if votes is None:
+            return [404]
+        if ts is None:
+            await db.execute("INSERT INTO bot_voters (user_id, bot_id) VALUES ($1, $2)", user_id, bot_id)
+        else:
+            ts.append(datetime.datetime.now())
+            await db.execute("UPDATE bot_voters SET timestamps = $1 WHERE bot_id = $2 AND user_id = $3", ts, bot_id, user_id)
+        await db.execute("UPDATE bots SET votes = votes + 1 WHERE bot_id = $1", bot_id)
+        await db.execute("UPDATE users SET vote_epoch = NOW() WHERE user_id = $1", user_id)
 
-    # Update bot_stats
-    check = await db.fetchrow("SELECT bot_id FROM bot_stats_votes WHERE bot_id = $1", int(bot_id))
-    if check is None:
-        await db.execute("INSERT INTO bot_stats_votes (bot_id, total_votes) VALUES ($1, $2)", int(bot_id), votes + 1)
-    else:
-        await db.execute("UPDATE bot_stats_votes SET total_votes = total_votes + 1 WHERE bot_id = $1", int(bot_id))
-
-    event_id = asyncio.create_task(bot_add_event(bot_id, enums.APIEvents.bot_vote, {"user": str(uid), "votes": votes + 1}))
-    await db.execute("UPDATE user_reminders SET resolved = false, remind_time = NOW() + interval '8 hours' WHERE user_id = $1 AND bot_id = $2", int(uid), int(bot_id))
+        # Update bot_stats
+        check = await db.fetchrow("SELECT bot_id FROM bot_stats_votes WHERE bot_id = $1", bot_id)
+        if check is None:
+            await db.execute("INSERT INTO bot_stats_votes (bot_id, total_votes) VALUES ($1, $2)", bot_id, votes + 1)
+        else:
+            await db.execute("UPDATE bot_stats_votes SET total_votes = total_votes + 1 WHERE bot_id = $1", bot_id)
+        await db.execute("UPDATE user_reminders SET resolved = false, remind_time = NOW() + interval '8 hours' WHERE user_id = $1 AND bot_id = $2", user_id, bot_id)
+    
+    event_id = asyncio.create_task(bot_add_event(bot_id, enums.APIEvents.bot_vote, {"user": str(user_id), "votes": votes + 1, "test": test}))
     return []
 
 async def invite_bot(bot_id: int, user_id = None, api = False):
@@ -89,7 +92,7 @@ async def invite_bot(bot_id: int, user_id = None, api = False):
         return f"https://discord.com/api/oauth2/authorize?client_id={bot_id}&permissions={perm}&scope=bot%20applications.commands"
     if not api:
         await db.execute("UPDATE bots SET invite_amount = $1 WHERE bot_id = $2", bot["invite_amount"] + 1, bot_id)
-    await bot_add_ws_event(bot_id, {"event": enums.APIEvents.bot_invite, "context": {"user": user_id, "api": api}})
+    await bot_add_ws_event(bot_id, {"event": enums.APIEvents.bot_invite, "context": {"user": str(user_id), "api": api}})
     return bot["invite"]
 
 # Check vanity of bot 

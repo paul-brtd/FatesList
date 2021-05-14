@@ -63,8 +63,8 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
     long_desc_replace_tuple = (("<h1", "<h2 style='text-align: center'"), ("h2", "h3"), ("h4", "h5"), ("h6", "p"), ("<a", "<a class='long-desc-link ldlink'"), ("<!DOCTYPE", ""), ("html>", ""), ("<body", ""), ("div", "article"), (".click", ""), ("bootstrap.min.css", ""), ("bootstrap.css", ""), ("jquery.min.js", ""), ("jquery.js", ""), ("fetch(", ""))
     ldesc = ireplacem(long_desc_replace_tuple, ldesc)
 
-    if "userid" in request.session.keys():
-        bot_admin = await is_bot_admin(int(bot_id), int(request.session.get("userid"))) 
+    if "user_id" in request.session.keys():
+        bot_admin = await is_bot_admin(int(bot_id), int(request.session.get("user_id"))) 
     else:
         bot_admin = False
     if not bot_admin:
@@ -99,7 +99,7 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
     else:
         return await templates.e(request, "Bot Not Found")
     _tags_fixed_bot = [tag for tag in tags_fixed if tag["id"] in bot["tags"]]
-    bt.add_task(bot_add_ws_event, bot_id, {"e": enums.APIEvents.bot_view, "ctx": {"user": request.session.get('userid'), "widget": False}, "ts": time.time()})
+    bt.add_task(bot_add_ws_event, bot_id, {"e": enums.APIEvents.bot_view, "ctx": {"user": request.session.get('user_id'), "widget": False}, "ts": time.time()})
     reviews = await parse_reviews(bot_id, page = rev_page)
     data = {"bot": bot, "bot_id": bot_id, "tags_fixed": _tags_fixed_bot, "promos": promos, "maint": maint, "bot_admin": bot_admin, "guild": main_server, "botp": True, "bot_reviews": reviews[0], "average_rating": reviews[1], "total_reviews": reviews[2], "review_page": rev_page, "total_review_pages": reviews[3], "per_page": reviews[4]}
 
@@ -118,7 +118,7 @@ async def render_bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, 
     bot = dict(bot)
     bot["votes"] = human_format(bot["votes"])
     bot["servers"] = human_format(bot["servers"])
-    bt.add_task(bot_add_ws_event, bot_id, {"payload": "event", "id": str(uuid.uuid4()), "event": "view_bot", "context": {"user": request.session.get('userid'), "widget": True}})
+    bt.add_task(bot_add_ws_event, bot_id, {"payload": "event", "id": str(uuid.uuid4()), "event": "view_bot", "context": {"user": request.session.get('user_id'), "widget": True}})
     data = {"bot": bot, "user": await get_bot(bot_id)}
     if api:
         return data

@@ -9,9 +9,9 @@ router = APIRouter(
 
 @router.get("/me")
 async def redirect_me(request: Request):
-    if "userid" not in request.session.keys():
+    if "user_id" not in request.session.keys():
         return RedirectResponse("/")
-    return RedirectResponse("/profile/" + request.session.get("userid"))
+    return RedirectResponse("/profile/" + request.session.get("user_id"))
 
 @router.get("/{user_id}")
 async def profile_of_user_generic(request: Request, user_id: int):
@@ -25,13 +25,13 @@ async def profile_of_user(request: Request, user_id: int):
     user = await get_user(int(user_id))
     if not user:
         return await templates.e(request, "Profile Not Found", 404)
-    if "userid" in request.session.keys():
+    if "user_id" in request.session.keys():
         try:
             guild = client.get_guild(main_server)
-            userobj = guild.get_member(int(request.session.get("userid")))
+            userobj = guild.get_member(int(request.session.get("user_id")))
         except:
             return await templates.TemplateResponse("message.html", {"request": request, "message": "Still connecting to Discord. Please refresh in a minute or two"})
-        if user_id == int(request.session["userid"]):
+        if user_id == int(request.session["user_id"]):
             personal = True
         else:
             personal = False

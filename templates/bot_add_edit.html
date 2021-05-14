@@ -397,21 +397,17 @@ $("#bot_form").submit( function(eventObj) {
   }
 
   function testHook(url, type) {
-	if(type != "VOTE")
-		return alert("Only Vote Webhook is currently supported for testing")
-        json = JSON.stringify({"id": 112233445566778899, "votes": 11, "test": true})
 	api_token = "{{data.api_token}}"
 	headers = {"Authorization": api_token}
 	$.ajax({
-		url: url,
+		url: "/api/v2/bots/{{data.bot_id}}/votes/test",
 		dataType: "json",
 		headers: headers,
 		type: "POST",
 		processData: false,
 		contentType: 'application/json',
-		data: json
 	})
-	alert("Sent Test Query")
+	modalShow("Sent Test Query", "If you do not get the test webhook, make sure you have editted the bot with the webhook url first by adding the Webhook URL and THEN clicking Edit and then try again")
   }
 
   {% endif %}

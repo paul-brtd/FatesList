@@ -18,13 +18,13 @@ class templates():
         except:
             raise KeyError
         status = arg_dict.get("status_code")
-        if "userid" in request.session.keys():
+        if "user_id" in request.session.keys():
             arg_dict["css"] = request.session.get("user_css")
             try:
-                user = guild.get_member(int(request.session["userid"]))
+                user = guild.get_member(int(request.session["user_id"]))
             except:
                 user = None
-            state = await db.fetchval("SELECT state FROM users WHERE user_id = $1", int(request.session["userid"]))
+            state = await db.fetchval("SELECT state FROM users WHERE user_id = $1", int(request.session["user_id"]))
             if (state == enums.UserState.global_ban or state == enums.UserState.ddr_ban) and not_error:
                 ban_type = enums.UserState(state).__doc__
                 return await templates.e(request, f"You have been {ban_type} banned from Fates List<br/>", status_code = 403)
@@ -36,7 +36,7 @@ class templates():
             arg_dict["staff"] = request.session.get("staff")
             arg_dict["avatar"] = request.session.get("avatar")
             arg_dict["username"] = request.session.get("username")
-            arg_dict["userid"] = int(request.session.get("userid"))
+            arg_dict["user_id"] = int(request.session.get("user_id"))
             arg_dict["user_token"] = request.session.get("user_token")
             try:
                 arg_dict["access_token"] = orjson.dumps(request.session.get("access_token")).decode("utf-8")

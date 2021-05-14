@@ -8,10 +8,10 @@ router = APIRouter(
 
 @router.get("/console")
 async def admin_dashboard(request: Request):
-    if request.session.get("userid"):
+    if request.session.get("user_id"):
         try:
             guild = client.get_guild(main_server)
-            user = guild.get_member(int(request.session.get("userid")))
+            user = guild.get_member(int(request.session.get("user_id")))
             staff = is_staff(staff_roles, user.roles, 2)
         except:
             staff = [False, 0, StaffMember(name = "user", id = 0, perm = 0)]
@@ -33,14 +33,14 @@ async def admin_api(request: Request, bt: BackgroundTasks, admin: str = FForm(""
     print(bot_id)
     try:
         guild = client.get_guild(main_server)
-        user = guild.get_member(int(request.session["userid"]))
+        user = guild.get_member(int(request.session["user_id"]))
     except:
         return HTMLResponse("Discord API is down right now")
     if user is None:
         return RedirectResponse("/")
     if not is_staff(staff_roles, user.roles, 5)[0]:
         return RedirectResponse("/admin/console", status_code = 303) 
-    admin_tool = BotListAdmin(bot_id, int(request.session["userid"]))
+    admin_tool = BotListAdmin(bot_id, int(request.session["user_id"]))
     if admin=="certify":
         rc = await admin_tool.certify_bot()
         if rc is not None:
@@ -69,10 +69,10 @@ async def stat_update_bt():
 
 @router.post("/console/ban")
 async def ban_user_admin(request: Request, user_id: int = FForm(1), ban_type: int = FForm(100)):
-    if "userid" not in request.session.keys():
+    if "user_id" not in request.session.keys():
         return RedirectResponse("/")
     guild = client.get_guild(main_server)
-    user = guild.get_member(int(request.session["userid"]))
+    user = guild.get_member(int(request.session["user_id"]))
     try:
         user_ban = guild.get_member(int(user_id))
     except:
@@ -92,15 +92,15 @@ async def ban_user_admin(request: Request, user_id: int = FForm(1), ban_type: in
 
 @router.post("/review/{bot_id}")
 async def review_tool(request: Request, bot_id: int, accept: str = FForm(""), deny_reason: str = FForm(deny_feedback), accept_feedback: str = FForm(approve_feedback), unverify_reason: str = FForm("This is likely due to it breaking Discord ToS or our rules")):
-    if "userid" not in request.session.keys():
+    if "user_id" not in request.session.keys():
         return RedirectResponse("/")
     guild = client.get_guild(main_server)
     if guild is None:
         return HTMLResponse("We are currently connecting to Discord, please wait")
-    user = guild.get_member(int(request.session["userid"]))
+    user = guild.get_member(int(request.session["user_id"]))
     s = is_staff(staff_roles, user.roles, 2)
     bot = await get_bot(bot_id)
-    admin_tool = BotListAdmin(bot_id, int(request.session["userid"]))
+    admin_tool = BotListAdmin(bot_id, int(request.session["user_id"]))
     if not s[0] or not bot:
         return RedirectResponse("/")             
     elif accept == "true":

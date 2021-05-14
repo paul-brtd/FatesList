@@ -8,7 +8,7 @@ router = APIRouter(
 
 @router.get("/admin/add")
 async def add_server_main(request: Request):
-    if "userid" in request.session.keys():
+    if "user_id" in request.session.keys():
         if request.session.get("server_list"):
             return await templates.TemplateResponse("server_add.html", {"request": request, "tags_fixed": server_tags_fixed, "data": {}, "error": None, "step": 1, "invite": server_bot_invite})
         else:

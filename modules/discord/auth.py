@@ -13,7 +13,7 @@ async def login_get(request: Request, redirect: Optional[str] = None, pretty: Op
     if redirect:
         if not redirect.startswith("/") and not redirect.startswith("https://fateslist.xyz"):
             return ORJSONResponse({"detail": "Invalid redirect. You may only redirect to pages on Fates List"}, status_code = 400)
-    if "userid" in request.session.keys():
+    if "user_id" in request.session.keys():
         return RedirectResponse("/", status_code=HTTP_303_SEE_OTHER)
     request.session["redirect"] = redirect
     return await templates.TemplateResponse("login.html", {"request": request, "perm_needed": redirect is not None, "perm_pretty": pretty, "csrf_protect": csrf_protect})
@@ -41,7 +41,7 @@ async def login_post(request: Request, join_servers: str = FForm("off"), server_
 
 @router.get("/login/confirm")
 async def login_confirm(request: Request, code: str, state: str):
-    if "userid" in request.session.keys():
+    if "user_id" in request.session.keys():
         return RedirectResponse("/")
     else:
         access_token = await discord_o.get_access_token(code, state)
@@ -61,7 +61,8 @@ async def login_confirm(request: Request, code: str, state: str):
             return await templates.e(request, f"You have been {ban_type} banned from Fates List<br/>", status_code = 403)
         request.session["ban"] = state
         request.session["access_token"] = access_token
-        request.session["userid"] = userjson["id"]
+        
+        request.session["user_id"] = userjson["id"]
         logger.debug(f"Got user json of {userjson}")
         request.session["username"] = str(userjson["name"])
         if (userjson.get("avatar")):
@@ -74,7 +75,7 @@ async def login_confirm(request: Request, code: str, state: str):
         # 794834630942654546
         token = await get_user_token(int(userjson["id"]), request.session.get("username"))
         request.session["user_token"] = token
-        user_css = await db.fetchrow("SELECT css FROM users WHERE user_id = $1", int(request.session["userid"]))
+        user_css = await db.fetchrow("SELECT css FROM users WHERE user_id = $1", int(request.session["user_id"]))
         if user_css is None:
             request.session["user_css"] = ""
         else:

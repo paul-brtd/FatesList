@@ -3,7 +3,7 @@ from .imports import *
 def ip_check(request: Request) -> str:
     forwarded = request.headers.get("X-Forwarded-For")
     if forwarded:
-        print(forwarded)
+        logger.trace(f"Forwarded IPs are {forwarded}")
         return forwarded.split(",")[0]
     return request.client.host
 

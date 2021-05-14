@@ -500,6 +500,14 @@ async def get_votes_api(request: Request, bot_id: int, user_id: Optional[int] = 
 
     return {"votes": voter_count, "voted": voter_count != 0, "vote_epoch": vote_epoch, "time_to_vote": time_to_vote, "vote_right_now": time_to_vote == 0}
 
+@router.get("/bots/{bot_id}/votes/test")
+async def send_test_webhook(bot_id: int, Authorization: str = Header("BOT_TOKEN")):
+    """Endpoint to test webhooks"""
+    id = await bot_auth(bot_id, Authorization)
+    if id is None:
+        return abort(401)
+    return await vote_bot(user_id = 519850436899897346, bot_id = bot_id, username = "Mewbot", autovote = False, test = True) 
+
 @router.get("/bots/{bot_id}/votes/timestamped", response_model = BotVotesTimestamped)
 async def timestamped_get_votes_api(request: Request, bot_id: int, user_id: Optional[int] = None, Authorization: str = Header("BOT_TOKEN")):
     """Endpoint to check amount of votes a user has with timestamps. This does not return whether a user can vote"""

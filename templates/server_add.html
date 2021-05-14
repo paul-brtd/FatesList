@@ -45,7 +45,7 @@
 	function checkGuilds(){
 		document.querySelector("#valid_servers").innerHTML = "Getting Guilds... Please wait"
         $.ajax({
-                url: "/api/users/{{userid}}/servers/prepare",
+                url: "/api/users/{{user_id}}/servers/prepare",
                 type: "POST",
 		data: JSON.stringify({'scopes': "{{scopes}}", "access_token": {{access_token|safe}} }),
 		headers: {"Authorization": "{{user_token}}"},
@@ -167,7 +167,7 @@ function previewLongDesc(gid){
 	$.ajax({
 		type: 'POST',
 		dataType: 'json',
-		url: '/api/v2/servers/' + gid + "?user_id={{userid}}",
+		url: '/api/v2/servers/' + gid + "?user_id={{user_id}}",
 		data: JSON.stringify({"code": code, "long_description_type": html, "long_description": ld, "description": sd, "tags": tags_list, "vanity": vanity}),
 		headers: {"Authorization": "{{user_token}}"},
 		statusCode: {

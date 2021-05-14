@@ -197,7 +197,7 @@
 				  				<span class="white" style="margin-left: 3px;">Reply</span>
 							</a>
 							{% endif %}
-							{% if userid == rev.user_id or staff[0] %}
+							{% if user_id == rev.user_id or staff[0] %}
 								<a href='javascript:void' style='font-weight: bold; margin-left: 3px;' class="long-desc-link" onclick="botReviewEditPane(this, '{{rev.id}}')">Edit</a>
 								<a href='javascript:void' style='font-weight: bold; margin-left: 3px;' class="long-desc-link" onclick="deleteReview('{{rev.id}}')">Delete</a>
 							{% endif %}
@@ -214,7 +214,7 @@
 								<button type="submit" class="btn btn-outline-light">Reply</button>
 							</form>
 							{% endif %}
-							{% if userid == rev.user_id or staff[0] %}
+							{% if user_id == rev.user_id or staff[0] %}
        								<form method="POST" id="review-{{rev.id}}" style="display: none; width: 100%;" action="/bot/{{bot_id}}/reviews/{{rev.id}}/edit" class="white">
 									<input type="hidden" name="id" value="{{rev.id}}" /> <!-- The ID to update -->
 									<label for="rating">On a scale of 1 to 10, how much did you like this bot?</label><br/>
@@ -385,7 +385,7 @@ function deleteReview(rev_id) {
 	$.ajax({
 		type: 'DELETE',
 		url: `/api/bots/{{bot_id}}/reviews/${rev_id}`,
-		data: JSON.stringify({"user_id": "{{userid}}"}),
+		data: JSON.stringify({"user_id": "{{user_id}}"}),
 		headers: {"Authorization": "{{user_token}}"},
 		processData: false,
 		contentType: 'application/json',
@@ -400,7 +400,7 @@ function upvoteReview(rev_id) {
 	$.ajax({
 		type: 'PATCH',
 		url: `/api/bots/{{bot_id}}/reviews/${rev_id}/votes`,
-		data: JSON.stringify({"upvote": true, "user_id": "{{userid}}"}),
+		data: JSON.stringify({"upvote": true, "user_id": "{{user_id}}"}),
 		headers: {"Authorization": "{{user_token}}"},
 		processData: false,
 		contentType: 'application/json',
@@ -427,7 +427,7 @@ function downvoteReview(rev_id) {
 	$.ajax({
 		type: 'PATCH',
 		url: `/api/bots/{{bot_id}}/reviews/${rev_id}/votes`,
-		data: JSON.stringify({"upvote": false, "user_id": "{{userid}}"}),
+		data: JSON.stringify({"upvote": false, "user_id": "{{user_id}}"}),
 		headers: {"Authorization": "{{user_token}}"},
 		processData: false,
 		contentType: 'application/json',

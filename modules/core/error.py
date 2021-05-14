@@ -11,7 +11,6 @@ class WebError():
     async def log(request, exc, error_id, curr_time):
         traceback = exc.__traceback__ # Get traceback from exception
         site_errors = client.get_channel(site_errors_channel) # Get site errors channel
-        logger.exception("Site Error") 
         try:
             fl_info = f"Error ID: {error_id}\n\n" # Initial header
             fl_info += etrace(exc)
@@ -41,11 +40,13 @@ class WebError():
         if exc.status_code == 401:
             return ORJSONResponse({"done": False, "reason": "Unauthorized", "code": 9999}, status_code = exc.status_code)
         elif exc.status_code == 500:
+            logger.exception(f"Site error at {request.url.path}", exception = exc)
             asyncio.create_task(WebError.log(request, exc, error_id, curr_time)) # Try and log what happened
             if str(request.url.path).startswith("/api"):
                 return ORJSONResponse({"done": False, "reason": f"Internal Server Error\nError ID: {error_id}\nTime when error happened: {curr_time}\nOur developers have been notified and are looking into it."}, status_code = exc.status_code)
             tb_full = "".join(tblib.format_exception(exc)) # COMPAT: Python 3.10 only
-            return HTMLResponse(f"<strong>500 Internal Server Error</strong><br/>Fates List had a slight issue and our developers and looking into what happened<br/><br/>Error ID: {error_id}<br/><br/>Please check our support server at <a href='{support_url}'>{support_url}</a> for more information<br/><br/>Please send the below traceback if asked:<br/><br/><pre>{tb_full}</pre>Time When Error Happened: {curr_time}<br/>", status_code=500) # Send 500 error to user with support server
+            errmsg = f"Fates List had a slight issue and our developers and looking into what happened<br/><br/>Error ID: {error_id}<br/><br/>Please check our support server at <a href='{support_url}'>{support_url}</a> for more information<br/><br/>Please send the below traceback if asked:<br/><br/><pre>{tb_full}</pre>Time When Error Happened: {curr_time}<br/>"
+            return HTMLResponse(errmsg)
         elif exc.status_code == 404: 
             if path.startswith("/bot"): # Bot 404
                 msg = "Bot Not Found"
