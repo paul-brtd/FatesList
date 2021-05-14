@@ -52,23 +52,21 @@ async def events_webhook_backend(webhook_url, webhook_type, api_token, id, webho
             cprint(f"JSON: {json}\nFunction: {f}\nURL: {webhook_url}\nHeaders: {headers}\nID: {context.get('user_id')}, {context.get('mod')}, {context.get('user')}\nBot ID: {id}", "blue")
             
             # Webhook sending with 7 retries
-            flagged = True # Are we 'flagged' for not yet sending webhook, default should be True 
-            sent = 0 # Just a fall safe
+            resolved_error = False 
             for i in range(1, 7):
-                if not flagged or sent > 1: # If not flagged or sent more than one message
-                    break
                 res = await f(webhook_url, json = json, headers = headers)
                 try:
-                    if res.status != 200 and int(str(res.status)[0]) != 4:
-                        cprint("Invalid URL", "yellow")
-                        continue
-                    elif res.status != 200:
-                        raise ValueError("URL did not return 200. Retrying...")
+                    if int(str(res.status)[0]) in (2, 4):
+                        cprint(f"Webhook Post Returned {res.status}. Not retrying as this is either a success or a client side error.", "green")
+                        return await _resolve_event(event_id, enums.WebhookResolver.posted)
+                    else:
+                        cprint(f"URL did not return 2xx or a client-side 4xx error and sent {res.status} instead. Retrying...", "red")
                 except Exception as exc:
                     # Had an error sending
-                    cprint(exc, "yellow")
-                    sent+=1
-                    flagged = False
-                flagged = False
-                sent+=1
-            await db.execute("UPDATE bot_api_event SET posted = true WHERE id = $1", event_id)
+                    cprint(exc, "red")
+                if not resolved_error:
+                    await _resolve_event(event_id, enums.WebhookResolver.error)
+                resolved_error = True
+
+async def _resolve_event(event_id, resolution):
+    await db.execute("UPDATE bot_api_event SET posted = $1 WHERE id = $2", resolution, event_id)

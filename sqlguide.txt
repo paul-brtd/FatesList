@@ -1,0 +1,3 @@
+Get User Events
+
+SELECT DISTINCT bot_api_event.bot_id, bot_api_event.epoch, bot_api_event.event, bot_api_event.context, u.value FROM bot_api_event JOIN json_each_text(bot_api_event.context::json) u ON true WHERE u.value = USER ID HERE;

@@ -48,6 +48,8 @@ async def add_promotion(bot_id: int, title: str, info: str, css: str, type: int)
 async def vote_bot(user_id: int, bot_id: int, username: str, autovote: bool, test: bool) -> Optional[list]:
     if not test:
         await get_user_token(user_id, username) # Make sure we have a user profile first
+    else:
+        votes = 0
 
     epoch = await db.fetchval("SELECT vote_epoch FROM users WHERE user_id = $1", user_id)
     if not epoch or test:

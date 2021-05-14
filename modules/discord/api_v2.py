@@ -500,7 +500,7 @@ async def get_votes_api(request: Request, bot_id: int, user_id: Optional[int] = 
 
     return {"votes": voter_count, "voted": voter_count != 0, "vote_epoch": vote_epoch, "time_to_vote": time_to_vote, "vote_right_now": time_to_vote == 0}
 
-@router.get("/bots/{bot_id}/votes/test")
+@router.post("/bots/{bot_id}/votes/test")
 async def send_test_webhook(bot_id: int, Authorization: str = Header("BOT_TOKEN")):
     """Endpoint to test webhooks"""
     id = await bot_auth(bot_id, Authorization)

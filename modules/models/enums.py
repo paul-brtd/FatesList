@@ -17,6 +17,12 @@ class WebhookType(IntEnum):
     discord = 1, "Discord Integration"
     fc = 2, "Fates Client"
 
+class WebhookResolver(IntEnum):
+    _init_ = 'value __doc__'
+    not_ack = 0, "Not Acknowledged"
+    error = 1, "Post Error"
+    posted = 2, "Posted"
+
 class Status(IntEnum):
     """
     Status object (See https://docs.fateslist.xyz/basics/basic-structures#status for more information)

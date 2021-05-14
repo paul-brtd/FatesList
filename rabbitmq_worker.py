@@ -70,7 +70,7 @@ async def new_task(queue_name, friendly_name):
 
     async def _task(message: IncomingMessage):
         """RabbitMQ Queue Function"""
-        print(f"{friendly_name} called")
+        cprint(f"{friendly_name} called", "magenta")
         _json = orjson.loads(message.body)
         _headers = message.headers
         if not _headers:
@@ -180,7 +180,9 @@ class TaskHandler():
     async def handle(self):
         try:
             handle_func = self.handlers[self.queue]
-            return await handle_func(**self.ctx)
+            rc = await handle_func(**self.ctx)
+            cprint("Event Handled", "magenta")
+            return rc
         except Exception as exc:
             stats.errors += 1 # Record new error
             stats.excs.append(exc)
