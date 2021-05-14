@@ -1,9 +1,7 @@
-"""
-Fates List Error System
-"""
-
+"""Fates List Error System"""
 from .imports import *
 from .templating import *
+from fastapi_csrf_protect.exceptions import CsrfProtectError, MissingTokenError
 
 def etrace(ex):
      return "".join(tblib.format_exception(ex)) # COMPAT: Python 3.10 only
@@ -13,8 +11,7 @@ class WebError():
     async def log(request, exc, error_id, curr_time):
         traceback = exc.__traceback__ # Get traceback from exception
         site_errors = client.get_channel(site_errors_channel) # Get site errors channel
-        if site_errors is None: # If this is None, config is wrong or we arent connected to Discord yet, in this case, raise traceback
-            raise exc
+        logger.exception("Site Error") 
         try:
             fl_info = f"Error ID: {error_id}\n\n" # Initial header
             fl_info += etrace(exc)
@@ -29,6 +26,8 @@ class WebError():
 
     @staticmethod
     async def error_handler(request, exc):
+        if type(exc) in (CsrfProtectError, MissingTokenError):
+            return await templates.e(request, main = "CSRF Error", reason = "Try disabling any extension that blocks cookies and/or join the support server for assistance", status_code = 400)
         error_id = str(uuid.uuid4()) # Create a error id
         curr_time = str(datetime.datetime.now()) # Get time error happened
         try:

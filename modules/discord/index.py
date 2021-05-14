@@ -20,8 +20,8 @@ def reroute_support():
 @router.delete("/")
 @router.put("/")
 @router.head("/")
-async def index_fend(request: Request, response: Response):
-    return await render_index(request = request, api = False)
+async def index_fend(request: Request, response: Response, csrf_protect: CsrfProtect = Depends()):
+    return await render_index(request = request, api = False, csrf_protect = csrf_protect)
 
 @router.get("/legal")
 async def legal_router():

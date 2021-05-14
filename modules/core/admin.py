@@ -15,7 +15,7 @@ class BotActions():
 
     def __init__(self, bot):
         self.__dict__.update(bot) # Add all kwargs to class
-        print("Request Acknowledged")
+        logger.debug("Request Acknowledged")
         self.generated = self.GeneratedObject() # To keep things clean, make sure we always put changed properties in generated
 
     def gen_rabbit_dict(self):
@@ -25,7 +25,7 @@ class BotActions():
         del rmq_dict["open_source"]
         for key in self.generated.__dict__.keys():
             rmq_dict[key] = self.generated.__dict__[key]
-        print(rmq_dict)
+        logger.trace(f"RabbitMQ dict is {rmq_dict}")
         return rmq_dict
 
     async def base_check(self) -> Optional[str]:

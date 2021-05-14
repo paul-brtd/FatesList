@@ -49,6 +49,6 @@ async def parse_reviews(bot_id: int, rev_id: uuid.uuid4 = None, page: int = None
 
     if i == 0:
         return reviews, 10.0, 0, 0, per_page
-    print(total_rev["count"]/per_page)
+    logger.trace(f"Total reviews per page is {total_rev['count']/per_page}")
     return reviews, total_rev["avg"], total_rev["count"], int(math.ceil(total_rev["count"]/per_page)), per_page
 

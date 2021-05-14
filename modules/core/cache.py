@@ -5,8 +5,8 @@ async def _user_fetch(user_id: str, user_type: int, user_only: bool = False) -> 
 
     CACHE_VER = 10 # Current cache ver
 
-    if len(user_id) not in [17, 18, 19, 20]: # Snowflake can be 17 - 21
-        print("Ignoring blatantly wrong User ID")
+    if len(user_id) not in [17, 18, 19, 20]: # Snowflake can be 17 - 20
+        logger.debug(f"Ignoring blatantly wrong User ID: {user_id}")
         return None # This is impossible to actually exist on the discord API or on our cache
 
     # Query redis cache for some important info
@@ -16,10 +16,9 @@ async def _user_fetch(user_id: str, user_type: int, user_only: bool = False) -> 
         cache_time = time.time() - cache['epoch']
         if cache.get("fl_cache_ver") != CACHE_VER or (cache.get("valid_user") is None and time.time() - cache_time > 60*10) or cache_time > 60*60*8: # Check for cache expiry of 8 hours for proper user, 10 minutes for invalid, proper cache version and that its a valid user
             # The cache is invalid, pass and make discord api call
-            print("Not using cache for id ", user_id)
-            pass
+            logger.debug(f"Not using cache for id {user_id}")
         else:
-            print("Using cache for id ", user_id) # Use cache
+            logger.debug(f"Using cache for id {user_id}") # Use cache
             fetch = False
             if cache.get("valid_user") and ((user_type == 2 and cache["bot"]) or user_type == 3): # Valid user and bot where bot is requested or all users requested
                 fetch = True
@@ -37,17 +36,17 @@ async def _user_fetch(user_id: str, user_type: int, user_only: bool = False) -> 
     username, avatar, disc = None, None, None # All are none at first
 
     try:
-        print(f"Making API call to get user {user_id}")
+        logger.debug(f"Making API call to get user {user_id}")
         bot_obj = await client.fetch_user(int(user_id)) # Use fetch user to actually use HTTP api and not cache to allow bots not in guild
         valid_user = True # It worked and didn't error, set valid_user
         bot = bot_obj.bot # Set bot flag accordingly
     except Exception as ex:
+        logger.warning(f"{ex}")
         valid_user, bot = False, False # Not a proper got, cache to avoid repitition
-        print(ex)
 
     try:
         status = str(client.get_guild(main_server).get_member(int(user_id)).status) # Get the status by getting guild, getting member and then setting status, may fail if not in guild so catch that using try except above
-        print(status)
+        logger.trace(status)
         if status == "online":
             status = 1 # Online
         elif status == "offline":
@@ -59,7 +58,7 @@ async def _user_fetch(user_id: str, user_type: int, user_only: bool = False) -> 
         else:
             status = 0 # Fallback status
     except Exception as ex:
-        print(ex)
+        logger.warning(f"{ex}")
         status = 0 # Fallback status
 
     if valid_user: # Get username, avatar and disc
@@ -72,7 +71,7 @@ async def _user_fetch(user_id: str, user_type: int, user_only: bool = False) -> 
         disc = ""
 
     if bot and valid_user: # Update cached username in postgres if valid username in asyncio background task
-        print("Setting db username to " + username + " for " + str(user_id))
+        logger.debug("Setting db username to " + username + " for " + str(user_id))
         try:
             await db.execute("UPDATE bots SET username_cached = $2 WHERE bot_id = $1", int(user_id), username)
         except:

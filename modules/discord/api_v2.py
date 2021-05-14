@@ -586,9 +586,9 @@ async def get_vanity_api(request: Request, vanity: str):
     return {"type": vb[1], "redirect": str(vb[0])}
 
 @router.get("/index/bots", response_model = BotIndex)
-async def bots_index_page(request: Request):
+async def bots_index_page(request: Request, csrf_protect: CsrfProtect = Depends()):
     """For any potential Android/iOS app, crawlers etc."""
-    return await render_index(request = request, api = True)
+    return await render_index(request = request, api = True, csrf_protect = csrf_protect)
 
 @router.get("/search/bots", response_model = BotSearch)
 async def bots_search_page(request: Request, q: str):

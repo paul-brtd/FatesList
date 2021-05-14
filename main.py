@@ -54,7 +54,6 @@ intent_server = deepcopy(intent_main)
 intent_server.presences = False
 builtins.client_servers = discord.Client(intents=intent_server)
 
-
 # Setup FastAPI with required urls and orjson for faster json handling
 app = FastAPI(default_response_class = ORJSONResponse, redoc_url = "/api/docs/redoc", docs_url = "/api/docs/swagger", openapi_url = "/api/docs/openapi")
 
@@ -83,17 +82,17 @@ builtins.CsrfProtect = CsrfProtect
 async def validation_exception_handler(request, exc):
     return await WebError.error_handler(request, exc)
 
-print("Loading discord modules for Fates List")
+logger.info("Loading modules for Fates List")
 
 # Include all the modules by looping through and using importlib to import them and then including them in fastapi
 for f in os.listdir("modules/discord"):
     if not f.startswith("_") or f.startswith("."):
         path = "modules.discord." + f.replace(".py", "")
-        print("Discord: Loading " + f.replace(".py", "") + " with path " + path)
+        logger.debug("Discord: Loading " + f.replace(".py", "") + " with path " + path)
         route = importlib.import_module(path)
         app.include_router(route.router)
 
-print("All discord modules have loaded successfully!")
+logger.info("All discord modules have loaded successfully!")
 
 async def setup_db():
     """Function to setup the asyncpg connection pool"""
@@ -124,7 +123,7 @@ async def startup():
     builtins.tags_fixed = calc_tags(tags)
     builtins.TAGS = tags
 
-    print("Discord init beginning")
+    logger.info("Discord init beginning")
     asyncio.create_task(client.start(TOKEN_MAIN))
     asyncio.create_task(client_servers.start(TOKEN_SERVER))
     await asyncio.sleep(4)
@@ -141,7 +140,7 @@ async def startup():
 async def vote_reminder():
     reminders = await db.fetch("SELECT user_id, bot_id FROM user_reminders WHERE remind_time >= NOW() WHERE resolved = false")
     for reminder in reminders:
-        print(reminder)
+        logger.debug(f"Got reminder {reminder}")
         await bot_add_event(reminder["bot_id"], enums.APIEvents.vote_reminder, {"user": str(reminder["user_id"])})
         await db.execute("UPDATE user_reminders SET resolved = true WHERE user_id = $1 AND bot_id = $2", reminder["user_id"], reminder["bot_id"])
 
@@ -156,11 +155,11 @@ async def close():
 # Two events to let us know when discord.py is up and ready
 @client.event
 async def on_ready():
-    print(client.user, "up")
+    logger.info(f"{client.user} up")
 
 @client_servers.event
 async def on_ready():
-    print(client_servers.user, "up [SERVER BOT]")
+    logger.info(f"{client_servers.user} up")
 
 def calc_tags(TAGS):
     # Tag calculation
@@ -186,7 +185,7 @@ async def fateslist_request_handler(request: Request, call_next):
             - Transparently redirect /bots to /bot and /servers to /servers/index by changing ASGI scope (no 303 since thats bad UX)
             - Set and record the process time for analytics
     """
-    print(request.headers.get("X-Forwarded-For"))
+    logger.trace(request.headers.get("X-Forwarded-For"))
     if str(request.url.path).startswith("/bots/"):
         request.scope["path"] = str(request.url.path).replace("/bots", "/bot", 1)
     if str(request.url.path) in ["/servers/", "/servers"]:
@@ -199,7 +198,7 @@ async def fateslist_request_handler(request: Request, call_next):
         try:
             request._is_disconnected = False
         except:
-            print("Disconnected")
+            logger.warn("User {request.headers.get('X-Forwarded-For')} disconnected")
         response = await asyncio.shield(call_next(request))
     process_time = time.time() - start_time # Get time taken
     response.headers["X-Process-Time"] = str(process_time) # Record time taken
@@ -213,7 +212,7 @@ async def fateslist_request_handler(request: Request, call_next):
 async def print_req(request, response):
     # Gunicorn logging is trash, lets fix that with custom logging
     query_str = f'?{request.scope["query_string"].decode("utf-8")}' if request.scope["query_string"] else "" # Get query strings
-    print(f"{request.client.host} - {BOLD_START}{request.method} {request.url.path}{query_str} HTTP/{request.scope['http_version']} - {response.status_code} {HTTPStatus(response.status_code).phrase}{BOLD_END}") # Print logs like uvicorn
+    logger.info(f"{request.client.host}: {BOLD_START}{request.method} {request.url.path}{query_str} HTTP/{request.scope['http_version']} - {response.status_code} {HTTPStatus(response.status_code).phrase}{BOLD_END}") # Print logs like uvicorn
 
 def fl_openapi():
     """Custom OpenAPI description"""

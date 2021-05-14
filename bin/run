@@ -1,1 +1,1 @@
-gunicorn -k fluvicorn.FatesWorker main:app -b 0.0.0.0:9999 -w 10
+LOGURU_LEVEL="DEBUG" gunicorn -k fluvicorn.FatesWorker main:app -b 0.0.0.0:9999 -w 10

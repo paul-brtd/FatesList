@@ -9,13 +9,13 @@ from .templating import *
 from .events import *
 from .reviews import *
 
-async def render_index(request: Request, api: bool):
+async def render_index(request: Request, api: bool, csrf_protect: CsrfProtect):
     top_voted = await do_index_query(add_query = "ORDER BY votes DESC")
     new_bots = await do_index_query(add_query = "ORDER BY created_at DESC") # and certified = true ORDER BY votes
     certified_bots = await do_index_query(add_query = "ORDER BY votes DESC", state = 6) # State 6 is certified
     base_json = {"tags_fixed": tags_fixed, "top_voted": top_voted, "new_bots": new_bots, "certified_bots": certified_bots, "roll_api": "/api/bots/random"}
     if not api:
-        return await templates.TemplateResponse("index.html", {"request": request, "random": random} | base_json)
+        return await templates.TemplateResponse("index.html", {"request": request, "random": random, "csrf_protect": csrf_protect} | base_json)
     else:
         return base_json
 

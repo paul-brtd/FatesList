@@ -50,8 +50,17 @@ class Manager(Cog):
     async def rmq(self, ctx, *, cmd: str):
         cmd = cmd.replace("```", "").lstrip()
         status, _ret = await add_rmq_task_with_ret("_admin", {}, op = cmd)
+        return await self.rmq_handler(ctx, status, _ret)
+
+    @is_owner()
+    @command(pass_context = True)
+    async def rmqret(self, ctx, id):
+        status, _ret = await rmq_get_ret(id)
+        return await self.rmq_handler(ctx, status, _ret)
+
+    async def rmq_handler(self, ctx, status, _ret):
         if not status:
-            await ctx.send(f"Failed to get message from workwr (likely busy). Return UUID is {_ret} and return prefix is rabbit-")
+            await ctx.send(f"Failed to get message from worker (likely busy). Return UUID is {_ret} and return prefix is rabbit-")
         
         err = _ret["err"]
         ret = "\n\n\n".join([f"Error: {_ret['err'][i]}\n\nReturn\n\n{_ret['ret'][i]}" for i in range(0, len(_ret["err"]))])

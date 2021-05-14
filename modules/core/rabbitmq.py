@@ -34,14 +34,17 @@ async def add_rmq_task_with_ret(queue_name, data: dict, **meta):
     else:
         _ret = str(uuid.uuid4())
         meta["ret"] = _ret
-    await  add_rmq_task(queue_name, data, **meta)
+    await add_rmq_task(queue_name, data, **meta)
+    return await rmq_get_ret(_ret)
+
+async def rmq_get_ret(id):
     tries = 0
     while tries < 100:
-        ret = await redis_db.get(f"rabbit-{_ret}")
+        ret = await redis_db.get(f"rabbit-{id}")
         if not ret:
             await asyncio.sleep(0.5) # Wait for half second before retrying
             tries += 1
             continue
-        await redis_db.delete(f"rabbit-{_ret}")
+        await redis_db.delete(f"rabbit-{id}")
         return True, orjson.loads(ret)
-    return False, _ret # We didnt get anything
+    return False, id # We didnt get anything

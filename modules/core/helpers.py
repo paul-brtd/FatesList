@@ -46,7 +46,6 @@ async def add_promotion(bot_id: int, title: str, info: str, css: str, type: int)
     return await db.execute("INSERT INTO bot_promotions (bot_id, title, info, css, type) VALUES ($1, $2, $3, $4, $5)", bot_id, title, info, css, type)
 
 async def vote_bot(uid: int, bot_id: int, username, autovote: bool) -> Optional[list]:
-    print("Here on voter")
     await get_user_token(uid, username) # Make sure we have a user profile first
     epoch = await db.fetchval("SELECT vote_epoch FROM users WHERE user_id = $1", int(uid))
     if epoch is None:
@@ -140,7 +139,7 @@ async def do_index_query(add_query: str = "", state: int = 0, limit: Optional[in
         end_query = f"LIMIT {limit}"
     else:
         end_query = ""
-    print(base_query, add_query, end_query)
+    logger.debug(base_query, add_query, end_query)
     fetch = await db.fetch(" ".join((base_query, add_query, end_query)))
     return await parse_index_query(fetch)
 

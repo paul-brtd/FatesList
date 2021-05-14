@@ -62,10 +62,10 @@ async def login_confirm(request: Request, code: str, state: str):
         request.session["ban"] = state
         request.session["access_token"] = access_token
         request.session["userid"] = userjson["id"]
-        print(userjson)
+        logger.debug(f"Got user json of {userjson}")
         request.session["username"] = str(userjson["name"])
         if (userjson.get("avatar")):
-            print("Got avatar")
+            logger.trace(f"Got avatar {userjson.get('avatar')}")
             request.session["avatar"] = "https://cdn.discordapp.com/avatars/" + \
                 userjson["id"] + "/" + userjson["avatar"]
         else:

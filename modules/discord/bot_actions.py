@@ -41,7 +41,6 @@ async def add_bot_backend(
 async def bot_edit(request: Request, bot_id: int, csrf_protect: CsrfProtect = Depends()):
     if "userid" in request.session.keys():
         check = await is_bot_admin(int(bot_id), int(request.session.get("userid")))
-        print(check)
         if not check:
             return abort(403)
         try:
@@ -51,7 +50,7 @@ async def bot_edit(request: Request, bot_id: int, csrf_protect: CsrfProtect = De
         tags = await db.fetch("SELECT tag FROM bot_tags WHERE bot_id = $1", bot_id)
         fetch = fetch | {"tags": [tag["tag"] for tag in tags]}
         owners = await db.fetch("SELECT owner, main FROM bot_owner WHERE bot_id = $1", bot_id)
-        print(owners)
+        logger.trace(owners)
         if owners is None:
             return "This bot has no found owners.\nPlease contact Fates List support"
         fetch = fetch | {"extra_owners": [obj["owner"] for obj in owners if obj["main"] is False]}
@@ -101,12 +100,10 @@ async def vote_for_bot_or_die(
         csrf_protect: CsrfProtect = Depends()
     ):
     verify_csrf(request, csrf_protect)
-    print("Got here")
     if request.session.get("userid") is None:
         return RedirectResponse(f"/auth/login?redirect=/bot/{bot_id}&pretty=to vote for this bot", status_code = 303)
     uid = request.session.get("userid")
     ret = await vote_bot(uid = uid, username = request.session.get("username"), bot_id = bot_id, autovote = False)
-    print(ret)
     if ret == []:
         return await templates.TemplateResponse("message.html", {"request": request, "message": "Successfully voted for this bot!<script>window.location.replace('/bot/" + str(bot_id) + "')</script>", "username": request.session.get("username", False), "avatar": request.session.get('avatar')})
     elif ret[0] in [404, 500]:

@@ -1,5 +1,6 @@
 config_secrets.py
 __pycache__
+logs/*
 *pyc
 admin/fateslist_django/secrets.py
 admin/fateslist_django/__pycache__
