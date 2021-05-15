@@ -7,9 +7,13 @@ from .imports import *
 from .events import *
 from .auth import *
 from .cache import *
+from .templating import *
 
-def verify_csrf(request, csrf_protect):
-    csrf_protect.validate_csrf_in_cookies(request)
+async def verify_csrf(request, csrf_protect):
+    try:
+        csrf_protect.validate_csrf_in_cookies(request)
+    except Exception as exc:
+        return await templates.e(request, main = f"CSRF Error ({type(exc).__name__})", reason = f"Try disabling any extension that blocks cookies and/or join the support server for assistance giving {type(exc).__name__} as the reason.", status_code = 400)
 
 async def get_maint(bot_id: str) -> Union[bool, Optional[dict]]:
     api_data = await db.fetchrow("SELECT type, reason, epoch FROM bot_maint WHERE bot_id = $1", bot_id)

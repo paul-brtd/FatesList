@@ -20,7 +20,9 @@ async def login_get(request: Request, redirect: Optional[str] = None, pretty: Op
 
 @router.post("/login")
 async def login_post(request: Request, join_servers: str = FForm("off"), server_list: str = FForm("off"), csrf_protect: CsrfProtect = Depends()):
-    verify_csrf(request, csrf_protect)
+    ret = await verify_csrf(request, csrf_protect)
+    if ret:
+        return ret
     scopes = ["identify"]
 
     # Join Server

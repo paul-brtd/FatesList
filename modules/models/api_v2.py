@@ -183,7 +183,6 @@ class BotUnderReview(BotListAdminRoute):
     requeue: Optional[bool] = False
 
 class BotOwner(BaseModel):
-    owner: str
     user: BaseUser
     main: bool
 

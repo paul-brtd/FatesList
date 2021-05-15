@@ -73,7 +73,9 @@ async def bot_edit_backend(
         bot: BotEditForm = Depends(BotEditForm),
         csrf_protect: CsrfProtect = Depends()
     ):
-    verify_csrf(request, csrf_protect)
+    ret = await verify_csrf(request, csrf_protect)
+    if ret:
+        return ret # CSRF
     if "user_id" not in request.session.keys():
         return RedirectResponse("/")
     check = await is_bot_admin(bot_id, int(request.session.get("user_id")))
@@ -102,7 +104,9 @@ async def vote_for_bot_or_die(
         bot_id: int,
         csrf_protect: CsrfProtect = Depends()
     ):
-    verify_csrf(request, csrf_protect)
+    ret = await verify_csrf(request, csrf_protect)
+    if ret:
+        return ret # CSRF
     if request.session.get("user_id") is None:
         return RedirectResponse(f"/auth/login?redirect=/bot/{bot_id}&pretty=to vote for this bot", status_code = 303)
     user_id = int(request.session.get("user_id"))

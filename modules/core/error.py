@@ -25,8 +25,6 @@ class WebError():
 
     @staticmethod
     async def error_handler(request, exc, log: bool = True):
-        if type(exc) in (CsrfProtectError, MissingTokenError):
-            return await templates.e(request, main = "CSRF Error", reason = "Try disabling any extension that blocks cookies and/or join the support server for assistance", status_code = 400)
         error_id = request.scope["error_id"] # Create a error id
         curr_time = request.scope["curr_time"] # Get time error happened
         try:

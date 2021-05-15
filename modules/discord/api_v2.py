@@ -262,7 +262,7 @@ async def get_bot_api(request: Request, bot_id: int):
     tags = await db.fetch("SELECT tag FROM bot_tags WHERE bot_id = $1", bot_id)
     api_ret["tags"] = [tag["tag"] for tag in tags]
     owners = await db.fetch("SELECT owner, main FROM bot_owner WHERE bot_id = $1", bot_id)
-    api_ret["owners"] = [{"owner": str(obj["owner"]), "user": (await get_user(obj["owner"])), "main": obj["main"]} for obj in owners]
+    api_ret["owners"] = [{"user": (await get_user(obj["owner"])), "main": obj["main"]} for obj in owners]
     if api_ret["features"] is None:
         api_ret["features"] = []
     api_ret["invite_link"] = await invite_bot(bot_id, api = True)
