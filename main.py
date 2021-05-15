@@ -24,13 +24,19 @@ from starlette.routing import Mount
 import sentry_sdk
 from starlette.requests import ClientDisconnect
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
+from sentry_sdk.integrations.logging import LoggingIntegration
 import time
 from fastapi_utils.tasks import repeat_every
 from fastapi_csrf_protect import CsrfProtect
+import logging
 
 builtins.boot_time = time.time()
 
-sentry_sdk.init(sentry_dsn)
+SENTRY = False
+
+if SENTRY:
+    sentry_sdk.init(sentry_dsn, integrations=[])
+
 # Setup Bots
 
 # Main Bot

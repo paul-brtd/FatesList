@@ -1,4 +1,5 @@
 from ..core import *
+from modules.discord.bots import vote_bot_get
 
 router = APIRouter(
         tags = ["Index"],
@@ -57,14 +58,15 @@ async def vanity_edit(request: Request, vanity: str, bt: BackgroundTasks):
     return RedirectResponse(eurl)
 
 @router.get("/{vanity}/vote")
-async def vanity_vote(request: Request, vanity: str):
+async def vanity_vote(request: Request, vanity: str, csrf_protect: CsrfProtect = Depends()):
     vurl = await vanity_bot(vanity)
     if vurl is None:
         return await templates.e(request, "Invalid Vanity")
     if vurl[1] == "profile":
         return abort(404)
-    eurl = "/".join([site_url, vurl[1], str(vurl[0]), "vote"])
-    return RedirectResponse(eurl)
+    if vurl[1] == "bot":
+        return await vote_bot_get(request, bot_id = vurl[0], csrf_protect = csrf_protect)
+
 
 @router.get("/{vanity}/invite")
 async def vanity_invite(request: Request, vanity: str):
