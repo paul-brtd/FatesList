@@ -79,14 +79,14 @@ builtins.CsrfProtect = CsrfProtect
 @app.exception_handler(500)
 @app.exception_handler(HTTPException)
 @app.exception_handler(Exception)
-async def validation_exception_handler(request, exc):
-    return await WebError.error_handler(request, exc)
+async def fl_exception_handler(request, exc, log = True):
+    return await WebError.error_handler(request, exc, log = log)
 
 logger.info("Loading modules for Fates List")
 
 # Include all the modules by looping through and using importlib to import them and then including them in fastapi
 for f in os.listdir("modules/discord"):
-    if not f.startswith("_") or f.startswith("."):
+    if not f.startswith("_") and not f.startswith("."):
         path = "modules.discord." + f.replace(".py", "")
         logger.debug("Discord: Loading " + f.replace(".py", "") + " with path " + path)
         route = importlib.import_module(path)
@@ -110,6 +110,7 @@ async def startup():
         - Setup Redis and initialize the ratelimiter and caching system
         - Connect robustly to rabbitmq for add bot/edit bot/delete bot
         - Start repeated task for vote reminder posting
+        - Listen for broadcast events
     """
     builtins.up = False
 
@@ -186,6 +187,8 @@ async def fateslist_request_handler(request: Request, call_next):
             - Transparently redirect /bots to /bot and /servers to /servers/index by changing ASGI scope (no 303 since thats bad UX)
             - Set and record the process time for analytics
     """
+    request.scope["error_id"] = str(uuid.uuid4()) # Create a error id for just in case
+    request.scope["curr_time"] = str(datetime.datetime.now()) # Get time request was made
     logger.trace(request.headers.get("X-Forwarded-For"))
     if str(request.url.path).startswith("/bots/"):
         request.scope["path"] = str(request.url.path).replace("/bots", "/bot", 1)
@@ -195,12 +198,17 @@ async def fateslist_request_handler(request: Request, call_next):
     start_time = time.time() # Get process time start
     try:
         response = await asyncio.shield(call_next(request)) # Process request
-    except ClientDisconnect:
+    except Exception as exc: # Try request again
         try:
             request._is_disconnected = False
         except:
             logger.warn("User {request.headers.get('X-Forwarded-For')} disconnected")
-        response = await asyncio.shield(call_next(request))
+        try:
+            response = await asyncio.shield(call_next(request))
+        except Exception as exc:
+            logger.exception("Site Error Occurred")
+            response = await fl_exception_handler(request, exc)
+
     process_time = time.time() - start_time # Get time taken
     response.headers["X-Process-Time"] = str(process_time) # Record time taken
     response.headers["FL-API-Version"] = api_ver # Record currently used api version for debug

@@ -30,7 +30,7 @@ async def admin_dashboard(request: Request):
 
 @router.post("/console")
 async def admin_api(request: Request, bt: BackgroundTasks, admin: str = FForm(""), bot_id: int = FForm(0)):
-    print(bot_id)
+    logger.debug(f"Got admin task request for {bot_id}")
     try:
         guild = client.get_guild(main_server)
         user = guild.get_member(int(request.session["user_id"]))

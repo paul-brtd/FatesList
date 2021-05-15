@@ -1,1 +1,0 @@
-uvicorn server_list_bot:app --port 25000

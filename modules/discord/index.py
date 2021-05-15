@@ -1,9 +1,9 @@
 from ..core import *
 
 router = APIRouter(
-    tags = ["Index"],
-    include_in_schema = False
-)
+        tags = ["Index"],
+        include_in_schema = False
+        )
 
 @router.get("/err/err")
 async def error():
@@ -38,7 +38,7 @@ async def nonerouter():
 @router.get("/{vanity}")
 async def vanity_bot_uri(request: Request, bt: BackgroundTasks, vanity: str, csrf_protect: CsrfProtect = Depends()):
     vurl = await vanity_bot(vanity)
-    print("Vanity: ", vurl)
+    logger.trace("Vanity for this object: ", vurl)
     if vurl is None:
         return await templates.e(request, "Invalid Vanity")
     if vurl[1] == "bot":

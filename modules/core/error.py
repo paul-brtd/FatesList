@@ -24,11 +24,11 @@ class WebError():
             await site_errors.send("No extra information could be logged and/or send right now") # Could not send it
 
     @staticmethod
-    async def error_handler(request, exc):
+    async def error_handler(request, exc, log: bool = True):
         if type(exc) in (CsrfProtectError, MissingTokenError):
             return await templates.e(request, main = "CSRF Error", reason = "Try disabling any extension that blocks cookies and/or join the support server for assistance", status_code = 400)
-        error_id = str(uuid.uuid4()) # Create a error id
-        curr_time = str(datetime.datetime.now()) # Get time error happened
+        error_id = request.scope["error_id"] # Create a error id
+        curr_time = request.scope["curr_time"] # Get time error happened
         try:
             status_code = exc.status_code # Check for 422 and 500 using status code presence
         except: # 500 and 422 do not have status code
@@ -40,13 +40,13 @@ class WebError():
         if exc.status_code == 401:
             return ORJSONResponse({"done": False, "reason": "Unauthorized", "code": 9999}, status_code = exc.status_code)
         elif exc.status_code == 500:
-            logger.exception(f"Site error at {request.url.path}", exception = exc)
-            asyncio.create_task(WebError.log(request, exc, error_id, curr_time)) # Try and log what happened
+            if log:
+                asyncio.create_task(WebError.log(request, exc, error_id, curr_time)) # Try and log what happened
             if str(request.url.path).startswith("/api"):
                 return ORJSONResponse({"done": False, "reason": f"Internal Server Error\nError ID: {error_id}\nTime when error happened: {curr_time}\nOur developers have been notified and are looking into it."}, status_code = exc.status_code)
             tb_full = "".join(tblib.format_exception(exc)) # COMPAT: Python 3.10 only
             errmsg = f"Fates List had a slight issue and our developers and looking into what happened<br/><br/>Error ID: {error_id}<br/><br/>Please check our support server at <a href='{support_url}'>{support_url}</a> for more information<br/><br/>Please send the below traceback if asked:<br/><br/><pre>{tb_full}</pre>Time When Error Happened: {curr_time}<br/>"
-            return HTMLResponse(errmsg)
+            return HTMLResponse(errmsg, status_code = exc.status_code)
         elif exc.status_code == 404: 
             if path.startswith("/bot"): # Bot 404
                 msg = "Bot Not Found"

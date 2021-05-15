@@ -6,6 +6,6 @@ This is part of Fates List. You can use this in any library you wish. For best A
 
 from pydantic import BaseModel
 
-class Bootstrap(BaseModel):
+class WebsocketBootstrap(BaseModel):
     versions: list
     endpoints: dict

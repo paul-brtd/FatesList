@@ -48,7 +48,7 @@ class Oauth():
 
     async def access_token_check(self, scope: str, access_token_dict: dict) -> str:
         if float(access_token_dict["current_time"]) + float(access_token_dict["expires_in"]) > time.time():
-            print("Using Old Access Token")
+            logger.debug("Using old access token without making any changes")
             return access_token_dict
         # Refresh
         payload = {
@@ -66,7 +66,7 @@ class Oauth():
 
         res = await requests.post(self.discord_token_url, data=payload, headers=headers)
         json = await res.json()
-        print(json)
+        logger.debug("Got json of {json}")
         return {"access_token": json.get("access_token"), "refresh_token": json.get("refresh_token"), "expires_in": json.get("expires_in"), "current_time": time.time()}
 
     async def get_user_json(self, access_token):
@@ -106,7 +106,7 @@ class Oauth():
                         guilds.append(str(guild["id"]))
         except:
             guilds = []
-        print("Guilds: ", guilds)
+        logger.debug(f"Got guilds {guilds}")
         return guilds
 
     async def join_user(self, access_token, user_id):
@@ -116,5 +116,4 @@ class Oauth():
             "Authorization": f"Bot {TOKEN_MAIN}"
         }
         rc = await requests.put(url, headers=headers,json={"access_token":access_token})
-        print(rc)
 

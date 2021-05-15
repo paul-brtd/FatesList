@@ -7,13 +7,15 @@ router = APIRouter(
 ) # No arguments needed for websocket but keep for chat
 
 bootstrap_info = {
-    "versions": ["v1", "v2"],
+    "versions": ["v1", "v3"],
     "endpoints": {
         "v1": {
-            "chat": "/api/v1/ws/chat"
+            "chat": "/api/v1/ws/chat",
+            "up": False
         },
         "v3": {
-            "bot_realtime_stats": "/apiws/bot/rtstats"
+            "bot_realtime_stats": "/apiws/bot/rtstats",
+            "up": True
         }
     }
 }
@@ -21,7 +23,7 @@ bootstrap_info = {
 builtins.manager = ConnectionManager()
 builtins.manager_chat = ConnectionManager()
 
-@router.get("/api/ws", response_model = Bootstrap, dependencies=[Depends(RateLimiter(times=5, minutes=1))])
+@router.get("/api/ws", response_model = WebsocketBootstrap, dependencies=[Depends(RateLimiter(times=5, minutes=1))])
 async def websocket_bootstrap(request: Request):
     """
         This is the gateway for all websockets. Use this to find which route you need or whether it is available
@@ -30,12 +32,14 @@ async def websocket_bootstrap(request: Request):
 
 @router.websocket("/apiws/bot/rtstats")
 async def websocket_bot_rtstats_v1(websocket: WebSocket):
+    logger.debug("Got websocket connection request. Connecting...")
     await manager.connect(websocket)
     if websocket.api_token == [] and not websocket.manager_bot:
+        logger.debug("Sending IDENTITY to websocket")
         await manager.send_personal_message(ws_identity_payload(), websocket)
         try:
             api_token = await websocket.receive_json()
-            print("HERE")
+            logger.debug("Got response from websocket. Checking response...")
             if api_token["e"] != enums.APIEvents.ws_identity_res or api_token["t"] not in [enums.APIEventTypes.auth_token, enums.APIEventTypes.auth_manager_key]:
                 raise TypeError
         except:
@@ -55,6 +59,7 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
                         websocket.bot_id.append(bid["bot_id"])
                 if websocket.api_token == [] or websocket.bot_id == []:
                     return await ws_kill_no_auth(manager, websocket)
+                logger.debug("Authenticated successfully to websocket")
                 await manager.send_personal_message({"e": enums.APIEvents.ws_status, "t": enums.APIEventTypes.ws_ready, "ctx": {"bots": [str(bid) for bid in websocket.bot_id]}}, websocket)
             case enums.APIEventTypes.auth_manager_key:
                 try:
@@ -76,7 +81,7 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
                 try:
                     events = orjson.loads(events)
                 except Exception as exc:
-                    print(exc)
+                    logger.exception()
                     events = {}
                 ini_events[str(bot)] = events
             await manager.send_personal_message({"e": enums.APIEvents.ws_event, "t": enums.APIEventTypes.ws_event_multi, "ctx": ini_events, "ts": time.time()}, websocket)
@@ -88,7 +93,7 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
             await pubsub.psubscribe("*")
     
         async for msg in pubsub.listen():
-            print(msg, websocket.manager_bot)
+            logger.debug(f"Got message {msg} with manager status of {websocket.manager_bot}")
             if msg is None or type(msg.get("data")) != bytes:
                 continue
             await manager.send_personal_message({"e": enums.APIEvents.ws_event, "t": enums.APIEventTypes.ws_event_single, "ctx": {msg.get("channel").decode("utf-8"): orjson.loads(msg.get("data"))}, "ts": time.time()}, websocket)
@@ -102,14 +107,14 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
 
 # Chat
 
-@router.websocket("/api/v1/ws/chat")
+#@router.websocket("/api/v1/ws/chat") # Disabled for rewrite
 async def chat_api(websocket: WebSocket):
     await manager_chat.connect(websocket)
     if not websocket.authorized:
         await manager_chat.send_personal_message({"payload": "IDENTITY", "type": "USER|BOT"}, websocket)
         try:
             identity = await websocket.receive_json()
-            print("HERE")
+            logger.debug("Got potential websocket identity response. Checking response...")
             if identity.get("payload") != "IDENTITY_RESPONSE":
                 raise TypeError
         except:
@@ -142,7 +147,6 @@ async def chat_api(websocket: WebSocket):
         pubsub = redis_db.pubsub()
         await pubsub.subscribe("global_chat_channel")
         async for msg in pubsub.listen():
-            print("Got msg")
             if type(msg['data']) != bytes:
                 continue
             try:
@@ -151,8 +155,8 @@ async def chat_api(websocket: WebSocket):
                 continue
             await manager_chat.send_personal_message(msg_info, websocket) # Send all messages in bulk
     except Exception as e:
+        logger.debug(f"Gor likely disconnect. Error: {exc}")
         await redis_db.decrby(str(sender) + "_cli_count")
-        print(e)
         await pubsub.unsubscribe()
         await manager_chat.disconnect(websocket)
 

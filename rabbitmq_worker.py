@@ -76,7 +76,7 @@ async def new_task(queue_name, friendly_name):
         if not _headers:
             cprint(f"Invalid auth for {friendly_name}", "red")
             message.ack()
-            return # No vlie auth sent
+            return # No valid auth sent
         if not secure_strcmp(_headers.get("auth"), worker_key):
             cprint(f"Invalid auth for {friendly_name} and JSON of {_json}", "red")
             message.ack()
@@ -87,7 +87,7 @@ async def new_task(queue_name, friendly_name):
             rc = []
             err = []
             ops = _json["meta"]["op"]
-            if type(ops) == str:
+            if isinstance(ops, str):
                 ops = [ops]
             for op in ops:
                 try:
@@ -123,7 +123,7 @@ async def new_task(queue_name, friendly_name):
 
         if queue_name == "_admin" or not _ret["err"]: # If no errors recorded
             message.ack()
-        
+        cprint("Message Handled", "magenta")
     await _queue.consume(_task)
 
 class Stats():
@@ -181,7 +181,6 @@ class TaskHandler():
         try:
             handle_func = self.handlers[self.queue]
             rc = await handle_func(**self.ctx)
-            cprint("Event Handled", "magenta")
             return rc
         except Exception as exc:
             stats.errors += 1 # Record new error

@@ -15,7 +15,7 @@ RMQ_META = {
 }
 
 async def add_rmq_task(queue_name: str, data: dict, **meta):
-    """Add RabbitMQ Task"""
+    """Ads a RabbitMQ Task using the Fates List Worker Protocol"""
     if meta:
         meta = deepcopy(RMQ_META) | meta
     else:

@@ -11,42 +11,48 @@ router = APIRouter(
 async def redirect_me(request: Request):
     if "user_id" not in request.session.keys():
         return RedirectResponse("/")
-    return RedirectResponse("/profile/" + request.session.get("user_id"))
+    return await get_user_profile(request, int(request.session.get("user_id")))
 
 @router.get("/{user_id}")
 async def profile_of_user_generic(request: Request, user_id: int):
-    return await profile_of_user(request, user_id)
+    return await get_user_profile(request, user_id)
 
-async def profile_of_user(request: Request, user_id: int):
-    personal = False # Initially
+async def get_user_profile(request, user_id: int):
+    guild = client.get_guild(main_server)
+    if guild is None:
+        return await templates.e(request, "Site is still loading...")
+    if request.session.get("user_id"):
+        dpy_viewer = guild.get_member(int(request.session.get("user_id")))
+    else:
+        dpy_viewer = None
+    dpy_member = guild.get_member(user_id)
+    if dpy_viewer is None:
+        admin = False
+    else:
+        admin = is_staff(staff_roles, dpy_viewer.roles, 4)[0]
+    if admin or (request.session.get("user_id") and user_id == int(request.session.get("user_id"))):
+        personal = True
+    else:
+        personal = False
+    return await _profile_of_user(request, user_id, personal = personal, admin = admin, dpy_member = dpy_member)
+
+async def _profile_of_user(request: Request, user_id: int, personal: bool, admin: bool, dpy_member: Optional[discord.Member]):
     state = await db.fetchval("SELECT state FROM users WHERE user_id = $1", user_id)
-    if state == enums.UserState.global_ban or state == enums.UserState.ddr_ban:
+    if (not admin and state == enums.UserState.global_ban) or state == enums.UserState.ddr_ban:
         return abort(404)
     user = await get_user(int(user_id))
     if not user:
         return await templates.e(request, "Profile Not Found", 404)
-    if "user_id" in request.session.keys():
-        try:
-            guild = client.get_guild(main_server)
-            userobj = guild.get_member(int(request.session.get("user_id")))
-        except:
-            return await templates.TemplateResponse("message.html", {"request": request, "message": "Still connecting to Discord. Please refresh in a minute or two"})
-        if user_id == int(request.session["user_id"]):
-            personal = True
-        else:
-            personal = False
-        if userobj is not None and is_staff(staff_roles, userobj.roles, 4)[0]:
-            personal = True
     bots = await db.fetch("SELECT DISTINCT bots.bot_id, bots.state FROM bot_owner INNER JOIN bots ON bot_owner.bot_id = bots.bot_id WHERE bot_owner.owner = $1", user_id)
     bot_id_lst = [obj["bot_id"] for obj in bots]
     fetchq = []
-    for bid in bot_id_lst:
+    for bot_id in bot_id_lst:
         base_query = ("SELECT description, banner, state, votes, servers, bot_id, invite FROM bots ")
         if not personal:
             query = base_query + "WHERE bot_id = $1 and (state = 0 OR state = 6) ORDER BY votes"
         else:
             query = base_query + "WHERE bot_id = $1 ORDER BY votes"
-        data = await db.fetchrow(query, bid)
+        data = await db.fetchrow(query, bot_id)
         fetchq.append(data)
     user_bots = await parse_index_query(fetchq)
     if personal:
@@ -56,8 +62,5 @@ async def profile_of_user(request: Request, user_id: int):
     if user_info is None:
         return abort(404)
     guild = client.get_guild(main_server)
-    user_dpy = guild.get_member(int(user_id))
-    if user_dpy is None:
-        user_dpy = await client.fetch_user(int(user_id))
-    return await templates.TemplateResponse("profile.html", {"request": request, "username": request.session.get("username", False), "user_bots": user_bots, "user": user, "avatar": request.session.get("avatar"), "user_id": user_id, "personal": personal, "badges": get_badges(user_dpy, user_info["badges"], bots), "user_info": user_info, "coins": user_info["coins"]})
+    return await templates.TemplateResponse("profile.html", {"request": request, "username": request.session.get("username", False), "user_bots": user_bots, "user": user, "avatar": request.session.get("avatar"), "user_id": user_id, "personal": personal, "badges": get_badges(dpy_member, user_info["badges"], bots), "user_info": user_info, "coins": user_info["coins"]})
 

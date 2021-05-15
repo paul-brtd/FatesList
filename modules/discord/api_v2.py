@@ -290,7 +290,6 @@ async def get_raw_bot_api(request: Request, bot_id: int, bt: BackgroundTasks):
 
 @router.get("/bots/{bot_id}/events", response_model = BotEvents)
 async def get_bot_events_api(request: Request, bot_id: int, exclude: Optional[list] = None, filter: Optional[list] = None, Authorization: str = Header("BOT_TOKEN_OR_TEST_MANAGER_KEY")):
-    print(filter, exclude)
     if secure_strcmp(Authorization, test_server_manager_key):
         pass
     else:
@@ -588,7 +587,7 @@ async def get_tags_api(request: Request, name: str):
 @router.get("/code/{vanity}", response_model = BotVanity)
 async def get_vanity_api(request: Request, vanity: str):
     vb = await vanity_bot(vanity)
-    print(vanity, vb)
+    logger.trace(f"Vanity is {vanity} and vb is {vb}")
     if vb is None:
         return abort(404)
     return {"type": vb[1], "redirect": str(vb[0])}
@@ -689,11 +688,11 @@ async def prepare_servers_api(request: Request, user_id: int, data: ServerCheck,
         if member is None:
             continue
         if member.guild_permissions.administrator or member.guild_permissions.manage_guild:
-            print(guild.id)
+            logger.debug(f"Adding {guild.id} to prepared server list")
             guild_json = {"icon": str(guild.icon_url), "name": guild.name, "member_count": guild.member_count, "created_at": str(guild.created_at.timestamp()), "code": get_token(37)}
             await redis_db.hset(str(guild.id), key = "cache", value = orjson.dumps(guild_json))
             valid = valid | {str(guild.id): guild_json}
-    print(valid)
+    logger.debug(f"Valid servers are {valid}")
     return {"servers": valid, "access_token": access_token}
 
 @router.post("/servers/{guild_id}")
@@ -703,7 +702,7 @@ async def add_guild_api(request: Request, guild_id: int, user_id: int, data: Ser
         return abort(401)
     guild_data = await redis_db.hget(str(guild_id), key = "cache")
     if guild_data is None:
-        print(guild_data)
+        logger.trace(f"Guild data is {guild_data}")
         return abort(404)
     guild_data = orjson.loads(guild_data)
     if guild_data["code"] != data.code:
@@ -759,5 +758,5 @@ async def fulfill_order(user_id, quantity, token, id, lm):
         pass
 
 async def dm_customer_about_failed_payment(session):
-    print("DM Customer: " + str(session))
+    logger.debug(f"DM Customer: {session}")
 

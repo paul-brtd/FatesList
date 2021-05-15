@@ -1,5 +1,6 @@
 from deps import *
 from modules.core import *
+import os
 
 class Manager(Cog):
     def __init__(self, client):
@@ -19,6 +20,12 @@ class Manager(Cog):
             return await ctx.send("You have no eligible bots (your bot is not verified and/or does not belong to you as a owner or extra owner)")
         await ctx.author.add_roles(ctx.guild.get_role(self.client.bot_dev_role))
         return await ctx.send("Added the role for you :)")
+
+    @is_owner()
+    @command(pass_context = True)
+    async def reload(self, ctx):
+        os.system("../../bin/reload")
+        return await ctx.send("Fates List Reload Triggered")
 
     @is_owner()
     @command(pass_context = True, aliases = ["bis"])
