@@ -32,10 +32,7 @@ import logging
 
 builtins.boot_time = time.time()
 
-SENTRY = False
-
-if SENTRY:
-    sentry_sdk.init(sentry_dsn, integrations=[])
+sentry_sdk.init(sentry_dsn)
 
 # Setup Bots
 

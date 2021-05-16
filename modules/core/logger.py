@@ -31,10 +31,6 @@ class InterceptHandler(logging.Handler):
             level, record.getMessage()
         )
 
-for name in (
-    "gunicorn",
-    "gunicorn.error",
-    "uvicorn",
-    "uvicorn.error",
-):
+# Just in case we need it
+for name in ("a", "b"):
     logging.getLogger(name).handlers = [InterceptHandler()]

@@ -2,7 +2,11 @@ from modules.core import bot_add_event
 from config import bot_logs
 import discord
 
-async def bot_delete_backend(user_id, bot_id):
+queue = "bot_delete_queue"
+name = "Bot Delete"
+description = "Bot Delete"
+
+async def backend(json, *, user_id, bot_id):
     await db.execute(f"DELETE FROM bots WHERE bot_id = $1", bot_id)
     await db.execute("DELETE FROM vanity WHERE redirect = $1", bot_id)
 

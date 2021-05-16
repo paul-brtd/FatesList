@@ -1,7 +1,5 @@
 """RabbitMQ worker"""
 import asyncpg, asyncio, uvloop, aioredis, os, importlib
-import nest_asyncio
-nest_asyncio.apply()
 import sys
 sys.path.append("..")
 from config import *
@@ -13,13 +11,18 @@ from copy import deepcopy
 from termcolor import colored, cprint
 from modules.utils import secure_strcmp
 from modules.core import *
+from rabbitmq.core import *
 
 # Import all needed backends
-from rabbitmq.backends.bot_add import bot_add_backend
-from rabbitmq.backends.bot_edit import bot_edit_backend
-from rabbitmq.backends.bot_delete import bot_delete_backend
-from rabbitmq.backends.server_add import server_add_backend
-from rabbitmq.backends.events_webhook import events_webhook_backend
+backends = Backends()
+builtins.backends = backends
+
+for f in os.listdir("rabbitmq/backend"):
+    if not f.startswith("_") and not f.startswith("."):
+        path = "rabbitmq.backend." + f.replace(".py", "")
+        logger.debug("FLWorker: Loading " + f.replace(".py", "") + " with path " + path)
+        _backend = importlib.import_module(path)
+        backends.add(queue = _backend.queue, backend = _backend.backend, name = _backend.name, description = _backend.description)
 
 # Setup main bot
 
@@ -46,69 +49,35 @@ builtins.client_server = discord.Client(intents=intent_server)
 async def dbg_test():
     return "HELLO"
 
-def handle_await(code):
-    if "await " not in code:
-        return code.replace("return ", "ret = ")
-    code = "".join(["    " + txt.lstrip() + "\n" for txt in code.lstrip().split('\n')])
-    return f"""
-async def task_runner():
-{code}
+builtins.dbg_test = dbg_test
 
-ret = asyncio.run(task_runner())
-"""
-
-async def new_task(queue_name, friendly_name):
+async def new_task(queue):
+    friendly_name = backends.getname(queue)
     _channel = await rabbitmq_db.channel()
-    _queue = await _channel.declare_queue(queue_name, durable = True) # Function to handle our queue
+    _queue = await _channel.declare_queue(queue, durable = True) # Function to handle our queue
     
-    def serialized(obj):
-        try:
-            orjson.dumps({"rc": obj})
-            return True
-        except:
-            return False
-
     async def _task(message: IncomingMessage):
         """RabbitMQ Queue Function"""
-        cprint(f"{friendly_name} called", "magenta")
+        curr = stats.on_message
+        logger.opt(ansi = True).info(f"<m>{friendly_name} called (message {curr})</m>")
+        stats.on_message += 1
         _json = orjson.loads(message.body)
         _headers = message.headers
         if not _headers:
-            cprint(f"Invalid auth for {friendly_name}", "red")
+            logger.error(f"Invalid auth for {friendly_name}")
             message.ack()
             return # No valid auth sent
         if not secure_strcmp(_headers.get("auth"), worker_key):
-            cprint(f"Invalid auth for {friendly_name} and JSON of {_json}", "red")
+            logger.error(f"Invalid auth for {friendly_name} and JSON of {_json}")
             message.ack()
             return # No valid auth sent
 
-        if queue_name == "_admin" and _json["meta"].get("op"):
-            # Handle admin operations
-            rc = []
-            err = []
-            ops = _json["meta"]["op"]
-            if isinstance(ops, str):
-                ops = [ops]
-            for op in ops:
-                try:
-                    op = handle_await(op)
-                    loc = {}
-                    exec(op.lstrip(), globals() | locals(), loc)
-                    _ret = loc["ret"] if loc.get("ret") is not None else loc # Get return stuff
-                    if not loc:
-                        _ret = None # No return or anything
-                    err.append(False)
-                except Exception as exc:
-                    cprint(exc, "red")
-                    _ret = f"{type(exc).__name__}: {exc}"
-                    err.append(True)
-                rc.append(_ret if serialized(_ret) else str(_ret))
-
+        # Normally handle rabbitmq task
+        _task_handler = TaskHandler(_json, queue)
+        rc = await _task_handler.handle()
+        if isinstance(rc, tuple):
+            rc, err = rc[0], rc[1]
         else:
-            # Normally handle rabbitmq task
-            _task_handler = TaskHandler(_json, queue_name)
-            rc = await _task_handler.handle()
-            rc = rc if serialized(rc) else str(rc)
             err = False # Initially until we find exception
 
         _ret = {"ret": rc, "err": err} # Result to return
@@ -117,13 +86,16 @@ async def new_task(queue_name, friendly_name):
             _ret["ret"] = f"{type(rc).__name__}: {rc}"
             _ret["err"] = True # Mark the error
             stats.err_msgs.append(message) # Mark the failed message so we can ack it later
+        
+        _ret["ret"] = _ret["ret"] if serialized(_ret["ret"]) else str(_ret["ret"])
 
         if _json["meta"].get("ret"):
             await redis_db.set(f"rabbit-{_json['meta'].get('ret')}", orjson.dumps(_ret)) # Save return code in redis
 
-        if queue_name == "_admin" or not _ret["err"]: # If no errors recorded
+        if backends.ackall(queue) or not _ret["err"]: # If no errors recorded
             message.ack()
-        cprint("Message Handled", "magenta")
+        logger.opt(ansi = True).info(f"<m>Message {curr} Handled</m>")
+        stats.handled += 1
     await _queue.consume(_task)
 
 class Stats():
@@ -131,6 +103,8 @@ class Stats():
         self.errors = 0 # Amount of errors
         self.exc = [] # Exceptions
         self.err_msgs = [] # All messages that failed
+        self.on_message = 1 # The currwnt message we are on. Default is 1
+        self.handled = 0 # Handled messages count
 
     def __str__(self):
         s = []
@@ -155,36 +129,25 @@ async def main():
             channel = client.get_channel(bot_logs)
         else:
             break
-    await new_task("bot_edit_queue", "Edit Bot")
-    await new_task("bot_add_queue", "Add Bot")
-    await new_task("bot_delete_queue", "Delete Bot")
-    await new_task("server_add_queue", "Add Server")
-    await new_task("events_webhook_queue", "Event Webhook")
-    await new_task("_admin", "Admin Command") # Special queue for admin commands sent
-    print("Ready!")
+    for backend in backends.getall():
+        await new_task(backend)
+    logger.info("RabbitMQ Worker Up!")
 
 class TaskHandler():
-    handlers = {
-        "bot_edit_queue": bot_edit_backend, 
-        "bot_add_queue": bot_add_backend, 
-        "bot_delete_queue": bot_delete_backend, 
-        "events_webhook_queue": events_webhook_backend,
-        "server_add_queue": server_add_backend
-    }
-    
     def __init__(self, dict, queue):
+        self.dict = dict
         self.ctx = dict["ctx"]
         self.meta = dict["meta"]
         self.queue = queue
 
     async def handle(self):
         try:
-            handle_func = self.handlers[self.queue]
-            rc = await handle_func(**self.ctx)
+            handle_func = backends.get(self.queue)
+            rc = await handle_func(self.dict, **self.ctx)
             return rc
         except Exception as exc:
             stats.errors += 1 # Record new error
-            stats.excs.append(exc)
+            stats.exc.append(exc)
             return exc
 
 # Run the task

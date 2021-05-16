@@ -5,8 +5,13 @@ from discord_webhook import DiscordWebhook, DiscordEmbed
 from modules.core import get_bot, get_user, get_token, bot_add_event
 from termcolor import colored, cprint
 import modules.models.enums as enums
+import inspect
 
-async def events_webhook_backend(webhook_url, webhook_type, api_token, id, webhook_target, event, context, event_type, event_time, event_id, webhook_secret):
+queue = "events_webhook_queue"
+name = "Events Webhook"
+description = "Send Webhooks for votes etc."
+
+async def backend(json, *, webhook_url, webhook_type, api_token, id, webhook_target, event, context, event_type, event_time, event_id, webhook_secret):
     """
         RabbitMQ Backend to send webhooks
 
@@ -48,8 +53,15 @@ async def events_webhook_backend(webhook_url, webhook_type, api_token, id, webho
         else:
             cont = False
         if cont:
-            cprint(f"Method Given: {enums.WebhookType(webhook_type).name}", "blue")
-            cprint(f"JSON: {json}\nFunction: {f}\nURL: {webhook_url}\nHeaders: {headers}\nID: {context.get('user_id')}, {context.get('mod')}, {context.get('user')}\nBot ID: {id}", "blue")
+            logger.debug(inspect.cleandoc(f"""
+                    Going to send webhook:
+                    Method Given: {enums.WebhookType(webhook_type).name}
+                    JSON: {json}
+                    Function: {f}
+                    URL: {webhook_url}
+                    Headers: {headers}
+                    IDs: Mod -> {context.get('mod')}, User -> {context.get('user')}
+                    Bot ID: {id}"""))
             
             # Webhook sending with 7 retries
             resolved_error = False 
@@ -57,10 +69,10 @@ async def events_webhook_backend(webhook_url, webhook_type, api_token, id, webho
                 res = await f(webhook_url, json = json, headers = headers)
                 try:
                     if int(str(res.status)[0]) in (2, 4):
-                        cprint(f"Webhook Post Returned {res.status}. Not retrying as this is either a success or a client side error.", "green")
+                        logger.opt(ansi = True).debug(f"<green>Webhook Post Returned {res.status}. Not retrying as this is either a success or a client side error.</green>")
                         return await _resolve_event(event_id, enums.WebhookResolver.posted)
                     else:
-                        cprint(f"URL did not return 2xx or a client-side 4xx error and sent {res.status} instead. Retrying...", "red")
+                        logger.warning(f"URL did not return 2xx or a client-side 4xx error and sent {res.status} instead. Retrying...", "red")
                 except Exception as exc:
                     # Had an error sending
                     cprint(exc, "red")
