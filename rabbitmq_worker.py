@@ -1,5 +1,5 @@
 """RabbitMQ worker"""
-import asyncpg, asyncio, uvloop, aioredis, os, importlib
+import asyncpg, asyncio, uvloop, aioredis
 import sys
 sys.path.append("..")
 from config import *
@@ -16,15 +16,6 @@ from rabbitmq.core import *
 # Import all needed backends
 backends = Backends()
 builtins.backends = backends
-
-def load_backends():
-    """Load all backends"""
-    for f in os.listdir("rabbitmq/backend"):
-        if not f.startswith("_") and not f.startswith("."):
-            path = "rabbitmq.backend." + f.replace(".py", "")
-            logger.debug("FLWorker: Loading " + f.replace(".py", "") + " with path " + path)
-            _backend = importlib.import_module(path)
-            backends.add(queue = _backend.queue, backend = _backend.backend, name = _backend.name, description = _backend.description)
 
 # Setup main bot
 
@@ -102,21 +93,6 @@ async def new_task(queue):
 
     await _queue.consume(_task)
 
-class Stats():
-    def __init__(self):
-        self.errors = 0 # Amount of errors
-        self.exc = [] # Exceptions
-        self.err_msgs = [] # All messages that failed
-        self.on_message = 1 # The currwnt message we are on. Default is 1
-        self.handled = 0 # Handled messages count
-        self.load_time = None # Amount of time taken to load site
-
-    def __str__(self):
-        s = []
-        for k in self.__dict__.keys():
-            s.append(f"{k}: {self.__dict__[k]}")
-        return "\n".join(s)
-
 async def connect(start_time):
     """Main worker function"""
     asyncio.create_task(client.start(TOKEN_MAIN))
@@ -141,6 +117,7 @@ async def connect(start_time):
     stats.load_time = end_time - start_time
     logger.opt(ansi = True).info(f"<magenta>Worker up in {end_time - start_time} seconds at time {end_time}!</magenta>")
 
+# TODO: Maybe move this to tasks.py with the rest of tasks later if this becomes too unmaintainable
 class TaskHandler():
     def __init__(self, dict, queue):
         self.dict = dict
@@ -158,12 +135,29 @@ class TaskHandler():
             stats.exc.append(exc)
             return exc
 
+class Stats():
+    def __init__(self):
+        self.errors = 0 # Amount of errors
+        self.exc = [] # Exceptions
+        self.err_msgs = [] # All messages that failed
+        self.on_message = 1 # The currwnt message we are on. Default is 1
+        self.handled = 0 # Handled messages count
+        self.load_time = None # Amount of time taken to load site
+
+    def __str__(self):
+        s = []
+        for k in self.__dict__.keys():
+            s.append(f"{k}: {self.__dict__[k]}")
+        return "\n".join(s)
+
+# ENDTODO lides
+
 # Run the task
 if __name__ == "__main__":
     try:
         start_time = time.time()
         logger.opt(ansi = True).info(f"<magenta>Starting Fates List RabbitMQ Worker (time: {start_time})...</magenta>")
-        load_backends() # Load all the backends
+        backends.load() # Load all the backends
         loop = asyncio.get_event_loop()
         loop.create_task(connect(start_time))
 
