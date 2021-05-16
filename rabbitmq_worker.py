@@ -17,12 +17,14 @@ from rabbitmq.core import *
 backends = Backends()
 builtins.backends = backends
 
-for f in os.listdir("rabbitmq/backend"):
-    if not f.startswith("_") and not f.startswith("."):
-        path = "rabbitmq.backend." + f.replace(".py", "")
-        logger.debug("FLWorker: Loading " + f.replace(".py", "") + " with path " + path)
-        _backend = importlib.import_module(path)
-        backends.add(queue = _backend.queue, backend = _backend.backend, name = _backend.name, description = _backend.description)
+def load_backends():
+    """Load all backends"""
+    for f in os.listdir("rabbitmq/backend"):
+        if not f.startswith("_") and not f.startswith("."):
+            path = "rabbitmq.backend." + f.replace(".py", "")
+            logger.debug("FLWorker: Loading " + f.replace(".py", "") + " with path " + path)
+            _backend = importlib.import_module(path)
+            backends.add(queue = _backend.queue, backend = _backend.backend, name = _backend.name, description = _backend.description)
 
 # Setup main bot
 
@@ -82,9 +84,10 @@ async def new_task(queue):
 
         _ret = {"ret": rc, "err": err} # Result to return
         if rc and isinstance(rc, Exception):
-            cprint(rc, "red")
+            logger.opts(ansi = True).warning(f"<red>{type(rc).__name__}: {rc}</red>")
             _ret["ret"] = f"{type(rc).__name__}: {rc}"
-            _ret["err"] = True # Mark the error
+            if not _ret["err"]:
+                _ret["err"] = True # Mark the error
             stats.err_msgs.append(message) # Mark the failed message so we can ack it later
         
         _ret["ret"] = _ret["ret"] if serialized(_ret["ret"]) else str(_ret["ret"])
@@ -96,6 +99,7 @@ async def new_task(queue):
             message.ack()
         logger.opt(ansi = True).info(f"<m>Message {curr} Handled</m>")
         stats.handled += 1
+
     await _queue.consume(_task)
 
 class Stats():
@@ -105,6 +109,7 @@ class Stats():
         self.err_msgs = [] # All messages that failed
         self.on_message = 1 # The currwnt message we are on. Default is 1
         self.handled = 0 # Handled messages count
+        self.load_time = None # Amount of time taken to load site
 
     def __str__(self):
         s = []
@@ -112,7 +117,7 @@ class Stats():
             s.append(f"{k}: {self.__dict__[k]}")
         return "\n".join(s)
 
-async def main():
+async def connect(start_time):
     """Main worker function"""
     asyncio.create_task(client.start(TOKEN_MAIN))
     asyncio.create_task(client_server.start(TOKEN_SERVER))
@@ -121,6 +126,7 @@ async def main():
     )
     builtins.db = await asyncpg.create_pool(host="127.0.0.1", port=5432, user=pg_user, password=pg_pwd, database="fateslist")
     builtins.redis_db = await aioredis.from_url('redis://localhost', db = 1)
+    logger.opt(ansi = True).debug("Connected to databases (postgres, redis and rabbitmq)")
     builtins.stats = Stats()
     channel = None
     while True: # Wait for discord.py before running tasks
@@ -131,7 +137,9 @@ async def main():
             break
     for backend in backends.getall():
         await new_task(backend)
-    logger.info("RabbitMQ Worker Up!")
+    end_time = time.time()
+    stats.load_time = end_time - start_time
+    logger.opt(ansi = True).info(f"<magenta>Worker up in {end_time - start_time} seconds at time {end_time}!</magenta>")
 
 class TaskHandler():
     def __init__(self, dict, queue):
@@ -142,8 +150,8 @@ class TaskHandler():
 
     async def handle(self):
         try:
-            handle_func = backends.get(self.queue)
-            rc = await handle_func(self.dict, **self.ctx)
+            handler = backends.get(self.queue)
+            rc = await handler(self.dict, **self.ctx)
             return rc
         except Exception as exc:
             stats.errors += 1 # Record new error
@@ -153,12 +161,14 @@ class TaskHandler():
 # Run the task
 if __name__ == "__main__":
     try:
+        start_time = time.time()
+        logger.opt(ansi = True).info(f"<magenta>Starting Fates List RabbitMQ Worker (time: {start_time})...</magenta>")
+        load_backends() # Load all the backends
         loop = asyncio.get_event_loop()
-        loop.create_task(main())
+        loop.create_task(connect(start_time))
 
         # we enter a never-ending loop that waits for data and runs
         # callbacks whenever necessary.
-        print(" [*] Starting Fates List RabbitMQ Worker. To exit press CTRL+C")
         loop.run_forever()
     except KeyboardInterrupt:
         try:
