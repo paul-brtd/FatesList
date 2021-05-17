@@ -20,7 +20,7 @@ async def backend(json, *, webhook_url, webhook_type, api_token, id, webhook_tar
         api_token - The API token of the bot/guild as a fallback
         id - The ID of the bot or user in question
         webhook_target - The target if the thing to send. Must be in enums.ObjTypes
-        event - The event name
+        event - The event ID
         context - The context/main body of the event in question
         event_type - The type of event to send
         event_time - The time at which the event was made
@@ -31,7 +31,7 @@ async def backend(json, *, webhook_url, webhook_type, api_token, id, webhook_tar
     if webhook_url not in ["", None] and webhook_type is not None and (webhook_url.startswith("http://") or webhook_url.startswith("https://")):
         cont = True
         if webhook_type == enums.WebhookType.fc:
-            f = requests.post
+            f = requests.post   
             json = {"e": event, "ctx": context | {"m": {"t": webhook_target, "id": id, "eid": str(event_id), "wt": webhook_type}}, "t": event_type, "ts": event_time}
             headers = {"Authorization": webhook_key}
         elif webhook_type == enums.WebhookType.discord and event == enums.APIEvents.bot_vote:
@@ -48,7 +48,7 @@ async def backend(json, *, webhook_url, webhook_type, api_token, id, webhook_tar
             cont = False
         elif webhook_type == enums.WebhookType.vote and event == enums.APIEvents.bot_vote:
             f = requests.post
-            json = {"id": str(context["user"]), "votes": context["votes"], "m": {"t": webhook_target, "wt": webhook_type, "eid": str(event_id)}, "ts": event_time, "e": "vote_bot", "t": "webhook", "ctx": context}
+            json = {"id": str(context["user"]), "votes": context["votes"], "m": {"t": webhook_target, "wt": webhook_type, "eid": str(event_id)}, "ts": event_time, "e": event, "t": "webhook", "ctx": context}
             headers = {"Authorization": webhook_key}
         else:
             cont = False
@@ -69,7 +69,7 @@ async def backend(json, *, webhook_url, webhook_type, api_token, id, webhook_tar
                 res = await f(webhook_url, json = json, headers = headers)
                 try:
                     if int(str(res.status)[0]) in (2, 4):
-                        logger.opt(ansi = True).debug(f"<green>Webhook Post Returned {res.status}. Not retrying as this is either a success or a client side error.</green>")
+                        logger.success(f"Webhook Post Returned {res.status}. Not retrying as this is either a success or a client side error")
                         return await _resolve_event(event_id, enums.WebhookResolver.posted)
                     else:
                         logger.warning(f"URL did not return 2xx or a client-side 4xx error and sent {res.status} instead. Retrying...", "red")

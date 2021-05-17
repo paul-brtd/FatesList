@@ -34,7 +34,7 @@ def exec_op(op):
             _ret = None # No return or anything
         _err = False
     except Exception as exc:
-        cprint(exc, "red")
         _ret = f"{type(exc).__name__}: {exc}"
+        cprint(_ret, "red")
         _err = True
     return _ret if serialized(_ret) else str(_ret), _err

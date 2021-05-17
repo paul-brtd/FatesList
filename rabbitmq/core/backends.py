@@ -45,8 +45,8 @@ class Backends():
             importlib.reload(_backend)
             self.add(path = path, queue = _backend.queue, backend = _backend.backend, name = _backend.name, description = _backend.description)
         except Exception as exc:
-            logger.warning("Reloading failed | {type(exc).__name__}: {exc}")
-            return exc
+            logger.warning(f"Reloading failed | {type(exc).__name__}: {exc}")
+            raise exc
 
     def getpath(self, f):
         """Utility function to get the path given a .py file (or backend name)"""
