@@ -9,3 +9,4 @@ ula/api/config_secrets.py
 docs/site/*
 docs/site
 flvenv
+flvenv/*
