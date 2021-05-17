@@ -8,3 +8,4 @@ admin/fateslist_django/__pycache__/settings.cpython-39.pyc
 ula/api/config_secrets.py
 docs/site/*
 docs/site
+flvenv
