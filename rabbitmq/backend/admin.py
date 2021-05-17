@@ -18,10 +18,10 @@ async def backend(json, **kwargs):
         ops = json["meta"]["op"]
         if isinstance(ops, str):
             ops = [ops]
-            for op in ops:
-                _ret, _err = exec_op(op)
-                err.append(_err)
-                rc.append(_ret)
+        for op in ops:
+            _ret, _err = exec_op(op)
+            err.append(_err)
+            rc.append(_ret)
         return (rc, err)
     return None
 
