@@ -5,7 +5,6 @@ from starlette.status import HTTP_302_FOUND, HTTP_303_SEE_OTHER
 import secrets
 import string
 from config import site_url
-from numba import jit
 
 # Some basic utility functions for Fates List (and other users as well)
 def redirect(path: str) -> RedirectResponse:

@@ -1,5 +1,7 @@
 from .imports import *
 
+Websocket = WebSocket
+
 class ConnectionManager:
     def __init__(self):
         self.active_connections: List[WebSocket] = []

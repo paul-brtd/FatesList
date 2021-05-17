@@ -85,7 +85,7 @@ support_url = "https://discord.gg/cMAnfu8AJB"
 SERVER_TAGS = {"music": "fa-solid:music", "moderation": "fa-solid:hammer", "economy": "fa-solid:coins", "fun": "fa-solid:heart", "anime": "fa-solid:camera", "games": "fa-solid:smile", "web_dashboard": "fa-solid:chart-bar", "logging": "fa-solid:chart-line", "game_stats": "fa-solid:chart-pie", "leveling": "fa-solid:arrow-up", "roleplay": "fa-solid:cat", "utility": "fa-solid:desktop", "social": "fa-solid:users"}
 
 
-pg_user = "postgres" # Postgres Database Username
+pg_user = "meow" # Postgres Database Username
 
 bans_data = {
     "1": {

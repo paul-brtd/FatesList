@@ -1,6 +1,7 @@
 # Put all needed imports here
 from fastapi import Request, APIRouter, BackgroundTasks, Form as FForm, Header, WebSocket, WebSocketDisconnect, File, UploadFile, Depends, Query, Response
 import traceback as tblib
+from fastapi_csrf_protect import CsrfProtect
 import aiohttp
 import asyncpg
 import datetime
@@ -43,6 +44,4 @@ from fastapi.exception_handlers import (
 from fastapi_limiter.depends import RateLimiter
 import lxml
 import io
-from numba import jit
-from numba.typed import Dict as NDict
 import modules.models.enums as enums
