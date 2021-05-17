@@ -209,10 +209,10 @@ class Bot(models.Model):
     shard_count = models.BigIntegerField(blank=True, null=True)
     bot_library = models.CharField(blank=False, null=False, max_length=32)
     webhook = models.CharField(blank=True, null=True, max_length = 1024)
-    webhook_type = models.CharField(max_length=10, choices = (
-        ('VOTE', 'Vote'),
-        ('DISCORD', 'Discord Integration'),
-        ('FC', 'Fates Client')
+    webhook_type = models.IntegerField(max_length=10, choices = (
+        (0, 'Vote'),
+        (1, 'Discord Integration'),
+        (2, 'Fates Client')
     ))
     description = models.CharField(blank=False, null=False, max_length = 105)
     api_token = models.CharField(unique=True, blank=False, null=False, default = uuid.uuid4, max_length = 255)

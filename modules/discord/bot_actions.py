@@ -261,7 +261,7 @@ async def resubmit_bot(request: Request, bot_id: int, appeal: str = FForm("No ap
         title = "Ban Appeal"
         type = "Appeal"
     resubmit_embed = discord.Embed(title=title, color=0x00ff00)
-    resubmit_embed.add_field(name="Username", value = user['username'])
+    resubmit_embed.add_field(name="Username", value = bot['username'])
     resubmit_embed.add_field(name="Bot ID", value = str(bot_id))
     resubmit_embed.add_field(name="Resubmission", value = str(resubmit))
     resubmit_embed.add_field(name=type, value = appeal)
