@@ -8,16 +8,19 @@ from .rabbitmq import *
 
 async def bot_add_ws_event(bot_id: int, ws_event: dict, *, id: Optional[uuid.UUID] = None) -> None:
     """A WS Event must have the following format:
-        - {e: Event Name, t: Event Type (Optional), ctx: Context}
+        - {e: Event Name, t: Event Type (Optional), ctx: Context, m: Event Metadata}
     """
+    if not id:
+        id = uuid.uuid4()
+    id = str(id)
+    if "m" not in ws_event.keys():
+        ws_event["m"] = {}
+    ws_event["m"]["eid"] = id
     curr_ws_events = await redis_db.hget(str(bot_id), key = "ws") # Get all the websocket events from the ws key
     if curr_ws_events is None:
         curr_ws_events = {} # No ws events means empty dict
     else:
         curr_ws_events = orjson.loads(curr_ws_events) # Otherwise, orjson load the current events
-    if not id:
-        id = uuid.uuid4() # Get id
-    id = str(id)
     curr_ws_events[id] = ws_event # Add event to current ws events
     await redis_db.hset(str(bot_id), key = "ws", value = orjson.dumps(curr_ws_events)) # Add it to redis
     await redis_db.publish(str(bot_id), orjson.dumps({id: ws_event})) # Publish it to consumers
@@ -36,11 +39,11 @@ async def bot_get_events(bot_id: int, filter: list = None, exclude: list = None)
         extra += f"AND event != ANY(${i}::text[])"
         extra_params.append(exclude)
         i+=1
-    api_data = await db.fetch(f"SELECT bot_id, epoch, event AS e, context AS ctx, id FROM bot_api_event WHERE bot_id = $1 {extra} ORDER BY epoch", bot_id, *extra_params)
-    api_data = [{"bot_id": str(obj["bot_id"]), "ts": str(obj["epoch"]), "e": obj["e"], "ctx": orjson.loads(obj["ctx"]), "id": obj["id"]} for obj in api_data]
+    api_data = await db.fetch(f"SELECT epoch, event AS e, context AS ctx, id, type FROM bot_api_event WHERE bot_id = $1 {extra} ORDER BY epoch", bot_id, *extra_params)
+    api_data = [{"ctx": orjson.loads(obj["ctx"]), "m": {"e": obj["e"], "eid": obj["id"], "ts": str(obj["epoch"]), "t": obj["type"]}} for obj in api_data]
     return {"events": api_data}
 
-async def bot_add_event(bot_id: int, event: int, context: dict, t: Optional[str] = None, *, send_event = True):
+async def bot_add_event(bot_id: int, event: int, context: dict, t: Optional[int] = None, *, send_event = True):
     if type(context) == dict:
         pass
     else:
@@ -51,7 +54,7 @@ async def bot_add_event(bot_id: int, event: int, context: dict, t: Optional[str]
     if api_token is None:
         return
     event_time = time.time()
-    asyncio.create_task(db.execute("INSERT INTO bot_api_event (bot_id, epoch, event, context, id) VALUES ($1, $2, $3, $4, $5)", bot_id, event_time, event, orjson.dumps(context).decode("utf-8"), id))
+    asyncio.create_task(db.execute("INSERT INTO bot_api_event (bot_id, epoch, event, type, context, id) VALUES ($1, $2, $3, $4, $5, $6)", bot_id, event_time, event, t, orjson.dumps(context).decode("utf-8"), id))
     webh = await db.fetchrow("SELECT webhook, webhook_type, webhook_secret FROM bots WHERE bot_id = $1", int(bot_id))
     if webh and send_event:
         await add_rmq_task("events_webhook_queue", {
@@ -67,5 +70,5 @@ async def bot_add_event(bot_id: int, event: int, context: dict, t: Optional[str]
             "event_time": event_time,
             "event_id": id
         })
-        asyncio.create_task(bot_add_ws_event(bot_id, {"e": event, "t": t, "ctx": context, "ts": event_time, "m": {"t": enums.ObjTypes.bot}}, id = id))
+        asyncio.create_task(bot_add_ws_event(bot_id, {"ctx": context, "m": {"t": t, "ts": event_time, "e": event}}, id = id))
     return id

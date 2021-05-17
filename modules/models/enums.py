@@ -109,6 +109,7 @@ class APIEventTypes(IntEnum):
     ws_event_multi = 5, "Mutliple Websocket Events"
     auth_token = 20, "Token Auth"
     auth_manager_key = 21, "Manager Auth"
+    vote_webhook = 40, "Vote Webhook Event"
 
 class ObjTypes(IntEnum):
     _init_ = "value __doc__"

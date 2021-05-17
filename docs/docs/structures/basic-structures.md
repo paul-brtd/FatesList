@@ -10,13 +10,13 @@
 
 A BaseUser represents a user on Fates List (See [https://github.com/Fates-List/FatesList/blob/main/modules/models/api_v2.py](https://github.com/Fates-List/FatesList/blob/main/modules/models/api_v2.py#L17), link may change). A User, Bot, BotPartial (index and search page uses this) and ProfilePartial (profile search uses this) object both extend the BaseUser class. This is a basic structure that can be seen everywhere in the Fates List API. Note that all values here are according to our 8 hour redis cache we have setup to avoid being ratelimited.
 
-| Structure Name | Description | Type |
+| Key | Description | Type |
 | :--- | :--- | :--- |
 | id  | The ID of the user | Snowflake |
 | username | The username of the user | String |
 | avatar | The avatar URL of the user | String |
 | disc | The discriminator | String |
-| status | The status of rhe user | Status (see below) |
+| status | The status of the user | Status (see below) |
 | bot | Whether the user is a bot or not | Boolean |
 
 ### Status

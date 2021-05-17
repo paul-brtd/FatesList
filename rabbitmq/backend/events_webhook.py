@@ -32,7 +32,7 @@ async def backend(json, *, webhook_url, webhook_type, api_token, id, webhook_tar
         cont = True
         if webhook_type == enums.WebhookType.fc:
             f = requests.post   
-            json = {"e": event, "ctx": context | {"m": {"t": webhook_target, "id": id, "eid": str(event_id), "wt": webhook_type}}, "t": event_type, "ts": event_time}
+            json = {"ctx": context, "m": {"e": event, "id": str(id), "eid": str(event_id), "wt": webhook_type, "t": event_type, "ts": event_time}}
             headers = {"Authorization": webhook_key}
         elif webhook_type == enums.WebhookType.discord and event == enums.APIEvents.bot_vote:
             webhook = DiscordWebhook(url=webhook_url)
@@ -48,7 +48,7 @@ async def backend(json, *, webhook_url, webhook_type, api_token, id, webhook_tar
             cont = False
         elif webhook_type == enums.WebhookType.vote and event == enums.APIEvents.bot_vote:
             f = requests.post
-            json = {"id": str(context["user"]), "votes": context["votes"], "m": {"t": webhook_target, "wt": webhook_type, "eid": str(event_id)}, "ts": event_time, "e": event, "t": "webhook", "ctx": context}
+            json = {"id": str(context["user"]), "votes": context["votes"], "m": {"t": webhook_target, "wt": webhook_type, "eid": str(event_id), "t": enums.APIEventTypes.vote_webhook, "ts": event_time, "e": event}, "ctx": context}
             headers = {"Authorization": webhook_key}
         else:
             cont = False

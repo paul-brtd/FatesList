@@ -236,10 +236,8 @@ class BotPartialList(BaseModel):
     __root__: List[BotPartial]
 
 class BotEvent(BaseModel):
-    id: uuid.UUID
-    event: str
-    epoch: str
-    context: dict
+    m: dict
+    ctx: dict
 
 class BotEventList(BaseModel):
     __root__: List[BotEvent]
