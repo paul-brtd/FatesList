@@ -6,15 +6,15 @@ class Backends():
         self.reload_index = {} # Maps backend path to queue
         self.rmq_backends = {}
 
-    def add(self, path, queue, backend, name, description, reload):
-        if not reload and queue in self.rmq_backends.keys():
+    def add(self, path, config, backend, reload):
+        if not reload and config.queue in self.rmq_backends.keys():
             raise ValueError("Queue already exists and not in reload mode!")
-        self.rmq_backends |= {queue: {"backend": backend, "name": name, "description": description}}
-        self.reload_index[path] = queue
+        self.rmq_backends |= {config.queue: {"backend": backend, "config": config}}
+        self.reload_index[path] = config.queue
 
     def ackall(self, queue):
         try:
-            return self.rmq_backends[queue]["backend"].__ack_all__
+            return self.rmq_backends[queue]["config"].ackall
         except:
             return False
 
@@ -22,7 +22,10 @@ class Backends():
         return self.rmq_backends[queue]["backend"]
 
     def getname(self, queue):
-        return self.rmq_backends[queue]["name"]
+        return self.rmq_backends[queue]["config"].name
+
+    def getdesc(self, queue):
+        return self.rmq_backends[queue]["config"].description
 
     def getall(self):
         return self.rmq_backends.keys()
@@ -31,7 +34,7 @@ class Backends():
         logger.debug(f"Worker: Loading {path}")
         _backend = importlib.import_module(path)
         config = _backend.Config
-        self.add(path = path, queue = config.queue, backend = _backend.backend, name = config.name, description = config.description, reload = False)
+        self.add(path = path, config = config, backend = _backend.backend, reload = False)
 
     def loadall(self):
         """Load all backends"""
@@ -47,7 +50,7 @@ class Backends():
             _backend = importlib.import_module(path)
             importlib.reload(_backend)
             config = _backend.Config
-            self.add(path = path, queue = config.queue, backend = _backend.backend, name = config.name, description = config.description, reload = True)
+            self.add(path = path, config = config, backend = _backend.backend, reload = True)
         except Exception as exc:
             logger.warning(f"Reloading failed | {type(exc).__name__}: {exc}")
             raise exc

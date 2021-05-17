@@ -10,6 +10,7 @@ class Config:
     queue = "_admin"
     name = "Admin Task"
     description = "Perform/Evaluate commands in RabbitMQ worker for debugging"
+    ackall = True
 
 async def backend(json, **kwargs):
     if json["meta"].get("op"):
@@ -25,5 +26,3 @@ async def backend(json, **kwargs):
             rc.append(_ret)
         return (rc, err)
     return None
-
-backend.__ack_all__ = True
