@@ -7,9 +7,10 @@ from termcolor import colored, cprint
 import modules.models.enums as enums
 import inspect
 
-queue = "events_webhook_queue"
-name = "Events Webhook"
-description = "Send Webhooks for votes etc."
+class Config:
+    queue = "events_webhook_queue"
+    name = "Events Webhook"
+    description = "Send Webhooks for votes etc."
 
 async def backend(json, *, webhook_url, webhook_type, api_token, id, webhook_target, event, context, event_type, event_time, event_id, webhook_secret):
     """

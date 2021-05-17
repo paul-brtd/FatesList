@@ -6,9 +6,10 @@ import asyncio
 from termcolor import cprint
 from rabbitmq.core import *
 
-queue = "_admin"
-name = "Admin Task"
-description = "Perform/Evaluate commands in RabbitMQ worker for debugging"
+class Config:
+    queue = "_admin"
+    name = "Admin Task"
+    description = "Perform/Evaluate commands in RabbitMQ worker for debugging"
 
 async def backend(json, **kwargs):
     if queue == "_admin" and json["meta"].get("op"):

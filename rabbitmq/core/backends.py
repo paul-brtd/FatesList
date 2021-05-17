@@ -30,7 +30,8 @@ class Backends():
     def load(self, path):
         logger.debug(f"Worker: Loading {path}")
         _backend = importlib.import_module(path)
-        self.add(path = path, queue = _backend.queue, backend = _backend.backend, name = _backend.name, description = _backend.description, reload = False)
+        config = _backend.Config
+        self.add(path = path, queue = config.queue, backend = _backend.backend, name = config.name, description = config.description, reload = False)
 
     def loadall(self):
         """Load all backends"""
@@ -45,7 +46,8 @@ class Backends():
             queue = self.reload_index[path]
             _backend = importlib.import_module(path)
             importlib.reload(_backend)
-            self.add(path = path, queue = _backend.queue, backend = _backend.backend, name = _backend.name, description = _backend.description, reload = True)
+            config = _backend.Config
+            self.add(path = path, queue = config.queue, backend = _backend.backend, name = config.name, description = config.description, reload = True)
         except Exception as exc:
             logger.warning(f"Reloading failed | {type(exc).__name__}: {exc}")
             raise exc

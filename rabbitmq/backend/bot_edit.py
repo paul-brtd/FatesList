@@ -4,9 +4,10 @@ import modules.models.enums as enums
 from config import bot_logs
 import asyncio
 
-queue = "bot_edit_queue"
-name = "Bot Edit"
-description = "Edits a bot on Fates List"
+class Config:
+    queue = "bot_edit_queue"
+    name = "Bot Edit"
+    description = "Edits a bot on Fates List"
 
 async def backend(json, *, user_id, bot_id, prefix, library, website, banner, support, long_description, description, tags, extra_owners, invite, webhook, vanity, github, features, long_description_type, webhook_type, webhook_secret, css, donate, privacy_policy, nsfw):
     await db.execute("UPDATE bots SET bot_library=$2, webhook=$3, description=$4, long_description=$5, prefix=$6, website=$7, discord=$8, banner=$9, invite=$10, github = $11, features = $12, long_description_type = $13, webhook_type = $14, css = $15, donate = $16, privacy_policy = $17, nsfw = $18, webhook_secret = $19 WHERE bot_id = $1", bot_id, library, webhook, description, long_description, prefix, website, support, banner, invite, github, features, long_description_type, webhook_type, css, donate, privacy_policy, nsfw, webhook_secret) # Update bot with new info

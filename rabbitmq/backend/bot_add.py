@@ -5,9 +5,10 @@ from config import bot_logs, staff_ping_add_role
 import asyncio
 from termcolor import cprint
 
-queue = "bot_add_queue"
-name = "Bot Add"
-description = "Adds a bot to the queue"
+class Config:
+    queue = "bot_add_queue"
+    name = "Bot Add"
+    description = "Adds a bot to the queue"
 
 async def backend(json, *, user_id, bot_id, prefix, library, website, banner, support, long_description, description, tags, extra_owners, invite, features, long_description_type, css, donate, github, webhook, webhook_type, webhook_secret, vanity, privacy_policy, nsfw):
     user_id, bot_id = int(user_id), int(bot_id) # I am stupid and made this a string

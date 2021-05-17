@@ -2,9 +2,10 @@ from modules.core import bot_add_event
 from config import bot_logs
 import discord
 
-queue = "bot_delete_queue"
-name = "Bot Delete"
-description = "Bot Delete"
+class Config:
+    queue = "bot_delete_queue"
+    name = "Bot Delete"
+    description = "Bot Delete"
 
 async def backend(json, *, user_id, bot_id):
     await db.execute(f"DELETE FROM bots WHERE bot_id = $1", bot_id)
