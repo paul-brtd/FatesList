@@ -76,9 +76,9 @@ async def new_task(queue):
         _ret = {"ret": rc, "err": err} # Result to return
         if rc and isinstance(rc, Exception):
             logger.opt(ansi = True).warning(f"<red>{type(rc).__name__}: {rc}</red>")
-            _ret["ret"] = f"{type(rc).__name__}: {rc}"
+            _ret["ret"] = [f"{type(rc).__name__}: {rc}"]
             if not _ret["err"]:
-                _ret["err"] = True # Mark the error
+                _ret["err"] = [True] # Mark the error
             stats.err_msgs.append(message) # Mark the failed message so we can ack it later
         
         _ret["ret"] = _ret["ret"] if serialized(_ret["ret"]) else str(_ret["ret"])
@@ -175,15 +175,19 @@ if __name__ == "__main__":
         start_time = time.time()
         logger.opt(ansi = True).info(f"<magenta>Starting Fates List RabbitMQ Worker (time: {start_time})...</magenta>")
         backends.loadall() # Load all the backends
-        loop = asyncio.get_event_loop()
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
         loop.create_task(connect(start_time))
+        #loop.create_task(connect(start_time))
 
         # we enter a never-ending loop that waits for data and runs
         # callbacks whenever necessary.
         loop.run_forever()
     except KeyboardInterrupt:
         try:
-            asyncio.get_event_loop().run_until_complete(rabbitmq.disconnect())
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            loop.run_until_complete(rabbitmq.disconnect())
         except:
             pass
         logger.opt(ansi = True).info("<magenta>RabbitMQ worker down!</magenta>")

@@ -12,7 +12,7 @@ class Config:
     description = "Perform/Evaluate commands in RabbitMQ worker for debugging"
 
 async def backend(json, **kwargs):
-    if queue == "_admin" and json["meta"].get("op"):
+    if json["meta"].get("op"):
         # Handle admin operations
         rc = []
         err = []
