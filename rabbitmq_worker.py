@@ -75,7 +75,7 @@ async def new_task(queue):
 
         _ret = {"ret": rc, "err": err} # Result to return
         if rc and isinstance(rc, Exception):
-            logger.opts(ansi = True).warning(f"<red>{type(rc).__name__}: {rc}</red>")
+            logger.opt(ansi = True).warning(f"<red>{type(rc).__name__}: {rc}</red>")
             _ret["ret"] = f"{type(rc).__name__}: {rc}"
             if not _ret["err"]:
                 _ret["err"] = True # Mark the error
@@ -89,6 +89,8 @@ async def new_task(queue):
         if backends.ackall(queue) or not _ret["err"]: # If no errors recorded
             message.ack()
         logger.opt(ansi = True).info(f"<m>Message {curr} Handled</m>")
+        await redis_db.incr("rmq_total_msgs", 1)
+        stats.total_msgs += 1
         stats.handled += 1
 
     await _queue.consume(_task)
@@ -104,6 +106,14 @@ async def connect(start_time):
     builtins.redis_db = await aioredis.from_url('redis://localhost', db = 1)
     logger.opt(ansi = True).debug("Connected to databases (postgres, redis and rabbitmq)")
     builtins.stats = Stats()
+    
+    # Get handled message count
+    stats.total_msgs = await redis_db.get("rmq_total_msgs")
+    try:
+        stats.total_msgs = int(stats.total_msgs)
+    except:
+        stats.total_msgs = 0
+
     channel = None
     while True: # Wait for discord.py before running tasks
         if channel is None:
@@ -143,6 +153,13 @@ class Stats():
         self.on_message = 1 # The currwnt message we are on. Default is 1
         self.handled = 0 # Handled messages count
         self.load_time = None # Amount of time taken to load site
+        self.total_msgs = 0 # Total messages
+
+    def cure(self, index):
+        """'Cures' a error that has been handled"""
+        self.errors -= 1
+        del self.exc[index]
+        del self.err_msgs[index]
 
     def __str__(self):
         s = []
@@ -150,14 +167,14 @@ class Stats():
             s.append(f"{k}: {self.__dict__[k]}")
         return "\n".join(s)
 
-# ENDTODO lides
+# ENDTODO lines
 
 # Run the task
 if __name__ == "__main__":
     try:
         start_time = time.time()
         logger.opt(ansi = True).info(f"<magenta>Starting Fates List RabbitMQ Worker (time: {start_time})...</magenta>")
-        backends.load() # Load all the backends
+        backends.loadall() # Load all the backends
         loop = asyncio.get_event_loop()
         loop.create_task(connect(start_time))
 
@@ -169,4 +186,4 @@ if __name__ == "__main__":
             asyncio.get_event_loop().run_until_complete(rabbitmq.disconnect())
         except:
             pass
-        print("RabbitMQ worker down!")
+        logger.opt(ansi = True).info("<magenta>RabbitMQ worker down!</magenta>")

@@ -59,7 +59,7 @@ async def backend(json, *, webhook_url, webhook_type, api_token, id, webhook_tar
                     JSON: {json}
                     Function: {f}
                     URL: {webhook_url}
-                    Headers: {headers}
+                    Headers: REDACTED FOR PERSONAL SAFETY
                     IDs: Mod -> {context.get('mod')}, User -> {context.get('user')}
                     Bot ID: {id}"""))
             
