@@ -25,7 +25,7 @@ function openf(evt, idp, data) {
 }
 
 var rating = 0;
-var slider = document.querySelectorAll(".bot-range-slider");
+var slider = document.querySelectorAll(".range-slider");
 // Update the current slider value (each time you drag the slider handle)
 for(var i = 0; i < slider.length; i++) {
 	output_id = slider[i].getAttribute("output")
@@ -67,13 +67,13 @@ function parseState(v) {
 
 $(document).ready(function(){	
 		if(window.location.hash == "")
-			document.querySelector('#bot-long-desc-tab-button').click()
+			document.querySelector('#long-desc-tab-button').click()
 		else {
 			try {
 				document.querySelector(window.location.hash.replace("-fl", "")).click()
 			}
 			catch {
-				document.querySelector('#bot-long-desc-tab-button').click()
+				document.querySelector('#long-desc-tab-button').click()
 			}
 		}
 	});
