@@ -1,4 +1,5 @@
-function openf(evt, id, data) {
+function openf(evt, type, idp, data) {
+	var id = `${type}-${idp}`
 	// Declare all variables
 	var i, tabcontent, tablinks;
 

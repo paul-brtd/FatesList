@@ -1,54 +1,56 @@
 {% extends "base/base.html" %}
 
 {% block head %}
-	<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Fates-List/FatesList@main/static/assets/css/bots.min.css" media="none" onload="if(media!='all')media='all'"/>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Fates-List/FatesList@main/static/assets/css/bots_servers.min.css" media="none" onload="if(media!='all')media='all'"/>
 <style>
-{{ireplace(".alert", "", bot.css)}}
+{{ireplace(".alert", "", data.css)}}
 </style>
 {% endblock %}
 {% block content %}
-	<div id="bot-content">
+	<div id="{{type}}-content">
 		<div class="d-flex d-xl-flex flex-column justify-content-center align-items-center justify-content-xl-center align-items-xl-center">
 
-			<img style="border-radius: 50%; width: 120px;" class="lozad" data-src="{{bot.user.avatar}}" id="bot-avatar" alt="{{bot.user.avatar}}'s avatar">
-			<a href="/bot/{{bot_id}}/invite" class="white"><h3 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;" id="bot-username">{{bot.user.username}} <span style="opacity: 0.65">({{bot.prefix}})</span></h3></a>
-			{% if bot.state == enums.BotState.denied %}
+			<img style="border-radius: 50%; width: 120px;" class="lozad" data-src="{{data.info.avatar}}" id="{{type}}-avatar" alt="{{data.info.name}}'s avatar">
+			<a href="/{{type}}/{{id}}/invite" class="white"><h3 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;" id="{{type}}-name">{{data.info.name}} <span style="opacity: 0.65">({{data.prefix}})</span></h3></a>
+			{% if type == "bot" %}
+				{% if data.state == enums.BotState.denied %}
 				<div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
-					<strong>This bot has been DENIED from this bot list for violating our rules or being a low-quality bot. Please do not invite it.</strong>	
-					{% if bot_admin %}
-						<br/><strong>Since you are the owner/extra owners of this bot, you can resubmit your bot or request a ban appeal (if your bot was banned and not denied) by clicking <a class="long-desc-link" href="/bot/{{bot.bot_id}}/resubmit">here</a></strong>
+					<strong>This bot has been DENIED from this list for violating our rules or being a low-quality bot. Please do not invite it.</strong>	
+					{% if admin %}
+						<br/><strong>Since you are the owner/extra owners of this bot, you can resubmit your bot or request a ban appeal (if your bot was banned and not denied) by clicking <a class="long-desc-link" href="/bot/{{data.id}}/resubmit">here</a></strong>
 				</div>
-			{% endif %}
-			</div>
-			{% elif bot.state == enums.BotState.banned %}
-				<div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
-					<strong>This bot has been BANNED from this bot list for violating our rules or being a low-quality bot. Please do not invite it.</strong>
-					{% if bot_admin %}
-						<br/><strong>Since you are the owner/extra owners of this bot, you can resubmit your bot or request a ban appeal (if your bot was banned and not denied) by clicking <a class="long-desc-link" href="/bot/{{bot.bot_id}}/resubmit">here</a></strong>
-					{% endif %}
+				{% endif %}
 				</div>
-			{% elif bot.state == enums.BotState.pending or bot.state == enums.BotState.under_review %}
-				<div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
-					<strong>This bot has not yet been verified/approved and may violate our rules and/or be low-quality or a "nuke bot". Please do not invite it until we have approved it</strong>
+				{% elif data.state == enums.BotState.banned %}
+					<div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
+						<strong>This bot has been BANNED from this bot list for violating our rules or being a low-quality bot. Please do not invite it.</strong>
+						{% if admin %}
+							<br/><strong>Since you are the owner/extra owners of this bot, you can resubmit your bot or request a ban appeal (if your bot was banned and not denied) by clicking <a class="long-desc-link" href="/bot/{{data.id}}/resubmit">here</a></strong>
+						{% endif %}
+					</div>
+				{% elif data.state == enums.BotState.pending or data.state == enums.BotState.under_review %}
+					<div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
+						<strong>This bot has not yet been verified/approved and may violate our rules and/or be low-quality or a "nuke bot". Please do not invite it until we have approved it</strong>
+					</div>
+				{% endif %}
+				{% if data.state == enums.BotState.under_review %}
+					<div class="alert alert-info" style="text-align: center; justify-content: center; color: white !important;" role="alert">
+						<strong>This bot is currently under review now right now and will be approved (or denied) soon!</strong>
+					</div>
+				{% endif %}
+				{% if data.state == enums.BotState.archived %}
+					<div class="alert alert-info" style="text-align: center; justify-content: center; color: white !important;" role="alert">
+						<strong>This bot has been archived by its owner and may not be working anymore</strong>
+					</div>
+				{% endif %}
+				{% if (data.state == enums.BotState.pending or data.state == enums.BotState.under_review) and staff[0] %}
+					<div class="alert alert-info" style="text-align: center; justify-content: center; color: white !important;" role="alert">
+						<strong>You are in review mode. Test the bot by inviting it to the staff server by clicking the Invite button and choosing the Testing Server. Once you are done reviewing the bot, click Admin to approve/deny it</strong>
+					</div>
 				</div>
-			{% endif %}
-			{% if bot.state == enums.BotState.under_review %}
-				<div class="alert alert-info" style="text-align: center; justify-content: center; color: white !important;" role="alert">
-					<strong>This bot is currently under review now right now and will be approved (or denied) soon!</strong>
-				</div>
-			{% endif %}
-			{% if bot.state == enums.BotState.archived %}
-				<div class="alert alert-info" style="text-align: center; justify-content: center; color: white !important;" role="alert">
-					<strong>This bot has been archived by its owner and may not be working anymore</strong>
-				</div>
-			{% endif %}
-			{% if (bot.state == enums.BotState.pending or bot.state == enums.BotState.under_review) and staff[0] %}
-				<div class="alert alert-info" style="text-align: center; justify-content: center; color: white !important;" role="alert">
-					<strong>You are in review mode. Test the bot by inviting it to the staff server by clicking the Invite button and choosing the Testing Server. Once you are done reviewing the bot, click Admin to approve/deny it</strong>
-				</div>
-		</div>
-	{% endif %}
-	{% if bot.nsfw %}
+				{% endif %}
+				{% endif %}
+	{% if data.nsfw %}
 		<div class="alert alert-info" style="text-align: center; justify-content: center; color: white !important;" role="alert">
 			<strong>This bot is primarily NSFW (Not Safe For Work), as such lots of functionality will need a NSFW channel. If the bot allows NSFW commands in non-NSFW channels, please report it using Mod Mail</strong>
 		</div>
@@ -58,53 +60,53 @@
 			<strong>{{maint[1]["reason"]}}</strong>
 		</div>
 	{% endif %}
-	<p style="color: rgba(255,255,255,0.87); font-weight: bold; font-size: 18px;" id="bot-description">{{bot.description}}</p>
+	<p style="color: rgba(255,255,255,0.87); font-weight: bold; font-size: 18px;" id="{{type}}-description">{{data.description}}</p>
 	</div>
-	<div class="d-flex justify-content-center align-items-center flex-wrap" style="width: 80%;margin: 0 auto;max-width: 1000px; margin-bottom: 3px !important;" id="bot-buttons">
-		{% if bot.state != enums.BotState.banned %}
-			<form method = "POST" action = "/bot/{{bot_id}}/vote" id="vote">
-				<button type="submit" data-sitekey="{{recaptcha_client}}" data-callback='onSubmit' data-action='submit' class="g-recaptcha btn bot-buttons-all vote btn-outline-light" id="bot-buttons-vote" style="color: white !important;">
+	<div class="d-flex justify-content-center align-items-center flex-wrap" style="width: 80%;margin: 0 auto;max-width: 1000px; margin-bottom: 3px !important;" id="{{type}}-buttons">
+		{% if data.state != enums.BotState.banned %}
+			<form method = "POST" action = "/bot/{{id}}/vote" id="{{data}}-vote">
+				<button type="submit" class="g-recaptcha btn {{type}}-buttons-all vote btn-outline-light" id="{{type}}-buttons-vote" style="color: white !important;">
 					<span class="iconify" data-icon="fa-solid:thumbs-up" data-inline="false"></span>
-					<span style="margin-left: 3px;">{{bot.votes}}</span>
+					<span style="margin-left: 3px;">{{data.votes}}</span>
 				</button>
 
 			</form>
 		{% endif %}
-		{% if bot.state != enums.BotState.banned %}
-			<a target=”_blank” href="/bot/{{bot_id}}/invite"><button class="btn btn-outline-light bot-buttons-all" id="bot-buttons-invite">Invite</button></a>
+		{% if type != "bot" or data.state != enums.BotState.banned %}
+			<a target=”_blank” href="/bot/{{id}}/invite"><button class="btn btn-outline-light {{type}}-buttons-all" id="{{type}}-buttons-invite">Invite</button></a>
 		{% endif %}
-		{% if bot.support and bot.support.replace(" ", "") %}
-			<a target=”_blank” href="{{bot.support}}"><button class="btn btn-outline-light bot-buttons-all" id="bot-buttons-support">Support</button></a>
+		{% if data.support and data.support.replace(" ", "") %}
+			<a target=”_blank” href="{{data.support}}"><button class="btn btn-outline-light {{type}}-buttons-all" id="{{type}}-buttons-support">Support</button></a>
 		{% endif %}
-		{% if bot.donate and bot.donate.replace(" ", "") %}
-			<a target=”_blank” href="{{bot.donate}}"><button class="btn btn-outline-light bot-buttons-all" id="bot-buttons-donate">Donate</button></a>
+		{% if data.donate and data.donate.replace(" ", "") %}
+			<a target=”_blank” href="{{data.donate}}"><button class="btn btn-outline-light {{type}}-buttons-all" id="{{type}}-buttons-donate">Donate</button></a>
 		{% endif %}
-		{% if bot.github and bot.github.replace(" ", "") %}
-			<a target=”_blank” href="{{bot.github}}"><button class="btn btn-outline-light bot-buttons-all" id="bot-buttons-github">Github</button></a>
+		{% if data.github and data.github.replace(" ", "") %}
+			<a target=”_blank” href="{{data.github}}"><button class="btn btn-outline-light {{type}}-buttons-all" id="{{type}}-buttons-github">Github</button></a>
 		{% endif %}
-		{% if bot.privacy_policy %}
-			<a target="_blank" href="{{bot.privacy_policy}}"><button class="btn btn-outline-light bot-buttons-all" id="bot-buttons-privacy_policy">Privacy Policy</button></a>
+		{% if data.privacy_policy %}
+			<a target="_blank" href="{{data.privacy_policy}}"><button class="btn btn-outline-light {{type}}-buttons-all" id="{{type}}-buttons-privacy_policy">Privacy Policy</button></a>
 		{% endif %}
-		{% if bot.website %}
-			<a target=”_blank” href="{{bot.website}}"><button class="btn btn-outline-light bot-buttons-all" id="bot-buttons-website">Website</button></a>
+		{% if data.website %}
+			<a target=”_blank” href="{{data.website}}"><button class="btn btn-outline-light {{type}}-buttons-all" id="{{type}}-buttons-website">Website</button></a>
 		{% endif %}
-		{% if bot_admin %}
-			<a href="/bot/{{bot_id}}/edit"><button class="btn btn-outline-light bot-buttons-all" id="bot-buttons-edit">Edit</button></a>
+		{% if admin %}
+			<a href="/bot/{{id}}/edit"><button class="btn btn-outline-light {{type}}-buttons-all" id="bot-buttons-edit">Edit</button></a>
 		{% endif %}
 	</div>
-	<div style="display: inline-block; width: fit-content; height: fit-content; margin: 7px; padding: 7px;" id="bot-key-container">
-		<section id="bot-tags">
-			<div style="text-align: center; margin-top: 9px;" id="bot-tags-container">
-				<div class="d-flex flex-wrap justify-content-center align-items-center" style="width: 93%; margin: 0 auto;" id="bot-tags-container-inner">
+	<div style="display: inline-block; width: fit-content; height: fit-content; margin: 7px; padding: 7px;" id="{{type}}--key-container">
+		<section id="{{typr}}-tags">
+			<div style="text-align: center; margin-top: 9px;" id="{{typew}}-tags-container">
+				<div class="d-flex flex-wrap justify-content-center align-items-center" style="width: 93%; margin: 0 auto;" id="{{type}}-tags-container-inner">
 					{{ tags(tags_fixed) }}
 				</div>
 			</div>
 		</section>
-		{% if promos != [] or bot_admin %}
+		{% if promos != [] or admin %}
 			<div id="bot-promo" style="margin-top: 30px;">
 				<h5 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;margin-top: -13px;margin-bottom: 3px;" id="bot-promo-header">Promotions, Announcements and More!</h5>
-				{% if bot_admin %}
-					<a href="javascript:void()" onclick="newPromotion('{{bot.api_token}}')" style="color: white !important; opacity: 0.8;"><span class="iconify" data-icon="fa-solid:plus" data-inline="false"></span><span style="margin-left: 3px">New Promotion (Coming Soon)</span></a>
+				{% if admin %}
+					<a href="javascript:void()" onclick="newPromotion('{{data.api_token}}')" style="color: white !important; opacity: 0.8;"><span class="iconify" data-icon="fa-solid:plus" data-inline="false"></span><span style="margin-left: 3px">New Promotion (Coming Soon)</span></a>
 				{% endif %}
 			{% endif %}
 			{% for promo in promos %}
@@ -117,20 +119,20 @@
 	</div>
 	<div id="bot-switcher" style='margin-bottom: 3px;' class='blackbar'>
 		<div class="tab">
-			  <button id="bot-long-desc-tab-button" class="tablinks" onclick="openf(event, 'bot-long-description-container', this)">Description</button>
-			  <button id="bot-review-tab-button" class="tablinks" onclick="openf(event, 'bot-reviews', this)">Reviews</button>
-			  <button id="bot-commands-tab-button" class="tablinks coming-soon" onclick="openf(event, 'bot-commands', this)">Commands</button>
-			  <button id="bot-about-tab-button" class="tablinks" onclick="openf(event, 'bot-about', this)">About</button>
+			  <button id="{{type}}-long-desc-tab-button" class="tablinks" onclick="openf(event, {{type}}, 'long-description-container', this)">Description</button>
+			  <button id="{{type}}-review-tab-button" class="tablinks" onclick="openf(event, {{type}}, 'reviews', this)">Reviews</button>
+			  <button id="{{type}}-tab-button" class="tablinks coming-soon" onclick="openf(event, {{type}} 'commands', this)">Commands</button>
+			  <button id="{{type}}-tab-button" class="tablinks" onclick="openf(event, {{type}}, 'about', this)">About</button>
 			  {% if staff[0] %}
-       				  <button id="bot-admin-tab-button" class="tablinks" onclick="openf(event, 'bot-admin', this)">Admin</button>
+       				  <button id="{{type}}admin-tab-button" class="tablinks" onclick="openf(event, "{{type}}", 'admin', this)">Admin</button>
 	   		  {% endif %}
 		</div>
-		<section id="bot-long-description-container" class='tabcontent'>
-			<div id="bot-long-description" style="color: white; text-align: left; margin-left: 5%; margin-right: 5%; margin-top: 13px;"> {% if bot.long_description_type in (enums.LongDescType.html, enums.LongDescType.markdown_pymarkdown) %}{{bot.long_description|safe}}{% endif %}</div> <!-- To avoid users seeing broken pages, don't add to site is markdown is used -->
-			{% if bot.long_description_type == enums.LongDescType.markdown_marked %}
+		<section id="{{type}}-long-description-container" class='tabcontent'>
+			<div id="{{type}}-long-description" style="color: white; text-align: left; margin-left: 5%; margin-right: 5%; margin-top: 13px;"> {% if data.description_type in (enums.LongDescType.html, enums.LongDescType.markdown_pymarkdown) %}{{data.long_description|safe}}{% endif %}</div> <!-- To avoid users seeing broken pages, don't add to site is markdown is used -->
+			{% if data.long_description_type == enums.LongDescType.markdown_marked %}
        				<!-- Handle markdown -->
 				<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-				<pre style="display: none" id="marked-ld">{{bot.long_description|safe}}</pre>
+				<pre style="display: none" id="marked-ld">{{data.long_description|safe}}</pre>
 				<script>
 
 					String.prototype.replaceAll = function(strReplace, strWith) {
@@ -148,19 +150,19 @@
 					};
 					long_desc_replace_tup = [["<a", "<a class='long-desc-link ldlink'"], ["h1", "h2 style='text-align: center'"], ["h3", "h4"], ["bootstrap.min.css", ""], ["bootstrap.css", ""], ["jquery.min.js", ""]] // Event though we are markdown, we still have some needed patches
 					var md = marked(document.querySelector("#marked-ld").innerHTML).replacem(long_desc_replace_tup) // Markdown it and apply some patches though not all used in python markdown
-					document.querySelector("#bot-long-description").innerHTML = md;
+					document.querySelector("#{{types}}-long-description").innerHTML = md;
 				</script>
 			{% endif %}
 		</section>
-		<section id="bot-reviews" class='tabcontent'>
+		<section id=";{type}}-reviews" class='tabcontent'>
 			<h6 style="font-size: 18px;" class="white">Bot Reviews</h6>
 			{% if username %}
-       				<form method="POST" id="review_form" action="/bot/{{bot_id}}/reviews/new" style="width: 100%; margin-bottom: 13px;">
-					<label for="rating">On a scale of 1 to 10, how much did you like this bot?</label><br/>
+       				<form method="POST" id="review_form" action="/{{type}}/{{id}}/reviews/new" style="width: 100%; margin-bottom: 13px;">
+					<label for="rating">On a scale of 1 to 10, how much did you like this {{type}}?</label><br/>
 					<input class='slider bot-range-slider' type="range" name="rating" min="0.1" max="10" style="width: 100%" value='5' step='0.1' output="rating-desc"/>
 					<p id='rating-desc' style="color: white;"></p>
 					<label for="review">Please write a few words about the bot (in your opinion)</label>
-					<textarea id='bot-rating-review' name="review" type="text" class="form-control fform" style="min-height: 100px; height: 100px;" required minlength="9" placeholder="This bot is a really good bot because of X, Y and Z however...">{{review_desc}}</textarea>
+					<textarea id='{{type}}-rating-review' name="review" type="text" class="form-control fform" style="min-height: 100px; height: 100px;" required minlength="9" placeholder="This bot is a really good bot because of X, Y and Z however...">{{review_desc}}</textarea>
 					<button type="submit" class="btn btn-outline-light">Review</button>
 				</form>
 			{% else %}
@@ -204,7 +206,7 @@
 							</div>
 							<span style="margin-left: 30px !important; color: white" id="review_text-{{rev.id}}">{{rev.review}}</span>
 							{% if username %}
-							<form method="POST" id="reviewreply-{{rev.id}}" style="display: none; width: 100%;" action="/bot/{{bot_id}}/reviews/{{rev.id}}/reply" class="white">
+							<form method="POST" id="reviewreply-{{rev.id}}" style="display: none; width: 100%;" action="/bot/{{id}}/reviews/{{rev.id}}/reply" class="white">
 								<input type="hidden" name="id" value="{{rev.id}}" /> <!-- The ID to update -->
 								<label for="rating">On a scale of 1 to 10, how much did you like this bot?</label><br/>
 								<input class='slider bot-range-slider' type="range" name="rating" min="0.1" max="10" step='0.1' style="width:100%;" output="rating-reply-desc-{{rev.id}}-{{index}}"/>
@@ -215,7 +217,7 @@
 							</form>
 							{% endif %}
 							{% if user_id == rev.user_id or staff[0] %}
-       								<form method="POST" id="review-{{rev.id}}" style="display: none; width: 100%;" action="/bot/{{bot_id}}/reviews/{{rev.id}}/edit" class="white">
+       								<form method="POST" id="review-{{rev.id}}" style="display: none; width: 100%;" action="/bot/{{id}}/reviews/{{rev.id}}/edit" class="white">
 									<input type="hidden" name="id" value="{{rev.id}}" /> <!-- The ID to update -->
 									<label for="rating">On a scale of 1 to 10, how much did you like this bot?</label><br/>
 									<input class='slider bot-range-slider' type="range" name="rating" min="0.1" max="10" value='{{rev.star_rating}}' step='0.1' style="width:100%;" output="rating-desc-{{rev.id}}-{{index}}"/>
@@ -237,9 +239,9 @@
 			    		{
 				  		"@context" : "http://schema.org",
 				 		"@type" : "Product",
-				  		"name" : "{{bot.user.username}}",
-				  		"image" : "{{bot.user.avatar}}",
-				  		"description": "{{bot.description}}",
+				  		"name" : "{{data.info.name}}",
+				  		"image" : "{{data.info.avatar}}",
+				  		"description": "{{data.description}}",
 				  		"sku": "{{rev.id}}",
 				  		"offers": "",
 				  		"aggregateRating" : {
@@ -268,13 +270,13 @@
 		    <p class="white text-center" id="rendering">Rendering Reviews</p>
 		    <article id="defer" hidden style="display: none:">
 			    {% for rev in bot_reviews %}
-			    <section class="bot-review-root bot-review">
+			    <section class="{{type}}-review-root {{type}}-review">
 				    {{ review(rev, loop.index) }}
 			    </section>
 		    	    {% endfor %}
 		    <div class="text-center">
 		    {% for page in range(1, total_review_pages + 1) %} 
-			    <a href="https://fateslist.xyz/bot/{{bot_id}}?rev_page={{page}}#bot-review-tab-button-fl" id="review-page-{{page}}" class="white review-pages" style="font-size: large;">{{page}}</a>
+			    <a href="https://fateslist.xyz/{{type}}/{{id}}?rev_page={{page}}#{{type}}-review-tab-button-fl" id="review-page-{{page}}" class="white review-pages" style="font-size: large;">{{page}}</a>
 		    {% endfor %}
 		    </div>
 		    </article>
@@ -293,77 +295,77 @@
 		    </script>
 		</div>
 	</section>
-	<section id="bot-commands" class="tabcontent white">
+	<section id="{{type}}-commands" class="tabcontent white">
 		<p style="font-size: 30px;">Coming soon<span class="iconify" data-icon="icomoon-free:happy2" style="margin-left: 3px"></span></p>
 	</section>
-	<section id="bot-about" class='tabcontent white'>
+	<section id="{{type}}-about" class='tabcontent white'>
 		<table style="margin: 0 auto !important;">
 			<tr>
 				<th>Owners</th>
-				<td>{{bot.owners_html|safe}}</td>
+				<td>{{data.owners_html|safe}}</td>
 			</tr>
 			<tr>
 				<th>Prefix</th>
-				<td>{{bot.prefix}}</td>
+				<td>{{data.prefix}}</td>
 			</tr>
 			<tr>
 				<th>Library</th>
-				<td>{{bot.library.lower()}}</td>
+				<td>{{data.library.lower()}}</td>
 			</tr>
 			<tr>
 				<th>Servers</th>
-				<td>{{bot.servers}}</td>
+				<td>{{data.servers}}</td>
 			</tr>
 			<tr>
 				<th>Shards</th>
-				<td>{{bot.shards}}</td>
+				<td>{{data.shards}}</td>
 			</tr>
 			<tr>
 				<th>Invites</th>
-				<td>{{bot.invite_amount}}</td>
+				<td>{{data.invite_amount}}</td>
 			</tr>
 			<tr>
 				<th>Vote Page</th>
-				<td><a class='long-desc-link' href="/bot/{{bot_id}}/vote">Click/Copy Me!</a></td>
+				<td><a class='long-desc-link' href="/{{type}}/{{id}}/vote">Click/Copy Me!</a></td>
 			</tr>
-			{% if bot.features %}
+			{% if data.features %}
 				<tr>
 					<th>Features</th>
-					<td>{{bot.features|safe}}</td>
+					<td>{{data.features|safe}}</td>
 				</tr>
 			{% endif %}
 		</table>
 	</section>
-	<div id="bot-admin" class='tabcontent white'>
+	<div id="{{type}}-admin" class='tabcontent white'>
 		<h6>Administrative Tasks</h6>
 		{% if staff[0] %}
-			{% if bot.state == enums.BotState.pending or bot.state == enums.BotState.under_review %}
+			{% if data.state == enums.BotState.pending or data.state == enums.BotState.under_review %}
 				<p>Approve this bot?</p>
-				<form method="POST" action="/admin/review/{{bot_id}}" style="margin-bottom: 10px;">
+				<form method="POST" action="/admin/review/{{id}}" style="margin-bottom: 10px;">
 					<input hidden name="accept" value="true"></input>
 					<textarea name="accept_feedback" style="border-radius: 4px 4px 4px 4px !important; min-height: 10px; height: 200px; width: 100%" placeholder="Enter any feedback you have for this bot"></textarea><br/>
 					<button class="btn btn-outline-light" type="submit" style="margin: 0 15px;">Accept</button>
 				</form>
 				<p>Deny this bot?</p>
-				<form method="POST" action="/admin/review/{{bot_id}}">
+				<form method="POST" action="/admin/review/{{id}}">
 					<textarea name="deny_reason" style="border-radius: 4px 4px 4px 4px !important; min-height: 10px; height: 200px; width: 100%" placeholder="Enter deny reason"></textarea><br/>
 					<input hidden name="accept" value="false"></input>
 					<button class="btn btn-outline-light" type="submit" style="margin: 0 15px;">Deny</button>
 				</form>
-			{% elif bot.state == enums.BotState.approved or bot.state == enums.BotState.certified %}
-				<form method="POST" action="/admin/review/{{bot_id}}">
+			{% elif data.state == enums.BotState.approved or data.state == enums.BotState.certified %}
+				<form method="POST" action="/admin/review/{{id}}">
 					<input hidden name="accept" value="unverify"></input>
 					<input type="text" name="unverify_reason" style="border-radius: 4px 4px 4px 4px !important;" placeholder="Enter unverify reason" required/>
 					<button class="btn btn-outline-light" type="submit" style="margin: 0 15px; border-radius: 4px 4px 4px 4px !important;">Unverify</button>
 				</form>
 			{% endif %}
-			<form style="text-align: center; margin: 10px;" method="POST" action="/bot/{{bot_id}}/ban">
-				{% if staff[0] and (bot.state == enums.BotState.approved or bot.state == enums.BotState.certified) %}
+			<form style="text-align: center; margin: 10px;" method="POST" action="/{{type}}/{{id}}/ban">
+				{% if staff[0] and (data.state == enums.BotState.approved or data.state == enums.BotState.certified) %}
 					<input type="hidden" name="ban" value="1"/>
 					<p style="font-weight: bold;color: rgba(255,255,255,0.87); text-align: center;">If this bot is misbehaving...</p>
 					<input type="text" name="reason" style="border-radius: 4px 4px 4px 4px !important;" placeholder="Enter ban reason" required/>
 					<button type="submit" class="btn btn-outline-dark" style="border-radius: 4px 4px 4px 4px !important; background-color: red; color: white !important;"><span class='iconify' style="margin-right: 3px; margin-bottom: 1px;" data-icon='fa-solid:hammer'></span>Ban</button>
-				{% elif staff[0] and (bot.state == enums.BotState.banned or bot.state == enums.BotState.denied) %}
+				{% elif staff[0] and (data.state == enums.BotState.banned or data.state == enums.BotState.denied) %}
 					<p style="font-weight: bold;color: rgba(255,255,255,0.87); text-align: center;">If this bot has learnt its lesson/needs a second review...</p>
 					<input type="hidden" name="ban" value="0"/>
 					<button type="submit" class="btn btn-outline-dark" style="background-color: red; color: white !important;"><span class='iconify' style="margin-right: 3px; margin-bottom: 1px;" data-icon='fa-solid:hammer'></span>Unban/Undeny</button>
@@ -375,7 +377,7 @@
 	</div>
 	</div>
 	</div>
-<script src="https://cdn.jsdelivr.net/gh/Fates-List/FatesList@main/static/assets/js/bots.min.js" defer></script>	
+<script src="https://cdn.jsdelivr.net/gh/Fates-List/FatesList@main/static/assets/js/bots_servers.min.js" defer></script>	
 <script>
 $( document ).ready(function() {
 	setTimeout(function() {document.querySelector("#rating-desc-avg").innerHTML = parseState({{average_rating}}) + ", " + {{average_rating}}}, 300); 
@@ -384,7 +386,7 @@ $( document ).ready(function() {
 function deleteReview(rev_id) {
 	$.ajax({
 		type: 'DELETE',
-		url: `/api/bots/{{bot_id}}/reviews/${rev_id}`,
+		url: `/api/{{type}}s/{{id}}/reviews/${rev_id}`,
 		data: JSON.stringify({"user_id": "{{user_id}}"}),
 		headers: {"Authorization": "{{user_token}}"},
 		processData: false,
@@ -399,7 +401,7 @@ function deleteReview(rev_id) {
 function upvoteReview(rev_id) {
 	$.ajax({
 		type: 'PATCH',
-		url: `/api/bots/{{bot_id}}/reviews/${rev_id}/votes`,
+		url: `/api/{{type}}s/{{id}}/reviews/${rev_id}/votes`,
 		data: JSON.stringify({"upvote": true, "user_id": "{{user_id}}"}),
 		headers: {"Authorization": "{{user_token}}"},
 		processData: false,
@@ -426,7 +428,7 @@ function upvoteReview(rev_id) {
 function downvoteReview(rev_id) {
 	$.ajax({
 		type: 'PATCH',
-		url: `/api/bots/{{bot_id}}/reviews/${rev_id}/votes`,
+		url: `/api/{{type}}s/{{id}}/reviews/${rev_id}/votes`,
 		data: JSON.stringify({"upvote": false, "user_id": "{{user_id}}"}),
 		headers: {"Authorization": "{{user_token}}"},
 		processData: false,

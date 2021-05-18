@@ -94,17 +94,19 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
         bot_features = replace_last(bot_features, ",", " and")
     if bot_info:
         bot = dict(bot)
-        bot = bot | {"votes": human_format(bot["votes"]), "servers": human_format(bot["servers"]), "banner": banner.replace("\"", "").replace("'", "").replace("http://", "https://").replace("(", "").replace(")", "").replace("file://", ""), "shards": human_format(bot["shard_count"]), "owners_html": owners_html, "features": bot_features, "long_description": ldesc.replace("window.location", "").replace("document.ge", ""), "user": (await get_bot(bot_id)), "long_description_type": bot["long_description_type"]}
+        user = await get_bot(bot_id)
+        user["name"] = user["username"]
+        bot = bot | {"votes": human_format(bot["votes"]), "servers": human_format(bot["servers"]), "banner": banner.replace("\"", "").replace("'", "").replace("http://", "https://").replace("(", "").replace(")", "").replace("file://", ""), "shards": human_format(bot["shard_count"]), "owners_html": owners_html, "features": bot_features, "long_description": ldesc.replace("window.location", "").replace("document.ge", ""), "info": user, "long_description_type": bot["long_description_type"]}
         #await db.execute("UPDATE bots SET username_cached = $2 WHERE bot_id = $1", int(bot_id), bot_info["username"])   
     else:
         return await templates.e(request, "Bot Not Found")
     _tags_fixed_bot = [tag for tag in tags_fixed if tag["id"] in bot["tags"]]
     bt.add_task(bot_add_ws_event, bot_id, {"e": enums.APIEvents.bot_view, "ctx": {"user": request.session.get('user_id'), "widget": False}, "ts": time.time()})
     reviews = await parse_reviews(bot_id, page = rev_page)
-    data = {"bot": bot, "bot_id": bot_id, "tags_fixed": _tags_fixed_bot, "promos": promos, "maint": maint, "bot_admin": bot_admin, "guild": main_server, "botp": True, "bot_reviews": reviews[0], "average_rating": reviews[1], "total_reviews": reviews[2], "review_page": rev_page, "total_review_pages": reviews[3], "per_page": reviews[4]}
+    data = {"data": bot, "type": "bot", "id": bot_id, "tags_fixed": _tags_fixed_bot, "promos": promos, "maint": maint, "admin": bot_admin, "guild": main_server, "bot_reviews": reviews[0], "average_rating": reviews[1], "total_reviews": reviews[2], "review_page": rev_page, "total_review_pages": reviews[3], "per_page": reviews[4]}
 
     if not api:
-        return await templates.TemplateResponse("bot.html", {"request": request, "replace_last": replace_last, "csrf_protect": csrf_protect} | data)
+        return await templates.TemplateResponse("bot_server.html", {"request": request, "replace_last": replace_last, "csrf_protect": csrf_protect} | data)
     else:
         data["bot_id"] = str(bot_id)
         return data

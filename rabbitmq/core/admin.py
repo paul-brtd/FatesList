@@ -35,6 +35,6 @@ def exec_op(op):
         _err = False
     except Exception as exc:
         _ret = f"{type(exc).__name__}: {exc}"
-        cprint(_ret, "red")
+        logger.warning(_ret, "red")
         _err = True
     return _ret if serialized(_ret) else str(_ret), _err

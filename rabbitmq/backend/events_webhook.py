@@ -28,13 +28,13 @@ async def backend(json, *, webhook_url, webhook_type, api_token, id, webhook_tar
         event_id - The event ID in question
         webhook_secret - The webhook secret
     """
-    base_json = json = {"ctx": context, "m": {"e": event, "id": str(id), "eid": str(event_id), "wt": webhook_type, "t": event_type, "ts": event_time}} # The base JSON to base webhooks from 
+    base_json = {"ctx": context, "m": {"e": event, "id": str(id), "eid": str(event_id), "wt": webhook_type, "t": event_type, "ts": event_time}} # The base JSON to base webhooks from 
     webhook_key = webhook_secret if webhook_secret else api_token
-    if webhook_url in ["", None] or webhook_type is None or not (webhook_url.startswith("http://") or webhook_url.startswith("https://")):
+    if webhook_url in ("", None) or webhook_type is None or not (webhook_url.startswith("http://") or webhook_url.startswith("https://")):
         logger.debug(f"Not sending webhook to this bot as the URL or webhook type is clearly invalid: Webhook URL is {webhook_url} and Webhook Type is {webhook_type}")
         return False
-    match [webhook_type, event]:
-        case [enums.WebhookType.discord, enums.APIEvents.bot_vote]:
+    match (webhook_type, event):
+        case (enums.WebhookType.discord, enums.APIEvents.bot_vote):
             webhook = DiscordWebhook(url=webhook_url)
             user = await get_user(int(context["user_id"])) # Get the user
             bot = await get_bot(id) # Get the bot
@@ -46,9 +46,9 @@ async def backend(json, *, webhook_url, webhook_type, api_token, id, webhook_tar
             webhook.add_embed(embed)
             response = webhook.execute()
             return True
-        case [enums.WebhookType.vote, enums.APIEvents.bot_vote]:
+        case (enums.WebhookType.vote, enums.APIEvents.bot_vote):
             json = base_json | {"id": str(context["user"]), "votes": context["votes"]}
-        case [enums.WebhookType.fc, _]:    
+        case (enums.WebhookType.fc, _):    
             json = base_json
         case _:
             return False
@@ -57,14 +57,13 @@ async def backend(json, *, webhook_url, webhook_type, api_token, id, webhook_tar
             Method Given: {enums.WebhookType(webhook_type).name}
             JSON: {json}
             URL: {webhook_url}
-            Headers: REDACTED FOR PERSONAL SAFETY
             IDs: Mod -> {context.get('mod')}, User -> {context.get('user')}
             Bot ID: {id}"""))
             
     # Webhook sending with 7 retries
     resolved_error = False 
     for i in range(1, 7):
-        res = await requests.post(webhook_url, json = json, headers = {"Authorization": webhook_key})
+        res = await requests.post(webhook_url, json = json, headers = {"Authorization": webhook_key}, timeout = 15)
         try:
             if int(str(res.status)[0]) in (2, 4):
                 logger.success(f"Webhook Post Returned {res.status}. Not retrying as this is either a success or a client side error")

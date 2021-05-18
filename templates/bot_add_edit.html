@@ -145,7 +145,7 @@
       <select id="webhook-type" name="webhook_type" class="form-control fform select-fl">
 	      <option value="{{enums.WebhookType.vote.__int__()}}" {% if data.webhook_type == enums.WebhookType.vote %}selected{%endif%}>Vote Webhook</option>
 	      <option value="{{enums.WebhookType.discord.__int__()}}" {% if data.webhook_type == enums.WebhookType.discord %}selected{%endif%}>Discord Integration</option>
-	      <option value="{{enums.WebhookType.fc.__int__()}}" {% if data.webhook_type == enums.WebhookType.fc %}selected{%endif%}>FatesHook (Fates Client)</option>
+	      <option value="{{enums.WebhookType.fc.__int__()}}" {% if data.webhook_type == enums.WebhookType.fc %}selected{%endif%}>Fates Client</option>
       </select>
       <label for="webhook">Webhook (max 1024 characters)</label>
     <input
