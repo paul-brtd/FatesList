@@ -18,20 +18,19 @@
 					<strong>This bot has been DENIED from this list for violating our rules or being a low-quality bot. Please do not invite it.</strong>	
 					{% if admin %}
 						<br/><strong>Since you are the owner/extra owners of this bot, you can resubmit your bot or request a ban appeal (if your bot was banned and not denied) by clicking <a class="long-desc-link" href="/bot/{{data.id}}/resubmit">here</a></strong>
-				</div>
-				{% endif %}
+					{% endif %}
 				</div>
 				{% elif data.state == enums.BotState.banned %}
-					<div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
-						<strong>This bot has been BANNED from this bot list for violating our rules or being a low-quality bot. Please do not invite it.</strong>
-						{% if admin %}
-							<br/><strong>Since you are the owner/extra owners of this bot, you can resubmit your bot or request a ban appeal (if your bot was banned and not denied) by clicking <a class="long-desc-link" href="/bot/{{data.id}}/resubmit">here</a></strong>
-						{% endif %}
-					</div>
+				<div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
+					<strong>This bot has been BANNED from this bot list for violating our rules or being a low-quality bot. Please do not invite it.</strong>
+					{% if admin %}
+						<br/><strong>Since you are the owner/extra owners of this bot, you can resubmit your bot or request a ban appeal (if your bot was banned and not denied) by clicking <a class="long-desc-link" href="/bot/{{data.id}}/resubmit">here</a></strong>
+					{% endif %}
+				</div>
 				{% elif data.state == enums.BotState.pending or data.state == enums.BotState.under_review %}
-					<div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
-						<strong>This bot has not yet been verified/approved and may violate our rules and/or be low-quality or a "nuke bot". Please do not invite it until we have approved it</strong>
-					</div>
+				<div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
+					<strong>This bot has not yet been verified/approved and may violate our rules and/or be low-quality or a "nuke bot". Please do not invite it until we have approved it</strong>
+				</div>
 				{% endif %}
 				{% if data.state == enums.BotState.under_review %}
 					<div class="alert alert-info" style="text-align: center; justify-content: center; color: white !important;" role="alert">
@@ -49,7 +48,7 @@
 					</div>
 				</div>
 				{% endif %}
-				{% endif %}
+		{% endif %}
 	{% if data.nsfw %}
 		<div class="alert alert-info" style="text-align: center; justify-content: center; color: white !important;" role="alert">
 			<strong>This bot is primarily NSFW (Not Safe For Work), as such lots of functionality will need a NSFW channel. If the bot allows NSFW commands in non-NSFW channels, please report it using Mod Mail</strong>
@@ -64,16 +63,15 @@
 	</div>
 	<div class="d-flex justify-content-center align-items-center flex-wrap" style="width: 80%;margin: 0 auto;max-width: 1000px; margin-bottom: 3px !important;" id="{{type}}-buttons">
 		{% if data.state != enums.BotState.banned %}
-			<form method = "POST" action = "/bot/{{id}}/vote" id="{{data}}-vote">
-				<button type="submit" class="g-recaptcha btn {{type}}-buttons-all vote btn-outline-light" id="{{type}}-buttons-vote" style="color: white !important;">
+			<form method = "POST" action = "/{{type}}/{{id}}/vote" id="{{type}}-vote">
+				<button type="submit" class="btn {{type}}-buttons-all vote btn-outline-light" id="{{type}}-buttons-vote" style="color: white !important;">
 					<span class="iconify" data-icon="fa-solid:thumbs-up" data-inline="false"></span>
 					<span style="margin-left: 3px;">{{data.votes}}</span>
 				</button>
-
 			</form>
 		{% endif %}
 		{% if type != "bot" or data.state != enums.BotState.banned %}
-			<a target=”_blank” href="/bot/{{id}}/invite"><button class="btn btn-outline-light {{type}}-buttons-all" id="{{type}}-buttons-invite">Invite</button></a>
+			<a target=”_blank” href="/{{type}}/{{id}}/invite"><button class="btn btn-outline-light {{type}}-buttons-all" id="{{type}}-buttons-invite">Invite</button></a>
 		{% endif %}
 		{% if data.support and data.support.replace(" ", "") %}
 			<a target=”_blank” href="{{data.support}}"><button class="btn btn-outline-light {{type}}-buttons-all" id="{{type}}-buttons-support">Support</button></a>
@@ -91,44 +89,44 @@
 			<a target=”_blank” href="{{data.website}}"><button class="btn btn-outline-light {{type}}-buttons-all" id="{{type}}-buttons-website">Website</button></a>
 		{% endif %}
 		{% if admin %}
-			<a href="/bot/{{id}}/edit"><button class="btn btn-outline-light {{type}}-buttons-all" id="bot-buttons-edit">Edit</button></a>
+			<a href="/{{type}}/{{id}}/edit"><button class="btn btn-outline-light buttons-all" id="buttons-edit">Edit</button></a>
 		{% endif %}
 	</div>
-	<div style="display: inline-block; width: fit-content; height: fit-content; margin: 7px; padding: 7px;" id="{{type}}--key-container">
-		<section id="{{typr}}-tags">
-			<div style="text-align: center; margin-top: 9px;" id="{{typew}}-tags-container">
-				<div class="d-flex flex-wrap justify-content-center align-items-center" style="width: 93%; margin: 0 auto;" id="{{type}}-tags-container-inner">
+	<div style="display: inline-block; width: fit-content; height: fit-content; margin: 7px; padding: 7px;" class="key-container">
+		<section id="tags">
+			<div style="text-align: center; margin-top: 9px;" id="tags-container">
+				<div class="d-flex flex-wrap justify-content-center align-items-center" style="width: 93%; margin: 0 auto;" id="tags-container-inner">
 					{{ tags(tags_fixed) }}
 				</div>
 			</div>
 		</section>
 		{% if promos != [] or admin %}
-			<div id="bot-promo" style="margin-top: 30px;">
-				<h5 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;margin-top: -13px;margin-bottom: 3px;" id="bot-promo-header">Promotions, Announcements and More!</h5>
+			<div id="{{type}}-promo" style="margin-top: 30px;">
+				<h5 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;margin-top: -13px;margin-bottom: 3px;" id="{{type}}-promo-header">Promotions, Announcements and More!</h5>
 				{% if admin %}
 					<a href="javascript:void()" onclick="newPromotion('{{data.api_token}}')" style="color: white !important; opacity: 0.8;"><span class="iconify" data-icon="fa-solid:plus" data-inline="false"></span><span style="margin-left: 3px">New Promotion (Coming Soon)</span></a>
 				{% endif %}
 			{% endif %}
 			{% for promo in promos %}
-				<div class="alert alert-primary" id="bot-promo-container-{{loop.index}}" class="bot-promo-container" role="alert" style='width: 90%; font-weight: bold; margin: 0 auto; height: 86%; padding: 5px; {% if not promo.css %}background-color: #111112; {%endif%} {{promo.css}} margin-bottom: 3px;'>
+				<div class="alert alert-primary" id="{{type}}-promo-container-{{loop.index}}" class="{{type}}-promo-container" role="alert" style='width: 90%; font-weight: bold; margin: 0 auto; height: 86%; padding: 5px; {% if not promo.css %}background-color: #111112; {%endif%} {{promo.css}} margin-bottom: 3px;'>
 					<p style="color: white; margin-bottom: 3px; margin-left: 2px; {{promo.css}}">{{promo.title.replace("<script", "")|safe}}</p>
 					<p style="color: white; {{promo.css}}">{{promo.info}}</p>
 				</div>
 			{% endfor %}
 	    	</div>
 	</div>
-	<div id="bot-switcher" style='margin-bottom: 3px;' class='blackbar'>
+	<div id="switcher" style='margin-bottom: 3px;' class='blackbar'>
 		<div class="tab">
-			  <button id="{{type}}-long-desc-tab-button" class="tablinks" onclick="openf(event, {{type}}, 'long-description-container', this)">Description</button>
-			  <button id="{{type}}-review-tab-button" class="tablinks" onclick="openf(event, {{type}}, 'reviews', this)">Reviews</button>
-			  <button id="{{type}}-tab-button" class="tablinks coming-soon" onclick="openf(event, {{type}} 'commands', this)">Commands</button>
-			  <button id="{{type}}-tab-button" class="tablinks" onclick="openf(event, {{type}}, 'about', this)">About</button>
+			  <button id="{{type}}-long-desc-tab-button" class="tablinks" onclick="openf(event, 'long-description', this)">Description</button>
+			  <button id="{{type}}-review-tab-button" class="tablinks" onclick="openf(event, 'reviews', this)">Reviews</button>
+			  <button id="{{type}}-tab-button" class="tablinks coming-soon" onclick="openf(event, 'commands', this)">Commands</button>
+			  <button id="{{type}}-tab-button" class="tablinks" onclick="openf(event, 'about', this)">About</button>
 			  {% if staff[0] %}
-       				  <button id="{{type}}admin-tab-button" class="tablinks" onclick="openf(event, "{{type}}", 'admin', this)">Admin</button>
+       				  <button id="{{type}}admin-tab-button" class="tablinks" onclick="openf(event, 'admin', this)">Admin</button>
 	   		  {% endif %}
 		</div>
-		<section id="{{type}}-long-description-container" class='tabcontent'>
-			<div id="{{type}}-long-description" style="color: white; text-align: left; margin-left: 5%; margin-right: 5%; margin-top: 13px;"> {% if data.description_type in (enums.LongDescType.html, enums.LongDescType.markdown_pymarkdown) %}{{data.long_description|safe}}{% endif %}</div> <!-- To avoid users seeing broken pages, don't add to site is markdown is used -->
+		<section id="long-description-tab" class='tabcontent'>
+			<div id="long-description" style="color: white; text-align: left; margin-left: 5%; margin-right: 5%; margin-top: 13px;"> {% if data.long_description_type in (enums.LongDescType.html, enums.LongDescType.markdown_pymarkdown) %}{{data.long_description|safe}}{% endif %}</div> <!-- To avoid users seeing broken pages, don't add to site is markdown is used -->
 			{% if data.long_description_type == enums.LongDescType.markdown_marked %}
        				<!-- Handle markdown -->
 				<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -154,15 +152,15 @@
 				</script>
 			{% endif %}
 		</section>
-		<section id=";{type}}-reviews" class='tabcontent'>
+		<section id="reviews-tab" class='tabcontent'>
 			<h6 style="font-size: 18px;" class="white">Bot Reviews</h6>
 			{% if username %}
        				<form method="POST" id="review_form" action="/{{type}}/{{id}}/reviews/new" style="width: 100%; margin-bottom: 13px;">
 					<label for="rating">On a scale of 1 to 10, how much did you like this {{type}}?</label><br/>
-					<input class='slider bot-range-slider' type="range" name="rating" min="0.1" max="10" style="width: 100%" value='5' step='0.1' output="rating-desc"/>
+					<input class='slider range-slider' type="range" name="rating" min="0.1" max="10" style="width: 100%" value='5' step='0.1' output="rating-desc"/>
 					<p id='rating-desc' style="color: white;"></p>
 					<label for="review">Please write a few words about the bot (in your opinion)</label>
-					<textarea id='{{type}}-rating-review' name="review" type="text" class="form-control fform" style="min-height: 100px; height: 100px;" required minlength="9" placeholder="This bot is a really good bot because of X, Y and Z however...">{{review_desc}}</textarea>
+					<textarea id='rating-review' name="review" type="text" class="form-control fform" style="min-height: 100px; height: 100px;" required minlength="9" placeholder="This bot is a really good bot because of X, Y and Z however...">{{review_desc}}</textarea>
 					<button type="submit" class="btn btn-outline-light">Review</button>
 				</form>
 			{% else %}
@@ -179,9 +177,9 @@
 			</span>
 			<div style="text-align: left;">
 				{% macro review(rev, index) %}
-				<div class="bot-review-user" style="margin-left: 2.5%; border: solid;">
-		   			<div class="bot-review-left">
-						<div class="bot-review-header" style="margin-bottom: 7px; font-weight: bold;">
+				<div class="review-user" style="margin-left: 2.5%; border: solid;">
+		   			<div class="review-left">
+						<div class="review-header" style="margin-bottom: 7px; font-weight: bold;">
 							<a href='/profile/{{rev.user_id}}' class="white">
 								<img style="border-radius: 50%; width: 24px;" data-src="{{rev.user.avatar.replace('.gif', '.webp')}}" class="lozad review-avatar" alt="{{rev.user.username}}'s avatar">
 								<span class="white">{{rev.user.username}}</span>
@@ -209,10 +207,10 @@
 							<form method="POST" id="reviewreply-{{rev.id}}" style="display: none; width: 100%;" action="/bot/{{id}}/reviews/{{rev.id}}/reply" class="white">
 								<input type="hidden" name="id" value="{{rev.id}}" /> <!-- The ID to update -->
 								<label for="rating">On a scale of 1 to 10, how much did you like this bot?</label><br/>
-								<input class='slider bot-range-slider' type="range" name="rating" min="0.1" max="10" step='0.1' style="width:100%;" output="rating-reply-desc-{{rev.id}}-{{index}}"/>
+								<input class='slider range-slider' type="range" name="rating" min="0.1" max="10" step='0.1' style="width:100%;" output="rating-reply-desc-{{rev.id}}-{{index}}"/>
 								<p id='rating-reply-desc-{{rev.id}}-{{index}}' style="color: white;"></p>
 								<label for="review">Please write a few words about the bot (in your opinion)</label>
-								<textarea id='bot-rating-review' name="review" type="text" class="form-control fform" style="min-height: 100px; height: 100px;" required minlength="9" placeholder="This bot is a really good bot because of X, Y and Z however..."></textarea>
+								<textarea id='rating-review' name="review" type="text" class="form-control fform" style="min-height: 100px; height: 100px;" required minlength="9" placeholder="This bot is a really good bot because of X, Y and Z however..."></textarea>
 								<button type="submit" class="btn btn-outline-light">Reply</button>
 							</form>
 							{% endif %}
@@ -220,10 +218,10 @@
        								<form method="POST" id="review-{{rev.id}}" style="display: none; width: 100%;" action="/bot/{{id}}/reviews/{{rev.id}}/edit" class="white">
 									<input type="hidden" name="id" value="{{rev.id}}" /> <!-- The ID to update -->
 									<label for="rating">On a scale of 1 to 10, how much did you like this bot?</label><br/>
-									<input class='slider bot-range-slider' type="range" name="rating" min="0.1" max="10" value='{{rev.star_rating}}' step='0.1' style="width:100%;" output="rating-desc-{{rev.id}}-{{index}}"/>
+									<input class='slider range-slider' type="range" name="rating" min="0.1" max="10" value='{{rev.star_rating}}' step='0.1' style="width:100%;" output="rating-desc-{{rev.id}}-{{index}}"/>
 									<strong><p id='rating-desc-{{rev.id}}-{{index}}' style="color: white;"></p></strong>
 									<label for="review">Please write a few words about the bot (in your opinion)</label>
-									<textarea id='bot-rating-review' name="review" type="text" class="form-control fform" style="min-height: 100px; height: 100px;" required minlength="9" placeholder="This bot is a really good bot because of X, Y and Z however...">{{rev.review}}</textarea>
+									<textarea id='rating-review' name="review" type="text" class="form-control fform" style="min-height: 100px; height: 100px;" required minlength="9" placeholder="This bot is a really good bot because of X, Y and Z however...">{{rev.review}}</textarea>
 									<button type="submit" class="btn btn-outline-light">Edit</button>
 								</form>
 							{% endif %}
@@ -270,13 +268,13 @@
 		    <p class="white text-center" id="rendering">Rendering Reviews</p>
 		    <article id="defer" hidden style="display: none:">
 			    {% for rev in bot_reviews %}
-			    <section class="{{type}}-review-root {{type}}-review">
+			    <section class="review-root review-section">
 				    {{ review(rev, loop.index) }}
 			    </section>
 		    	    {% endfor %}
 		    <div class="text-center">
 		    {% for page in range(1, total_review_pages + 1) %} 
-			    <a href="https://fateslist.xyz/{{type}}/{{id}}?rev_page={{page}}#{{type}}-review-tab-button-fl" id="review-page-{{page}}" class="white review-pages" style="font-size: large;">{{page}}</a>
+			    <a href="https://fateslist.xyz/{{type}}/{{id}}?rev_page={{page}}#review-tab-button-fl" id="review-page-{{page}}" class="white review-pages" style="font-size: large;">{{page}}</a>
 		    {% endfor %}
 		    </div>
 		    </article>
@@ -295,10 +293,10 @@
 		    </script>
 		</div>
 	</section>
-	<section id="{{type}}-commands" class="tabcontent white">
+	<section id="commands-tab" class="tabcontent white">
 		<p style="font-size: 30px;">Coming soon<span class="iconify" data-icon="icomoon-free:happy2" style="margin-left: 3px"></span></p>
 	</section>
-	<section id="{{type}}-about" class='tabcontent white'>
+	<section id="about-tab" class='tabcontent white'>
 		<table style="margin: 0 auto !important;">
 			<tr>
 				<th>Owners</th>
@@ -336,7 +334,7 @@
 			{% endif %}
 		</table>
 	</section>
-	<div id="{{type}}-admin" class='tabcontent white'>
+	<div id="admin-tab" class='tabcontent white'>
 		<h6>Administrative Tasks</h6>
 		{% if staff[0] %}
 			{% if data.state == enums.BotState.pending or data.state == enums.BotState.under_review %}
@@ -377,7 +375,7 @@
 	</div>
 	</div>
 	</div>
-<script src="https://cdn.jsdelivr.net/gh/Fates-List/FatesList@main/static/assets/js/bots_servers.min.js" defer></script>	
+<script src="https://cdn.jsdelivr.net/gh/Fates-List/FatesList@main/static/assets/js/bots_servers_v2.min.js" defer></script>	
 <script>
 $( document ).ready(function() {
 	setTimeout(function() {document.querySelector("#rating-desc-avg").innerHTML = parseState({{average_rating}}) + ", " + {{average_rating}}}, 300); 
