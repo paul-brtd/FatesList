@@ -64,29 +64,29 @@
 	<div class="d-flex justify-content-center align-items-center flex-wrap" style="width: 80%;margin: 0 auto;max-width: 1000px; margin-bottom: 3px !important;" id="{{type}}-buttons">
 		{% if data.state != enums.BotState.banned %}
 			<form method = "POST" action = "/{{type}}/{{id}}/vote" id="{{type}}-vote">
-				<button type="submit" class="btn {{type}}-buttons-all vote btn-outline-light" id="{{type}}-buttons-vote" style="color: white !important;">
+				<button type="submit" class="btn buttons-all vote btn-outline-light" id="buttons-vote" style="color: white !important;">
 					<span class="iconify" data-icon="fa-solid:thumbs-up" data-inline="false"></span>
 					<span style="margin-left: 3px;">{{data.votes}}</span>
 				</button>
 			</form>
 		{% endif %}
 		{% if type != "bot" or data.state != enums.BotState.banned %}
-			<a target=”_blank” href="/{{type}}/{{id}}/invite"><button class="btn btn-outline-light {{type}}-buttons-all" id="{{type}}-buttons-invite">Invite</button></a>
+			<a target=”_blank” href="/{{type}}/{{id}}/invite"><button class="btn btn-outline-light buttons-all" id="buttons-invite">Invite</button></a>
 		{% endif %}
 		{% if data.support and data.support.replace(" ", "") %}
-			<a target=”_blank” href="{{data.support}}"><button class="btn btn-outline-light {{type}}-buttons-all" id="{{type}}-buttons-support">Support</button></a>
+			<a target=”_blank” href="{{data.support}}"><button class="btn btn-outline-light buttons-all" id="buttons-support">Support</button></a>
 		{% endif %}
 		{% if data.donate and data.donate.replace(" ", "") %}
-			<a target=”_blank” href="{{data.donate}}"><button class="btn btn-outline-light {{type}}-buttons-all" id="{{type}}-buttons-donate">Donate</button></a>
+			<a target=”_blank” href="{{data.donate}}"><button class="btn btn-outline-light buttons-all" id="buttons-donate">Donate</button></a>
 		{% endif %}
 		{% if data.github and data.github.replace(" ", "") %}
-			<a target=”_blank” href="{{data.github}}"><button class="btn btn-outline-light {{type}}-buttons-all" id="{{type}}-buttons-github">Github</button></a>
+			<a target=”_blank” href="{{data.github}}"><button class="btn btn-outline-light buttons-all" id="buttons-github">Github</button></a>
 		{% endif %}
 		{% if data.privacy_policy %}
-			<a target="_blank" href="{{data.privacy_policy}}"><button class="btn btn-outline-light {{type}}-buttons-all" id="{{type}}-buttons-privacy_policy">Privacy Policy</button></a>
+			<a target="_blank" href="{{data.privacy_policy}}"><button class="btn btn-outline-light buttons-all" id="buttons-privacy">Privacy Policy</button></a>
 		{% endif %}
 		{% if data.website %}
-			<a target=”_blank” href="{{data.website}}"><button class="btn btn-outline-light {{type}}-buttons-all" id="{{type}}-buttons-website">Website</button></a>
+			<a target=”_blank” href="{{data.website}}"><button class="btn btn-outline-light buttons-all" id="buttons-website">Website</button></a>
 		{% endif %}
 		{% if admin %}
 			<a href="/{{type}}/{{id}}/edit"><button class="btn btn-outline-light buttons-all" id="buttons-edit">Edit</button></a>
@@ -117,12 +117,12 @@
 	</div>
 	<div id="switcher" style='margin-bottom: 3px;' class='blackbar'>
 		<div class="tab">
-			  <button id="{{type}}-long-desc-tab-button" class="tablinks" onclick="openf(event, 'long-description', this)">Description</button>
-			  <button id="{{type}}-review-tab-button" class="tablinks" onclick="openf(event, 'reviews', this)">Reviews</button>
-			  <button id="{{type}}-tab-button" class="tablinks coming-soon" onclick="openf(event, 'commands', this)">Commands</button>
-			  <button id="{{type}}-tab-button" class="tablinks" onclick="openf(event, 'about', this)">About</button>
+			  <button id="long-desc-tab-button" class="tablinks" onclick="openf(event, 'long-description', this)">Description</button>
+			  <button id="review-tab-button" class="tablinks" onclick="openf(event, 'reviews', this)">Reviews</button>
+			  <button id="commands-tab-button" class="tablinks coming-soon" onclick="openf(event, 'commands', this)">Commands</button>
+			  <button id="about-tab-button" class="tablinks" onclick="openf(event, 'about', this)">About</button>
 			  {% if staff[0] %}
-       				  <button id="{{type}}admin-tab-button" class="tablinks" onclick="openf(event, 'admin', this)">Admin</button>
+       				  <button id="admin-tab-button" class="tablinks" onclick="openf(event, 'admin', this)">Admin</button>
 	   		  {% endif %}
 		</div>
 		<section id="long-description-tab" class='tabcontent'>
@@ -148,7 +148,7 @@
 					};
 					long_desc_replace_tup = [["<a", "<a class='long-desc-link ldlink'"], ["h1", "h2 style='text-align: center'"], ["h3", "h4"], ["bootstrap.min.css", ""], ["bootstrap.css", ""], ["jquery.min.js", ""]] // Event though we are markdown, we still have some needed patches
 					var md = marked(document.querySelector("#marked-ld").innerHTML).replacem(long_desc_replace_tup) // Markdown it and apply some patches though not all used in python markdown
-					document.querySelector("#{{types}}-long-description").innerHTML = md;
+					document.querySelector("#long-description").innerHTML = md;
 				</script>
 			{% endif %}
 		</section>
@@ -375,7 +375,7 @@
 	</div>
 	</div>
 	</div>
-<script src="https://cdn.jsdelivr.net/gh/Fates-List/FatesList@main/static/assets/js/bots_servers2.min.js" defer></script>	
+<script src="https://cdn.jsdelivr.net/gh/Fates-List/FatesList@main/static/assets/js/bots_servers3.min.js" defer></script>	
 <script>
 $( document ).ready(function() {
 	setTimeout(function() {document.querySelector("#rating-desc-avg").innerHTML = parseState({{average_rating}}) + ", " + {{average_rating}}}, 300); 
