@@ -52,7 +52,12 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
             return abort(404) # If API, just regular 404 JSON
         return await templates.e(request, "It might still be in our RabbitMQ queue waiting to be added to our database if you recently added it. Try reloading!", main = "Bot Not Found") # Otherwise HTML error
     bot = dict(bot) | {"tags": [tag["tag"] for tag in tags]}
-    owners = await db.fetch("SELECT DISTINCT owner, main FROM bot_owner WHERE bot_id = $1 ORDER BY main DESC", bot_id) # Get all bot owners
+    owners = await db.fetch("SELECT DISTINCT ON (owner) owner, main FROM bot_owner WHERE bot_id = $1 ORDER BY owner, main DESC", bot_id) # Get all bot owners
+    _owners = []
+    for owner in owners:
+        if owner["main"]: _owners.insert(0, owner)
+        else: _owners.append(owner)
+    owners = _owners
 
     if bot["long_description_type"] == enums.LongDescType.markdown_pymarkdown: # If we are using markdown
         ldesc = emd(markdown.markdown(bot['long_description'], extensions=["extra", "abbr", "attr_list", "def_list", "fenced_code", "footnotes", "tables", "admonition", "codehilite", "meta", "nl2br", "sane_lists", "toc", "wikilinks", "smarty", "md_in_html"]))
@@ -101,7 +106,7 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
     else:
         return await templates.e(request, "Bot Not Found")
     _tags_fixed_bot = [tag for tag in tags_fixed if tag["id"] in bot["tags"]]
-    bt.add_task(bot_add_ws_event, bot_id, {"e": enums.APIEvents.bot_view, "ctx": {"user": request.session.get('user_id'), "widget": False}, "ts": time.time()})
+    bt.add_task(bot_add_ws_event, bot_id, {"m": {"e": enums.APIEvents.bot_view}, "ctx": {"user": request.session.get('user_id'), "widget": False}})
     reviews = await parse_reviews(bot_id, page = rev_page)
     data = {"data": bot, "type": "bot", "id": bot_id, "tags_fixed": _tags_fixed_bot, "promos": promos, "maint": maint, "admin": bot_admin, "guild": main_server, "bot_reviews": reviews[0], "average_rating": reviews[1], "total_reviews": reviews[2], "review_page": rev_page, "total_review_pages": reviews[3], "per_page": reviews[4]}
 
@@ -120,7 +125,7 @@ async def render_bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, 
     bot = dict(bot)
     bot["votes"] = human_format(bot["votes"])
     bot["servers"] = human_format(bot["servers"])
-    bt.add_task(bot_add_ws_event, bot_id, {"payload": "event", "id": str(uuid.uuid4()), "event": "view_bot", "context": {"user": request.session.get('user_id'), "widget": True}})
+    bt.add_task(bot_add_ws_event, bot_id, {"m": {"e": enums.APIEvents.bot_view}, "ctx": {"user": request.session.get('user_id'), "widget": False}})
     data = {"bot": bot, "user": await get_bot(bot_id)}
     if api:
         return data

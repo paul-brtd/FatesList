@@ -78,6 +78,7 @@ class APIEvents(IntEnum):
     bot_unverify = 15, "Bot Unverify Event"
     bot_view = 16, "Bot View Event (Websocket only)" # WS only
     bot_invite = 17, "Bot Invite Event (Websocket only)" # WS only
+    bot_unclaim = 18, "Bot Unclaim Event"
     review_vote = 30, "Review Vote Event"
     review_add = 31, "Bot Review Add Event"
     review_edit = 32, "Bot Review Edit Event"

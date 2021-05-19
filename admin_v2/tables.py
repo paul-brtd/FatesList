@@ -1,6 +1,6 @@
 from piccolo.table import Table
 import datetime
-from piccolo.columns.column_types import Integer, Varchar, BigInt, Text, Secret, Array, Timestamptz
+from piccolo.columns.column_types import Integer, Varchar, BigInt, Text, Secret, Array, Timestamptz, Boolean
 
 class Vanity(Table, tablename="vanity"):
     type = Integer()
@@ -31,5 +31,18 @@ class Bot(Table, tablename="bots"):
     shards = Array(base_column = Integer())
     user_count = BigInt(default = 0)
     last_stats_post = Timestamptz(default = datetime.datetime.now())
-    webhook_type = Varchar(default = "VOTE") # FIXME
+    created_at = Timestamptz(default = datetime.datetime.now())
+    webhook_type = Integer()
+    webhook = Text()
+    bot_library = Text()
+    css = Text(default = "")
+    prefix = Varchar(length = 13)
+    website = Text()
+    discord = Text()
+    banner = Text()
+    github = Text()
+    donate = Text()
+    privacy_policy = Text()
+    nsfw = Boolean(default = False)
+    verifier = BigInt()
     api_token = Secret()

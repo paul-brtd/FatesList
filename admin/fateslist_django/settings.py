@@ -36,7 +36,6 @@ ALLOWED_HOSTS = ["dev.fateslist.xyz"]
 INSTALLED_APPS = [
     'django_admin_logs',
     'material.admin',
-    'material.admin.default',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',

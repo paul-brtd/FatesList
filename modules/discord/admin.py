@@ -91,32 +91,47 @@ async def ban_user_admin(request: Request, user_id: int = FForm(1), ban_type: in
 
 
 @router.post("/review/{bot_id}")
-async def review_tool(request: Request, bot_id: int, accept: str = FForm(""), deny_reason: str = FForm(deny_feedback), accept_feedback: str = FForm(approve_feedback), unverify_reason: str = FForm("This is likely due to it breaking Discord ToS or our rules")):
+async def review_tool(request: Request, bot_id: int, task: str = FForm(""), feedback: str = FForm("")):
     if "user_id" not in request.session.keys():
         return RedirectResponse("/")
     guild = client.get_guild(main_server)
     if guild is None:
         return HTMLResponse("We are currently connecting to Discord, please wait")
-    user = guild.get_member(int(request.session["user_id"]))
+    user = guild.get_member(int(request.session["user_id"])) 
     s = is_staff(staff_roles, user.roles, 2)
     bot = await get_bot(bot_id)
-    admin_tool = BotListAdmin(bot_id, int(request.session["user_id"]))
+    
     if not s[0] or not bot:
-        return RedirectResponse("/")             
-    elif accept == "true":
-        rc = await admin_tool.approve_bot(accept_feedback)
-        if rc is not None:
-            return rc
-        return await templates.TemplateResponse("message.html",{"request":request, "message": f"Bot accepted; You MUST Invite it by clicking <a href='https://discord.com/oauth2/authorize?client_id={bot_id}&scope=bot&guild_id={guild.id}&disable_guild_select=true&permissions=0' class='long-desc-link'>here</a>"})
-    elif accept == "unverify":
-        rc = await admin_tool.unverify_bot(unverify_reason)
-        if rc is False:
-            return RedirectResponse("/admin/console")
-        return await templates.TemplateResponse("message.html",{"request":request,"message":"Bot unverified. Please carry on with your day"})
-    elif accept == "false":
-        rc = await admin_tool.deny_bot(deny_reason)
-        if rc is not None:
-            return rc
-        return await templates.TemplateResponse("message.html",{"request":request,"message":"Bot denied. Please carry on with your day"})
-    else:
         return RedirectResponse("/")
+
+    admin_tool = BotListAdmin(bot_id, int(request.session["user_id"]))
+    
+    def _feedback(default_feedback):
+        return feedback if feedback else default_feedback
+
+    match task:
+        case "approve":
+            feedback = _feedback(approve_feedback)
+            rc = await admin_tool.approve_bot(feedback)
+            message = f"Bot accepted; You MUST Invite it by clicking <a href='https://discord.com/oauth2/authorize?client_id={bot_id}&scope=bot&guild_id={guild.id}&disable_guild_select=true&permissions=0' class='long-desc-link'>here</a>"
+        case "deny":
+            feedback = _feedback(deny_feedback)
+            rc = await admin_tool.deny_bot(feedback)
+            message = "Bot denied. Please carry on with your day"
+        case "unverify":
+            feedback = _feedback("This is likely due to it breaking Discord ToS or our rules")
+            rc = await admin_tool.unverify_bot(feedback)
+            message = "Bot unverified. Please carry on with your day"
+        case "claim":
+            rc = await admin_tool.claim_bot()
+            message = "Claimed bot"
+        case "unclaim":
+            rc = await admin_tool.unclaim_bot()
+            message = "Unclaimed bot!"
+        case _:
+            return "Invalid task!"
+    if rc:
+        return rc
+    elif rc is False:
+        return RedirectResponse("/admin/console")
+    return await templates.TemplateResponse("message.html",{"request":request, "message": message})

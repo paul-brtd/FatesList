@@ -16,6 +16,7 @@ async def bot_add_ws_event(bot_id: int, ws_event: dict, *, id: Optional[uuid.UUI
     if "m" not in ws_event.keys():
         ws_event["m"] = {}
     ws_event["m"]["eid"] = id
+    ws_event["m"]["ts"] = time.time()
     curr_ws_events = await redis_db.hget(str(bot_id), key = "ws") # Get all the websocket events from the ws key
     if curr_ws_events is None:
         curr_ws_events = {} # No ws events means empty dict

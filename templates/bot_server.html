@@ -1,7 +1,7 @@
 {% extends "base/base.html" %}
 
 {% block head %}
-	<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Fates-List/FatesList@main/static/assets/css/bots_servers.min.css" media="none" onload="if(media!='all')media='all'"/>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Fates-List/FatesList@main/static/assets/css/bots_servers2.min.css" media="none" onload="if(media!='all')media='all'"/>
 <style>
 {{ireplace(".alert", "", data.css)}}
 </style>
@@ -337,23 +337,34 @@
 	<div id="admin-tab" class='tabcontent white'>
 		<h6>Administrative Tasks</h6>
 		{% if staff[0] %}
+			{% if data.state == enums.BotState.pending %}
+				<form method="POST" action="/admin/review/{{id}}" style="margin-bottom: 10px;">
+					<input hidden name="task" value="claim"></input>
+					<button class="btn btn-outline-light" type="submit" style="margin: 0 15px;">Claim Bot</button>
+				</form>
+			{% elif data.state == enums.BotState.under_review %}
+				<form method="POST" action="/admin/review/{{id}}" style="margin-bottom: 10px;">
+					<input hidden name="task" value="unclaim"></input>
+					<button class="btn btn-outline-light" type="submit" style="margin: 0 15px;">Unclaim Bot</button>
+				</form>
+			{% endif %}
 			{% if data.state == enums.BotState.pending or data.state == enums.BotState.under_review %}
 				<p>Approve this bot?</p>
 				<form method="POST" action="/admin/review/{{id}}" style="margin-bottom: 10px;">
-					<input hidden name="accept" value="true"></input>
-					<textarea name="accept_feedback" style="border-radius: 4px 4px 4px 4px !important; min-height: 10px; height: 200px; width: 100%" placeholder="Enter any feedback you have for this bot"></textarea><br/>
+					<input hidden name="task" value="approve"></input>
+					<textarea name="feedback" style="border-radius: 4px 4px 4px 4px !important; min-height: 10px; height: 200px; width: 100%" placeholder="Enter any feedback you have for this bot"></textarea><br/>
 					<button class="btn btn-outline-light" type="submit" style="margin: 0 15px;">Accept</button>
 				</form>
 				<p>Deny this bot?</p>
 				<form method="POST" action="/admin/review/{{id}}">
-					<textarea name="deny_reason" style="border-radius: 4px 4px 4px 4px !important; min-height: 10px; height: 200px; width: 100%" placeholder="Enter deny reason"></textarea><br/>
-					<input hidden name="accept" value="false"></input>
+					<textarea name="feedback" style="border-radius: 4px 4px 4px 4px !important; min-height: 10px; height: 200px; width: 100%" placeholder="Enter deny reason"></textarea><br/>
+					<input hidden name="task" value="deny"></input>
 					<button class="btn btn-outline-light" type="submit" style="margin: 0 15px;">Deny</button>
 				</form>
 			{% elif data.state == enums.BotState.approved or data.state == enums.BotState.certified %}
 				<form method="POST" action="/admin/review/{{id}}">
-					<input hidden name="accept" value="unverify"></input>
-					<input type="text" name="unverify_reason" style="border-radius: 4px 4px 4px 4px !important;" placeholder="Enter unverify reason" required/>
+					<input hidden name="task" value="unverify"></input>
+					<input type="text" name="feedback" style="border-radius: 4px 4px 4px 4px !important;" placeholder="Enter unverify reason" required/>
 					<button class="btn btn-outline-light" type="submit" style="margin: 0 15px; border-radius: 4px 4px 4px 4px !important;">Unverify</button>
 				</form>
 			{% endif %}

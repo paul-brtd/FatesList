@@ -161,7 +161,7 @@ class BotListAdmin():
     good = 0x00ff00 # "Good" color for positive things
     bad = discord.Color.red()
 
-    def __init__(self, bot_id, mod):
+    def __init__(self, bot_id, mod, force = False):
         self.bot_id = bot_id # The bot id to handle
         self.mod = int(mod) # Mod is the moderator who performed the request
         self.str_mod = str(mod) # Rhe moderator in string form for quicker and easier access
@@ -190,13 +190,35 @@ class BotListAdmin():
         claim_embed.add_field(name="Link", value=f"https://fateslist.xyz/bot/{self.bot_id}") # Add link to bot page
         await bot_add_event(self.bot_id, enums.APIEvents.bot_claim, {"user": self.str_mod}) # Add the api event
         await self.channel.send(embed = claim_embed) # Send it to the channel
+        try:
+            owner = self._get_main_owner()
+            owner_dpy = self.guild.get_member(owner)
+            await owner_dpy.send(embed = claim_embed)
+        except:
+            pass
+
+    async def unclaim_bot(self):
+        check = await db.fetchrow("SELECT bot_id FROM bots WHERE bot_id = $2 AND state = $1", enums.BotState.under_review, self.bot_id) # Before claiming, make sure it is under review and exists first
+        if not check:
+            return self.bot_not_found
+        await db.execute("UPDATE bots SET state = $1 WHERE bot_id = $2", enums.BotState.pending, self.bot_id) # Set it to pending in database
+        unclaim_embed = discord.Embed(title="Bot No Longer Under Review", description = f"<@{self.bot_id}> is no longer under review by and should be approved or denied when another reviewer comes in! Don't worry, this is completely normal!", color = self.good) # Create unclaim embed
+        unclaim_embed.add_field(name="Link", value=f"https://fateslist.xyz/bot/{self.bot_id}") # Add link to bot page
+        await bot_add_event(self.bot_id, enums.APIEvents.bot_unclaim, {"user": self.str_mod}) # Add the api event
+        await self.channel.send(embed = unclaim_embed) # Send it to the channel
+        try:
+            owner = self._get_main_owner()
+            owner_dpy = self.guild.get_member(owner)
+            await owner_dpy.send(embed = unclaim_embed)
+        except:
+            pass
 
     async def approve_bot(self, feedback):
         owners = await db.fetch("SELECT owner, main FROM bot_owner WHERE bot_id = $1", self.bot_id)
         if not owners:
             return self.bot_not_found
         check = await db.fetchrow("SELECT state FROM bots WHERE bot_id = $1", self.bot_id)
-        if check["state"] != enums.BotState.under_review:
+        if check["state"] != enums.BotState.under_review and not self.force:
             return self.must_claim 
         await db.execute("UPDATE bots SET state = $1, verifier = $2 WHERE bot_id = $3", enums.BotState.approved, self.mod, self.bot_id)
         await bot_add_event(self.bot_id, enums.APIEvents.bot_approve, {"user": self.str_mod})
@@ -228,7 +250,7 @@ class BotListAdmin():
         if owner is None:
             return self.bot_not_found
         check = await db.fetchrow("SELECT state FROM bots WHERE bot_id = $1", self.bot_id)
-        if check["state"] != enums.BotState.under_review:
+        if check["state"] != enums.BotState.under_review and not self.force:
             return self.must_claim
         await db.execute("UPDATE bots SET state = $1, verifier = $2 WHERE bot_id = $3", enums.BotState.denied, self.mod, self.bot_id)
         await bot_add_event(self.bot_id, enums.APIEvents.bot_deny, {"user": self.str_mod, "reason": reason})
