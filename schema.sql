@@ -76,7 +76,7 @@ CREATE TABLE bot_packs (
 CREATE TABLE bot_commands (
    id uuid primary key DEFAULT uuid_generate_v4(),
    bot_id bigint,
-   slash integer, -- 0 = no, 1 = guild, 2 = global
+   cmd_type integer, -- 0 = no, 1 = guild, 2 = global
    name text, -- command name
    description text, -- command description
    args text[], -- list of arguments

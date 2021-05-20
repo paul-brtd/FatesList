@@ -24,9 +24,7 @@ class WebhookResolver(IntEnum):
     posted = 2, "Posted"
 
 class Status(IntEnum):
-    """
-    Status object (See https://docs.fateslist.xyz/basics/basic-structures#status for more information)
-    """
+    """Status object (See https://docs.fateslist.xyz/basics/basic-structures#status for more information)"""
     _init_ = 'value __doc__'
     unknown = 0, "Unknown"
     online = 1, "Online"
@@ -56,6 +54,12 @@ class Vanity(IntEnum):
     server = 0, "Server"
     bot = 1, "Bot"
     profile = 2, "Profile"
+
+class CommandType(IntEnum):
+    _init_ = "value __doc__"
+    regular = 0, "Regular Command"
+    guild_slash = 1, "Slash Command (guild)"
+    global_slash = 2, "Slash Command (global)"
 
 class APIEvents(IntEnum):
     """May or may not be in numeric order"""

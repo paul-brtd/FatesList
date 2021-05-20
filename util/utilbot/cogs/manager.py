@@ -31,8 +31,8 @@ class Manager(Cog):
     @command(pass_context = True, aliases = ["bis"])
     async def botinserver(self, ctx):
         cmd = """
-            db_lst = await db.fetch("SELECT bot_id, state FROM bots WHERE state = 0 OR state = 6")
-            return [dict(obj) for obj in db_lst]
+db_lst = await db.fetch("SELECT bot_id, state FROM bots WHERE state = 0 OR state = 6")
+return [dict(obj) for obj in db_lst]
         """
         status, _ret = await add_rmq_task_with_ret("_admin", {}, op = cmd)
         if not status:

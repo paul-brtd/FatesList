@@ -9,7 +9,7 @@
   <div class="d-flex d-sm-flex d-md-flex d-lg-flex d-xl-flex flex-column justify-content-center align-items-center flex-sm-column justify-content-sm-center align-items-sm-center flex-md-column justify-content-md-center align-items-md-center flex-lg-column justify-content-lg-center align-items-lg-center flex-xl-column justify-content-xl-center align-items-xl-center">
     <h2 style="color: rgba(255, 255, 255, 0.87); font-weight: bold; margin-top: 40px;">Fates List</h2>
     <p style="color: rgba(255, 255, 255, 0.87); font-weight: bold; opacity: 0.78; font-size: 21px;">
-    	{%if mode == "edit" %}Edit your bot here.{%elif mode == "add"%}Add your bot here!{%endif%}
+    	{%if mode == "edit" %}Bot Settings{%elif mode == "add"%}Add your bot here!{%endif%}
     </p>
     {% if not error %}
     {% else %}
@@ -30,10 +30,15 @@
     </div>
     <h6 style="color: white; margin-top: 1px !important; font-size: 12.5px; overflow-wrap: break-word;">API Token <span id="hidden_token">(Hidden)</span><span id="apitok" style="display: none; overflow-wrap: break-word !important; font-size: 11.5px; opacity: 0.9">{{data.api_token}}</span></h6>
    <button onclick='showToken(this)' class="btn btn-outline-light">Show API Token</button>
-   <button onclick='regenToken("{{data.api_token}}")' class="btn btn-outline-light">Regenerate</button>
+   <button onclick='regenToken()' class="btn btn-outline-light">Regenerate</button>
+   <div>
+	   <h6 style="color: white;">Stat Posting</h6>
+	   <input type="number" placeholder="Server Count" id="server-count" />
+	   <button onclick='postStats()' class="btn btn-outline-light">Post</button>
+   </div>
    </section>
    {% endif %}
-  <form style="height: auto; margin-top: 30px; color: rgba(255, 255, 255, 0.87); text-align: center;" id="bot_form" method="POST">
+   <form {% if mode == "edit" %} action="/bot/{{data.bot_id}}/edit" {% endif %} style="height: auto; margin-top: 30px; color: rgba(255, 255, 255, 0.87); text-align: center;" id="bot_form" method="POST">
    <div class="form-group">
     <div class="container">
       <div class="row">
@@ -384,9 +389,21 @@ $("#bot_form").submit( function(eventObj) {
 	}
   }
   {% if mode == "edit" %}
-  function regenToken(api_token) {
+  function postStats() {
+	server_count = document.querySelector("#server-count").value
+  	payload = {"guild_count": server_count}
 	$.ajax({
-	   headers: {'Authorization': `${api_token}`},
+		headers: {'Authorization': '{{data.api_token}}'},
+		type: 'POST',
+		url: '/api/bots/{{data.bot_id}}/stats',
+		contentType: 'application/json',
+		data: JSON.stringify(payload),
+	});
+	modalShow("Success", "Done posting stats. You may leave this page or continue editing this bot!")
+  }
+  function regenToken() {
+	$.ajax({
+	   headers: {'Authorization': '{{data.api_token}}'},
 	   type: 'PATCH',
 	   url: '/api/bots/{{data.bot_id}}/token',
 	   processData: false,

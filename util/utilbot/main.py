@@ -19,7 +19,7 @@ class ASB(AutoShardedBot):
 
 
 # Set the roles in client
-client = ASB(command_prefix = "fl!", intents = intents)
+builtins.client = ASB(command_prefix = "fl!", intents = intents)
 
 client.load_extension("jishaku")
 client.bots_role = bots_role

@@ -89,7 +89,7 @@
 			<a target=”_blank” href="{{data.website}}"><button class="btn btn-outline-light buttons-all" id="buttons-website">Website</button></a>
 		{% endif %}
 		{% if admin %}
-			<a href="/{{type}}/{{id}}/edit"><button class="btn btn-outline-light buttons-all" id="buttons-edit">Edit</button></a>
+			<a href="/{{type}}/{{id}}/settings"><button class="btn btn-outline-light buttons-all" id="buttons-settings">Settings</button></a>
 		{% endif %}
 	</div>
 	<div style="display: inline-block; width: fit-content; height: fit-content; margin: 7px; padding: 7px;" class="key-container">
@@ -119,7 +119,9 @@
 		<div class="tab">
 			  <button id="long-desc-tab-button" class="tablinks" onclick="openf(event, 'long-description', this)">Description</button>
 			  <button id="review-tab-button" class="tablinks" onclick="openf(event, 'reviews', this)">Reviews</button>
+			  {% if type == "bot" %}
 			  <button id="commands-tab-button" class="tablinks coming-soon" onclick="openf(event, 'commands', this)">Commands</button>
+			  {% endif %}
 			  <button id="about-tab-button" class="tablinks" onclick="openf(event, 'about', this)">About</button>
 			  {% if staff[0] %}
        				  <button id="admin-tab-button" class="tablinks" onclick="openf(event, 'admin', this)">Admin</button>
@@ -293,8 +295,10 @@
 		    </script>
 		</div>
 	</section>
+	{% if type == "bot" %}
 	<section id="commands-tab" class="tabcontent white">
 		<p style="font-size: 30px;">Coming soon<span class="iconify" data-icon="icomoon-free:happy2" style="margin-left: 3px"></span></p>
+	{% endif %}
 	</section>
 	<section id="about-tab" class='tabcontent white'>
 		<table style="margin: 0 auto !important;">

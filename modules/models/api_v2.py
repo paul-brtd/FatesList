@@ -245,43 +245,24 @@ class BotEventList(BaseModel):
 class BotEvents(BaseModel):
     events: BotEventList
 
-class BotCommand(BaseModel):
+class PartialBotCommand(BaseModel):
+    cmd_type: enums.CommandType # 0 = no, 1 = guild, 2 = global
+    name: str
+    description: str
+    args: Optional[list] = ["<user>"]
+    examples: Optional[list] = []
+    premium_only: Optional[bool] = False
+    notes: Optional[list] = []
+    doc_link: str
+
+class BotCommand(PartialBotCommand):
     id: uuid.UUID
-    slash: int # 0 = no, 1 = guild, 2 = global
-    name: str
-    description: str
-    args: Optional[list] = ["<user>"]
-    examples: Optional[list] = []
-    premium_only: Optional[bool] = False
-    notes: Optional[list] = []
-    doc_link: str
-
-class BotCommandAdd(BaseModel):
-    slash: int # 0 = no, 1 = guild, 2 = global
-    name: str
-    description: str
-    args: Optional[list] = ["<user>"]
-    examples: Optional[list] = []
-    premium_only: Optional[bool] = False
-    notes: Optional[list] = []
-    doc_link: str
-
+    
 class BotCommandAddResponse(APIResponse):
     id: uuid.UUID
 
 class BotCommands(BaseModel):
     __root__: Dict[uuid.UUID, BotCommand]
-
-class BotCommandEdit(BaseModel):
-    id: uuid.UUID
-    slash: Optional[int] = None # 0 = no, 1 = guild, 2 = global
-    name: Optional[str] = None
-    description: Optional[str] = None
-    args: Optional[list] = None
-    examples: Optional[list] = None
-    premium_only: Optional[bool] = None
-    notes: Optional[list] = None
-    doc_link: Optional[str] = None
 
 class BotCommandDelete(BaseModel):
     id: uuid.UUID

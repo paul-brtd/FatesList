@@ -28,7 +28,7 @@ async def get_promotions(bot_id: int) -> list:
     return api_data
 
 async def get_bot_commands(bot_id: int) -> dict:
-    cmd_raw = await db.fetch("SELECT id, slash, name, description, args, examples, premium_only, notes, doc_link FROM bot_commands WHERE bot_id = $1", bot_id)
+    cmd_raw = await db.fetch("SELECT id, cmd_type, name, description, args, examples, premium_only, notes, doc_link FROM bot_commands WHERE bot_id = $1", bot_id)
     cmd = {cmd_raw_obj["id"]: dict(cmd_raw_obj) for cmd_raw_obj in cmd_raw}
     return cmd
 
@@ -64,12 +64,12 @@ async def vote_bot(user_id: int, bot_id: int, username: str, autovote: bool, tes
         else:
             WT = datetime.timedelta(hours = 8) # Wait Time
         if datetime.datetime.now(epoch.tzinfo) - epoch < WT: # Subtract the two times
-            return [401, WT - (datetime.datetime.now(epoch.tzinfo) - epoch)]
+            return WT - (datetime.datetime.now(epoch.tzinfo) - epoch)
     if not test:
         votes = await db.fetchval("SELECT votes FROM bots WHERE bot_id = $1", bot_id)
         ts = await db.fetchval("SELECT timestamps FROM bot_voters WHERE bot_id = $1 AND user_id = $2", bot_id, user_id)
         if votes is None:
-            return [404]
+            return None
         if ts is None:
             await db.execute("INSERT INTO bot_voters (user_id, bot_id) VALUES ($1, $2)", user_id, bot_id)
         else:
@@ -87,7 +87,7 @@ async def vote_bot(user_id: int, bot_id: int, username: str, autovote: bool, tes
         await db.execute("UPDATE user_reminders SET resolved = false, remind_time = NOW() + interval '8 hours' WHERE user_id = $1 AND bot_id = $2", user_id, bot_id)
     
     event_id = asyncio.create_task(bot_add_event(bot_id, enums.APIEvents.bot_vote, {"user": str(user_id), "votes": votes + 1, "test": test}))
-    return []
+    return True
 
 async def invite_bot(bot_id: int, user_id = None, api = False):
     bot = await db.fetchrow("SELECT invite, invite_amount FROM bots WHERE bot_id = $1", bot_id)

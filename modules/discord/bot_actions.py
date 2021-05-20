@@ -37,8 +37,8 @@ async def add_bot_backend(
     bot_dict["tags"] = bot_dict["tags"].split(",")
     return await templates.TemplateResponse("bot_add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": rc[0], "code": rc[1], "mode": "add"})
 
-@router.get("/{bot_id}/edit")
-async def bot_edit(request: Request, bot_id: int, csrf_protect: CsrfProtect = Depends()):
+@router.get("/{bot_id}/settings")
+async def bot_settings_page(request: Request, bot_id: int, csrf_protect: CsrfProtect = Depends()):
     if "user_id" in request.session.keys():
         check = await is_bot_admin(int(bot_id), int(request.session.get("user_id")))
         if not check:
@@ -111,12 +111,12 @@ async def vote_for_bot_or_die(
         return RedirectResponse(f"/auth/login?redirect=/bot/{bot_id}&pretty=to vote for this bot", status_code = 303)
     user_id = int(request.session.get("user_id"))
     ret = await vote_bot(user_id = user_id, username = request.session.get("username"), bot_id = bot_id, autovote = False, test = False)
-    if ret == []:
-        return await templates.TemplateResponse("message.html", {"request": request, "message": "Successfully voted for this bot!<script>window.location.replace('/bot/" + str(bot_id) + "')</script>", "username": request.session.get("username", False), "avatar": request.session.get('avatar')})
-    elif ret[0] in [404, 500]:
-        return abort(ret[0])
-    elif ret[0] == 401:
-        wait_time = round(ret[1].total_seconds())
+    if ret is True:
+        return await templates.TemplateResponse("message.html", {"request": request, "message": f"Successfully voted for this bot!<script>window.location.replace('/bot/{bot_id}')</script>"})
+    elif ret is None:
+        return abort(404)
+    else: # Otherwise route
+        wait_time = round(ret.total_seconds())
         wait_time_hr = wait_time//(60*60)
         wait_time_mp = (wait_time - (wait_time_hr*60*60)) # Minutes
         wait_time_min = wait_time_mp//60
@@ -136,9 +136,7 @@ async def vote_for_bot_or_die(
         else:
             sec = "seconds"
         wait_time_human = " ".join((str(wait_time_hr), hr, str(wait_time_min), min, str(wait_time_sec), sec))
-        return await templates.TemplateResponse("message.html", {"request": request, "username": request.session.get("username"), "avatar": request.session.get("avatar"), "message": "Vote Error", "context": "Please wait " + wait_time_human + " before voting for this bot"})
-    else:
-        return ret
+        return await templates.TemplateResponse("message.html", {"request": request, "message": "Vote Error", "context": "Please wait " + wait_time_human + " before voting for this bot"})
 
 @router.post("/{bot_id}/delete")
 async def delete_bot(request: Request, bot_id: int):
@@ -147,7 +145,7 @@ async def delete_bot(request: Request, bot_id: int):
         if check is None:
             return await templates.TemplateResponse("message.html", {"request": request, "message": "This bot doesn't exist in our database."})
         elif check == False:
-            return await templates.TemplateResponse("message.html", {"request": request, "message": "You aren't the owner of this bot.", "context": "Only owners and admins can delete bots", "username": request.session.get("username", False)})
+            return await templates.TemplateResponse("message.html", {"request": request, "message": "You aren't the owner of this bot.", "context": "Only owners and admins can delete bots"})
         await add_rmq_task("bot_delete_queue", {"user_id": int(request.session["user_id"]), "bot_id": bot_id})
     return RedirectResponse("/", status_code = 303)
 
@@ -162,12 +160,12 @@ async def ban_bot(request: Request, bot_id: int, ban: int = FForm(1), reason: st
     if "user_id" in request.session.keys():
         check = await db.fetchval("SELECT state FROM bots WHERE bot_id = $1", bot_id)
         if check is None:
-            return await templates.TemplateResponse("message.html", {"request": request, "message": "This bot doesn't exist in our database.", "username": request.session.get("username", False)})
+            return await templates.TemplateResponse("message.html", {"request": request, "message": "This bot doesn't exist in our database."})
         user = guild.get_member(int(request.session.get("user_id")))
         if is_staff(staff_roles, user.roles, 3)[0]:
             pass
         else:
-            return await templates.TemplateResponse("message.html", {"request": request, "message": "You aren't the owner of this bot.", "context": "Only owners, admins and moderators can unban bots. Please contact them if you accidentally denied a bot.", "username": request.session.get("username", False)})
+            return await templates.TemplateResponse("message.html", {"request": request, "message": "You aren't the owner of this bot.", "context": "Only owners, admins and moderators can unban bots. Please contact them if you accidentally denied a bot."})
     admin_tool = BotListAdmin(bot_id, int(request.session.get("user_id")))
     if ban == 1:
         await admin_tool.ban_bot(reason)
@@ -187,7 +185,7 @@ async def new_reviews(request: Request, bot_id: int, bt: BackgroundTasks, rating
     id = uuid.uuid4()
     await db.execute("INSERT INTO bot_reviews (id, bot_id, user_id, star_rating, review_text, epoch) VALUES ($1, $2, $3, $4, $5, $6)", id, bot_id, int(request.session["user_id"]), rating, review, [time.time()])
     await bot_add_event(bot_id, enums.APIEvents.review_add, {"user": str(request.session["user_id"]), "reply": False, "id": str(id), "star_rating": rating, "review": review, "root": None})
-    return await templates.TemplateResponse("message.html", {"request": request, "message": "Successfully made a review for this bot!<script>window.location.replace('/bot/" + str(bot_id) + "')</script>", "username": request.session.get("username", False), "avatar": request.session.get('avatar')}) 
+    return await templates.TemplateResponse("message.html", {"request": request, "message": f"Successfully made a review for this bot!<script>window.location.replace('/bot/{bot_id}')</script>"}) 
 
 @router.post("/{bot_id}/reviews/{rid}/edit")
 async def edit_review(request: Request, bot_id: int, rid: uuid.UUID, bt: BackgroundTasks, rating: float = FForm(5.1), review: str = FForm("This is a placeholder review as the user has not posted anything...")):
@@ -211,7 +209,7 @@ async def edit_review(request: Request, bot_id: int, rid: uuid.UUID, bt: Backgro
         epoch = [time.time()]
     await db.execute("UPDATE bot_reviews SET star_rating = $1, review_text = $2, epoch = $3 WHERE id = $4", rating, review, epoch, rid)
     await bot_add_event(bot_id, enums.APIEvents.review_edit, {"user": str(request.session["user_id"]), "id": str(rid), "star_rating": rating, "review": review, "reply": check["reply"]})
-    return await templates.TemplateResponse("message.html", {"request": request, "message": "Successfully editted your/this review for this bot!<script>window.location.replace('/bot/" + str(bot_id) + "')</script>"})
+    return await templates.TemplateResponse("message.html", {"request": request, "message": f"Successfully editted your/this review for this bot!<script>window.location.replace('/bot/{bot_id}')</script>"})
 
 @router.post("/{bot_id}/reviews/{rid}/reply")
 async def edit_review(request: Request, bot_id: int, rid: uuid.UUID, bt: BackgroundTasks, rating: float = FForm(5.1), review: str = FForm("This is a placeholder review as the user has not posted anything...")):
@@ -226,7 +224,7 @@ async def edit_review(request: Request, bot_id: int, rid: uuid.UUID, bt: Backgro
     replies.append(reply_id)
     await db.execute("UPDATE bot_reviews SET replies = $1 WHERE id = $2", replies, rid)
     await bot_add_event(bot_id, enums.APIEvents.review_add, {"user": str(request.session["user_id"]), "reply": True, "id": str(reply_id), "star_rating": rating, "review": review, "root": str(rid)})
-    return await templates.TemplateResponse("message.html", {"request": request, "message": "Successfully replied to your/this review for this bot!<script>window.location.replace('/bot/" + str(bot_id) + "')</script>"})
+    return await templates.TemplateResponse("message.html", {"request": request, "message": f"Successfully replied to your/this review for this bot!<script>window.location.replace('/bot/{bot_id}')</script>"})
 
 @router.get("/{bot_id}/resubmit")
 async def resubmit_bot(request: Request, bot_id: int):
