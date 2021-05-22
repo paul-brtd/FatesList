@@ -9,7 +9,7 @@ nest_asyncio.apply()
 def handle_await(code):
     if "await " not in code:
         return code.replace("return ", "ret = ")
-    code = "".join(["    " + txt + "\n" for txt in code.lstripe().split('\n')])
+    code = "".join(["    " + txt + "\n" for txt in code.lstrip().split('\n')])
     return f"""
 async def task_runner():
 {code}

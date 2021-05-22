@@ -297,7 +297,7 @@
 	</section>
 	{% if type == "bot" %}
 	<section id="commands-tab" class="tabcontent white">
-		<p style="font-size: 30px;">Coming soon<span class="iconify" data-icon="icomoon-free:happy2" style="margin-left: 3px"></span></p>
+		<p style="font-size: 30px;" id="commands-error">Getting Commands...</p>
 	{% endif %}
 	</section>
 	<section id="about-tab" class='tabcontent white'>
@@ -395,6 +395,31 @@
 $( document ).ready(function() {
 	setTimeout(function() {document.querySelector("#rating-desc-avg").innerHTML = parseState({{average_rating}}) + ", " + {{average_rating}}}, 300); 
 });
+
+function getCommands() {
+	commandsTab = document.querySelector("#commands-tab")
+	error = document.querySelector("#commands-error")
+	$.get({
+		url: '/api/{{type}}s/{{id}}/commands',
+		statusCode: {
+			404: function(data) {
+				error.textContent = "No Commands Found"
+			},
+			200: function(data) {
+				commands = `<p style='font-size: 30px'>Commands List</p><br/>
+					<table style="margin: 0 auto !important;">`
+				/* TODO: Fill in HTML */
+				
+				
+				commands += `</table>`
+				commandsTab.innerHTML = commands
+			}
+
+		}
+	})
+}
+
+setTimeout(getCommands, 700)
 
 function deleteReview(rev_id) {
 	$.ajax({

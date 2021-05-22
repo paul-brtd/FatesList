@@ -167,6 +167,7 @@ class BotListAdmin():
         self.str_mod = str(mod) # Rhe moderator in string form for quicker and easier access
         self.channel = client.get_channel(bot_logs) # Bot log channel cached so we don't need to ask Discord
         self.guild = self.channel.guild # Alias to make guild sending easier
+        self.force = force 
 
     async def _get_main_owner(self):
         """Internal function to get the main owner"""

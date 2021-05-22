@@ -135,7 +135,7 @@ async def run_worker():
     builtins.rabbitmq_db = await connect_robust(
         f"amqp://fateslist:{rabbitmq_pwd}@127.0.0.1/"
     )
-    builtins.db = await asyncpg.create_pool(host="127.0.0.1", port=5432, user=pg_user, password=pg_pwd, database="fateslist")
+    builtins.db = await asyncpg.create_pool(host="localhost", port=12345, user=pg_user, database="fateslist")
     builtins.redis_db = await aioredis.from_url('redis://localhost', db = 1)
     logger.opt(ansi = True).debug("Connected to databases (postgres, redis and rabbitmq)")
     builtins.stats = Stats()

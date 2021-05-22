@@ -7,7 +7,8 @@ from config import pg_user, pg_pwd
 DB = PostgresEngine(config={
     "database": "fateslist",
     "user": pg_user,
-    "password": pg_pwd
+    "host": "localhost",
+    "port": 12345,
 })
 
 
