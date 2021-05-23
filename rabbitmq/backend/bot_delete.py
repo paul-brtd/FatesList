@@ -1,6 +1,5 @@
-from modules.core import bot_add_event
-from config import bot_logs
-import discord
+from modules.core import *
+from rabbitmq.core import *
 
 class Config:
     queue = "bot_delete_queue"

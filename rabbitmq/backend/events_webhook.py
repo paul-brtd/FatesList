@@ -1,11 +1,6 @@
-import orjson
-from aiohttp_requests import requests
-import asyncio
 from discord_webhook import DiscordWebhook, DiscordEmbed
-from modules.core import get_bot, get_user, get_token, bot_add_event
-from termcolor import colored, cprint
-import modules.models.enums as enums
-import inspect
+from rabbitmq.core import *
+from modules.core import *
 
 class Config:
     queue = "events_webhook_queue"
@@ -79,7 +74,7 @@ async def backend(json, *, webhook_url, webhook_type, api_token, id, webhook_tar
                 logger.warning(f"URL did not return 2xx or a client-side 4xx error and sent {res.status} instead. Retrying...", "red")
         except Exception as exc:
             # Had an error sending
-            cprint(exc, "red")
+            logger.warning(f"Error when sending -> {type(exc).__name__}: {exc}")
             if not resolved_error:
                 await _resolve_event(event_id, enums.WebhookResolver.error)
             resolved_error = True

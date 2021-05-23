@@ -1,21 +1,22 @@
-import asyncio, asyncpg, uvloop
-from copy import deepcopy
-from termcolor import colored, cprint
-from modules.utils import secure_strcmp
-import orjson
-import builtins
 from modules.core import *
-import asyncpg, asyncio, uvloop, aioredis
-import sys
 sys.path.append("..")
-from config import *
-from aio_pika import *
-import discord
 from . import *
+import nest_asyncio
+nest_asyncio.apply()
 
 # Import all needed backends
 backends = Backends()
 builtins.backends = backends
+
+def _serialize(obj):
+    try:
+        orjson.dumps({"rc": obj})
+        return obj
+    except:
+        try:
+            return dict(obj)
+        except:
+            return str(obj)
 
 def _setup_discord():
     # Setup client (main + server)
@@ -34,12 +35,12 @@ def _setup_discord():
     intent_server.presences = False
     return discord.Client(intents=intent_main), discord.Client(intents=intent_server)
 
-async def new_task(queue):
+async def _new_task(queue):
     friendly_name = backends.getname(queue)
     _channel = await rabbitmq_db.channel()
     _queue = await _channel.declare_queue(queue, durable = True) # Function to handle our queue
     
-    async def _task(message: IncomingMessage):
+    async def _task(message: aio_pika.IncomingMessage):
         """RabbitMQ Queue Function"""
         curr = stats.on_message
         logger.opt(ansi = True).info(f"<m>{friendly_name} called (message {curr})</m>")
@@ -57,21 +58,12 @@ async def new_task(queue):
 
         # Normally handle rabbitmq task
         _task_handler = TaskHandler(_json, queue)
-        rc = await _task_handler.handle()
-        if isinstance(rc, tuple):
-            rc, err = rc[0], rc[1]
-        else:
-            err = False # Initially until we find exception
-
-        _ret = {"ret": rc, "err": err} # Result to return
-        if rc and isinstance(rc, Exception):
-            logger.opt(ansi = True).warning(f"<red>{type(rc).__name__}: {rc}</red>")
-            _ret["ret"] = [f"{type(rc).__name__}: {rc}"]
-            if not _ret["err"]:
-                _ret["err"] = [True] # Mark the error
-            stats.err_msgs.append(message) # Mark the failed message so we can ack it later
-        
-        _ret["ret"] = _ret["ret"] if serialized(_ret["ret"]) else str(_ret["ret"])
+        rc, err = await _task_handler.handle()
+        if isinstance(rc, Exception):
+            logger.warning(f"{type(rc).__name__}: {rc}")
+            rc = f"{type(rc).__name__}: {rc}"
+            stats.err_msgs.append(message) # Mark the failed message so we can ack it later    
+        _ret = {"ret": _serialize(rc), "err": err}
 
         if _json["meta"].get("ret"):
             await redis_db.set(f"rabbit-{_json['meta'].get('ret')}", orjson.dumps(_ret)) # Save return code in redis
@@ -96,11 +88,15 @@ class TaskHandler():
         try:
             handler = backends.get(self.queue)
             rc = await handler(self.dict, **self.ctx)
-            return rc
+            if isinstance(rc, tuple):
+                return rc[0], rc[1]
+            elif isinstance(rc, Exception):
+                return rc, True
+            return rc, False
         except Exception as exc:
             stats.errors += 1 # Record new error
             stats.exc.append(exc)
-            return exc
+            return exc, True
 
 class Stats():
     def __init__(self):
@@ -132,7 +128,7 @@ async def run_worker():
     builtins.client, builtins.client_server = _setup_discord()
     asyncio.create_task(client.start(TOKEN_MAIN))
     asyncio.create_task(client_server.start(TOKEN_SERVER))
-    builtins.rabbitmq_db = await connect_robust(
+    builtins.rabbitmq_db = await aio_pika.connect_robust(
         f"amqp://fateslist:{rabbitmq_pwd}@127.0.0.1/"
     )
     builtins.db = await asyncpg.create_pool(host="localhost", port=12345, user=pg_user, database="fateslist")
@@ -155,7 +151,7 @@ async def run_worker():
         else:
             break
     for backend in backends.getall():
-        await new_task(backend)
+        await _new_task(backend)
     end_time = time.time()
     stats.load_time = end_time - start_time
     logger.opt(ansi = True).info(f"<magenta>Worker up in {end_time - start_time} seconds at time {end_time}!</magenta>")

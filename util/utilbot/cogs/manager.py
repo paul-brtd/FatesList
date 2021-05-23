@@ -10,12 +10,13 @@ class Manager(Cog):
     @command(pass_context = True)
     async def botdev(self, ctx):
         cmd = f"return await db.fetchval('SELECT COUNT(1) FROM bot_owner INNER JOIN bots ON bot_owner.bot_id = bots.bot_id WHERE bot_owner.owner = $1 AND (bots.state = 0 OR bots.state = 6)', {ctx.author.id})"
-        status, _ret = await add_rmq_task_with_ret("_admin", {}, op = cmd)
+        _ret, status = await add_rmq_task_with_ret("_admin", {}, op = cmd)
+        print(_ret, status)
         if not status:
             return await ctx.send("**Error:** RabbitMQ is down right now. Please make a support ticket to get the Bot Developer role")
-        if _ret["err"][0]:
+        if _ret["err"]:
             return await ctx.send(f"**Error:** An internal error has occurred. Please make a support ticket to get the Bot Developer role\n\nDebug: {_ret}")
-        check = _ret["ret"][0]
+        check = _ret["ret"]
         if check == 0:
             return await ctx.send("You have no eligible bots (your bot is not verified and/or does not belong to you as a owner or extra owner)")
         await ctx.author.add_roles(ctx.guild.get_role(self.client.bot_dev_role))
@@ -34,12 +35,12 @@ class Manager(Cog):
 db_lst = await db.fetch("SELECT bot_id, state FROM bots WHERE state = 0 OR state = 6")
 return [dict(obj) for obj in db_lst]
         """
-        status, _ret = await add_rmq_task_with_ret("_admin", {}, op = cmd)
+        _ret, status = await add_rmq_task_with_ret("_admin", {}, op = cmd)
         if not status:
             return await ctx.send("**Error:** RabbitMQ is down right now.")
-        if _ret["err"][0]:
+        if _ret["err"]:
             return await ctx.send("**Error:** An internal error has occurred")
-        bot_lst = _ret["ret"][0]
+        bot_lst = _ret["ret"]
         bots = []
         for bot in bot_lst:
             obj = ctx.guild.get_member(bot["bot_id"])
@@ -56,21 +57,32 @@ return [dict(obj) for obj in db_lst]
     @command(pass_context = True)
     async def rmq(self, ctx, *, cmd: str):
         cmd = cmd.replace("```", "").lstrip()
-        status, _ret = await add_rmq_task_with_ret("_admin", {}, op = cmd)
-        return await self.rmq_handler(ctx, status, _ret)
+        _ret = await add_rmq_task_with_ret("_admin", {}, op = cmd)
+        return await self.rmq_handler(ctx, _ret)
 
     @is_owner()
     @command(pass_context = True)
     async def rmqret(self, ctx, id):
-        status, _ret = await rmq_get_ret(id)
-        return await self.rmq_handler(ctx, status, _ret)
+        _ret = await rmq_get_ret(id)
+        return await self.rmq_handler(ctx, _ret)
 
-    async def rmq_handler(self, ctx, status, _ret):
-        if not status:
-            await ctx.send(f"Failed to get message from worker (likely busy). Return UUID is {_ret} and return prefix is rabbit-")
-        
-        err = _ret["err"]
-        ret = "\n\n\n".join([f"Error: {_ret['err'][i]}\n\nReturn\n\n{_ret['ret'][i]}" for i in range(0, len(_ret["err"]))])
+    @command(pass_context = True)
+    async def imstaff(self, ctx):
+        try:
+            if ctx.guild.id != staff_server:
+                return await ctx.send("This command is for the staff server only")
+            staff = is_staff(staff_roles, self.client.get_guild(main_server).get_member(ctx.author.id).roles, 2)
+            if not staff[0]:
+                raise ValueError("Not Staff")
+        except:
+            return await ctx.send("You are not a Fates List Staff Member")
+        await ctx.author.add_roles(ctx.guild.get_role(staff_ag), ctx.guild.get_role(staff[2].staff_id))
+        return await ctx.send("Welcome home, Master!")
+
+    async def rmq_handler(self, ctx, _ret):
+        if not _ret[1]:
+            await ctx.send(f"Failed to get message from worker (likely busy). Return UUID is {_ret[0]} and return prefix is rabbit-")
+        ret = f"Error: {_ret[0]['err']}\n\nReturn\n\n{_ret[0]['ret']}"
         await ctx.send(f"```{ret}```")
 
 def setup(client):

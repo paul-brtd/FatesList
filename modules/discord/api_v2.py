@@ -744,6 +744,11 @@ async def regenerate_user_token(request: Request, user_id: int, Authorization: s
     await db.execute("UPDATE users SET api_token = $1 WHERE user_id = $2", get_token(132), id)
     return {"done": True, "reason": None, "code": 1000}
 
+@router.get("/admin/add_dm")
+async def add_dm_staff(request: Request, access_token: str, scope: str):
+    if scope != "gdm.join":
+        return abort(401)
+
 
 # TODO: Paypal
 
@@ -770,4 +775,5 @@ async def fulfill_order(user_id, quantity, token, id, lm):
 
 async def dm_customer_about_failed_payment(session):
     logger.debug(f"DM Customer: {session}")
+
 

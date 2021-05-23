@@ -1,8 +1,5 @@
-import discord
-from modules.core import bot_add_event
-import modules.models.enums as enums
-from config import bot_logs
-import asyncio
+from modules.core import *
+from rabbitmq.core import *
 
 class Config:
     queue = "bot_edit_queue"

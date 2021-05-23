@@ -396,30 +396,44 @@ $( document ).ready(function() {
 	setTimeout(function() {document.querySelector("#rating-desc-avg").innerHTML = parseState({{average_rating}}) + ", " + {{average_rating}}}, 300); 
 });
 
-function getCommands() {
+function getCommands(bot_id) {
 	commandsTab = document.querySelector("#commands-tab")
 	error = document.querySelector("#commands-error")
 	$.get({
-		url: '/api/{{type}}s/{{id}}/commands',
+		url: `/api/bots/${bot_id}/commands`,
 		statusCode: {
 			404: function(data) {
 				error.textContent = "No Commands Found"
 			},
 			200: function(data) {
 				commands = `<p style='font-size: 30px'>Commands List</p><br/>
-					<table style="margin: 0 auto !important;">`
+					<table style="margin: 0 auto !important;">
+					<colgroup>
+						<tr>
+							<th style="border-right: none;">Name</th>
+							<th style="border-right: none;">Description</th>
+						</tr>
+					</colgroup>
+				`
 				/* TODO: Fill in HTML */
-				
-				
+				$.each(data, function(key, value) {
+					commands += `
+					<colgroup>
+						<tr>
+							<td>${value.name}</td>
+							<td>${value.description}</td>
+						</tr>
+					</colgroup>
+					`
+				});
 				commands += `</table>`
 				commandsTab.innerHTML = commands
 			}
-
 		}
 	})
 }
 
-setTimeout(getCommands, 700)
+setTimeout(function(){getCommands('{{id}}')}, 700)
 
 function deleteReview(rev_id) {
 	$.ajax({

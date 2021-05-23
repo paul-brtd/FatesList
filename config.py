@@ -7,8 +7,11 @@ bots_role = 836326315946672158 # BOTS role in support server
 staff_ping_add_role=836326316188893275
 bot_dev_role = 836326314344185876 # BOT Developer in support server
 certified_dev_role = 836326313283026995 # Certified Developer in support server
-main_server=789934742128558080 # Main server
-test_server = 794834630942654546 # The test server for reviewing bots
+main_server = 789934742128558080 # Main server
+staff_server = 816130947274899487 # The staff server
+staff_ag = 845931695387181066 # Access Granted role in staff server
+test_botsrole = 845940351339987004 # Bots role on test server
+test_server = 845928429357367316 # Test Server
 owner = 563808552288780322
 
 # Messages
@@ -22,27 +25,38 @@ reserved_vanity = ["bot", "docs", "redoc", "doc", "profile", "server", "bots", "
 staff_roles = {
     "user": {
         "id": 00000000000000000,
+        "staff_id": 0000000000000000,
         "perm": 0
     },
     "auditor": {
         "id": 000000000000000000,
+        "staff_id": 0000000000000000,
         "perm": 1
     }, # Unused
     "bot_reviewer": {
         "id": 836326311147864104,
+        "staff_id": 845931373520748545,
         "perm": 2
     },
     "mod": {
         "id": 836326309528600627,
+        "staff_id": 845931545076432931,
         "perm": 3
     },
     "admin": {
         "id": 836326305666039848,
+        "staff_id": 845930903883874336,
         "perm": 4,
+    },
+    "head_admin": {
+        "id": 836349482340843572,
+        "staff_id": 845930541018513428,
+        "perm": 5
     },
     "owner": {
         "id": 836326299223195738,
-        "perm": 5,
+        "staff_id": 830540676952227863,
+        "perm": 6,
     }
 }
 # TODO: Add Timed Badges
@@ -110,4 +124,5 @@ class OauthConfig:
     client_id = "798951566634778641"
     client_secret = oauth_client_secret
     redirect_uri = "https://" + site + "/auth/login/confirm"
+
 

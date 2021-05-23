@@ -10,7 +10,7 @@ RMQ_META = {
     "pv": 1, # Protocol Version
     "dbg": True, # Debug Mode
     "worker": None, # For when we do multi server rabbit
-    "op": None, # Any operations that we should run in list format
+    "op": None, # Any operations that we should run as a string
     "ret": None # The UUID to save returned values to on Redis if wanted
 }
 
@@ -46,5 +46,5 @@ async def rmq_get_ret(id):
             tries += 1
             continue
         await redis_db.delete(f"rabbit-{id}")
-        return True, orjson.loads(ret)
-    return False, id # We didnt get anything
+        return orjson.loads(ret), True
+    return id, False # We didnt get anything
