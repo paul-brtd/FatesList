@@ -40,11 +40,11 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
         try:
             api_token = await websocket.receive_json()
             logger.debug("Got response from websocket. Checking response...")
-            if api_token["e"] != enums.APIEvents.ws_identity_res or api_token["t"] not in [enums.APIEventTypes.auth_token, enums.APIEventTypes.auth_manager_key]:
+            if api_token["m"]["e"] != enums.APIEvents.ws_identity_res or enums.APIEventTypes(api_token["m"]["t"]) not in [enums.APIEventTypes.auth_token, enums.APIEventTypes.auth_manager_key]:
                 raise TypeError
         except:
             return await ws_kill_invalid(manager, websocket)
-        match api_token["type"]:
+        match api_token["m"]["t"]:
             case enums.APIEventTypes.auth_token:
                 try:
                     api_token = api_token["ctx"]["token"]
@@ -60,7 +60,7 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
                 if websocket.api_token == [] or websocket.bot_id == []:
                     return await ws_kill_no_auth(manager, websocket)
                 logger.debug("Authenticated successfully to websocket")
-                await manager.send_personal_message({"e": enums.APIEvents.ws_status, "t": enums.APIEventTypes.ws_ready, "ctx": {"bots": [str(bid) for bid in websocket.bot_id]}}, websocket)
+                await manager.send_personal_message({"m": {"e": enums.APIEvents.ws_status, "eid": str(uuid.uuid4()), "t": enums.APIEventTypes.ws_ready}, "ctx": {"bots": [str(bid) for bid in websocket.bot_id]}}, websocket)
             case enums.APIEventTypes.auth_manager_key:
                 try:
                     if secure_strcmp(api_token["ctx"]["key"], test_server_manager_key) or secure_strcmp(api_token["ctx"]["key"], root_key):
@@ -69,7 +69,7 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
                         return await ws_kill_no_auth(manager, websocket) 
                 except:
                     return await ws_kill_invalid(manager, websocket)
-                await manager.send_personal_message({"e": enums.APIEvents.ws_status, "t": enums.APIEventTypes.ws_ready, "ctx": None}, websocket)
+                await manager.send_personal_message({"m": {"e": enums.APIEvents.ws_status, "eid": str(uuid.uuid4()), "t": enums.APIEventTypes.ws_ready}, "ctx": None}, websocket)
     try:
         if not websocket.manager_bot:
             ini_events = {}
@@ -84,7 +84,7 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
                     logger.exception()
                     events = {}
                 ini_events[str(bot)] = events
-            await manager.send_personal_message({"e": enums.APIEvents.ws_event, "t": enums.APIEventTypes.ws_event_multi, "ctx": ini_events, "ts": time.time()}, websocket)
+            await manager.send_personal_message({"m": {"e": enums.APIEvents.ws_event, "eid": str(uuid.uuid4()), "t": enums.APIEventTypes.ws_event_multi, "ts": time.time()}, "ctx": ini_events}, websocket)
             pubsub = redis_db.pubsub()
             for bot in websocket.bot_id:
                 await pubsub.subscribe(str(bot))
@@ -96,7 +96,7 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
             logger.debug(f"Got message {msg} with manager status of {websocket.manager_bot}")
             if msg is None or type(msg.get("data")) != bytes:
                 continue
-            await manager.send_personal_message({"e": enums.APIEvents.ws_event, "t": enums.APIEventTypes.ws_event_single, "ctx": {msg.get("channel").decode("utf-8"): orjson.loads(msg.get("data"))}, "ts": time.time()}, websocket)
+            await manager.send_personal_message({"m": {"e": enums.APIEvents.ws_event, "eid": str(uuid.uuid4()), "t": enums.APIEventTypes.ws_event_single, "ts": time.time()}, "ctx": {msg.get("channel").decode("utf-8"): orjson.loads(msg.get("data"))}}, websocket)
     except:
         try:
             await pubsub.unsubscribe()

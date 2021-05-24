@@ -11,6 +11,7 @@ main_server = 789934742128558080 # Main server
 staff_server = 816130947274899487 # The staff server
 staff_ag = 845931695387181066 # Access Granted role in staff server
 test_botsrole = 845940351339987004 # Bots role on test server
+test_staffrole = 846028433985503232 # Staff role on test server
 test_server = 845928429357367316 # Test Server
 owner = 563808552288780322
 

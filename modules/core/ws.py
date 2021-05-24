@@ -59,7 +59,7 @@ def ws_identity_payload():
 
 async def ws_kill(manager: ConnectionManager, websocket: Websocket, type, code):
     await manager.send_personal_message({"m": {"e": enums.APIEvents.ws_kill, "t": type, "ts": time.time(), "eid": str(uuid.uuid4())}}, websocket)
-    return await ws_close(code = code)
+    return await ws_close(websocket, code = code)
 
 async def ws_kill_invalid(manager: ConnectionManager, websocket: Websocket):
     return await ws_kill(manager, websocket, enums.APIEventTypes.ws_invalid, 4000)

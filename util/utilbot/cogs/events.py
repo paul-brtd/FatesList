@@ -14,7 +14,10 @@ class Events(Cog):
         self.whitelist[bot_id] = True
         await ctx.send("Temporarily whitelisted for one minute")
         await asyncio.sleep(60)
-        del self.whitelist[bot_id]
+        try:
+            del self.whitelist[bot_id]
+        except:
+            pass
         await ctx.send("Unwhitelisted bot again")
 
 
@@ -29,5 +32,9 @@ class Events(Cog):
                 await member.kick(reason = "Unauthorized Bot")
             else:
                 del self.whitelist[member.id]
+        else:
+            staff = is_staff(staff_roles, client.get_guild(main_server).get_member(member.id).roles, 2)
+            if staff[0]:
+                await member.add_roles(member.guild.get_role(test_staffrole))
 def setup(client):
     client.add_cog(Events(client))

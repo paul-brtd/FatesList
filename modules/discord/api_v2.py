@@ -744,11 +744,14 @@ async def regenerate_user_token(request: Request, user_id: int, Authorization: s
     await db.execute("UPDATE users SET api_token = $1 WHERE user_id = $2", get_token(132), id)
     return {"done": True, "reason": None, "code": 1000}
 
-@router.get("/admin/add_dm")
-async def add_dm_staff(request: Request, access_token: str, scope: str):
-    if scope != "gdm.join":
-        return abort(401)
-
+@router.get("/admin/is_staff")
+async def check_staff_member(request: Request, user_id: int, min_perm: int):
+    """Admin route to check if a user is staff or not"""
+    try:
+        staff = is_staff(staff_roles, client.get_guild(main_server).get_member(user_id).roles, min_perm)
+    except:
+        return {"staff": False, "perm": 1, "sm": {}}
+    return {"staff": staff[0], "perm": staff[1], "sm": staff[2].dict()}
 
 # TODO: Paypal
 
