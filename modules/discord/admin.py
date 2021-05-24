@@ -14,9 +14,9 @@ async def admin_dashboard(request: Request):
             user = guild.get_member(int(request.session.get("user_id")))
             staff = is_staff(staff_roles, user.roles, 2)
         except:
-            staff = [False, 0, StaffMember(name = "user", id = 0, perm = 0)]
+            staff = [False, 0, StaffMember(name = "user", id = 0, perm = 0, staff_id = 0)]
     else:
-        staff = [False, 0, StaffMember(name = "user", id = 0, perm = 0)]
+        staff = [False, 0, StaffMember(name = "user", id = 0, perm = 0, staff_id = 0)]
     certified = await do_index_query(state = 6, limit = None) # State 0 and state 6 are approved and certified
     bot_amount = await db.fetchval("SELECT COUNT(1) FROM bots WHERE state = 0 OR state = 6")
     queue = await do_index_query(state = 1, limit = None, add_query = "ORDER BY created_at ASC")

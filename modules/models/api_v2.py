@@ -369,8 +369,14 @@ class BotQueuePatch(BotListAdminRoute):
     feedback: Optional[str] = None 
     approve: bool
 
+class PartialBotQueue(BaseModel):
+    user: BaseUser
+    prefix: str
+    invite: str
+    description: str
+
 class BotQueueList(BaseModel):
-    __root__: List[BaseUser]
+    __root__: List[PartialBotQueue]
 
 class BotQueueGet(BaseModel):
     bots: BotQueueList

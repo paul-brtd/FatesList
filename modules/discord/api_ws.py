@@ -38,16 +38,17 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
         logger.debug("Sending IDENTITY to websocket")
         await manager.send_personal_message(ws_identity_payload(), websocket)
         try:
-            api_token = await websocket.receive_json()
+            data = await websocket.receive_json()
             logger.debug("Got response from websocket. Checking response...")
-            if api_token["m"]["e"] != enums.APIEvents.ws_identity_res or enums.APIEventTypes(api_token["m"]["t"]) not in [enums.APIEventTypes.auth_token, enums.APIEventTypes.auth_manager_key]:
+            if data["m"]["e"] != enums.APIEvents.ws_identity_res or enums.APIEventTypes(data["m"]["t"]) not in [enums.APIEventTypes.auth_token, enums.APIEventTypes.auth_manager_key]:
                 raise TypeError
         except:
             return await ws_kill_invalid(manager, websocket)
-        match api_token["m"]["t"]:
+        match data["m"]["t"]:
             case enums.APIEventTypes.auth_token:
                 try:
-                    api_token = api_token["ctx"]["token"]
+                    api_token = data["ctx"]["token"]
+                    event_filter = data["ctx"].get("filter")
                 except:
                     return await ws_kill_invalid(manager, websocket) 
                 if api_token is None or type(api_token) == int or type(api_token) == str:
@@ -63,14 +64,21 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
                 await manager.send_personal_message({"m": {"e": enums.APIEvents.ws_status, "eid": str(uuid.uuid4()), "t": enums.APIEventTypes.ws_ready}, "ctx": {"bots": [str(bid) for bid in websocket.bot_id]}}, websocket)
             case enums.APIEventTypes.auth_manager_key:
                 try:
-                    if secure_strcmp(api_token["ctx"]["key"], test_server_manager_key) or secure_strcmp(api_token["ctx"]["key"], root_key):
+                    if secure_strcmp(data["ctx"]["key"], test_server_manager_key) or secure_strcmp(data["ctx"]["key"], root_key):
                         websocket.manager_bot = True
+                        event_filter = data["ctx"].get("filter")
                     else:
                         return await ws_kill_no_auth(manager, websocket) 
                 except:
                     return await ws_kill_invalid(manager, websocket)
                 await manager.send_personal_message({"m": {"e": enums.APIEvents.ws_status, "eid": str(uuid.uuid4()), "t": enums.APIEventTypes.ws_ready}, "ctx": None}, websocket)
     try:
+        if isinstance(event_filter, int):
+            event_filter = [event_filter]
+        elif isinstance(event_filter, list):
+            pass
+        else:
+            event_filter = None
         if not websocket.manager_bot:
             ini_events = {}
             for bot in websocket.bot_id:
@@ -96,15 +104,32 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
             logger.debug(f"Got message {msg} with manager status of {websocket.manager_bot}")
             if msg is None or type(msg.get("data")) != bytes:
                 continue
-            await manager.send_personal_message({"m": {"e": enums.APIEvents.ws_event, "eid": str(uuid.uuid4()), "t": enums.APIEventTypes.ws_event_single, "ts": time.time()}, "ctx": {msg.get("channel").decode("utf-8"): orjson.loads(msg.get("data"))}}, websocket)
-    except:
+            try:
+                data = orjson.loads(msg.get("data"))
+                if not event_filter or data[list(data.keys())[0]]["m"]["e"] in event_filter:
+                    flag = True
+                else:
+                    flag = False
+            except Exception as exc:
+                print(exc)
+                raise exc
+                flag = False
+            if flag:
+                rc = await manager.send_personal_message({"m": {"e": enums.APIEvents.ws_event, "eid": str(uuid.uuid4()), "t": enums.APIEventTypes.ws_event_single, "ts": time.time()}, "ctx": {msg.get("channel").decode("utf-8"): orjson.loads(msg.get("data"))}}, websocket)
+            else:
+                rc = True
+            if not rc:
+                await ws_close(websocket, 4007)
+                return
+    except Exception as exc:
+        print(exc)
         try:
             await pubsub.unsubscribe()
         except:
             pass
         await ws_close(websocket, 4006)
+        raise exc
         await manager.disconnect(websocket)
-
 # Chat
 
 #@router.websocket("/api/v1/ws/chat") # Disabled for rewrite

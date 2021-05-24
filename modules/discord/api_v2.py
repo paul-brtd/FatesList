@@ -197,8 +197,8 @@ async def transfer_bot_api(request: Request, bot_id: int, data: BotTransfer, Aut
 @router.get("/bots/admin/queue", response_model = BotQueueGet)
 async def botlist_get_queue_api(request: Request):
     """Admin API to get the bot queue"""
-    bots = await db.fetch("SELECT bot_id FROM bots WHERE state = $1 ORDER BY created_at ASC", enums.BotState.pending)
-    return {"bots": [(await get_bot(bot["bot_id"])) for bot in bots]}
+    bots = await db.fetch("SELECT bot_id, prefix, description FROM bots WHERE state = $1 ORDER BY created_at ASC", enums.BotState.pending)
+    return {"bots": [{"user": await get_bot(bot["bot_id"]), "prefix": bot["prefix"], "invite": await invite_bot(bot["bot_id"], api = True), "description": bot["description"]} for bot in bots]}
 
 @router.patch("/bots/admin/{bot_id}/queue", response_model = APIResponse)
 async def botlist_edit_queue_api(request: Request, bot_id: int, data: BotQueuePatch, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
@@ -304,6 +304,17 @@ async def get_bot_events_api(request: Request, bot_id: int, exclude: Optional[li
         if id is None:
             return abort(401)
     return await bot_get_events(bot_id = bot_id, filter = filter, exclude = exclude)
+
+@router.get("/bots/{bot_id}/ws_events")
+async def get_bot_ws_events(request: Request, bot_id: int, Authorization: str = Header("BOT_TOKEN_OR_TEST_MANAGER_KEY")):
+    id = await bot_auth(bot_id, Authorization)
+    if id is None:
+        return abort(401)
+    ini_events = {}
+    events = await redis_db.hget(str(bot_id), key = "ws")
+    if events is None:
+        events = {} # Nothing
+    return events
 
 @router.post("/bots/{bot_id}", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=5, minutes=1))])
 async def add_bot_api(request: Request, bot_id: int, bot: BotAdd, Authorization: str = Header("USER_TOKEN_OR_BOTBLOCK_ADD_KEY")):

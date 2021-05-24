@@ -20,8 +20,10 @@ class ConnectionManager:
             await websocket.close(code=4005)
         except:
             pass
-        self.active_connections.remove(websocket)
-
+        try:
+            self.active_connections.remove(websocket)
+        except:
+            pass
         # Delete stale websocket credentials
         websocket.api_token = []
         websocket.bot_id = [] # Bot ID
@@ -43,6 +45,7 @@ class ConnectionManager:
                     return False
                 else:
                     i+=1
+        return True
 
     async def broadcast(self, message: str):
         for connection in self.active_connections:

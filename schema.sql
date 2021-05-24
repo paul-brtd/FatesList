@@ -16,6 +16,7 @@ CREATE TABLE bots (
     webhook_type integer DEFAULT 1,
     webhook text,
     webhook_secret text,
+    di_text text, -- Discord Integration Text
     description text,
     long_description text,
     long_description_type integer default 0,
