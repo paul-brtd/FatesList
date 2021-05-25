@@ -160,12 +160,35 @@ async def bot_under_review_api(request: Request, bot_id: int, data: BotUnderRevi
     if user is None or not is_staff(staff_roles, user.roles, 2)[0]:
         return ORJSONResponse({"done": False, "reason": "Invalid Moderator specified. The moderator in question does not have permission to perform this action!", "code": 9867}, status_code = 400)
     admin_tool = BotListAdmin(bot_id, data.mod)
-    if data.requeue:
-        state = await db.fetchval("SELECT state FROM bots WHERE bot_id = $1 AND (state != $2 AND state != $3 AND state != $4)", bot_id, enums.BotState.under_review, enums.BotState.approved, enums.BotState.certified)
+
+    if data.requeue == 1 or data.requeue == 2:
+        # Requeue or unclaim
+        if data.requeue == 1:
+            state = await db.fetchval("SELECT state FROM bots WHERE bot_id = $1 AND state = $2", bot_id, enums.BotState.denied)
+            if state is None:
+                return ORJSONResponse({"done": False, "reason": "This bot does not exist", "code": 2747}, status_code = 404)
+            tool = admin_tool.unban_requeue_bot(state)
+        
+        elif data.requeue == 2:
+            state = await db.fetchval("SELECT state FROM bots WHERE bot_id = $1", bot_id)
+            if state is None:
+                return ORJSONResponse({"done": False, "reason": "This bot does not exist", "code": 2747}, status_code = 404)   
+            if state != enums.BotState.under_review:
+                return ORJSONResponse({"done": False, "reason": f"This bot is not currently claimed and hence cannot be unclaimed (state: {enums.BotState(state).__doc__})", "code": 2746}, status_code = 400)
+            tool = admin_tool.unclaim_bot()
         if state is None:
-            return abort(404)
-        rc = await admin_tool.unban_requeue_bot(state)
+            return ORJSONResponse({"done": False, "reason": "This bot either does not exist or may already be claimed by someone else...", "code": 2747}, status_code = 404)
+        rc = await tool
     else:
+        state = await db.fetchval("SELECT state FROM bots WHERE bot_id = $1", bot_id) 
+        if state is None:
+            return ORJSONResponse({"done": False, "reason": "This bot does not exist", "code": 2747}, status_code = 404)
+        if state == enums.BotState.under_review:
+            verifier = await db.fetchval("SELECT verifier FROM bots WHERE bot_id = $1", bot_id)
+            return ORJSONResponse({"done": False, "reason": f"This bot has already been claimed by <@{verifier}> ({verifier})", "code": 2647}, status_code = 400)
+        elif state != enums.BotState.pending:
+            return ORJSONResponse({"done": False, "reason": f"This bot is not currently pending review (state is {enums.BotState(state).__doc__})", "code": 5747}, status_code = 400)
+
         rc = await admin_tool.claim_bot()
     if rc is not None:
         return ORJSONResponse({"done": False, "reason": rc, "code": 4646}, status_code = 400)
@@ -458,7 +481,7 @@ async def add_bot_command_api(request: Request, bot_id: int, command: PartialBot
     id = uuid.uuid4()
     await db.execute("INSERT INTO bot_commands (id, bot_id, cmd_type, name, description, args, examples, premium_only, notes, doc_link) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)", id, bot_id, command.cmd_type, command.name, command.description, command.args, command.examples, command.premium_only, command.notes, command.doc_link)
     await bot_add_event(bot_id, enums.APIEvents.command_add, {"user": None, "id": id})
-    return {"done": True, "reason": None, "id": id, "code": 1001}
+    return ORJSONResponse({"done": True, "reason": None, "id": id, "code": 1001}, status_code = 206)
 
 @router.patch("/bots/{bot_id}/commands", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=20, minutes=1))])
 async def edit_bot_command_api(request: Request, bot_id: int, command: BotCommand, Authorization: str = Header("BOT_TOKEN")):

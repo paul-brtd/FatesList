@@ -180,7 +180,7 @@ class BotTransfer(BotListAdminRoute):
     new_owner: str
 
 class BotUnderReview(BotListAdminRoute):
-    requeue: Optional[bool] = False
+    requeue: enums.BotRequeue
 
 class BotOwner(BaseModel):
     user: BaseUser

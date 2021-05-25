@@ -17,7 +17,7 @@
 				<div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
 					<strong>This bot has been DENIED from this list for violating our rules or being a low-quality bot. Please do not invite it.</strong>	
 					{% if admin %}
-						<br/><strong>Since you are the owner/extra owners of this bot, you can resubmit your bot or request a ban appeal (if your bot was banned and not denied) by clicking <a class="long-desc-link" href="/bot/{{data.id}}/resubmit">here</a></strong>
+						<br/><strong>Since you are the owner/extra owners of this bot, you can resubmit your bot or request a ban appeal (if your bot was banned and not denied) by clicking <a class="long-desc-link" href="/bot/{{id}}/resubmit">here</a></strong>
 					{% endif %}
 				</div>
 				{% elif data.state == enums.BotState.banned %}

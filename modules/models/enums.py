@@ -11,6 +11,12 @@ class UserState(IntEnum):
     pedit_ban = 3, "Profile Edit Ban"
     ddr_ban = 4, "Data Deletion Request Ban"
 
+class BotRequeue(IntEnum):
+    _init_ = 'value __doc__'
+    claim = 0, "Claim Bot"
+    requeue = 1, "Requeue Bot"
+    unclaim = 2, "Unclaim Bot"
+
 class WebhookType(IntEnum):
     _init_ = 'value __doc__'
     vote = 0, "Vote Webhook"

@@ -192,7 +192,7 @@ class BotListAdmin():
         await bot_add_event(self.bot_id, enums.APIEvents.bot_claim, {"user": self.str_mod}) # Add the api event
         await self.channel.send(embed = claim_embed) # Send it to the channel
         try:
-            owner = self._get_main_owner()
+            owner = await self._get_main_owner()
             owner_dpy = self.guild.get_member(owner)
             await owner_dpy.send(embed = claim_embed)
         except:
@@ -208,7 +208,7 @@ class BotListAdmin():
         await bot_add_event(self.bot_id, enums.APIEvents.bot_unclaim, {"user": self.str_mod}) # Add the api event
         await self.channel.send(embed = unclaim_embed) # Send it to the channel
         try:
-            owner = self._get_main_owner()
+            owner = await self._get_main_owner()
             owner_dpy = self.guild.get_member(owner)
             await owner_dpy.send(embed = unclaim_embed)
         except:

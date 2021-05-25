@@ -33,7 +33,6 @@ async def backend(json, *, webhook_url, webhook_type, api_token, id, webhook_tar
     match (webhook_type, event):
     
         case (enums.WebhookType.discord, enums.APIEvents.bot_vote):
-            webhook = DiscordWebhook(url=webhook_url)
             if context.get("test"):
                 user = await get_bot(int(context["user"])) # Get the test bot
             else:
@@ -42,9 +41,10 @@ async def backend(json, *, webhook_url, webhook_type, api_token, id, webhook_tar
             logger.debug(f"Got user {user} and bot {bot}")
             if not user or not bot:
                 return False
+            webhook = DiscordWebhook(url=webhook_url, username = f"Fates List ({user['id']}, {user['disc']})")
             embed = DiscordEmbed(
                 title = "New Vote on Fates List",
-                description=f"{user['username']} with ID {user['id']} has just cast a vote for {bot['username']} with ID {bot['id']} on Fates List!\nIt now has {context['votes']} votes!\n\nThank you for supporting this bot\n**GG**",
+                description=f"{user['username']}#{user['disc']} with ID {user['id']} has just cast a vote for {bot['username']} with ID {bot['id']} on Fates List!\nIt now has {context['votes']} votes!\n\nThank you for supporting this bot\n**GG**",
                 color=242424
             )
             webhook.add_embed(embed)
