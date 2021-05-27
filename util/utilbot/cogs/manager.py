@@ -6,22 +6,6 @@ class Manager(Cog):
     def __init__(self, client):
         self.client = client
 
-    @cooldown(1, 5)
-    @command(pass_context = True)
-    async def botdev(self, ctx):
-        cmd = f"return await db.fetchval('SELECT COUNT(1) FROM bot_owner INNER JOIN bots ON bot_owner.bot_id = bots.bot_id WHERE bot_owner.owner = $1 AND (bots.state = 0 OR bots.state = 6)', {ctx.author.id})"
-        _ret, status = await add_rmq_task_with_ret("_admin", {}, op = cmd)
-        print(_ret, status)
-        if not status:
-            return await ctx.send("**Error:** RabbitMQ is down right now. Please make a support ticket to get the Bot Developer role")
-        if _ret["err"]:
-            return await ctx.send(f"**Error:** An internal error has occurred. Please make a support ticket to get the Bot Developer role\n\nDebug: {_ret}")
-        check = _ret["ret"]
-        if check == 0:
-            return await ctx.send("You have no eligible bots (your bot is not verified and/or does not belong to you as a owner or extra owner)")
-        await ctx.author.add_roles(ctx.guild.get_role(self.client.bot_dev_role))
-        return await ctx.send("Added the role for you :)")
-
     @is_owner()
     @command(pass_context = True)
     async def reload(self, ctx):
@@ -65,19 +49,6 @@ return [dict(obj) for obj in db_lst]
     async def rmqret(self, ctx, id):
         _ret = await rmq_get_ret(id)
         return await self.rmq_handler(ctx, _ret)
-
-    @command(pass_context = True)
-    async def imstaff(self, ctx):
-        try:
-            if ctx.guild.id != staff_server:
-                return await ctx.send("This command is for the staff server only")
-            staff = is_staff(staff_roles, self.client.get_guild(main_server).get_member(ctx.author.id).roles, 2)
-            if not staff[0]:
-                raise ValueError("Not Staff")
-        except:
-            return await ctx.send("You are not a Fates List Staff Member")
-        await ctx.author.add_roles(ctx.guild.get_role(staff_ag), ctx.guild.get_role(staff[2].staff_id))
-        return await ctx.send("Welcome home, Master!")
 
     async def rmq_handler(self, ctx, _ret):
         if not _ret[1]:

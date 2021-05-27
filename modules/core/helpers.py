@@ -139,11 +139,12 @@ async def parse_index_query(fetch: List[asyncpg.Record]) -> list:
             continue
     return lst
 
-async def do_index_query(add_query: str = "", state: int = 0, limit: Optional[int] = 12) -> List[asyncpg.Record]:
+async def do_index_query(add_query: str = "", state: list = [0, 6], limit: Optional[int] = 12) -> List[asyncpg.Record]:
     """
     Performs a 'index' query which can also be used by other things as well
     """
-    base_query = f"SELECT description, banner, state, votes, servers, bot_id, invite, nsfw FROM bots WHERE state = {state}"
+    states = "WHERE " + " OR ".join([f"state = {s}" for s in state])
+    base_query = f"SELECT description, banner, state, votes, servers, bot_id, invite, nsfw FROM bots {states}"
     if limit:
         end_query = f"LIMIT {limit}"
     else:

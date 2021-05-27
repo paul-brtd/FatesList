@@ -39,6 +39,11 @@ class BaseUser(BaseModel):
         """
         return Status(status = self.status)
 
+class BotBan(BaseModel):
+    ban: bool
+    reason: Optional[str] = None
+    mod: str
+
 class BotListStats(BaseModel):
     uptime: float
     pid: int

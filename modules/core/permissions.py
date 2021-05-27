@@ -7,9 +7,9 @@ from .imports import *
 class StaffMember(BaseModel):
     """Represents a staff member in Fates List""" 
     name: str
-    id: int
+    id: Union[str, int]
     perm: int
-    staff_id: int
+    staff_id: Union[str, int]
 
 async def is_bot_admin(bot_id: int, user_id: int):
     try:
@@ -32,14 +32,14 @@ async def is_bot_admin(bot_id: int, user_id: int):
 def _get_staff_member(staff_json: dict, role: int) -> StaffMember:
     for key in staff_json.keys(): # Loop through all keys in staff json
         if int(role) == int(staff_json[key]["id"]): # Check if role matches
-            return StaffMember(name = key, id = staff_json[key]["id"], staff_id = staff_json[key]["staff_id"], perm = staff_json[key]["perm"]) # Return the staff json role data
-    return StaffMember(name = "user", id = staff_json["user"]["id"], staff_id = staff_json["user"]["staff_id"], perm = 1) # Fallback to perm 1 user member
+            return StaffMember(name = key, id = str(staff_json[key]["id"]), staff_id = str(staff_json[key]["staff_id"]), perm = staff_json[key]["perm"]) # Return the staff json role data
+    return StaffMember(name = "user", id = str(staff_json["user"]["id"]), staff_id = str(staff_json["user"]["staff_id"]), perm = 1) # Fallback to perm 1 user member
 
 def is_staff(staff_json: dict, roles: Union[list, int], base_perm: int) -> Union[bool, int, StaffMember]:
     if type(roles) != list and type(roles) != tuple:
         roles = [roles]
     max_perm = 0 # This is a cache of the max perm a user has
-    sm = StaffMember(name = "user", id = staff_json["user"]["id"], staff_id = staff_json["user"]["staff_id"], perm = 1) # Initially
+    sm = StaffMember(name = "user", id = str(staff_json["user"]["id"]), staff_id = str(staff_json["user"]["staff_id"]), perm = 1) # Initially
     bak_sm = sm # Backup staff member
     for role in roles: # Loop through all roles
         if type(role) == discord.Role:

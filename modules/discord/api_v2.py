@@ -194,6 +194,31 @@ async def bot_under_review_api(request: Request, bot_id: int, data: BotUnderRevi
         return ORJSONResponse({"done": False, "reason": rc, "code": 4646}, status_code = 400)
     return {"done": True, "reason": None, "code": 1000}
 
+@router.patch("/bots/admin/{bot_id}/ban", response_model = APIResponse)
+async def ban_unban_bot_api(request: Request, bot_id: int, data: BotBan, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
+    if not secure_strcmp(Authorization, test_server_manager_key) and not secure_strcmp(Authorization, root_key):
+        return abort(401)
+    guild = client.get_guild(main_server) 
+    user = guild.get_member(int(data.mod)) 
+    if user is None or not is_staff(staff_roles, user.roles, 2)[0]:
+        return ORJSONResponse({"done": False, "reason": "Invalid Moderator specified. The moderator in question does not have permission to perform this action!", "code": 9867}, status_code = 400)
+    admin_tool = BotListAdmin(bot_id, data.mod)
+    state = await db.fetchval("SELECT state FROM bots WHERE bot_id = $1", bot_id)
+    if state is None:
+        return ORJSONResponse({"done": False, "reason": "This bot does not exist", "code": 2747}, status_code = 404)
+    if data.ban:
+        if state == enums.BotState.banned:
+            return ORJSONResponse({"done": False, "reason": "This bot has already been banned", "code": 2748}, status_code = 400)
+        elif not data.reason:
+            return ORJSONResponse({"done": False, "reason": "Please specify a reason before banning", "code": 2751}, status_code = 400)
+        await admin_tool.ban_bot(data.reason)
+    else:
+        if state == enums.BotState.banned:
+            await admin_tool.unban_requeue_bot(state)
+        else:
+            return ORJSONResponse({"done": False, "reason": "This bot has is not currently banned or denied", "code": 2749}, status_code = 400)
+    return {"done": True, "reason": None, "code": 1000}
+
 @router.patch("/bots/admin/{bot_id}/main_owner", response_model = APIResponse)
 async def transfer_bot_api(request: Request, bot_id: int, data: BotTransfer, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
     if not secure_strcmp(Authorization, test_server_manager_key) and not secure_strcmp(Authorization, root_key):
@@ -673,7 +698,8 @@ async def get_user_api(request: Request, user_id: int):
     user_ret = dict(user)
     badges = user_ret["badges"]
     del user_ret["badges"]
-    bots = await db.fetch("SELECT bots.description, bots.banner, bots.state, bots.votes, bots.servers, bots.bot_id, bots.invite, bots.nsfw, bot_owner.main FROM bots INNER JOIN bot_owner ON bot_owner.bot_id = bots.bot_id WHERE bot_owner.owner = $1", user_id)
+    _bots = await db.fetch("SELECT bots.description, bots.prefix, bots.banner, bots.state, bots.votes, bots.servers, bots.bot_id, bots.nsfw, bot_owner.main FROM bots INNER JOIN bot_owner ON bot_owner.bot_id = bots.bot_id WHERE bot_owner.owner = $1", user_id)
+    bots = [dict(obj) | {"invite": await invite_bot(obj["bot_id"], api = True)} for obj in _bots]
     approved_bots = [obj for obj in bots if obj["state"] in (0, 6)]
     certified_bots = [obj for obj in bots if obj["state"] == 6]
     guild = client.get_guild(main_server)

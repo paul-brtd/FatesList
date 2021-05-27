@@ -10,9 +10,9 @@ from .events import *
 from .reviews import *
 
 async def render_index(request: Request, api: bool, csrf_protect: CsrfProtect):
-    top_voted = await do_index_query(add_query = "ORDER BY votes DESC")
-    new_bots = await do_index_query(add_query = "ORDER BY created_at DESC") # and certified = true ORDER BY votes
-    certified_bots = await do_index_query(add_query = "ORDER BY votes DESC", state = 6) # State 6 is certified
+    top_voted = await do_index_query(add_query = "ORDER BY votes DESC", state = [0])
+    new_bots = await do_index_query(add_query = "ORDER BY created_at DESC", state = [0]) # and certified = true ORDER BY votes
+    certified_bots = await do_index_query(add_query = "ORDER BY votes DESC", state = [6]) # State 6 is certified
     base_json = {"tags_fixed": tags_fixed, "top_voted": top_voted, "new_bots": new_bots, "certified_bots": certified_bots, "roll_api": "/api/bots/random"}
     if not api:
         return await templates.TemplateResponse("index.html", {"request": request, "random": random, "csrf_protect": csrf_protect} | base_json)
@@ -163,3 +163,9 @@ async def render_profile_search(request: Request, q: str, api: bool):
         return await templates.TemplateResponse("search.html", {"request": request, "tags_fixed": tags_fixed, "profile_search": True, "query": q, "profiles": profile_obj})
     else:
         return {"profiles": profile_obj, "tags_fixed": tags_fixed, "query": q, "profile_search": True}
+
+async def render_guild(request: Request, guild_id: int):
+    guild = client_servers.get_guild(guild_id)
+    if not guild:
+        return abort(404)
+    guild_data = await db.fetchrow("SELECT description, long_description from servers WHERE guild_id = $1", guild_id)
