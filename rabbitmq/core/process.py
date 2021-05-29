@@ -143,13 +143,7 @@ async def run_worker():
     except:
         stats.total_msgs = 0
 
-    channel = None
-    while True: # Wait for discord.py before running tasks
-        if channel is None:
-            await asyncio.sleep(1)
-            channel = client.get_channel(bot_logs)
-        else:
-            break
+    await client.wait_until_ready()
     for backend in backends.getall():
         await _new_task(backend)
     end_time = time.time()

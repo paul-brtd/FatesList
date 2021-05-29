@@ -40,8 +40,8 @@ async def bot_get_events(bot_id: int, filter: list = None, exclude: list = None)
         extra += f"AND event != ANY(${i}::text[])"
         extra_params.append(exclude)
         i+=1
-    api_data = await db.fetch(f"SELECT epoch, event AS e, context AS ctx, id, type FROM bot_api_event WHERE bot_id = $1 {extra} ORDER BY epoch", bot_id, *extra_params)
-    api_data = [{"ctx": orjson.loads(obj["ctx"]), "m": {"e": obj["e"], "eid": obj["id"], "ts": str(obj["epoch"]), "t": obj["type"]}} for obj in api_data]
+    api_data = await db.fetch(f"SELECT ts, event AS e, context AS ctx, id, type FROM bot_api_event WHERE bot_id = $1 {extra} ORDER BY ts", bot_id, *extra_params)
+    api_data = [{"ctx": orjson.loads(obj["ctx"]), "m": {"e": obj["e"], "eid": obj["id"], "ts": obj["ts"].timestamp(), "t": obj["type"]}} for obj in api_data]
     return {"events": api_data}
 
 async def bot_add_event(bot_id: int, event: int, context: dict, t: Optional[int] = None, *, send_event = True):
@@ -55,7 +55,7 @@ async def bot_add_event(bot_id: int, event: int, context: dict, t: Optional[int]
     if api_token is None:
         return
     event_time = time.time()
-    asyncio.create_task(db.execute("INSERT INTO bot_api_event (bot_id, epoch, event, type, context, id) VALUES ($1, $2, $3, $4, $5, $6)", bot_id, event_time, event, t, orjson.dumps(context).decode("utf-8"), id))
+    asyncio.create_task(db.execute("INSERT INTO bot_api_event (bot_id, event, type, context, id) VALUES ($1, $2, $3, $4, $5)", bot_id, event, t, orjson.dumps(context).decode("utf-8"), id))
     webh = await db.fetchrow("SELECT webhook, webhook_type, webhook_secret FROM bots WHERE bot_id = $1", int(bot_id))
     if webh and send_event:
         await add_rmq_task("events_webhook_queue", {

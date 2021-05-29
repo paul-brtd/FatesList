@@ -216,7 +216,7 @@ async def ban_unban_bot_api(request: Request, bot_id: int, data: BotBan, Authori
         if state == enums.BotState.banned:
             await admin_tool.unban_requeue_bot(state)
         else:
-            return ORJSONResponse({"done": False, "reason": "This bot has is not currently banned or denied", "code": 2749}, status_code = 400)
+            return ORJSONResponse({"done": False, "reason": "This bot is not currently banned", "code": 2749}, status_code = 400)
     return {"done": True, "reason": None, "code": 1000}
 
 @router.patch("/bots/admin/{bot_id}/main_owner", response_model = APIResponse)

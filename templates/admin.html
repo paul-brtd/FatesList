@@ -73,7 +73,7 @@
         <div style="width: 80%;margin: 0 auto;;">
             <h3 class="text-center" style="color: rgba(241,241,241,0.87);">Admin Functions</h3>
 	    <h4 class="white">You currently may perform the below actions</h4>
-	    {% if owner %}
+	    {% if staff[1] > 4 %}
 	    <form method="POST">
                 <input type="hidden" name="admin" value="certify"></input>
                 <div class="input-group">
