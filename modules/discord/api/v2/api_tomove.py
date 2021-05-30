@@ -21,12 +21,6 @@ router = APIRouter(
     tags = [f"API v{API_VERSION} (default, beta)"]
 )
 
-@router.get("/admin/console")
-async def botlist_admin_console_api(request: Request):
-    """API to get raw admin console info"""
-    return await admin_dashboard(request) # Just directly render the admin dashboard. It knows what to do
-
-
 @router.get("/bots/{bot_id}/promotions", response_model = BotPromotionGet, responses = {
     404: {"model": BotPromotion_NotFound} # Promotion Not Found
 })
