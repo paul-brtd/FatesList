@@ -71,18 +71,6 @@ async def on_ready():
 async def on_ready():
     logger.info(f"{client_servers.user} up")
 
-def calc_tags(TAGS):
-    # Tag calculation
-    tags_fixed = []
-    for tag in TAGS.keys():
-        # For every key in tag dict, create the "fixed" tag information (friendly and easy to use data for tags)
-        tags_fixed.append({"name": tag.replace("_", " ").title(), "iconify_data": TAGS[tag], "id": tag})
-    return tags_fixed
-
-builtins.server_tags_fixed = []
-for tag in SERVER_TAGS.keys():
-    server_tags_fixed.append({"name": tag.replace("_", " ").title(), "iconify_data": SERVER_TAGS[tag], "id": tag})
-
 # Two variables used in our logger
 BOLD_START =  "\033[1m"
 BOLD_END = "\033[0m"
