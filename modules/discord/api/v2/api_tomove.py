@@ -18,7 +18,7 @@ API_VERSION = 2 # This is the API version
 router = APIRouter(
     prefix = f"/api/v{API_VERSION}",
     include_in_schema = True,
-    tags = [f"API v{API_VERSION} (default, beta)"]
+    tags = [f"API v{API_VERSION} - To Move"]
 )
 
 @router.get("/admin/console")
