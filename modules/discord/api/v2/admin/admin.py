@@ -185,3 +185,13 @@ async def botlist_edit_queue_api(request: Request, bot_id: int, data: BotQueuePa
             return {"done": True, "reason": "Bot Denied Successfully!", "code": 1001}
         return {"done": True, "reason": f"Bot Approved Successfully! Invite it to the main server with https://discord.com/oauth2/authorize?client_id={bot_id}&scope=bot&guild_id={guild.id}&disable_guild_select=true&permissions=0", "code": 1001}
     return ORJSONResponse({"done": False, "reason": rc, "code": 3869}, status_code = 400)
+
+@router.get("/is_staff")
+async def check_staff_member(request: Request, user_id: int, min_perm: int):
+    """Admin route to check if a user is staff or not"""
+    try:
+        staff = is_staff(staff_roles, client.get_guild(main_server).get_member(user_id).roles, min_perm)
+    except:
+        return {"staff": False, "perm": 1, "sm": {}}
+    return {"staff": staff[0], "perm": staff[1], "sm": staff[2].dict()}
+
