@@ -17,8 +17,6 @@ from config import *
 import os
 from fastapi_limiter import FastAPILimiter
 import logging
-from starlette.datastructures import URL
-from http import HTTPStatus
 from copy import deepcopy
 from starlette.routing import Mount
 import sentry_sdk
