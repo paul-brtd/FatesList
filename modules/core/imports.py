@@ -56,3 +56,5 @@ import sentry_sdk
 from starlette.requests import ClientDisconnect
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from sentry_sdk.integrations.logging import LoggingIntegration
+from starlette.datastructures import URL
+from http import HTTPStatus
