@@ -29,3 +29,56 @@ def include_routers(app, fname, rootpath):
                     logger.debug(f"{fname}: {root}: Loading {f} with path {path}")
                     route = importlib.import_module(path)
                     app.include_router(route.router)
+
+                         
+async def startup_tasks():
+    builtins.up = False
+    builtins.db = await setup_db()
+
+    # Set bot tags
+    tags_db = await db.fetch("SELECT id, icon FROM bot_list_tags WHERE type = 0 or type = 2")
+    tags =  {}
+    for tag in tags_db:
+        tags = tags | {tag["id"]: tag["icon"]}
+    builtins.tags_fixed = calc_tags(tags)
+    builtins.TAGS = tags
+
+    logger.info("Discord init beginning")
+    asyncio.create_task(client.start(TOKEN_MAIN))
+    asyncio.create_task(client_servers.start(TOKEN_SERVER))
+    builtins.redis_db = await aioredis.from_url('redis://localhost', db = 1)
+    workers = os.environ.get("WORKERS")
+    asyncio.create_task(status(workers))
+    await asyncio.sleep(4)
+    app.add_middleware(SessionMiddleware, secret_key=session_key, https_only = True, max_age = 60*60*12) # 1 day expiry cookie
+    FastAPILimiter.init(redis_db, identifier = rl_key_func)
+    builtins.rabbitmq_db = await aio_pika.connect_robust(
+        f"amqp://fateslist:{rabbitmq_pwd}@127.0.0.1/"
+    )
+    builtins.up = True
+    await redis_db.publish("_worker", f"UP WORKER {os.getpid()} 0 {workers}") # Announce that we are up and not a repeat
+    await vote_reminder()
+
+async def status(workers):
+    pubsub = redis_db.pubsub()
+    await pubsub.subscribe("_worker")
+    async for msg in pubsub.listen():
+        if msg is None or type(msg.get("data")) != bytes:
+            continue
+        msg = msg.get("data").decode("utf-8").split(" ")
+        match msg:
+            case ["UP", "RMQ", _]:
+                await redis_db.publish("_worker", f"UP WORKER {os.getpid()} 1 {workers}") # Announce that we are up and sending to repeat a message
+            case ["REGET", "WORKER", reason]:
+                logger.warning(f"RabbitMQ requesting REGET with reason {reason}")
+                await redis_db.publish("_worker", f"UP WORKER {os.getpid()} 1 {workers}") # Announce that we are up and sending to repeat a message
+            case _:
+                pass # Ignore the rest for now
+
+@repeat_every(seconds=60)
+async def vote_reminder():
+    reminders = await db.fetch("SELECT user_id, bot_id FROM user_reminders WHERE remind_time >= NOW() WHERE resolved = false")
+    for reminder in reminders:
+        logger.debug(f"Got reminder {reminder}")
+        await bot_add_event(reminder["bot_id"], enums.APIEvents.vote_reminder, {"user": str(reminder["user_id"])})
+        await db.execute("UPDATE user_reminders SET resolved = true WHERE user_id = $1 AND bot_id = $2", reminder["user_id"], reminder["bot_id"])
