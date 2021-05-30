@@ -118,3 +118,26 @@ async def certify_bot_api(request: Request, bot_id: int, data: BotCertify, Autho
     if rc is None:
         return {"done": True, "reason": None, "code": 1000}
     return ORJSONResponse({"done": False, "reason": rc, "code": 3732}, status_code = 400)
+
+@router.patch("/bots/{bot_id}/main_owner", response_model = APIResponse)
+async def transfer_bot_api(request: Request, bot_id: int, data: BotTransfer, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
+    if not secure_strcmp(Authorization, test_server_manager_key) and not secure_strcmp(Authorization, root_key):
+        return abort(401)
+    guild = client.get_guild(main_server)
+    try:
+        user = guild.get_member(int(data.mod))
+    except ValueError:
+        user = None
+    if user is None or not is_staff(staff_roles, user.roles, 4)[0]:
+        return ORJSONResponse({"done": False, "reason": "Invalid Moderator specified. The moderator in question does not have permission to perform this action!", "code": 8826}, status_code = 400)
+    try:
+        new_owner = await get_user(int(data.new_owner))
+    except:
+        new_owner = None
+    if new_owner is None:
+        return ORJSONResponse({"done": False, "reason": "Invalid new owner specified.", "code": 8827}, status_code = 400)
+    admin_tool = BotListAdmin(bot_id, int(data.mod))
+    rc = await admin_tool.transfer_bot(int(data.new_owner))
+    if rc is None:
+        return {"done": True, "reason": "Bot Transferred Successfully!", "code": 1001}
+    return ORJSONResponse({"done": False, "reason": rc, "code": 3869}, status_code = 400)
