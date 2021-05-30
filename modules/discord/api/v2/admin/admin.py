@@ -1,5 +1,6 @@
 from modules.core import *
 from .models import BotCertify
+from modules.discord.admin import admin_dashboard
 from ..base import API_VERSION
 
 router = APIRouter(
