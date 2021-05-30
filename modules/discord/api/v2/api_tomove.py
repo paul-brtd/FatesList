@@ -118,31 +118,6 @@ async def regenerate_bot_token(request: Request, bot_id: int, Authorization: str
     await db.execute("UPDATE bots SET api_token = $1 WHERE bot_id = $2", get_token(132), id)
     return {"done": True, "reason": None, "code": 1000}
 
-@router.patch("/bots/admin/{bot_id}/ban", response_model = APIResponse)
-async def ban_unban_bot_api(request: Request, bot_id: int, data: BotBan, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
-    if not secure_strcmp(Authorization, test_server_manager_key) and not secure_strcmp(Authorization, root_key):
-        return abort(401)
-    guild = client.get_guild(main_server) 
-    user = guild.get_member(int(data.mod)) 
-    if user is None or not is_staff(staff_roles, user.roles, 3)[0]:
-        return ORJSONResponse({"done": False, "reason": "Invalid Moderator specified. The moderator in question does not have permission to perform this action!", "code": 9867}, status_code = 400)
-    admin_tool = BotListAdmin(bot_id, data.mod)
-    state = await db.fetchval("SELECT state FROM bots WHERE bot_id = $1", bot_id)
-    if state is None:
-        return ORJSONResponse({"done": False, "reason": "This bot does not exist", "code": 2747}, status_code = 404)
-    if data.ban:
-        if state == enums.BotState.banned:
-            return ORJSONResponse({"done": False, "reason": "This bot has already been banned", "code": 2748}, status_code = 400)
-        elif not data.reason:
-            return ORJSONResponse({"done": False, "reason": "Please specify a reason before banning", "code": 2751}, status_code = 400)
-        await admin_tool.ban_bot(data.reason)
-    else:
-        if state == enums.BotState.banned:
-            await admin_tool.unban_requeue_bot(state)
-        else:
-            return ORJSONResponse({"done": False, "reason": "This bot is not currently banned", "code": 2749}, status_code = 400)
-    return {"done": True, "reason": None, "code": 1000}
-
 @router.patch("/bots/admin/{bot_id}/certify", response_model = APIResponse)
 async def certify_bot_api(request: Request, bot_id: int, data: BotCertify, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
     if not secure_strcmp(Authorization, test_server_manager_key) and not secure_strcmp(Authorization, root_key):
