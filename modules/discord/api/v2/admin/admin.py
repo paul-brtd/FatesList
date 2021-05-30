@@ -90,3 +90,31 @@ async def ban_unban_bot_api(request: Request, bot_id: int, data: BotBan, Authori
         else:
             return ORJSONResponse({"done": False, "reason": "This bot is not currently banned", "code": 2749}, status_code = 400)
     return {"done": True, "reason": None, "code": 1000}
+
+@router.patch("/bots/{bot_id}/certify", response_model = APIResponse)
+async def certify_bot_api(request: Request, bot_id: int, data: BotCertify, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
+    if not secure_strcmp(Authorization, test_server_manager_key) and not secure_strcmp(Authorization, root_key):
+        return abort(401)
+    guild = client.get_guild(main_server)
+    try:
+        user = guild.get_member(int(data.mod))
+    except ValueError:
+        user = None
+    if user is None or not is_staff(staff_roles, user.roles, 5)[0]:
+        return ORJSONResponse({"done": False, "reason": "Invalid Moderator specified. The moderator in question does not have permission to perform this action!", "code": 8826}, status_code = 400)
+    state = await db.fetchval("SELECT state FROM bots WHERE bot_id = $1", bot_id)
+    admin_tool = BotListAdmin(bot_id, data.mod)
+    if data.certify:
+        if state == enums.BotState.certified:
+            return ORJSONResponse({"done": False, "reason": "Bot is already certified", "code": 8826}, status_code = 400)
+        elif state !=enums.BotState.approved:
+            return ORJSONResponse({"done": False, "reason": f"Bot is not in a approved state. State is {enums.BotState(state).__doc__}.", "code": 8126}, status_code = 400)
+        rc = await admin_tool.certify_bot()
+    else:
+        if state != enums.BotState.certified:
+            return ORJSONResponse({"done": False, "reason": "Bot is not already certified", "code": 8826}, status_code = 400)
+        rc = await admin_tool.uncertify_bot()
+
+    if rc is None:
+        return {"done": True, "reason": None, "code": 1000}
+    return ORJSONResponse({"done": False, "reason": rc, "code": 3732}, status_code = 400)
