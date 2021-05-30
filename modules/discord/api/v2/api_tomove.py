@@ -21,25 +21,6 @@ router = APIRouter(
     tags = [f"API v{API_VERSION} (default, beta)"]
 )
 
-@router.get("/blstats", response_model = BotListStats, tags = [f"Core (API v{API_VERSION})"])
-async def botlist_stats_api(request: Request):
-    """
-        Returns uptime and stats about the list.
-
-        uptime - The current uptime for the given worker
-        pid - The pid of the worker you are connected to
-        up - Whether the databases are up on this worker
-        dup - Whether we have connected to discord on this worker
-        bot_count_total - The bot count of the list
-        bot_count - The approved and certified bots on the list
-    """
-    if up:
-        bot_count_total = await db.fetchval("SELECT COUNT(1) FROM bots")
-        bot_count = await db.fetchval("SELECT COUNT(1) FROM bots WHERE state = 0 OR state = 6")
-    else:
-        bot_count = 0
-    return {"uptime": time.time() - boot_time, "pid": os.getpid(), "up": up, "dup": (client.user is not None), "bot_count": bot_count, "bot_count_total": bot_count_total}
-
 @router.get("/admin/console")
 async def botlist_admin_console_api(request: Request):
     """API to get raw admin console info"""
