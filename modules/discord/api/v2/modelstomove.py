@@ -314,22 +314,6 @@ class BotSearch(BaseSearch):
     search_bots: BotPartialList
     profile_search: bool = False
 
-class BotQueuePatch(BotListAdminRoute):
-    feedback: Optional[str] = None 
-    approve: bool
-
-class PartialBotQueue(BaseModel):
-    user: BaseUser
-    prefix: str
-    invite: str
-    description: str
-
-class BotQueueList(BaseModel):
-    __root__: List[PartialBotQueue]
-
-class BotQueueGet(BaseModel):
-    bots: BotQueueList
-
 class ProfilePartial(BaseUser):
     description: Optional[str] = None
     banner: None
