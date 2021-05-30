@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import Optional
 
 class BotListStats(BaseModel):
     uptime: float
@@ -7,3 +8,4 @@ class BotListStats(BaseModel):
     dup: bool
     bot_count: int
     bot_count_total: int
+    workers: Optional[list] = None

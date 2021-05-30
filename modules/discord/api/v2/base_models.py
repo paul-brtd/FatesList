@@ -1,4 +1,7 @@
 import modules.models.enums as enums
+from pydantic import BaseModel
+from typing import Optional
+
 class BaseUser(BaseModel):
     """
     Represents a base user class on Fates List.

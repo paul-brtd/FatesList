@@ -13,7 +13,7 @@ import sys
 sys.path.append("modules/models") # Libraries should remove this
 import enums # as enums (for libraries)
 import datetime
-from base_models import BaseUser
+from .base_models import BaseUser, APIResponse
 
 #LIBRARY-INTERNAL
 class BotPromotionDelete(BaseModel):

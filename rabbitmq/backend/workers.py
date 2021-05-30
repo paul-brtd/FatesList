@@ -3,9 +3,6 @@ import asyncio
 import orjson
 import builtins
 
-async def backend(json, **kwargs):
-    print("Stub")
-
 class PIDRecorder():
     def __init__(self):
         self.pids = []
@@ -28,6 +25,9 @@ class PIDRecorder():
 
     def reset(self):
         self.pids = []
+
+    def list(self):
+        return self.pids
 
 async def status(pidrec):
     pubsub = redis_db.pubsub()
@@ -60,6 +60,9 @@ async def status(pidrec):
 async def prehook(*args, **kwargs):
     builtins.pidrec = PIDRecorder()
     asyncio.create_task(status(pidrec))
+
+async def backend(json, *args, **kwargs):
+    return pidrec.list()
 
 class Config:   
     queue = "_worker"
