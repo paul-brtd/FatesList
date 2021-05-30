@@ -28,6 +28,10 @@ class PartialBotQueue(BaseModel):
 
 class BotQueueList(BaseModel):
    __root__: List[PartialBotQueue]
-
 class BotQueueGet(BaseModel):
-   bots: BotQueueList
+    bots: BotQueueList
+
+class BotBan(BaseModel):
+    ban: bool
+    reason: Optional[str] = None
+    mod: str
