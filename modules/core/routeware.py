@@ -1,5 +1,5 @@
 from .imports import *
-async def middleware(app, request: Request, call_next):
+async def routeware(app, fl_exception_handler, request: Request, call_next):
     """
         Simple middleware to:
             - Handle API version and internally redirect by changing ASGI scope at request.scope
@@ -34,3 +34,8 @@ async def middleware(app, request: Request, call_next):
     response.headers["Access-Control-Allow-Credentials"] = "true"
     asyncio.create_task(print_req(request, response))
     return response
+
+async def print_req(request, response):
+    # Gunicorn logging is trash, lets fix that with custom logging
+    query_str = f'?{request.scope["query_string"].decode("utf-8")}' if request.scope["query_string"] else "" # Get query strings
+    logger.info(f"{request.client.host}: {BOLD_START}{request.method} {request.url.path}{query_str} HTTP/{request.scope['http_version']} - {response.status_code} {HTTPStatus(response.status_code).phrase}{BOLD_END}") # Print logs like uvicorn
