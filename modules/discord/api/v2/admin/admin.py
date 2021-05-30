@@ -141,3 +141,47 @@ async def transfer_bot_api(request: Request, bot_id: int, data: BotTransfer, Aut
     if rc is None:
         return {"done": True, "reason": "Bot Transferred Successfully!", "code": 1001}
     return ORJSONResponse({"done": False, "reason": rc, "code": 3869}, status_code = 400)
+
+@router.get("/queue/bots", response_model = BotQueueGet)
+async def botlist_get_queue_api(request: Request):
+    """Admin API to get the bot queue"""
+    bots = await db.fetch("SELECT bot_id, prefix, description FROM bots WHERE state = $1 ORDER BY created_at ASC", enums.BotState.pending)
+    return {"bots": [{"user": await get_bot(bot["bot_id"]), "prefix": bot["prefix"], "invite": await invite_bot(bot["bot_id"], api = True), "description": bot["description"]} for bot in bots]}
+
+@router.patch("/bots/{bot_id}/queue", response_model = APIResponse)
+async def botlist_edit_queue_api(request: Request, bot_id: int, data: BotQueuePatch, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
+    """Admin API to approve/verify or deny a bot on Fates List"""
+    if not secure_strcmp(Authorization, test_server_manager_key) and not secure_strcmp(Authorization, root_key):
+        return abort(401)
+    
+    try:
+        admin_tool = BotListAdmin(bot_id, int(data.mod))
+    except:
+        return ORJSONResponse({"done": False, "reason": "Invalid Moderator specified. Please contact the developers of this bot!", "code": 3839}, status_code = 400)
+ 
+    if not data.feedback:
+        if data.approve:
+            data.feedback = approve_feedback
+        else:
+            data.feedback = deny_feedback
+
+    if len(data.feedback) < 3:
+        return ORJSONResponse({"done": False, "reason": "Feedback must either not be provided or must be larger than 3 characters!", "code": 3836}, status_code = 400)
+    guild = client.get_guild(main_server)
+    try:
+        user = guild.get_member(int(data.mod))
+    except ValueError:
+        user = None
+    if user is None or not is_staff(staff_roles, user.roles, 2)[0]:
+        return ORJSONResponse({"done": False, "reason": "Invalid Moderator specified. The moderator in question does not have permission to perform this action!", "code": 3867}, status_code = 400)
+
+    if data.approve:
+        rc = await admin_tool.approve_bot(data.feedback)
+    else:
+        rc = await admin_tool.deny_bot(data.feedback)
+    
+    if rc is None:
+        if not data.approve:
+            return {"done": True, "reason": "Bot Denied Successfully!", "code": 1001}
+        return {"done": True, "reason": f"Bot Approved Successfully! Invite it to the main server with https://discord.com/oauth2/authorize?client_id={bot_id}&scope=bot&guild_id={guild.id}&disable_guild_select=true&permissions=0", "code": 1001}
+    return ORJSONResponse({"done": False, "reason": rc, "code": 3869}, status_code = 400)
