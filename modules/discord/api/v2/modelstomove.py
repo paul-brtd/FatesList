@@ -13,36 +13,7 @@ import sys
 sys.path.append("modules/models") # Libraries should remove this
 import enums # as enums (for libraries)
 import datetime
-
-class BaseUser(BaseModel):
-    """
-    Represents a base user class on Fates List.
-    """
-    id: str
-    username: str
-    avatar: str
-    disc: str
-    status: enums.Status
-    bot: bool
-
-    def __str__(self):
-        """
-        :return: Returns the username
-        :rtype: str
-        """
-        return self.username
-
-    def get_status(self):
-        """
-        :return: Returns a status object for the bot
-        :rtype: Status
-        """
-        return Status(status = self.status)
-
-class BotBan(BaseModel):
-    ban: bool
-    reason: Optional[str] = None
-    mod: str
+from base_models import BaseUser
 
 #LIBRARY-INTERNAL
 class BotPromotionDelete(BaseModel):
@@ -92,18 +63,6 @@ class BasePager(BaseModel):
 
     class Config:
         fields = {'from_': 'from'}
-
-class APIResponse(BaseModel):
-    """
-    Represents a "regular" API response on Fates List CRUD endpoints
-
-    You can check for success using the done boolean and reason using the reason attribute 
-    
-    Code is mostly random and for debugging other than 1000 and 1001 where 1000 means success and 1001 means success with message
-    """
-    done: bool
-    reason: Optional[str] = None
-    code: int = 1000
 
 class BotMaintenancePartial(BaseModel):
     type: int = 1
@@ -166,21 +125,6 @@ class BotRandom(BaseModel):
     servers: str
     invite: Optional[str] = None
     votes: int
-
-class BotListAdminRoute(BaseModel):
-    mod: str
-
-class BotCertify(BotListAdminRoute):
-    certify: bool
-
-class BotStateUpdate(BaseModel):
-    state: enums.BotState
-
-class BotTransfer(BotListAdminRoute):
-    new_owner: str
-
-class BotUnderReview(BotListAdminRoute):
-    requeue: enums.BotRequeue
 
 class BotOwner(BaseModel):
     user: BaseUser
@@ -364,22 +308,6 @@ class BaseSearch(BaseModel):
 class BotSearch(BaseSearch):
     search_bots: BotPartialList
     profile_search: bool = False
-
-class BotQueuePatch(BotListAdminRoute):
-    feedback: Optional[str] = None 
-    approve: bool
-
-class PartialBotQueue(BaseModel):
-    user: BaseUser
-    prefix: str
-    invite: str
-    description: str
-
-class BotQueueList(BaseModel):
-    __root__: List[PartialBotQueue]
-
-class BotQueueGet(BaseModel):
-    bots: BotQueueList
 
 class ProfilePartial(BaseUser):
     description: Optional[str] = None
