@@ -6,7 +6,6 @@ from fastapi.responses import HTMLResponse
 from typing import List, Dict
 from modules.discord.api.v2.modelstomove import * #TODO
 from modules.models.bot_actions import BotAdd, BotEdit
-from modules.discord.admin import admin_dashboard
 from lxml.html.clean import Cleaner
 from modules.badges import get_badges
 discord_o = Oauth(OauthConfig)
