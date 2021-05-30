@@ -2,6 +2,13 @@ from deps import *
 from modules.core import *
 import os
 
+def splitc(s, l = 1990):
+    o = []
+    while s:
+        o.append(s[:l])
+        s = s[l:]
+    return o
+
 class Manager(Cog):
     def __init__(self, client):
         self.client = client
@@ -54,7 +61,9 @@ return [dict(obj) for obj in db_lst]
         if not _ret[1]:
             await ctx.send(f"Failed to get message from worker (likely busy). Return UUID is {_ret[0]} and return prefix is rabbit-")
         ret = f"Error: {_ret[0]['err']}\n\nReturn\n\n{_ret[0]['ret']}"
-        await ctx.send(f"```{ret}```")
+        retl = splitc(ret)
+        for r in retl:
+            await ctx.send(f"```{r}```")
 
 def setup(client):
     client.add_cog(Manager(client))

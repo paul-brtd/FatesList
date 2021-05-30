@@ -7,8 +7,7 @@ if __name__ == "__main__":
     try:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        loop.create_task(run_worker())
-        #loop.create_task(connect(start_time))
+        loop.create_task(run_worker(loop))
 
         # we enter a never-ending loop that waits for data and runs
         # callbacks whenever necessary.
@@ -20,3 +19,5 @@ if __name__ == "__main__":
             loop.run_until_complete(disconnect_worker())
         except:
             pass
+    except Exception as exc:
+        print(f"{type(exc).__name__}: {exc}")

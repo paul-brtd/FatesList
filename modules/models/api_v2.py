@@ -178,6 +178,9 @@ class BotRandom(BaseModel):
 class BotListAdminRoute(BaseModel):
     mod: str
 
+class BotCertify(BotListAdminRoute):
+    certify: bool
+
 class BotStateUpdate(BaseModel):
     state: enums.BotState
 

@@ -130,15 +130,34 @@ async def startup():
     logger.info("Discord init beginning")
     asyncio.create_task(client.start(TOKEN_MAIN))
     asyncio.create_task(client_servers.start(TOKEN_SERVER))
-    await asyncio.sleep(4)
     builtins.redis_db = await aioredis.from_url('redis://localhost', db = 1)
+    workers = os.environ.get("WORKERS")
+    asyncio.create_task(status(workers))
+    await asyncio.sleep(4)
     app.add_middleware(SessionMiddleware, secret_key=session_key, https_only = True, max_age = 60*60*12) # 1 day expiry cookie
     FastAPILimiter.init(redis_db, identifier = rl_key_func)
     builtins.rabbitmq_db = await aio_pika.connect_robust(
         f"amqp://fateslist:{rabbitmq_pwd}@127.0.0.1/"
     )
     builtins.up = True
+    await redis_db.publish("_worker", f"UP WORKER {os.getpid()} 0 {workers}") # Announce that we are up and not a repeat
     await vote_reminder()
+
+async def status(workers):
+    pubsub = redis_db.pubsub()
+    await pubsub.subscribe("_worker")
+    async for msg in pubsub.listen():
+        if msg is None or type(msg.get("data")) != bytes:
+            continue
+        msg = msg.get("data").decode("utf-8").split(" ")
+        match msg:
+            case ["UP", "RMQ", _]:
+                await redis_db.publish("_worker", f"UP WORKER {os.getpid()} 1 {workers}") # Announce that we are up and sending to repeat a message
+            case ["REGET", "WORKER", reason]:
+                logger.warning(f"RabbitMQ requesting REGET with reason {reason}")
+                await redis_db.publish("_worker", f"UP WORKER {os.getpid()} 1 {workers}") # Announce that we are up and sending to repeat a message
+            case _:
+                pass # Ignore the rest for now
 
 @repeat_every(seconds=60)
 async def vote_reminder():
@@ -150,8 +169,9 @@ async def vote_reminder():
 
 @app.on_event("shutdown")
 async def close():
-    """Close all commections on shutdown"""
+    """Close all connections on shutdown"""
     logger.info("Killing Fates List")
+    await redis_db.publish("_worker", f"DOWN WORKER {os.getpid()}") # Announce that we are down
     await redis_db.close()
     await rabbitmq_db.close()
     await db.close()

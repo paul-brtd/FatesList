@@ -8,7 +8,7 @@ nest_asyncio.apply()
 backends = Backends()
 builtins.backends = backends
 
-def _serialize(obj):
+def serialize(obj):
     try:
         orjson.dumps({"rc": obj})
         return obj
@@ -63,7 +63,7 @@ async def _new_task(queue):
             logger.warning(f"{type(rc).__name__}: {rc}")
             rc = f"{type(rc).__name__}: {rc}"
             stats.err_msgs.append(message) # Mark the failed message so we can ack it later    
-        _ret = {"ret": _serialize(rc), "err": err}
+        _ret = {"ret": serialize(rc), "err": err}
 
         if _json["meta"].get("ret"):
             await redis_db.set(f"rabbit-{_json['meta'].get('ret')}", orjson.dumps(_ret)) # Save return code in redis
@@ -109,10 +109,16 @@ class Stats():
         self.total_msgs = 0 # Total messages
 
     def cure(self, index):
-        """'Cures' a error that has been handled"""
+        """'Cures a error that has been handled"""
         self.errors -= 1
         del self.exc[index]
         del self.err_msgs[index]
+
+    def cureall(self):
+        i = 0
+        while i < len(self.err_msgs):
+            self.cure(i)
+            i+=1
 
     def __str__(self):
         s = []
@@ -120,11 +126,10 @@ class Stats():
             s.append(f"{k}: {self.__dict__[k]}")
         return "\n".join(s)
 
-async def run_worker():
+async def run_worker(loop):
     """Main worker function"""
     start_time = time.time()
     logger.opt(ansi = True).info(f"<magenta>Starting Fates List RabbitMQ Worker (time: {start_time})...</magenta>")
-    backends.loadall() # Load all the backends firstly
     builtins.client, builtins.client_server = _setup_discord()
     asyncio.create_task(client.start(TOKEN_MAIN))
     asyncio.create_task(client_server.start(TOKEN_SERVER))
@@ -134,6 +139,7 @@ async def run_worker():
     builtins.db = await asyncpg.create_pool(host="localhost", port=12345, user=pg_user, database="fateslist")
     builtins.redis_db = await aioredis.from_url('redis://localhost', db = 1)
     logger.opt(ansi = True).debug("Connected to databases (postgres, redis and rabbitmq)")
+    await backends.loadall() # Load all the backends and run prehooks
     builtins.stats = Stats()
     
     # Get handled message count

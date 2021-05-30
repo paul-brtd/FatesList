@@ -308,7 +308,7 @@ class BotListAdmin():
         owners = await db.fetch("SELECT owner FROM bot_owner WHERE bot_id = $1", self.bot_id)
         if not owners:
             return self.bot_not_found
-        await db.execute("UPDATE bots SET state = 6 WHERE bot_id = $1", self.bot_id)
+        await db.execute("UPDATE bots SET state = 0 WHERE bot_id = $1", self.bot_id)
         uncertify_embed = discord.Embed(title = "Bot Uncertified", description = f"<@{self.mod}> uncertified the bot <@{self.bot_id}>", color = self.bad)
         uncertify_embed.add_field(name="Link", value=f"https://fateslist.xyz/bot/{self.bot_id}")
         await self.channel.send(embed = uncertify_embed)
