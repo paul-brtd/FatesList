@@ -118,14 +118,6 @@ async def regenerate_bot_token(request: Request, bot_id: int, Authorization: str
     await db.execute("UPDATE bots SET api_token = $1 WHERE bot_id = $2", get_token(132), id)
     return {"done": True, "reason": None, "code": 1000}
 
-@router.patch("/bots/admin/{bot_id}/state")
-async def bot_root_update_api(request: Request, bot_id: int, data: BotStateUpdate, Authorization: str = Header("ROOT_KEY")):
-    """Root API to update a bots state. Needs the root key"""
-    if not secure_strcmp(Authorization, root_key):
-        return abort(401)
-    await db.execute("UPDATE bots SET state = $1 WHERE bot_id = $2", data.state, bot_id)
-    return {"done": True, "reason": None, "code": 1000}
-
 @router.patch("/bots/admin/{bot_id}/under_review", response_model = APIResponse)
 async def bot_under_review_api(request: Request, bot_id: int, data: BotUnderReview, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
     """Put a bot in queue under review or back in queue. This is internal and only meant for our test server manager bot"""
