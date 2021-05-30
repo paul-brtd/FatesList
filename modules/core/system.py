@@ -47,13 +47,20 @@ async def startup_tasks():
     builtins.db = await setup_db()
 
     # Set bot tags
-    tags_db = await db.fetch("SELECT id, icon FROM bot_list_tags WHERE type = 0 or type = 2")
-    tags =  {}
-    for tag in tags_db:
-        tags = tags | {tag["id"]: tag["icon"]}
-    builtins.tags_fixed = calc_tags(tags)
+    def _tags(tag_db):
+        tags =  {}
+        for tag in tags_db:
+            tags = tags | {tag["id"]: tag["icon"]}
+        return tags
+    
+    tags_db = await db.fetch("SELECT id, icon FROM bot_list_tags WHERE type = 0 or type = 2")    
+    tags_db_server = await db.fetch("SELECT id, icon FROM bot_list_tags WHERE type = 1 or type = 2")
+    tags = _tags(tags_db)
+    tags_server = _tags(tags_db_server)
     builtins.TAGS = tags
-
+    builtins.TAGS_SERVER = tags_server
+    builtins.tags_fixed = calc_tags(tags)
+    builtins.tags_fixed = calc_tags(tags_server) 
     logger.info("Discord init beginning")
     asyncio.create_task(client.start(TOKEN_MAIN))
     asyncio.create_task(client_servers.start(TOKEN_SERVER))
@@ -93,3 +100,11 @@ async def vote_reminder():
         logger.debug(f"Got reminder {reminder}")
         await bot_add_event(reminder["bot_id"], enums.APIEvents.vote_reminder, {"user": str(reminder["user_id"])})
         await db.execute("UPDATE user_reminders SET resolved = true WHERE user_id = $1 AND bot_id = $2", reminder["user_id"], reminder["bot_id"])
+ 
+def calc_tags(TAGS):
+    # Tag calculation
+    tags_fixed = []
+    for tag in TAGS.keys():
+        # For every key in tag dict, create the "fixed" tag information (friendly and easy to use data for tags)
+        tags_fixed.append({"name": tag.replace("_", " ").title(), "iconify_data": TAGS[tag], "id": tag})
+    return tags_fixed
