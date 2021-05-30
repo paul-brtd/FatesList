@@ -65,10 +65,6 @@ async def on_ready():
 async def on_ready():
     logger.info(f"{client_servers.user} up")
 
-# Two variables used in our logger
-BOLD_START =  "\033[1m"
-BOLD_END = "\033[0m"
-
 @app.middleware("http")
 async def fateslist_request_handler(request: Request, call_next):
     return await routeware(app, fl_exception_handler, request, call_next)
