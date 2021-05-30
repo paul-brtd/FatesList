@@ -44,14 +44,6 @@ class BotBan(BaseModel):
     reason: Optional[str] = None
     mod: str
 
-class BotListStats(BaseModel):
-    uptime: float
-    pid: int
-    up: bool
-    dup: bool
-    bot_count: int
-    bot_count_total: int
-
 #LIBRARY-INTERNAL
 class BotPromotionDelete(BaseModel):
     """
