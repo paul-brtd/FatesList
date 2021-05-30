@@ -69,5 +69,5 @@ async def on_ready():
 async def fateslist_request_handler(request: Request, call_next):
     return await routeware(app, fl_exception_handler, request, call_next)
 
-app.openapi = fl_openapi # OpenAPI schema setup
+app.openapi = fl_openapi(app) # OpenAPI schema setup
 

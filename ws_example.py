@@ -6,7 +6,7 @@ import uuid
 import time
 
 async def run():
-    async with websockets.connect("wss://fateslist.xyz/apiws/bot/rtstats", max_size=1_000_000_000_000) as websocket:
+    async with websockets.connect("wss://fateslist.xyz/api/v2/ws/rtstats", max_size=1_000_000_000_000) as websocket:
         while True:
             event = await websocket.recv()
             event = json.loads(event)
