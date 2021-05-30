@@ -38,24 +38,8 @@ sentry_sdk.init(sentry_dsn)
 
 # Main Bot
 
-intent_main = discord.Intents.default()
-intent_main.typing = False
-intent_main.bans = False
-intent_main.emojis = False
-intent_main.integrations = False
-intent_main.webhooks = False
-intent_main.invites = False
-intent_main.voice_states = False
-intent_main.messages = False
-intent_main.members = True
-intent_main.presences = True
-builtins.client = discord.Client(intents=intent_main)
 
-# Server Bot
-
-intent_server = deepcopy(intent_main)
-intent_server.presences = False
-builtins.client_servers = discord.Client(intents=intent_server)
+builtins.client, builtins.client_servers = setup_discord()
 
 # Setup FastAPI with required urls and orjson for faster json handling
 app = FastAPI(default_response_class = ORJSONResponse, redoc_url = "/api/docs/redoc", docs_url = "/api/docs/swagger", openapi_url = "/api/docs/openapi")
