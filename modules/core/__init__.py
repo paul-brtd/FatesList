@@ -13,4 +13,4 @@ from .reviews import * # Import review parser
 from .ratelimits import * # Import ratelimit handler
 from .rabbitmq import * # RabbitMQ
 from .logger import * # Enable loguru
-from .sys import * # System module
+from .system import * # System module
