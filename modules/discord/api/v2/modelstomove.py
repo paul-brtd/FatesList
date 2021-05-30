@@ -15,11 +15,6 @@ import enums # as enums (for libraries)
 import datetime
 from base_models import BaseUser
 
-class BotBan(BaseModel):
-    ban: bool
-    reason: Optional[str] = None
-    mod: str
-
 #LIBRARY-INTERNAL
 class BotPromotionDelete(BaseModel):
     """
