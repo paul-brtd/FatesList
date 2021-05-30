@@ -6,11 +6,6 @@ builtins.boot_time = time.time()
 
 sentry_sdk.init(sentry_dsn)
 
-# Setup Bots
-
-# Main Bot
-
-
 builtins.client, builtins.client_servers = setup_discord()
 
 # Setup FastAPI with required urls and orjson for faster json handling
@@ -43,7 +38,7 @@ async def fl_exception_handler(request, exc, log = True):
 
 logger.info("Loading modules for Fates List")
 
-include_routers("Discord", "modules/discord")
+include_routers(app, "Discord", "modules/discord")
 
 logger.info("All discord modules have loaded successfully!")
 

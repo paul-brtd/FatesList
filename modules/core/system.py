@@ -1,6 +1,6 @@
 from .imports import *
 
-def setup_discord()
+def setup_discord():
     intent_main = discord.Intents.default()
     intent_main.typing = False
     intent_main.bans = False
@@ -19,7 +19,7 @@ def setup_discord()
     return client, client_server
 
 # Include all the modules by looping through and using importlib to import them and then including them in fastapi
-def include_routers(fname, rootpath):
+def include_routers(app, fname, rootpath):
     for root, dirs, files in os.walk(rootpath):
         if not root.startswith("_") and not root.startswith("."):
             rrep = root.replace("/", ".")
