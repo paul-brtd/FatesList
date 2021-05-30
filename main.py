@@ -50,15 +50,8 @@ async def setup_db():
 
 @app.on_event("startup")
 async def startup():
-    """
-    On startup:
-        - Initialize the database
-        - Get bot and server tags
-        - Start the main and server bots using tokens in config_secrets.py
-        - Sleep for 4 seconds to ensure connections are made before application startup
-        - Setup Redis and initialize the ratelimiter and caching system
-        - Connect robustly to rabbitmq for add bot/edit bot/delete bot
-    """
+    await startup_tasks()
+
 @app.on_event("shutdown")
 async def close():
     """Close all connections on shutdown"""
