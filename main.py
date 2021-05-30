@@ -44,7 +44,7 @@ logger.info("All discord modules have loaded successfully!")
 
 @app.on_event("startup")
 async def startup():
-    await startup_tasks()
+    await startup_tasks(app)
 
 @app.on_event("shutdown")
 async def close():

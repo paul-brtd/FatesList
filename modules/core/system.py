@@ -1,4 +1,5 @@
 from .imports import *
+from .ratelimits import *
 
 def setup_discord():
     intent_main = discord.Intents.default()
@@ -31,7 +32,7 @@ def include_routers(app, fname, rootpath):
                     app.include_router(route.router)
 
                          
-async def startup_tasks():
+async def startup_tasks(app):
     """
     On startup:
         - Initialize the database
