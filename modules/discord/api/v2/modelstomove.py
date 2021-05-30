@@ -131,21 +131,6 @@ class BotRandom(BaseModel):
     invite: Optional[str] = None
     votes: int
 
-class BotListAdminRoute(BaseModel):
-    mod: str
-
-class BotCertify(BotListAdminRoute):
-    certify: bool
-
-class BotStateUpdate(BaseModel):
-    state: enums.BotState
-
-class BotTransfer(BotListAdminRoute):
-    new_owner: str
-
-class BotUnderReview(BotListAdminRoute):
-    requeue: enums.BotRequeue
-
 class BotOwner(BaseModel):
     user: BaseUser
     main: bool
