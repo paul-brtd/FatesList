@@ -35,5 +35,5 @@ async def botlist_stats_api(request: Request, workers: Optional[bool] = False):
         else:
             worker_lst = worker_ret[0]["ret"]
     else:
-        worker_dict = None
+        worker_lst = None
     return {"uptime": time.time() - boot_time, "pid": os.getpid(), "up": up, "dup": (client.user is not None), "bot_count": bot_count, "bot_count_total": bot_count_total, "workers": worker_lst}

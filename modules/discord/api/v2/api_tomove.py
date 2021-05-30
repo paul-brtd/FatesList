@@ -307,7 +307,7 @@ async def delete_review(request: Request, bot_id: int, rid: uuid.UUID, bt: Backg
             return ORJSONResponse({"done": False, "reason": "You are not allowed to delete this review", "code": 1232}, status_code = 400)
     event_data = await db.fetchrow("SELECT reply, review_text, star_rating FROM bot_reviews WHERE id = $1", rid) # Information needed to send an event
     await db.execute("DELETE FROM bot_reviews WHERE id = $1", rid)
-    await bot_add_event(bot_id, enums.APIEvent.review_delete, {"user": str(data.user_id), "reply": event_data["reply"], "id": str(rid), "star_rating": event_data["star_rating"], "review": event_data["review_text"]})
+    await bot_add_event(bot_id, enums.APIEvents.review_delete, {"user": str(data.user_id), "reply": event_data["reply"], "id": str(rid), "star_rating": event_data["star_rating"], "review": event_data["review_text"]})
     return {"done": True, "reason": None, "code": 1000}
 
 @router.get("/bots/{bot_id}/commands", response_model = BotCommands)
