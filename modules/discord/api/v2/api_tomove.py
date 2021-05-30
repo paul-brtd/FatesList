@@ -1,8 +1,10 @@
-from ..core import *
+"""Modules to move"""
+# TODO: Move these
+from modules.core import *
 from uuid import UUID
 from fastapi.responses import HTMLResponse
 from typing import List, Dict
-from modules.models.api_v2 import *
+from modules.discord.api.v2.modelstomove import * #TODO
 from modules.models.bot_actions import BotAdd, BotEdit
 from modules.discord.admin import admin_dashboard
 from lxml.html.clean import Cleaner

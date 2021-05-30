@@ -1,5 +1,5 @@
-from ..core import *
-from modules.models.api_ws import *
+from modules.core import *
+from .models import *
 
 router = APIRouter(
     include_in_schema = True,

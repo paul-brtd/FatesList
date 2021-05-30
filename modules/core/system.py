@@ -25,7 +25,7 @@ def include_routers(app, fname, rootpath):
         if not root.startswith("_") and not root.startswith("."):
             rrep = root.replace("/", ".")
             for f in files:
-                if not f.startswith("_") and not f.startswith(".") and not f.endswith("pyc"):
+                if not f.startswith("_") and not f.startswith(".") and not f.endswith("pyc") and not f.startswith("models"):
                     path = f"{rrep}.{f.replace('.py', '')}"
                     logger.debug(f"{fname}: {root}: Loading {f} with path {path}")
                     route = importlib.import_module(path)
