@@ -42,12 +42,6 @@ include_routers(app, "Discord", "modules/discord")
 
 logger.info("All discord modules have loaded successfully!")
 
-async def setup_db():
-    """Function to setup the asyncpg connection pool"""
-    db = await asyncpg.create_pool(host="localhost", port=12345, user=pg_user, database="fateslist")
-
-    return db
-
 @app.on_event("startup")
 async def startup():
     await startup_tasks()
