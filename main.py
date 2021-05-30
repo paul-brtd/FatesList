@@ -69,18 +69,5 @@ async def on_ready():
 async def fateslist_request_handler(request: Request, call_next):
     return await routeware(app, fl_exception_handler, request, call_next)
 
-def fl_openapi():
-    """Custom OpenAPI description"""
-    if app.openapi_schema:
-        return app.openapi_schema
-    openapi_schema = get_openapi(
-        title="Fates List",
-        version="1.0",
-        description="Only v2 beta 2 API is supported (v1 is the old one that fateslist.js currently uses). The default API is v2. This means /api will point to this. To pin a api, either use the FL-API-Version header or directly use /api/v/{version}.",
-        routes=app.routes,
-    )
-    app.openapi_schema = openapi_schema
-    return app.openapi_schema
-
 app.openapi = fl_openapi # OpenAPI schema setup
 
