@@ -1,32 +1,6 @@
 import uvloop
 uvloop.install()
-from fastapi import FastAPI, Request, Form as FForm
-from fastapi.openapi.utils import get_openapi
-from starlette.middleware.sessions import SessionMiddleware
-from fastapi.responses import ORJSONResponse
-from fastapi.templating import Jinja2Templates
-import asyncpg
-from pydantic import BaseModel
-import discord
-import asyncio
-import builtins
-import importlib
-from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 from modules.core import *
-from config import *
-import os
-from fastapi_limiter import FastAPILimiter
-import logging
-from copy import deepcopy
-from starlette.routing import Mount
-import sentry_sdk
-from starlette.requests import ClientDisconnect
-from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
-from sentry_sdk.integrations.logging import LoggingIntegration
-import time
-from fastapi_utils.tasks import repeat_every
-from fastapi_csrf_protect import CsrfProtect
-import logging
 
 builtins.boot_time = time.time()
 
