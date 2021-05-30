@@ -35,6 +35,11 @@ async def routeware(app, fl_exception_handler, request: Request, call_next):
     asyncio.create_task(print_req(request, response))
     return response
 
+
+# Two variables used in our logger
+BOLD_START =  "\033[1m"
+BOLD_END = "\033[0m"
+
 async def print_req(request, response):
     # Gunicorn logging is trash, lets fix that with custom logging
     query_str = f'?{request.scope["query_string"].decode("utf-8")}' if request.scope["query_string"] else "" # Get query strings
