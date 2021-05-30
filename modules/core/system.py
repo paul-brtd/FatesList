@@ -108,3 +108,9 @@ def calc_tags(TAGS):
         # For every key in tag dict, create the "fixed" tag information (friendly and easy to use data for tags)
         tags_fixed.append({"name": tag.replace("_", " ").title(), "iconify_data": TAGS[tag], "id": tag})
     return tags_fixed
+
+async def setup_db():
+    """Function to setup the asyncpg connection pool"""
+    db = await asyncpg.create_pool(host="localhost", port=12345, user=pg_user, database="fateslist")
+
+    return db
