@@ -6,43 +6,50 @@
 
 {% block content %}
 <div style="text-align: center; display: block; color: white;">
-	<h3 style="font-weight: bold;">Login To Fates List</h3>
+	<h3 style="font-weight: bold;">Login</h3>
 	<h4>We're glad to see you again!</h4>
 	{% if perm_needed %}
-		<h5><span style="color: red">Oops!</span><br/>You need to login {{perm_pretty}}</h5>
+	<h5><span style="color: red">Whoops!</span><br />You need to login {{perm_pretty}}</h5>
 	{% endif %}
 </div>
 <form method="POST" style="text-align: left">
-        <div style="text-align: center; display: block;">
-                <button type="submit" class="btn btn-outline-light btn-lg" style="margin-bottom: 20px;">Login</button>
+	<div style="text-align: center; display: block;">
+		<button type="submit" class="btn btn-outline-light btn-lg" style="color: #4caf50; margin-bottom: 20px;">Login</button>
 	</div>
 	<small>
-	<div style="text-align: center;">
-    	<div style="display: inline-block; text-align: left;">
-	<div style="padding: 3px; display: inline-block;">
-	<div class="form-group" style="color: blue; display: block; height: auto; color: rgba(255, 255, 255, 0.87);">
-		<div class="form-group" class="d-flex" style="color: white; font-weight: bold;">
-			<div class="form-group">
-				<div style="display: block;"/>
-        				<input type="checkbox" tabindex="0" id="join_servers"  name="join_servers" aria-label="Join Servers" style="margin-right: 5px;" />
-					<label class="custom-control-label" for="join_servers">Join Servers (Join The Support Server) -> Would you like to be added to the support server? Turn this on if you do</label>
+		<div style="text-align: center;">
+			<div style="display: inline-block; text-align: left;">
+				<div style="padding: 3px; display: inline-block;">
+					<div class="form-group"
+						style="color: blue; display: block; height: auto; color: rgba(255, 255, 255, 0.87);">
+						<div class="form-group" class="d-flex" style="color: white; font-weight: bold;">
+							<div class="form-group">
+								<div style="display: block;" />
+								<input type="checkbox" tabindex="0" id="join_servers" name="join_servers"
+									aria-label="Join Servers" style="margin-right: 5px;" />
+								<label class="custom-control-label" for="join_servers">Join Servers (Join The Support
+									Server) -> Would you like to be added to the support server? Turn this on if you
+									do</label>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="form-group"
+					style="color: blue; display: inline-block; height: auto; color: rgba(255, 255, 255, 0.87);">
+					<div class="form-group" class="d-flex" style="color: white; font-weight: bold;">
+						<div class="form-group">
+							<div style="display: block;" />
+							<input type="checkbox" tabindex="0" id="server_list" name="server_list"
+								aria-label="Join Servers" style="margin-right: 5px;" checked="true" />
+							<label for="server_list">Server List -> Would you like us to access your server list for
+								server listing? Keep this ticked if unsure.</label>
+						</div>
+					</div>
 				</div>
 			</div>
 		</div>
-	</div>
-        <div class="form-group" style="color: blue; display: inline-block; height: auto; color: rgba(255, 255, 255, 0.87);">
-		<div class="form-group" class="d-flex" style="color: white; font-weight: bold;">
-			<div class="form-group">
-				<div style="display: block;"/>
-					<input type="checkbox" tabindex="0" id="server_list"  name="server_list" aria-label="Join Servers" style="margin-right: 5px;" checked="true"/>
-					<label for="server_list">Server List -> Would you like us to access your server list for server listing. Keep this ticked if unsure.</label>
-				</div>
-			</div>
 		</div>
-	</div>
-	</div>
-	</div>
-	</div>
+		</div>
 	</small>
 </form>
 </div>
