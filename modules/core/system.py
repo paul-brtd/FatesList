@@ -61,7 +61,7 @@ async def startup_tasks(app):
     builtins.TAGS = tags
     builtins.TAGS_SERVER = tags_server
     builtins.tags_fixed = calc_tags(tags)
-    builtins.tags_fixed = calc_tags(tags_server) 
+    builtins.tags_fixed_server = calc_tags(tags_server) 
     logger.info("Discord init beginning")
     asyncio.create_task(client.start(TOKEN_MAIN))
     asyncio.create_task(client_servers.start(TOKEN_SERVER))
