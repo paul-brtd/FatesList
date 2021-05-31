@@ -11,22 +11,27 @@
 		<span class="iconify white" data-icon="fa-solid:search" data-inline="false" data-height="3em"></span>
 		<p class="title-is">Random Bot</p>
 	</div>
-	<div id="random-section" class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center div-is">
+	<div id="random-section"
+		class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center div-is">
 		<div id="random-bots">
 			{{ flCard(random.choice(certified_bots + top_voted ), True, 'bot') }}
-		</div> 
+		</div>
 	</div>
-	<div id="random-section-bt" class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center div-is">
-		<button class="btn btn-outline-light text-center" style="display: block;  text-align: center; justify-content: center;" onclick="randomBotRoll()">Roll</button>
+	<div id="random-section-bt"
+		class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center div-is">
+		<button class="btn btn-outline-light text-center"
+			style="display: block;  text-align: center; justify-content: center;"
+			onclick="randomBotRoll()">Roll</button>
 	</div>
 	<hr class="hr-is">
 	<div class="d-flex" style="margin-left: 5%;">
-                <span class="iconify white" data-icon="fa-solid:certificate" data-inline="false" data-height="3em"></span>
+		<span class="iconify white" data-icon="fa-solid:certificate" data-inline="false" data-height="3em"></span>
 		<p class="title-is">Certified Bots</p>
 	</div>
-	<div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center div-is" id="tt-2">
-        	{% for bot in certified_bots %}
-			{{ flCard(bot, False, 'bot') }}
+	<div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center div-is"
+		id="tt-2">
+		{% for bot in certified_bots %}
+		{{ flCard(bot, False, 'bot') }}
 		{% endfor %}
 	</div>
 	<hr class="hr-is">
@@ -34,9 +39,10 @@
 		<span class="iconify white" data-icon="fa-solid:sort-amount-up" data-inline="false" data-height="3em"></span>
 		<p class="title-is">Top Voted</p>
 	</div>
-	<div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center div-is" id="tt-1">
+	<div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center div-is"
+		id="tt-1">
 		{% for bot in top_voted %}
-			{{ flCard(bot, False, 'bot') }}
+		{{ flCard(bot, False, 'bot') }}
 		{% endfor %}
 	</div>
 	<hr class="hr-is">
@@ -44,28 +50,85 @@
 		<span class="iconify white" data-icon="fa-solid:plus" data-inline="false" data-height="3em"></span>
 		<p class="title-is">New Bots</p>
 	</div>
-	<div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center" id="tt" style="width: 90%;margin: 30px 5%;">
+	<div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center"
+		id="tt" style="width: 90%;margin: 30px 5%;">
 		{% for bot in new_bots %}
-			{{ flCard(bot, False, 'bot') }}
+		{{ flCard(bot, False, 'bot') }}
 		{% endfor %}
 	</div>
+	<button onclick="topFunction()" id="myBtn" title="Go to top">▲</button>
+	<style>
+		#myBtn {
+			display: none;
+			/* Hidden by default */
+			position: fixed;
+			/* Fixed/sticky position */
+			bottom: 20px;
+			/* Place the button at the bottom of the page */
+			right: 30px;
+			/* Place the button 30px from the right */
+			z-index: 99;
+			/* Make sure it does not overlap */
+			border: none;
+			/* Remove borders */
+			outline: none;
+			/* Remove outline */
+			background-color: #4caf50;
+			/* Set a background color */
+			color: white;
+			/* Text color */
+			cursor: pointer;
+			/* Add a mouse pointer on hover */
+			padding: 15px;
+			/* Some padding */
+			border-radius: 10px;
+			/* Rounded corners */
+			font-size: 18px;
+			/* Increase font size */
+		}
+
+		#myBtn:hover {
+			background-color: #1D1E23;
+			/* Add a dark-grey background on hover */
+		}
+	</style>
 	<script>
-		function randomBotRoll(){
-			$.get("{{site_url}}{{roll_api}}", function(data, status) {
-				if(status == 429) {
+		mybutton = document.getElementById("myBtn");
+
+		// When the user scrolls down 20px from the top of the document, show the button
+		window.onscroll = function () { scrollFunction() };
+
+		function scrollFunction() {
+			if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+				mybutton.style.display = "block";
+			} else {
+				mybutton.style.display = "none";
+			}
+		}
+
+		// When the user clicks on the button, scroll to the top of the document
+		function topFunction() {
+			document.body.scrollTop = 0; // For Safari
+			document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
+		}
+	</script>
+	<script>
+		function randomBotRoll() {
+			$.get("{{site_url}}{{roll_api}}", function (data, status) {
+				if (status == 429) {
 					modalShow("You are rolling too fast!", `Please wait ${data.headers['Retry-After']} seconds`)
 					return
 				}
 				random_bots = document.querySelector("#random-bots")
-				
+
 				// Get banner
-				if(data.banner == "" || data.banner == "none") {
+				if (data.banner == "" || data.banner == "none") {
 					banner = "/static/assets/img/banner.webp"
 				}
 				else {
 					banner = data.banner
 				}
-				if(data.state == 6) { // State 6 is certified
+				if (data.state == 6) { // State 6 is certified
 					certified_ico = "visible"
 				}
 				else {
@@ -77,23 +140,22 @@
 				avatar_dom = random_bots.querySelectorAll(".bot-card-avatar")[0] // Avatar
 				avatar_dom.setAttribute("data-src", data.avatar)
 				avatar_dom.setAttribute("data-loaded", "false") // Lozad Reload Avatar
-                                banner_dom.setAttribute("data-loaded", "false") // Lozad Reload Banner
+				banner_dom.setAttribute("data-loaded", "false") // Lozad Reload Banner
 				observer.observe() // Lozad Reobserve
 				view_links = random_bots.querySelectorAll(".bot-card-view-link")
-				for(let i = 0; i < view_links.length; i++) {
+				for (let i = 0; i < view_links.length; i++) {
 					view_links[i].setAttribute("href", "/bot/" + data.bot_id.toString())
 				}
 				username_dom = random_bots.querySelectorAll(".bot-card-username-txt")[0].innerHTML = data.username
-                                random_bots.querySelectorAll(".bot-card-description-txt")[0].innerHTML = data.description
+				random_bots.querySelectorAll(".bot-card-description-txt")[0].innerHTML = data.description
 				random_bots.querySelectorAll(".bot-servers")[0].innerHTML = data.servers
-                                random_bots.querySelectorAll(".bot-votes")[0].innerHTML = data.votes
+				random_bots.querySelectorAll(".bot-votes")[0].innerHTML = data.votes
 				random_bots.querySelectorAll(".bot-card-invite-link")[0].setAttribute("href", "/bot/" + data.bot_id.toString() + "/invite")
 			})
 		}
 		window.addEventListener("load", randomBotRoll)
 	</script>
-{% endblock %}
-{% block footer %}
+	{% endblock %}
+	{% block footer %}
 
-{% endblock %}
-
+	{% endblock %}
