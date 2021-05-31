@@ -49,15 +49,20 @@ staff_roles = {
         "staff_id": 845930903883874336,
         "perm": 4,
     },
+    "developer": {
+        "id": 836326304860078160,
+        "staff_id": 848745475494641694,
+        "perm": 5
+    },
     "head_admin": {
         "id": 836349482340843572,
         "staff_id": 845930541018513428,
-        "perm": 5
+        "perm": 6
     },
     "owner": {
         "id": 836326299223195738,
         "staff_id": 830540676952227863,
-        "perm": 6,
+        "perm": 7,
     }
 }
 # TODO: Add Timed Badges
@@ -66,15 +71,25 @@ special_badges = {
         "name": "Staff",
         "description": "This is a Fates List Staff Member",
         "image": "/static/assets/img/staff.png",
-        "staff": True, # Is this badge only for staff?
-        "certified": False # Certified
+        "staff": True # Is this badge only for staff?
     },
     "CERTIFIED": {
-        "name": "Certified Bot Dev.",
+        "name": "Certified Bot Developer",
         "description": "This is a certified bot developer",
         "image": "/static/assets/img/certified.png",
-        "staff": False, # Is this badge only for staff?
         "certified": True # Certified
+    },
+    "BOTDEV": {
+        "name": "Bot Developer",
+        "description": "This is a bot developer",
+        "image": "/static/assets/img/botdev.png",
+        "bot_dev": True
+    },
+    "DISCORD_MEMBER": {
+        "name": "Discord Member",
+        "description": "This user is on our support server",
+        "image": "/static/assets/img/dmember.png",
+        "support_server_member": True
     }
 }
 

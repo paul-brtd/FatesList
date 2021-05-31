@@ -28,7 +28,7 @@
 	{%endif%}
 	<div>
 	{% for badge_id, badge_dict in badges.items()%} <!-- Badges -->
-                <a href="javascript:void(0)"><img src='{{badge_dict["image"]}}' alt='{{badge_dict["name"] + " badge"}}' height="50px" width="50px" class="modalux" onclick="modalShow('#{{badge_id}}')"/></a>
+                <a href="javascript:void(0)"><img src='{{badge_dict["image"]}}' alt='{{badge_dict["name"] + " badge"}}' height="50px" width="55px" class="modalux" onclick="modalShow('#{{badge_id}}')"/></a>
 
                 <div class="modal fade" id="{{badge_id}}" tabindex="-1"  aria-labelledby="{{badge_id}}Label" aria-hidden="true">
                         <div class="modal-dialog modal-dialog-centered">
