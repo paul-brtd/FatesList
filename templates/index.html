@@ -17,8 +17,7 @@
 			{{ flCard(random.choice(certified_bots + top_voted ), True, 'bot') }}
 		</div>
 	</div>
-	<div id="random-section-bt"
-		class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center div-is">
+	<div id="random-section-bt" class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center div-is">
 		<button class="btn btn-outline-light text-center"
 			style="display: block;  text-align: center; justify-content: center;"
 			onclick="randomBotRoll()">Roll</button>
@@ -28,8 +27,7 @@
 		<span class="iconify white" data-icon="fa-solid:certificate" data-inline="false" data-height="3em"></span>
 		<p class="title-is">Certified Bots</p>
 	</div>
-	<div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center div-is"
-		id="tt-2">
+	<div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center div-is" id="tt-2">
 		{% for bot in certified_bots %}
 		{{ flCard(bot, False, 'bot') }}
 		{% endfor %}
@@ -39,8 +37,7 @@
 		<span class="iconify white" data-icon="fa-solid:sort-amount-up" data-inline="false" data-height="3em"></span>
 		<p class="title-is">Top Voted</p>
 	</div>
-	<div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center div-is"
-		id="tt-1">
+	<div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center div-is" id="tt-1">
 		{% for bot in top_voted %}
 		{{ flCard(bot, False, 'bot') }}
 		{% endfor %}
@@ -50,8 +47,7 @@
 		<span class="iconify white" data-icon="fa-solid:plus" data-inline="false" data-height="3em"></span>
 		<p class="title-is">New Bots</p>
 	</div>
-	<div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center"
-		id="tt" style="width: 90%;margin: 30px 5%;">
+	<div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center" id="tt" style="width: 90%;margin: 30px 5%;">
 		{% for bot in new_bots %}
 		{{ flCard(bot, False, 'bot') }}
 		{% endfor %}
