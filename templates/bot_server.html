@@ -412,16 +412,29 @@ function getCommands(bot_id) {
 						<tr>
 							<th style="border-right: none;">Name</th>
 							<th style="border-right: none;">Description</th>
+							<th style="border-right: none;">Arguments</th>
+							<th style="border-right: none;">Docs</th>
+							<th style="border-right: none;">Premium Only</th>
 						</tr>
 					</colgroup>
 				`
 				/* TODO: Fill in HTML */
+
 				$.each(data, function(key, value) {
+					if(value.args.length == 0)
+						value.args = ["No arguments"]
+					if(value.doc_link.replace(" ", "") == "")
+						docs = "No docs available"
+					else
+						docs = `<a class='long-desc-link'>${value.doc_link}</a>`
 					commands += `
 					<colgroup>
 						<tr>
 							<td>${value.name}</td>
 							<td>${value.description}</td>
+							<td>${value.args.join(" ").replace(">", "</span>").replace("<", "<span class='arg'>")}</td>
+							<td>${docs}</td>
+							<td>${value.premium_only.toString().replace("true", "Yes").replace("false", "No")}</td>
 						</tr>
 					</colgroup>
 					`
