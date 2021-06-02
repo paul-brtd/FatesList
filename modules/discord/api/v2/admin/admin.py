@@ -1,5 +1,5 @@
 from modules.core import *
-from .models import BotStateUpdate, BotCertify, BotBan, APIResponse, BotUnderReview, BotTransfer, BotQueueGet, BotQueuePatch
+from .models import BotStateUpdate, BotCertify, BotBan, APIResponse, BotUnderReview, BotTransfer, BotQueueGet, BotQueuePatch, BotLock
 from modules.discord.admin import admin_dashboard
 from ..base import API_VERSION
 
@@ -21,6 +21,22 @@ async def bot_root_update_api(request: Request, bot_id: int, data: BotStateUpdat
         return abort(401)
     await db.execute("UPDATE bots SET state = $1 WHERE bot_id = $2", data.state, bot_id)
     return {"done": True, "reason": None, "code": 1000}
+
+@router.patch("/bots/{bot_id}/lock")
+async def bot_lock_unlock_api(request: Request, bot_id: int, data: BotLock, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
+    """Locks or unlocks a bot for staff to edit. This is internal and only meant for our test server manager bot"""
+    if not secure_strcmp(Authorization, test_server_manager_key) and not secure_strcmp(Authorization, root_key):
+        return abort(401)
+    guild = client.get_guild(main_server)
+    user = guild.get_member(int(data.mod))
+    if user is None or not is_staff(staff_roles, user.roles, 4)[0]: 
+        return ORJSONResponse({"done": False, "reason": "Invalid Moderator specified. The moderator in question does not have permission to perform this action!", "code": 9867}, status_code = 400)
+    req = await redis_db.get("fl_staff_req")
+    req = orjson.loads(req) if req else []
+    op = "lock" if data.lock else "unlock"
+    req.append({"op": op, "staff": data.mod, "bot_id": bot_id})
+    await redis_db.set("fl_staff_req", orjson.dumps(req))
+    return {"done": True, "reason": None, "code": 1000, "op": op}
 
 @router.patch("/bots/{bot_id}/under_review", response_model = APIResponse)
 async def bot_under_review_api(request: Request, bot_id: int, data: BotUnderReview, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):

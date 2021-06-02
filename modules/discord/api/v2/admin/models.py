@@ -6,6 +6,10 @@ from typing import Optional, List
 class BotListAdminRoute(BaseModel):
     mod: str
 
+class BotLock(BotListAdminRoute):
+    reason: str
+    lock: bool
+
 class BotCertify(BotListAdminRoute):
     certify: bool
 

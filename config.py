@@ -14,6 +14,7 @@ test_botsrole = 845940351339987004 # Bots role on test server
 test_staffrole = 846028433985503232 # Staff role on test server
 test_server = 845928429357367316 # Test Server
 owner = 563808552288780322
+instance_name = "main"
 
 # Messages
 approve_feedback = "There was no feedback given for this bot. It was likely a good bot, but you can ask any staff member about feedback if you wish"

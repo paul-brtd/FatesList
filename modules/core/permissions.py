@@ -11,6 +11,12 @@ class StaffMember(BaseModel):
     perm: int
     staff_id: Union[str, int]
 
+async def is_staff_unlocked(bot_id: int, user_id: int):
+    key = "lock-" + str(user_id) + "-" + str(bot_id)
+    lock = await redis_db.get(key)
+    logger.info(f"{lock} gotten")
+    return orjson.loads(lock) if lock else False
+
 async def is_bot_admin(bot_id: int, user_id: int):
     try:
         user_id = int(user_id)
@@ -21,7 +27,7 @@ async def is_bot_admin(bot_id: int, user_id: int):
         user = guild.get_member(user_id)
     except:
         user = None
-    if user is not None and is_staff(staff_roles, user.roles, 4)[0]:
+    if user is not None and is_staff(staff_roles, user.roles, 4)[0] and (await is_staff_unlocked(bot_id, user_id)):
         return True
     check = await db.fetchval("SELECT COUNT(1) FROM bot_owner WHERE bot_id = $1 AND owner = $2", bot_id, user_id)
     if check == 0:

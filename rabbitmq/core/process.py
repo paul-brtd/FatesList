@@ -38,8 +38,7 @@ def _setup_discord():
 async def _new_task(queue):
     friendly_name = backends.getname(queue)
     _channel = await rabbitmq_db.channel()
-    _queue = await _channel.declare_queue(queue, durable = True) # Function to handle our queue
-    
+    _queue = await _channel.declare_queue(instance_name + "." + queue, durable = True) # Function to handle our queue
     async def _task(message: aio_pika.IncomingMessage):
         """RabbitMQ Queue Function"""
         curr = stats.on_message
@@ -66,7 +65,7 @@ async def _new_task(queue):
         _ret = {"ret": serialize(rc), "err": err}
 
         if _json["meta"].get("ret"):
-            await redis_db.set(f"rabbit-{_json['meta'].get('ret')}", orjson.dumps(_ret)) # Save return code in redis
+            await redis_db.set(f"rabbit.{instance_name}-{_json['meta'].get('ret')}", orjson.dumps(_ret)) # Save return code in redis
 
         if backends.ackall(queue) or not _ret["err"]: # If no errors recorded
             message.ack()

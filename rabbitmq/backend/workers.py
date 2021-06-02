@@ -2,6 +2,8 @@ from rabbitmq.core import *
 import asyncio
 import orjson
 import builtins
+import time
+from modules.core import *
 
 class PIDRecorder():
     def __init__(self):
@@ -57,9 +59,48 @@ async def status(pidrec):
             case _:
                 logger.warning(f"Unhandled message {msg}")
 
+async def lock_unlock():
+    while True:
+        try:
+            # Handle Staff Requests
+            req = await redis_db.get("fl_staff_req")
+            req = orjson.loads(req) if req else None
+            if req and isinstance(req, list):
+                for i in range(len(req)):
+                    try:
+                        r = req[i]
+                    except:
+                        continue # Already deleted
+
+                    if r["op"] not in ("lock", "unlock"):
+                        continue
+                    logger.info(f"Got {r['op']} request")
+                    user = await get_user(int(r["staff"]))
+                    if not user:
+                        continue
+                    key = "lock-" + str(r["staff"]) + "-" + str(r["bot_id"])
+                    sa = await redis_db.get("staff_access")
+                    sa = orjson.loads(sa) if sa else []
+                    sa.append({"staff": r["staff"], "bot_id": r["bot_id"], "key": key, "time": time.time()})
+                    await redis_db.set("staff_access", orjson.dumps(sa))
+                    await redis_db.set(key, orjson.dumps(r["op"] == "unlock"), ex = 60*16) # Give one minute for us to handle staff_access
+                    await client.wait_until_ready()
+                    channel = client.get_channel(bot_logs)
+                    bot = await get_bot(r["bot_id"])
+                    if not bot:
+                        bot = {"username": "Unknown", "disc": "0000"}
+                    embed = discord.Embed(title = "Staff Access Alert!", description = f"Staff member {user['username']}#{user['disc']} have {r['op'] + 'ed'} {bot['username']}#{bot['disc']} for editing. This is normal but if it happens too much, open a ticket or contact any online or offline staff immediately")
+                    await channel.send(embed = embed)
+                    del req[i]
+                    await redis_db.set("fl_staff_req", orjson.dumps(req)) 
+        except Exception:
+            logger.exception("Something happened!")
+        await asyncio.sleep(5)
+
 async def prehook(*args, **kwargs):
     builtins.pidrec = PIDRecorder()
     asyncio.create_task(status(pidrec))
+    asyncio.create_task(lock_unlock())
 
 async def backend(json, *args, **kwargs):
     return pidrec.list()
