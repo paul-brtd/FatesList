@@ -191,13 +191,14 @@ class BotEvents(BaseModel):
 
 class PartialBotCommand(BaseModel):
     cmd_type: enums.CommandType # 0 = no, 1 = guild, 2 = global
+    cmd_groups: Optional[List[str]] = ["Default"]
     name: str
     description: str
     args: Optional[list] = ["<user>"]
     examples: Optional[list] = []
     premium_only: Optional[bool] = False
     notes: Optional[list] = []
-    doc_link: str
+    doc_link: Optional[str] = ""
 
 class BotCommand(PartialBotCommand):
     id: uuid.UUID
@@ -205,8 +206,8 @@ class BotCommand(PartialBotCommand):
 class BotCommandAddResponse(APIResponse):
     id: uuid.UUID
 
-class BotCommands(BaseModel):
-    __root__: Dict[uuid.UUID, BotCommand]
+class BotCommandsGet(BaseModel):
+    __root__: Dict[str, List[BotCommand]]
 
 class BotCommandDelete(BaseModel):
     id: uuid.UUID

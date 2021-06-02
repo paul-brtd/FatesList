@@ -66,7 +66,7 @@ async def bot_settings_page(request: Request, bot_id: int, csrf_protect: CsrfPro
     else:
         return RedirectResponse("/")
 
-@router.post("/{bot_id}/edit")
+@router.post("/{bot_id}/edit", dependencies=[Depends(RateLimiter(times=1, minutes=2))])
 async def bot_edit_backend(
         request: Request,
         bot_id: int,
@@ -138,7 +138,7 @@ async def vote_for_bot_or_die(
         wait_time_human = " ".join((str(wait_time_hr), hr, str(wait_time_min), min, str(wait_time_sec), sec))
         return await templates.TemplateResponse("message.html", {"request": request, "message": "Vote Error", "context": "Please wait " + wait_time_human + " before voting for this bot"})
 
-@router.post("/{bot_id}/delete")
+@router.post("/{bot_id}/delete", dependencies=[Depends(RateLimiter(times=1, minutes=2))])
 async def delete_bot(request: Request, bot_id: int):
     if "user_id" in request.session.keys():
         check = await is_bot_admin(int(bot_id), int(request.session.get("user_id")))
@@ -149,7 +149,7 @@ async def delete_bot(request: Request, bot_id: int):
         await add_rmq_task("bot_delete_queue", {"user_id": int(request.session["user_id"]), "bot_id": bot_id})
     return RedirectResponse("/", status_code = 303)
 
-@router.post("/{bot_id}/ban")
+@router.post("/{bot_id}/ban", dependencies=[Depends(RateLimiter(times=1, minutes=2))])
 async def ban_bot(request: Request, bot_id: int, ban: int = FForm(1), reason: str = FForm('There was no reason specified')):
     guild = client.get_guild(main_server)
     if ban not in [0, 1]:

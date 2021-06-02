@@ -91,7 +91,7 @@ async def login_confirm(request: Request, code: str, state: str):
             ban_type = ban_data["type"]
             ban_desc = ban_data["desc"]
             return await templates.e(request, main = f"<span style='color: red;'>You have been {ban_type} banned in Fates List.</span>", reason = f"You can still login however {ban_desc}. Click 'Go Back Home' to finish logging in.", status_code = 200)
-        return RedirectResponse("/")
+        return HTMLResponse("<script>window.location.replace('/')</script>")
 
 @router.get("/logout")
 async def logout(request: Request):

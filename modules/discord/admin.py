@@ -28,7 +28,7 @@ async def admin_dashboard(request: Request):
         return data # Return JSON if so
     return await templates.TemplateResponse("admin.html", {"request": request} | data) # Otherwise, render the template
 
-@router.post("/console")
+@router.post("/console", dependencies=[Depends(RateLimiter(times=1, minutes=5))])
 async def admin_api(request: Request, bt: BackgroundTasks, admin: str = FForm(""), bot_id: int = FForm(0)):
     logger.debug(f"Got admin task request for {bot_id}")
     try:

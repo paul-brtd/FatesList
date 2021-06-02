@@ -196,7 +196,7 @@ async def get_bot_ws_events(request: Request, bot_id: int, Authorization: str = 
         events = {} # Nothing
     return events
 
-@router.post("/bots/{bot_id}", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=5, minutes=1))])
+@router.post("/bots/{bot_id}", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=1, minutes=2))])
 async def add_bot_api(request: Request, bot_id: int, bot: BotAdd, Authorization: str = Header("USER_TOKEN_OR_BOTBLOCK_ADD_KEY")):
     if secure_strcmp(Authorization, bb_add_key):
         bot.oauth_enforced = True # Botblock add key, enforce oauth
@@ -221,7 +221,7 @@ async def add_bot_api(request: Request, bot_id: int, bot: BotAdd, Authorization:
         return {"done": True, "reason": f"{site_url}/bot/{bot_id}", "code": 1001}
     return ORJSONResponse({"done": False, "reason": rc[0],"code": rc[1]}, status_code = 400)
 
-@router.patch("/bots/{bot_id}", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=5, minutes=1))])
+@router.patch("/bots/{bot_id}", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=1, minutes=2))])
 async def edit_bot_api(request: Request, bot_id: int, bot: BotEdit, Authorization: str = Header("USER_TOKEN_OR_BOTBLOCK_EDIT_KEY")):
     """
     Edits a bot, the owner here should be the owner editing the bot
@@ -310,9 +310,9 @@ async def delete_review(request: Request, bot_id: int, rid: uuid.UUID, bt: Backg
     await bot_add_event(bot_id, enums.APIEvents.review_delete, {"user": str(data.user_id), "reply": event_data["reply"], "id": str(rid), "star_rating": event_data["star_rating"], "review": event_data["review_text"]})
     return {"done": True, "reason": None, "code": 1000}
 
-@router.get("/bots/{bot_id}/commands", response_model = BotCommands)
-async def get_bot_commands_api(request:  Request, bot_id: int):
-    cmd = await get_bot_commands(bot_id)
+@router.get("/bots/{bot_id}/commands", response_model = BotCommandsGet)
+async def get_bot_commands_api(request:  Request, bot_id: int, filter: Optional[str] = None):
+    cmd = await get_bot_commands(bot_id, filter)
     if cmd == {}:
         return abort(404)
     return cmd
@@ -336,7 +336,7 @@ async def add_bot_command_api(request: Request, bot_id: int, command: PartialBot
         if check is not None:
             return ORJSONResponse({"done":  False, "reason": "COMMAND_ALREADY_EXISTS"}, status_code = 400)
     id = uuid.uuid4()
-    await db.execute("INSERT INTO bot_commands (id, bot_id, cmd_type, name, description, args, examples, premium_only, notes, doc_link) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)", id, bot_id, command.cmd_type, command.name, command.description, command.args, command.examples, command.premium_only, command.notes, command.doc_link)
+    await db.execute("INSERT INTO bot_commands (id, bot_id, cmd_groups, cmd_type, name, description, args, examples, premium_only, notes, doc_link) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)", id, bot_id, command.cmd_groups, command.cmd_type, command.name, command.description, command.args, command.examples, command.premium_only, command.notes, command.doc_link)
     await bot_add_event(bot_id, enums.APIEvents.command_add, {"user": None, "id": id})
     return ORJSONResponse({"done": True, "reason": None, "id": id, "code": 1001}, status_code = 206)
 
@@ -350,7 +350,7 @@ async def edit_bot_command_api(request: Request, bot_id: int, command: BotComman
     id = await bot_auth(bot_id, Authorization)
     if id is None:
         return abort(401)
-    data = await db.fetchrow(f"SELECT id, cmd_type, name, description, args, examples, premium_only, notes, doc_link FROM bot_commands WHERE id = $1 AND bot_id = $2", command.id, bot_id)
+    data = await db.fetchrow(f"SELECT id, cmd_type, cmd_groups, name, description, args, examples, premium_only, notes, doc_link FROM bot_commands WHERE id = $1 AND bot_id = $2", command.id, bot_id)
     if data is None:
         return abort(404)
 
@@ -359,7 +359,7 @@ async def edit_bot_command_api(request: Request, bot_id: int, command: BotComman
     for key in command_dict.keys():
         if command_dict[key] is None: 
             command_dict[key] = data[key]
-    await db.execute("UPDATE bot_commands SET cmd_type = $2, name = $3, description = $4, args = $5, examples = $6, premium_only = $7, notes = $8, doc_link = $9 WHERE id = $1", command_dict["id"], command_dict["cmd_type"], command_dict["name"], command_dict["description"], command_dict["args"], command_dict["examples"], command_dict["premium_only"], command_dict["notes"], command_dict["doc_link"])
+    await db.execute("UPDATE bot_commands SET cmd_type = $2, name = $3, description = $4, args = $5, examples = $6, premium_only = $7, notes = $8, doc_link = $9, cmd_groups = $10 WHERE id = $1", command_dict["id"], command_dict["cmd_type"], command_dict["name"], command_dict["description"], command_dict["args"], command_dict["examples"], command_dict["premium_only"], command_dict["notes"], command_dict["doc_link"], command_dict["cmd_groups"])
     await bot_add_event(bot_id, enums.APIEvents.command_edit, {"user": None, "id": command.id})
     return {"done": True, "reason": None, "code": 1000}
 

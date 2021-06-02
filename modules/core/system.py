@@ -69,7 +69,7 @@ async def startup_tasks(app):
     workers = os.environ.get("WORKERS")
     asyncio.create_task(status(workers))
     await asyncio.sleep(4)
-    app.add_middleware(SessionMiddleware, secret_key=session_key, https_only = True, max_age = 60*60*12) # 1 day expiry cookie
+    app.add_middleware(SessionMiddleware, secret_key=session_key, https_only = True, max_age = 60*60*12, same_site = 'strict') # 1 day expiry cookie
     FastAPILimiter.init(redis_db, identifier = rl_key_func)
     builtins.rabbitmq_db = await aio_pika.connect_robust(
         f"amqp://fateslist:{rabbitmq_pwd}@127.0.0.1/"

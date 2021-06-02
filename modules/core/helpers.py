@@ -8,6 +8,9 @@ from .events import *
 from .auth import *
 from .cache import *
 from .templating import *
+from lxml.html.clean import Cleaner
+import bleach
+cleaner = Cleaner(remove_unknown_tags=False)
 
 async def verify_csrf(request, csrf_protect):
     try:
@@ -27,10 +30,34 @@ async def get_promotions(bot_id: int) -> list:
     api_data = await db.fetch("SELECT id, title, info, css, type FROM bot_promotions WHERE bot_id = $1", bot_id)
     return api_data
 
-async def get_bot_commands(bot_id: int) -> dict:
-    cmd_raw = await db.fetch("SELECT id, cmd_type, name, description, args, examples, premium_only, notes, doc_link FROM bot_commands WHERE bot_id = $1", bot_id)
-    cmd = {cmd_raw_obj["id"]: dict(cmd_raw_obj) for cmd_raw_obj in cmd_raw}
-    return cmd
+async def get_bot_commands(bot_id: int, filter: Optional[str] = None) -> dict:
+    await db.execute("DELETE FROM bot_commands WHERE cmd_groups = $1", []) # Remove unneeded commands
+    if filter:
+        extra = "AND name ilike $2"
+        args = (f'%{filter}%',)
+    else:
+        extra, args = "", []
+    cmd_raw = await db.fetch(f"SELECT id, cmd_groups, cmd_type, name, description, args, examples, premium_only, notes, doc_link FROM bot_commands WHERE bot_id = $1 {extra}", bot_id, *args)
+    cmd_dict = {}
+    for cmd in cmd_raw:
+        for group in cmd["cmd_groups"]:
+            if not cmd_dict.get(group):
+                cmd_dict[group] = []
+            _cmd = dict(cmd)
+            for key in _cmd.keys():
+                if isinstance(_cmd[key], str):
+                    try:
+                        _cmd[key] = cleaner.clean_html(_cmd[key]).replace("<p>", "").replace("</p>", "")
+                    except:
+                        _cmd[key] = bleach.clean(_cmd[key]).replace("<p>", "").replace("</p>", "")
+                elif isinstance(_cmd[key], list):
+                    try:
+                        _cmd[key] = [cleaner.clean_html(el).replace("<p>", "").replace("</p>", "") for el in _cmd[key]]
+                    except:
+                        _cmd[key] = [bleach.clean(el).replace("<p>", "").replace("</p>", "") for el in _cmd[key]]
+
+            cmd_dict[group].append(_cmd)
+    return cmd_dict
 
 async def add_maint(bot_id: int, type: int, reason: str):
     maints = await db.fetchrow("SELECT bot_id FROM bot_maint WHERE bot_id = $1", bot_id)

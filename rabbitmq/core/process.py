@@ -60,7 +60,7 @@ async def _new_task(queue):
         _task_handler = TaskHandler(_json, queue)
         rc, err = await _task_handler.handle()
         if isinstance(rc, Exception):
-            logger.warning(f"{type(rc).__name__}: {rc}")
+            logger.warning(f"{type(rc).__name__}: {rc} (JSON of {_json})")
             rc = f"{type(rc).__name__}: {rc}"
             stats.err_msgs.append(message) # Mark the failed message so we can ack it later    
         _ret = {"ret": serialize(rc), "err": err}

@@ -78,6 +78,7 @@ CREATE TABLE bot_commands (
    id uuid primary key DEFAULT uuid_generate_v4(),
    bot_id bigint,
    cmd_type integer, -- 0 = no, 1 = guild, 2 = global
+   cmd_groups text[] default '{Default}',
    name text, -- command name
    description text, -- command description
    args text[], -- list of arguments
@@ -216,39 +217,11 @@ CREATE TABLE server_tags (
     CONSTRAINT guilds_fk FOREIGN KEY (guild_id) REFERENCES servers(guild_id) ON DELETE CASCADE ON UPDATE CASCADE
 )
 
-CREATE TABLE bot_list (
-	icon TEXT,
-	url TEXT NOT NULL UNIQUE,
-	api_url TEXT,
-	api_docs TEXT,
-	discord TEXT,
-	description TEXT,
-	supported_features INTEGER[],
-	api_token TEXT,
-	queue BOOLEAN DEFAULT FALSE,
-	owners BIGINT[] DEFAULT '{}'
-);
-
 CREATE TABLE bot_list_feature (
 	feature_id INTEGER PRIMARY KEY,
 	name TEXT NOT NULL UNIQUE,
 	iname TEXT NOT NULL UNIQUE, -- Internal Name
 	description TEXT,
 	positive INTEGER
-);
-
-CREATE TABLE bot_list_api (
-	id SERIAL PRIMARY KEY, -- Django'isms and good for us
-	url TEXT NOT NULL,
-	method INTEGER, -- 1 = GET, 2 = POST, 3 = PATCH, 4 = PUT, 5 = DELETE
-	feature INTEGER, -- 1 = Get Bot, 2 = Post Stats
-	supported_fields JSONB, -- Supported fields
-	api_path TEXT NOT NULL,
-	CONSTRAINT url_constraint FOREIGN KEY (url) REFERENCES bot_list(url) ON DELETE CASCADE ON UPDATE CASCADE -- Autoupdate
-);
-
-CREATE TABLE ula_user (
-	user_id BIGINT NOT NULL,
-	api_token TEXT NOT NULL UNIQUE
 );
 
