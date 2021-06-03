@@ -8,6 +8,10 @@ from .helpers import *
 from .templating import *
 from .events import *
 from .reviews import *
+import bleach
+from lxml.html.clean import Cleaner
+
+cleaner = Cleaner()
 
 async def render_index(request: Request, api: bool, csrf_protect: CsrfProtect):
     top_voted = await do_index_query(add_query = "ORDER BY votes DESC", state = [0])
@@ -45,7 +49,7 @@ def gen_owner_html(owners_lst: tuple):
 async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bool, rev_page: int = 1, csrf_protect: CsrfProtect = None):
     if bot_id >= 9223372036854775807: # Max size of bigint
         return abort(404)
-    bot = await db.fetchrow("SELECT prefix, shard_count, state, description, bot_library AS library, banner, website, votes, servers, bot_id, discord AS support, banner, github, features, invite_amount, css, long_description_type, long_description, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", bot_id)
+    bot = await db.fetchrow("SELECT js_allowed, prefix, shard_count, state, description, bot_library AS library, banner, website, votes, servers, bot_id, discord AS support, banner, github, features, invite_amount, css, long_description_type, long_description, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", bot_id)
     tags = await db.fetch("SELECT tag FROM bot_tags WHERE bot_id = $1", bot_id)
     if not bot or not tags:
         if api:
@@ -58,11 +62,23 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
         if owner["main"]: _owners.insert(0, owner)
         else: _owners.append(owner)
     owners = _owners
-
+    
     if bot["long_description_type"] == enums.LongDescType.markdown_pymarkdown: # If we are using markdown
         ldesc = emd(markdown.markdown(bot['long_description'], extensions=["extra", "abbr", "attr_list", "def_list", "fenced_code", "footnotes", "tables", "admonition", "codehilite", "meta", "nl2br", "sane_lists", "toc", "wikilinks", "smarty", "md_in_html"]))
-    else:
+    else: 
         ldesc = bot['long_description']
+
+    if request.session.get("user_id"):
+        nojs = await db.fetchval("SELECT nojs from users WHERE user_id = $1", int(request.session.get("user_id")))
+    if bot["js_allowed"]:
+        nojs = False
+    else:
+        nojs = True
+    if nojs:
+        try:
+            ldesc = cleaner.clean_html(ldesc)
+        except:
+            ldesc = bleach.clean(ldesc)
 
         # Take the h1...h5 anad drop it one lower and fix peoples stupidity and some nice patches to the site to improve accessibility
     long_desc_replace_tuple = (("<h1", "<h2 style='text-align: center'"), ("h2", "h3"), ("h4", "h5"), ("h6", "p"), ("<a", "<a class='long-desc-link ldlink'"), ("<!DOCTYPE", ""), ("html>", ""), ("<body", ""), ("div", "article"), (".click", ""), ("bootstrap.min.css", ""), ("bootstrap.css", ""), ("jquery.min.js", ""), ("jquery.js", ""), ("fetch(", ""))

@@ -1,5 +1,5 @@
 from modules.core import *
-from .models import BotPromotionPartial, BotPromotion, BotPromotions, BotPromotionPartial, BotPromotionDelete
+from .models import BotPromotionPartial, BotPromotion, BotPromotions, BotPromotionPartial, BotPromotionDelete, APIResponse
 from ..base import API_VERSION
 
 router = APIRouter(
@@ -20,7 +20,7 @@ async def get_promotion(request:  Request, bot_id: int):
 @router.post("/bots/{bot_id}/promotions", response_model = APIResponse, responses = {
     400: {"model": APIResponse}
 })
-async def add_promotion_api(request: Request, bot_id: int, promo: BotPromotionPartial, Authorization: str = Header("BOT_TOKEN")):
+async def add_promotion(request: Request, bot_id: int, promo: BotPromotionPartial, Authorization: str = Header("BOT_TOKEN")):
     """Creates a promotion for a bot. Type can be 1 for announcement, 2 for promotion or 3 for generic
     """
     if len(promo.title) < 3:

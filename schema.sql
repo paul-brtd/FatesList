@@ -35,7 +35,8 @@ CREATE TABLE bots (
     donate text,
     privacy_policy text,
     nsfw boolean DEFAULT false,
-    verifier bigint
+    verifier bigint,
+    js_allowed BOOLEAN DEFAULT TRUE
 );
 
 CREATE TABLE bot_tags (
@@ -133,7 +134,8 @@ CREATE TABLE users (
     username text,
     css text default '',
     state integer default 0, -- 0 = No Ban, 1 = Global Ban
-    coins INTEGER DEFAULT 0
+    coins INTEGER DEFAULT 0,
+    nojs BOOLEAN DEFAULT false
 );
 
 CREATE TABLE user_reminders (
