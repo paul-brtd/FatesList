@@ -1,6 +1,5 @@
 from modules.core import *
 from .models import BotPromotionPartial, BotPromotion, BotPromotions, BotPromotionPartial, BotPromotionDelete
-from modules.discord.admin import admin_dashboard
 from ..base import API_VERSION
 
 router = APIRouter(
