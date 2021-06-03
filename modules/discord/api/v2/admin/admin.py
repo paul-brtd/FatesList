@@ -68,9 +68,23 @@ async def new_partner(request: Request, partner: BotListPartner, Authorization: 
         return ORJSONResponse({"done": False, "reason": f"Could not resolve invite as {type(exc).__name__}: {exc}. Double check the invite"}, status_code = 400)
     id = uuid.uuid4()
     await db.execute("INSERT INTO bot_list_partners (id, mod, partner, channel, guild_id, invite, user_count) VALUES ($1, $2, $3, $4, $5, $6)", id, int(partner.mod), int(partner.partner_id), int(partner.channel), invite.guild.id, invite.approximate_member_count)
-    embed = discord.Embed(title="Partnership Channel Recorded", description="Put your advertisement here, then ask a moderator to run +partner publish <message link of ad>")
+    embed = discord.Embed(title="Partnership Channel Recorded", description=f"Put your advertisement here, then ask a moderator to run +partner ad {id} <message link of ad>")
     await channel.send(embed = embed)
-    return {"done": True, "reason": None, "code": 1000}
+    return {"done": True, "reason": None, "code": 1000, "id": id}
+
+@router.patch("/partners/ad", response_model = APIResponse)
+async def set_partner_ad(request: Request, partner: BotPartnerAd, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
+   if not secure_strcmp(Authorization, test_server_manager_key) and not secure_strcmp(Authorization, root_key):
+        return abort(401)
+    guild = client.get_guild(main_server)
+    user = guild.get_member(int(partner.mod))
+    if user is None or not is_staff(staff_roles, user.roles, 2)[0] or (data.requeue == 1 and not is_staff(staff_roles, user.roles, 3)[0]):
+        return ORJSONResponse({"done": False, "reason": "Invalid Moderator specified. The moderator in question does not have permission to perform this action!", "code": 9867}, status_code = 400)
+    partner = await db.fetchval("SELECT COUNT(1) FROM bot_list_partners WHERE id = $1", partner.id)
+    if partner == 0:
+        return ORJSONResponse({"done": False, "reason": "Partnership ID is invalid or partnership does not exist. Recheck the ID", "code": 4642}, status_code = 400)
+    await db.execute("UPDATE bot_list_partners SET ad = $1 WHERE id = $2", partner.ad, partner.id)
+    return {"done": True, "reason": None, "code": 1000, "id": id}
     
 @router.patch("/bots/{bot_id}/under_review", response_model = APIResponse)
 async def bot_under_review_api(request: Request, bot_id: int, data: BotUnderReview, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
