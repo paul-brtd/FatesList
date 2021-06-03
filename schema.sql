@@ -228,12 +228,12 @@ CREATE TABLE bot_list_feature (
 );
 
 CREATE TABLE bot_list_partners (
-	id UUID NOT NULL, 
+	id UUID NOT NULL UNIQUE, 
 	mod BIGINT NOT NULL,
 	partner BIGINT NOT NULL, 
-	channel BIGINT NOT NULL, 
+	channel BIGINT NOT NULL UNIQUE, 
 	invite TEXT NOT NULL, 
 	user_count BIGINT NOT NULL,
-	guild_id BIGINT NOT NULL,
+	guild_id BIGINT NOT NULL UNIQUE,
 	ad TEXT
 );
