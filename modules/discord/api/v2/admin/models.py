@@ -2,10 +2,16 @@ from pydantic import BaseModel
 import modules.models.enums as enums
 from ..base_models import BaseUser, APIResponse
 from typing import Optional, List
-
+    
 class BotListAdminRoute(BaseModel):
     mod: str
 
+ class BotListPartner(BotListAdminRoute):
+    partner_id: str
+    channel: str # Channel for partnership
+    guild_id: str
+    user_count: int # User count of server
+            
 class BotLock(BotListAdminRoute):
     reason: str
     lock: bool
