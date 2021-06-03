@@ -7,10 +7,26 @@ class BotListAdminRoute(BaseModel):
     mod: str
 
  class BotListPartner(BotListAdminRoute):
-    partner_id: str
+    pid: str
+    type: enums.PartnerType
     channel: str # Channel for partnership
-    invite: str
-            
+    invite: str # Support server or partnered server invite
+    id: Optional[str] = None
+ 
+    @validator('id')
+    def id_if_bot(cls, v, values, **kwargs):
+        if values.get("type") != enums.PartnerType.bot:
+            return v
+        elif v is not None or not v.isdigit():
+            raise ValueError('Bots must have a ID set')
+        return v
+
+
+ class BotListPartnerAd(BotListAdminRoute):
+    mod: str
+    pid: uuid.UUID
+    ad: str
+        
 class BotLock(BotListAdminRoute):
     reason: str
     lock: bool
