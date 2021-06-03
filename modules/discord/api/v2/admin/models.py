@@ -9,8 +9,7 @@ class BotListAdminRoute(BaseModel):
  class BotListPartner(BotListAdminRoute):
     partner_id: str
     channel: str # Channel for partnership
-    guild_id: str
-    user_count: int # User count of server
+    invite: str
             
 class BotLock(BotListAdminRoute):
     reason: str
