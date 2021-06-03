@@ -52,10 +52,10 @@ async def new_partner(request: Request, partner: BotListPartner, Authorization: 
     user = guild.get_member(int(partner.mod))
     if user is None or not is_staff(staff_roles, user.roles, 2)[0] or (data.requeue == 1 and not is_staff(staff_roles, user.roles, 3)[0]):
         return ORJSONResponse({"done": False, "reason": "Invalid Moderator specified. The moderator in question does not have permission to perform this action!", "code": 9867}, status_code = 400)
-    prev_partner = await db.fetchval("SELECT COUNT(1) FROM bot_list_partners WHERE partner_id = $1", int(partner.partner_id))
+    prev_partner = await db.fetchval("SELECT COUNT(1) FROM bot_list_partners WHERE pid = $1", int(partner.pid))
     if len(prev_partner) > 2:
         return ORJSONResponse({"done": False, "reason": "This user already has two partnerships"}, status_code = 400)
-    channel = client.get_channel(int(partner.partner_channel))
+    channel = client.get_channel(int(partner.channel))
     if not channel:
         return ORJSONResponse({"done": False, "reason": "Partnership channel does not exist"}, status_code = 400)
     try:
@@ -67,7 +67,13 @@ async def new_partner(request: Request, partner: BotListPartner, Authorization: 
     except Exception as exc:
         return ORJSONResponse({"done": False, "reason": f"Could not resolve invite as {type(exc).__name__}: {exc}. Double check the invite"}, status_code = 400)
     id = uuid.uuid4()
-    await db.execute("INSERT INTO bot_list_partners (id, mod, partner, channel, guild_id, invite, user_count) VALUES ($1, $2, $3, $4, $5, $6)", id, int(partner.mod), int(partner.partner_id), int(partner.channel), invite.guild.id, invite.approximate_member_count)
+    if partner.type == enums.PartnerType.bot:
+        if not partner.id:
+            return ORJSONResponse({"done": False, "reason": f"Bot not passed to API. Contact the developers of this app", "code": 5682}, status_code = 400)
+        bot_user_count = await db.fetchval("SELECT user_count FROM bots WHERE bot_id = $1", int(partner.id))
+        if not bot_user_count:
+            return ORJSONResponse({"done": False, "reason": f"Bot has not yet posted user count yet or is not on Fates List", "code": 4748}, status_code = 400)
+    await db.execute("INSERT INTO bot_list_partners (pid, mod, partner, channel, guild_id, invite, count, id) VALUES ($1, $2, $3, $4, $5, $6, $7)", id, int(partner.mod), int(partner.partner_id), int(partner.channel), invite.guild.id, invite.approximate_member_count if partner.type == enums.PartnerType.guild else bot_user_count)
     embed = discord.Embed(title="Partnership Channel Recorded", description=f"Put your advertisement here, then ask a moderator to run +partner ad {id} <message link of ad>")
     await channel.send(embed = embed)
     return {"done": True, "reason": None, "code": 1000, "id": id}
