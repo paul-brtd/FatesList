@@ -1,3 +1,9 @@
+from pydantic import BaseModel
+import modules.models.enums as enums
+from ..base_models import BaseUser, APIResponse
+from typing import Optional, List
+import uuid
+
 class BotPromotionDelete(BaseModel):
     """Represents a promotion delete request. Your library should internally be using this but you shouldn't need to handle this yourself """
     id: Optional[uuid.UUID] = None
@@ -25,6 +31,6 @@ class BotPromotionList(BaseModel):
     __root__: List[BotPromotion]
 
 #LIBRARY-INTERNAL
-class BotPromotionGet(BaseModel):
+class BotPromotions(BaseModel):
     """Represents a bot promotion response model. This should be handled by your library"""
     promotions: BotPromotionList
