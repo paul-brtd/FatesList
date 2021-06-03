@@ -1,7 +1,8 @@
 from modules.core import *
-from .models import BotStateUpdate, BotCertify, BotBan, APIResponse, BotUnderReview, BotTransfer, BotQueueGet, BotQueuePatch, BotLock
+from .models import BotStateUpdate, BotCertify, BotBan, APIResponse, BotUnderReview, BotTransfer, BotQueueGet, BotQueuePatch, BotLock, BotListPartner
 from modules.discord.admin import admin_dashboard
 from ..base import API_VERSION
+import uuid
 
 router = APIRouter(
     prefix = f"/api/v{API_VERSION}/admin",
@@ -40,6 +41,26 @@ async def bot_lock_unlock_api(request: Request, bot_id: int, data: BotLock, Auth
     await redis_db.set("fl_staff_req", orjson.dumps(req))
     return {"done": True, "reason": None, "code": 1000, "op": op}
 
+@router.post("/partners", response_model = APIResponse)
+async def new_partner(request: Request, partner: BotListPartner, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
+   if not secure_strcmp(Authorization, test_server_manager_key) and not secure_strcmp(Authorization, root_key):
+        return abort(401)
+    guild = client.get_guild(main_server)
+    user = guild.get_member(int(partner.mod))
+    if user is None or not is_staff(staff_roles, user.roles, 2)[0] or (data.requeue == 1 and not is_staff(staff_roles, user.roles, 3)[0]):
+        return ORJSONResponse({"done": False, "reason": "Invalid Moderator specified. The moderator in question does not have permission to perform this action!", "code": 9867}, status_code = 400)
+    prev_partner = await db.fetchval("SELECT COUNT(1) FROM bot_list_partners WHERE partner_id = $1", int(partner.partner_id))
+    if len(prev_partner) > 2:
+        return ORJSONResponse({"done": False, "reason": "This user already has two partnerships"}, status_code = 400)
+    channel = client.get_channel(int(partner.partner_channel))
+    if not channel:
+        return ORJSONResponse({"done": False, "reason": "Partnership channel does not exist"}, status_code = 400)
+    id = uuid.uuid4()
+    await db.execute("INSERT INTO bot_list_partners (mod, partner_id, channel, guild_id) VALUES ($1, $2, $3, $4)", int(partner.mod), int(partner.partner_id), int(partner.channel), int(partner.guild_id))
+    embed = discord.Embed(title="Partnership Channel Recorded", description="Put your advertisement here, then ask a moderator to run +partner publish <message link of ad>")
+    await channel.send(embed = embed)
+    return {"done": True, "reason": None, "code": 1000}
+    
 @router.patch("/bots/{bot_id}/under_review", response_model = APIResponse)
 async def bot_under_review_api(request: Request, bot_id: int, data: BotUnderReview, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
     """Put a bot in queue under review or back in queue. This is internal and only meant for our test server manager bot"""
