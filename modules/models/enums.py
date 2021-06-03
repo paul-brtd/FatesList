@@ -3,6 +3,11 @@ from pydantic import BaseModel
 import uuid
 from aenum import Enum, IntEnum
 
+class PartnerType(IntEnum):
+    _init_ = 'value __doc__'
+    bot = 0, "Bot"
+    guild = 1, "Guild"
+
 class UserState(IntEnum):
     _init_ = 'value __doc__'
     normal = 0, "Normal"
