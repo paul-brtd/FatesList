@@ -55,8 +55,16 @@ async def new_partner(request: Request, partner: BotListPartner, Authorization: 
     channel = client.get_channel(int(partner.partner_channel))
     if not channel:
         return ORJSONResponse({"done": False, "reason": "Partnership channel does not exist"}, status_code = 400)
+    try:
+        invite = await client.fetch_invite(partner.invite)
+        if not invite.guild:
+            raise InvalidInvite("Invite not for server")
+        if invite.max_age != 0 or invite.max_uses != 0:
+            raise InvalidInvite("Invite not unlimited use")
+    except Exception as exc:
+        return ORJSONResponse({"done": False, "reason": f"Could not resolve invite as {type(exc).__name__}: {exc}. Dobule check the invite"}, status_code = 400)
     id = uuid.uuid4()
-    await db.execute("INSERT INTO bot_list_partners (mod, partner_id, channel, guild_id) VALUES ($1, $2, $3, $4)", int(partner.mod), int(partner.partner_id), int(partner.channel), int(partner.guild_id))
+    await db.execute("INSERT INTO bot_list_partners (mod, partner_id, channel, guild_id, invite, user_count) VALUES ($1, $2, $3, $4, $5)", int(partner.mod), int(partner.partner_id), int(partner.channel), invite.guild.id, invite.approximate_member_count)
     embed = discord.Embed(title="Partnership Channel Recorded", description="Put your advertisement here, then ask a moderator to run +partner publish <message link of ad>")
     await channel.send(embed = embed)
     return {"done": True, "reason": None, "code": 1000}
