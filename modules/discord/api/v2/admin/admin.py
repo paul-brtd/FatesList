@@ -10,6 +10,9 @@ router = APIRouter(
     tags = [f"API v{API_VERSION} - Admin"]
 )
 
+class InvalidInvite(Exception):
+    pass
+
 @router.get("/console")
 async def botlist_admin_console_api(request: Request):
     """API to get raw admin console info"""
