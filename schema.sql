@@ -234,5 +234,6 @@ CREATE TABLE bot_list_partners (
 	channel BIGINT NOT NULL, 
 	invite TEXT NOT NULL, 
 	user_count BIGINT NOT NULL,
+	guild_id BIGINT NOT NULL,
 	ad TEXT
 );
