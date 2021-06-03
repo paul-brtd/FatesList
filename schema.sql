@@ -232,6 +232,7 @@ CREATE TABLE bot_list_partners (
 	mod BIGINT NOT NULL,
 	partner BIGINT NOT NULL, 
 	channel BIGINT NOT NULL, 
-	invite TEXT, 
-	user_count BIGINT
+	invite TEXT NOT NULL, 
+	user_count BIGINT NOT NULL,
+	ad TEXT
 );
