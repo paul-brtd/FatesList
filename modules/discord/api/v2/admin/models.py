@@ -1,11 +1,17 @@
 from pydantic import BaseModel, validator
 import modules.models.enums as enums
-from ..base_models import BaseUser, APIResponse
+from ..base_models import BaseUser, APIResponse, IDResponse
 from typing import Optional, List
 import uuid
 
 class BotListAdminRoute(BaseModel):
     mod: str
+
+    @validator('mod')
+    def mod_int(cls, v, values, **kwargs):
+        if not v.isdigit():
+            raise ValueError('Mod must be a integer')
+        return int(v)
 
 class BotListPartner(BotListAdminRoute):
     type: enums.PartnerType
@@ -17,7 +23,7 @@ class BotListPartner(BotListAdminRoute):
     @validator('id')
     def id_if_bot(cls, v, values, **kwargs):
         if values.get("type") != enums.PartnerType.bot:
-            return v
+            return int(v) if v.isdigit() else None
         elif v is None or not v.isdigit():
             raise ValueError('Bots must have a ID set')
         return v

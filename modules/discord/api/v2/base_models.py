@@ -1,6 +1,7 @@
 import modules.models.enums as enums
 from pydantic import BaseModel
 from typing import Optional
+import uuid
 
 class BaseUser(BaseModel):
     """
@@ -38,3 +39,6 @@ class APIResponse(BaseModel):
     done: bool
     reason: Optional[str] = None
     code: int = 1000
+
+class IDResponse(APIResponse):
+    id: uuid.UUID
