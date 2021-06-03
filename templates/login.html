@@ -12,7 +12,7 @@
 	<h5><span style="color: red">Whoops!</span><br />You need to login {{perm_pretty}}</h5>
 	{% endif %}
 </div>
-<form method="POST" style="text-align: left">
+<form method="POST" action="/auth/login?redirect={{redirect}}" style="text-align: left">
 	<div style="text-align: center; display: block;">
 		<button type="submit" class="btn btn-outline-light btn-lg" style="color: red; margin-bottom: 20px;">Login</button>
 	</div>

@@ -25,6 +25,8 @@ async def bot_root_update_api(request: Request, bot_id: int, data: BotStateUpdat
 @router.patch("/bots/{bot_id}/lock")
 async def bot_lock_unlock_api(request: Request, bot_id: int, data: BotLock, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
     """Locks or unlocks a bot for staff to edit. This is internal and only meant for our test server manager bot"""
+    if playground:
+        return ORJSONResponse({"done": False, "reason": "Bot locks are disabled in playground instances", "code": 9867}, status_code = 400)
     if not secure_strcmp(Authorization, test_server_manager_key) and not secure_strcmp(Authorization, root_key):
         return abort(401)
     guild = client.get_guild(main_server)

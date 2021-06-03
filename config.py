@@ -1,20 +1,30 @@
+import os, builtins
+try: 
+    _test = playground
+except:
+    builtins.playground = (int(os.environ.get("PLAYGROUND")) == 1) if os.environ.get("PLAYGROUND") and os.environ.get("PLAYGROUND").isdigit() else False
+
 from config_secrets import *
-bot_logs = 836326348326043648 # #bot-logs in support server
-server_logs = 837048691965034496 # Server logs in support server
-appeals_channel = 836326351387623454 # #resubmissions-and-appeals in support server
-site_errors_channel = 836326323281592330 # Where to log site errors
+if playground:
+    general = 849691083989581864
+    bugs = 849691086611677194
+
+bot_logs = 836326348326043648 if not playground else general # #bot-logs in support server
+server_logs = 837048691965034496 if not playground else general # Server logs in support server
+appeals_channel = 836326351387623454 if not playground else general # #resubmissions-and-appeals in support server
+site_errors_channel = 836326323281592330 if not playground else bugs# Where to log site errors
 bots_role = 836326315946672158 # BOTS role in support server
 staff_ping_add_role=836326316188893275
 bot_dev_role = 836326314344185876 # BOT Developer in support server
 certified_dev_role = 836326313283026995 # Certified Developer in support server
-main_server = 789934742128558080 # Main server
-staff_server = 816130947274899487 # The staff server
+main_server = 789934742128558080 if not playground else 849690576093446144# Main server
+staff_server = 816130947274899487 if not playground else 849690576093446144 # The staff server
 staff_ag = 845931695387181066 # Access Granted role in staff server
 test_botsrole = 845940351339987004 # Bots role on test server
 test_staffrole = 846028433985503232 # Staff role on test server
 test_server = 845928429357367316 # Test Server
 owner = 563808552288780322
-instance_name = "main"
+instance_name = "main" if not playground else "playground"
 
 # Messages
 approve_feedback = "There was no feedback given for this bot. It was likely a good bot, but you can ask any staff member about feedback if you wish"
@@ -65,7 +75,24 @@ staff_roles = {
         "staff_id": 830540676952227863,
         "perm": 7,
     }
+} if not playground else {
+    "user": {
+        "id": 0,
+        "staff_id": 0,
+        "perm": 1
+    },
+    "playground_user": {
+        "id": 849691058421366814,
+        "staff_id": 0,
+        "perm": 4
+    },
+    "playground_user_certified": {
+        "id": 849691056777461811,
+        "staff_id": 0,
+        "perm": 7
+    }
 }
+
 # TODO: Add Timed Badges
 special_badges = {
     "STAFF": {
@@ -105,7 +132,7 @@ features = {
     }
 } 
 
-site = "fateslist.xyz" # Replace this with your domain
+site = "fateslist.xyz" if not playground else "pg.bristleroot.me" # Replace this with your domain
 
 server_bot_invite = "https://discord.com/api/oauth2/authorize?client_id=811073947382579200&permissions=67649&scope=bot" # Ensure that it uses 67649 for perms
 
@@ -138,7 +165,7 @@ bans_data = {
 }
 
 class OauthConfig:
-    client_id = "798951566634778641"
+    client_id = "798951566634778641" if not playground else "751642525734797322"
     client_secret = oauth_client_secret
     redirect_uri = "https://" + site + "/auth/login/confirm"
 

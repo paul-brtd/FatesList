@@ -12,6 +12,8 @@ class StaffMember(BaseModel):
     staff_id: Union[str, int]
 
 async def is_staff_unlocked(bot_id: int, user_id: int):
+    if playground:
+        return True
     key = "lock-" + str(user_id) + "-" + str(bot_id)
     lock = await redis_db.get(key)
     logger.info(f"{lock} gotten")

@@ -33,11 +33,11 @@ class PIDRecorder():
 
 async def status(pidrec):
     pubsub = redis_db.pubsub()
-    await pubsub.subscribe("_worker")
+    await pubsub.subscribe(f"{instance_name}._worker")
     flag = True
     async for msg in pubsub.listen():
         if flag:
-            await redis_db.publish("_worker", "UP RMQ 0") # Announce that we are up
+            await redis_db.publish(f"{instance_name}._worker", "UP RMQ 0") # Announce that we are up
             flag = False
         print(msg)
         if msg is None or type(msg.get("data")) != bytes:
@@ -51,7 +51,7 @@ async def status(pidrec):
                     logger.warning(f"Invalid worker {worker_amt} with pid {pid} added. Restting config and publishing REGET")
                     pidrec.reset()
                     await asyncio.sleep(1)
-                    await redis_db.publish("_worker", "REGET WORKER INVALID_STATE")
+                    await redis_db.publish(f"{instance_name}._worker", "REGET WORKER INVALID_STATE")
 
             case ("DOWN", ("RMQ" | "WORKER") as tgt, pid) if pid.isdigit():
                 logger.info(f"{tgt} {pid} is now down")
@@ -60,6 +60,8 @@ async def status(pidrec):
                 logger.warning(f"Unhandled message {msg}")
 
 async def lock_unlock():
+    if playground:
+        return # Playground doesnt get this
     while True:
         try:
             # Handle Staff Requests

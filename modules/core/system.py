@@ -75,22 +75,22 @@ async def startup_tasks(app):
         f"amqp://fateslist:{rabbitmq_pwd}@127.0.0.1/"
     )
     builtins.up = True
-    await redis_db.publish("_worker", f"UP WORKER {os.getpid()} 0 {workers}") # Announce that we are up and not a repeat
+    await redis_db.publish(f"{instance_name}._worker", f"UP WORKER {os.getpid()} 0 {workers}") # Announce that we are up and not a repeat
     await vote_reminder()
 
 async def status(workers):
     pubsub = redis_db.pubsub()
-    await pubsub.subscribe("_worker")
+    await pubsub.subscribe(f"{instance_name}._worker")
     async for msg in pubsub.listen():
         if msg is None or type(msg.get("data")) != bytes:
             continue
         msg = msg.get("data").decode("utf-8").split(" ")
         match msg:
             case ["UP", "RMQ", _]:
-                await redis_db.publish("_worker", f"UP WORKER {os.getpid()} 1 {workers}") # Announce that we are up and sending to repeat a message
+                await redis_db.publish(f"{instance_name}._worker", f"UP WORKER {os.getpid()} 1 {workers}") # Announce that we are up and sending to repeat a message
             case ["REGET", "WORKER", reason]:
                 logger.warning(f"RabbitMQ requesting REGET with reason {reason}")
-                await redis_db.publish("_worker", f"UP WORKER {os.getpid()} 1 {workers}") # Announce that we are up and sending to repeat a message
+                await redis_db.publish(f"{instance_name}._worker", f"UP WORKER {os.getpid()} 1 {workers}") # Announce that we are up and sending to repeat a message
             case _:
                 pass # Ignore the rest for now
 
@@ -112,8 +112,7 @@ def calc_tags(TAGS):
 
 async def setup_db():
     """Function to setup the asyncpg connection pool"""
-    db = await asyncpg.create_pool(host="localhost", port=12345, user=pg_user, database="fateslist")
-
+    db = await asyncpg.create_pool(host="localhost", port=12345, user=pg_user, database="fateslist" if not playground else "fateslist_pg")
     return db
 
 def fl_openapi(app):

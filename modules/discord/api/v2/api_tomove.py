@@ -364,7 +364,7 @@ async def edit_bot_command_api(request: Request, bot_id: int, command: BotComman
     return {"done": True, "reason": None, "code": 1000}
 
 @router.delete("/bots/{bot_id}/commands", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=20, minutes=1))])
-async def delete_bot_command_api(request: Request, bot_id: int, command: BotCommandDelete, Authorization: str = Header("BOT_TOKEN")):
+async def delete_bot_command_api_(request: Request, bot_id: int, command: BotCommandDelete, Authorization: str = Header("BOT_TOKEN")):
     id = await bot_auth(bot_id, Authorization)
     if id is None:
         return abort(401)

@@ -1,0 +1,1 @@
+PLAYGROUND=1 python rabbitmq_worker.py

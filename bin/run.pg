@@ -1,0 +1,2 @@
+export WORKERS=1
+PLAYGROUND=1 LOGURU_LEVEL="DEBUG" gunicorn -k fluvicorn.FatesWorker main:app -b 0.0.0.0:9998 -w $WORKERS

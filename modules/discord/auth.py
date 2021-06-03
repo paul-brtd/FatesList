@@ -15,11 +15,10 @@ async def login_get(request: Request, redirect: Optional[str] = None, pretty: Op
             return ORJSONResponse({"detail": "Invalid redirect. You may only redirect to pages on Fates List"}, status_code = 400)
     if "user_id" in request.session.keys():
         return RedirectResponse("/", status_code=HTTP_303_SEE_OTHER)
-    request.session["redirect"] = redirect
-    return await templates.TemplateResponse("login.html", {"request": request, "perm_needed": redirect is not None, "perm_pretty": pretty, "csrf_protect": csrf_protect})
+    return await templates.TemplateResponse("login.html", {"request": request, "perm_needed": redirect is not None, "perm_pretty": pretty, "csrf_protect": csrf_protect, "redirect": redirect if redirect else '/'})
 
 @router.post("/login")
-async def login_post(request: Request, join_servers: str = FForm("off"), server_list: str = FForm("off"), csrf_protect: CsrfProtect = Depends()):
+async def login_post(request: Request, redirect: str, join_servers: str = FForm("off"), server_list: str = FForm("off"), csrf_protect: CsrfProtect = Depends()):
     ret = await verify_csrf(request, csrf_protect)
     if ret:
         return ret
@@ -38,7 +37,7 @@ async def login_post(request: Request, join_servers: str = FForm("off"), server_
     else:
         request.session["server_list"] = True
         scopes.append("guilds")
-    oauth_data = discord_o.get_discord_oauth(scopes)
+    oauth_data = discord_o.get_discord_oauth(scopes, redirect)
     return RedirectResponse(oauth_data["url"], status_code=HTTP_303_SEE_OTHER)
 
 @router.get("/login/confirm")
@@ -46,6 +45,8 @@ async def login_confirm(request: Request, code: str, state: str):
     if "user_id" in request.session.keys():
         return RedirectResponse("/")
     else:
+        scopes = state.split("|")[0]
+        redirect = state.split("|")[1]
         access_token = await discord_o.get_access_token(code, state)
         userjson = await discord_o.get_user_json(access_token["access_token"])
         if userjson["id"]:
@@ -84,14 +85,12 @@ async def login_confirm(request: Request, code: str, state: str):
             request.session["user_css"] = user_css["css"]
         if request.session.get("join_servers"):
             await discord_o.join_user(access_token["access_token"], userjson["id"])
-        if request.session.get("redirect") is not None:
-            return RedirectResponse(request.session["redirect"])
         request.session["ban_data"] = ban_data
         if state != 0:
             ban_type = ban_data["type"]
             ban_desc = ban_data["desc"]
             return await templates.e(request, main = f"<span style='color: red;'>You have been {ban_type} banned in Fates List.</span>", reason = f"You can still login however {ban_desc}. Click 'Go Back Home' to finish logging in.", status_code = 200)
-        return HTMLResponse("<script>window.location.replace('/')</script>")
+        return HTMLResponse(f"<script>window.location.replace('{redirect}')</script>")
 
 @router.get("/logout")
 async def logout(request: Request):

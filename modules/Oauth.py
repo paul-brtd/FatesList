@@ -23,11 +23,11 @@ class Oauth():
     def get_scopes(self, scopes_lst: list) -> str:
         return "%20".join(scopes_lst)
 
-    def get_discord_oauth(self, scopes: Union[str, list]):
+    def get_discord_oauth(self, scopes: Union[str, list], redirect: str):
         if type(scopes) == list:
             scopes = self.get_scopes(scopes)
-        state = get_token(101)
-        return {"state": scopes, "url": f"{self.discord_login_url}&state={scopes}&response_type=code&scope={scopes}"}
+        state = "|".join((scopes, redirect))
+        return {"state": scopes, "url": f"{self.discord_login_url}&state={state}&response_type=code&scope={scopes}"}
 
     async def get_access_token(self, code, scope) -> dict:
         payload = {
