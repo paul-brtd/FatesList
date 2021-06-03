@@ -17,7 +17,7 @@ class BotListAdminRoute(BaseModel):
     def id_if_bot(cls, v, values, **kwargs):
         if values.get("type") != enums.PartnerType.bot:
             return v
-        elif v is not None or not v.isdigit():
+        elif v is None or not v.isdigit():
             raise ValueError('Bots must have a ID set')
         return v
 
