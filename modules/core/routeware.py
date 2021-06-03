@@ -33,7 +33,7 @@ async def routeware(app, fl_exception_handler, request: Request, call_next):
     response.headers["Access-Control-Allow-Origin"] = request.headers.get('Origin') if request.headers.get('Origin') else "*"
     response.headers["Access-Control-Allow-Credentials"] = "true"
     asyncio.create_task(print_req(request, response))
-    return response
+    return response if response else ORJSONResponse({"detail": "Internal Server Error V2"}, status_code = 500) 
 
 
 # Two variables used in our logger

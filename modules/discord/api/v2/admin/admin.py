@@ -1,5 +1,5 @@
 from modules.core import *
-from .models import BotStateUpdate, BotCertify, BotBan, APIResponse, BotUnderReview, BotTransfer, BotQueueGet, BotQueuePatch, BotLock, BotListPartner
+from .models import BotStateUpdate, BotCertify, BotBan, APIResponse, BotUnderReview, BotTransfer, BotQueueGet, BotQueuePatch, BotLock, BotListPartner, BotListPartnerAd
 from modules.discord.admin import admin_dashboard
 from ..base import API_VERSION
 import uuid
@@ -44,16 +44,20 @@ async def bot_lock_unlock_api(request: Request, bot_id: int, data: BotLock, Auth
     await redis_db.set("fl_staff_req", orjson.dumps(req))
     return {"done": True, "reason": None, "code": 1000, "op": op}
 
+@router.get("/err")
+async def error_maker(request: Request):
+    error = int("haha")
+
 @router.post("/partners", response_model = APIResponse)
 async def new_partner(request: Request, partner: BotListPartner, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
     if not secure_strcmp(Authorization, test_server_manager_key) and not secure_strcmp(Authorization, root_key):
         return abort(401)
     guild = client.get_guild(main_server)
     user = guild.get_member(int(partner.mod))
-    if user is None or not is_staff(staff_roles, user.roles, 2)[0] or (data.requeue == 1 and not is_staff(staff_roles, user.roles, 3)[0]):
+    if user is None or not is_staff(staff_roles, user.roles, 5)[0]:
         return ORJSONResponse({"done": False, "reason": "Invalid Moderator specified. The moderator in question does not have permission to perform this action!", "code": 9867}, status_code = 400)
-    prev_partner = await db.fetchval("SELECT COUNT(1) FROM bot_list_partners WHERE pid = $1", int(partner.pid))
-    if len(prev_partner) > 2:
+    prev_partner = await db.fetchval("SELECT COUNT(1) FROM bot_list_partners WHERE partner = $1", int(partner.partner))
+    if prev_partner > 2:
         return ORJSONResponse({"done": False, "reason": "This user already has two partnerships"}, status_code = 400)
     channel = client.get_channel(int(partner.channel))
     if not channel:
@@ -63,7 +67,7 @@ async def new_partner(request: Request, partner: BotListPartner, Authorization: 
         if not invite.guild:
             raise InvalidInvite("Invite not for server")
         if invite.max_age != 0 or invite.max_uses != 0:
-            raise InvalidInvite("Invite is not unlimited use")
+            raise InvalidInvite(f"Invite is not unlimited use. Max age is {invite.max_age} and max uses is {invite.max_uses}.")
     except Exception as exc:
         return ORJSONResponse({"done": False, "reason": f"Could not resolve invite as {type(exc).__name__}: {exc}. Double check the invite"}, status_code = 400)
     id = uuid.uuid4()
@@ -73,23 +77,23 @@ async def new_partner(request: Request, partner: BotListPartner, Authorization: 
         bot_user_count = await db.fetchval("SELECT user_count FROM bots WHERE bot_id = $1", int(partner.id))
         if not bot_user_count:
             return ORJSONResponse({"done": False, "reason": f"Bot has not yet posted user count yet or is not on Fates List", "code": 4748}, status_code = 400)
-    await db.execute("INSERT INTO bot_list_partners (pid, mod, partner, channel, guild_id, invite, count, id) VALUES ($1, $2, $3, $4, $5, $6, $7)", id, int(partner.mod), int(partner.partner_id), int(partner.channel), invite.guild.id, invite.approximate_member_count if partner.type == enums.PartnerType.guild else bot_user_count)
+    await db.execute("INSERT INTO bot_list_partners (pid, mod, partner, channel, invite, user_count, id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)", id, int(partner.mod), int(partner.partner), int(partner.channel), invite.code, invite.approximate_member_count if partner.type == enums.PartnerType.guild else bot_user_count, partner.id if partner.type == enums.PartnerType.bot else invite.guild.id, partner.type)
     embed = discord.Embed(title="Partnership Channel Recorded", description=f"Put your advertisement here, then ask a moderator to run +partner ad {id} <message link of ad>")
     await channel.send(embed = embed)
     return {"done": True, "reason": None, "code": 1000, "id": id}
 
 @router.patch("/partners/ad", response_model = APIResponse)
-async def set_partner_ad(request: Request, partner: BotPartnerAd, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
-   if not secure_strcmp(Authorization, test_server_manager_key) and not secure_strcmp(Authorization, root_key):
+async def set_partner_ad(request: Request, partner: BotListPartnerAd, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
+    if not secure_strcmp(Authorization, test_server_manager_key) and not secure_strcmp(Authorization, root_key):
         return abort(401)
     guild = client.get_guild(main_server)
     user = guild.get_member(int(partner.mod))
     if user is None or not is_staff(staff_roles, user.roles, 2)[0] or (data.requeue == 1 and not is_staff(staff_roles, user.roles, 3)[0]):
         return ORJSONResponse({"done": False, "reason": "Invalid Moderator specified. The moderator in question does not have permission to perform this action!", "code": 9867}, status_code = 400)
-    partner = await db.fetchval("SELECT COUNT(1) FROM bot_list_partners WHERE id = $1", partner.id)
+    partner = await db.fetchval("SELECT COUNT(1) FROM bot_list_partners WHERE pid = $1", partner.pid)
     if partner == 0:
         return ORJSONResponse({"done": False, "reason": "Partnership ID is invalid or partnership does not exist. Recheck the ID", "code": 4642}, status_code = 400)
-    await db.execute("UPDATE bot_list_partners SET ad = $1 WHERE id = $2", partner.ad, partner.id)
+    await db.execute("UPDATE bot_list_partners SET ad = $1 WHERE pid = $2", partner.ad, partner.pid)
     return {"done": True, "reason": None, "code": 1000, "id": id}
     
 @router.patch("/bots/{bot_id}/under_review", response_model = APIResponse)

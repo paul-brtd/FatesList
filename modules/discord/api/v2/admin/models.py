@@ -1,14 +1,15 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 import modules.models.enums as enums
 from ..base_models import BaseUser, APIResponse
 from typing import Optional, List
-    
+import uuid
+
 class BotListAdminRoute(BaseModel):
     mod: str
 
- class BotListPartner(BotListAdminRoute):
-    pid: str
+class BotListPartner(BotListAdminRoute):
     type: enums.PartnerType
+    partner: str
     channel: str # Channel for partnership
     invite: str # Support server or partnered server invite
     id: Optional[str] = None
@@ -21,8 +22,7 @@ class BotListAdminRoute(BaseModel):
             raise ValueError('Bots must have a ID set')
         return v
 
-
- class BotListPartnerAd(BotListAdminRoute):
+class BotListPartnerAd(BotListAdminRoute):
     mod: str
     pid: uuid.UUID
     ad: str
