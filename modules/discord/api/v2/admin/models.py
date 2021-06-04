@@ -27,11 +27,26 @@ class BotListPartner(BotListAdminRoute):
         elif v is None or not v.isdigit():
             raise ValueError('Bots must have a ID set')
         return v
-
+    
+    @validator('edit_channel')
+    async def edit_channel_int(cls, v, values, **kwargs):
+        if not v.isdigit():
+            raise ValueError('Edit channel must be a integer')
+        return int(v)
+    
 class BotListPartnerAd(BotListAdminRoute):
-    mod: str
     pid: uuid.UUID
     ad: str
+        
+class BotListPartnerChannel(BotListAdminRoute):
+    pid: uuid.UUID
+    publish_channel: str  
+        
+    @validator('publish_channel')
+    async def edit_channel_int(cls, v, values, **kwargs):
+        if not v.isdigit():
+            raise ValueError('Publish channel must be a integer')
+        return int(v)
         
 class BotLock(BotListAdminRoute):
     reason: str
