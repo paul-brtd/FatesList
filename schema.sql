@@ -237,5 +237,6 @@ CREATE TABLE bot_list_partners (
 	invite TEXT NOT NULL, 
 	user_count BIGINT NOT NULL,
 	id BIGINT NOT NULL UNIQUE,
-	ad TEXT
+	site_ad TEXT,
+	server_ad TEXT
 );

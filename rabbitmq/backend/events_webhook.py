@@ -47,7 +47,7 @@ async def backend(json, *, webhook_url, webhook_type, api_token, id, webhook_tar
                 description=f"{user['username']}#{user['disc']} with ID {user['id']} has just cast a vote for {bot['username']} with ID {bot['id']} on Fates List!\nIt now has {context['votes']} votes!\n\nThank you for supporting this bot\n**GG**",
                 color=242424
             )
-            username = f"Fates List - {user['username']}#{user['disc']} ({user['id']})")
+            username = f"Fates List - {user['username']}#{user['disc']} ({user['id']})"
             async with aiohttp.ClientSession() as session:
                 webhook = Webhook.from_url(webhook_url, adapter=AsyncWebhookAdapter(session))
                 await webhook.send(embed = embed, username = username)

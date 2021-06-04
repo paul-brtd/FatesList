@@ -1,5 +1,5 @@
 from modules.core import *
-from .models import BotStateUpdate, BotCertify, BotBan, APIResponse, BotUnderReview, BotTransfer, BotQueueGet, BotQueuePatch, BotLock, BotListPartner, BotListPartnerAd, BotListPartnerChannel, IDResponse
+from .models import BotStateUpdate, BotCertify, BotBan, APIResponse, BotUnderReview, BotTransfer, BotQueueGet, BotQueuePatch, BotLock, BotListPartner, BotListPartnerAd, BotListPartnerChannel, IDResponse, enums
 from modules.discord.admin import admin_dashboard
 from ..base import API_VERSION
 import uuid
@@ -86,8 +86,8 @@ async def new_partner(request: Request, partner: BotListPartner, Authorization: 
     await channel.send(embed = embed)
     return {"done": True, "reason": None, "code": 1000, "id": id}
 
-@router.patch("/partners/ad", response_model = APIResponse)
-async def set_partner_ad(request: Request, partner: BotListPartnerAd, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
+@router.patch("/partners/ad/{ad_type}", response_model = APIResponse)
+async def set_partner_ad(request: Request, ad_type: enums.PartnerAdType, partner: BotListPartnerAd, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
     if not secure_strcmp(Authorization, test_server_manager_key) and not secure_strcmp(Authorization, root_key):
         return abort(401)
     guild = client.get_guild(main_server)
@@ -97,7 +97,7 @@ async def set_partner_ad(request: Request, partner: BotListPartnerAd, Authorizat
     partner_check = await db.fetchval("SELECT COUNT(1) FROM bot_list_partners WHERE pid = $1", partner.pid)
     if partner_check == 0:
         return ORJSONResponse({"done": False, "reason": "Partnership ID is invalid or partnership does not exist. Recheck the ID", "code": 4642}, status_code = 400)
-    await db.execute("UPDATE bot_list_partners SET ad = $1 WHERE pid = $2", partner.ad, partner.pid)
+    await db.execute(f"UPDATE bot_list_partners SET {ad_type.get_col()} = $1 WHERE pid = $2", partner.ad, partner.pid)
     return {"done": True, "reason": None, "code": 1000, "id": id}
 
 @router.patch("/partners/publish_channel", response_model = APIResponse)

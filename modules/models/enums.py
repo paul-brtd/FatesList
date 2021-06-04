@@ -3,6 +3,14 @@ from pydantic import BaseModel
 import uuid
 from aenum import Enum, IntEnum
 
+class PartnerAdType(Enum):
+    _init_ = 'value __doc__'
+    server = "server", "Server Ad"
+    site = "site", "Site Ad"
+
+    def get_col(self):
+        return f"{self.value}_ad" 
+
 class PartnerType(IntEnum):
     _init_ = 'value __doc__'
     bot = 0, "Bot"
@@ -10,7 +18,7 @@ class PartnerType(IntEnum):
 
 class UserState(IntEnum):
     _init_ = 'value __doc__'
-    normal = 0, "Normal"
+    normal = 0, "Normal (No Ban)"
     global_ban = 1, "Global Ban"
     login_ban = 2, "Login Ban"
     pedit_ban = 3, "Profile Edit Ban"
