@@ -1,5 +1,5 @@
 from modules.core import *
-from .models import BotStateUpdate, BotCertify, BotBan, APIResponse, BotUnderReview, BotTransfer, BotQueueGet, BotQueuePatch, BotLock, BotListPartner, BotListPartnerAd, IDResponse
+from .models import BotStateUpdate, BotCertify, BotBan, APIResponse, BotUnderReview, BotTransfer, BotQueueGet, BotQueuePatch, BotLock, BotListPartner, BotListPartnerAd, BotListPartnerChannel, IDResponse
 from modules.discord.admin import admin_dashboard
 from ..base import API_VERSION
 import uuid
@@ -99,7 +99,21 @@ async def set_partner_ad(request: Request, partner: BotListPartnerAd, Authorizat
         return ORJSONResponse({"done": False, "reason": "Partnership ID is invalid or partnership does not exist. Recheck the ID", "code": 4642}, status_code = 400)
     await db.execute("UPDATE bot_list_partners SET ad = $1 WHERE pid = $2", partner.ad, partner.pid)
     return {"done": True, "reason": None, "code": 1000, "id": id}
-    
+
+@router.patch("/partners/publish_channel", response_model = APIResponse)
+async def set_partner_publish_channel(request: Request, partner: BotListPartnerChannel, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
+    if not secure_strcmp(Authorization, test_server_manager_key) and not secure_strcmp(Authorization, root_key):
+        return abort(401)
+    guild = client.get_guild(main_server)
+    user = guild.get_member(partner.mod)
+    if user is None or not is_staff(staff_roles, user.roles, 5)[0]:
+        return ORJSONResponse({"done": False, "reason": "Invalid Moderator specified. The moderator in question does not have permission to perform this action!", "code": 9867}, status_code = 400)
+    partner_check = await db.fetchval("SELECT COUNT(1) FROM bot_list_partners WHERE pid = $1", partner.pid)
+    if partner_check == 0:
+        return ORJSONResponse({"done": False, "reason": "Partnership ID is invalid or partnership does not exist. Recheck the ID", "code": 4642}, status_code = 400)
+    await db.execute("UPDATE bot_list_partners SET publish_channel = $1 WHERE pid = $2", partner.publish_channel, partner.pid)
+    return {"done": True, "reason": None, "code": 1000, "id": id}
+
 @router.patch("/bots/{bot_id}/under_review", response_model = APIResponse)
 async def bot_under_review_api(request: Request, bot_id: int, data: BotUnderReview, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
     """Put a bot in queue under review or back in queue. This is internal and only meant for our test server manager bot"""
