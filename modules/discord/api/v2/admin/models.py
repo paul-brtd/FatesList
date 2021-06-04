@@ -16,7 +16,7 @@ class BotListAdminRoute(BaseModel):
 class BotListPartner(BotListAdminRoute):
     type: enums.PartnerType
     partner: str
-    channel: str # Channel for partnership
+    edit_channel: str # Edit channel for partnership (where the ad will be sent and/or updated
     invite: str # Support server or partnered server invite
     id: Optional[str] = None
  

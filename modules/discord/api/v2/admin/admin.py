@@ -60,9 +60,9 @@ async def new_partner(request: Request, partner: BotListPartner, Authorization: 
     prev_partner = await db.fetchval("SELECT COUNT(1) FROM bot_list_partners WHERE partner = $1", int(partner.partner))
     if prev_partner > 2:
         return ORJSONResponse({"done": False, "reason": "This user already has two partnerships"}, status_code = 400)
-    channel = client.get_channel(int(partner.channel))
+    channel = client.get_channel(int(partner.edit_channel))
     if not channel:
-        return ORJSONResponse({"done": False, "reason": "Partnership channel does not exist"}, status_code = 400)
+        return ORJSONResponse({"done": False, "reason": "Partnership edit channel does not exist"}, status_code = 400)
     try:
         invite = await client.fetch_invite(partner.invite, with_expiration = True)
         if not invite.guild:
@@ -79,7 +79,7 @@ async def new_partner(request: Request, partner: BotListPartner, Authorization: 
         if not bot_user_count:
             return ORJSONResponse({"done": False, "reason": f"Bot has not yet posted user count yet or is not on Fates List", "code": 4748}, status_code = 400)
     try:
-        await db.execute("INSERT INTO bot_list_partners (pid, mod, partner, channel, invite, user_count, id, type) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)", id, int(partner.mod), int(partner.partner), int(partner.channel), invite.code, invite.approximate_member_count if partner.type == enums.PartnerType.guild else bot_user_count, partner.id if partner.type == enums.PartnerType.bot else invite.guild.id, partner.type)
+        await db.execute("INSERT INTO bot_list_partners (pid, mod, partner, edit_channel, invite, user_count, id, type) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)", id, int(partner.mod), int(partner.partner), int(partner.edit_channel), invite.code, invite.approximate_member_count if partner.type == enums.PartnerType.guild else bot_user_count, partner.id if partner.type == enums.PartnerType.bot else invite.guild.id, partner.type)
     except Exception as exc:
         return ORJSONResponse({"done": False, "reason": f"Could not create partnership as {type(exc).__name__}: {exc}. Contact Rootspring for help with this error"}, status_code = 400)
     embed = discord.Embed(title="Partnership Channel Recorded", description=f"Put your advertisement here, then ask a moderator to run +partner ad {id} <message link of ad>")

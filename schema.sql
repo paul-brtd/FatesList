@@ -231,8 +231,9 @@ CREATE TABLE bot_list_partners (
 	pid UUID NOT NULL UNIQUE, 
 	mod BIGINT NOT NULL,
 	partner BIGINT NOT NULL, 
-	channel BIGINT NOT NULL UNIQUE, 
-	type INTEGER NOT NULL
+	publish_channel BIGINT NOT NULL UNIQUE, 
+	edit_channel BIGINT NOT NULL UNIQUE,
+	type INTEGER NOT NULL,
 	invite TEXT NOT NULL, 
 	user_count BIGINT NOT NULL,
 	id BIGINT NOT NULL UNIQUE,

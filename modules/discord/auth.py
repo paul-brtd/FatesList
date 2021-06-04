@@ -45,8 +45,11 @@ async def login_confirm(request: Request, code: str, state: str):
     if "user_id" in request.session.keys():
         return RedirectResponse("/")
     else:
-        scopes = state.split("|")[0]
-        redirect = state.split("|")[1]
+        try:
+            scopes = state.split("|")[0]
+            redirect = state.split("|")[1]
+        except:
+            return RedirectResponse(f"/auth/login?pretty=again as there was an issue we faced when logging you in...&redirect=/")
         access_token = await discord_o.get_access_token(code, state)
         userjson = await discord_o.get_user_json(access_token["access_token"])
         if userjson["id"]:
