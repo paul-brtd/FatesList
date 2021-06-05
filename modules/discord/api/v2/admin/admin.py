@@ -114,20 +114,20 @@ async def set_partner_publish_channel(request: Request, partner: BotListPartnerC
     await db.execute("UPDATE bot_list_partners SET publish_channel = $1 WHERE pid = $2", partner.publish_channel, partner.pid)
     return {"done": True, "reason": None, "code": 1000, "id": id}
 
-@router.patch("/bots/{bot_id}/state", response_model = APIResponse)
-async def edit_bot_state(request: Request, bot_id: int, data: BotQueueAdminPatch, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
-    """Put a bot in queue under review or back in queue. This is internal and only meant for our test server manager bot"""
+@router.patch("/bots/{bot_id}/queue/op", response_model = APIResponse)
+async def bot_queue_operation(request: Request, bot_id: int, data: BotQueueAdminPatch, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
+    """Performs a bot queue operation. This is internal and only meant for our test server manager bot"""
     if not secure_strcmp(Authorization, test_server_manager_key) and not secure_strcmp(Authorization, root_key):
         return abort(401)
     guild = client.get_guild(main_server)
     user = guild.get_member(data.mod)
-    if user is None or not is_staff(staff_roles, user.roles, 2)[0] or (data.op == 1 and not is_staff(staff_roles, user.roles, 3)[0]):
+    if user is None or not is_staff(staff_roles, user.roles, data.op.__perm__)[0]:
         return ORJSONResponse({"done": False, "reason": "Invalid Moderator specified. The moderator in question does not have permission to perform this action!", "code": 9867}, status_code = 400)
     admin_tool = BotListAdmin(bot_id, data.mod)
     state = await db.fetchval("SELECT state FROM bots WHERE bot_id = $1", bot_id)
-    if state is not None:
+    if state is None:
         return ORJSONResponse({"done": False, "reason": "This bot does not exist", "code": 2747}, status_code = 404)
-    state_str = f"(state: {enums.BotState(state).__doc__}"
+    state_str = f"(state: {enums.BotState(state).__doc__})"
     success_msg = None
 
     if data.op == enums.AdminQueueOp.requeue:
@@ -141,7 +141,7 @@ async def edit_bot_state(request: Request, bot_id: int, data: BotQueueAdminPatch
         tool = admin_tool.unban_bot()
         
     elif data.op == enums.AdminQueueOp.unclaim:
-        if state != enums.BotStateOp.under_review:
+        if state != enums.BotState.under_review:
             return ORJSONResponse({"done": False, "reason": f"This bot is not currently claimed and hence cannot be unclaimed {state_str}", "code": 2746}, status_code = 400)
         tool = admin_tool.unclaim_bot()
 
@@ -175,7 +175,7 @@ async def edit_bot_state(request: Request, bot_id: int, data: BotQueueAdminPatch
 
     elif data.op == enums.AdminQueueOp.approve:
         if state != enums.BotState.under_review:
-            return ORJSONResponse({"done": False, "reason": "You must claim this bot using +claim on the testing server. {state_str}"}, status_code = 400)
+            return ORJSONResponse({"done": False, "reason": f"You must claim this bot using +claim on the testing server. {state_str}"}, status_code = 400)
         if not data.reason:
             data.reason = approve_feedback
         if len(data.reason) < 7:
@@ -185,12 +185,19 @@ async def edit_bot_state(request: Request, bot_id: int, data: BotQueueAdminPatch
 
     elif data.op == enums.AdminQueueOp.deny:
         if state != enums.BotState.under_review:
-            return ORJSONResponse({"done": False, "reason": "You must claim this bot using +claim on the testing server. {state_str}"}, status_code = 400)
+            return ORJSONResponse({"done": False, "reason": f"You must claim this bot using +claim on the testing server. {state_str}"}, status_code = 400)
         if not data.reason:
             data.reason = deny_feedback
         if len(data.reason) < 7:
             return ORJSONResponse({"done": False, "reason": "Feedback must either not be provided or must be larger than 7 characters!", "code": 3836}, status_code = 400)
         tool = admin_tool.deny_bot(data.reason)
+    
+    elif data.op == enums.AdminQueueOp.unverify:
+        if state not in (enums.BotState.approved, enums.BotState.certified):
+            return ORJSONResponse({"done": False, "reason": f"This bot is not verified {state_str}!"}, status_code = 400)
+        if not data.reason:
+            return ORJSONResponse({"done": False, "reason": "Please specify a reason before unverifying", "code": 2751}, status_code = 400)
+        tool = admin_tool.unverify_bot(data.reason)
 
     rc = await tool
     if rc is not None:

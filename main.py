@@ -67,7 +67,11 @@ async def on_ready():
 
 @app.middleware("http")
 async def fateslist_request_handler(request: Request, call_next):
-    return await routeware(app, fl_exception_handler, request, call_next)
+    try:
+        return await routeware(app, fl_exception_handler, request, call_next)
+    except:
+        logger.exception("Site Error Occurred") 
+        return await fl_exception_handler(request, exc)
 
 app.openapi = fl_openapi(app) # OpenAPI schema setup
 

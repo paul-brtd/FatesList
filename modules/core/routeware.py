@@ -14,17 +14,10 @@ async def routeware(app, fl_exception_handler, request: Request, call_next):
     request.scope, api_ver = version_scope(request, 2) # Transparently redirect /api to /api/vX excluding docs and already /api/vX'd apis
     start_time = time.time() # Get process time start
     try:
-        response = await asyncio.shield(call_next(request)) # Process request
+        response = await call_next(request) # Process request
     except Exception as exc: # Try request again
-        try:
-            request._is_disconnected = False
-        except:
-            logger.warn("User {request.headers.get('X-Forwarded-For')} disconnected")
-        try:
-            response = await asyncio.shield(call_next(request))
-        except Exception as exc:
-            logger.exception("Site Error Occurred")
-            response = await fl_exception_handler(request, exc)
+        logger.exception("Site Error Occurred")
+        response = await fl_exception_handler(request, exc)
 
     process_time = time.time() - start_time # Get time taken
     response.headers["X-Process-Time"] = str(process_time) # Record time taken

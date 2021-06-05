@@ -5,16 +5,17 @@ from aenum import Enum, IntEnum
 
 class AdminQueueOp(IntEnum):
     """Handles admin queue change operations"""
-    _init_ = 'value __doc__'
-    requeue = 0, "Requeue Bot"
-    claim = 1, "Claim Bot"
-    unclaim = 2, "Unclaim Bot"
-    ban = 3, "Ban Bot"
-    unban = 4, "Unban Bot"    
-    certify = 5, "Certify Bot"
-    uncertify = 6, "Uncertify Bot"
-    approve = 7, "Approve Bot"
-    deny = 8, "Deny Bot"
+    _init_ = 'value __doc__ __perm__'
+    requeue = 0, "Requeue Bot", 3
+    claim = 1, "Claim Bot", 2
+    unclaim = 2, "Unclaim Bot", 2
+    ban = 3, "Ban Bot", 3
+    unban = 4, "Unban Bot", 3   
+    certify = 5, "Certify Bot", 5
+    uncertify = 6, "Uncertify Bot", 5
+    approve = 7, "Approve Bot", 2
+    deny = 8, "Deny Bot", 2
+    unverify = 9, "Unverify Bot", 3
 
 class PartnerAdType(Enum):
     _init_ = 'value __doc__'
