@@ -21,7 +21,7 @@ async def backend(json, *, user_id, bot_id, prefix, library, website, banner, su
             api_token, features, long_description_type, 
             css, donate, github, 
             webhook, webhook_type, webhook_secret,
-            privacy_policy, nsfw) VALUES(
+            privacy_policy, nsfw, id) VALUES(
             $1, $2, $3,
             $4, $5, $6,
             $7, $8, $9,
@@ -29,7 +29,7 @@ async def backend(json, *, user_id, bot_id, prefix, library, website, banner, su
             $13, $14, $15,
             $16, $17, $18,
             $19, $20, $21,
-            $22, $23)""", bot_id, prefix, library, invite, website, banner, support, long_description, description, 0, 0, 0, get_token(132), features, long_description_type, css, donate, github, webhook, webhook_type, webhook_secret, privacy_policy, nsfw) # Add new bot info
+            $22, $23, $1)""", bot_id, prefix, library, invite, website, banner, support, long_description, description, 0, 0, 0, get_token(132), features, long_description_type, css, donate, github, webhook, webhook_type, webhook_secret, privacy_policy, nsfw) # Add new bot info
     if vanity.replace(" ", "") != '':
         await db.execute("INSERT INTO vanity (type, vanity_url, redirect) VALUES ($1, $2, $3)", enums.Vanity.bot, vanity, bot_id) # Add new vanity if not empty string
 

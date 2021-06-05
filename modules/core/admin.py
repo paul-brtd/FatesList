@@ -276,22 +276,17 @@ class BotListAdmin():
         await db.execute("UPDATE bots SET state = 4 WHERE bot_id = $1", self.bot_id)
         await bot_add_event(self.bot_id, enums.APIEvents.bot_ban, {"user": self.str_mod, "reason": reason})
 
-    # Unban or requeue a bot
-    async def unban_requeue_bot(self, state):
-        if state == enums.BotState.under_review or state == enums.BotState.denied:
-            word = "removed from the deny list"
-            title = "Bot requeued"
-        else:
-            word = "unbanned"
-            title = "Bot unbanned"
-        unban_embed = discord.Embed(title=title, description=f"<@{self.bot_id}> has been {word}", color=self.good)
+    async def requeue_bot(self):
+        embed = discord.Embed(title="Bot Requeued", description=f"<@{self.bot_id}> has been requeued (removed from the deny list)!", color=self.good)
         await self.channel.send(embed = unban_embed)
-        if state == 2:
-            await db.execute("UPDATE bots SET state = 1 WHERE bot_id = $1", self.bot_id)
-            await bot_add_event(self.bot_id, enums.APIEvents.bot_requeue, {"user": self.str_mod})
-        else:
-            await db.execute("UPDATE bots SET state = 0 WHERE bot_id = $1", self.bot_id)
-            await bot_add_event(self.bot_id, enums.APIEvents.bot_unban, {"user": self.str_mod})
+        await db.execute("UPDATE bots SET state = 1 WHERE bot_id = $1", self.bot_id)
+        await bot_add_event(self.bot_id, enums.APIEvents.bot_requeue, {"user": self.str_mod})
+
+    async def unban_bot(self):
+        embed = discord.Embed(title="Bot Unbanned", description=f"<@{self.bot_id}> has been unbanned", color=self.good)
+        await self.channel.send(embed = embed)
+        await db.execute("UPDATE bots SET state = 0 WHERE bot_id = $1", self.bot_id)
+        await bot_add_event(self.bot_id, enums.APIEvents.bot_unban, {"user": self.str_mod})
 
     async def certify_bot(self):
         owners = await db.fetch("SELECT owner FROM bot_owner WHERE bot_id = $1", self.bot_id)

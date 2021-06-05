@@ -110,13 +110,13 @@ async def vote_for_bot_or_die(
     if request.session.get("user_id") is None:
         return RedirectResponse(f"/auth/login?redirect=/bot/{bot_id}&pretty=to vote for this bot", status_code = 303)
     user_id = int(request.session.get("user_id"))
-    ret = await vote_bot(user_id = user_id, username = request.session.get("username"), bot_id = bot_id, autovote = False, test = False)
+    ret = await vote_bot(user_id = user_id, bot_id = bot_id, autovote = False, test = False, pretend = False)
     if ret is True:
         return await templates.TemplateResponse("message.html", {"request": request, "message": f"Successfully voted for this bot!<script>window.location.replace('/bot/{bot_id}')</script>"})
     elif ret is None:
         return abort(404)
     else: # Otherwise route
-        wait_time = round(ret.total_seconds())
+        wait_time = round(ret[1].total_seconds())
         wait_time_hr = wait_time//(60*60)
         wait_time_mp = (wait_time - (wait_time_hr*60*60)) # Minutes
         wait_time_min = wait_time_mp//60

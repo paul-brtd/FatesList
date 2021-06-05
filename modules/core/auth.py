@@ -29,7 +29,7 @@ async def get_user_token(uid: int, username: str) -> str:
             tcheck = await db.fetchrow("SELECT api_token FROM users WHERE api_token = $1", token)
             if tcheck is None:
                 flag = False
-        await db.execute("INSERT INTO users (user_id, api_token, vote_epoch, username) VALUES ($1, $2, $3, $4)", int(uid), token, None, username)
+        await db.execute("INSERT INTO users (user_id, api_token, vote_epoch, username, id) VALUES ($1, $2, $3, $4, $1)", int(uid), token, None, username)
     else:
         # Update their username if needed
         if token["username"] != username:

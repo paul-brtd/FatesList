@@ -3,6 +3,19 @@ from pydantic import BaseModel
 import uuid
 from aenum import Enum, IntEnum
 
+class AdminQueueOp(IntEnum):
+    """Handles admin queue change operations"""
+    _init_ = 'value __doc__'
+    requeue = 0, "Requeue Bot"
+    claim = 1, "Claim Bot"
+    unclaim = 2, "Unclaim Bot"
+    ban = 3, "Ban Bot"
+    unban = 4, "Unban Bot"    
+    certify = 5, "Certify Bot"
+    uncertify = 6, "Uncertify Bot"
+    approve = 7, "Approve Bot"
+    deny = 8, "Deny Bot"
+
 class PartnerAdType(Enum):
     _init_ = 'value __doc__'
     server = "server", "Server Ad"

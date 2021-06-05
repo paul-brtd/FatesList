@@ -3,7 +3,7 @@ CREATE DATABASE fateslist;
 CREATE EXTENSION "uuid-ossp";
 
 CREATE TABLE bots (
-    id SERIAL,
+    id BIGINT NOT NULL, -- Used by piccolo, must be equal to bot_id
     username_cached text DEFAULT '',
     bot_id bigint not null unique,
     votes bigint,
@@ -40,6 +40,7 @@ CREATE TABLE bots (
 );
 
 CREATE TABLE bot_tags (
+    id SERIAL,
     bot_id BIGINT NOT NULL,
     tag TEXT NOT NULL,
     CONSTRAINT bots_fk FOREIGN KEY (bot_id) REFERENCES bots(bot_id) ON DELETE CASCADE ON UPDATE CASCADE
@@ -114,6 +115,7 @@ CREATE TABLE bot_reviews (
    epoch bigint[] default '{}',
    replies uuid[] default '{}',
    reply boolean default false,
+   CONSTRAINT users_fk FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE ON UPDATE CASCADE,
    CONSTRAINT bots_fk FOREIGN KEY (bot_id) REFERENCES bots(bot_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
@@ -125,7 +127,7 @@ CREATE TABLE bot_voters (
 );
 
 CREATE TABLE users (
-    id SERIAL,
+    id bigint not null, -- Used by piccolo, must be equal to user_id
     user_id bigint not null unique,
     api_token text,
     vote_epoch timestamptz,
