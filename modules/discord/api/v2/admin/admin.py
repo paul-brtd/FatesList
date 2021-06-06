@@ -174,7 +174,13 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
         return abort(401)
     guild = client.get_guild(main_server)
     user = guild.get_member(data.mod)
-    if user is None or not is_staff(staff_roles, user.roles, data.op.__perm__)[0]:
+    
+    if isinstance(data.op.__perm__, tuple):
+        if data.op.__recursive__:
+            perm = data.op.__perm__[0] if bot_id != 0 else data.op.__perm__[1]
+    else:
+        perm = data.op.__perm__
+    if user is None or not is_staff(staff_roles, user.roles, perm)[0]:
         return ORJSONResponse({"done": False, "reason": "Invalid Moderator specified. The moderator in question does not have permission to perform this action!", "code": 9867}, status_code = 400)
     
     if data.op.__reason_needed__ and not data.reason:
@@ -182,22 +188,21 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
     
     admin_tool = BotListAdmin(bot_id, data.mod)
     
-    if bot_id == 0:
-        if not data.op.__recursive__:
-            return api_error("This operation is not recursive. You must provide a nonzero bot id", 2761)
-    
+    if bot_id == 0 and not data.op.__recursive__:
+        return api_error("This operation is not recursive. You must provide a nonzero bot id", 2763)
+    elif bot_id == 0 and data.op.__recursive__:
+        pass
     else:
         state = await db.fetchval("SELECT state FROM bots WHERE bot_id = $1", bot_id)
         if state is None:
             return api_error("This bot does not exist", 2747, status_code = 404)
-    
-    try:
-        state = enums.BotState(state)
-    
-    except:
-        return api_error("Bot is in invalid state. Contact the developers of this list and ask them to fix this!", 2761)
+        try:
+            state = enums.BotState(state)
+        except:
+            return api_error("Bot is in invalid state. Contact the developers of this list and ask them to fix this!", 2761)
 
-    state_str = f"(state: {state.__doc__})"
+        state_str = f"(state: {state.__doc__})"
+    
     success_msg = None
     task = False
     success_code = 200
@@ -278,10 +283,10 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
             return api_error("Invalid state for root state update!", 2761)
         tool = admin_tool.root_update(data.reason, state, new_state)
 
-    elif data.op == enums.BotAdminOp.reset_votes_all:
+    elif data.op == enums.BotAdminOp.reset_votes:
         task = True
         success_code = 202
-        tool = admin_tool.reset_votes_all(data.reason)
+        tool = admin_tool.reset_votes(data.reason)
 
     if tool: 
         if not task:

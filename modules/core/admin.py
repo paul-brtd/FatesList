@@ -333,24 +333,30 @@ class BotListAdmin():
         await bot_add_event(self.bot_id, enums.APIEvents.bot_transfer, {"user": self.str_mod, "old_owner": str(owner), "new_owner": str(new_owner), "reason": reason})
 
     async def root_update(self, reason, old_state, new_state):
-        await db.execute("UPDATE bots SET state = $1 WHERE bot_id = $2", new_state, bot_id)
+        await db.execute("UPDATE bots SET state = $1 WHERE bot_id = $2", new_state, self.bot_id)
         embed = discord.Embed(title="Root State Update", description = f"<@{self.mod}> has changed the state of <@{self.bot_id}> from {old_state.__doc__} ({old_state}) to {new_state.__doc__} ({new_state})", color=self.good)
         await self.channel.send(embed = embed)
         await bot_add_event(self.bot_id, enums.APIEvents.bot_root_update, {"user": self.str_mod, "old_state": old_state, "new_state": new_state, "reason": reason})
 
-    async def reset_votes_all(self, reason):
+    async def reset_votes(self, reason):
         """This function supports recursion (bot id of 0)"""
-        bots = await db.fetch("SELECT bot_id, votes FROM bots")
-        epoch = time.time()
-        for bot in bots:
-            await db.execute("INSERT INTO bot_stats_votes_pm (bot_id, epoch, votes) VALUES ($1, $2, $3)", bot["bot_id"], epoch, bot["votes"])
-        await db.execute("UPDATE bots SET votes = 0")
-        await db.execute("UPDATE users SET vote_epoch = NULL")
-        embed = discord.Embed(title="Reset Votes", description = f"<@{self.mod}> has reset all votes on Fates List")
-        embed.add_field(name="Reason", value = reason)
-        await self.channel.send(embed = embed)
-        await bot_add_event(self.bot_id, enums.APIEvents.bot_vote_reset_all, {"user": self.str_mod, "reason": reason})
-
+        if self.bot_id == 0: # Recursive, reset all votes
+            bots = await db.fetch("SELECT bot_id, votes FROM bots")
+            epoch = time.time()
+            for bot in bots:
+                await db.execute("INSERT INTO bot_stats_votes_pm (bot_id, epoch, votes) VALUES ($1, $2, $3)", bot["bot_id"], epoch, bot["votes"])
+            await db.execute("UPDATE bots SET votes = 0")
+            await db.execute("UPDATE users SET vote_epoch = NULL")
+            embed = discord.Embed(title="Reset Votes", description = f"<@{self.mod}> has reset all votes on Fates List")
+            embed.add_field(name="Reason", value = reason)
+            await self.channel.send(embed = embed)
+            await bot_add_event(self.bot_id, enums.APIEvents.bot_vote_reset_all, {"user": self.str_mod, "reason": reason})
+        else:
+            await db.execute("UPDATE bots set votes = 0 WHERE bot_id = $1", self.bot_id)
+            embed = discord.Embed(title="Reset Votes", description = f"<@{self.mod}> has reset votes for <@{self.bot_id}>")
+            embed.add_field(name="Reason", value = reason)
+            await self.channel.send(embed = embed)
+            await bot_add_event(self.bot_id, enums.APIEvents.bot_vote_reset, {"user": self.str_mod, "reason": reason})
 class ServerActions():
     class GeneratedObject():
         """Instead of crappily changing self, just use a generated object which is at least cleaner"""
