@@ -1,8 +1,12 @@
 from modules.core import *
-from .models import BotStateUpdate, APIResponse, BotTransfer, BotQueueGet, BotLock, BotListPartner, BotListPartnerAd, BotListPartnerChannel, IDResponse, enums, BotQueueAdminPatch
+from .models import BotStateUpdate, APIResponse, BotTransfer, BotQueueGet, BotLock, BotListPartner, BotListPartnerAd, BotListPartnerChannel, IDResponse, enums, BotAdminOpEndpoint
 from modules.discord.admin import admin_dashboard
 from ..base import API_VERSION
 import uuid
+import bleach
+from lxml.html.clean import Cleaner
+
+cleaner = Cleaner()
 
 router = APIRouter(
     prefix = f"/api/v{API_VERSION}/admin",
@@ -18,15 +22,7 @@ async def botlist_admin_console_api(request: Request):
     """API to get raw admin console info"""
     return await admin_dashboard(request) # Just directly render the admin dashboard. It knows what to do
 
-@router.patch("/bots/{bot_id}/state/root")
-async def bot_root_update_api(request: Request, bot_id: int, data: BotStateUpdate, Authorization: str = Header("ROOT_KEY")):
-    """Root API to update a bots state. Needs the root key"""
-    if not secure_strcmp(Authorization, root_key):
-        return abort(401)
-    await db.execute("UPDATE bots SET state = $1 WHERE bot_id = $2", data.state, bot_id)
-    return {"done": True, "reason": None, "code": 1000}
-
-@router.patch("/bots/{bot_id}/lock")
+@router.patch("/bots/{bot_id}/lock", response_model = APIResponse)
 async def bot_lock_unlock_api(request: Request, bot_id: int, data: BotLock, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
     """Locks or unlocks a bot for staff to edit. This is internal and only meant for our test server manager bot"""
     if playground:
@@ -42,12 +38,69 @@ async def bot_lock_unlock_api(request: Request, bot_id: int, data: BotLock, Auth
     op = "lock" if data.lock else "unlock"
     req.append({"op": op, "staff": data.mod, "bot_id": bot_id})
     await redis_db.set("fl_staff_req", orjson.dumps(req))
-    return {"done": True, "reason": None, "code": 1000, "op": op}
+    return {"done": True, "reason": None, "code": 1000}
 
-@router.get("/err")
+@router.get("/err", response_model = APIResponse)
 @router.post("/err", response_model = APIResponse)
-async def error_maker(request: Request):
+async def error_maker(request: Request, test: Optional[APIResponse] = None):
     error = int("haha")
+
+@router.get("/partners")
+async def get_partners(request: Request, f_ad: Optional[str] = None, f_site_ad: Optional[str] = None, f_server_ad: Optional[str] = None, id: Optional[uuid.UUID] = None, mod: Optional[int] = None, f_condition: Optional[str] = "AND"):
+    """API to get partnerships:
+
+    For clarification:
+
+        - target: The ID of the bot or guild in question for the partnership
+
+    Filters:
+
+        f_site_ad is a site ad filter
+        f_server_ad is a server ad filter
+        f_ad is a both site ad and server ad filter
+        mod is a mod filter. Useful in investigations
+        id is a id filter
+
+        Using multiple checks uses the f_condition value which can only be AND, AND NOT or OR
+    """
+    if f_condition not in ("AND", "OR", "AND NOT"):
+        return abort(400)
+    condition, args, i = [], [], 1
+    if f_ad:
+        condition.append(f"(site_ad ilike ${i} or server_ad ilike ${i})")
+        args.append(f'%{f_ad}%')
+        i+=1
+    if f_site_ad:
+        condition.append(f"site_ad ilike ${i}")
+        args.append(f'%{f_site_ad}%')
+        i+=1
+    if f_server_ad:
+        condition.append(f"server_ad ilike ${i}")
+        args.append(f'%{f_server_ad}%')
+        i+=1
+    if id:
+        condition.append(f"id = ${i}")
+        args.append(id)
+        i+=1
+    if mod:
+        condition.append(f"mod = ${i}")
+        args.append(mod)
+        i+=1
+    if condition:
+        cstr = "WHERE " + (" " + f_condition + " ").join(condition)
+    else:
+        cstr = ""
+    partner_db = await db.fetch(f"SELECT id, mod, partner, publish_channel, edit_channel, type, invite, user_count, target, site_ad, server_ad FROM bot_list_partners {cstr}", *args)
+    partners = []
+    for partner in partner_db:
+        mod = await get_user(partner["mod"])
+        partner = await get_user(partner["partner"])
+        try:
+            site_ad = cleaner.clean_html(emd(markdown.markdown(partner["site_ad"], extensions = md_extensions)))
+        except:
+            site_ad = bleach.clean(emd(markdown.markdown(partner["site_ad"], extensions = md_extensions)))
+        partners.append(dict(partner) | {"partner": {"user": partner}, "mod": {"user": mod}, "site_ad": site_ad})
+    return {"partners": partners}
 
 @router.post("/partners", response_model = IDResponse)
 async def new_partner(request: Request, partner: BotListPartner, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
@@ -79,7 +132,7 @@ async def new_partner(request: Request, partner: BotListPartner, Authorization: 
         if not bot_user_count:
             return ORJSONResponse({"done": False, "reason": f"Bot has not yet posted user count yet or is not on Fates List", "code": 4748}, status_code = 400)
     try:
-        await db.execute("INSERT INTO bot_list_partners (pid, mod, partner, edit_channel, invite, user_count, id, type) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)", id, int(partner.mod), int(partner.partner), int(partner.edit_channel), invite.code, invite.approximate_member_count if partner.type == enums.PartnerType.guild else bot_user_count, partner.id if partner.type == enums.PartnerType.bot else invite.guild.id, partner.type)
+        await db.execute("INSERT INTO bot_list_partners (id, mod, partner, edit_channel, invite, user_count, target, type) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)", id, int(partner.mod), int(partner.partner), int(partner.edit_channel), invite.code, invite.approximate_member_count if partner.type == enums.PartnerType.guild else bot_user_count, partner.id if partner.type == enums.PartnerType.bot else invite.guild.id, partner.type)
     except Exception as exc:
         return ORJSONResponse({"done": False, "reason": f"Could not create partnership as {type(exc).__name__}: {exc}. Contact Rootspring for help with this error"}, status_code = 400)
     embed = discord.Embed(title="Partnership Channel Recorded", description=f"Put your advertisement here, then ask a moderator to run +partner ad {id} <message link of ad>")
@@ -94,10 +147,10 @@ async def set_partner_ad(request: Request, ad_type: enums.PartnerAdType, partner
     user = guild.get_member(partner.mod)
     if user is None or not is_staff(staff_roles, user.roles, 5)[0]:
         return ORJSONResponse({"done": False, "reason": "Invalid Moderator specified. The moderator in question does not have permission to perform this action!", "code": 9867}, status_code = 400)
-    partner_check = await db.fetchval("SELECT COUNT(1) FROM bot_list_partners WHERE pid = $1", partner.pid)
+    partner_check = await db.fetchval("SELECT COUNT(1) FROM bot_list_partners WHERE id = $1", partner.pid)
     if partner_check == 0:
         return ORJSONResponse({"done": False, "reason": "Partnership ID is invalid or partnership does not exist. Recheck the ID", "code": 4642}, status_code = 400)
-    await db.execute(f"UPDATE bot_list_partners SET {ad_type.get_col()} = $1 WHERE pid = $2", partner.ad, partner.pid)
+    await db.execute(f"UPDATE bot_list_partners SET {ad_type.get_col()} = $1 WHERE id = $2", partner.ad, partner.pid)
     return {"done": True, "reason": None, "code": 1000, "id": id}
 
 @router.patch("/partners/publish_channel", response_model = APIResponse)
@@ -108,124 +161,136 @@ async def set_partner_publish_channel(request: Request, partner: BotListPartnerC
     user = guild.get_member(partner.mod)
     if user is None or not is_staff(staff_roles, user.roles, 5)[0]:
         return ORJSONResponse({"done": False, "reason": "Invalid Moderator specified. The moderator in question does not have permission to perform this action!", "code": 9867}, status_code = 400)
-    partner_check = await db.fetchval("SELECT COUNT(1) FROM bot_list_partners WHERE pid = $1", partner.pid)
+    partner_check = await db.fetchval("SELECT COUNT(1) FROM bot_list_partners WHERE id = $1", partner.pid)
     if partner_check == 0:
         return ORJSONResponse({"done": False, "reason": "Partnership ID is invalid or partnership does not exist. Recheck the ID", "code": 4642}, status_code = 400)
-    await db.execute("UPDATE bot_list_partners SET publish_channel = $1 WHERE pid = $2", partner.publish_channel, partner.pid)
+    await db.execute("UPDATE bot_list_partners SET publish_channel = $1 WHERE id = $2", partner.publish_channel, partner.pid)
     return {"done": True, "reason": None, "code": 1000, "id": id}
 
-@router.patch("/bots/{bot_id}/queue/op", response_model = APIResponse)
-async def bot_queue_operation(request: Request, bot_id: int, data: BotQueueAdminPatch, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
-    """Performs a bot queue operation. This is internal and only meant for our test server manager bot"""
+@router.patch("/bots/{bot_id}/ops", response_model = APIResponse)
+async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEndpoint, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
+    """Performs a bot admin operation. This is internal and only meant for our test server manager bot. 0 is the recursion bot for botlist-wide actions like vote resets every month"""
     if not secure_strcmp(Authorization, test_server_manager_key) and not secure_strcmp(Authorization, root_key):
         return abort(401)
     guild = client.get_guild(main_server)
     user = guild.get_member(data.mod)
     if user is None or not is_staff(staff_roles, user.roles, data.op.__perm__)[0]:
         return ORJSONResponse({"done": False, "reason": "Invalid Moderator specified. The moderator in question does not have permission to perform this action!", "code": 9867}, status_code = 400)
+    
+    if data.op.__reason_needed__ and not data.reason:
+        return api_error("Please specify a reason for doing this!", 2753)
+    
     admin_tool = BotListAdmin(bot_id, data.mod)
-    state = await db.fetchval("SELECT state FROM bots WHERE bot_id = $1", bot_id)
-    if state is None:
-        return ORJSONResponse({"done": False, "reason": "This bot does not exist", "code": 2747}, status_code = 404)
-    state_str = f"(state: {enums.BotState(state).__doc__})"
+    
+    if bot_id == 0:
+        if not data.op.__recursive__:
+            return api_error("This operation is not recursive. You must provide a nonzero bot id", 2761)
+    
+    else:
+        state = await db.fetchval("SELECT state FROM bots WHERE bot_id = $1", bot_id)
+        if state is None:
+            return api_error("This bot does not exist", 2747, status_code = 404)
+    
+    try:
+        state = enums.BotState(state)
+    
+    except:
+        return api_error("Bot is in invalid state. Contact the developers of this list and ask them to fix this!", 2761)
+
+    state_str = f"(state: {state.__doc__})"
     success_msg = None
+    task = False
+    success_code = 200
+    tool = None
 
-    if data.op == enums.AdminQueueOp.requeue:
+
+    if data.op == enums.BotAdminOp.requeue:
         if state != enums.BotState.denied:
-            return ORJSONResponse({"done": False, "reason": "This bot has not been denied {state_str}", "code": 2747}, status_code = 404)
-        tool = admin_tool.requeue_bot()
+            return api_error(f"This bot has not been denied {state_str}", 2748)
+        tool = admin_tool.requeue_bot(data.reason)
 
-    elif data.op == enums.AdminQueueOp.unban:
+    elif data.op == enums.BotAdminOp.unban:
         if state != enums.BotState.unban:
-            return ORJSONResponse({"done": False, "reason": "This bot has not been banned {state_str}", "code": 2747}, status_code = 404)
-        tool = admin_tool.unban_bot()
+            return api_error(f"This bot has not been banned {state_str}", 2749)
+        tool = admin_tool.unban_bot(data.reason)
         
-    elif data.op == enums.AdminQueueOp.unclaim:
+    elif data.op == enums.BotAdminOp.unclaim:
         if state != enums.BotState.under_review:
-            return ORJSONResponse({"done": False, "reason": f"This bot is not currently claimed and hence cannot be unclaimed {state_str}", "code": 2746}, status_code = 400)
+            return api_error(f"This bot is not currently claimed and hence cannot be unclaimed {state_str}", 2749)
         tool = admin_tool.unclaim_bot()
 
-    elif data.op == enums.AdminQueueOp.claim:
+    elif data.op == enums.BotAdminOp.claim:
         if state == enums.BotState.under_review:
             verifier = await db.fetchval("SELECT verifier FROM bots WHERE bot_id = $1", bot_id)
-            return ORJSONResponse({"done": False, "reason": f"This bot has already been claimed by <@{verifier}> ({verifier})", "code": 2647}, status_code = 400)
+            return api_error(f"This bot has already been claimed by <@{verifier}> ({verifier})", 2750)
 
         elif state != enums.BotState.pending:
-            return ORJSONResponse({"done": False, "reason": f"This bot is not currently pending review {state_str}", "code": 5747}, status_code = 400)
+            return api_error(f"This bot is not currently pending review {state_str}", 2751)
         tool = admin_tool.claim_bot()
 
-    elif data.op == enums.AdminQueueOp.ban:
-        if state == enums.BotState.banned:                                                                   
-            return ORJSONResponse({"done": False, "reason": "This bot has already been banned", "code": 2748}, status_code = 400)
-        elif not data.reason:
-            return ORJSONResponse({"done": False, "reason": "Please specify a reason before banning", "code": 2751}, status_code = 400)
+    elif data.op == enums.BotAdminOp.ban:
+        if state == enums.BotState.banned:
+            return api_error("This bot has already been banned", 2752)
         tool = admin_tool.ban_bot(data.reason)
 
-    elif data.op == enums.AdminQueueOp.certify:
-         if state == enums.BotState.certified: 
-             return ORJSONResponse({"done": False, "reason": "Bot is already certified", "code": 8826}, status_code = 400) 
-         elif state !=enums.BotState.approved:
-             return ORJSONResponse({"done": False, "reason": f"Bot is not in a approved state. State is {enums.BotState(state).__doc__}.", "code": 8126}, status_code = 400)
+    elif data.op == enums.BotAdminOp.certify:
+         if state == enums.BotState.certified:
+             return api_error("Bot is already certified", 2754)
+         elif state != enums.BotState.approved:
+             return api_error(f"Bot is not in a approved state. {state_str}", 2755)
          tool = admin_tool.certify_bot()
 
-    elif data.op == enums.AdminQueueOp.uncertify:
+    elif data.op == enums.BotAdminOp.uncertify:
         if state != enums.BotState.certified:
-            return ORJSONResponse({"done": False, "reason": "Bot is not already certified", "code": 8826}, status_code = 400)
-        tool = admin_tool.uncertify_bot()
+            return api_error("Bot is not already certified", 2756)
+        tool = admin_tool.uncertify_bot(data.reason)
 
-    elif data.op == enums.AdminQueueOp.approve:
+    elif data.op == enums.BotAdminOp.approve:
         if state != enums.BotState.under_review:
-            return ORJSONResponse({"done": False, "reason": f"You must claim this bot using +claim on the testing server. {state_str}"}, status_code = 400)
-        if not data.reason:
-            data.reason = approve_feedback
-        if len(data.reason) < 7:
-            return ORJSONResponse({"done": False, "reason": "Feedback must either not be provided or must be larger than 7 characters!", "code": 3836}, status_code = 400)
+            return api_error(f"You must claim this bot using +claim on the testing server. {state_str}", 2757)
         success_msg = f"Bot Approved Successfully! Invite it to the main server with https://discord.com/oauth2/authorize?client_id={bot_id}&scope=bot&guild_id={guild.id}&disable_guild_select=true&permissions=0"
         tool = admin_tool.approve_bot(data.reason)
 
-    elif data.op == enums.AdminQueueOp.deny:
+    elif data.op == enums.BotAdminOp.deny:
         if state != enums.BotState.under_review:
-            return ORJSONResponse({"done": False, "reason": f"You must claim this bot using +claim on the testing server. {state_str}"}, status_code = 400)
-        if not data.reason:
-            data.reason = deny_feedback
-        if len(data.reason) < 7:
-            return ORJSONResponse({"done": False, "reason": "Feedback must either not be provided or must be larger than 7 characters!", "code": 3836}, status_code = 400)
+            return api_error(f"You must claim this bot using +claim on the testing server. {state_str}", 2757)
         tool = admin_tool.deny_bot(data.reason)
     
-    elif data.op == enums.AdminQueueOp.unverify:
+    elif data.op == enums.BotAdminOp.unverify:
         if state not in (enums.BotState.approved, enums.BotState.certified):
-            return ORJSONResponse({"done": False, "reason": f"This bot is not verified {state_str}!"}, status_code = 400)
-        if not data.reason:
-            return ORJSONResponse({"done": False, "reason": "Please specify a reason before unverifying", "code": 2751}, status_code = 400)
+            return api_error(f"Bot is not in a approved state. {state_str}", 2755)
         tool = admin_tool.unverify_bot(data.reason)
 
-    rc = await tool
-    if rc is not None:
-        return ORJSONResponse({"done": False, "reason": rc, "code": 4646}, status_code = 400)
-    return {"done": True, "reason": success_msg, "code": 1000}
+    elif data.op == enums.BotAdminOp.transfer:
+        try:
+            new_owner = await get_user(int(data.ctx))
+        except:
+            new_owner = None
+        if new_owner is None:
+            return api_error("Invalid new owner for bot transfer specified", 2759)
+        success_msg = "Bot has been transferred successfully!"
+        tool = admin_tool.transfer_bot(data.reason, int(data.ctx))
 
-@router.patch("/bots/{bot_id}/main_owner", response_model = APIResponse)
-async def transfer_bot_api(request: Request, bot_id: int, data: BotTransfer, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
-    if not secure_strcmp(Authorization, test_server_manager_key) and not secure_strcmp(Authorization, root_key):
-        return abort(401)
-    guild = client.get_guild(main_server)
-    try:
-        user = guild.get_member(data.mod)
-    except ValueError:
-        user = None
-    if user is None or not is_staff(staff_roles, user.roles, 4)[0]:
-        return ORJSONResponse({"done": False, "reason": "Invalid Moderator specified. The moderator in question does not have permission to perform this action!", "code": 8826}, status_code = 400)
-    try:
-        new_owner = await get_user(int(data.new_owner))
-    except:
-        new_owner = None
-    if new_owner is None:
-        return ORJSONResponse({"done": False, "reason": "Invalid new owner specified.", "code": 8827}, status_code = 400)
-    admin_tool = BotListAdmin(bot_id, data.mod)
-    rc = await admin_tool.transfer_bot(int(data.new_owner))
-    if rc is None:
-        return {"done": True, "reason": "Bot Transferred Successfully!", "code": 1001}
-    return ORJSONResponse({"done": False, "reason": rc, "code": 3869}, status_code = 400)
+    elif data.op == enums.BotAdminOp.root_update:
+        try:
+            new_state = enums.BotState(int(data.ctx))
+        except:
+            return api_error("Invalid state for root state update!", 2761)
+        tool = admin_tool.root_update(data.reason, state, new_state)
+
+    elif data.op == enums.BotAdminOp.reset_votes_all:
+        task = True
+        success_code = 202
+        tool = admin_tool.reset_votes_all(data.reason)
+
+    if tool: 
+        if not task:
+            rc = await tool
+            if rc is not None:
+                return api_error(rc, 2760)
+        else:
+            asyncio.create_task(tool)
+    return api_success(success_msg, 1000 if not success_msg else 1001, status_code = success_code)
 
 @router.get("/queue/bots", response_model = BotQueueGet)
 async def botlist_get_queue_api(request: Request):

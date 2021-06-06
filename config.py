@@ -34,6 +34,8 @@ deny_feedback = "There was no reason specified. DM/Ping Mod Mail to learn why"
 
 reserved_vanity = ["bot", "docs", "redoc", "doc", "profile", "server", "bots", "servers", "search", "invite", "discord", "login", "logout", "register", "admin", "console", "fuck", "support"]
 
+md_extensions = ["extra", "abbr", "attr_list", "def_list", "fenced_code", "footnotes", "tables", "admonition", "codehilite", "meta", "nl2br", "sane_lists", "toc", "wikilinks", "smarty", "md_in_html"]
+
 staff_roles = {
     "user": {
         "id": 00000000000000000,

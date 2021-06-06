@@ -3,19 +3,24 @@ from pydantic import BaseModel
 import uuid
 from aenum import Enum, IntEnum
 
-class AdminQueueOp(IntEnum):
-    """Handles admin queue change operations"""
-    _init_ = 'value __doc__ __perm__'
-    requeue = 0, "Requeue Bot", 3
-    claim = 1, "Claim Bot", 2
-    unclaim = 2, "Unclaim Bot", 2
-    ban = 3, "Ban Bot", 3
-    unban = 4, "Unban Bot", 3   
-    certify = 5, "Certify Bot", 5
-    uncertify = 6, "Uncertify Bot", 5
-    approve = 7, "Approve Bot", 2
-    deny = 8, "Deny Bot", 2
-    unverify = 9, "Unverify Bot", 3
+class BotAdminOp(IntEnum):
+    """Handles bot admin operations"""
+    _init_ = 'value __doc__ __perm__ __reason_needed__ __recursive__'
+    requeue = 0, "Requeue Bot", 3, True, False
+    claim = 1, "Claim Bot", 2, False, False
+    unclaim = 2, "Unclaim Bot", 2, False, False
+    ban = 3, "Ban Bot", 3, True, False
+    unban = 4, "Unban Bot", 3, True , False
+    certify = 5, "Certify Bot", 5, False, False
+    uncertify = 6, "Uncertify Bot", 5, True, False
+    approve = 7, "Approve Bot", 2, True, False
+    deny = 8, "Deny Bot", 2, True, False
+    unverify = 9, "Unverify Bot", 3, True, False
+    transfer = 10, "Transfer Bot Ownership", 4, True, False
+    root_update = 11, "Root State Update", 5, True, False
+    reset_votes_all = 12, "Reset All Votes", 7, True, True
+    dummy_recursive = 13, "Dummy Resursive", 2, False, True
+    dummy_nrecursive = 14, "Dummy Nonrecursive", 2, False, False
 
 class PartnerAdType(Enum):
     _init_ = 'value __doc__'
@@ -116,6 +121,8 @@ class APIEvents(IntEnum):
     bot_view = 16, "Bot View Event (Websocket only)" # WS only
     bot_invite = 17, "Bot Invite Event (Websocket only)" # WS only
     bot_unclaim = 18, "Bot Unclaim Event"
+    bot_root_update = 19, "Bot Root State Update Event" # Whenever a head admin+ performs a Root State Update on a bot
+    bot_vote_reset_all = 20, "Bot Votes Reset All Event" # Whenever all votes are reset, this is usually every month but may not be
     review_vote = 30, "Review Vote Event"
     review_add = 31, "Bot Review Add Event"
     review_edit = 32, "Bot Review Edit Event"

@@ -64,7 +64,7 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
     owners = _owners
     
     if bot["long_description_type"] == enums.LongDescType.markdown_pymarkdown: # If we are using markdown
-        ldesc = emd(markdown.markdown(bot['long_description'], extensions=["extra", "abbr", "attr_list", "def_list", "fenced_code", "footnotes", "tables", "admonition", "codehilite", "meta", "nl2br", "sane_lists", "toc", "wikilinks", "smarty", "md_in_html"]))
+        ldesc = emd(markdown.markdown(bot['long_description'], extensions = md_extensions))
     else: 
         ldesc = bot['long_description']
 

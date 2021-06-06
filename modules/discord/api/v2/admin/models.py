@@ -58,9 +58,15 @@ class BotStateUpdate(BaseModel):
 class BotTransfer(BotListAdminRoute):
     new_owner: str
 
-class BotQueueAdminPatch(BotListAdminRoute):
-    op: enums.AdminQueueOp
+class BotAdminOpEndpoint(BotListAdminRoute):
+    """
+        - op is a operation defined in BotAdminOp
+        - reason is the optional reason for the operation
+        - ctx is any additional information needed for the operation
+    """
+    op: enums.BotAdminOp
     reason: Optional[str] = None
+    ctx: Optional[str] = None
 
 class PartialBotQueue(BaseModel):
     user: BaseUser

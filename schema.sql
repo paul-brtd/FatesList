@@ -230,7 +230,7 @@ CREATE TABLE bot_list_feature (
 );
 
 CREATE TABLE bot_list_partners (
-	pid UUID NOT NULL UNIQUE, 
+	id UUID NOT NULL UNIQUE, 
 	mod BIGINT NOT NULL,
 	partner BIGINT NOT NULL, 
 	publish_channel BIGINT, 
@@ -238,7 +238,8 @@ CREATE TABLE bot_list_partners (
 	type INTEGER NOT NULL,
 	invite TEXT NOT NULL, 
 	user_count BIGINT NOT NULL,
-	id BIGINT NOT NULL UNIQUE,
+	target BIGINT NOT NULL UNIQUE,
 	site_ad TEXT,
-	server_ad TEXT
+	server_ad TEXT,
+	created_at timestamptz default now()
 );

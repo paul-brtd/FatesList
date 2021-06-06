@@ -12,6 +12,16 @@ from lxml.html.clean import Cleaner
 import bleach
 cleaner = Cleaner(remove_unknown_tags=False)
 
+# API returners
+def api_return(done: bool, reason: str, code: int, status_code: int, **kwargs): 
+    return ORJSONResponse({"done": done, "reason": reason, "code": code} | kwargs, status_code = status_code)
+
+def api_error(reason: str, code: int, status_code: int = 400, **kwargs):
+    return api_return(done = False, reason = reason, code = code, status_code = status_code, **kwargs)
+
+def api_success(reason: str, code: int, status_code: int = 200, **kwargs):
+    return api_return(done = True, reason = reason, code = code, status_code = status_code, **kwargs)
+
 async def verify_csrf(request, csrf_protect):
     try:
         csrf_protect.validate_csrf_in_cookies(request)
