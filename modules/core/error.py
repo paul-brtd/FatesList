@@ -77,7 +77,7 @@ class WebError():
                 msg = "Invalid Data Provided<br/>" + str(exc) # Regular 422
                 code = 422
         else:
-            msg = "Unknown Error" # Unknown error, no case for it yet
+            msg = f"Unknown Error: {exc}" # Unknown error, no case for it yet
             code = 400
 
         json = path.startswith("/api") # Check if api route, return JSON if it is

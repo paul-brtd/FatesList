@@ -181,7 +181,7 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
     else:
         perm = data.op.__perm__
     if user is None or not is_staff(staff_roles, user.roles, perm)[0]:
-        return ORJSONResponse({"done": False, "reason": "Invalid Moderator specified. The moderator in question does not have permission to perform this action!", "code": 9867}, status_code = 400)
+        return api_error(f"You do not have permission to perform this action! You need permlevel {perm}", 2764)
     
     if data.op.__reason_needed__ and not data.reason:
         return api_error("Please specify a reason for doing this!", 2753)
@@ -215,7 +215,7 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
         tool = admin_tool.requeue_bot(data.reason)
 
     elif data.op == enums.BotAdminOp.unban:
-        if state != enums.BotState.unban:
+        if state != enums.BotState.banned:
             return api_error(f"This bot has not been banned {state_str}", 2749)
         tool = admin_tool.unban_bot(data.reason)
         
