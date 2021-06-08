@@ -161,7 +161,6 @@ class BotListAdmin():
     """Class to control and handle bots"""
 
     # Some messages
-    bot_not_found = "Bot could not be found"
     good = 0x00ff00 # "Good" color for positive things
     bad = discord.Color.red()
 
