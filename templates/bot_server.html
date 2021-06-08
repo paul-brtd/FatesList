@@ -346,7 +346,8 @@ function commandModal(name) {
 	cmd = document.querySelector("#cmd-" + name.replace(" ", "")).textContent
 	cmd = JSON.parse(cmd)
 	args = cmd.args.toString().replace(",", " ")
-	modalShow(`More information (${cmd.name})`, `
+	modalShow(`More information (${cmd.friendly_name})`, `
+		Command Name: ${cmd.cmd_name}<br>
 		Arguments: ${args.replace(">", "</span>").replace("<", "<span class='arg'>")}<br>
 		ID: ${cmd.id}
 	`) 
@@ -402,7 +403,7 @@ function getCommands(bot_id) {
 							<colgroup>
 								<tr>
 									<span style="display: none" id="cmd-${cmd.name}">${JSON.stringify(cmd)}</span>
-									<td>${cmd.name}</td>
+									<td>${cmd.friendly_name}</td>
 									<td>${cmd.description}</td>
 									<td>${docs}</td>
 									<td>${cmd.premium_only.toString().replace("true", "Yes").replace("false", "No")}</td>

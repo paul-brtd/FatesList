@@ -47,7 +47,7 @@ async def get_bot_commands(bot_id: int, filter: Optional[str] = None) -> dict:
         args = (f'%{filter}%',)
     else:
         extra, args = "", []
-    cmd_raw = await db.fetch(f"SELECT id, cmd_groups, cmd_type, name, description, args, examples, premium_only, notes, doc_link FROM bot_commands WHERE bot_id = $1 {extra}", bot_id, *args)
+    cmd_raw = await db.fetch(f"SELECT id, cmd_groups, cmd_type, cmd_name, friendly_name, description, args, examples, premium_only, notes, doc_link FROM bot_commands WHERE bot_id = $1 {extra}", bot_id, *args)
     cmd_dict = {}
     for cmd in cmd_raw:
         for group in cmd["cmd_groups"]:

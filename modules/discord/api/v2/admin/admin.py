@@ -22,24 +22,6 @@ async def botlist_admin_console_api(request: Request):
     """API to get raw admin console info"""
     return await admin_dashboard(request) # Just directly render the admin dashboard. It knows what to do
 
-@router.patch("/bots/{bot_id}/lock", response_model = APIResponse)
-async def bot_lock_unlock_api(request: Request, bot_id: int, data: BotLock, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
-    """Locks or unlocks a bot for staff to edit. This is internal and only meant for our test server manager bot"""
-    if playground:
-        return ORJSONResponse({"done": False, "reason": "Bot locks are disabled in playground instances", "code": 9867}, status_code = 400)
-    if not secure_strcmp(Authorization, test_server_manager_key) and not secure_strcmp(Authorization, root_key):
-        return abort(401)
-    guild = client.get_guild(main_server)
-    user = guild.get_member(data.mod)
-    if user is None or not is_staff(staff_roles, user.roles, 4)[0]: 
-        return ORJSONResponse({"done": False, "reason": "Invalid Moderator specified. The moderator in question does not have permission to perform this action!", "code": 9867}, status_code = 400)
-    req = await redis_db.get("fl_staff_req")
-    req = orjson.loads(req) if req else []
-    op = "lock" if data.lock else "unlock"
-    req.append({"op": op, "staff": data.mod, "bot_id": bot_id})
-    await redis_db.set("fl_staff_req", orjson.dumps(req))
-    return {"done": True, "reason": None, "code": 1000}
-
 @router.get("/err", response_model = APIResponse)
 @router.post("/err", response_model = APIResponse)
 async def error_maker(request: Request, test: Optional[APIResponse] = None):
@@ -183,6 +165,13 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
     if user is None or not is_staff(staff_roles, user.roles, perm)[0]:
         return api_error(f"You do not have permission to perform this action! You need permlevel {perm}", 2764)
     
+    if data.op.__cooldown__:
+        bucket_time = enums.cooldown_buckets[data.op.__cooldown__]
+        coolkey = await redis_db.ttl(f"cooldown-{data.op.__cooldown__}-{data.mod}")
+        if coolkey not in (-1, -2): # https://redis.io/commands/ttl, -2 means no key found and -1 means key exists but has no associated expire
+            return api_error(f"This operation is on cooldown for {coolkey} seconds", 2767)
+        await redis_db.set(f"cooldown-{data.op.__cooldown__}-{data.mod}", 0, ex = int(bucket_time))
+
     if data.op.__reason_needed__ and not data.reason:
         return api_error("Please specify a reason for doing this!", 2753)
     
@@ -207,7 +196,6 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
     task = False
     success_code = 200
     tool = None
-
 
     if data.op == enums.BotAdminOp.requeue:
         if state != enums.BotState.denied:
@@ -287,6 +275,23 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
         task = True
         success_code = 202
         tool = admin_tool.reset_votes(data.reason)
+
+    elif data.op == enums.BotAdminOp.staff_lock:
+        if playground:
+            return api_error("Staff bot locks are disabled in playground instances", 2765)
+        req = await redis_db.get("fl_staff_req")
+        req = orjson.loads(req) if req else []
+        op = "lock"
+        req.append({"op": "lock", "staff": data.mod, "bot_id": bot_id})
+        await redis_db.set("fl_staff_req", orjson.dumps(req))
+    
+    elif data.op == enums.BotAdminOp.staff_unlock:
+        if playground:
+            return api_error("Staff bot unlocks are disabled in playground instances", 2765)
+        req = await redis_db.get("fl_staff_req")
+        req = orjson.loads(req) if req else []
+        req.append({"op": "unlock", "staff": data.mod, "bot_id": bot_id})
+        await redis_db.set("fl_staff_req", orjson.dumps(req))
 
     if tool: 
         if not task:

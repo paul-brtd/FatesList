@@ -7,7 +7,7 @@ Depends: enums.py
 """
 
 from typing import List, Dict, Optional, ForwardRef
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 import uuid
 import sys
 sys.path.append("modules/models") # Libraries should remove this
@@ -154,7 +154,8 @@ class BotEvents(BaseModel):
 class PartialBotCommand(BaseModel):
     cmd_type: enums.CommandType # 0 = no, 1 = guild, 2 = global
     cmd_groups: Optional[List[str]] = ["Default"]
-    name: str
+    cmd_name: str
+    friendly_name: str
     description: str
     args: Optional[list] = ["<user>"]
     examples: Optional[list] = []
@@ -172,7 +173,15 @@ class BotCommandsGet(BaseModel):
     __root__: Dict[str, List[BotCommand]]
 
 class BotCommandDelete(BaseModel):
-    id: uuid.UUID
+    """You can use either command id or cmd_name to remove a command"""
+    id: Optional[uuid.UUID] = None
+    cmd_name: Optional[str] = None
+    
+    @validator("cmd_name")
+    def cmd_name_or_id_exists(cls, v, values, **kwargs):
+        if not values["id"] or not v:
+            raise ValueError("Either Command ID or UUID must be provided")
+        return v
 
 class BotVoteCheck(BaseModel):
     votes: int

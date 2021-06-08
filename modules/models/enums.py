@@ -3,24 +3,34 @@ from pydantic import BaseModel
 import uuid
 from aenum import Enum, IntEnum
 
+cooldown_buckets = {
+    "requeue": 60*0.2,
+    "ban": 60*0.3,
+    "transfer": 60*0.5,
+    "reset": 60*1,
+    "unlock": 60*2
+}
+
 class BotAdminOp(IntEnum):
     """Handles bot admin operations"""
-    _init_ = 'value __doc__ __perm__ __reason_needed__ __recursive__'
-    requeue = 0, "Requeue Bot", 3, True, False
-    claim = 1, "Claim Bot", 2, False, False
-    unclaim = 2, "Unclaim Bot", 2, False, False
-    ban = 3, "Ban Bot", 3, True, False
-    unban = 4, "Unban Bot", 3, True , False
-    certify = 5, "Certify Bot", 5, False, False
-    uncertify = 6, "Uncertify Bot", 5, True, False
-    approve = 7, "Approve Bot", 2, True, False
-    deny = 8, "Deny Bot", 2, True, False
-    unverify = 9, "Unverify Bot", 3, True, False
-    transfer = 10, "Transfer Bot Ownership", 4, True, False
-    root_update = 11, "Root State Update", 5, True, False
-    reset_votes = 12, "Reset All Votes", (5, 7), True, True
-    dummy_recursive = 13, "Dummy Resursive", 2, False, True
-    dummy_nrecursive = 14, "Dummy Nonrecursive", 2, False, False
+    _init_ = 'value __doc__ __perm__ __reason_needed__ __recursive__ __cooldown__'
+    requeue = 0, "Requeue Bot", 3, True, False, "requeue"
+    claim = 1, "Claim Bot", 2, False, False, None
+    unclaim = 2, "Unclaim Bot", 2, False, False, None
+    ban = 3, "Ban Bot", 3, True, False, "ban"
+    unban = 4, "Unban Bot", 3, True , False, "ban"
+    certify = 5, "Certify Bot", 5, False, False, None
+    uncertify = 6, "Uncertify Bot", 5, True, False, None
+    approve = 7, "Approve Bot", 2, True, False, None
+    deny = 8, "Deny Bot", 2, True, False, None
+    unverify = 9, "Unverify Bot", 3, True, False, "ban"
+    transfer = 10, "Transfer Bot Ownership", 4, True, False, "transfer"
+    root_update = 11, "Root State Update", 5, True, False, "transfer"
+    reset_votes = 12, "Reset All Votes", (5, 7), True, True, "reset"
+    dummy_recursive = 13, "Dummy Resursive", 2, False, True, None
+    dummy_nrecursive = 14, "Dummy Nonrecursive", 2, False, False, None
+    staff_lock = 15, "Staff Lock Bot", 4, True, False, None
+    staff_unlock = 16, "Staff Unlock Bot", 4, True, False, "unlock"
 
 class PartnerAdType(Enum):
     _init_ = 'value __doc__'
