@@ -152,9 +152,15 @@ async def set_partner_publish_channel(request: Request, partner: BotListPartnerC
 @router.patch("/bots/{bot_id}/ops", response_model = APIResponse)
 async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEndpoint, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
     """Performs a bot admin operation. This is internal and only meant for our test server manager bot. 0 is the recursion bot for botlist-wide actions like vote resets every month"""
+    
+    # Manager key check (only redbot can use this api) 
     if not secure_strcmp(Authorization, test_server_manager_key) and not secure_strcmp(Authorization, root_key):
         return abort(401)
+    
+    # Get user
     guild = client.get_guild(main_server)
+    if not guild: # Guild is None when still connecting to discord
+        return api_error("Not yet connected to discord", 2761, status_code = 503, headers = {"Retry-After": 5})
     user = guild.get_member(data.mod)
     
     if isinstance(data.op.__perm__, tuple):
@@ -170,7 +176,7 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
         bucket_time = enums.cooldown_buckets[data.op.__cooldown__]
         coolkey = await redis_db.ttl(f"cooldown-{data.op.__cooldown__}-{data.mod}")
         if coolkey not in (-1, -2): # https://redis.io/commands/ttl, -2 means no key found and -1 means key exists but has no associated expire
-            return api_error(f"This operation is on cooldown for {coolkey} seconds", 2767, status_code = 429)
+            return api_error(f"This operation is on cooldown for {coolkey} seconds", 2767, status_code = 429, headers = {"Retry-After": coolkey})
         await redis_db.set(f"cooldown-{data.op.__cooldown__}-{data.mod}", 0, ex = int(bucket_time))
 
     if data.op.__reason_needed__ and not data.reason:
