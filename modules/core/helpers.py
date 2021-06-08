@@ -142,7 +142,7 @@ async def invite_bot(bot_id: int, user_id = None, api = False):
         return f"https://discord.com/api/oauth2/authorize?client_id={bot_id}&permissions={perm}&scope=bot%20applications.commands"
     if not api:
         await db.execute("UPDATE bots SET invite_amount = $1 WHERE bot_id = $2", bot["invite_amount"] + 1, bot_id)
-    await bot_add_ws_event(bot_id, {"m": {"e": enums.APIEvents.bot_invite}, "ctx": {"user": str(user_id), "api": api}})
+    await add_ws_event(bot_id, {"m": {"e": enums.APIEvents.bot_invite}, "ctx": {"user": str(user_id), "api": api}})
     return bot["invite"]
 
 # Check vanity of bot 

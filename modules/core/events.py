@@ -6,7 +6,7 @@ from .imports import *
 from .cache import get_user, get_bot
 from .rabbitmq import *
 
-async def bot_add_ws_event(bot_id: int, ws_event: dict, *, id: Optional[uuid.UUID] = None) -> None:
+async def add_ws_event(target: int, ws_event: dict, *, id: Optional[uuid.UUID] = None, type: str = "bot") -> None:
     """A WS Event must have the following format:
         - {e: Event Name, t: Event Type (Optional), ctx: Context, m: Event Metadata}
     """
@@ -17,14 +17,14 @@ async def bot_add_ws_event(bot_id: int, ws_event: dict, *, id: Optional[uuid.UUI
         ws_event["m"] = {}
     ws_event["m"]["eid"] = id
     ws_event["m"]["ts"] = time.time()
-    curr_ws_events = await redis_db.hget(str(bot_id), key = "ws") # Get all the websocket events from the ws key
+    curr_ws_events = await redis_db.hget(type + "-" + str(target), key = "ws") # Get all the websocket events from the ws key
     if curr_ws_events is None:
         curr_ws_events = {} # No ws events means empty dict
     else:
         curr_ws_events = orjson.loads(curr_ws_events) # Otherwise, orjson load the current events
     curr_ws_events[id] = ws_event # Add event to current ws events
-    await redis_db.hset(str(bot_id), key = "ws", value = orjson.dumps(curr_ws_events)) # Add it to redis
-    await redis_db.publish(str(bot_id), orjson.dumps({id: ws_event})) # Publish it to consumers
+    await redis_db.hset(type + "-" + str(target), key = "ws", value = orjson.dumps(curr_ws_events)) # Add it to redis
+    await redis_db.publish(type + "-" + str(target), orjson.dumps({id: ws_event})) # Publish it to consumers
 
 async def bot_get_events(bot_id: int, filter: list = None, exclude: list = None):
     # As a replacement/addition to webhooks, we have API events as well to allow you to quickly get old and new events with their epoch
@@ -71,5 +71,5 @@ async def bot_add_event(bot_id: int, event: int, context: dict, t: Optional[int]
             "event_time": event_time,
             "event_id": id
         })
-        asyncio.create_task(bot_add_ws_event(bot_id, {"ctx": context, "m": {"t": t, "ts": event_time, "e": event}}, id = id))
+        asyncio.create_task(add_ws_event(bot_id, {"ctx": context, "m": {"t": t, "ts": event_time, "e": event}}, id = id))
     return id

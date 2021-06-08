@@ -54,14 +54,10 @@ async def startup_tasks(app):
             tags = tags | {tag["id"]: tag["icon"]}
         return tags
     
-    tags_db = await db.fetch("SELECT id, icon FROM bot_list_tags WHERE type = 0 or type = 2")    
-    tags_db_server = await db.fetch("SELECT id, icon FROM bot_list_tags WHERE type = 1 or type = 2")
+    tags_db = await db.fetch("SELECT id, icon FROM bot_list_tags")    
     tags = _tags(tags_db)
-    tags_server = _tags(tags_db_server)
     builtins.TAGS = tags
-    builtins.TAGS_SERVER = tags_server
     builtins.tags_fixed = calc_tags(tags)
-    builtins.tags_fixed_server = calc_tags(tags_server) 
     logger.info("Discord init beginning")
     asyncio.create_task(client.start(TOKEN_MAIN))
     asyncio.create_task(client_servers.start(TOKEN_SERVER))

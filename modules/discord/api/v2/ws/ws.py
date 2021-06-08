@@ -60,7 +60,7 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
         if not websocket.manager_bot:
             ini_events = {}
             for bot in websocket.bot_id:
-                events = await redis_db.hget(str(bot), key = "ws")
+                events = await redis_db.hget("bot_" + str(bot), key = "ws")
             if events is None:
                 events = {} # Nothing
             else:
@@ -73,7 +73,7 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
             await manager.send_personal_message({"m": {"e": enums.APIEvents.ws_event, "eid": str(uuid.uuid4()), "t": enums.APIEventTypes.ws_event_multi, "ts": time.time()}, "ctx": ini_events}, websocket)
             pubsub = redis_db.pubsub()
             for bot in websocket.bot_id:
-                await pubsub.subscribe(str(bot))
+                await pubsub.subscribe("bot_" + str(bot))
         else:
             pubsub = redis_db.pubsub()
             await pubsub.psubscribe("*")

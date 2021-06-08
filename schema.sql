@@ -43,13 +43,13 @@ CREATE TABLE bot_tags (
     id SERIAL,
     bot_id BIGINT NOT NULL,
     tag TEXT NOT NULL,
-    CONSTRAINT bots_fk FOREIGN KEY (bot_id) REFERENCES bots(bot_id) ON DELETE CASCADE ON UPDATE CASCADE
+    CONSTRAINT bots_fk FOREIGN KEY (bot_id) REFERENCES bots(bot_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT tags_fk FOREIGN KEY (tag) REFERENCES bot_list_tags(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE bot_list_tags (
     id TEXT NOT NULL UNIQUE, 
     icon TEXT NOT NULL UNIQUE,
-    type INTEGER NOT NULL -- Either 0 for bot, 1 for server or 2 for both
 );
 
 CREATE INDEX bot_list_tags_index ON bot_list_tags (id, icon, type);
@@ -218,6 +218,7 @@ CREATE TABLE servers (
 CREATE TABLE server_tags (
     guild_id bigint not null,
     tag text,
+    emoji text default 'bx:bxs-tag-alt',
     CONSTRAINT guilds_fk FOREIGN KEY (guild_id) REFERENCES servers(guild_id) ON DELETE CASCADE ON UPDATE CASCADE
 )
 

@@ -25,17 +25,11 @@ async def login_post(request: Request, redirect: str, join_servers: str = FForm(
     scopes = ["identify"]
 
     # Join Server
-    if join_servers == "off":
-        request.session["join_servers"] = False
-    else:
-        request.session["join_servers"] = True
+    if join_servers == "on":
         scopes.append("guilds.join")
 
     # Server Lists
-    if server_list == "off":
-        request.session["server_list"] = False
-    else:
-        request.session["server_list"] = True
+    if server_list == "on":
         scopes.append("guilds")
     oauth_data = discord_o.get_discord_oauth(scopes, redirect)
     return RedirectResponse(oauth_data["url"], status_code=HTTP_303_SEE_OTHER)
@@ -45,17 +39,19 @@ async def login_confirm(request: Request, code: str, state: str):
     if "user_id" in request.session.keys():
         return RedirectResponse("/")
     else:
+        scopes = state.split("|")[0]
+        redirect = state.split("|")[1] if len(state.split("|")) >= 2 else "/" 
+        scopes_lst = scopes.split(" ")
+        request.session["scopes"] = scopes
         try:
-            scopes = state.split("|")[0]
-            redirect = state.split("|")[1]
+            access_token = await discord_o.get_access_token(code, state)
+            userjson = await discord_o.get_user_json(access_token["access_token"])
         except:
-            return RedirectResponse(f"/auth/login?pretty=again as there was an issue we faced when logging you in...&redirect=/")
-        access_token = await discord_o.get_access_token(code, state)
-        userjson = await discord_o.get_user_json(access_token["access_token"])
+            return RedirectResponse(f"/auth/login?pretty=again as there was an issue we faced when logging you in...&redirect={redirect}")
         if userjson["id"]:
             pass
         else:
-            return RedirectResponse("/")
+            return RedirectResponse(f"/auth/login?pretty=again as there was an issue we faced when logging you in...&redirect={redirect}")
         state = await db.fetchval("SELECT state FROM users WHERE user_id = $1", int(userjson["id"]))
         if state is None:
             state = enums.UserState.normal
@@ -86,7 +82,7 @@ async def login_confirm(request: Request, code: str, state: str):
             request.session["user_css"] = ""
         else:
             request.session["user_css"] = user_css["css"]
-        if request.session.get("join_servers"):
+        if "guilds.join" in scopes_lst:
             await discord_o.join_user(access_token["access_token"], userjson["id"])
         request.session["ban_data"] = ban_data
         if state != 0:

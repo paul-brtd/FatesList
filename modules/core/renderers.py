@@ -122,7 +122,7 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
     else:
         return await templates.e(request, "Bot Not Found")
     _tags_fixed_bot = [tag for tag in tags_fixed if tag["id"] in bot["tags"]]
-    bt.add_task(bot_add_ws_event, bot_id, {"m": {"e": enums.APIEvents.bot_view}, "ctx": {"user": request.session.get('user_id'), "widget": False}})
+    bt.add_task(add_ws_event, bot_id, {"m": {"e": enums.APIEvents.bot_view}, "ctx": {"user": request.session.get('user_id'), "widget": False}})
     reviews = await parse_reviews(bot_id, page = rev_page)
     data = {"data": bot, "type": "bot", "id": bot_id, "tags_fixed": _tags_fixed_bot, "promos": promos, "maint": maint, "admin": bot_admin, "guild": main_server, "bot_reviews": reviews[0], "average_rating": reviews[1], "total_reviews": reviews[2], "review_page": rev_page, "total_review_pages": reviews[3], "per_page": reviews[4]}
 
@@ -141,7 +141,7 @@ async def render_bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, 
     bot = dict(bot)
     bot["votes"] = human_format(bot["votes"])
     bot["servers"] = human_format(bot["servers"])
-    bt.add_task(bot_add_ws_event, bot_id, {"m": {"e": enums.APIEvents.bot_view}, "ctx": {"user": request.session.get('user_id'), "widget": False}})
+    bt.add_task(add_ws_event, bot_id, {"m": {"e": enums.APIEvents.bot_view}, "ctx": {"user": request.session.get('user_id'), "widget": True}})
     data = {"bot": bot, "user": await get_bot(bot_id)}
     if api:
         return data
@@ -180,8 +180,13 @@ async def render_profile_search(request: Request, q: str, api: bool):
     else:
         return {"profiles": profile_obj, "tags_fixed": tags_fixed, "query": q, "profile_search": True}
 
-async def render_guild(request: Request, guild_id: int):
+async def render_server(request: Request, guild_id: int, bt: BackgroundTasks, csrf_protect: CsrfProtect = None, **kwargs):
     guild = client_servers.get_guild(guild_id)
     if not guild:
         return abort(404)
     guild_data = await db.fetchrow("SELECT description, long_description from servers WHERE guild_id = $1", guild_id)
+    if not guild_data:
+        return await templates.e(request, "Ask a server manager or admin to add this server to finish adding this server to our list!")
+    bt.add_task(add_ws_event, guild_id, {"m": {"e": enums.APIEvents.server_view}, "ctx": {"user": request.session.get('user_id'), "widget": False}}, type = "server")
+    data = {"data": guild_data | {"name": guild.name}, "type": "server", "id": guild_id, "tags_fixed": []} # TODO: Add tags, reviews and voting
+    return await templates.TemplateResponse("bot_server.html", {"request": request, "replace_last": replace_last, "csrf_protect": csrf_protect} | data)
