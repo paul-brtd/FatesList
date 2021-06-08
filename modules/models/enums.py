@@ -8,7 +8,7 @@ cooldown_buckets = {
     "ban": 60*0.3,
     "transfer": 60*0.5,
     "reset": 60*1,
-    "unlock": 60*2
+    "lock": 60*2
 }
 
 class BotAdminOp(IntEnum):
@@ -30,7 +30,16 @@ class BotAdminOp(IntEnum):
     dummy_recursive = 13, "Dummy Resursive", 2, False, True, None
     dummy_nrecursive = 14, "Dummy Nonrecursive", 2, False, False, None
     staff_lock = 15, "Staff Lock Bot", 4, True, False, None
-    staff_unlock = 16, "Staff Unlock Bot", 4, True, False, "unlock"
+    staff_unlock = 16, "Staff Unlock Bot", 4, True, False, "lock"
+    bot_lock = 17, "Bot Lock", 0, False, False, "lock"
+    bot_unlock = 18, "Bot Unlock", 0, False, False, "lock"
+
+class BotLock(IntEnum):
+    _init_ = 'value __doc__'
+    unlocked = 0, "Bot unlocked for editing"
+    locked = 1, "Bot locked for editing"
+    locked_staff = 2, "Bot locked by staff"
+    locked_staff_spam = 3, "Bot locked by staff due to spamming edits"
 
 class PartnerAdType(Enum):
     _init_ = 'value __doc__'
@@ -134,6 +143,8 @@ class APIEvents(IntEnum):
     bot_root_update = 19, "Bot Root State Update Event" # Whenever a head admin+ performs a Root State Update on a bot
     bot_vote_reset = 20, "Bot Votes Reset Event" # Whenever all votes for a particular bot either to prevent abuse or otherwise is reset
     bot_vote_reset_all = 21, "Bot Votes Reset All Event" # Whenever all votes are reset, this is usually every month but may not be
+    bot_lock = 22, "Bot Lock Event"
+    bot_unlock = 23, "Bot Unlock Event"
     review_vote = 30, "Review Vote Event"
     review_add = 31, "Bot Review Add Event"
     review_edit = 32, "Bot Review Edit Event"

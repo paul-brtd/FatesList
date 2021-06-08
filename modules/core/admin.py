@@ -118,6 +118,11 @@ class BotActions():
         check = await self.base_check() # Initial base checks
         if check is not None:
             return check
+        
+        lock = await db.fetchval("SELECT lock FROM bots WHERE bot_id = $1", int(self.bot_id))
+        lock = enums.BotLock(lock)
+        if lock != enums.BotLock.unlocked:
+            return f"This bot cannot be edited as it has been locked with a code of {int(lock)}: ({lock.__doc__}). If this bot is not staff staff locked, join the support server and run +unlock <BOT> to unlock it.", 20
 
         check = await is_bot_admin(int(self.bot_id), int(self.user_id)) # Check for owner
         if not check:
@@ -157,7 +162,6 @@ class BotListAdmin():
 
     # Some messages
     bot_not_found = "Bot could not be found"
-    must_claim = "You must claim this bot using +claim on the testing server before approving or denying it. If you have claimed it, make sure it is not already verified"
     good = 0x00ff00 # "Good" color for positive things
     bad = discord.Color.red()
 
@@ -183,9 +187,6 @@ class BotListAdmin():
                 pass
 
     async def claim_bot(self):
-        check = await db.fetchrow("SELECT bot_id FROM bots WHERE bot_id = $2 AND state = $1", enums.BotState.pending, self.bot_id) # Before claiming, make sure it is pending and exists first
-        if not check:
-            return self.bot_not_found
         await db.execute("UPDATE bots SET state = $1 WHERE bot_id = $2", enums.BotState.under_review, self.bot_id) # Set it to under review in database
         claim_embed = discord.Embed(title="Bot Under Review", description = f"<@{self.bot_id}> is now under review by <@{self.mod}> and should be approved or denied soon!", color = self.good) # Create claim embed
         claim_embed.add_field(name="Link", value=f"https://fateslist.xyz/bot/{self.bot_id}") # Add link to bot page
@@ -199,9 +200,6 @@ class BotListAdmin():
             pass
 
     async def unclaim_bot(self):
-        check = await db.fetchrow("SELECT bot_id FROM bots WHERE bot_id = $2 AND state = $1", enums.BotState.under_review, self.bot_id) # Before claiming, make sure it is under review and exists first
-        if not check:
-            return self.bot_not_found
         await db.execute("UPDATE bots SET state = $1 WHERE bot_id = $2", enums.BotState.pending, self.bot_id) # Set it to pending in database
         unclaim_embed = discord.Embed(title="Bot No Longer Under Review", description = f"<@{self.bot_id}> is no longer under review by and should be approved or denied when another reviewer comes in! Don't worry, this is completely normal!", color = self.good) # Create unclaim embed
         unclaim_embed.add_field(name="Link", value=f"https://fateslist.xyz/bot/{self.bot_id}") # Add link to bot page
@@ -215,12 +213,6 @@ class BotListAdmin():
             pass
 
     async def approve_bot(self, feedback):
-        owners = await db.fetch("SELECT owner, main FROM bot_owner WHERE bot_id = $1", self.bot_id)
-        if not owners:
-            return self.bot_not_found
-        check = await db.fetchrow("SELECT state FROM bots WHERE bot_id = $1", self.bot_id)
-        if check["state"] != enums.BotState.under_review and not self.force:
-            return self.must_claim 
         await db.execute("UPDATE bots SET state = $1, verifier = $2 WHERE bot_id = $3", enums.BotState.approved, self.mod, self.bot_id)
         await bot_add_event(self.bot_id, enums.APIEvents.bot_approve, {"user": self.str_mod, "reason": feedback})
         owner = [obj["owner"] for obj in owners if obj["main"]][0]
@@ -237,9 +229,6 @@ class BotListAdmin():
         await self.channel.send(embed = approve_embed)
 
     async def unverify_bot(self, reason):
-        owner = await self._get_main_owner()
-        if owner is None:
-            return False # No bot found
         await db.execute("UPDATE bots SET state = $1 WHERE bot_id = $2", enums.BotState.pending, self.bot_id)
         await bot_add_event(self.bot_id, enums.APIEvents.bot_unverify, {"user": self.str_mod, "reason": reason})
         unverify_embed = discord.Embed(title="Bot Unverified!", description = f"<@{self.bot_id}> by <@{owner}> has been unverified", color=self.bad)
@@ -247,12 +236,6 @@ class BotListAdmin():
         await self.channel.send(embed = unverify_embed)
 
     async def deny_bot(self, reason):
-        owner = await self._get_main_owner()
-        if owner is None:
-            return self.bot_not_found
-        check = await db.fetchrow("SELECT state FROM bots WHERE bot_id = $1", self.bot_id)
-        if check["state"] != enums.BotState.under_review and not self.force:
-            return self.must_claim
         await db.execute("UPDATE bots SET state = $1, verifier = $2 WHERE bot_id = $3", enums.BotState.denied, self.mod, self.bot_id)
         await bot_add_event(self.bot_id, enums.APIEvents.bot_deny, {"user": self.str_mod, "reason": reason})
         deny_embed = discord.Embed(title="Bot Denied!", description = f"<@{self.bot_id}> by <@{owner}> has been denied", color=self.bad)
@@ -291,9 +274,6 @@ class BotListAdmin():
         await bot_add_event(self.bot_id, enums.APIEvents.bot_unban, {"user": self.str_mod, "reason": reason})
 
     async def certify_bot(self):
-        owners = await db.fetch("SELECT owner FROM bot_owner WHERE bot_id = $1", self.bot_id)
-        if not owners:
-            return self.bot_not_found
         await db.execute("UPDATE bots SET state = 6 WHERE bot_id = $1", self.bot_id)
         certify_embed = discord.Embed(title = "Bot Certified", description = f"<@{self.mod}> certified the bot <@{self.bot_id}>", color = self.good)
         certify_embed.add_field(name="Link", value=f"https://fateslist.xyz/bot/{self.bot_id}")
@@ -302,9 +282,6 @@ class BotListAdmin():
         await self._give_roles(certified_dev_role, [owner["owner"] for owner in owners])
 
     async def uncertify_bot(self, reason):
-        owners = await db.fetch("SELECT owner FROM bot_owner WHERE bot_id = $1", self.bot_id)
-        if not owners:
-            return self.bot_not_found
         await db.execute("UPDATE bots SET state = 0 WHERE bot_id = $1", self.bot_id)
         uncertify_embed = discord.Embed(title = "Bot Uncertified", description = f"<@{self.mod}> uncertified the bot <@{self.bot_id}>", color = self.bad)
         embed.add_field(name="Reason", value = reason)
@@ -313,9 +290,6 @@ class BotListAdmin():
         await bot_add_event(self.bot_id, enums.APIEvents.bot_uncertify, {"user": self.str_mod, "reason": reason})
 
     async def transfer_bot(self, reason, new_owner):
-        owner = await self._get_main_owner()
-        if owner is None:
-            return self.bot_not_found
         await db.execute("UPDATE bot_owner SET owner = $1 WHERE bot_id = $2 AND main = true", new_owner, self.bot_id) 
         # Remove bot developer role
         member = self.guild.get_member(owner)
@@ -357,6 +331,21 @@ class BotListAdmin():
             embed.add_field(name="Reason", value = reason)
             await self.channel.send(embed = embed)
             await bot_add_event(self.bot_id, enums.APIEvents.bot_vote_reset, {"user": self.str_mod, "reason": reason})
+
+    async def lock_bot(self, lock, reason = "This bot was locked by staff, its owner or with its owners permission to protect against malicious or accidental editing!"):
+        await db.execute("UPDATE bots SET lock = $1 WHERE bot_id = $2", lock, self.bot_id)
+        embed = discord.Embed(title="Lock Bot", description = f"<@{self.mod}> has locked the bot <@{self.bot_id}>")
+        embed.add_field(name="Reason", value = reason)
+        await self.channel.send(embed = embed)
+        await bot_add_event(self.bot_id, enums.APIEvents.bot_lock, {"user": self.str_mod, "reason": reason, "lock": lock})
+
+    async def unlock_bot(self, reason = "This bot was unlocked by staff, its owner or with its owners permission to make changes to the bot!"):
+        await db.execute("UPDATE bots SET lock = $1 WHERE bot_id = $2", enums.BotLock.unlocked, self.bot_id)
+        embed = discord.Embed(title="Unlock Bot", description = f"<@{self.mod}> has unlocked the bot <@{self.bot_id}>")
+        embed.add_field(name="Reason", value = reason)
+        await self.channel.send(embed = embed)
+        await bot_add_event(self.bot_id, enums.APIEvents.bot_unlock, {"user": self.str_mod, "reason": reason})
+
 class ServerActions():
     class GeneratedObject():
         """Instead of crappily changing self, just use a generated object which is at least cleaner"""

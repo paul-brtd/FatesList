@@ -162,14 +162,15 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
             perm = data.op.__perm__[0] if bot_id != 0 else data.op.__perm__[1]
     else:
         perm = data.op.__perm__
-    if user is None or not is_staff(staff_roles, user.roles, perm)[0]:
-        return api_error(f"You do not have permission to perform this action! You need permlevel {perm}", 2764)
+    staff = is_staff(staff_roles, user.roles, perm)
+    if user is None or not staff[0]:
+        return api_error(f"You do not have permission to perform this action! You need permlevel {perm}", 2764, status_code = 403)
     
     if data.op.__cooldown__:
         bucket_time = enums.cooldown_buckets[data.op.__cooldown__]
         coolkey = await redis_db.ttl(f"cooldown-{data.op.__cooldown__}-{data.mod}")
         if coolkey not in (-1, -2): # https://redis.io/commands/ttl, -2 means no key found and -1 means key exists but has no associated expire
-            return api_error(f"This operation is on cooldown for {coolkey} seconds", 2767)
+            return api_error(f"This operation is on cooldown for {coolkey} seconds", 2767, status_code = 429)
         await redis_db.set(f"cooldown-{data.op.__cooldown__}-{data.mod}", 0, ex = int(bucket_time))
 
     if data.op.__reason_needed__ and not data.reason:
@@ -183,6 +184,7 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
         pass
     else:
         state = await db.fetchval("SELECT state FROM bots WHERE bot_id = $1", bot_id)
+        owners = await db.fetchval("SELECT COUNT(1) FROM bot_owner WHERE bot_id = $1", bot_id)
         if state is None:
             return api_error("This bot does not exist", 2747, status_code = 404)
         try:
@@ -292,6 +294,38 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
         req = orjson.loads(req) if req else []
         req.append({"op": "unlock", "staff": data.mod, "bot_id": bot_id})
         await redis_db.set("fl_staff_req", orjson.dumps(req))
+
+    elif data.op == enums.BotAdminOp.bot_lock:
+        if not is_bot_admin(bot_id, data.mod):
+            return api_error("You cannot lock or unlock a bot you do not own. If you are staff, ensure you have staff unlocked the bot using +sunlock <bot>", 2771, status_code = 403)
+        sm = staff[2]
+        try:
+            lock = enums.BotLock(int(data.ctx))
+        except:
+            return api_error("Invalid lock state for bot!", 2766)
+        if lock == enums.BotLock.locked:
+            return api_error("You can't unlock a bot using bot_lock!", 2767)
+        if sm.perm < 4 and lock not in enums.BotLock.locked:
+            return api_error("Only staff with permlevel 4 and higher can use this lock type", 2768, status_code = 403)
+        curr_lock = await db.fetchval("SELECT lock from bots WHERE bot_id = $1", bot_id)
+        if curr_lock != enums.BotLock.unlocked:
+            if curr_lock == enums.BotLock.locked:
+                return api_error("This bot is already locked", 2769)
+            elif sm.perm < 4:
+                return api_error(f"This bot has been locked by staff and has a code of {curr_lock} ({enums.BotLock(curr_lock).__doc__}). Please ask a staff to unlock it", 2770, status_code = 403)
+        tool = admin_tool.lock_bot(lock)
+
+    elif data.op == enums.BotAdminOp.bot_unlock:
+        if not is_bot_admin(bot_id, data.mod):
+            return api_error("You cannot lock or unlock a bot you do not own. If you are staff, ensure you have staff unlocked the bot using +sunlock <bot>", 2771, status_code = 403)
+        sm = staff[2]
+        curr_lock = await db.fetchval("SELECT lock from bots WHERE bot_id = $1", bot_id)
+        if curr_lock != enums.BotLock.locked:
+            if curr_lock == enums.BotLock.unlocked:
+                return api_error("This bot is already locked", 2769)
+            elif sm.perm < 4:
+                return api_error(f"This bot has been locked by staff and has a code of {curr_lock} ({enums.BotLock(curr_lock).__doc__}). Please ask a staff to unlock it", 2770, status_code = 403)
+        tool = admin_tool.unlock_bot()
 
     if tool: 
         if not task:
