@@ -170,7 +170,7 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
         bucket_time = enums.cooldown_buckets[data.op.__cooldown__]
         coolkey = await redis_db.ttl(f"cooldown-{data.op.__cooldown__}-{data.mod}")
         if coolkey not in (-1, -2): # https://redis.io/commands/ttl, -2 means no key found and -1 means key exists but has no associated expire
-            return api_error(f"This operation is on cooldown for {coolkey} seconds", 2767, status_code = 429)
+            return api_error(f"This operation is on cooldown for {coolkey} seconds", 2767, status_code = 429, headers = {"X-OP-RL": "1", "Retry-After": str(coolkey)})
         await redis_db.set(f"cooldown-{data.op.__cooldown__}-{data.mod}", 0, ex = int(bucket_time))
 
     if data.op.__reason_needed__ and not data.reason:

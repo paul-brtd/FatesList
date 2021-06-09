@@ -13,8 +13,8 @@ import bleach
 cleaner = Cleaner(remove_unknown_tags=False)
 
 # API returners
-def api_return(done: bool, reason: str, code: int, status_code: int, **kwargs): 
-    return ORJSONResponse({"done": done, "reason": reason, "code": code} | kwargs, status_code = status_code)
+def api_return(done: bool, reason: str, code: int, status_code: int, headers: dict = None, **kwargs): 
+    return ORJSONResponse({"done": done, "reason": reason, "code": code} | kwargs, status_code = status_code, headers = headers)
 
 def api_error(reason: str, code: int, status_code: int = 400, **kwargs):
     return api_return(done = False, reason = reason, code = code, status_code = status_code, **kwargs)

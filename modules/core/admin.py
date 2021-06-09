@@ -170,15 +170,20 @@ class BotListAdmin():
         self.str_mod = str(mod) # Rhe moderator in string form for quicker and easier access
         self.channel = client.get_channel(bot_logs) # Bot log channel cached so we don't need to ask Discord
         self.guild = self.channel.guild # Alias to make guild sending easier
-        self.force = force 
+        self.force = force
 
     async def _get_main_owner(self):
         """Internal function to get the main owner"""
         return await db.fetchval("SELECT owner FROM bot_owner WHERE bot_id = $1 AND main = true", self.bot_id) # Return main owner from database
 
-    async def _give_roles(self, role, users):
-        """Internal function to give a role to a list of users"""
-        for user in users:
+    async def _get_owners(self):
+        return await db.fetch("SELECT owner FROM bot_owner WHERE bot_id = $1", self.bot_id)
+
+    async def _give_roles(self, role):
+        """Internal function to give a role to all owners of a bot"""
+        owners_raw = await self._get_owners()
+        owners = [owner["owner"] for owner in owners_raw]
+        for user in owners:
             try:
                 member = self.guild.get_member(int(user))
                 await member.add_roles(self.guild.get_role(role))
@@ -214,11 +219,11 @@ class BotListAdmin():
     async def approve_bot(self, feedback):
         await db.execute("UPDATE bots SET state = $1, verifier = $2 WHERE bot_id = $3", enums.BotState.approved, self.mod, self.bot_id)
         await bot_add_event(self.bot_id, enums.APIEvents.bot_approve, {"user": self.str_mod, "reason": feedback})
-        owner = [obj["owner"] for obj in owners if obj["main"]][0]
+        owner = await self._get_main_owner()
         approve_embed = discord.Embed(title="Bot Approved!", description = f"<@{self.bot_id}> by <@{owner}> has been approved", color = self.good)
         approve_embed.add_field(name="Feedback", value=feedback)
         approve_embed.add_field(name="Link", value=f"https://fateslist.xyz/bot/{self.bot_id}")
-        await self._give_roles(bot_dev_role, [owner["owner"] for owner in owners])
+        await self._give_roles(bot_dev_role)
         try:
             member = self.guild.get_member(int(owner))
             if member is not None:
@@ -235,6 +240,7 @@ class BotListAdmin():
         await self.channel.send(embed = unverify_embed)
 
     async def deny_bot(self, reason):
+        owner = await self._get_main_owner()
         await db.execute("UPDATE bots SET state = $1, verifier = $2 WHERE bot_id = $3", enums.BotState.denied, self.mod, self.bot_id)
         await bot_add_event(self.bot_id, enums.APIEvents.bot_deny, {"user": self.str_mod, "reason": reason})
         deny_embed = discord.Embed(title="Bot Denied!", description = f"<@{self.bot_id}> by <@{owner}> has been denied", color=self.bad)
@@ -278,7 +284,7 @@ class BotListAdmin():
         certify_embed.add_field(name="Link", value=f"https://fateslist.xyz/bot/{self.bot_id}")
         await self.channel.send(embed = certify_embed)
         await bot_add_event(self.bot_id, enums.APIEvents.bot_certify, {"user": self.str_mod})
-        await self._give_roles(certified_dev_role, [owner["owner"] for owner in owners])
+        await self._give_roles(certified_dev_role)
 
     async def uncertify_bot(self, reason):
         await db.execute("UPDATE bots SET state = 0 WHERE bot_id = $1", self.bot_id)
@@ -289,6 +295,7 @@ class BotListAdmin():
         await bot_add_event(self.bot_id, enums.APIEvents.bot_uncertify, {"user": self.str_mod, "reason": reason})
 
     async def transfer_bot(self, reason, new_owner):
+        owner = await self._get_main_owner()
         await db.execute("UPDATE bot_owner SET owner = $1 WHERE bot_id = $2 AND main = true", new_owner, self.bot_id) 
         # Remove bot developer role
         member = self.guild.get_member(owner)
