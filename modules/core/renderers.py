@@ -63,6 +63,7 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
         else: _owners.append(owner)
     owners = _owners
     
+    bot['long_description'] = intl_text(bot['long_description'], request.session.get("site_lang", "default"))
     if bot["long_description_type"] == enums.LongDescType.markdown_pymarkdown: # If we are using markdown
         ldesc = emd(markdown.markdown(bot['long_description'], extensions = md_extensions))
     else: 

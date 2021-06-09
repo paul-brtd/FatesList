@@ -10,6 +10,7 @@ from .cache import *
 from .templating import *
 from lxml.html.clean import Cleaner
 import bleach
+import re
 cleaner = Cleaner(remove_unknown_tags=False)
 
 # API returners
