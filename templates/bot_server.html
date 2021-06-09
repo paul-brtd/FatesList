@@ -273,7 +273,7 @@
 		    	    {% endfor %}
 		    <div class="text-center">
 		    {% for page in range(1, total_review_pages + 1) %} 
-			    <a href="https://fateslist.xyz/{{type}}/{{id}}?rev_page={{page}}#review-tab-button-fl" id="review-page-{{page}}" class="white review-pages" style="font-size: large;">{{page}}</a>
+		    <a href="{{site_url}}/{{type}}/{{id}}?rev_page={{page}}#review-tab-button-fl" id="review-page-{{page}}" class="white review-pages" style="font-size: large;">{{page}}</a>
 		    {% endfor %}
 		    </div>
 		    </article>
@@ -357,7 +357,7 @@ function getCommands(bot_id) {
 	commandsTab = document.querySelector("#commands-tab")
 	error = document.querySelector("#commands-error")
 	$.get({
-		url: `/api/bots/${bot_id}/commands`,
+		url: `/api/bots/${bot_id}/commands?lang={{site_lang}}`,
 		statusCode: {
 			404: function(data) {
 				error.textContent = "No Commands Found"

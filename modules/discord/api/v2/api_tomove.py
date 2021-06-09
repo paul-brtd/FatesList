@@ -47,7 +47,7 @@ async def regenerate_bot_token(request: Request, bot_id: int, Authorization: str
     return {"done": True, "reason": None, "code": 1000}
 
 @router.get("/bots/random", response_model = BotRandom, dependencies=[Depends(RateLimiter(times=7, seconds=5))])
-async def random_bots_api(request: Request):
+async def random_bots_api(request: Request, lang: str = "default"):
     random_unp = await db.fetchrow("SELECT description, banner, state, votes, servers, bot_id, invite FROM bots WHERE state = 0 OR state = 6 ORDER BY RANDOM() LIMIT 1") # Unprocessed, use the random function to get a random bot
     try:
         bot = (await get_bot(random_unp["bot_id"])) | dict(random_unp) # Get bot from cache and add that in
@@ -55,7 +55,7 @@ async def random_bots_api(request: Request):
         return await random_bots_api(request) 
     bot["bot_id"] = str(bot["bot_id"]) # Make sure bot id is a string to prevent corruption issues
     bot["servers"] = human_format(bot["servers"]) # Format the servers field
-    bot["description"] = cleaner.clean_html(bot["description"]) # Prevent some basic attacks in short description
+    bot["description"] = cleaner.clean_html(intl_text(bot["description"], lang)) # Prevent some basic attacks in short description
     if bot["banner"] is None:
         bot["banner"] = "" # Make sure banner is always a string
     return bot
@@ -239,8 +239,8 @@ async def delete_review(request: Request, bot_id: int, rid: uuid.UUID, bt: Backg
     return {"done": True, "reason": None, "code": 1000}
 
 @router.get("/bots/{bot_id}/commands", response_model = BotCommandsGet)
-async def get_bot_commands_api(request:  Request, bot_id: int, filter: Optional[str] = None):
-    cmd = await get_bot_commands(bot_id, filter)
+async def get_bot_commands_api(request:  Request, bot_id: int, filter: Optional[str] = None, lang: str = "default"):
+    cmd = await get_bot_commands(bot_id, lang, filter)
     if cmd == {}:
         return abort(404)
     return cmd
