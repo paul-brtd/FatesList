@@ -182,22 +182,18 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
 
     # Staff lock
     elif data.op == enums.BotAdminOp.staff_lock:
-        if playground:
-            return api_error("Staff bot locks are disabled in playground instances", 2765)
-        req = await redis_db.get("fl_staff_req")
+        req = await redis_db.get(f"{instance_name}.fl_staff_req")
         req = orjson.loads(req) if req else []
         op = "lock"
         req.append({"op": "lock", "staff": data.mod, "bot_id": bot_id})
-        await redis_db.set("fl_staff_req", orjson.dumps(req))
+        await redis_db.set(f"{instance_name}.fl_staff_req", orjson.dumps(req))
    
     # Staff unlock
     elif data.op == enums.BotAdminOp.staff_unlock:
-        if playground:
-            return api_error("Staff bot unlocks are disabled in playground instances", 2765)
-        req = await redis_db.get("fl_staff_req")
+        req = await redis_db.get(f"{instance_name}.fl_staff_req")
         req = orjson.loads(req) if req else []
         req.append({"op": "unlock", "staff": data.mod, "bot_id": bot_id})
-        await redis_db.set("fl_staff_req", orjson.dumps(req))
+        await redis_db.set(f"{instance_name}.fl_staff_req", orjson.dumps(req))
 
     # Bot lock
     elif data.op == enums.BotAdminOp.bot_lock:

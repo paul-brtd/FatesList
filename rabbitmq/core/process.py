@@ -70,7 +70,7 @@ async def _new_task(queue):
         if backends.ackall(queue) or not _ret["err"]: # If no errors recorded
             message.ack()
         logger.opt(ansi = True).info(f"<m>Message {curr} Handled</m>")
-        await redis_db.incr("rmq_total_msgs", 1)
+        await redis_db.incr(f"{instance_name}.rmq_total_msgs", 1)
         stats.total_msgs += 1
         stats.handled += 1
 
@@ -135,14 +135,14 @@ async def run_worker(loop):
     builtins.rabbitmq_db = await aio_pika.connect_robust(
         f"amqp://fateslist:{rabbitmq_pwd}@127.0.0.1/"
     )
-    builtins.db = await asyncpg.create_pool(host="localhost", port=12345, user=pg_user, database="fateslist" if not playground else "fateslist_pg")
+    builtins.db = await asyncpg.create_pool(host="localhost", port=12345, user=pg_user, database=f"fateslist_{instance_name}")
     builtins.redis_db = await aioredis.from_url('redis://localhost', db = 1)
     logger.opt(ansi = True).debug("Connected to databases (postgres, redis and rabbitmq)")
     await backends.loadall() # Load all the backends and run prehooks
     builtins.stats = Stats()
     
     # Get handled message count
-    stats.total_msgs = await redis_db.get("rmq_total_msgs")
+    stats.total_msgs = await redis_db.get(f"{instance_name}.rmq_total_msgs")
     try:
         stats.total_msgs = int(stats.total_msgs)
     except:

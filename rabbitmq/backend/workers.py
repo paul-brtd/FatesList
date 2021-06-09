@@ -60,12 +60,10 @@ async def status(pidrec):
                 logger.warning(f"Unhandled message {msg}")
 
 async def lock_unlock():
-    if playground:
-        return # Playground doesnt get this
     while True:
         try:
             # Handle Staff Requests
-            req = await redis_db.get("fl_staff_req")
+            req = await redis_db.get(f"{instance_name}.fl_staff_req")
             req = orjson.loads(req) if req else None
             if req and isinstance(req, list):
                 for i in range(len(req)):
@@ -81,7 +79,7 @@ async def lock_unlock():
                     if not user:
                         continue
                     key = "lock-" + str(r["staff"]) + "-" + str(r["bot_id"])
-                    sa = await redis_db.get("staff_access")
+                    sa = await redis_db.get(f"{instance_name}.staff_access")
                     sa = orjson.loads(sa) if sa else []
                     sa.append({"staff": r["staff"], "bot_id": r["bot_id"], "key": key, "time": time.time()})
                     await redis_db.set("staff_access", orjson.dumps(sa))
@@ -94,7 +92,7 @@ async def lock_unlock():
                     embed = discord.Embed(title = "Staff Access Alert!", description = f"Staff member {user['username']}#{user['disc']} have {r['op'] + 'ed'} {bot['username']}#{bot['disc']} for editing. This is normal but if it happens too much, open a ticket or contact any online or offline staff immediately")
                     await channel.send(embed = embed)
                     del req[i]
-                    await redis_db.set("fl_staff_req", orjson.dumps(req)) 
+                    await redis_db.set(f"{instance_name}.fl_staff_req", orjson.dumps(req)) 
         except Exception:
             logger.exception("Something happened!")
         await asyncio.sleep(5)
