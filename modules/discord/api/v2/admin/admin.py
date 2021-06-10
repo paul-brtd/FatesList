@@ -238,7 +238,7 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
         else:
             asyncio.create_task(tool)
             
-    return api_success(success_msg, 1000 if not success_msg else 1001, status_code = success_code)
+    return api_success(success_msg, status_code = success_code)
 
 @router.get("/queue/bots", response_model = BotQueueGet)
 async def botlist_get_queue_api(request: Request):

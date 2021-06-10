@@ -1,5 +1,4 @@
 """Modules to move"""
-# TODO: Move these
 from modules.core import *
 from uuid import UUID
 from fastapi.responses import HTMLResponse
@@ -44,7 +43,7 @@ async def regenerate_bot_token(request: Request, bot_id: int, Authorization: str
     if id is None:
         return abort(401)
     await db.execute("UPDATE bots SET api_token = $1 WHERE bot_id = $2", get_token(132), id)
-    return {"done": True, "reason": None, "code": 1000}
+    return api_success()
 
 @router.get("/bots/random", response_model = BotRandom, dependencies=[Depends(RateLimiter(times=7, seconds=5))])
 async def random_bots_api(request: Request, lang: str = "default"):
@@ -146,8 +145,8 @@ async def add_bot_api(request: Request, bot_id: int, bot: BotAdd, Authorization:
     bot_adder = BotActions(bot_dict)
     rc = await bot_adder.add_bot()
     if rc is None:
-        return {"done": True, "reason": f"{site_url}/bot/{bot_id}", "code": 1001}
-    return ORJSONResponse({"done": False, "reason": rc[0],"code": rc[1]}, status_code = 400)
+        return api_success(f"{site_url}/bot/{bot_id}")
+    return api_error(rc[0], rc[1])
 
 @router.patch("/bots/{bot_id}", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=1, minutes=2))])
 async def edit_bot_api(request: Request, bot_id: int, bot: BotEdit, Authorization: str = Header("USER_TOKEN_OR_BOTBLOCK_EDIT_KEY")):
@@ -174,8 +173,8 @@ async def edit_bot_api(request: Request, bot_id: int, bot: BotEdit, Authorizatio
     bot_editor = BotActions(bot_dict)
     rc = await bot_editor.edit_bot()
     if rc is None:
-        return {"done": True, "reason": f"{site_url}/bot/{bot_id}", "code": 1001}
-    return ORJSONResponse({"done": False, "reason": rc[0], "code": rc[1]}, status_code = 400)
+        return api_success(f"{site_url}/bot/{bot_id}")
+    return api_error(rc[0], rc[1])
 
 @router.get("/bots/{bot_id}/reviews", response_model = BotReviews)
 async def get_bot_reviews(request: Request, bot_id: int, page: Optional[int] = 1):
@@ -192,7 +191,7 @@ async def vote_review_api(request: Request, bot_id: int, rid: uuid.UUID, vote: B
     vote.user_id = int(vote.user_id)
     bot_rev = await db.fetchrow("SELECT review_upvotes, review_downvotes, star_rating, reply, review_text FROM bot_reviews WHERE id = $1", rid)
     if bot_rev is None:
-        return ORJSONResponse({"done": False, "reason": "You are not allowed to up/downvote this review (doesn't actually exist)", "code": 3836}, status_code = 404)
+        return api_error("You are not allowed to up/downvote this review (doesn't actually exist)", 3836)
     bot_rev = dict(bot_rev)
     if vote.upvote:
         main_key = "review_upvotes"
@@ -201,7 +200,7 @@ async def vote_review_api(request: Request, bot_id: int, rid: uuid.UUID, vote: B
         main_key = "review_downvotes"
         remove_key = "review_upvotes"
     if vote.user_id in bot_rev[main_key]:
-        return ORJSONResponse({"done": False, "reason": "The user has already voted for this review", "code": 5858}, status_code = 400)
+        return api_error("The user has already voted for this review", 5858)
     if vote.user_id in bot_rev[remove_key]:
         while True:
             try:
@@ -211,7 +210,7 @@ async def vote_review_api(request: Request, bot_id: int, rid: uuid.UUID, vote: B
     bot_rev[main_key].append(vote.user_id)
     await db.execute("UPDATE bot_reviews SET review_upvotes = $1, review_downvotes = $2 WHERE id = $3", bot_rev["review_upvotes"], bot_rev["review_downvotes"], rid)
     await bot_add_event(bot_id, enums.APIEvents.review_vote, {"user": str(vote.user_id), "id": str(rid), "star_rating": bot_rev["star_rating"], "reply": bot_rev["reply"], "review": bot_rev["review_text"], "upvotes": len(bot_rev["review_upvotes"]), "downvotes": len(bot_rev["review_downvotes"]), "upvote": vote.upvote})
-    return {"done": True, "reason": None, "code": 1000}
+    return api_success()
 
 @router.delete("/bots/{bot_id}/reviews/{rid}", response_model = APIResponse)
 async def delete_review(request: Request, bot_id: int, rid: uuid.UUID, bt: BackgroundTasks, data: BotReviewAction, Authorization: str = Header("USER_TOKEN")):
@@ -228,15 +227,15 @@ async def delete_review(request: Request, bot_id: int, rid: uuid.UUID, bt: Backg
     if staff:
         check = await db.fetchrow("SELECT replies FROM bot_reviews WHERE id = $1", rid)
         if check is None:
-            return ORJSONResponse({"done": False, "reason": "You are not allowed to delete this review", "code": 1232}, status_code = 400)
+            return api_error("You are not allowed to delete this review", 1232)
     else:
         check = await db.fetchrow("SELECT replies FROM bot_reviews WHERE id = $1 AND bot_id = $2 AND user_id = $3", rid, bot_id, data.user_id)
         if check is None:
-            return ORJSONResponse({"done": False, "reason": "You are not allowed to delete this review", "code": 1232}, status_code = 400)
+            return api_error("You are not allowed to delete this review", 1232)
     event_data = await db.fetchrow("SELECT reply, review_text, star_rating FROM bot_reviews WHERE id = $1", rid) # Information needed to send an event
     await db.execute("DELETE FROM bot_reviews WHERE id = $1", rid)
     await bot_add_event(bot_id, enums.APIEvents.review_delete, {"user": str(data.user_id), "reply": event_data["reply"], "id": str(rid), "star_rating": event_data["star_rating"], "review": event_data["review_text"]})
-    return {"done": True, "reason": None, "code": 1000}
+    return api_success()
 
 @router.get("/bots/{bot_id}/commands", response_model = BotCommandsGet)
 async def get_bot_commands_api(request:  Request, bot_id: int, filter: Optional[str] = None, lang: str = "default"):
@@ -253,7 +252,7 @@ async def add_bot_command_api(request: Request, bot_id: int, command: PartialBot
     try:
         _tmp = enums.CommandType(command.cmd_type)
     except ValueError:
-        return ORJSONResponse({"done":  False, "reason": "This command type is not yet supported", "code": 4658}, status_code = 400)
+        return api_error("This command type is not yet supported", 4658)
 
     id = await bot_auth(bot_id, Authorization)
     if id is None:
@@ -262,18 +261,18 @@ async def add_bot_command_api(request: Request, bot_id: int, command: PartialBot
     if force_add is False:
         check = await db.fetchrow("SELECT name FROM bot_commands WHERE cmd_name = $1 AND bot_id = $2", command.cmd_name, bot_id)
         if check is not None:
-            return ORJSONResponse({"done":  False, "reason": "A command with this name already exists on your bot", "code": 6858}, status_code = 400)
+            return api_error("A command with this name already exists on your bot", 6858)
     id = uuid.uuid4()
     await db.execute("INSERT INTO bot_commands (id, bot_id, cmd_groups, cmd_type, cmd_name, description, args, examples, premium_only, notes, doc_link, friendly_name) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)", id, bot_id, command.cmd_groups, command.cmd_type, command.cmd_name, command.description, command.args, command.examples, command.premium_only, command.notes, command.doc_link, command.friendly_name)
     await bot_add_event(bot_id, enums.APIEvents.command_add, {"user": None, "id": id})
-    return ORJSONResponse({"done": True, "reason": None, "id": id, "code": 1001}, status_code = 206)
+    return api_success(id = id)
 
 @router.patch("/bots/{bot_id}/commands", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=20, minutes=1))])
 async def edit_bot_command_api(request: Request, bot_id: int, command: BotCommand, Authorization: str = Header("BOT_TOKEN")):
     try:
         _tmp = enums.CommandType(command.cmd_type)
     except ValueError:
-        return ORJSONResponse({"done":  False, "reason": "This command type is not yet supported", "code": 4658}, status_code = 400)
+        return api_error("This command type is not yet supported", 4658)
 
     id = await bot_auth(bot_id, Authorization)
     if id is None:
@@ -289,7 +288,7 @@ async def edit_bot_command_api(request: Request, bot_id: int, command: BotComman
             command_dict[key] = data[key]
     await db.execute("UPDATE bot_commands SET cmd_type = $2, cmd_name = $3, description = $4, args = $5, examples = $6, premium_only = $7, notes = $8, doc_link = $9, cmd_groups = $10, friendly_name = $11 WHERE id = $1", command_dict["id"], command_dict["cmd_type"], command_dict["cmd_name"], command_dict["description"], command_dict["args"], command_dict["examples"], command_dict["premium_only"], command_dict["notes"], command_dict["doc_link"], command_dict["cmd_groups"], command_dict["friendly_name"])
     await bot_add_event(bot_id, enums.APIEvents.command_edit, {"user": None, "id": command.id})
-    return {"done": True, "reason": None, "code": 1000}
+    return api_success()
 
 @router.delete("/bots/{bot_id}/commands", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=20, minutes=1))])
 async def delete_bot_command_api_(request: Request, bot_id: int, command: BotCommandDelete, Authorization: str = Header("BOT_TOKEN")):
@@ -307,7 +306,7 @@ async def delete_bot_command_api_(request: Request, bot_id: int, command: BotCom
     elif command.cmd_name:
         await db.execute("DELETE FROM bot_commands WHERE cmd_name = $1 AND bot_id = $2", command.cmd_name, bot_id)
     await bot_add_event(bot_id, enums.APIEvents.command_delete, {"user": None, "id": command.id})
-    return {"done": True, "reason": None, "code": 1000}
+    return api_success()
 
 @router.get("/bots/{bot_id}/votes", response_model = BotVoteCheck, dependencies=[Depends(RateLimiter(times=5, minutes=1))])
 async def get_votes_api(request: Request, bot_id: int, user_id: int, Authorization: str = Header("BOT_TOKEN")):
@@ -319,7 +318,7 @@ async def get_votes_api(request: Request, bot_id: int, user_id: int, Authorizati
     voter_count = voter_count if voter_count else 0
     ret = await vote_bot(user_id = user_id, bot_id = bot_id, autovote = False, test = False, pretend = True)
     if ret is None:
-        {"votes": voter_count, "voted": voter_count != 0, "vote_epoch": 0, "time_to_vote": 0, "vote_right_now": False, "message": "Voter not found!"}
+        return {"votes": voter_count, "voted": voter_count != 0, "vote_epoch": 0, "time_to_vote": 0, "vote_right_now": False, "message": "Voter not found!"}
     return {"votes": voter_count, "voted": voter_count != 0, "vote_epoch": ret[0].timestamp() if isinstance(ret, tuple) else 0, "time_to_vote": ret[1].total_seconds() if isinstance(ret, tuple) else 0, "vote_right_now": ret == True,  "message": None}
 
 @router.post("/bots/{bot_id}/votes/test")
@@ -366,7 +365,7 @@ async def set_bot_stats_api(request: Request, bot_id: int, api: BotStats, Author
     else:
         user_count = api.user_count
     await set_stats(bot_id = id["bot_id"], guild_count = api.guild_count, shard_count = shard_count, shards = shards, user_count = user_count)
-    return {"done": True, "reason": None, "code": 1000}
+    return api_success()
 
 @router.get("/bots/{bot_id}/maintenance", response_model = BotMaintenance)
 async def get_maintenance_mode(request: Request, bot_id: int):
@@ -377,7 +376,7 @@ async def get_maintenance_mode(request: Request, bot_id: int):
 
 @router.post("/bots/{bot_id}/maintenance", response_model = APIResponse)
 async def set_maintenance_mode(request: Request, bot_id: int, api: BotMaintenancePartial, Authorization: str = Header("BOT_TOKEN")):
-    """This is just an endpoing for enabling or disabling maintenance mode. As of the new API Revamp, this is the only way to enable or disable maintenance mode as of right now
+    """This is just an endpoint for enabling or disabling maintenance mode. As of the new API Revamp, this is the only way to enable or disable maintenance mode as of right now
 
     **API Token**: You can get this by clicking your bot and clicking edit and scrolling down to API Token
 
@@ -385,13 +384,13 @@ async def set_maintenance_mode(request: Request, bot_id: int, api: BotMaintenanc
     """
     
     if api.mode not in [0, 1]:
-        return ORJSONResponse({"done":  False, "reason": "UNSUPPORTED_MODE"}, status_code = 400)
+        return api_error("The mode you are using is invalid", 36281)
 
     id = await bot_auth(bot_id, Authorization)
     if id is None:
         return abort(401)
     await add_maint(id["bot_id"], api.mode, api.reason)
-    return {"done": True, "reason": None, "code": 1000}
+    return api_success()
 
 @router.get("/features/{name}", response_model = FLFeature)
 async def get_feature_api(request: Request, name: str):
@@ -476,12 +475,12 @@ async def set_vote_reminder(request: Request, user_id: int, bot_id: int, data: V
         check = await db.fetchval("SELECT DISTINCT bot_id FROM user_reminders WHERE user_id = $1 AND bot_id = $2", user_id, bot_id)
         if check == 0:
             await db.execute("INSERT INTO user_reminders (user_id, bot_id) VALUES ($1, $2)", user_id, bot_id)
-            return {"done": True, "reason": None, "code": 1000}
+            return api_success()
         else:
-            return ORJSONResponse({"done": False, "reason": "User already signed up for vote reminders", "code": 37373}, status_code = 400)
+            return api_error("User already signed up for vote reminders", 37373)
     else:
         await db.execute("DELETE FROM user_reminders WHERE user_id = $1 AND bot_id = $2", user_id, bot_id)
-        return {"done": True, "reason": None, "code": 1000}
+        return api_success()
 
 @router.post("/users/{user_id}/servers/prepare", dependencies=[Depends(RateLimiter(times=3, seconds=35))], response_model = ServerListAuthed)
 async def prepare_servers_api(request: Request, user_id: int, data: ServerCheck, Authorization: str = Header("USER_TOKEN")):
@@ -530,12 +529,12 @@ async def add_guild_api(request: Request, guild_id: int, user_id: int, data: Ser
         return abort(404)
     guild_data = orjson.loads(guild_data)
     if guild_data["code"] != data.code:
-        return ORJSONResponse({"done": False, "reason": "Bad code provided", "code": 6767}, status_code = 400)
+        return api_error("Bad code provided", 6767)
     server_actions = ServerActions(data.dict() | {"data": guild_data, "guild_id": guild_id, "user_id": user_id})
     rc = await server_actions.add_server()
     if rc is None:
-        return {"done": True, "reacon": None, "code": 1000}
-    return ORJSONResponse({"done": False, "reason": rc[0], "code": rc[1]}, status_code = 400)
+        return api_success()
+    return api_error(rc[0], rc[1])
 
 @router.patch("/users/{user_id}/description", response_model = APIResponse)
 async def set_user_description_api(request: Request, user_id: int, desc: UserDescEdit, Authorization: str = Header("USER_TOKEN")):
@@ -543,7 +542,7 @@ async def set_user_description_api(request: Request, user_id: int, desc: UserDes
     if id is None:
         return abort(401)
     await db.execute("UPDATE users SET description = $1 WHERE user_id = $2", desc.description, user_id)
-    return {"done": True, "reason": None, "code": 1000}
+    return api_success()
 
 @router.patch("/users/{user_id}/token", response_model = APIResponse)
 async def regenerate_user_token(request: Request, user_id: int, Authorization: str = Header("USER_TOKEN")):
@@ -555,32 +554,14 @@ async def regenerate_user_token(request: Request, user_id: int, Authorization: s
     if id is None:
         return abort(401)
     await db.execute("UPDATE users SET api_token = $1 WHERE user_id = $2", get_token(132), id)
-    return {"done": True, "reason": None, "code": 1000}
+    return api_success()
 
-# TODO: Paypal
+@router.patch("/users/{user_id}/js")
+async def set_js_mode(request: Request, user_id: int, Authorization: str = Header("USER_TOKEN")):
+    id = await user_auth(user_id, Authorization)
+    if id is None:
+        return abort(401)
 
-# Generic methods to add coins for future paypal integration
-
-async def create_order(user_id, quantity, token, id, lm):
-    await db.execute("INSERT INTO user_payments (user_id, token, coins, paid, stripe_id, livemode) VALUES ($1, $2, $3, $4, $5, $6)", user_id, token, quantity, False, id, lm)
-    try:
-        guild = client.get_guild(main_server)
-        user = guild.get_member(user_id)
-        await user.send(f"You have successfully created an order for {quantity} coins! Your payment id is {id}. After our payment processor confirms your payment. The coins will be added to your account! DM a Fates List Admin with your payment id if you do not get the coins within an hour.")
-    except:
-        pass
-
-async def fulfill_order(user_id, quantity, token, id, lm):
-    await db.execute(f"UPDATE users SET coins = coins + {quantity} WHERE user_id = $1", user_id)
-    await db.execute("UPDATE user_payments SET paid = $1 WHERE user_id = $2 AND token = $3", True, user_id, token) 
-    try:
-        guild = client.get_guild(main_server)
-        user = guild.get_member(user_id)
-        await user.send(f"We have successfully fulfilled an order for {quantity} coins! Your payment id is {id}. The coins have been added to your account! DM a Fates List Admin with your payment id if you did not get the coins.")
-    except:
-        pass
-
-async def dm_customer_about_failed_payment(session):
-    logger.debug(f"DM Customer: {session}")
-
+    js = await db.fetchval("UPDATE users SET nojs = NOT(COALESCE(js, FALSE)) RETRUNING nojs")
+    return api_success(status_code = 206, js = js)
 

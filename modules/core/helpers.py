@@ -20,7 +20,14 @@ def api_return(done: bool, reason: str, code: int, status_code: int, headers: di
 def api_error(reason: str, code: int, status_code: int = 400, **kwargs):
     return api_return(done = False, reason = reason, code = code, status_code = status_code, **kwargs)
 
-def api_success(reason: str, code: int, status_code: int = 200, **kwargs):
+def api_success(reason: str = None, status_code: int = 200, **kwargs):
+    if not reason:
+        code = 1000
+    else:
+        code = 1001
+    if kwargs:
+        code = 1001
+
     return api_return(done = True, reason = reason, code = code, status_code = status_code, **kwargs)
 
 async def verify_csrf(request, csrf_protect):
@@ -74,8 +81,8 @@ async def add_maint(bot_id: int, type: int, reason: str):
     maints = await db.fetchrow("SELECT bot_id FROM bot_maint WHERE bot_id = $1", bot_id)
     if maints is None:
         return await db.execute("INSERT INTO bot_maint (bot_id, reason, type, epoch) VALUES ($1, $2, $3, $4)", bot_id, reason, type, time.time())
-    return await db.execute("UPDATE bot_maint SET reason = $1, type = $2, epoch = $3 WHERE bot_id = $4", reason, type, time.time(), bot_id)
-
+    await db.execute("UPDATE bot_maint SET reason = $1, type = $2, epoch = $3 WHERE bot_id = $4", reason, type, time.time(), bot_id)
+    
 async def set_stats(*, bot_id: int, guild_count: int, shard_count: int, user_count: int, shards: int):
     if int(guild_count) > 300000000000 or int(shard_count) > 300000000000:
         return
