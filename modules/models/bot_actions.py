@@ -13,15 +13,6 @@ import sys
 sys.path.append("modules/models") # Libraries should remove this
 import enums # as enums (for libraries)
 
-def form_body(cls):
-    cls.__signature__ = cls.__signature__.replace(
-        parameters=[
-            arg.replace(default=FForm(""))
-            for arg in cls.__signature__.parameters.values()
-        ]
-    )
-    return cls
-
 class BotMeta(BaseModel):
     prefix: str
     library: str
@@ -42,20 +33,6 @@ class BotMeta(BaseModel):
     webhook: Optional[str] = ""
     webhook_secret: Optional[str] = ""
     vanity: Optional[str] = ""
-
-class BaseForm(BotMeta):
-    custom_prefix: str = FForm("on")
-    open_source: str = FForm("on")
-    tags: str = FForm("")
-    extra_owners: str = FForm("")
-
-@form_body
-class BotAddForm(BaseForm):
-    bot_id: int
-
-@form_body
-class BotEditForm(BaseForm):
-    pass
 
 class BotAPIMeta(BotMeta):
     """

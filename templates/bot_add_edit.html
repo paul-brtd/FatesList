@@ -1,6 +1,6 @@
 {% extends "base/base.html" %} 
 {% block head %}
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" integrity="sha512-iBBXm8fW90+nuLcSKlbmrPcLa0OT92xO1BIsZ+ywDWZCvqsWgccV3gFoRBv0z+8dLJgyAHIhR35VZc2oM/gI1w==" crossorigin="anonymous" /> <!-- Sadly needed for things to work -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" integrity="sha512-iBBXm8fW90+nuLcSKlbmrPcLa0OT92xO1BIsZ+ywDWZCvqsWgccV3gFoRBv0z+8dLJgyAHIhR35VZc2oM/gI1w==" crossorigin="anonymous" /> <!-- Sadly needed for things to work -->
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Fates-List/FatesList@master/static/assets/css/styles.css" media="none" onload="if(media!='all')media='all'">
 {% endblock %} 
 {% block content %}
@@ -38,7 +38,7 @@
    </div>
    </section>
    {% endif %}
-   <form {% if mode == "edit" %} action="/bot/{{data.bot_id}}/edit" {% endif %} style="height: auto; margin-top: 30px; color: rgba(255, 255, 255, 0.87); text-align: center;" id="bot_form" method="POST">
+   <form id="botform" style="height: auto; margin-top: 30px; color: rgba(255, 255, 255, 0.87); text-align: center;" onsubmit="event.preventDefault(); submitBot(event)">
    <div class="form-group">
     <div class="container">
       <div class="row">
@@ -146,8 +146,8 @@
       placeholder="https://patreon.com/foo"
       minlength="5"
       value="{% if data.donate %}{{data.donate}}{% endif %}"/>
-      <label for="webhook_type">Webhook Type (Click to change)</label>
-      <select id="webhook-type" name="webhook_type" class="form-control fform select-fl">
+      <label for="webhook_type:number">Webhook Type (Click to change)</label>
+      <select id="webhook-type" name="webhook_type:number" class="form-control fform select-fl">
 	      <option value="{{enums.WebhookType.vote.__int__()}}" {% if data.webhook_type == enums.WebhookType.vote %}selected{%endif%}>Vote Webhook</option>
 	      <option value="{{enums.WebhookType.discord.__int__()}}" {% if data.webhook_type == enums.WebhookType.discord %}selected{%endif%}>Discord Integration</option>
 	      <option value="{{enums.WebhookType.fc.__int__()}}" {% if data.webhook_type == enums.WebhookType.fc %}selected{%endif%}>Fates Client</option>
@@ -205,20 +205,13 @@
         >{{data.css}}</textarea>
   </div>
   </div>
-	    <h5 style="font-weight: bold; margin-bottom: 15px;">{% if mode == "templ_add" or mode == "templ_edit" %}Server Template Features{% else %}Bot Features + Privacy{% endif %}</h5>
-<div class="container">
-<div class="row">
-<div class-"col">
-<div class="custom-control custom-switch" style="text-align: center; float: left; display: block; margin-bottom: 3px;">
-	<input type="checkbox" class="custom-control-input" tabindex="0" id="custom_prefix" style="margin: auto !important;" name="custom_prefix" {%if data.features and "custom_prefix" in data.features %}checked aria-label="Custom Prefix Enabled"{% else %}aria-label="Custom Prefix Disabled"{% endif%}/>
-	<label class="custom-control-label" for="custom_prefix">Custom Prefix -> Can your prefix be customized/changed?</label>
-</div><br/>
-<div class="custom-control custom-switch" style="text-align: center; float: left; display: block; margin-top: 15px;">
-	<input type="checkbox" class="custom-control-input" tabindex="0" id="open_source" style="margin: auto !important;" name="open_source" {%if data.features and "open_source" in data.features %}checked aria-label="Open Source Enabled"{% else %}aria-label="Open Source Disabled"{% endif %}/>
-	<label class="custom-control-label" for="open_source">Open Source -> Does your bot have it's code open to the public, preferrably on a git repository?</label>
-</div>
-</div></div><br/>
-     <h5 style="font-weight: bold; margin-bottom: 15px;">Bot Purpose</h5>
+	<h5 style="font-weight: bold; margin-bottom: 15px;">{% if mode == "templ_add" or mode == "templ_edit" %}Server Template Features{% else %}Bot Features + Privacy{% endif %}</h5>
+	    <select-pure name="tags" id="features" default-label="Choose any features that your bot supports" multiple>
+		{% for feature in features.keys() %}
+		<option-pure value="{{feature}}" {% if feature in data.features %}selected{% endif %}>{{features[feature].name}}</option-pure>
+		{% endfor %}
+	    </select-pure>
+     <h5 style="font-weight: bold; margin-bottom: 15px; margin-top: 5px">Bot Purpose</h5>
       <label
         for="description"
         >Short Description <span style="color: red; font-weight: bold" aria-hidden="true">*</span></label
@@ -237,14 +230,14 @@
       <label 
       for="long_description_type"
       >Long Description Type (Click to change)</label>
-      <select id="long_description_type" name="long_description_type" class="form-control fform select-fl">
+      <select id="long_description_type" name="long_description_type:number" class="form-control fform select-fl">
               <option value="0" {% if data.long_description_type == enums.LongDescType.html %}selected{%endif%}>HTML/Raw - Recommended</option>
 	      <option value="1" {% if data.long_description_type == enums.LongDescType.markdown_pymarkdown %}selected{%endif%}>Markdown (python-markdown) - Recommended</option>
 	      <option value="2" {% if data.long_description_type == enums.LongDescType.markdown_marked %}selected{%endif%}>Markdown (marked) - Beta</option>
       </select>
       <button type="button" class="btn btn-outline-light" onclick="longdescfaq();">Help me decide</button><br/><br/>
       <label for="nsfw">NSFW Bot (Click to change)</label>
-      <select id="nsfw" name="nsfw" class="form-control fform select-fl">
+      <select id="nsfw" name="nsfw:boolean" class="form-control fform select-fl">
 	      <option value="false" {% if not data.nsfw %}selected{% endif %}>No</option>
 	      <option value="true" {% if data.nsfw %}selected{% endif %}>Yes</option>
       </select>
@@ -269,8 +262,13 @@
       </div>
       <label
         for="tags"
-	>Select tags for your bot <span style="color: red; font-weight: bold" aria-hidden="true">*</span></label
-      ><span class="select_tags"></span>
+	>Select tags for your bot <span style="color: red; font-weight: bold" aria-hidden="true">*</span></label>
+      <select-pure name="tags" id="tags" default-label="Please select tags for your bot" multiple>
+	<option-pure value="" disabled hidden>-- Please select tags for your bot --</option-pure>
+	{% for tag in tags_fixed %}
+	<option-pure value="{{tag.id}}" {% if data.tags and tag.id in data.tags %}selected{% endif %}>{{tag.name}}</option-pure>
+	{% endfor %}
+      </select-pure>
       <div class="d-flex justify-content-center">
         <button class="btn btn-outline-light" type="submit" style="margin-top: 50px; margin-bottom: 30px">{% if mode == "edit" %}Edit Bot{%else%}Add Bot{%endif%}</button>
       </div>
@@ -292,7 +290,6 @@
 	};
 
   </script>
-<script src="https://cdn.jsdelivr.net/gh/Fates-List/FatesList@main/static/assets/js/bundle.min.js"></script>
 {% if mode == "edit" %}
   <hr
     style="
@@ -316,24 +313,29 @@
 </div>
 </div>
 </div>
-  {% endif %}
+{% endif %}
+<script src="https://cdn.jsdelivr.net/npm/jquery-serializejson@3.2.1/jquery.serializejson.min.js"></script>
+<script>
+	var $j = jQuery.noConflict();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/select-pure@latest/dist/index.js"></script>
 <script>
 function previewLongDesc(){
 	html = document.querySelector("#long_description_type").value == "0";
 	ld = document.querySelector("#long_description").value;
 	if(ld == "")
 		return
-        $.ajax({
+        $j.ajax({
            type: 'POST',
            dataType: 'json',
            {% if mode == "edit" %}
 	   headers: {"Authorization": "{{data.api_token}}"},
 	   {% endif %}
-           url: '/api/preview',
+		url: '/api/preview?lang={{site_lang}}',
            data: JSON.stringify({"html_long_description": html, "data": ld}),
 	   statusCode: {
            "200": function(data) {
-               $("#ld-preview").html(data.html)
+               $j("#ld-preview").html(data.html)
            },
            "429": function(data)
            {
@@ -343,37 +345,65 @@ function previewLongDesc(){
     });
 
 }
-
-$("#bot_form").submit( function(eventObj) {
-    var input = $("<input>").attr({"type":"hidden","name":"tags"}).val(instance.value());
-    $('#bot_form').append(input);
-    return true;
-});
-  {% if mode == "edit" or data.tags %}
-  const selected_tags = [
-      {% for tag in data.tags %}
-        "{{tag}}",
-      {% endfor %}
-  ]
-  {% else %} 
-  const selected_tags = []
-  {% endif %}
-  const myOptions = [
-      {% for tag in tags_fixed %}
-
-    {
-      label: '{{tag.name}}',
-          value: '{{tag.id}}',
-    },
-        {% endfor %}
-      ]
-  var instance = new SelectPure(".select_tags", {
-      options: myOptions,
-      autocomplete: true, // default: false
-      multiple: true,
-      icon: "fas fa-times",
-      value: selected_tags,
-  });
+function submitBot(e) {
+    try {
+    	json = $j('#botform').serializeJSON()
+    	json.tags = document.querySelector("#tags").values
+	extra_owners = json.extra_owners.replace(" ", "").split(",")
+	json.extra_owners = []
+	for(i = 0; i < extra_owners.length; i++) {
+	   if(extra_owners[i] != "")
+		json.extra_owners.append(extra_owners[i])
+	}
+	bot_id = json.bot_id
+	if(bot_id == undefined)
+	    bot_id = "{{data.bot_id}}"
+	if(json.tags == []) {
+	    modalShow("Choose Some Tags!", "You need to choose tags for your bot to add it")
+	    return
+	}
+	json.features = document.querySelector("#features").values
+	json.owner = "{{user_id}}"
+	json = JSON.stringify(json)
+	$j.ajax({
+		url: `/api/bots/${bot_id}`,
+		method: {% if mode == "add" %}"POST"{% else %}"PATCH"{% endif %},
+		headers: {'Authorization': '{{user_token}}'},
+		contentType: "application/json",
+		data: json,
+		statusCode: {
+			202: function(data) {
+				modalShow("Success", "Your bot (and its changes) has been added to the RabbitMQ queue. Your page should auto refresh to it in a few minutes")
+				window.bot_id = bot_id // Make it global
+				setTimeout(setInterval(function(){
+				$j.ajax({
+					url: `/api/bots/${bot_id}`,
+					method: "GET",
+					statusCode: {
+						200: function(data){
+							window.location.replace(`/bot/${bot_id}`)
+						}
+					}
+				})
+				}, 2000), 1000);
+			},
+			400: function(data) {
+				modalShow("Error", data.responseJSON.reason)
+			},
+			422: function(data) {
+				json = JSON.stringify(data.responseJSON)
+				modalShow("An error occurred during initial proccessing. Try again later", json)
+			},
+			429: function(data) {
+				modalShow("Ratelimited", "You are being ratelimited, try again in 5 minutes")
+			}
+		}
+	})
+    }
+    catch(err) {
+    	alert(err)
+    }
+};
   function showToken(but) {
 	
 	token = document.querySelector("#apitok")
@@ -392,9 +422,9 @@ $("#bot_form").submit( function(eventObj) {
   function postStats() {
 	server_count = document.querySelector("#server-count").value
   	payload = {"guild_count": server_count}
-	$.ajax({
+	$j.ajax({
 		headers: {'Authorization': '{{data.api_token}}'},
-		type: 'POST',
+		method: 'POST',
 		url: '/api/bots/{{data.bot_id}}/stats',
 		contentType: 'application/json',
 		data: JSON.stringify(payload),
@@ -402,7 +432,7 @@ $("#bot_form").submit( function(eventObj) {
 	modalShow("Success", "Done posting stats. You may leave this page or continue editing this bot!")
   }
   function regenToken() {
-	$.ajax({
+	$j.ajax({
 	   headers: {'Authorization': '{{data.api_token}}'},
 	   type: 'PATCH',
 	   url: '/api/bots/{{data.bot_id}}/token',
@@ -416,7 +446,7 @@ $("#bot_form").submit( function(eventObj) {
   function testHook(url, type) {
 	api_token = "{{data.api_token}}"
 	headers = {"Authorization": api_token}
-	$.ajax({
+	$j.ajax({
 		url: "/api/v2/bots/{{data.bot_id}}/votes/test",
 		dataType: "json",
 		headers: headers,
@@ -428,11 +458,6 @@ $("#bot_form").submit( function(eventObj) {
   }
 
   {% endif %}
-  $("#bot_form").submit(function (eventObj) {
-      var input = $("<input>").attr({ "type": "hidden", "name": "tags" }).val(instance.value());
-      $('#bot_form').append(input);
-      return true;
-  });
 </script>
 
 {% endblock %} 

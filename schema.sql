@@ -244,5 +244,6 @@ CREATE TABLE bot_list_partners (
 	target BIGINT NOT NULL UNIQUE,
 	site_ad TEXT,
 	server_ad TEXT,
-	created_at timestamptz default now()
+	created_at timestamptz default now(),
+	js_allowed boolean default true
 );

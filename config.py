@@ -101,10 +101,12 @@ special_badges = {
 
 features = {
     "custom_prefix": {
+        "name": "Customizable Prefix",
         "type": "positive",
         "description": "A bot with Custom Prefix supports changing of the bots prefix and is considered positive by Fates List"
     },
     "open_source": {
+        "name": "Open Source",
         "type": "positive",
         "description": "These bots are open source meaning they can easily be audited and/or potentially self hosted."
     }

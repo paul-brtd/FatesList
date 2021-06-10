@@ -77,11 +77,12 @@ async def login_confirm(request: Request, code: str, state: str):
         # 794834630942654546
         token = await get_user_token(int(userjson["id"]), request.session.get("username"))
         request.session["user_token"] = token
-        user_css = await db.fetchrow("SELECT css FROM users WHERE user_id = $1", int(request.session["user_id"]))
+        user_css = await db.fetchrow("SELECT css FROM users WHERE user_id = $1", int(userjson["id"]))
         if user_css is None:
             request.session["user_css"] = ""
         else:
             request.session["user_css"] = user_css["css"]
+        request.session["js_allowed"] = await db.fetchval("SELECT js_allowed from users WHERE user_id = $1", int(userjson["id"])) 
         if "guilds.join" in scopes_lst:
             await discord_o.join_user(access_token["access_token"], userjson["id"])
         request.session["ban_data"] = ban_data

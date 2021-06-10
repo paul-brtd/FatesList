@@ -123,8 +123,13 @@ async def get_bot_ws_events(request: Request, bot_id: int, Authorization: str = 
         events = {} # Nothing
     return events
 
-@router.post("/bots/{bot_id}", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=1, minutes=2))])
+@router.post("/bots/{bot_id}", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=2, minutes=2))])
 async def add_bot_api(request: Request, bot_id: int, bot: BotAdd, Authorization: str = Header("USER_TOKEN_OR_BOTBLOCK_ADD_KEY")):
+    """
+    Adds a bot to fates list. Owner must be the owner adding the bot
+
+    Due to how Fates List edits bota using RabbitMQ, this will return a 202 and not a 200 on success
+    """
     if secure_strcmp(Authorization, bb_add_key):
         bot.oauth_enforced = True # Botblock add key, enforce oauth
     else:
@@ -145,13 +150,15 @@ async def add_bot_api(request: Request, bot_id: int, bot: BotAdd, Authorization:
     bot_adder = BotActions(bot_dict)
     rc = await bot_adder.add_bot()
     if rc is None:
-        return api_success(f"{site_url}/bot/{bot_id}")
+        return api_success(f"{site_url}/bot/{bot_id}", status_code = 202)
     return api_error(rc[0], rc[1])
 
-@router.patch("/bots/{bot_id}", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=1, minutes=2))])
+@router.patch("/bots/{bot_id}", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=2, minutes=2))])
 async def edit_bot_api(request: Request, bot_id: int, bot: BotEdit, Authorization: str = Header("USER_TOKEN_OR_BOTBLOCK_EDIT_KEY")):
     """
-    Edits a bot, the owner here should be the owner editing the bot
+    Edits a bot, the owner here should be the owner editing the bot.
+
+    Due to how Fates List edits bota using RabbitMQ, this will return a 202 and not a 200 on success
     """
     if secure_strcmp(Authorization, bb_edit_key):
         bot.oauth_enforced = True # Botblock add key, enforce o0auth0
@@ -173,7 +180,7 @@ async def edit_bot_api(request: Request, bot_id: int, bot: BotEdit, Authorizatio
     bot_editor = BotActions(bot_dict)
     rc = await bot_editor.edit_bot()
     if rc is None:
-        return api_success(f"{site_url}/bot/{bot_id}")
+        return api_success(f"{site_url}/bot/{bot_id}", status_code = 202)
     return api_error(rc[0], rc[1])
 
 @router.get("/bots/{bot_id}/reviews", response_model = BotReviews)
@@ -430,11 +437,11 @@ async def profiles_search_page(request: Request, q: str):
     return await render_profile_search(request = request, q = q, api = True)
 
 @router.post("/preview", response_model = PrevResponse, dependencies=[Depends(RateLimiter(times=20, minutes=1))])
-async def preview_api(request: Request, data: PrevRequest):
+async def preview_api(request: Request, data: PrevRequest, lang: str = "default"):
     if not data.html_long_description:
-        html = emd(markdown.markdown(data.data, extensions=["extra", "abbr", "attr_list", "def_list", "fenced_code", "footnotes", "tables", "admonition", "codehilite", "meta", "nl2br", "sane_lists", "toc", "wikilinks", "smarty", "md_in_html"]))
+        html = emd(markdown.markdown(intl_text(data.data, lang), extensions=["extra", "abbr", "attr_list", "def_list", "fenced_code", "footnotes", "tables", "admonition", "codehilite", "meta", "nl2br", "sane_lists", "toc", "wikilinks", "smarty", "md_in_html"]))
     else:
-        html = data.data
+        html = intl_text(data.data, lang)
     # Take the h1...h5 anad drop it one lower
     html = html.replace("<h1", "<h2 style='text-align: center'").replace("<h2", "<h3").replace("<h4", "<h5").replace("<h6", "<p").replace("<a", "<a class='long-desc-link'").replace("ajax", "").replace("http://", "https://").replace(".alert", "")
     return {"html": html}
@@ -562,6 +569,7 @@ async def set_js_mode(request: Request, user_id: int, Authorization: str = Heade
     if id is None:
         return abort(401)
 
-    js = await db.fetchval("UPDATE users SET nojs = NOT(COALESCE(js, FALSE)) RETRUNING nojs")
+    js = await db.fetchval("UPDATE users SET js_allowed = NOT(COALESCE(js_allowed, TRUE)) RETURNING js_allowed")
+    request.session["js_allowed"] = js
     return api_success(status_code = 206, js = js)
 

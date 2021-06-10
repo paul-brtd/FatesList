@@ -69,13 +69,8 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
     else: 
         ldesc = bot['long_description']
 
-    if request.session.get("user_id"):
-        nojs = await db.fetchval("SELECT nojs from users WHERE user_id = $1", int(request.session.get("user_id")))
-    if bot["js_allowed"]:
-        nojs = False
-    else:
-        nojs = True
-    if nojs:
+    user_js_allowed = request.session.get("js_allowed", True)
+    if not user_js_allowed or not bot["js_allowed"]:
         try:
             ldesc = cleaner.clean_html(ldesc)
         except:

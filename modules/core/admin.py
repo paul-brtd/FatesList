@@ -21,8 +21,6 @@ class BotActions():
     def gen_rabbit_dict(self):
         rmq_dict = self.__dict__.copy()
         del rmq_dict["generated"]
-        del rmq_dict["custom_prefix"]
-        del rmq_dict["open_source"]
         for key in self.generated.__dict__.keys():
             rmq_dict[key] = self.generated.__dict__[key]
         logger.trace(f"RabbitMQ dict is {rmq_dict}")

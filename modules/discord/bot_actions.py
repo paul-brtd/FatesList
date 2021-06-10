@@ -1,5 +1,4 @@
 from ..core import *
-from modules.models.bot_actions import BotAddForm, BotEditForm
 router = APIRouter(
     prefix = "/bot",
     tags = ["Actions"],
@@ -11,31 +10,9 @@ allowed_file_ext = [".gif", ".png", ".jpeg", ".jpg", ".webm", ".webp"]
 @router.get("/admin/add")
 async def add_bot(request: Request):
     if "user_id" in request.session.keys():
-        return await templates.TemplateResponse("bot_add_edit.html", {"request": request, "tags_fixed": tags_fixed, "error": None, "mode": "add"})
+        return await templates.TemplateResponse("bot_add_edit.html", {"request": request, "tags_fixed": tags_fixed, "features": features, "mode": "add"})
     else:
         return RedirectResponse("/auth/login?redirect=/bot/admin/add&pretty=to add a bot")
-
-@router.post("/admin/add")
-async def add_bot_backend(
-        request: Request,
-        bot: BotAddForm = Depends(BotAddForm),
-    ):
-    if "user_id" not in request.session.keys():
-        return RedirectResponse("/auth/login?redirect=/bot/admin/add&pretty=to add a bot", status_code = 303)
-    banner = bot.banner.replace("http://", "https://").replace("(", "").replace(")", "")
-    bot_dict = bot.dict()
-    features = [f for f in bot_dict.keys() if bot_dict[f] == "on" and f in ["custom_prefix", "open_source"]]
-    bot_dict["features"] = features
-    bot_dict["user_id"] = request.session.get("user_id")
-    bot_adder = BotActions(bot_dict)
-    try:
-        rc = await asyncio.shield(bot_adder.add_bot())
-    except:
-        rc = await asyncio.shield(bot_adder.add_bot())
-    if rc is None:
-        return RedirectResponse("/bot/" + str(bot_dict["bot_id"]), status_code = 303)
-    bot_dict["tags"] = bot_dict["tags"].split(",")
-    return await templates.TemplateResponse("bot_add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": rc[0], "code": rc[1], "mode": "add"})
 
 @router.get("/{bot_id}/settings")
 async def bot_settings_page(request: Request, bot_id: int, csrf_protect: CsrfProtect = Depends()):
@@ -62,41 +39,9 @@ async def bot_settings_page(request: Request, bot_id: int, csrf_protect: CsrfPro
         if vanity is None:
             vanity = {"vanity": None}
         bot = fetch | dict(vanity)
-        return await templates.TemplateResponse("bot_add_edit.html", {"request": request, "mode": "edit", "tags_fixed": tags_fixed, "username": request.session.get("username", False),"data": bot, "avatar": request.session.get("avatar"), "epoch": time.time(), "vanity": vanity["vanity"], "csrf_protect": csrf_protect})
+        return await templates.TemplateResponse("bot_add_edit.html", {"request": request, "mode": "edit", "tags_fixed": tags_fixed, "username": request.session.get("username", False),"data": bot, "avatar": request.session.get("avatar"), "epoch": time.time(), "vanity": vanity["vanity"], "csrf_protect": csrf_protect, "features": features})
     else:
         return RedirectResponse("/")
-
-@router.post("/{bot_id}/edit", dependencies=[Depends(RateLimiter(times=1, minutes=2))])
-async def bot_edit_backend(
-        request: Request,
-        bot_id: int,
-        bot: BotEditForm = Depends(BotEditForm),
-        csrf_protect: CsrfProtect = Depends()
-    ):
-    ret = await verify_csrf(request, csrf_protect)
-    if ret:
-        return ret # CSRF
-    if "user_id" not in request.session.keys():
-        return RedirectResponse("/")
-    check = await is_bot_admin(bot_id, int(request.session.get("user_id")))
-    if not check:
-        return abort(403)
-    banner = bot.banner.replace("http://", "https://").replace("(", "").replace(")", "")
-    guild = client.get_guild(main_server)
-    bot_dict = bot.dict()
-    features = [f for f in bot_dict.keys() if bot_dict[f] == "on" and f in ["custom_prefix", "open_source"]]
-    bot_dict["features"] = features
-    bot_dict["bot_id"] = bot_id
-    bot_dict["user_id"] = request.session.get("user_id")
-    bot_editor = BotActions(bot_dict)
-    rc = await bot_editor.edit_bot()
-    if rc is None:
-        return RedirectResponse("/bot/" + str(bot_id), status_code = 303)
-    bot_dict["tags"] = bot_dict["tags"].split(",")
-    return await templates.TemplateResponse("bot_add_edit.html", {"request": request, "tags_fixed": tags_fixed, "data": bot_dict, "error": rc[0], "code": rc[1], "mode": "edit", "csrf_protect": csrf_protect})
-
-class RC(BaseModel):
-    g_recaptcha_response: str = FForm(None)
 
 @router.post("/{bot_id}/vote")
 async def vote_for_bot_or_die(

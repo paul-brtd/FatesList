@@ -3,8 +3,8 @@
 {% block head %}
 <style>
 .modalux {
-                border-radius: 50%;
-       }
+    border-radius: 50%;
+}
 </style>
 {% endblock %}
 
@@ -28,21 +28,8 @@
 	{%endif%}
 	<div>
 	{% for badge_id, badge_dict in badges.items()%} <!-- Badges -->
-                <a href="javascript:void(0)"><img src='{{badge_dict["image"]}}' alt='{{badge_dict["name"] + " badge"}}' height="50px" width="55px" class="modalux" onclick="modalShow('#{{badge_id}}')"/></a>
-
-                <div class="modal fade" id="{{badge_id}}" tabindex="-1"  aria-labelledby="{{badge_id}}Label" aria-hidden="true">
-                        <div class="modal-dialog modal-dialog-centered">
-                                <div class="modal-content">
-                                        <div class="modal-header">
-                                                <h5 style="color: black;" class="modal-title" id="{{badge_id}}Label">{{badge_dict["name"]}}</h5>
-                                        </div>
-                                        <div class="modal-body">
-                                        {{badge_dict["description"]}}<br/><br/>
-                                        </div>
-                                </div>
-                        </div>
-                </div>
-        {%endfor%}
+	<a href="javascript:void(0)"><img src='{{badge_dict["image"]}}' alt='{{badge_dict["name"] + " badge"}}' height="50px" width="55px" class="modalux" onclick="modalShow('{{badge_dict.name}}', '{{badge_dict.description}}')"/></a>
+        {% endfor %}
 	</div>
     </div>
     <hr style="font-size: 20px;border-top-width: 1px;border-top-color: #eee;width: 90%;">
@@ -54,13 +41,20 @@
 		{{ flCard(bot, False, 'bot') }}
 	{% endfor %}
     </div>
+    <aside class="white" style="opacity: 0.8; margin-bottom: 11px;">Note that the above list of bots includes your bots in the queue and banned bots (DM/ping an admin for resubmission). These bots are hidden unless you are logged in.</aside>
     {% if personal %}
-    <h6 class="white" style="margin-bottom: 11px;">Note that the above list of bots includes your bots in the queue and banned bots (DM/ping an admin for resubmission). These bots are hidden unless you are logged in.</h6>
+    <h5 class="white" style="margin-bottom: 11px;">Security And Privacy</h5>
+    <h6 class="white">JavaScript</h6>
+    <aside class="white" style="opacity: 0.8">JavaScript in bots is a huge power and responsibility Fates List gives to bot owners to make their bot pages more interactive. Some (rare) bot owners however, despite all our testing and reporting abuse JavaScript and iframes to deliver potentially malicious content. You can disable or enable javascript and iframes in bot pages here! Note that this does not apply to markdown content which is anyways secure but this may be changed in the future</aside>
+    <p class="white">JavaScript Enabled: {{user_info.js_allowed}} <span style="font-size: 14px"><a class="long-desc-link" onclick="{% if user_info.js_allowed %}toggleJS(false){% else %}toggleJS(true){% endif %}">{% if user_info.js_allowed %}Disable{% else %}Enable{% endif %}</a></span></p>
+    <br/>
+    <h6 class="white">User Token</h6>
     <small id="user_tok" class="long-desc-link" style="display: none; margin-bottom: 5px;">API Token (User) [DO NOT SHARE]: {{user_info.api_token}}</small>
-    <button class="btn btn-outline-light" style="margin-bottom: 15px" onclick="showToken(this)">Show API Token (User)</button><br/>
+    <a class="long-desc-link" style="margin-bottom: 20px" onclick="showToken(this)">Show API Token (User)</a><br/>
     <p></p>
     {%endif%}
     <script>
+	{% if personal %}	
 	function showToken(but) {
 		usertok = document.querySelector("#user_tok");
 		if(usertok.style.display == "none") {	
@@ -72,9 +66,6 @@
 			but.innerHTML = "Show API Token (User)"
 		}
 	}		
-        function modalShow(id) {
-                        $(id).modal()
-        }
         function pbioEditPane(el, id) {
                 bio = document.querySelector('#bio-' + id)
                 if(bio.style.display == "none") {
@@ -88,7 +79,25 @@
                         el.innerHTML = 'Edit';
                 }
         }
-  {% if personal %}
+  function toggleJS(mode) {
+  	json = JSON.stringify({"js": mode})
+	headers = {"Authorization": "{{user_info.api_token}}"}
+        $.ajax({
+		url: "/api/users/{{user_id}}/js",
+		dataType: "json",
+		headers: headers,
+		type: "PATCH",
+		processData: false,
+		contentType: 'application/json',
+		data: json,
+		statusCode: {
+			206: function(data) {
+				window.location.reload()
+			}
+		}
+
+	})
+  }
   function updateBio() {
         json = JSON.stringify({"description": document.querySelector("#bio-form-0").value})
         headers = {"Authorization": "{{user_info.api_token}}"}
@@ -101,7 +110,7 @@
                 contentType: 'application/json',
                 data: json
         })
-        alert("Changed your bio successfully")
+        modalShow("Success!", "Changed your bio successfully")
         window.location.reload()
 
   }

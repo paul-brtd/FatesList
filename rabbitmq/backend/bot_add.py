@@ -6,7 +6,7 @@ class Config:
     name = "Bot Add"
     description = "Adds a bot to the queue"
 
-async def backend(json, *, user_id, bot_id, prefix, library, website, banner, support, long_description, description, tags, extra_owners, invite, features, long_description_type, css, donate, github, webhook, webhook_type, webhook_secret, vanity, privacy_policy, nsfw):
+async def backend(json, *, user_id, bot_id, prefix, library, website, banner, support, long_description, description, tags, extra_owners, invite, features, long_description_type, css, donate, github, webhook, webhook_type, webhook_secret, vanity, privacy_policy, nsfw, **kwargs):
     user_id, bot_id = int(user_id), int(bot_id) # I am stupid and made this a string
     logger.trace(f"Got bot id {bot_id}")
     await db.execute("DELETE FROM bots WHERE bot_id = $1", bot_id)

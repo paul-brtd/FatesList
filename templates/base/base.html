@@ -89,7 +89,12 @@
 		function modalShow(title, body) {
 			document.querySelector("#base-modal-label").innerHTML = title;
 			document.querySelector("#base-modal-body").innerHTML = body;
-			$("#base-modal").modal();
+			try {
+				$("#base-modal").modal();
+			}
+			catch(err) {
+				$j("#base-modal").modal();
+			}
 		}
 	</script>
 <header role="navigation" style="background: black; color: white;" class="navbar fixed-top navbar-full navbar-dark navigation-clean-button" aria-label="Site Navigation Menu">
