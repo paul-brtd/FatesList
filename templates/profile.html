@@ -32,16 +32,6 @@
         {% endfor %}
 	</div>
     </div>
-    <hr style="font-size: 20px;border-top-width: 1px;border-top-color: #eee;width: 90%;">
-    <div class="d-flex" style="margin-left: 5%;"><span class="iconify" data-icon="fa-solid:robot" data-inline="false" data-height="3em" style="color: white"></span>
-	    <h4 style="color: rgba(255,255,255,0.87);margin-left: 15px;">{% if not personal %}{{user.username}}'s Bots{%else%}Your Bots{%endif%}</h4>
-    </div>
-    <div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center" id="tt-1" style="width: 90%;margin: 30px 5%;">
-        {% for bot in user_bots %}
-		{{ flCard(bot, False, 'bot') }}
-	{% endfor %}
-    </div>
-    <aside class="white" style="opacity: 0.8; margin-bottom: 11px;">Note that the above list of bots includes your bots in the queue and banned bots (DM/ping an admin for resubmission). These bots are hidden unless you are logged in.</aside>
     {% if personal %}
     <h5 class="white" style="margin-bottom: 11px;">Security And Privacy</h5>
     <h6 class="white">JavaScript</h6>
@@ -53,6 +43,20 @@
     <a class="long-desc-link" style="margin-bottom: 20px" href="javascript:showToken()" id="sat">Show API Token (User)</a><br/>
     <p></p>
     {%endif%}
+
+    <hr style="font-size: 20px;border-top-width: 1px;border-top-color: #eee;width: 90%;">
+    <div class="d-flex" style="margin-left: 5%;"><span class="iconify" data-icon="fa-solid:robot" data-inline="false" data-height="3em" style="color: white"></span>
+	    <h4 style="color: rgba(255,255,255,0.87);margin-left: 15px;">{% if not personal %}{{user.username}}'s Bots{%else%}Your Bots{%endif%}</h4>
+    </div>
+    <div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center" id="tt-1" style="width: 90%;margin: 30px 5%;">
+        {% for bot in user_bots %}
+		{{ flCard(bot, False, 'bot') }}
+	{% endfor %}
+    </div>
+
+    {% if personal %}
+    <aside class="white" style="opacity: 0.8; margin-bottom: 11px;">Note that the above list of bots includes your bots in the queue and banned bots (DM/ping an admin for resubmission). These bots are hidden unless you are logged in.</aside>
+    {% endif %}
     <script>
 	{% if personal %}	
 	function showToken() {
