@@ -149,4 +149,9 @@ class OauthConfig:
     client_secret = oauth_client_secret
     redirect_uri = "https://" + site + "/auth/login/confirm"
 
-
+langs = {
+    "default": "Default",
+    "en": "English",
+    "es": "Spanish/Español",
+    "it": "Italian"
+}

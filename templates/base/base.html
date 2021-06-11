@@ -114,7 +114,7 @@
           aria-haspopup="true" aria-expanded="false">
 	{% if username %}<img alt="{{username}}'s Avatar" width="25px" style="border-radius: 50%; margin-right: 5px;" src="{{avatar}}">{{username}}{% else %}Not Logged In{%endif%}</span>
 	<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink-333">
-          {% if username %}
+	  {% if username %}
 	  <a class="dropdown-item" href="/profile/{{user_id}}">My Profile</a>
           <a class="dropdown-item" href="/bot/admin/add">Add Bot</a>
 	  <!--<a class="dropdown-item" href="/template/admin/add">Add Server Template</a>-->
@@ -136,8 +136,8 @@
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js" crossorigin></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js" crossorigin></script>
     <script src="https://cdn.jsdelivr.net/gh/djibe/material@4.6.0-rc1/js/material.min.js"></script>
-	<div style="padding: 2px;">
-        <div class="text-center" id="header_text" style="margin-right: auto;margin-left: auto;margin-top: 75px;">
+    <div style="padding: 2px;">
+    <div class="text-center" id="header_text" style="margin-right: auto;margin-left: auto;margin-top: 75px;">
     <main>{% block icontent %}{%endblock%}{% block content %}{% endblock %}</main>
     <footer>
     </footer>
