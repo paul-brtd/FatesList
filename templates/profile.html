@@ -46,16 +46,17 @@
     <h5 class="white" style="margin-bottom: 11px;">Security And Privacy</h5>
     <h6 class="white">JavaScript</h6>
     <aside class="white" style="opacity: 0.8">JavaScript in bots is a huge power and responsibility Fates List gives to bot owners to make their bot pages more interactive. Some (rare) bot owners however, despite all our testing and reporting abuse JavaScript and iframes to deliver potentially malicious content. You can disable or enable javascript and iframes in bot pages here! Note that this does not apply to markdown content which is anyways secure but this may be changed in the future</aside>
-    <p class="white">JavaScript Enabled: {{user_info.js_allowed}} <span style="font-size: 14px"><a class="long-desc-link" onclick="{% if user_info.js_allowed %}toggleJS(false){% else %}toggleJS(true){% endif %}">{% if user_info.js_allowed %}Disable{% else %}Enable{% endif %}</a></span></p>
+    <p class="white">JavaScript Enabled: {{user_info.js_allowed}} <span style="font-size: 14px"><a class="long-desc-link" href="javascript:{% if user_info.js_allowed %}toggleJS(false){% else %}toggleJS(true){% endif %}">{% if user_info.js_allowed %}Disable{% else %}Enable{% endif %}</a></span></p>
     <br/>
     <h6 class="white">User Token</h6>
     <small id="user_tok" class="long-desc-link" style="display: none; margin-bottom: 5px;">API Token (User) [DO NOT SHARE]: {{user_info.api_token}}</small>
-    <a class="long-desc-link" style="margin-bottom: 20px" onclick="showToken(this)">Show API Token (User)</a><br/>
+    <a class="long-desc-link" style="margin-bottom: 20px" href="javascript:showToken()" id="sat">Show API Token (User)</a><br/>
     <p></p>
     {%endif%}
     <script>
 	{% if personal %}	
-	function showToken(but) {
+	function showToken() {
+		but = document.querySelector("#sat")
 		usertok = document.querySelector("#user_tok");
 		if(usertok.style.display == "none") {	
 			usertok.style.display = "block";
