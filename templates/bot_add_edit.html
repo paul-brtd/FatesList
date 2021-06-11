@@ -36,6 +36,15 @@
 	   <input type="number" placeholder="Server Count" id="server-count" />
 	   <button onclick='postStats()' class="btn btn-outline-light">Post</button>
    </div>
+   <div>
+	   <!-- https://fateslist.xyz/api/bots/822459974936166470/maintenance -->
+	   <h6 style="color: white">Maintenance Mode</h6>
+	   <span id="mm-rendering">
+		   <p>Checking maintenance mode for this bot... please wait</p>
+	   </span>
+	   <span id="mm-status" style="display: none">
+		   <p>Maintenance mode is currently <span id="mm-on"></span></p>
+	   </span>
    </section>
    {% endif %}
    <form id="botform" style="height: auto; margin-top: 30px; color: rgba(255, 255, 255, 0.87); text-align: center;" onsubmit="event.preventDefault(); submitBot(event)">
@@ -348,21 +357,23 @@ function previewLongDesc(){
 function submitBot(e) {
     try {
     	json = $j('#botform').serializeJSON()
-    	json.tags = document.querySelector("#tags").values
-	extra_owners = json.extra_owners.replace(" ", "").split(",")
-	json.extra_owners = []
-	for(i = 0; i < extra_owners.length; i++) {
-	   if(extra_owners[i] != "")
-		json.extra_owners.append(extra_owners[i])
+    	tags = document.querySelector("#tags").values
+        extra_owners = json.extra_owners.replace(" ", "").split(",")
+        features = document.querySelector("#features").values
+	{% for key in ("extra_owners", "tags", "features") %}
+	json.{{key}} = []
+	for(i = 0; i < {{key}}.length; i++) {
+		if({{key}}[i] != "")
+			json.{{key}}[i] = {{key}}[i]
 	}
+	{% endfor %}
 	bot_id = json.bot_id
 	if(bot_id == undefined)
 	    bot_id = "{{data.bot_id}}"
-	if(json.tags == []) {
-	    modalShow("Choose Some Tags!", "You need to choose tags for your bot to add it")
+	if(json.tags.length == 0 || json.tags[0] == "") {
+	    modalShow("Error", "You need to select tags for your bot!")
 	    return
 	}
-	json.features = document.querySelector("#features").values
 	json.owner = "{{user_id}}"
 	json = JSON.stringify(json)
 	$j.ajax({
@@ -396,6 +407,12 @@ function submitBot(e) {
 			},
 			429: function(data) {
 				modalShow("Ratelimited", "You are being ratelimited, try again in 5 minutes")
+			},
+			404: function(data) {
+				modalShow("API is down", "Unfortunately, the Fates List API is down right now. Please try again later")
+			},
+			500: function(data) {
+				modalShow("Internal Server Error", "We had an error internally on our side when proccessing your request. Please try again later.")
 			}
 		}
 	})

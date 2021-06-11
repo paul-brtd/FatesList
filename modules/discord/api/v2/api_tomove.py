@@ -123,8 +123,8 @@ async def get_bot_ws_events(request: Request, bot_id: int, Authorization: str = 
         events = {} # Nothing
     return events
 
-@router.post("/bots/{bot_id}", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=2, minutes=2))])
-async def add_bot_api(request: Request, bot_id: int, bot: BotAdd, Authorization: str = Header("USER_TOKEN_OR_BOTBLOCK_ADD_KEY")):
+@router.post("/bots/{bot_id}", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=5, minutes=3))])
+async def add_bot(request: Request, bot_id: int, bot: BotAdd, Authorization: str = Header("USER_TOKEN_OR_BOTBLOCK_ADD_KEY")):
     """
     Adds a bot to fates list. Owner must be the owner adding the bot
 
@@ -153,8 +153,8 @@ async def add_bot_api(request: Request, bot_id: int, bot: BotAdd, Authorization:
         return api_success(f"{site_url}/bot/{bot_id}", status_code = 202)
     return api_error(rc[0], rc[1])
 
-@router.patch("/bots/{bot_id}", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=2, minutes=2))])
-async def edit_bot_api(request: Request, bot_id: int, bot: BotEdit, Authorization: str = Header("USER_TOKEN_OR_BOTBLOCK_EDIT_KEY")):
+@router.patch("/bots/{bot_id}", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=5, minutes=3))])
+async def edit_bot(request: Request, bot_id: int, bot: BotEdit, Authorization: str = Header("USER_TOKEN_OR_BOTBLOCK_EDIT_KEY")):
     """
     Edits a bot, the owner here should be the owner editing the bot.
 

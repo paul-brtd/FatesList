@@ -4,11 +4,12 @@ from modules.discord.bots import vote_bot_get
 router = APIRouter(
         tags = ["Index"],
         include_in_schema = False
-        )
+)
 
-@router.get("/err/err")
-async def error():
-    return int("haha")
+@router.get("/exp/1")
+async def exp1(request: Request):
+    # Experiment 1
+    request.session["test"] = "hello"
 
 @router.get("/discord")
 def reroute_support():

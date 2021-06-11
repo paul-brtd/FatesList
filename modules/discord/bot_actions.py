@@ -60,28 +60,18 @@ async def vote_for_bot_or_die(
         return await templates.TemplateResponse("message.html", {"request": request, "message": f"Successfully voted for this bot!<script>window.location.replace('/bot/{bot_id}')</script>"})
     elif ret is None:
         return abort(404)
-    else: # Otherwise route
-        wait_time = round(ret[1].total_seconds())
-        wait_time_hr = wait_time//(60*60)
-        wait_time_mp = (wait_time - (wait_time_hr*60*60)) # Minutes
-        wait_time_min = wait_time_mp//60
-        wait_time_sec = (wait_time_mp - wait_time_min*60)
-        if wait_time_min < 1:
-            wait_time_min = 1
-        if wait_time_hr == 1:
-            hr = "hour"
-        else:
-            hr = "hours"
-        if wait_time_min == 1:
-            min = "minute"
-        else:
-            min = "minutes"
-        if wait_time_sec == 1:
-            sec = "second"
-        else:
-            sec = "seconds"
-        wait_time_human = " ".join((str(wait_time_hr), hr, str(wait_time_min), min, str(wait_time_sec), sec))
-        return await templates.TemplateResponse("message.html", {"request": request, "message": "Vote Error", "context": "Please wait " + wait_time_human + " before voting for this bot"})
+    else: # Otherwise error
+        # Get hours, minutes, seconds from total time and format it and return
+        wait_time_total_seconds = round(ret[1].total_seconds())
+        wait_time = {}
+        wait_time["minutes"], wait_time["seconds"] = divmod(wait_time_total_seconds, 60)
+        wait_time["hours"], wait_time["minutes"] = divmod(wait_time["minutes"], 60)
+        wait_time_format = {"hours": "hours", "minutes": "minutes", "seconds": "seconds"}
+        for key in ("hours", "minutes", "seconds"): 
+            if wait_time[key] == 1:
+                wait_time_format[key] = wait_time_format[key][:-1]
+        wait_time_human = ", ".join([f"{wait_time[key]} {wait_time_format[key]}" for key in ("hours", "minutes", "seconds")])
+        return await templates.TemplateResponse("message.html", {"request": request, "message": "Vote Error", "context": f"Please wait {wait_time_human} before voting for this bot"})
 
 @router.post("/{bot_id}/delete", dependencies=[Depends(RateLimiter(times=1, minutes=2))])
 async def delete_bot(request: Request, bot_id: int):
