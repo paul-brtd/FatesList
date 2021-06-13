@@ -98,3 +98,41 @@ function previewLongDesc(){
     });
 
 }
+function showToken(but) {
+	
+	token = document.querySelector("#apitok")
+	if(token.style.display == "none") {
+		document.querySelector("#hidden_token").style.display = "none";
+		document.querySelector("#apitok").style.display = "block";
+		but.innerHTML = "Hide API Token"
+	}
+	else {
+                document.querySelector("#hidden_token").style.display = "inline-block";
+                document.querySelector("#apitok").style.display = "none";
+		but.innerHTML = "Show API Token"
+	}
+  }
+  function postStats() {
+	server_count = document.querySelector("#server-count").value
+  	payload = {"guild_count": server_count}
+	$j.ajax({
+		headers: {'Authorization': context.api_token},
+		method: 'POST',
+		url: `/api/bots/${context.bot_id}/stats`,
+		contentType: 'application/json',
+		data: JSON.stringify(payload),
+	});
+	modalShow("Success", "Done posting stats. You may leave this page or continue editing this bot!")
+  }
+  function regenToken() {
+	$j.ajax({
+	   headers: {'Authorization': context.api_token},
+	   type: 'PATCH',
+	   url: `/api/bots/${context.bot_id}/token`,
+	   processData: false,
+	   contentType: 'application/json',
+	});
+	alert("Regenerated Token Successfully")
+	window.location.reload()
+  }
+
