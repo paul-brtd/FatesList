@@ -67,3 +67,34 @@ function submitBot(e) {
     	alert(err)
     }
 };
+
+function previewLongDesc(){
+	html = document.querySelector("#long_description_type").value == "0";
+	ld = document.querySelector("#long_description").value;
+	if(context.mode == "edit") {
+		headers = {"Authorization": context.api_token}
+	}
+	else {
+		headers = {}
+	}
+	if(ld == "") {
+		return
+	}
+        $j.ajax({
+           type: 'POST',
+           dataType: 'json',
+	   headers: headers,
+	   url: `/api/preview?lang=${context.site_lang}`,
+           data: JSON.stringify({"html_long_description": html, "data": ld}),
+	   statusCode: {
+           "200": function(data) {
+               $j("#ld-preview").html(data.html)
+           },
+           "429": function(data)
+           {
+		alert("You have been rate limited from using previews")
+           }
+	}
+    });
+
+}
