@@ -136,3 +136,15 @@ function showToken(but) {
 	window.location.reload()
   }
 
+function testHook(url, type) {
+	headers = {"Authorization": context.api_token}
+	$j.ajax({
+		url: `/api/bots/${context.bot_id}/votes/test`,
+		dataType: "json",
+		headers: headers,
+		type: "POST",
+		processData: false,
+		contentType: 'application/json',
+	})
+	modalShow("Sent Test Query", "If you do not get the test webhook, make sure you have editted the bot with the webhook url first by adding the Webhook URL and THEN clicking Edit and then try again")
+  }
