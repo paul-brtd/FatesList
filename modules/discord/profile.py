@@ -56,9 +56,9 @@ async def _profile_of_user(request: Request, user_id: int, personal: bool, admin
         fetchq.append(data)
     user_bots = await parse_index_query(fetchq)
     if personal:
-        user_info = await db.fetchrow("SELECT js_allowed, api_token, badges, description, coins FROM users WHERE user_id = $1", user_id)
+        user_info = await db.fetchrow("SELECT user_id, js_allowed, api_token, badges, description, coins FROM users WHERE user_id = $1", user_id)
     else:
-        user_info = await db.fetchrow("SELECT badges, description, coins FROM users  WHERE user_id = $1", user_id)
+        user_info = await db.fetchrow("SELECT user_id, badges, description, coins FROM users WHERE user_id = $1", user_id)
     if user_info is None:
         return abort(404)
     guild = client.get_guild(main_server)

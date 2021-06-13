@@ -108,14 +108,15 @@ class templates():
             arg_dict["avatar"] = request.session.get("avatar")
             arg_dict["username"] = request.session.get("username")
             arg_dict["user_id"] = int(request.session.get("user_id"))
-            arg_dict["user_token"] = request.session.get("user_token")
+            if request.session.get("user_id"):
+                arg_dict["user_token"] = await db.fetchval("SELECT api_token FROM users WHERE user_id = $1", arg_dict["user_id"]) 
             arg_dict["intl_text"] = intl_text
             arg_dict["site_lang"] = request.session.get("site_lang", "default")
             try:
                 arg_dict["access_token"] = orjson.dumps(request.session.get("access_token")).decode("utf-8")
             except:
                 pass
-            arg_dict["scopes"] = request.session.get("dscopes_str")
+            arg_dict["scopes"] = request.session.get("scopes")
         else:
             arg_dict["staff"] = [False]
         arg_dict["site_url"] = site_url

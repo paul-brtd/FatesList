@@ -7,6 +7,7 @@
 }
 .pane {
 	margin-left: 5%;
+	margin-right: 5%;
 }
 .padspan {
 	line-height: 2;
@@ -53,7 +54,7 @@
 	    <span style="font-size: 18px; margin-top: 5px" class="white padspan">JavaScript Enabled: {{user_info.js_allowed}} <span style="font-size: 11px"></span></span><br/>
     </div>
     <div class="d-flex pane">
-	    <button class="btn btn-outline-light" onclick="{% if user_info.js_allowed %}toggleJS(false){% else %}toggleJS(true){% endif %}">{% if user_info.js_allowed %}Disable{% else %}Enable{% endif %}</a></span></p>
+	    <button class="btn btn-outline-light" onclick="toggleJS()">{% if user_info.js_allowed %}Disable{% else %}Enable{% endif %}</a></span></p>
     </div>
     <br/>
     </div>
@@ -69,10 +70,11 @@
 	    <span style="font-size: 18px; margin-top: 5px" class="white padspan">Click the Show button to see your user token</span><br>
     </div>
     <div class="d-flex pane">
-        <button class="btn btn-outline-light" style="margin-bottom: 20px" onclick="showToken()" id="sat">Show</button>
+        <button class="btn btn-outline-light" style="margin-bottom: 20px; margin-right: 4px;" onclick="showToken()" id="sat">Show</button>
+	<button onclick='regenUserToken()' class="btn btn-outline-light">Regenerate</button>
     </div>
     <div class="d-flex pane">
-    <p id="user_tok" class="long-desc-link" style="display: none; margin-bottom: 5px;">{{user_info.api_token}}</p>
+    <p id="user_tok" class="long-desc-link" style="margin-bottom: 5px;"></p>
     </div>
     </section>
     {%endif%}
@@ -91,16 +93,21 @@
     <aside class="white" style="margin-left: 10px; opacity: 0.8; margin-bottom: 11px;">Note that the above list of bots includes your bots in the queue, denied bots (resubmit your bot once its fixed!) and banned bots (make a support ticket to learn why and how to fix it). These bots are hidden to only you and staff until it is approved or unbanned or requeued and approved</aside>
     {% endif %}
     <script>
-	{% if personal %}	
+        var context = {
+		user_id: "{{user_info.user_id}}",
+		user_token: "{{user_info.api_token}}",
+		js_allowed: {{user_info.js_allowed.__str__().lower()}}
+	}
+	    
 	function showToken() {
 		but = document.querySelector("#sat")
-		usertok = document.querySelector("#user_tok");
-		if(usertok.style.display == "none") {	
-			usertok.style.display = "block";
+		usertok = $("#user_tok")
+		if(!usertok.html()) {	
+			usertok.html(context.user_token)
 			but.innerHTML = "Hide"
 		}
 		else {
-			usertok.style.display = "none";
+			usertok.html("")
 			but.innerHTML = "Show"
 		}
 	}		
@@ -117,14 +124,14 @@
                         el.innerHTML = 'Edit';
                 }
         }
-  function toggleJS(mode) {
-  	json = JSON.stringify({"js": mode})
-	headers = {"Authorization": "{{user_info.api_token}}"}
+  function toggleJS() {
+  	json = JSON.stringify({"js": !context.js_allowed})
+	headers = {"Authorization": context.user_token}
         $.ajax({
-		url: "/api/users/{{user_id}}/js",
+		url: `/api/users/${context.user_id}/js`,
 		dataType: "json",
 		headers: headers,
-		type: "PATCH",
+		method: "PATCH",
 		processData: false,
 		contentType: 'application/json',
 		data: json,
@@ -136,14 +143,28 @@
 
 	})
   }
+  function regenUserToken() {
+	headers = {"Authorization": context.user_token}
+        $.ajax({
+		url: `/api/users/${context.user_id}/token`,
+		headers: headers,
+		method: "PATCH",
+		statusCode: {
+			200: function() {
+				modalShow("Success!", "Regenerated User Token Successfully!")
+			}
+		}
+	})
+	setTimeout(function(){window.location.reload()}, 2000)
+  }
   function updateBio() {
         json = JSON.stringify({"description": document.querySelector("#bio-form-0").value})
-        headers = {"Authorization": "{{user_info.api_token}}"}
+        headers = {"Authorization": context.user_token}
         $.ajax({
-		url: "/api/users/{{user_id}}/description",
+		url: `/api/users/${context.user_id}/description`,
                 dataType: "json",
                 headers: headers,
-                type: "PATCH",
+                method: "PATCH",
                 processData: false,
                 contentType: 'application/json',
                 data: json
@@ -152,7 +173,6 @@
         window.location.reload()
 
   }
-{% endif %}
 </script>
 {% endblock %}
 {% block footer %}

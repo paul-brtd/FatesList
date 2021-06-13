@@ -35,11 +35,9 @@ class BotListPartner(BotListAdminRoute):
         return int(v)
     
 class BotListPartnerAd(BotListAdminRoute):
-    pid: uuid.UUID
     ad: str
         
 class BotListPartnerChannel(BotListAdminRoute):
-    pid: uuid.UUID
     publish_channel: str  
         
     @validator('publish_channel')

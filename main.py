@@ -1,7 +1,6 @@
 import uvloop
 uvloop.install()
 from modules.core import *
-
 builtins.boot_time = time.time()
 
 sentry_sdk.init(sentry_dsn)

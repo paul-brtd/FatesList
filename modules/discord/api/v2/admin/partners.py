@@ -80,13 +80,21 @@ async def new_partner(request: Request, partner: BotListPartner, Authorization: 
     guild = client.get_guild(main_server)
     user = guild.get_member(int(partner.mod))
     if user is None or not is_staff(staff_roles, user.roles, 5)[0]:
-        return ORJSONResponse({"done": False, "reason": "Invalid Moderator specified. The moderator in question does not have permission to perform this action!", "code": 9867}, status_code = 400)
+        return api_error(
+            "Invalid Moderator specified. The moderator in question does not have permission to perform this action!", 9867
+        )
     prev_partner = await db.fetchval("SELECT COUNT(1) FROM bot_list_partners WHERE partner = $1", int(partner.partner))
     if prev_partner > 2:
-        return ORJSONResponse({"done": False, "reason": "This user already has two partnerships"}, status_code = 400)
+        return api_error(
+            "This user already has two or more partnerships", 23835
+        )
+
     channel = client.get_channel(int(partner.edit_channel))
     if not channel:
-        return ORJSONResponse({"done": False, "reason": "Partnership edit channel does not exist"}, status_code = 400)
+        return api_error(
+            "Partnership edit channel does not exist", 48844
+        )
+    
     try:
         invite = await client.fetch_invite(partner.invite, with_expiration = True)
         if not invite.guild:
@@ -94,46 +102,68 @@ async def new_partner(request: Request, partner: BotListPartner, Authorization: 
         if not invite.unlimited:
             raise InvalidInvite(f"Invite is not unlimited use. Max age is {invite.max_age} and unlimited is {invite.unlimited}.")
     except Exception as exc:
-        return ORJSONResponse({"done": False, "reason": f"Could not resolve invite as {type(exc).__name__}: {exc}. Double check the invite"}, status_code = 400)
+        return api_error(
+            f"Could not resolve invite as {type(exc).__name__}: {exc}. Double check the invite **and** the API code itself", 38281
+        )
+        
     id = uuid.uuid4()
     if partner.type == enums.PartnerType.bot:
         if not partner.id:
-            return ORJSONResponse({"done": False, "reason": f"Bot not passed to API. Contact the developers of this app", "code": 5682}, status_code = 400)
+            return api_error(
+                f"Bot not passed to API. Contact the developers of this app", 5682
+            )
+        
         bot_user_count = await db.fetchval("SELECT user_count FROM bots WHERE bot_id = $1", int(partner.id))
         if not bot_user_count:
-            return ORJSONResponse({"done": False, "reason": f"Bot has not yet posted user count yet or is not on Fates List", "code": 4748}, status_code = 400)
+            return ORJSONResponse(
+                f"Bot has not yet posted user count yet or is not on Fates List", 4748
+            )
+    
     try:
         await db.execute("INSERT INTO bot_list_partners (id, mod, partner, edit_channel, invite, user_count, target, type) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)", id, int(partner.mod), int(partner.partner), int(partner.edit_channel), invite.code, invite.approximate_member_count if partner.type == enums.PartnerType.guild else bot_user_count, partner.id if partner.type == enums.PartnerType.bot else invite.guild.id, partner.type)
     except Exception as exc:
-        return ORJSONResponse({"done": False, "reason": f"Could not create partnership as {type(exc).__name__}: {exc}. Contact Rootspring for help with this error"}, status_code = 400)
-    embed = discord.Embed(title="Partnership Channel Recorded", description=f"Put your advertisement here, then ask a moderator to run +partner ad {id} <message link of ad>")
+        return api_error(
+            f"Could not create partnership as {type(exc).__name__}: {exc}. Contact Rootspring for help with this error", 58583
+        )
+    embed = discord.Embed(
+        title="Partnership Channel Recorded", 
+        description=f"Put your advertisement here, then ask a moderator to run +partner ad {id} <message link of ad>"
+    )
     await channel.send(embed = embed)
-    return {"done": True, "reason": None, "code": 1000, "id": id}
+    return api_success(id = id)
 
-@router.patch("/partners/ad/{ad_type}", response_model = APIResponse)
-async def set_partner_ad(request: Request, ad_type: enums.PartnerAdType, partner: BotListPartnerAd, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
+@router.patch("/partners/{pid}/ad/{ad_type}", response_model = APIResponse)
+async def set_partner_ad(request: Request, pid: uuid.UUID, ad_type: enums.PartnerAdType, partner: BotListPartnerAd, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
     if not secure_strcmp(Authorization, test_server_manager_key) and not secure_strcmp(Authorization, root_key):
         return abort(401)
     guild = client.get_guild(main_server)
     user = guild.get_member(partner.mod)
     if user is None or not is_staff(staff_roles, user.roles, 5)[0]:
         return ORJSONResponse({"done": False, "reason": "Invalid Moderator specified. The moderator in question does not have permission to perform this action!", "code": 9867}, status_code = 400)
-    partner_check = await db.fetchval("SELECT COUNT(1) FROM bot_list_partners WHERE id = $1", partner.pid)
+    partner_check = await db.fetchval("SELECT COUNT(1) FROM bot_list_partners WHERE id = $1", pid)
     if partner_check == 0:
         return ORJSONResponse({"done": False, "reason": "Partnership ID is invalid or partnership does not exist. Recheck the ID", "code": 4642}, status_code = 400)
-    await db.execute(f"UPDATE bot_list_partners SET {ad_type.get_col()} = $1 WHERE id = $2", partner.ad, partner.pid)
-    return {"done": True, "reason": None, "code": 1000, "id": id}
+    await db.execute(f"UPDATE bot_list_partners SET {ad_type.get_col()} = $1 WHERE id = $2", partner.ad, pid)
+    return {"done": True, "reason": None, "code": 1000}
 
-@router.patch("/partners/publish_channel", response_model = APIResponse)
-async def set_partner_publish_channel(request: Request, partner: BotListPartnerChannel, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
+@router.patch("/partners/{pid}/publish_channel", response_model = APIResponse)
+async def set_partner_publish_channel(request: Request, pid: uuid.UUID, partner: BotListPartnerChannel, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
     if not secure_strcmp(Authorization, test_server_manager_key) and not secure_strcmp(Authorization, root_key):
         return abort(401)
     guild = client.get_guild(main_server)
     user = guild.get_member(partner.mod)
     if user is None or not is_staff(staff_roles, user.roles, 5)[0]:
-        return ORJSONResponse({"done": False, "reason": "Invalid Moderator specified. The moderator in question does not have permission to perform this action!", "code": 9867}, status_code = 400)
-    partner_check = await db.fetchval("SELECT COUNT(1) FROM bot_list_partners WHERE id = $1", partner.pid)
+        return api_error(
+            "Invalid Moderator specified. The moderator in question does not have permission to perform this action!", 9867
+        )
+    partner_check = await db.fetchval("SELECT COUNT(1) FROM bot_list_partners WHERE id = $1", pid)
     if partner_check == 0:
-        return ORJSONResponse({"done": False, "reason": "Partnership ID is invalid or partnership does not exist. Recheck the ID", "code": 4642}, status_code = 400)
-    await db.execute("UPDATE bot_list_partners SET publish_channel = $1 WHERE id = $2", partner.publish_channel, partner.pid)
-    return {"done": True, "reason": None, "code": 1000, "id": id}
+        return api_error(
+            "Partnership ID is invalid or partnership does not exist. Recheck the ID", 4642
+        )
+    await db.execute("UPDATE bot_list_partners SET publish_channel = $1 WHERE id = $2", partner.publish_channel, pid)
+    return api_success()
+
+@router.post("/partners/{pid}/publish")
+async def publish_partnership(request: Request, pid: uuid.UUID):
+    pass

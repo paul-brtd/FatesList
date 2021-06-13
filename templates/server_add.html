@@ -44,17 +44,26 @@
 	  }
 	function checkGuilds(){
 		document.querySelector("#valid_servers").innerHTML = "Getting Guilds... Please wait"
-        $.ajax({
+		access_token = {{access_token|safe}}
+		try {
+		$.ajax({
                 url: "/api/users/{{user_id}}/servers/prepare",
-                type: "POST",
-		data: JSON.stringify({'scopes': "{{scopes}}", "access_token": {{access_token|safe}} }),
+                method: "POST",
+		dataType: "json",
+		processData: false,
+		contentType: 'application/json',
+		data: JSON.stringify({"scopes": "{{scopes}}", "access_token": access_token}),
 		headers: {"Authorization": "{{user_token}}"},
            	statusCode: {
-                	'429': function(data) {
+                	429: function(data) {
 				console.log(data)
 				modalShow('You are being ratelimited', `You are being ratelimited. Please try again in 30 seconds. Thank you for your patience!`)
                 	},
-			'200': function(data) {
+			422: function(data) {
+				alert("Test")
+				alert(JSON.stringify(data.responseJSON))
+			},
+			200: function(data) {
 				server_data = ""
 				for(server in data.servers) {
 					server_data += `
@@ -107,6 +116,10 @@
 			}
 		}
         })
+	}
+		catch (err) {
+		alert(err)
+		}
 	};
 	function openGuild(gid) {
 		if($("#" + gid).attr("data-hidden") == "true"){

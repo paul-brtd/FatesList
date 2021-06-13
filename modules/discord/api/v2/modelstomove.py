@@ -6,7 +6,7 @@ This is part of Fates List. You can use this in any library you wish. For best A
 Depends: enums.py
 """
 
-from typing import List, Dict, Optional, ForwardRef
+from typing import List, Dict, Optional, ForwardRef, Union
 from pydantic import BaseModel, validator
 import uuid
 import sys
@@ -220,7 +220,7 @@ class AccessToken(BaseModel):
     access_token: str
     refresh_token: str
     expires_in: int
-    current_time: str
+    current_time: Union[float, int]
 
 class ServerList(BaseModel):
     servers: PartialServerDict
