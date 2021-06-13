@@ -8,16 +8,16 @@ router = APIRouter(
 )
 
 @router.get("/me")
-async def redirect_me(request: Request):
+async def redirect_me(request: Request, preview: bool = False):
     if "user_id" not in request.session.keys():
         return RedirectResponse("/")
-    return await get_user_profile(request, int(request.session.get("user_id")))
+    return await get_user_profile(request, int(request.session.get("user_id")), preview = preview)
 
 @router.get("/{user_id}")
-async def profile_of_user_generic(request: Request, user_id: int):
-    return await get_user_profile(request, user_id)
+async def profile_of_user_generic(request: Request, user_id: int, preview: bool = False):
+    return await get_user_profile(request, user_id, preview = preview)
 
-async def get_user_profile(request, user_id: int):
+async def get_user_profile(request, user_id: int, preview: bool):
     guild = client.get_guild(main_server)
     if guild is None:
         return await templates.e(request, "Site is still loading...")
@@ -34,7 +34,7 @@ async def get_user_profile(request, user_id: int):
         personal = True
     else:
         personal = False
-    return await _profile_of_user(request, user_id, personal = personal, admin = admin, dpy_member = dpy_member)
+    return await _profile_of_user(request, user_id, personal = personal if personal and not preview else False, admin = admin, dpy_member = dpy_member)
 
 async def _profile_of_user(request: Request, user_id: int, personal: bool, admin: bool, dpy_member: Optional[discord.Member]):
     state = await db.fetchval("SELECT state FROM users WHERE user_id = $1", user_id)

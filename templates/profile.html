@@ -5,57 +5,90 @@
 .modalux {
     border-radius: 50%;
 }
+.pane {
+	margin-left: 5%;
+}
+.padspan {
+	line-height: 2;
+}
 </style>
 {% endblock %}
 
 {% block content %}
     <div class="d-flex d-xl-flex flex-column justify-content-center align-items-center justify-content-xl-center align-items-xl-center"><img style="border-radius: 50%;width: 128px;" src="{{user.avatar}}">
         <h3 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;">{{user.username}}</h3>
-	<span style="font-size: 18px" class="white">
+	<span class="white"><span style="margin-right: 3px;" class="iconify white" data-icon="fa-solid:coins" data-inline="false"></span>{{coins}} coins</span>
+	<span style="font-size: 20px" class="white">
 		<span id="bio_text-0" style="opacity: 0.7">{% if not user_info.description %}This user prefers to be an enigma{% else %}{{user_info.description}}{% endif %}</span>
 		{% if personal %}
 		<a role="button" aria-label="Edit Profile" href="javascript:void" class="long-desc-link" style="color: white !important; opacity: 0.7; font-size: 14px" onclick="pbioEditPane(this, 0)">Edit</a>
-		<div role="form" id="bio-0" style="display: none">
-			<input type="text" class="fform" id="bio-form-0" value="{% if not user_info.description %}This user prefers to be an enigma{% else %}{{user_info.description}}{% endif %}" placeholder="Enter your bio here">
-			<button class="btn btn-outline-light" onclick="updateBio()">Edit</button>
-		</div>
+		<form id="bio-0" style="display: none" onsubmit="updateBio()">
+			<input type="text" class="fform" id="bio-form-0" value="{% if not user_info.description %}This user prefers to be an enigma{% else %}{{user_info.description}}{% endif %}" placeholder="Enter your bio here" minlength="13" required>
+			<button type="submit" class="btn btn-outline-light">Edit</button>
+		</form>
                 {% endif %}
 	</span>
-	<p class="white"><span style="margin-right: 3px;" class="iconify white" data-icon="fa-solid:coins" data-inline="false"></span>{{coins}}</p>
-	<h4 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;">Badges</h4>
-	{% if badges == [] or not badges or badges == {} %}
-		<h5 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;">No Badges Yet...</h5>
-	{%endif%}
-	<div>
-	{% for badge_id, badge_dict in badges.items()%} <!-- Badges -->
-	<a href="javascript:void(0)"><img src='{{badge_dict["image"]}}' alt='{{badge_dict["name"] + " badge"}}' height="50px" width="55px" class="modalux" onclick="modalShow('{{badge_dict.name}}', '{{badge_dict.description}}')"/></a>
-        {% endfor %}
-	</div>
+	<section style="margin-top: 7px; padding: 3px;" id="badges">
+		<div>
+			{% for badge_id, badge_dict in badges.items()%} <!-- Badges -->
+				<a href="javascript:void(0)"><img src='{{badge_dict.image}}' alt='{{badge_dict.name}} badge' height="40px" width="45px" class="modalux" onclick="modalShow('{{badge_dict.name}}', '{{badge_dict.description}}')"/></a>
+        		{% endfor %}
+		</div>
+	</section>
     </div>
     {% if personal %}
-    <h5 class="white" style="margin-bottom: 11px;">Security And Privacy</h5>
-    <h6 class="white">JavaScript</h6>
-    <aside class="white" style="opacity: 0.8">JavaScript in bots is a huge power and responsibility Fates List gives to bot owners to make their bot pages more interactive. Some (rare) bot owners however, despite all our testing and reporting abuse JavaScript and iframes to deliver potentially malicious content. You can disable or enable javascript and iframes in bot pages here! Note that this does not apply to markdown content which is anyways secure but this may be changed in the future</aside>
-    <p class="white">JavaScript Enabled: {{user_info.js_allowed}} <span style="font-size: 14px"><a class="long-desc-link" href="javascript:{% if user_info.js_allowed %}toggleJS(false){% else %}toggleJS(true){% endif %}">{% if user_info.js_allowed %}Disable{% else %}Enable{% endif %}</a></span></p>
+    <hr style="font-size: 20px;border-top-width: 1px;border-top-color: #eee;width: 90%;">
+    <div class="d-flex pane">
+	<span class="iconify" data-icon="fa-solid:lock" data-inline="false" data-height="3em" style="color: white"></span>
+    	<h4 class="white" style="color: rgba(255,255,255,0.87);margin-left: 15px;">Profile Settings</h4>
+    </div>
+    <section id="js">
+    <div class="d-flex pane" style="margin-top: 10px;">
+    	<h5 class="white">JavaScript</h5>
+    </div>
+    <div class="d-flex pane">
+    <aside class="white" style="text-align: left; opacity: 0.8">JavaScript in bots is a huge power and responsibility Fates List gives to bot owners to make their bot pages more interactive. Some (rare) bot owners however, despite all our testing and reporting abuse JavaScript and iframes to deliver potentially malicious content. You can disable or enable javascript and iframes in bot pages here! Note that this does not apply to markdown content which is anyways secure but this may be changed in the future...</aside>
+    </div>
+    <div class="d-flex pane">
+	    <span style="font-size: 18px; margin-top: 5px" class="white padspan">JavaScript Enabled: {{user_info.js_allowed}} <span style="font-size: 11px"></span></span><br/>
+    </div>
+    <div class="d-flex pane">
+	    <button class="btn btn-outline-light" onclick="{% if user_info.js_allowed %}toggleJS(false){% else %}toggleJS(true){% endif %}">{% if user_info.js_allowed %}Disable{% else %}Enable{% endif %}</a></span></p>
+    </div>
     <br/>
-    <h6 class="white">User Token</h6>
-    <small id="user_tok" class="long-desc-link" style="display: none; margin-bottom: 5px;">API Token (User) [DO NOT SHARE]: {{user_info.api_token}}</small>
-    <a class="long-desc-link" style="margin-bottom: 20px" href="javascript:showToken()" id="sat">Show API Token (User)</a><br/>
-    <p></p>
+    </div>
+    </section>
+    <section id="apitok">
+    <div class="d-flex pane">
+	    <h5 class="white">User Token</h5>
+    </div>
+    <div class="d-flex pane">
+	    <aside class="white" style="text-align: left; opacity: 0.8">Your User Token allows you to interact with our user APIs to do things like changing your description every set amount of time, setting your javascript state using a command and much more. However, with great power comes great responsibility. Do not share this user token with anyone, ever. Doing so will allow said users to add bots using the API as you (will be fixed soon with oauth enforcement)</aside>
+    </div>
+    <div class="d-flex pane">
+	    <span style="font-size: 18px; margin-top: 5px" class="white padspan">Click the Show button to see your user token</span><br>
+    </div>
+    <div class="d-flex pane">
+        <button class="btn btn-outline-light" style="margin-bottom: 20px" onclick="showToken()" id="sat">Show</button>
+    </div>
+    <div class="d-flex pane">
+    <p id="user_tok" class="long-desc-link" style="display: none; margin-bottom: 5px;">{{user_info.api_token}}</p>
+    </div>
+    </section>
     {%endif%}
 
     <hr style="font-size: 20px;border-top-width: 1px;border-top-color: #eee;width: 90%;">
     <div class="d-flex" style="margin-left: 5%;"><span class="iconify" data-icon="fa-solid:robot" data-inline="false" data-height="3em" style="color: white"></span>
 	    <h4 style="color: rgba(255,255,255,0.87);margin-left: 15px;">{% if not personal %}{{user.username}}'s Bots{%else%}Your Bots{%endif%}</h4>
     </div>
-    <div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center" id="tt-1" style="width: 90%;margin: 30px 5%;">
+    <div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center" id="tt-1" style="width: 90%;margin: 10px 5%;">
         {% for bot in user_bots %}
 		{{ flCard(bot, False, 'bot') }}
 	{% endfor %}
     </div>
 
     {% if personal %}
-    <aside class="white" style="opacity: 0.8; margin-bottom: 11px;">Note that the above list of bots includes your bots in the queue and banned bots (DM/ping an admin for resubmission). These bots are hidden unless you are logged in.</aside>
+    <aside class="white" style="margin-left: 10px; opacity: 0.8; margin-bottom: 11px;">Note that the above list of bots includes your bots in the queue, denied bots (resubmit your bot once its fixed!) and banned bots (make a support ticket to learn why and how to fix it). These bots are hidden to only you and staff until it is approved or unbanned or requeued and approved</aside>
     {% endif %}
     <script>
 	{% if personal %}	
@@ -64,11 +97,11 @@
 		usertok = document.querySelector("#user_tok");
 		if(usertok.style.display == "none") {	
 			usertok.style.display = "block";
-			but.innerHTML = "Hide API Token"
+			but.innerHTML = "Hide"
 		}
 		else {
 			usertok.style.display = "none";
-			but.innerHTML = "Show API Token (User)"
+			but.innerHTML = "Show"
 		}
 	}		
         function pbioEditPane(el, id) {

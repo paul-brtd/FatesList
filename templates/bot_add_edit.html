@@ -326,21 +326,34 @@
 <script src="https://cdn.jsdelivr.net/npm/jquery-serializejson@3.2.1/jquery.serializejson.min.js"></script>
 <script>
 	var $j = jQuery.noConflict();
+        var context = {
+		mode: "{{mode}}",
+		bot_id: "{{data.bot_id}}",
+		api_token: "{{data.api_token}}",
+		user_token: "{{user_token}}",
+		user_id: "{{user_id}}",
+		site_lang: "{{site_lang}}"
+	}
 </script>
 <script src="https://cdn.jsdelivr.net/npm/select-pure@latest/dist/index.js"></script>
 <script>
 function previewLongDesc(){
 	html = document.querySelector("#long_description_type").value == "0";
 	ld = document.querySelector("#long_description").value;
-	if(ld == "")
+	if(context.mode == "edit") {
+		headers = {"Authorization": context.api_token}
+	}
+	else {
+		headers = {}
+	}
+	if(ld == "") {
 		return
+	}
         $j.ajax({
            type: 'POST',
            dataType: 'json',
-           {% if mode == "edit" %}
-	   headers: {"Authorization": "{{data.api_token}}"},
-	   {% endif %}
-		url: '/api/preview?lang={{site_lang}}',
+	   headers: headers,
+	   url: `/api/preview?lang=${context.site_lang}`,
            data: JSON.stringify({"html_long_description": html, "data": ld}),
 	   statusCode: {
            "200": function(data) {
@@ -358,41 +371,43 @@ function submitBot(e) {
     try {
     	json = $j('#botform').serializeJSON()
     	tags = document.querySelector("#tags").values
-        extra_owners = json.extra_owners.replace(" ", "").split(",")
-        features = document.querySelector("#features").values
-	{% for key in ("extra_owners", "tags", "features") %}
-	json.{{key}} = []
-	for(i = 0; i < {{key}}.length; i++) {
-		if({{key}}[i] != "")
-			json.{{key}}[i] = {{key}}[i]
+	toReplace = {
+	    tags: document.querySelector("#tags").values,
+	    extra_owners: json.extra_owners.replace(" ", "").split(","),
+            features: document.querySelector("#features").values
+        }
+	keys = ["extra_owners", "tags", "features"]
+	keys.forEach(function (key) {
+	    json[key] = toReplace[key].filter(x => x !== "")
+	})
+	if(context.mode == "edit") {
+	    json.bot_id = context.bot_id
+	    method = "PATCH"
 	}
-	{% endfor %}
-	bot_id = json.bot_id
-	if(bot_id == undefined)
-	    bot_id = "{{data.bot_id}}"
+	else {
+	    method = "POST"
+	}
 	if(json.tags.length == 0 || json.tags[0] == "") {
 	    modalShow("Error", "You need to select tags for your bot!")
 	    return
 	}
-	json.owner = "{{user_id}}"
-	json = JSON.stringify(json)
+	json.owner = context.user_id
 	$j.ajax({
-		url: `/api/bots/${bot_id}`,
-		method: {% if mode == "add" %}"POST"{% else %}"PATCH"{% endif %},
-		headers: {'Authorization': '{{user_token}}'},
+		url: `/api/bots/${json.bot_id}`,
+		method: method,
+		headers: {'Authorization': context.user_token},
 		contentType: "application/json",
-		data: json,
+		data: JSON.stringify(json),
 		statusCode: {
 			202: function(data) {
 				modalShow("Success", "Your bot (and its changes) has been added to the RabbitMQ queue. Your page should auto refresh to it in a few minutes")
-				window.bot_id = bot_id // Make it global
 				setTimeout(setInterval(function(){
 				$j.ajax({
-					url: `/api/bots/${bot_id}`,
+					url: `/api/bots/${json.bot_id}`,
 					method: "GET",
 					statusCode: {
 						200: function(data){
-							window.location.replace(`/bot/${bot_id}`)
+							window.location.replace(`/bot/${json.bot_id}`)
 						}
 					}
 				})
@@ -435,14 +450,13 @@ function submitBot(e) {
 		but.innerHTML = "Show API Token"
 	}
   }
-  {% if mode == "edit" %}
   function postStats() {
 	server_count = document.querySelector("#server-count").value
   	payload = {"guild_count": server_count}
 	$j.ajax({
-		headers: {'Authorization': '{{data.api_token}}'},
+		headers: {'Authorization': context.api_token},
 		method: 'POST',
-		url: '/api/bots/{{data.bot_id}}/stats',
+		url: `/api/bots/${context.bot_id}/stats`,
 		contentType: 'application/json',
 		data: JSON.stringify(payload),
 	});
@@ -450,9 +464,9 @@ function submitBot(e) {
   }
   function regenToken() {
 	$j.ajax({
-	   headers: {'Authorization': '{{data.api_token}}'},
+	   headers: {'Authorization': context.api_token},
 	   type: 'PATCH',
-	   url: '/api/bots/{{data.bot_id}}/token',
+	   url: `/api/bots/${context.bot_id}/token`,
 	   processData: false,
 	   contentType: 'application/json',
 	});
@@ -461,10 +475,9 @@ function submitBot(e) {
   }
 
   function testHook(url, type) {
-	api_token = "{{data.api_token}}"
-	headers = {"Authorization": api_token}
+	headers = {"Authorization": context.api_token}
 	$j.ajax({
-		url: "/api/v2/bots/{{data.bot_id}}/votes/test",
+		url: `/api/bots/${context.bot_id}/votes/test`,
 		dataType: "json",
 		headers: headers,
 		type: "POST",
@@ -474,7 +487,6 @@ function submitBot(e) {
 	modalShow("Sent Test Query", "If you do not get the test webhook, make sure you have editted the bot with the webhook url first by adding the Webhook URL and THEN clicking Edit and then try again")
   }
 
-  {% endif %}
 </script>
 
 {% endblock %} 
