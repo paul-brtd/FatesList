@@ -6,12 +6,12 @@ from lxml.html.clean import Cleaner
 cleaner = Cleaner(remove_unknown_tags=False)
 
 router = APIRouter(
-    prefix = f"/api/v{API_VERSION}",
+    prefix = f"/api/v{API_VERSION}/bots",
     include_in_schema = True,
     tags = [f"API v{API_VERSION} - Bots"]
 )
 
-@router.get("/bots/{bot_id}/token")
+@router.get("/{bot_id}/token")
 async def get_bot_token(request: Request, bot_id: int, user_id: int, Authorization: str = Header("USER_TOKEN")):
     """
     Gets a bot token given a user token. 401 = Invalid API Token, 403 = Forbidden (not owner of bot or staff)
@@ -24,7 +24,7 @@ async def get_bot_token(request: Request, bot_id: int, user_id: int, Authorizati
         return abort(403)
     return await db.fetchrow("SELECT api_token FROM bots WHERE bot_id = $1", bot_id)
 
-@router.patch("/bots/{bot_id}/token", response_model = APIResponse)
+@router.patch("/{bot_id}/token", response_model = APIResponse)
 async def regenerate_bot_token(request: Request, bot_id: int, Authorization: str = Header("BOT_TOKEN")):
     """
     Regenerates the Bot token
@@ -36,7 +36,7 @@ async def regenerate_bot_token(request: Request, bot_id: int, Authorization: str
     await db.execute("UPDATE bots SET api_token = $1 WHERE bot_id = $2", get_token(132), id)
     return api_success()
 
-@router.get("/bots/random", response_model = BotRandom, dependencies=[Depends(RateLimiter(times=7, seconds=5))])
+@router.get("/random", response_model = BotRandom, dependencies=[Depends(RateLimiter(times=7, seconds=5))])
 async def random_bots_api(request: Request, lang: str = "default"):
     random_unp = await db.fetchrow("SELECT description, banner, state, votes, servers, bot_id, invite FROM bots WHERE state = 0 OR state = 6 ORDER BY RANDOM() LIMIT 1") # Unprocessed, use the random function to get a random bot
     try:
@@ -50,7 +50,7 @@ async def random_bots_api(request: Request, lang: str = "default"):
         bot["banner"] = "" # Make sure banner is always a string
     return bot
 
-@router.get("/bots/{bot_id}", response_model = Bot, dependencies=[Depends(RateLimiter(times=5, minutes=3))])
+@router.get("/{bot_id}", response_model = Bot, dependencies=[Depends(RateLimiter(times=5, minutes=3))])
 async def get_bot_api(request: Request, bot_id: int):
     """Gets bot information given a bot ID. If not found, 404 will be returned."""
     api_ret = await db.fetchrow("SELECT banner, description, long_description_type, long_description, servers AS server_count, shard_count, shards, prefix, invite, invite_amount, features, bot_library AS library, state, website, discord AS support, github, user_count, votes, css, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", bot_id)
@@ -78,11 +78,11 @@ async def get_bot_api(request: Request, bot_id: int):
     api_ret["vanity"] = await db.fetchval("SELECT vanity_url FROM vanity WHERE redirect = $1", bot_id)
     return api_ret
 
-@router.get("/bots/{bot_id}/widget")
+@router.get("/{bot_id}/widget")
 async def bot_widget_api(request: Request, bot_id: int, bt: BackgroundTasks):
     return await render_bot_widget(request, bt, bot_id, api = True)
 
-@router.get("/bots/{bot_id}/raw")
+@router.get("/{bot_id}/raw")
 async def get_raw_bot_api(request: Request, bot_id: int, bt: BackgroundTasks):
     """
     Gets the raw given to the template with a few differences (bot_id being string and not int and passing auth manually to the function (coming soon) as the API aims to be as stateless as possible)
