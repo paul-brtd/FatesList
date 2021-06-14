@@ -74,20 +74,6 @@ class PrevRequest(BaseModel):
     html_long_description: bool
     data: str
 
-class BotRandom(BaseModel):
-    """
-    Represents a random bot on Fates List
-    """
-    bot_id: str
-    description: str
-    banner: str
-    state: int
-    username: str
-    avatar: str
-    servers: str
-    invite: Optional[str] = None
-    votes: int
-
 class BotOwner(BaseModel):
     user: BaseUser
     main: bool
