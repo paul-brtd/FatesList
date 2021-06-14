@@ -4,7 +4,12 @@ from ..base_models import BaseUser, APIResponse
 from typing import Optional, List
 import uuid
 
-class Login(BaseModel):
-    code: str
+class LoginInfo(BaseModel):
     scopes: List[str]
-    redirect: str
+    redirect: Optional[str] = "/"
+
+class Login(LoginInfo):
+    code: str
+    oauth_redirect: Optional[str] = None
+
+

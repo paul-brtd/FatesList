@@ -29,13 +29,13 @@ class Oauth():
         state = "|".join((scopes, redirect))
         return {"state": scopes, "url": f"{self.discord_login_url}&state={state}&response_type=code&scope={scopes}"}
 
-    async def get_access_token(self, code, scope) -> dict:
+    async def get_access_token(self, code, scope, redirect_uri: str = None) -> dict:
         payload = {
             "client_id": self.client_id,
             "client_secret": self.client_secret,
             "grant_type": "authorization_code",
             "code": code,
-            "redirect_uri": self.redirect_uri,
+            "redirect_uri": self.redirect_uri if not redirect_uri else redirect_uri,
             "scope": scope
         }
 
@@ -44,7 +44,7 @@ class Oauth():
         }
         res = await requests.post(self.discord_token_url, data=payload, headers=headers)
         json = await res.json()
-        return {"access_token": json.get("access_token"), "refresh_token": json.get("refresh_token"), "expires_in": json.get("expires_in"), "current_time": time.time()}
+        return {"access_token": json.get("access_token"), "refresh_token": json.get("refresh_token"), "expires_in": json.get("expires_in"), "current_time": time.time(), "real": json}
 
     async def access_token_check(self, scope: str, access_token_dict: dict) -> str:
         if float(access_token_dict["current_time"]) + float(access_token_dict["expires_in"]) > time.time():
@@ -81,8 +81,8 @@ class Oauth():
         name = user_json.get("username")
         dash = user_json.get("discriminator")
         avatar = user_json.get("avatar")
-        return {"id":id, "name":name, "dash":dash, "avatar":avatar, "real": user_json}
-    
+        return user_json
+
     async def get_guilds(self, access_token: str, permissions: Optional[hex] = None):
         url = self.discord_api_url + "/users/@me/guilds"
         headers = {'Content-Type': 'application/x-www-form-urlencoded', "Authorization": "Bearer " + access_token}
