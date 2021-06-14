@@ -14,21 +14,23 @@ import re
 cleaner = Cleaner(remove_unknown_tags=False)
 
 # API returners
-def api_return(done: bool, reason: str, code: int, status_code: int, headers: dict = None, **kwargs): 
-    return ORJSONResponse({"done": done, "reason": reason, "code": code} | kwargs, status_code = status_code, headers = headers)
+def api_return(done: bool, reason: str, status_code: int, headers: dict = None, **kwargs): 
+    return ORJSONResponse({"done": done, "reason": reason} | kwargs, status_code = status_code, headers = headers)
 
-def api_error(reason: str, code: int, status_code: int = 400, **kwargs):
-    return api_return(done = False, reason = reason, code = code, status_code = status_code, **kwargs)
+def api_error(reason: str, code: int = None, status_code: int = 400, **kwargs):
+    return api_return(done = False, reason = reason, status_code = status_code, **kwargs)
+
+def api_no_perm(permlevel: int = None):
+    base = "You do not have permission to perform this action!"
+    if permlevel:
+        base += f" You need permlevel {permlevel}"
+    return api_error(
+        base,
+        status_code = 403
+    )
 
 def api_success(reason: str = None, status_code: int = 200, **kwargs):
-    if not reason:
-        code = 1000
-    else:
-        code = 1001
-    if kwargs:
-        code = 1001
-
-    return api_return(done = True, reason = reason, code = code, status_code = status_code, **kwargs)
+    return api_return(done = True, reason = reason, status_code = status_code, **kwargs)
 
 async def verify_csrf(request, csrf_protect):
     try:

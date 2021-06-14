@@ -245,5 +245,6 @@ CREATE TABLE bot_list_partners (
 	site_ad TEXT,
 	server_ad TEXT,
 	created_at timestamptz default now(),
-	js_allowed boolean default true
+	js_allowed boolean default true,
+	published boolean default false
 );

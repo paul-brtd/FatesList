@@ -45,7 +45,10 @@ class BotListPartnerChannel(BotListAdminRoute):
         if not v.isdigit():
             raise ValueError('Publish channel must be a integer')
         return int(v)
-        
+
+class BotListPartnerPublish(BotListAdminRoute):
+    embed: bool
+
 class BotLock(BotListAdminRoute):
     reason: str
     lock: bool

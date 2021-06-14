@@ -14,9 +14,6 @@ router = APIRouter(
     tags = [f"API v{API_VERSION} - Admin"]
 )
 
-class InvalidInvite(Exception):
-    pass
-
 @router.get("/console")
 async def botlist_admin_console_api(request: Request):
     """API to get raw admin console info"""
@@ -51,7 +48,7 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
     # Check if they are staff or not
     staff = is_staff(staff_roles, user.roles, perm)
     if user is None or not staff[0]:
-        return api_error(f"You do not have permission to perform this action! You need permlevel {perm}", 2764, status_code = 403)
+        return api_no_perm(perm)
     
     # Handle cooldown by first getting the bucket and checking the ttl of the needed key given bucket
     if data.op.__cooldown__:
