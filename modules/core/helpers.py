@@ -30,6 +30,8 @@ def api_no_perm(permlevel: int = None):
     )
 
 def api_success(reason: str = None, status_code: int = 200, **kwargs):
+    if kwargs and status_code == 200:
+        status_code = 206
     return api_return(done = True, reason = reason, status_code = status_code, **kwargs)
 
 async def verify_csrf(request, csrf_protect):

@@ -58,7 +58,7 @@ async def login_confirm(request: Request, code: str, state: str):
         ban_data = bans_data.get(str(state))
         if ban_data is None:
             ban_data = {"type": "", "desc": ""}
-        if state in [enums.UserState.global_ban, enums.UserState.login_ban, enums.UserState.ddr_ban]: # 1 = Global ban, 2 = Login Ban, 4 = DDR Ban
+        if state in [enums.UserState.global_ban, enums.UserState.ddr_ban]: # 1 = Global ban, 2 = Login Ban, 4 = DDR Ban
             ban_type = ban_data["type"]
             return await templates.e(request, f"You have been {ban_type} banned from Fates List<br/>", status_code = 403)
         request.session["ban"] = state
