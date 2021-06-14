@@ -55,3 +55,9 @@ class Bot(BaseUser):
     privacy_policy: Optional[str] = None
     nsfw: bool
     banner: Optional[str] = None
+
+class BotStats(BaseModel):
+    guild_count: int
+    shard_count: Optional[int] = None
+    shards: Optional[list] = None
+    user_count: Optional[int] = None
