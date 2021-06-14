@@ -74,13 +74,6 @@ class PrevRequest(BaseModel):
     html_long_description: bool
     data: str
 
-class BotOwner(BaseModel):
-    user: BaseUser
-    main: bool
-
-class BotOwners(BaseModel):
-    __root__: List[BotOwner]
-
 class VoteReminderPatch(BaseModel):
     remind: bool
 
