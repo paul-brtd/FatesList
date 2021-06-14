@@ -1,3 +1,8 @@
+from modules.core import *
+from .models import APIResponse, BotRandom, Bot
+from ..base import API_VERSION
+
+
 @router.get("/bots/{bot_id}/token")
 async def get_bot_token(request: Request, bot_id: int, user_id: int, Authorization: str = Header("USER_TOKEN")):
     """
