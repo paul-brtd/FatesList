@@ -2,6 +2,11 @@ from modules.core import *
 from .models import APIResponse, BotRandom, Bot
 from ..base import API_VERSION
 
+router = APIRouter(
+    prefix = f"/api/v{API_VERSION}",
+    include_in_schema = True,
+    tags = [f"API v{API_VERSION} - Bots"]
+)
 
 @router.get("/bots/{bot_id}/token")
 async def get_bot_token(request: Request, bot_id: int, user_id: int, Authorization: str = Header("USER_TOKEN")):
