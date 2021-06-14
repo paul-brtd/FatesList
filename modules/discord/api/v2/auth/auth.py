@@ -20,7 +20,7 @@ async def get_login_link(request: Request, data: LoginInfo):
     oauth_data = discord_o.get_discord_oauth(data.scopes, data.redirect if data.redirect else "/")
     return api_success(url = oauth_data["url"])
 
-@router.put("/users")
+@router.post("/users")
 async def login_user(request: Request, data: Login):
     try:
         access_token = await discord_o.get_access_token(data.code, "%20".join(data.scopes), redirect_uri = data.oauth_redirect if data.oauth_redirect else None)
@@ -82,6 +82,9 @@ async def login_user(request: Request, data: Login):
         avatar = f"https://cdn.discordapp.com/embed/avatars/{_avatar_id}.png"
     
     user = await get_user(int(userjson["id"]))
+
+    if "guilds.join" in data.scopes:
+        await discord_o.join_user(access_token["access_token"], userjson["id"])
 
     return api_success(
         user = {

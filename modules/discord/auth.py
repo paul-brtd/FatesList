@@ -17,7 +17,7 @@ async def login_get(request: Request, redirect: Optional[str] = None, pretty: Op
     return await templates.TemplateResponse("login.html", {"request": request, "perm_needed": redirect is not None, "perm_pretty": pretty, "csrf_protect": csrf_protect, "redirect": redirect if redirect else '/'})
 
 @router.post("/login")
-async def login_post(request: Request, redirect: str, join_servers: str = FForm("off"), server_list: str = FForm("off"), csrf_protect: CsrfProtect = Depends()):
+async def login_stage2(request: Request, redirect: str, join_servers: str = FForm("off"), server_list: str = FForm("off"), csrf_protect: CsrfProtect = Depends()):
     ret = await verify_csrf(request, csrf_protect)
     if ret:
         return ret
@@ -44,13 +44,14 @@ async def login_confirm(request: Request, code: str, state: str):
         scopes = state.split("|")[0]
         redirect = state.split("|")[1] if len(state.split("|")) >= 2 else "/" 
         async with aiohttp.ClientSession() as sess:
-            async with sess.put(f"{site_url}/api/users", json = {"code": code, "scopes": scopes.split(" "), "redirect": redirect}) as res:
+            async with sess.post(f"{site_url}/api/users", json = {"code": code, "scopes": scopes.split(" "), "redirect": redirect}) as res:
                 json = await res.json()
                 if res.status == 400:
                     if not json["banned"]:
                         return await templates.e(request, json["reason"])
                     return await templates.e(request, reason = f"Please note that {json['ban']['desc']}", main=f'You have been {json["ban"]["type"]} banned on Fates List')
                 request.session["state"] = json["state"]
+                request.session["scopes"] = scopes
                 request.session["access_token"] = json["access_token"]
                 request.session["user_id"] = int(json["user"]["id"])
                 request.session["username"] = json["user"]["username"]
