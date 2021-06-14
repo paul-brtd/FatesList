@@ -74,7 +74,7 @@ async def login_user(request: Request, data: Login):
         token, css, state = user_info["api_token"], user_info["css"] if user_info["css"] else None, state
 
     if userjson["avatar"]:
-        avatar = 'https://cdn.discordapp.com/avatars/{userjson["id"]}/{userjson["avatar"]}'
+        avatar = f'https://cdn.discordapp.com/avatars/{userjson["id"]}/{userjson["avatar"]}'
     else:
         avatar = "https://s3.us-east-1.amazonaws.com/files.tvisha.aws/posts/crm/panel/attachments/1580985653/discord-logo.jpg"
 
