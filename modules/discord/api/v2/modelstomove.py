@@ -138,12 +138,6 @@ class BotVoteCheck(BaseModel):
     vote_epoch: int
     time_to_vote: int
 
-class BotStats(BaseModel):
-    guild_count: int
-    shard_count: Optional[int] = None
-    shards: Optional[list] = None
-    user_count: Optional[int] = None
-
 class BotVanity(BaseModel):
     type: str
     redirect: str
