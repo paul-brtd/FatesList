@@ -3,6 +3,8 @@ from .models import APIResponse, BotRandom, Bot
 from ..base import API_VERSION
 from lxml.html.clean import Cleaner
 
+cleaner = Cleaner(remove_unknown_tags=False)
+
 router = APIRouter(
     prefix = f"/api/v{API_VERSION}",
     include_in_schema = True,
