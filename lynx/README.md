@@ -4,13 +4,13 @@ Work in progress potential vue/nuxt js frontend rewrite named Lynx for Fates Lis
 
 Needed APIs:
 
-[] POST /api/auth/login - Login API
+- [ ] POST /api/auth/login - Login API
 
-[] POST /api/auth/logout - Logout API
+- [ ] POST /api/auth/logout - Logout API
 
-[] POST /api/bots/{bot_id}/vote - Vote API
+- [ ] POST /api/bots/{bot_id}/vote - Vote API
 
-[] DELETE /api/bots/{bot_id} - Delete Bot API
+- [ ] DELETE /api/bots/{bot_id} - Delete Bot API
 
 API improvements needed:
 
