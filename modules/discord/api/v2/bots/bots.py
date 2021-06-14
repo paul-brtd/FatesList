@@ -90,3 +90,26 @@ async def get_raw_bot_api(request: Request, bot_id: int, bt: BackgroundTasks):
     This API is prone to change as render_bot will keep changing
     """
     return await render_bot(request, bt, bot_id, api = True)
+
+@router.post("/bots/{bot_id}/stats", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=5, minutes=1))])
+async def set_bot_stats_api(request: Request, bot_id: int, api: BotStats, Authorization: str = Header("BOT_API_TOKEN")):
+    """
+    This endpoint allows you to set the guild + shard counts for your bot
+    """
+    id = await bot_auth(bot_id, Authorization, fields = "shard_count, shards, user_count")
+    if id is None:
+        return abort(401)
+    if api.shard_count is None:
+        shard_count = id["shard_count"]
+    else:
+        shard_count = api.shard_count
+    if api.shards is None:
+        shards = id["shards"]
+    else:
+        shards = api.shards
+    if api.user_count is None:
+        user_count = id["user_count"]
+    else:
+        user_count = api.user_count
+    await set_stats(bot_id = id["bot_id"], guild_count = api.guild_count, shard_count = shard_count, shards = shards, user_count = user_count)
+    return api_success()
