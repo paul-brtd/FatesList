@@ -1,6 +1,7 @@
 from modules.core import *
 from .models import APIResponse, BotRandom, Bot
 from ..base import API_VERSION
+from lxml.html.clean import Cleaner
 
 router = APIRouter(
     prefix = f"/api/v{API_VERSION}",
