@@ -37,7 +37,7 @@ async def regenerate_bot_token(request: Request, bot_id: int, Authorization: str
     return api_success()
 
 @router.get("/random", response_model = BotRandom, dependencies=[Depends(RateLimiter(times=7, seconds=5))])
-async def random_bots_api(request: Request, lang: str = "default"):
+async def fetch_random_bot(request: Request, lang: str = "default"):
     random_unp = await db.fetchrow("SELECT description, banner, state, votes, servers, bot_id, invite FROM bots WHERE state = 0 OR state = 6 ORDER BY RANDOM() LIMIT 1") # Unprocessed, use the random function to get a random bot
     try:
         bot = (await get_bot(random_unp["bot_id"])) | dict(random_unp) # Get bot from cache and add that in
@@ -51,8 +51,8 @@ async def random_bots_api(request: Request, lang: str = "default"):
     return bot
 
 @router.get("/{bot_id}", response_model = Bot, dependencies=[Depends(RateLimiter(times=5, minutes=3))])
-async def get_bot_api(request: Request, bot_id: int):
-    """Gets bot information given a bot ID. If not found, 404 will be returned."""
+async def fetch_bot(request: Request, bot_id: int):
+    """Fetches bot information given a bot ID. If not found, 404 will be returned."""
     api_ret = await db.fetchrow("SELECT banner, description, long_description_type, long_description, servers AS server_count, shard_count, shards, prefix, invite, invite_amount, features, bot_library AS library, state, website, discord AS support, github, user_count, votes, css, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", bot_id)
     if api_ret is None:
         return abort(404)
@@ -79,7 +79,7 @@ async def get_bot_api(request: Request, bot_id: int):
     return api_ret
 
 @router.get("/{bot_id}/widget")
-async def bot_widget_api(request: Request, bot_id: int, bt: BackgroundTasks):
+async def get_bot_widget(request: Request, bot_id: int, bt: BackgroundTasks):
     return await render_bot_widget(request, bt, bot_id, api = True)
 
 @router.get("/{bot_id}/raw")
@@ -91,8 +91,8 @@ async def get_raw_bot_api(request: Request, bot_id: int, bt: BackgroundTasks):
     """
     return await render_bot(request, bt, bot_id, api = True)
 
-@router.post("/bots/{bot_id}/stats", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=5, minutes=1))])
-async def set_bot_stats_api(request: Request, bot_id: int, api: BotStats, Authorization: str = Header("BOT_API_TOKEN")):
+@router.post("/{bot_id}/stats", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=5, minutes=1))])
+async def set_bot_stats(request: Request, bot_id: int, api: BotStats, Authorization: str = Header("BOT_API_TOKEN")):
     """
     This endpoint allows you to set the guild + shard counts for your bot
     """
