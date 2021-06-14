@@ -17,7 +17,14 @@ class BotRandom(BaseModel):
     servers: str
     invite: Optional[str] = None
     votes: int
+        
+class BotOwner(BaseModel):
+    user: BaseUser
+    main: bool
 
+class BotOwners(BaseModel):
+    __root__: List[BotOwner]
+        
 class Bot(BaseUser):
     """
     Represents a bot on Fates List
