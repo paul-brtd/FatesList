@@ -43,36 +43,6 @@ async def bot_settings_page(request: Request, bot_id: int, csrf_protect: CsrfPro
     else:
         return RedirectResponse("/")
 
-@router.post("/{bot_id}/vote")
-async def vote_for_bot_or_die(
-        request: Request,
-        bot_id: int,
-        csrf_protect: CsrfProtect = Depends()
-    ):
-    ret = await verify_csrf(request, csrf_protect)
-    if ret:
-        return ret # CSRF
-    if request.session.get("user_id") is None:
-        return RedirectResponse(f"/auth/login?redirect=/bot/{bot_id}&pretty=to vote for this bot", status_code = 303)
-    user_id = int(request.session.get("user_id"))
-    ret = await vote_bot(user_id = user_id, bot_id = bot_id, autovote = False, test = False, pretend = False)
-    if ret is True:
-        return await templates.TemplateResponse("message.html", {"request": request, "message": f"Successfully voted for this bot!<script>window.location.replace('/bot/{bot_id}')</script>"})
-    elif ret is None:
-        return abort(404)
-    else: # Otherwise error
-        # Get hours, minutes, seconds from total time and format it and return
-        wait_time_total_seconds = round(ret[1].total_seconds())
-        wait_time = {}
-        wait_time["minutes"], wait_time["seconds"] = divmod(wait_time_total_seconds, 60)
-        wait_time["hours"], wait_time["minutes"] = divmod(wait_time["minutes"], 60)
-        wait_time_format = {"hours": "hours", "minutes": "minutes", "seconds": "seconds"}
-        for key in ("hours", "minutes", "seconds"): 
-            if wait_time[key] == 1:
-                wait_time_format[key] = wait_time_format[key][:-1]
-        wait_time_human = ", ".join([f"{wait_time[key]} {wait_time_format[key]}" for key in ("hours", "minutes", "seconds")])
-        return await templates.TemplateResponse("message.html", {"request": request, "message": "Vote Error", "context": f"Please wait {wait_time_human} before voting for this bot"})
-
 @router.post("/{bot_id}/delete", dependencies=[Depends(RateLimiter(times=1, minutes=2))])
 async def delete_bot(request: Request, bot_id: int):
     if "user_id" in request.session.keys():

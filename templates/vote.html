@@ -24,13 +24,21 @@
 	<h3 style="margin 0 auto; color: white;font-weight: bold; font-size: 20px;">Please vote for {{bot.username}} now!</h3>
     </div>
      <div class="d-flex d-xl-flex flex-column justify-content-center align-items-center justify-content-xl-center align-items-xl-center">    
-	<form method = "POST" action = "/bot/{{bot.bot_id}}/vote">
-		<button type="submit" class="btn btn-block btn-lg btn-outline-light" style="color: white !important;">
+		<button onclick="voteBot()" class="btn btn-lg btn-outline-light" style="color: white !important;">
 			<span class="iconify" data-icon="fa-solid:thumbs-up" data-inline="false"></span><span style="margin-left: 3px;">{{bot.votes}}</span>
 		</button>
-        </form>
        </div>
         <h3 style="margin 0 auto; color: white;font-weight: bold; font-size: 20px;"><span style="color: red;">Warning:</span> You can only vote for one bot every 8 hours, so vote wisely</h3>
+	<script>
+		var context = {
+			"user_id": "{{user_id}}",
+			"id": "{{bot.bot_id}}",
+			"logged_in": {% if user_id %}true{% else %}false{% endif %},
+			"user_token": "{{user_token}}",
+			"type": "bot"
+		}
+	</script>
+	<script src="https://cdn.jsdelivr.net/gh/Fates-List/FatesList@main/static/assets/js/bots_servers5.min.js" defer></script>
 {% endblock %} 
 {% block footer %} 
 {% endblock %}
