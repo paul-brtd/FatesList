@@ -12,3 +12,4 @@ class BotVoteCheck(BaseModel):
     time_to_vote: Optional[int] = None
     type: str
     reason: Optional[str] = None
+    partial: bool
