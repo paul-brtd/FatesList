@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 import modules.models.enums as enums
 from ..base_models import APIResponse
 from typing import Optional, List
@@ -15,3 +15,13 @@ class BotVoteCheck(BaseModel):
     type: str
     reason: Optional[str] = None
     partial: bool
+
+class BotVote(BaseModel):
+    user_id: str
+    
+    @validator("user_id")
+    def userid_int(cls, v, values, **kwargs):
+        if not v.isdigit():
+            raise ValueError("User ID must be a integer")
+        return int(v)
+                
