@@ -1,6 +1,7 @@
 from modules.core import *
 from .models import APIResponse, BotVoteCheck, BotVote
 from ..base import API_VERSION
+from math import ceil
 
 router = APIRouter(
     prefix = f"/api/v{API_VERSION}/bots",
@@ -30,7 +31,34 @@ async def create_vote(bot_id: int, data: BotVote, Authorization: str = Header("U
     id = await user_auth(data.user_id, Authorization)
     if id is None:
         return abort(401)
-
+    ret = await vote_bot(user_id = data.user_id, bot_id = bot_id, autovote = False, test = False, pretend = False)
+    if ret is True: 
+        return api_success()
+    elif ret is None: 
+        return abort(404)
+    else:
+        total_seconds = ceil(ret[1].total_seconds())
+        wait_time = {}
+        
+        # Get wait time
+        wait_time["minutes"], wait_time["seconds"] = divmod(total_seconds, 60)
+        wait_time["hours"], wait_time["minutes"] = divmod(wait_time["minutes"], 60)
+        
+        # Get the format, the :-1 is to make seconds into second etc for cases where the key (h, m, s) is 1
+        wait_time_format = {}
+        for key in ("hours", "minutes", "seconds"):
+            wait_time_format[key] = key[:-1] if wait_time[key] == 1 else key
+                
+        return api_error(
+            "You can't vote for this bot yet!",
+            wait_time = wait_time,
+            format = wait_time_format,
+            human = ", ".join([f"{wait_time[key]} {wait_time_format[key]}" for key in ("hours", "minutes", "seconds")]),
+            headers = {"Retry-After": total_seconds}
+        )
+        
+                
+        
 @router.post("/{bot_id}/votes/test")
 async def send_test_webhook(bot_id: int, Authorization: str = Header("BOT_TOKEN")):
     """Endpoint to test webhooks"""
