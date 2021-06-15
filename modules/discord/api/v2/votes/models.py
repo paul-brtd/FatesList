@@ -10,6 +10,7 @@ class BotVoteCheck(BaseModel):
     vote_right_now: Optional[bool] = None
     vote_epoch: Optional[int] = None
     time_to_vote: Optional[int] = None
+    vts: List[Union[float, int]]
     type: str
     reason: Optional[str] = None
     partial: bool
