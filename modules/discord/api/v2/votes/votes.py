@@ -17,9 +17,9 @@ async def get_votes(request: Request, bot_id: int, user_id: Optional[int] = None
     id = await bot_auth(bot_id, Authorization)
     if id is None:
         return abort(401)
-    voter_count = await db.fetchval("SELECT cardinality(timestamps) FROM bot_voters WHERE bot_id = $1 AND user_id = $2", int(bot_id), int(user_id))
-    voter_count = voter_count if voter_count else 0
+    voter_count = await db.fetchval("SELECT timestamps FROM bot_voters WHERE bot_id = $1 AND user_id = $2", int(bot_id), int(user_id))
+    voter_count = len(voter_ts) if voter_ts else 0
     ret = await vote_bot(user_id = user_id, bot_id = bot_id, autovote = False, test = False, pretend = True)
     if ret is None:
         return {"votes": voter_count, "voted": voter_count != 0, "type": "VNFVote", "reason": "Voter not found!", "partial": True}
-    return {"votes": voter_count, "voted": voter_count != 0, "vote_epoch": ret[0].timestamp() if isinstance(ret, tuple) else 0, "time_to_vote": ret[1].total_seconds() if isinstance(ret, tuple) else 0, "vote_right_now": ret == True, "type": "Vote", "reason": None, "partial": False}
+    return {"votes": voter_count, "voted": voter_count != 0, "vote_epoch": ret[0].timestamp() if isinstance(ret, tuple) else 0, "vts": voter_ts, "time_to_vote": ret[1].total_seconds() if isinstance(ret, tuple) else 0, "vote_right_now": ret == True, "type": "Vote", "reason": None, "partial": False}
