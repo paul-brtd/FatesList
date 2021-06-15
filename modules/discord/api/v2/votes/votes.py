@@ -17,7 +17,7 @@ async def get_votes(request: Request, bot_id: int, user_id: Optional[int] = None
     id = await bot_auth(bot_id, Authorization)
     if id is None:
         return abort(401)
-    voter_count = await db.fetchval("SELECT timestamps FROM bot_voters WHERE bot_id = $1 AND user_id = $2", int(bot_id), int(user_id))
+    voter_ts = await db.fetchval("SELECT timestamps FROM bot_voters WHERE bot_id = $1 AND user_id = $2", int(bot_id), int(user_id))
     voter_count = len(voter_ts) if voter_ts else 0
     ret = await vote_bot(user_id = user_id, bot_id = bot_id, autovote = False, test = False, pretend = True)
     if ret is None:
