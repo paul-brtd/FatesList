@@ -1,5 +1,5 @@
 from modules.core import *
-from .models import APIResponse, Login, LoginInfo
+from .models import APIResponse, Login, LoginInfo, OAuthInfo
 from ..base import API_VERSION
 
 router = APIRouter(
@@ -10,7 +10,7 @@ router = APIRouter(
 
 discord_o = Oauth(OauthConfig)
 
-@router.post("/oauth")
+@router.post("/oauth", response_model = OAuthInfo)
 async def get_login_link(request: Request, data: LoginInfo):
     if data.redirect:
         if not data.redirect.startswith("/") and not data.redirect.startswith("https://fateslist.xyz"):

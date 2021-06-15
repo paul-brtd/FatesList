@@ -26,7 +26,7 @@ async def get_votes(request: Request, bot_id: int, user_id: Optional[int] = None
         return {"votes": voter_count, "voted": voter_count != 0, "type": "VNFVote", "reason": "Voter not found!", "partial": True}
     return {"votes": voter_count, "voted": voter_count != 0, "vote_epoch": ret[0].timestamp() if isinstance(ret, tuple) else 0, "vts": voter_ts, "time_to_vote": ret[1].total_seconds() if isinstance(ret, tuple) else 0, "vote_right_now": ret == True, "type": "Vote", "reason": None, "partial": False}
 
-@router.patch("/{bot_id}/votes", dependencies=[Depends(RateLimiter(times=3, minutes=1))])
+@router.patch("/{bot_id}/votes", dependencies=[Depends(RateLimiter(times=7, minutes=1))])
 async def create_vote(bot_id: int, data: BotVote, Authorization: str = Header("USER_TOKEN")):
     """Endpoint to create a vote for a bot"""
     id = await user_auth(data.user_id, Authorization)

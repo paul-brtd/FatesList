@@ -25,13 +25,18 @@ async def error_maker(request: Request, test: Optional[APIResponse] = None):
     error = int("haha")
 
 @router.patch("/bots/{bot_id}/ops", response_model = APIResponse)
-async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEndpoint, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
-    """Performs a bot admin operation. This is internal and only meant for our test server manager bot. 0 is the recursion bot for botlist-wide actions like vote resets every month"""
+async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEndpoint, Authorization: str = Header("BOT_TEST_MANAGER_KEY"), Snowfall: str = Header("USER_TOKEN")):
+    """Performs a bot admin operation. This is internal and only meant for our test server manager bot. 0 is the recursion bot for botlist-wide actions like vote resets every month. Snowfall is the user token header for staff api requests"""
     
     # Manager key check (only redbot can use this api) 
     if not secure_strcmp(Authorization, test_server_manager_key) and not secure_strcmp(Authorization, root_key):
         return abort(401)
     
+    # Check user token
+    id = await user_auth(data.mod, Snowfall)
+    if id is None:
+        return abort(401)
+
     # Get user
     guild = client.get_guild(main_server)
     if not guild: # Guild is None when still connecting to discord
@@ -70,16 +75,20 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
         return api_error("This operation is not recursive. You must provide a nonzero Bot ID", 2763)
     
     # Check that the state exists and get it too
-    state = await db.fetchval("SELECT state FROM bots WHERE bot_id = $1", bot_id)
-    if state is None:
-        return api_error("This bot does not exist", 2747, status_code = 404)
-    try:
-        state = enums.BotState(state)
-    except:
-        return api_error("Bot is in invalid state. Contact the developers of this list and ask them to fix this!", 2761)
+    if not data.op.__recursive__:
+        state = await db.fetchval("SELECT state FROM bots WHERE bot_id = $1", bot_id)
+        if state is None:
+            return api_error("This bot does not exist", 2747, status_code = 404)
+        try:
+            state = enums.BotState(state)
+        except:
+            return api_error("Bot is in invalid state. Contact the developers of this list and ask them to fix this!", 2761)
 
-    state_str = f"(state: {state} -> {state.__doc__})" # State string for some operations. Format: (state: STATE DESCRIPTION)
-    
+        state_str = f"(state: {state} -> {state.__doc__})" # State string for some operations. Format: (state: STATE DESCRIPTION)
+    else:
+        state = None
+        state_str = None
+
     success_msg = None # Success message, changing this will change the reason key in the success message
     task = False # Whether to run op tasks using asyncio.create_task (True) or await (False)
     success_code = 200 # Status codes to be used on success

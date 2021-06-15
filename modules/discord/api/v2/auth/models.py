@@ -12,4 +12,5 @@ class Login(LoginInfo):
     code: str
     oauth_redirect: Optional[str] = None
 
-
+class OAuthInfo(APIResponse):
+    url: Optional[str] = "/"

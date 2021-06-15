@@ -121,6 +121,7 @@ $( document ).ready(function() {
 function voteBot() {
 	if(!context.logged_in)
 		window.location.replace(`/auth/login?redirect=/${context.type}/${context.id}/vote&pretty=to vote for this bot`)
+	modalShow("Voting...", "Please wait...")
 	$.ajax({
 		url: `/api/${context.type}s/${context.id}/votes`,
 		method: "PATCH",
