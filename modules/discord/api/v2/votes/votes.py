@@ -22,4 +22,4 @@ async def get_votes(request: Request, bot_id: int, user_id: Optional[int] = None
     ret = await vote_bot(user_id = user_id, bot_id = bot_id, autovote = False, test = False, pretend = True)
     if ret is None:
         return {"votes": voter_count, "voted": voter_count != 0, "type": "VNFVote", "reason": "Voter not found!", "partial": True}
-    return {"votes": voter_count, "voted": voter_count != 0, "vote_epoch": ret[0].timestamp() if isinstance(ret, tuple) else 0, "time_to_vote": ret[1].total_seconds() if isinstance(ret, tuple) else 0, "vote_right_now": ret == True, "type": "VoteObject", "reason": None, "partial": False}
+    return {"votes": voter_count, "voted": voter_count != 0, "vote_epoch": ret[0].timestamp() if isinstance(ret, tuple) else 0, "time_to_vote": ret[1].total_seconds() if isinstance(ret, tuple) else 0, "vote_right_now": ret == True, "type": "Vote", "reason": None, "partial": False}
