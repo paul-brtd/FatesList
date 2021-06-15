@@ -1,6 +1,6 @@
 # API Pinning
 
-When using the Fates List API, be sure to pin the api version. The /api will always point to latest API version thanks to our versioning middleware and this version may change often . To avoid breaking changes, just pin the version you are using. Note that the endpoint docs use the Direct Pinning, while you typically want and we recommend Header Pinning  
+When using the Fates List API, be sure to pin the api version. The /api will always point to latest API version thanks to our versioning middleware and this version may change often . To avoid breaking changes, just pin the version you are using. Note that the endpoint docs use the Direct Pinning, while you typically want and we recommend Header Pinning. Pinning does not apply to documentation.
 
 
 **Header Pinning**
@@ -9,7 +9,7 @@ The first way to pin the version is by using the ’FL-API-Version’ header. Ju
 
 **Direct Pinning**
 
-Another very common way to pin the API versiom is to directly access the needed version using /api/vVERSION/endpoint like in the endpoint docs instead of /api. This is the most common form of pinning. This does not apply to documentation
+Another very common way to pin the API versiom is to directly access the needed version using /api/vVERSION/endpoint like in the endpoint docs instead of /api. This is the most common form of pinning.
 
 **Middleware Information \(for those curious\)**
 
