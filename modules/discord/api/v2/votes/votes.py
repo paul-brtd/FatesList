@@ -55,9 +55,7 @@ async def create_vote(bot_id: int, data: BotVote, Authorization: str = Header("U
             format = wait_time_format,
             human = ", ".join([f"{wait_time[key]} {wait_time_format[key]}" for key in ("hours", "minutes", "seconds")]),
             headers = {"Retry-After": total_seconds}
-        )
-        
-                
+        )              
         
 @router.post("/{bot_id}/votes/test")
 async def send_test_webhook(bot_id: int, Authorization: str = Header("BOT_TOKEN")):
