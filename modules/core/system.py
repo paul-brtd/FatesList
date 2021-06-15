@@ -119,7 +119,7 @@ def fl_openapi(app):
         openapi_schema = get_openapi(
             title="Fates List",
             version="1.0",
-            description="Only v2 beta 2 API is supported (v1 is the old one that fateslist.js currently uses). The default API is v2. This means /api will point to this. To pin a api, either use the FL-API-Version header or directly use /api/v/{version}.",
+            description="Only v2 beta 3 API is supported (v1 is the old one that fateslist.js currently uses). The default API is v2. This means /api will point to this. To pin a api, either use the FL-API-Version header or directly use /api/v{version}.",
             routes=app.routes,
         )
         app.openapi_schema = openapi_schema
