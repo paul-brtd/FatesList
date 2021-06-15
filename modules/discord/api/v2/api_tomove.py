@@ -229,19 +229,6 @@ async def delete_bot_command_api_(request: Request, bot_id: int, command: BotCom
     await bot_add_event(bot_id, enums.APIEvents.command_delete, {"user": None, "id": command.id})
     return api_success()
 
-@router.get("/bots/{bot_id}/votes", response_model = BotVoteCheck, dependencies=[Depends(RateLimiter(times=5, minutes=1))])
-async def get_votes_api(request: Request, bot_id: int, user_id: int, Authorization: str = Header("BOT_TOKEN")):
-    """Endpoint to check amount of votes a user has."""
-    id = await bot_auth(bot_id, Authorization)
-    if id is None:
-        return abort(401)
-    voter_count = await db.fetchval("SELECT cardinality(timestamps) FROM bot_voters WHERE bot_id = $1 AND user_id = $2", int(bot_id), int(user_id))
-    voter_count = voter_count if voter_count else 0
-    ret = await vote_bot(user_id = user_id, bot_id = bot_id, autovote = False, test = False, pretend = True)
-    if ret is None:
-        return {"votes": voter_count, "voted": voter_count != 0, "vote_epoch": 0, "time_to_vote": 0, "vote_right_now": False, "message": "Voter not found!"}
-    return {"votes": voter_count, "voted": voter_count != 0, "vote_epoch": ret[0].timestamp() if isinstance(ret, tuple) else 0, "time_to_vote": ret[1].total_seconds() if isinstance(ret, tuple) else 0, "vote_right_now": ret == True,  "message": None}
-
 @router.post("/bots/{bot_id}/votes/test")
 async def send_test_webhook(bot_id: int, Authorization: str = Header("BOT_TOKEN")):
     """Endpoint to test webhooks"""
@@ -249,21 +236,6 @@ async def send_test_webhook(bot_id: int, Authorization: str = Header("BOT_TOKEN"
     if id is None:
         return abort(401)
     return await vote_bot(user_id = 519850436899897346, bot_id = bot_id, autovote = False, test = True, pretend = False) 
-
-@router.get("/bots/{bot_id}/votes/timestamped", response_model = BotVotesTimestamped)
-async def timestamped_get_votes_api(request: Request, bot_id: int, user_id: Optional[int] = None, Authorization: str = Header("BOT_TOKEN")):
-    """Endpoint to check amount of votes a user has with timestamps. This does not return whether a user can vote"""
-    id = await bot_auth(bot_id, Authorization)
-    if id is None:
-        return abort(401)
-    elif user_id is not None:
-        ldata = await db.fetch("SELECT user_id, timestamps FROM bot_voters WHERE bot_id = $1 AND user_id = $2", int(bot_id), int(user_id))
-    else:
-        ldata = await db.fetch("SELECT user_id, timestamps FROM bot_voters WHERE bot_id = $1", int(bot_id))
-    ret = {}
-    for data in ldata:
-        ret[str(data["user_id"])] = [round(ts.timestamp()) for ts in data["timestamps"]]
-    return {"timestamped_votes": ret}
 
 @router.get("/bots/{bot_id}/maintenance", response_model = BotMaintenance)
 async def get_maintenance_mode(request: Request, bot_id: int):
