@@ -63,12 +63,10 @@
 	</div>
 	<div class="d-flex justify-content-center align-items-center flex-wrap" style="width: 80%;margin: 0 auto;max-width: 1000px; margin-bottom: 3px !important;" id="{{type}}-buttons">
 		{% if data.state != enums.BotState.banned %}
-			<form method = "POST" action = "/{{type}}/{{id}}/vote" id="{{type}}-vote">
-				<button type="submit" class="btn buttons-all vote btn-outline-light" id="buttons-vote" style="color: white !important;">
+				<button onclick="voteBot()" class="btn buttons-all vote btn-outline-light" id="buttons-vote" style="color: white !important;">
 					<span class="iconify" data-icon="fa-solid:thumbs-up" data-inline="false"></span>
 					<span style="margin-left: 3px;">{{data.votes}}</span>
 				</button>
-			</form>
 		{% endif %}
 		{% if type != "bot" or data.state != enums.BotState.banned %}
 			<a target=”_blank” href="/{{type}}/{{id}}/invite"><button class="btn btn-outline-light buttons-all" id="buttons-invite">Invite</button></a>
@@ -338,9 +336,46 @@
 </div>
 <script src="https://cdn.jsdelivr.net/gh/Fates-List/FatesList@main/static/assets/js/bots_servers3.min.js" defer></script>	
 <script>
+	var context = {
+		"id": "{{id}}",
+		"user_id": "{{user_id}}",
+		"bot_token": "{% if data.api_token %}{{data.api_token}}{% endif %}",
+		"user_token": "{{user_token}}",
+		"type": "{{type}}",
+		"logged_in": {% if user_id %}true{% else %}false{% endif %},
+		"bot_admin": {% if data.api_token %}true{% else %}false{% endif %},
+		"reviews": {
+			"average_rating": {{average_rating}}
+		},
+		"site_lang": "{{site_lang}}"
+	}
 $( document ).ready(function() {
-	setTimeout(function() {document.querySelector("#rating-desc-avg").innerHTML = parseState({{average_rating}}) + ", " + {{average_rating}}}, 300); 
+	setTimeout(function() {document.querySelector("#rating-desc-avg").innerHTML = parseState(context.reviews.average_rating) + ", " + context.reviews.average_rating}, 300); 
 });
+
+function voteBot() {
+	if(!context.logged_in)
+		window.location.replace(`/auth/login?redirect=/${context.type}/${context.id}/vote&pretty=to vote for this bot`)
+	$.ajax({
+		url: `/api/${context.type}s/${context.id}/votes`,
+		method: "PATCH",
+		headers: {"Authorization": context.user_token},
+		contentType: "application/json",
+		data: JSON.stringify({"user_id": context.user_id}),
+		statusCode: {
+			200: function(data) {
+				modalShow("Voted!", "You have successfully voted for this bot")
+				setTimeout(() => window.location.reload(), 1500)
+			},
+			400: function(data) {
+				modalShow(data.responseJSON.reason, `Please wait ${data.responseJSON.human} before trying to vote for this bot`)
+			},
+			429: function(data) {
+				modalShow("Rate Limited", "You are being ratelimited. Please try voting again in a few minutes")
+			}
+		}
+	})
+}
 
 function commandModal(name) {
 	cmd = document.querySelector("#cmd-" + name.replace(" ", "")).textContent
@@ -357,7 +392,7 @@ function getCommands(bot_id) {
 	commandsTab = document.querySelector("#commands-tab")
 	error = document.querySelector("#commands-error")
 	$.get({
-		url: `/api/bots/${bot_id}/commands?lang={{site_lang}}`,
+		url: `/api/bots/${context.id}/commands?lang=${context.site_lang}`,
 		statusCode: {
 			404: function(data) {
 				error.textContent = "No Commands Found"
@@ -420,14 +455,14 @@ function getCommands(bot_id) {
 	})
 }
 
-setTimeout(function(){getCommands('{{id}}')}, 700)
+setTimeout(function(){getCommands(context.id)}, 700)
 
 function deleteReview(rev_id) {
 	$.ajax({
 		type: 'DELETE',
-		url: `/api/{{type}}s/{{id}}/reviews/${rev_id}`,
-		data: JSON.stringify({"user_id": "{{user_id}}"}),
-		headers: {"Authorization": "{{user_token}}"},
+		url: `/api/${context.type}s/${context.id}/reviews/${rev_id}`,
+		data: JSON.stringify({"user_id": context.user_id}),
+		headers: {"Authorization": context.user_token},
 		processData: false,
 		contentType: 'application/json',
 		statusCode: {
@@ -440,9 +475,9 @@ function deleteReview(rev_id) {
 function upvoteReview(rev_id) {
 	$.ajax({
 		type: 'PATCH',
-		url: `/api/{{type}}s/{{id}}/reviews/${rev_id}/votes`,
-		data: JSON.stringify({"upvote": true, "user_id": "{{user_id}}"}),
-		headers: {"Authorization": "{{user_token}}"},
+		url: `/api/${context.type}s/${context.id}/reviews/${rev_id}/votes`,
+		data: JSON.stringify({"upvote": true, "user_id": context.user_id}),
+		headers: {"Authorization": context.user_token},
 		processData: false,
 		contentType: 'application/json',
 		statusCode: {
@@ -467,9 +502,9 @@ function upvoteReview(rev_id) {
 function downvoteReview(rev_id) {
 	$.ajax({
 		type: 'PATCH',
-		url: `/api/{{type}}s/{{id}}/reviews/${rev_id}/votes`,
-		data: JSON.stringify({"upvote": false, "user_id": "{{user_id}}"}),
-		headers: {"Authorization": "{{user_token}}"},
+		url: `/api/${context.type}s/${context.id}/reviews/${rev_id}/votes`,
+		data: JSON.stringify({"upvote": false, "user_id": context.user_id}),
+		headers: {"Authorization": context.user_token},
 		processData: false,
 		contentType: 'application/json',
 		statusCode: {

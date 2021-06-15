@@ -50,6 +50,8 @@ def version_scope(request, def_version):
         else:
             api_ver = str(def_version)
     logger.trace(f"API version is {api_ver}")
+    if request.headers.get("FL-Method") and str(request.headers.get("FL-Method")).upper() in ("GET", "POST", "PUT", "PATCH", "DELETE"):
+        new_scope["method"] = str(request.headers.get("FL-Method")).upper()
     return new_scope, api_ver
 
 def force_bytes(s, encoding='utf-8', strings_only=False, errors='strict'):
