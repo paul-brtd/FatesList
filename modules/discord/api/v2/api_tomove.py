@@ -229,14 +229,6 @@ async def delete_bot_command_api_(request: Request, bot_id: int, command: BotCom
     await bot_add_event(bot_id, enums.APIEvents.command_delete, {"user": None, "id": command.id})
     return api_success()
 
-@router.post("/bots/{bot_id}/votes/test")
-async def send_test_webhook(bot_id: int, Authorization: str = Header("BOT_TOKEN")):
-    """Endpoint to test webhooks"""
-    id = await bot_auth(bot_id, Authorization)
-    if id is None:
-        return abort(401)
-    return await vote_bot(user_id = 519850436899897346, bot_id = bot_id, autovote = False, test = True, pretend = False) 
-
 @router.get("/bots/{bot_id}/maintenance", response_model = BotMaintenance)
 async def get_maintenance_mode(request: Request, bot_id: int):
     ret = await get_maint(bot_id = bot_id)
