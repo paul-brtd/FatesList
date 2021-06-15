@@ -65,7 +65,8 @@ function parseState(v) {
 	return state
 }
 
-$(document).ready(function(){	
+try {
+	$(document).ready(function(){	
 		if(window.location.hash == "")
 			document.querySelector('#long-desc-tab-button').click()
 		else {
@@ -77,6 +78,8 @@ $(document).ready(function(){
 			}
 		}
 	});
+}
+catch (err) {}
 function onSubmit(token) {
 	document.getElementById("vote").submit();
 }
