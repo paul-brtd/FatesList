@@ -17,7 +17,7 @@ async def get_login_link(request: Request, data: LoginInfo):
             return api_error(
                 "Invalid redirect. You may only redirect to pages on Fates List"
             )
-    oauth_data = discord_o.get_discord_oauth(data.scopes, data.redirect if data.redirect else "/")
+    oauth_data = discord_o.get_discord_oauth(data.scopes, data.redirect if data.redirect else "/", redirect_uri = data.oauth_redirect)
     return api_success(url = oauth_data["url"])
 
 @router.post("/users", response_model = LoginResponse)
