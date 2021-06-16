@@ -6,6 +6,7 @@ import uuid
 
 class Callback(BaseModel):
     key: str
+    verify_key: str
     name: str
     url: str
 
