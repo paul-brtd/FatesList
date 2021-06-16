@@ -22,7 +22,7 @@ First send a POST request to /api/oauth (see [Endpoints](endpoints.md) to learn 
 The URL, on a `GET` request with the `FL-Keycheck` header set to a nonzero number or a string *should* respond with the key you sent in the `key` field and the name you sent in the `name` field. If it does not, the callback will be aborted.
 
 ???+ warning
-    The `oauth_redirect` field must be either `https://fateslist.xyz/auth/login/confirm` or `https://fateslist.xyz/auth/callback` or users will get a `Invalid redirect_uri` error. Use externallcallback for custom clients or WIP clients like Lynx. Externalcallback needs the `ec` field to be set as well (see above)
+    The `oauth_redirect` field must be either `https://fateslist.xyz/auth/login/confirm` or `https://fateslist.xyz/api/auth/callback` or users will get a `Invalid redirect_uri` error. Use externallcallback for custom clients or WIP clients like Lynx. Externalcallback needs the `ec` field to be set as well (see above)
 
 
 
