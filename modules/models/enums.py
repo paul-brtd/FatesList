@@ -2,6 +2,7 @@ from typing import List, Dict, Optional, ForwardRef
 from pydantic import BaseModel
 import uuid
 from aenum import Enum, IntEnum
+from config import *
 
 class KnownClients(Enum):
     _init_ = 'value __key__ __banned__ __verified__ __noprompt__'

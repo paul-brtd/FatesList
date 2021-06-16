@@ -2,7 +2,7 @@ from modules.core import *
 from .models import APIResponse, Login, LoginInfo, OAuthInfo, LoginResponse, LoginBan, BaseUser, Callback
 from ..base import API_VERSION
 from urllib.parse import unquote
-
+from itsdangerous import URLSafeSerializer
 router = APIRouter(
     prefix = f"/api/v{API_VERSION}",
     include_in_schema = True,
@@ -10,6 +10,7 @@ router = APIRouter(
 )
 
 discord_o = Oauth(OauthConfig)
+auth_s = URLSafeSerializer(auth_jwt_key, "auth")
 
 @router.post("/oauth", response_model = OAuthInfo)
 async def get_login_link(request: Request, data: LoginInfo):
@@ -24,11 +25,17 @@ async def get_login_link(request: Request, data: LoginInfo):
         "redirect": data.redirect if data.redirect else "/", 
         "callback": data.callback.dict()
     }), ex = 90)
-    return api_success(url = discord_o.get_discord_oauth(id, data.scopes))
+    return api_success(url = discord_o.get_discord_oauth(auth_s.dumps(str(id)), data.scopes))
 
 @router.get("/auth/callback")
 async def auth_callback_handler(request: Request, code: str, state: str):
-    oauth = await redis_db.get(f"oauth-{state}")
+    try:
+        id = auth_s.loads(state)
+    except Exception:
+        return api_error(
+            "Invalid state provided"
+        )
+    oauth = await redis_db.get(f"oauth-{id}")
     if not oauth:
         return api_error(
             "Invalid state. There is no oauth data associated with this state. Please try and login again"        
@@ -44,12 +51,12 @@ async def auth_callback_handler(request: Request, code: str, state: str):
     except ValueError:
         client = enums.KnownClients.unknown
         
-    url = f"{callback.url}?code={code}&scopes={discord_o.get_scopes(oauth['scopes'])}&redirect={oauth['redirect']}
+    url = f"{callback.url}?code={code}&scopes={discord_o.get_scopes(oauth['scopes'])}&redirect={oauth['redirect']}"
     
     if not callback.url.startswith("http://localhost:"):
         async with aiohttp.ClientSession() as sess:
-            async with sess.put(callback.url, headers = {"Snowfall": callback.verify_key}):
-                if res.status_code != 200:
+            async with sess.put(callback.url, headers = {"Snowfall": callback.verify_key}) as res:
+                if res.status != 200:
                     return api_error(
                         "Callback URL does not return 200 on PUT!"
                     )
@@ -64,6 +71,7 @@ async def auth_callback_handler(request: Request, code: str, state: str):
                         "Callback URL not returning name in performed oauth request"
                     )
     if client.__noprompt__:
+        await redis_db.delete(f"oauth-{id}")
         return RedirectResponse(url)
     return api_error(
         "Prompt auth is not yet implemented!"

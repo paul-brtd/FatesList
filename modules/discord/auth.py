@@ -70,9 +70,9 @@ async def login_confirm(request: Request, code: str, scopes: str, redirect: str)
             
 @router.put("/login/confirm")
 async def confirm_auditor(request: Request, Snowfall: str = Header(...)):
-    if not secure_strcmp(Snowfall, client_keys_fateslistp):
+    if not secure_strcmp(Snowfall, client_key_fateslistp):
         return abort(401)
-    return {"key": client_keys_fateslist, "name": "Fates List"}
+    return {"key": client_key_fateslist, "name": "Fates List"}
             
 @router.get("/logout")
 async def logout(request: Request):
