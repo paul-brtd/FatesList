@@ -15,14 +15,14 @@ First send a POST request to /api/oauth (see [Endpoints](endpoints.md) to learn 
 
 | Key | Description | Type |
 | :--- | :--- | :--- |
-| post | The url to redirect the user to after oauth and externalcallback auth. | String |
+| post | The url to redirect the user to after oauth and callback auth. | String |
 | key | The key that is tied to your custom client. To create this, just use `utils/gensecret.py` | String |
-| name | The name of the custom client. Will be displayed in externalcallback auth | String |
+| name | The name of the custom client. Will be displayed in callback auth | String |
 
-The URL, on a `GET` request with the `FL-Keycheck` header set to a nonzero number or a string *should* respond with the key you sent in the `key` field and the name you sent in the `name` field. If it does not, the externalcallback will be aborted.
+The URL, on a `GET` request with the `FL-Keycheck` header set to a nonzero number or a string *should* respond with the key you sent in the `key` field and the name you sent in the `name` field. If it does not, the callback will be aborted.
 
 ???+ warning
-    The `oauth_redirect` field must be either `https://fateslist.xyz/auth/login/confirm` or `https://fateslist.xyz/auth/login/externalcallback` or users will get a `Invalid redirect_uri` error. Use externallcallback for custom clients or WIP clients like Lynx. Externalcallback needs the `ec` field to be set as well (see above)
+    The `oauth_redirect` field must be either `https://fateslist.xyz/auth/login/confirm` or `https://fateslist.xyz/auth/callback` or users will get a `Invalid redirect_uri` error. Use externallcallback for custom clients or WIP clients like Lynx. Externalcallback needs the `ec` field to be set as well (see above)
 
 
 
