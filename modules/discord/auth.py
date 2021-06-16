@@ -66,7 +66,13 @@ async def login_confirm(request: Request, code: str, scopes: str, redirect: str)
                 request.session["user_css"] = json["css"]
                 request.session["js_allowed"] = json["js_allowed"]
                 return HTMLResponse(f"<script>window.location.replace('{redirect}')</script>")
-
+            
+@router.put("/login/confirm")
+async def confirm_auditor(request: Request, Snowfall: str = Header(...)):
+    if not secure_strcmp(Snowfall, client_keys_fateslistp):
+        return abort(401)
+    return {"key": client_keys_fateslist, "name": "Fates List"}
+            
 @router.get("/logout")
 async def logout(request: Request):
     request.session.clear()
