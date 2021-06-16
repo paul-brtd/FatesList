@@ -17,7 +17,7 @@ class Oauth():
         self.client_id = oc.client_id
         self.client_secret = oc.client_secret
         self.redirect_uri = oc.redirect_uri
-        self.discord_login_url = f"https://discord.com/api/oauth2/authorize?client_id={self.client_id}&redirect_uri=https://fateslist.xyz/auth/callback"
+        self.discord_login_url = f"https://discord.com/api/oauth2/authorize?client_id={self.client_id}&redirect_uri={self.redirect_uri}"
         self.discord_token_url = "https://discord.com/api/oauth2/token"
         self.discord_api_url = "https://discord.com/api"
     
