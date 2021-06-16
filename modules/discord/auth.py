@@ -37,12 +37,10 @@ async def login_stage2(request: Request, redirect: str, join_servers: str = FFor
     return RedirectResponse(url, status_code=HTTP_303_SEE_OTHER)
 
 @router.get("/login/confirm")
-async def login_confirm(request: Request, code: str, state: str):
+async def login_confirm(request: Request, code: str, scopes: str, redirect: str):
     if "user_id" in request.session.keys():
         return RedirectResponse("/")
     else:
-        scopes = state.split("|")[0]
-        redirect = state.split("|")[1] if len(state.split("|")) >= 2 else "/" 
         async with aiohttp.ClientSession() as sess:
             async with sess.post(f"{site_url}/api/users", json = {"code": code, "scopes": scopes.split(" "), "redirect": redirect}) as res:
                 json = await res.json()
