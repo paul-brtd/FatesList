@@ -7,6 +7,7 @@ import uuid
 class LoginInfo(BaseModel):
     scopes: List[str]
     redirect: Optional[str] = "/"
+    oauth_redirect: Optional[str] = "https://fateslist.xyz/auth/login/confirm"
 
 class Login(LoginInfo):
     code: str
