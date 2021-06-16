@@ -1,5 +1,5 @@
 from modules.core import *
-from .models import APIResponse, Login, LoginInfo, OAuthInfo
+from .models import APIResponse, Login, LoginInfo, OAuthInfo, LoginResponse, LoginBan, BaseUser
 from ..base import API_VERSION
 
 router = APIRouter(
@@ -20,7 +20,7 @@ async def get_login_link(request: Request, data: LoginInfo):
     oauth_data = discord_o.get_discord_oauth(data.scopes, data.redirect if data.redirect else "/")
     return api_success(url = oauth_data["url"])
 
-@router.post("/users")
+@router.post("/users", response_model = LoginResponse)
 async def login_user(request: Request, data: Login):
     try:
         access_token = await discord_o.get_access_token(data.code, "%20".join(data.scopes), redirect_uri = data.oauth_redirect if data.oauth_redirect else None)
@@ -61,10 +61,10 @@ async def login_user(request: Request, data: Login):
             return api_error(
                 "You have been banned from Fates List",
                 banned = True,
-                ban = {
-                    "type": ban_data["type"],
-                    "desc": ban_data["desc"]
-                },
+                ban = LoginBan(
+                    type = ban_data["type"],
+                    desc = ban_data["desc"],
+                ),
                 state = state
             )
         if userjson["username"] != user_info["username"]:
@@ -87,14 +87,14 @@ async def login_user(request: Request, data: Login):
         await discord_o.join_user(access_token["access_token"], userjson["id"])
 
     return api_success(
-        user = {
-            "id": userjson["id"],
-            "username": userjson["username"],
-            "bot": False,
-            "disc": userjson["discriminator"],
-            "avatar": avatar,
-            "status": user["status"] if user else 0
-        },
+        user = BaseUser(
+            id = userjson["id"],
+            username = userjson["username"],
+            bot = False,
+            disc = userjson["discriminator"],
+            avatar = avatar,
+            status = user["status"] if user else 0
+        ),
         token = token,
         css = css,
         state = state,

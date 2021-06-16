@@ -13,7 +13,7 @@ import sys
 sys.path.append("modules/models") # Libraries should remove this
 import enums # as enums (for libraries)
 import datetime
-from .base_models import BaseUser, APIResponse
+from .base_models import BaseUser, APIResponse, AccessToken
 
 class BasePager(BaseModel):
     """Information given by the API for pagination"""
@@ -157,12 +157,6 @@ class PartialServer(BaseModel):
 
 class PartialServerDict(BaseModel):
     __root__: Dict[str, PartialServer]
-
-class AccessToken(BaseModel):
-    access_token: str
-    refresh_token: str
-    expires_in: int
-    current_time: Union[float, int]
 
 class ServerList(BaseModel):
     servers: PartialServerDict

@@ -1,6 +1,6 @@
 import modules.models.enums as enums
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Union
 import uuid
 
 class BaseUser(BaseModel):
@@ -40,3 +40,10 @@ class APIResponse(BaseModel):
 
 class IDResponse(APIResponse):
     id: uuid.UUID
+
+class AccessToken(BaseModel):
+    access_token: str
+    refresh_token: str
+    expires_in: int
+    current_time: Union[float, int]
+

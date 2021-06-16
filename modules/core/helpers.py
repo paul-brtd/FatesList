@@ -15,7 +15,13 @@ cleaner = Cleaner(remove_unknown_tags=False)
 
 # API returners
 def api_return(done: bool, reason: str, status_code: int, headers: dict = None, **kwargs): 
-    return ORJSONResponse({"done": done, "reason": reason} | kwargs, status_code = status_code, headers = headers)
+    serialized = {}
+    for kwarg in kwargs.keys():
+        if isinstance(kwargs[kwarg], BaseModel):
+            serialized = serialized | {kwarg: kwargs[kwarg].dict()}
+        else:
+            serialized = serialized | {kwarg: kwargs[kwarg]}
+    return ORJSONResponse({"done": done, "reason": reason} | serialized, status_code = status_code, headers = headers)
 
 def api_error(reason: str, code: int = None, status_code: int = 400, **kwargs):
     return api_return(done = False, reason = reason, status_code = status_code, **kwargs)
