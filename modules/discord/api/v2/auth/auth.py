@@ -48,7 +48,7 @@ async def auth_callback_handler(request: Request, code: str, state: str):
     
     if not callback.url.startswith("http://localhost:"):
         async with aiohttp.ClientSession() as sess:
-            async with sess.put(callback.url):
+            async with sess.put(callback.url, headers = {"Snowfall": callback.verify_key}):
                 if res.status_code != 200:
                     return api_error(
                         "Callback URL does not return 200 on PUT!"
