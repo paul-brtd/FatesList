@@ -17,13 +17,13 @@ async def get_login_link(request: Request, data: LoginInfo):
             return api_error(
                 "Invalid redirect. You may only redirect to pages on Fates List"
             )
-    oauth_data = discord_o.get_discord_oauth(data.scopes, data.redirect if data.redirect else "/", redirect_uri = data.oauth_redirect, callback = data.callback)
+    oauth_data = discord_o.get_discord_oauth(data.scopes, data.redirect if data.redirect else "/", data.callback)
     return api_success(url = oauth_data["url"])
 
 @router.post("/users", response_model = LoginResponse)
 async def login_user(request: Request, data: Login):
     try:
-        access_token = await discord_o.get_access_token(data.code, "%20".join(data.scopes), redirect_uri = data.oauth_redirect if data.oauth_redirect else None)
+        access_token = await discord_o.get_access_token(data.code, "%20".join(data.scopes))
         userjson = await discord_o.get_user_json(access_token["access_token"])
         if not userjson["id"]:
             raise ValueError("Invalid user json")
