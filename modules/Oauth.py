@@ -27,7 +27,7 @@ class Oauth():
     def get_discord_oauth(self, scopes: Union[str, list], site_redirect: str, callback: BaseModel):
         if type(scopes) == list:
             scopes = self.get_scopes(scopes)
-        state = "|".join((scopes, site_redirect, callback.dict()))
+        state = "|".join((scopes, site_redirect, str(callback.dict())))
         return {"state": scopes, "url": f"{self.discord_login_url}&state={state}&response_type=code&scope={scopes}"}
 
     async def get_access_token(self, code, scope) -> dict:

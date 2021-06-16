@@ -1,6 +1,7 @@
 from modules.core import *
 from .models import APIResponse, Login, LoginInfo, OAuthInfo, LoginResponse, LoginBan, BaseUser, Callback
 from ..base import API_VERSION
+from urllib.parse import unquote
 
 router = APIRouter(
     prefix = f"/api/v{API_VERSION}",
@@ -17,10 +18,11 @@ async def get_login_link(request: Request, data: LoginInfo):
             return api_error(
                 "Invalid redirect. You may only redirect to pages on Fates List"
             )
-        if "|" in str(callback.dict()):
+        if "|" in str(data.callback.dict()):
             return api_error(
                 "Callback may not have | anywhere in the dict"
             )
+
     oauth_data = discord_o.get_discord_oauth(data.scopes, data.redirect if data.redirect else "/", data.callback)
     return api_success(url = oauth_data["url"])
 
@@ -30,9 +32,8 @@ async def auth_callback_handler(request: Request, code: str, state: str):
     callback_str = state_lst[2]
     scopes = state_lst[0]
     redirect =  state_lst[1]
-    callback_json = orjson.loads(callback_str)
-    callback = Callback(callback_json)
-    
+    callback_json = orjson.loads(callback_str.replace("'", "\""))
+    callback = Callback(**callback_json)  
     # TODO: Auth checks
     return RedirectResponse(f"{callback.url}?code={code}&scopes={scopes}&redirect={redirect}")
 

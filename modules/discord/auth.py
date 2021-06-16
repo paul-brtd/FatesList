@@ -39,7 +39,7 @@ async def login_stage2(request: Request, redirect: str, join_servers: str = FFor
                 "name": "Fates List",
                 "key": "" # TODO: Set this later
             }
-        ) as res:
+        }) as res:
             json = await res.json()
             url = json["url"]
     return RedirectResponse(url, status_code=HTTP_303_SEE_OTHER)
