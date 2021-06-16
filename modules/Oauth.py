@@ -5,6 +5,7 @@ from typing import Union, Optional, List
 import secrets
 import string
 import time
+from pydantic import BaseModel
 
 def get_token(length: str) -> str:
     secure_str = "".join((secrets.choice(string.ascii_letters + string.digits) for i in range(length)))
@@ -16,18 +17,18 @@ class Oauth():
         self.client_id = oc.client_id
         self.client_secret = oc.client_secret
         self.redirect_uri = oc.redirect_uri
-        self.discord_login_url = "https://discord.com/api/oauth2/authorize?client_id=" + self.client_id
+        self.discord_login_url = f"https://discord.com/api/oauth2/authorize?client_id={self.client_id}&redirect_uri=https://fateslist.xyz/auth/callback"
         self.discord_token_url = "https://discord.com/api/oauth2/token"
         self.discord_api_url = "https://discord.com/api"
     
     def get_scopes(self, scopes_lst: list) -> str:
         return "%20".join(scopes_lst)
 
-    def get_discord_oauth(self, scopes: Union[str, list], site_redirect: str, redirect_uri: Optional[str] = "https://fateslist.xyz/auth/login/confirm"):
+    def get_discord_oauth(self, scopes: Union[str, list], site_redirect: str, callback: BaseModel):
         if type(scopes) == list:
             scopes = self.get_scopes(scopes)
-        state = "|".join((scopes, site_redirect))
-        return {"state": scopes, "url": f"{self.discord_login_url}&state={state}&response_type=code&scope={scopes}&redirect_uri={redirect_uri}"}
+        state = "|".join((scopes, site_redirect, callback.dict()))
+        return {"state": scopes, "url": f"{self.discord_login_url}&state={state}&response_type=code&scope={scopes}"}
 
     async def get_access_token(self, code, scope, redirect_uri: str = None) -> dict:
         payload = {
