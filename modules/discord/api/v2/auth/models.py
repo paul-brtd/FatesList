@@ -4,15 +4,22 @@ from ..base_models import BaseUser, APIResponse, AccessToken
 from typing import Optional, List, Union
 import uuid
 
-class LoginInfo(BaseModel):
+class Callback(BaseModel):
+    key: str
+    name: str
+    url: str
+
+class BaseLoginInfo(BaseModel):
     scopes: List[str]
     redirect: Optional[str] = "/"
     oauth_redirect: Optional[str] = "https://fateslist.xyz/auth/login/confirm"
 
-class Login(LoginInfo):
+class Login(BaseLoginInfo):
     code: str
-    oauth_redirect: Optional[str] = None
-
+        
+class LoginInfo(BaseLoginInfo):
+    callback: Callback
+ 
 class OAuthInfo(APIResponse):
     url: Optional[str] = "/"
 
