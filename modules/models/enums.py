@@ -5,8 +5,8 @@ from aenum import Enum, IntEnum
 
 class KnownClients(Enum):
     _init_ = 'value __key__ __banned__ __verified__ __noprompt__'
-    fates_list = "Fates List", client_keys.fates_list, False, True, True
-    lynx = "Lynx", client_keys.lynx, False, False, False
+    fates_list = "Fates List", client_keys_fateslist, False, True, True
+    lynx = "Lynx", client_keys_lynx, False, False, False
     
 cooldown_buckets = {
     "requeue": 60*0.2,
