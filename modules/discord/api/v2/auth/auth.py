@@ -35,8 +35,40 @@ async def auth_callback_handler(request: Request, code: str, state: str):
         )
     oauth = orjson.loads(oauth)
     callback = Callback(**oauth["callback"])
-    # TODO: Auth checks
-    return RedirectResponse(f"{callback.url}?code={code}&scopes={discord_o.get_scopes(oauth['scopes'])}&redirect={oauth['redirect']}")
+    try:
+        client = enums.KnownClient(callback.name)
+        if client.__key__ != callback.key:
+            return api_error(
+                "Invalid client key for known client"
+            )
+    except ValueError:
+        client = enums.KnownClient.unknown
+        
+    url = f"{callback.url}?code={code}&scopes={discord_o.get_scopes(oauth['scopes'])}&redirect={oauth['redirect']}
+    
+    if client.__noprompt__:
+        return RedirectResponse(url)
+    
+    if not callback.url.startswith("http://localhost:"):
+        async with aiohttp.ClientSession() as sess:
+            async with sess.put(callback.url):
+                if res.status_code != 200:
+                    return api_error(
+                        "Callback URL does not return 200 on PUT!"
+                    )
+                try:
+                    json = await res.json()
+                except Exception:
+                    return api_error(
+                        "Callback URL not returning a proper JSON"
+                    )
+                if json.get("key", "") != callback.key or json.get("name", "") != callback.name:
+                    return api_error(
+                        "Callback URL not returning name in performed oauth request"
+                    )
+    return api_error(
+        "Prompt auth is not yet implemented!"
+    )
 
 @router.post("/users", response_model = LoginResponse)
 async def login_user(request: Request, data: Login):
