@@ -30,13 +30,13 @@ class Oauth():
         state = "|".join((scopes, site_redirect, callback.dict()))
         return {"state": scopes, "url": f"{self.discord_login_url}&state={state}&response_type=code&scope={scopes}"}
 
-    async def get_access_token(self, code, scope, redirect_uri: str = None) -> dict:
+    async def get_access_token(self, code, scope) -> dict:
         payload = {
             "client_id": self.client_id,
             "client_secret": self.client_secret,
             "grant_type": "authorization_code",
             "code": code,
-            "redirect_uri": self.redirect_uri if not redirect_uri else redirect_uri,
+            "redirect_uri": self.redirect_uri,
             "scope": scope
         }
 
