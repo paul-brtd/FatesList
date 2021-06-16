@@ -6,6 +6,7 @@ import secrets
 import string
 import time
 from pydantic import BaseModel
+import uuid
 
 def get_token(length: str) -> str:
     secure_str = "".join((secrets.choice(string.ascii_letters + string.digits) for i in range(length)))
@@ -24,11 +25,8 @@ class Oauth():
     def get_scopes(self, scopes_lst: list) -> str:
         return "%20".join(scopes_lst)
 
-    def get_discord_oauth(self, scopes: Union[str, list], site_redirect: str, callback: BaseModel):
-        if type(scopes) == list:
-            scopes = self.get_scopes(scopes)
-        state = "|".join((scopes, site_redirect, str(callback.dict())))
-        return {"state": scopes, "url": f"{self.discord_login_url}&state={state}&response_type=code&scope={scopes}"}
+    def get_discord_oauth(self, id: uuid.UUID, scopes: list):
+        return f"{self.discord_login_url}&state={id}&response_type=code&scope={self.get_scopes(scopes)}"
 
     async def get_access_token(self, code, scope) -> dict:
         payload = {

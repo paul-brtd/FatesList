@@ -18,24 +18,25 @@ async def get_login_link(request: Request, data: LoginInfo):
             return api_error(
                 "Invalid redirect. You may only redirect to pages on Fates List"
             )
-        if "|" in str(data.callback.dict()):
-            return api_error(
-                "Callback may not have | anywhere in the dict"
-            )
-
-    oauth_data = discord_o.get_discord_oauth(data.scopes, data.redirect if data.redirect else "/", data.callback)
-    return api_success(url = oauth_data["url"])
+    id = uuid.uuid4()
+    await redis_db.set(f"oauth-{id}", orjson.dumps({
+        "scopes": data.scopes, 
+        "redirect": data.redirect if data.redirect else "/", 
+        "callback": data.callback.dict()
+    }), ex = 90)
+    return api_success(url = discord_o.get_discord_oauth(id, data.scopes))
 
 @router.get("/auth/callback")
 async def auth_callback_handler(request: Request, code: str, state: str):
-    state_lst = state.split("|")
-    callback_str = state_lst[2]
-    scopes = state_lst[0]
-    redirect =  state_lst[1]
-    callback_json = orjson.loads(callback_str.replace("'", "\""))
-    callback = Callback(**callback_json)  
+    oauth = await redis_db.get(f"oauth-{state}")
+    if not oauth:
+        return api_error(
+            "Invalid state. There is no oauth data associated with this state. Please try and login again"        
+        )
+    oauth = orjson.loads(oauth)
+    callback = Callback(**oauth["callback"])
     # TODO: Auth checks
-    return RedirectResponse(f"{callback.url}?code={code}&scopes={scopes}&redirect={redirect}")
+    return RedirectResponse(f"{callback.url}?code={code}&scopes={discord_o.get_scopes(oauth['scopes'])}&redirect={oauth['redirect']}")
 
 @router.post("/users", response_model = LoginResponse)
 async def login_user(request: Request, data: Login):
