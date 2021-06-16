@@ -36,18 +36,15 @@ async def auth_callback_handler(request: Request, code: str, state: str):
     oauth = orjson.loads(oauth)
     callback = Callback(**oauth["callback"])
     try:
-        client = enums.KnownClient(callback.name)
+        client = enums.KnownClients(callback.name)
         if client.__key__ != callback.key:
             return api_error(
                 "Invalid client key for known client"
             )
     except ValueError:
-        client = enums.KnownClient.unknown
+        client = enums.KnownClients.unknown
         
     url = f"{callback.url}?code={code}&scopes={discord_o.get_scopes(oauth['scopes'])}&redirect={oauth['redirect']}
-    
-    if client.__noprompt__:
-        return RedirectResponse(url)
     
     if not callback.url.startswith("http://localhost:"):
         async with aiohttp.ClientSession() as sess:
@@ -66,6 +63,8 @@ async def auth_callback_handler(request: Request, code: str, state: str):
                     return api_error(
                         "Callback URL not returning name in performed oauth request"
                     )
+    if client.__noprompt__:
+        return RedirectResponse(url)
     return api_error(
         "Prompt auth is not yet implemented!"
     )
