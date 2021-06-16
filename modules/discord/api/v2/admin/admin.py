@@ -173,20 +173,26 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
     # Approve
     elif data.op == enums.BotAdminOp.approve:
         if state != enums.BotState.under_review:
-            return api_error(f"You must claim this bot using +claim on the testing server. {state_str}", 2757)
+            return api_error(
+                f"You must claim this bot using +claim on the testing server. {state_str}"
+            )
         success_msg = f"Bot Approved Successfully! Invite it to the main server with https://discord.com/oauth2/authorize?client_id={bot_id}&scope=bot&guild_id={guild.id}&disable_guild_select=true&permissions=0"
         tool = admin_tool.approve_bot(data.reason)
     
     # Deny
     elif data.op == enums.BotAdminOp.deny:
         if state != enums.BotState.under_review:
-            return api_error(f"You must claim this bot using +claim on the testing server. {state_str}", 2757)
+            return api_error(
+                f"You must claim this bot using +claim on the testing server. {state_str}"
+            )
         tool = admin_tool.deny_bot(data.reason)
     
     # Unverify
     elif data.op == enums.BotAdminOp.unverify:
         if state not in (enums.BotState.approved, enums.BotState.certified):
-            return api_error(f"Bot is not in a approved state. {state_str}", 2755)
+            return api_error(
+                f"Bot is not in a approved state. {state_str}"
+            )
         tool = admin_tool.unverify_bot(data.reason)
       
     # Requeue
