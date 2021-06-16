@@ -17,6 +17,10 @@ async def get_login_link(request: Request, data: LoginInfo):
             return api_error(
                 "Invalid redirect. You may only redirect to pages on Fates List"
             )
+        if "|" in str(callback.dict()):
+            return api_error(
+                "Callback may not have | anywhere in the dict"
+            )
     oauth_data = discord_o.get_discord_oauth(data.scopes, data.redirect if data.redirect else "/", data.callback)
     return api_success(url = oauth_data["url"])
 
