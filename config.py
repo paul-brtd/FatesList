@@ -131,16 +131,12 @@ bans_data = {
         "desc": "you cannot/will not be able to login or access the support server"
     },
     "2": {
-        "type": "login",
-        "desc": "you will not be able to login but should still be able to access the support server" 
-    },
-    "3": {
         "type": "profile edit",
         "desc": "you will not be able to edit your profile"
     },
-    "4": {
+    "3": {
         "type": "data deletion request",
-        "desc": "Contact modmail to be unbanned"
+        "desc": "you can contact modmail to be unbanned"
     }
 }
 

@@ -57,7 +57,7 @@ async def login_user(request: Request, data: Login):
     else:
         state = enums.UserState(user_info["state"])
         if state.__sitelock__:
-            ban_data = bans_data[str(state)]
+            ban_data = bans_data[str(state.value)]
             return api_error(
                 "You have been banned from Fates List",
                 banned = True,

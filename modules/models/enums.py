@@ -58,8 +58,8 @@ class UserState(IntEnum):
     _init_ = 'value __doc__ __sitelock__'
     normal = 0, "Normal (No Ban)", False
     global_ban = 1, "Global Ban", True
-    pedit_ban = 3, "Profile Edit Ban", False
-    ddr_ban = 4, "Data Deletion Request Ban", True
+    pedit_ban = 2, "Profile Edit Ban", False
+    ddr_ban = 3, "Data Deletion Request Ban", True
 
 class BotRequeue(IntEnum):
     _init_ = 'value __doc__'
