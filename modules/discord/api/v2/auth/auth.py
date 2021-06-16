@@ -1,5 +1,5 @@
 from modules.core import *
-from .models import APIResponse, Login, LoginInfo, OAuthInfo, LoginResponse, LoginBan, BaseUser
+from .models import APIResponse, Login, LoginInfo, OAuthInfo, LoginResponse, LoginBan, BaseUser, Callback
 from ..base import API_VERSION
 
 router = APIRouter(
@@ -19,6 +19,18 @@ async def get_login_link(request: Request, data: LoginInfo):
             )
     oauth_data = discord_o.get_discord_oauth(data.scopes, data.redirect if data.redirect else "/", data.callback)
     return api_success(url = oauth_data["url"])
+
+@router.get("/auth/callback")
+async def auth_callback_handler(request: Request, code: str, state: str):
+    state_lst = state.split("|")
+    callback_str = state_lst[2]
+    scopes = state_lst[0]
+    redirect =  state_lst[1]
+    callback_json = orjson.loads(callback_str)
+    callback = Callback(callback_json)
+    
+    # TODO: Auth checks
+    return RedirectResponse(f"{callback.url}?code={code}&scopes={scopes}&redirect={redirect}")
 
 @router.post("/users", response_model = LoginResponse)
 async def login_user(request: Request, data: Login):
