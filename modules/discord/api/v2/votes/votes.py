@@ -45,17 +45,10 @@ async def create_vote(bot_id: int, data: BotVote, Authorization: str = Header("U
         wait_time["minutes"], wait_time["seconds"] = divmod(total_seconds, 60)
         wait_time["hours"], wait_time["minutes"] = divmod(wait_time["minutes"], 60)
         wait_time["total"] = total_seconds
-
-        # Get the format, the :-1 is to make seconds into second etc for cases where the key (h, m, s) is 1
-        wait_time_format = {}
-        for key in ("hours", "minutes", "seconds"):
-            wait_time_format[key] = key[:-1] if wait_time[key] == 1 else key
                 
         return api_error(
             "You can't vote for this bot yet!",
             wait_time = wait_time,
-            format = wait_time_format,
-            human = ", ".join([f"{wait_time[key]} {wait_time_format[key]}" for key in ("hours", "minutes", "seconds")]),
             headers = {"Retry-After": str(total_seconds)}
         )              
         
