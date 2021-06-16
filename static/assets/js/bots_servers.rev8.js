@@ -134,7 +134,7 @@ function voteBot() {
 				setTimeout(() => window.location.reload(), 1500)
 			},
 			400: function(data) {
-				modalShow(data.responseJSON.reason, `Please wait ${data.responseJSON.wait_time.hours} hours, ${data.responseJSON.wait_time.minutes} minutes and ${data.responseJSON.seconds} seconds before trying to vote for this bot`)
+				modalShow(data.responseJSON.reason, `Please wait ${data.responseJSON.wait_time.hours} hours, ${data.responseJSON.wait_time.minutes} minutes and ${data.responseJSON.wait_time.seconds} seconds before trying to vote for this bot`)
 			},
 			429: function(data) {
 				modalShow("Rate Limited", "You are being ratelimited. Please try voting again in a few minutes")
