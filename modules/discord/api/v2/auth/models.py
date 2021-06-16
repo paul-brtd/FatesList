@@ -12,7 +12,6 @@ class Callback(BaseModel):
 class BaseLoginInfo(BaseModel):
     scopes: List[str]
     redirect: Optional[str] = "/"
-    oauth_redirect: Optional[str] = "https://fateslist.xyz/auth/login/confirm"
 
 class Login(BaseLoginInfo):
     code: str
