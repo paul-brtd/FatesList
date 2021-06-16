@@ -37,7 +37,8 @@ async def login_stage2(request: Request, redirect: str, join_servers: str = FFor
             "callback": {
                 "url": "https://fateslist.xyz/auth/login/confirm",
                 "name": "Fates List",
-                "key": "" # TODO: Set this later
+                "key": client_keys_fateslist,
+                "verify_key": client_keys_fateslistp
             }
         }) as res:
             json = await res.json()
