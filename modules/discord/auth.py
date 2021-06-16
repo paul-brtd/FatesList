@@ -31,7 +31,15 @@ async def login_stage2(request: Request, redirect: str, join_servers: str = FFor
     if server_list == "on":
         scopes.append("guilds")
     async with aiohttp.ClientSession() as sess:
-        async with sess.post(f"{site_url}/api/v2/oauth", json = {"redirect": redirect, "scopes": scopes}) as res:
+        async with sess.post(f"{site_url}/api/v2/oauth", json = {
+            "redirect": redirect, 
+            "scopes": scopes, 
+            "callback": {
+                "url": "https://fateslist.xyz/auth/login/confirm",
+                "name": "Fates List",
+                "key": "" # TODO: Set this later
+            }
+        ) as res:
             json = await res.json()
             url = json["url"]
     return RedirectResponse(url, status_code=HTTP_303_SEE_OTHER)
