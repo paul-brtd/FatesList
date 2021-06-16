@@ -60,29 +60,43 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
         bucket_time = enums.cooldown_buckets[data.op.__cooldown__] # Get Bucket
         coolkey = await redis_db.ttl(f"cooldown-{data.op.__cooldown__}-{data.mod}") # Format: cooldown-BUCKET-MOD
         if coolkey not in (-1, -2): # https://redis.io/commands/ttl, -2 means no key found and -1 means key exists but has no associated expire
-            return api_error(f"This operation is on cooldown for {coolkey} seconds", 2767, status_code = 429, headers = {"X-OP-RL": "1", "Retry-After": str(coolkey)})
+            return api_error(
+                f"This operation is on cooldown for {coolkey} seconds",
+                status_code = 429, 
+                headers = {"X-OP-RL": "1", "Retry-After": str(coolkey)}
+            )
         await redis_db.set(f"cooldown-{data.op.__cooldown__}-{data.mod}", 0, ex = int(bucket_time))
 
     # Check that reason is given where needed
     if data.op.__reason_needed__ and not data.reason:
-        return api_error("Please specify a reason for doing this!", 2753)
+        return api_error(
+            "Please specify a reason for doing this!"
+        )
     
     # Create admin_tool for use by ops
     admin_tool = BotListAdmin(bot_id, data.mod)
     
     # Using Bot ID 0 on a non recursive command is not allowed
     if bot_id == 0 and not data.op.__recursive__:
-        return api_error("This operation is not recursive. You must provide a nonzero Bot ID", 2763)
+        return api_error(
+            "This operation is not recursive. You must provide a nonzero Bot ID"
+        )
     
     # Check that the state exists and get it too
     if not data.op.__recursive__:
         state = await db.fetchval("SELECT state FROM bots WHERE bot_id = $1", bot_id)
         if state is None:
-            return api_error("This bot does not exist", 2747, status_code = 404)
+            return api_error(
+                "This bot does not exist", 
+                status_code = 404
+            )
+        
         try:
             state = enums.BotState(state)
         except:
-            return api_error("Bot is in invalid state. Contact the developers of this list and ask them to fix this!", 2761)
+            return api_error(
+                "Bot is in invalid state. Contact the developers of this list and ask them to fix this!"
+            )
 
         state_str = f"(state: {state} -> {state.__doc__})" # State string for some operations. Format: (state: STATE DESCRIPTION)
     else:
@@ -98,42 +112,62 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
     if data.op == enums.BotAdminOp.claim:
         if state == enums.BotState.under_review:
             verifier = await db.fetchval("SELECT verifier FROM bots WHERE bot_id = $1", bot_id)
-            return api_error(f"This bot has already been claimed by <@{verifier}> ({verifier})", 2750)
+            return api_error(
+                f"This bot has already been claimed by <@{verifier}> ({verifier})"
+            )
 
         elif state != enums.BotState.pending:
-            return api_error(f"This bot is not currently pending review {state_str}", 2751)
+            return api_error(
+                f"This bot is not currently pending review {state_str}"
+            )
+        
         tool = admin_tool.claim_bot()
         
     # Unclaim
     elif data.op == enums.BotAdminOp.unclaim:
         if state != enums.BotState.under_review:
-            return api_error(f"This bot is not currently claimed and hence cannot be unclaimed {state_str}", 2749)
+            return api_error(
+                f"This bot is not currently claimed and hence cannot be unclaimed {state_str}"
+            )
         tool = admin_tool.unclaim_bot()
     
     # Ban
     elif data.op == enums.BotAdminOp.ban:
         if state == enums.BotState.banned:
-            return api_error("This bot has already been banned", 2752)
+            return api_error(
+                "This bot has already been banned"
+            )
+        
         tool = admin_tool.ban_bot(data.reason)
     
     # Unban
     elif data.op == enums.BotAdminOp.unban:
         if state != enums.BotState.banned:
-            return api_error(f"This bot has not been banned {state_str}", 2749)
-        tool = admin_tool.unban_bot(data.reason)
+            return api_error(
+                f"This bot has not been banned {state_str}"
+            )
+        
+        else:   
+            tool = admin_tool.unban_bot(data.reason)
         
     # Certify
     elif data.op == enums.BotAdminOp.certify:
          if state == enums.BotState.certified:
-             return api_error("Bot is already certified", 2754)
+             return api_error(
+                 "Bot is already certified"
+             )
          elif state != enums.BotState.approved:
-             return api_error(f"Bot is not in a approved state. {state_str}", 2755)
+             return api_error(
+                 f"Bot is not in a approved state. {state_str}"
+             )
          tool = admin_tool.certify_bot()
     
     # Uncertify
     elif data.op == enums.BotAdminOp.uncertify:
         if state != enums.BotState.certified:
-            return api_error("Bot is not already certified", 2756)
+            return api_error(
+                "Bot is not already certified"
+            )
         tool = admin_tool.uncertify_bot(data.reason)
     
     # Approve
