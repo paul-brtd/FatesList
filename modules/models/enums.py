@@ -4,6 +4,12 @@ import uuid
 from aenum import Enum, IntEnum
 from config import *
 
+class PromotionType(IntEnum):
+    _init_ = 'value __doc__"
+    announcement = 0, "Announcement"
+    promotion = 1, "Promotion"
+    generic = 2, "Generic"
+
 class KnownClients(Enum):
     _init_ = 'value __key__ __banned__ __verified__ __noprompt__'
     fates_list = "Fates List", client_key_fateslist, False, True, True
