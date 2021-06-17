@@ -40,7 +40,7 @@ async def regenerate_bot_token(request: Request, bot_id: int):
     Regenerates the Bot token
     **Bot Token**: You can get this by clicking your bot and clicking edit and clicking Show (under API Token section)
     """
-    await db.execute("UPDATE bots SET api_token = $1 WHERE bot_id = $2", get_token(132), id)
+    await db.execute("UPDATE bots SET api_token = $1 WHERE bot_id = $2", get_token(132), bot_id)
     return api_success()
 
 @router.get(
