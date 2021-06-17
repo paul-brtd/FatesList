@@ -70,7 +70,7 @@ async def fetch_bot(request: Request, bot_id: int):
         else: 
             owners.append(owner)
 
-    api_ret["owners"] = [{"user": (await get_user(obj["owner"])), "main": obj["main"]} for obj in _owners]
+    api_ret["owners"] = [{"user": (await get_user(obj["owner"])), "main": obj["main"]} for obj in owners]
     if api_ret["features"] is None:
         api_ret["features"] = []
     api_ret["invite_link"] = await invite_bot(bot_id, api = True)
@@ -98,7 +98,7 @@ async def get_raw_bot_api(request: Request, bot_id: int, bt: BackgroundTasks):
     return await render_bot(request, bt, bot_id, api = True)
 
 @router.post("/{bot_id}/stats", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=5, minutes=1)), Depends(bot_auth_check)])
-async def set_bot_stats(request: Request, bot_id: int, api: BotStats, Authorization: str = Header("BOT_API_TOKEN")):
+async def set_bot_stats(request: Request, bot_id: int, api: BotStats):
     """This endpoint allows you to set the guild + shard counts for your bot"""
     stats_old = await db.fetchrow(
         "SELECT servers AS guild_count, shard_count, shards, user_count FROM bots WHERE bot_id = $1",
