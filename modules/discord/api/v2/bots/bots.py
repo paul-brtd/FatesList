@@ -13,7 +13,10 @@ router = APIRouter(
 
 @router.get(
     "/{bot_id}/token",
-    dependencies=[Depends(RateLimiter(times=5, minutes=1)), Depends(user_auth_check)]
+    dependencies=[
+        Depends(RateLimiter(times=5, minutes=1)), 
+        Depends(user_auth_check)
+    ]
 )
 async def get_bot_token(request: Request, bot_id: int, user_id: int):
     """
@@ -27,7 +30,10 @@ async def get_bot_token(request: Request, bot_id: int, user_id: int):
 @router.patch(
     "/{bot_id}/token", 
     response_model = APIResponse, 
-    dependencies = [Depends(RateLimiter(times=7, minutes=3)), Depends(bot_auth_check)]
+    dependencies = [
+        Depends(RateLimiter(times=7, minutes=3)), 
+        Depends(bot_auth_check)
+    ]
 )
 async def regenerate_bot_token(request: Request, bot_id: int):
     """
@@ -40,7 +46,9 @@ async def regenerate_bot_token(request: Request, bot_id: int):
 @router.get(
     "/random", 
     response_model = BotRandom, 
-    dependencies=[Depends(RateLimiter(times=7, seconds=5))]
+    dependencies=[
+        Depends(RateLimiter(times=7, seconds=5))
+    ]
 )
 async def fetch_random_bot(request: Request, lang: str = "default"):
     random_unp = await db.fetchrow(
@@ -60,7 +68,9 @@ async def fetch_random_bot(request: Request, lang: str = "default"):
 @router.get(
     "/{bot_id}", 
     response_model = Bot, 
-    dependencies=[Depends(RateLimiter(times=5, minutes=2))]
+    dependencies=[
+        Depends(RateLimiter(times=5, minutes=2))
+    ]
 )
 async def fetch_bot(request: Request, bot_id: int):
     """Fetches bot information given a bot ID. If not found, 404 will be returned."""
@@ -98,14 +108,18 @@ async def fetch_bot(request: Request, bot_id: int):
 
 @router.get(
     "/{bot_id}/widget",
-    dependencies=[Depends(RateLimiter(times=5, minutes=2))]
+    dependencies=[
+        Depends(RateLimiter(times=5, minutes=2))
+    ]
 )
 async def get_bot_widget(request: Request, bot_id: int, bt: BackgroundTasks):
     return await render_bot_widget(request, bt, bot_id, api = True)
 
 @router.get(
     "/{bot_id}/raw",
-    dependencies=[Depends(RateLimiter(times=5, minutes=4))]
+    dependencies=[
+        Depends(RateLimiter(times=5, minutes=4))
+    ]
 )
 async def get_raw_bot_api(request: Request, bot_id: int, bt: BackgroundTasks):
     """
@@ -118,7 +132,10 @@ async def get_raw_bot_api(request: Request, bot_id: int, bt: BackgroundTasks):
 @router.post(
     "/{bot_id}/stats", 
     response_model = APIResponse, 
-    dependencies=[Depends(RateLimiter(times=5, minutes=1)), Depends(bot_auth_check)]
+    dependencies=[
+        Depends(RateLimiter(times=5, minutes=1)), 
+        Depends(bot_auth_check)
+    ]
 )
 async def set_bot_stats(request: Request, bot_id: int, api: BotStats):
     """This endpoint allows you to set the guild + shard counts for your bot"""
