@@ -43,24 +43,16 @@ async def get_bot_ws_events(request: Request, bot_id: int):
     "/bots/{bot_id}", 
     response_model = APIResponse, 
     dependencies=[
-        Depends(RateLimiter(times=5, minutes=3))
+        Depends(RateLimiter(times=5, minutes=3)),
+        Depends(user_bb_auth_check)
     ]
 )
-async def add_bot(request: Request, bot_id: int, bot: BotAdd, Authorization: str = Header("USER_TOKEN_OR_BOTBLOCK_ADD_KEY")):
+async def add_bot(request: Request, bot_id: int, bot: BotAdd):
     """
     Adds a bot to fates list. Owner must be the owner adding the bot
 
-    Due to how Fates List edits bots using RabbitMQ, this will return a 202 and not a 200 on success
+    Due to how Fates List adds and edits bots using RabbitMQ, this will return a 202 and not a 200 on success
     """
-    if secure_strcmp(Authorization, bb_add_key):
-        bot.oauth_enforced = True # Botblock add key, enforce oauth
-    else:
-        try:
-            user = await user_auth(int(bot.owner), Authorization)
-        except:
-            return abort(401)
-        if user is None:
-            return abort(401)
     if bot.oauth_enforced:
         user_json = await discord_o.get_user_json(bot.oauth_access_token)
         if user_json.get("id") is None or str(user_json.get("id")) != str(user):
@@ -68,7 +60,7 @@ async def add_bot(request: Request, bot_id: int, bot: BotAdd, Authorization: str
     bot.banner = bot.banner.replace("http://", "https://").replace("(", "").replace(")", "")
     bot_dict = bot.dict()
     bot_dict["bot_id"] = bot_id
-    bot_dict["user_id"] = bot_dict["owner"]
+    bot_dict["user_id"] = bot.owner
     bot_adder = BotActions(bot_dict)
     rc = await bot_adder.add_bot()
     if rc is None:
@@ -79,7 +71,8 @@ async def add_bot(request: Request, bot_id: int, bot: BotAdd, Authorization: str
     "/bots/{bot_id}", 
     response_model = APIResponse, 
     dependencies=[
-        Depends(RateLimiter(times=5, minutes=3))
+        Depends(RateLimiter(times=5, minutes=3)),
+        Depends(user_bb_auth_check)
     ]
 )
 async def edit_bot(request: Request, bot_id: int, bot: BotEdit, Authorization: str = Header("USER_TOKEN_OR_BOTBLOCK_EDIT_KEY")):
@@ -88,15 +81,6 @@ async def edit_bot(request: Request, bot_id: int, bot: BotEdit, Authorization: s
 
     Due to how Fates List edits bota using RabbitMQ, this will return a 202 and not a 200 on success
     """
-    if secure_strcmp(Authorization, bb_edit_key):
-        bot.oauth_enforced = True # Botblock add key, enforce o0auth0
-    else:
-        try:
-            user = await user_auth(int(bot.owner), Authorization)
-        except:
-            return abort(401)
-        if user is None:
-            return abort(401)
     if bot.oauth_enforced:
         user_json = await discord_o.get_user_json(bot.oauth_access_token)
         if user_json.get("id") is None or str(user_json.get("id")) != str(user):
@@ -104,7 +88,7 @@ async def edit_bot(request: Request, bot_id: int, bot: BotEdit, Authorization: s
     bot.banner = bot.banner.replace("http://", "https://").replace("(", "").replace(")", "")
     bot_dict = bot.dict()
     bot_dict["bot_id"] = bot_id
-    bot_dict["user_id"] = bot_dict["owner"]
+    bot_dict["user_id"] = bot.owner
     bot_editor = BotActions(bot_dict)
     rc = await bot_editor.edit_bot()
     if rc is None:
