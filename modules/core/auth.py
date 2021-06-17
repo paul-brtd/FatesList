@@ -16,3 +16,8 @@ async def bot_auth_check(bot_id: int, Authorization: str = Header("Put Bot Token
     id = await bot_auth(bot_id, Authorization)
     if id is None:
         raise HTTPException(status_code=401, detail="Invalid Bot Token")
+
+async def user_auth_check(user_id: int, Authorization: str = Header("Put User Token Here")):
+    id = await user_auth(user_id, Authorization)
+    if id is None:
+        raise HTTPException(status_code=401, detail="Invalid User Token")
