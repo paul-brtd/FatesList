@@ -20,16 +20,17 @@ async def get_promotion(request:  Request, bot_id: int):
     dependencies = [Depends(bot_auth_check)]
 )
 async def add_promotion(request: Request, bot_id: int, promo: BotPromotionPartial):
-    """Creates a promotion for a bot. Type can be 1 for announcement, 2 for promotion or 3 for generic
-    """
+    """Creates a promotion for a bot. Type can be 1 for announcement, 2 for promotion or 3 for generic"""
     if len(promo.title) < 3:
         return api_error(
             "Text is to small"
         )
     if promo.type not in [1, 2, 3]:
-        return ORJSONResponse({"done":  False, "reason": "Invalid promotion type provided ", "code": 9897}, status_code = 400)
+        return api_error( 
+            "Invalid promotion type provided"
+        )
     await add_promotion(bot_id, promo.title, promo.info, promo.css, promo.type)
-    return {"done":  True, "reason": None, "code": 1000}
+    return api_success()
 
 @router.patch("/bots/{bot_id}/promotions", 
     response_model = APIResponse,
