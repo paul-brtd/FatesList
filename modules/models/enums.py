@@ -5,7 +5,7 @@ from aenum import Enum, IntEnum
 from config import *
 
 class PromotionType(IntEnum):
-    _init_ = 'value __doc__"
+    _init_ = 'value __doc__'
     announcement = 0, "Announcement"
     promotion = 1, "Promotion"
     generic = 2, "Generic"
