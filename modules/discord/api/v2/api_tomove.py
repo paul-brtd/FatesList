@@ -19,20 +19,18 @@ router = APIRouter(
 @router.get(
     "/bots/{bot_id}/events", 
     response_model = BotEvents,
-    dependencies = [Depends(bot_auth_check)]
+    dependencies = [
+        Depends(bot_auth_check)
+    ]
 )
 async def get_bot_events_api(request: Request, bot_id: int, exclude: Optional[list] = None, filter: Optional[list] = None):
-    if secure_strcmp(Authorization, test_server_manager_key):
-        pass
-    else:
-        id = await bot_auth(bot_id, Authorization)
-        if id is None:
-            return abort(401)
     return await bot_get_events(bot_id = bot_id, filter = filter, exclude = exclude)
 
 @router.get(
     "/bots/{bot_id}/ws_events",
-    dependencies = [Depends(bot_auth_check)]
+    dependencies = [
+        Depends(bot_auth_check)
+    ]
 )
 async def get_bot_ws_events(request: Request, bot_id: int):
     ini_events = {}
@@ -44,13 +42,15 @@ async def get_bot_ws_events(request: Request, bot_id: int):
 @router.post(
     "/bots/{bot_id}", 
     response_model = APIResponse, 
-    dependencies=[Depends(RateLimiter(times=5, minutes=3))]
+    dependencies=[
+        Depends(RateLimiter(times=5, minutes=3))
+    ]
 )
 async def add_bot(request: Request, bot_id: int, bot: BotAdd, Authorization: str = Header("USER_TOKEN_OR_BOTBLOCK_ADD_KEY")):
     """
     Adds a bot to fates list. Owner must be the owner adding the bot
 
-    Due to how Fates List edits bota using RabbitMQ, this will return a 202 and not a 200 on success
+    Due to how Fates List edits bots using RabbitMQ, this will return a 202 and not a 200 on success
     """
     if secure_strcmp(Authorization, bb_add_key):
         bot.oauth_enforced = True # Botblock add key, enforce oauth
@@ -78,7 +78,9 @@ async def add_bot(request: Request, bot_id: int, bot: BotAdd, Authorization: str
 @router.patch(
     "/bots/{bot_id}", 
     response_model = APIResponse, 
-    dependencies=[Depends(RateLimiter(times=5, minutes=3))]
+    dependencies=[
+        Depends(RateLimiter(times=5, minutes=3))
+    ]
 )
 async def edit_bot(request: Request, bot_id: int, bot: BotEdit, Authorization: str = Header("USER_TOKEN_OR_BOTBLOCK_EDIT_KEY")):
     """
@@ -121,12 +123,12 @@ async def get_bot_reviews(request: Request, bot_id: int, page: Optional[int] = 1
 
 @router.patch(
     "/bots/{bot_id}/reviews/{rid}/votes", 
-    response_model = APIResponse
+    response_model = APIResponse,
+    dependencies = [
+        Depends(user_auth_check)
+    ]
 )
-async def vote_review_api(request: Request, bot_id: int, rid: uuid.UUID, vote: BotReviewVote, Authorization: str = Header("USER_TOKEN")):
-    id = await user_auth(vote.user_id, Authorization)
-    if id is None:
-        return abort(401)
+async def vote_review_api(request: Request, bot_id: int, rid: uuid.UUID, vote: BotReviewVote):
     vote.user_id = int(vote.user_id)
     bot_rev = await db.fetchrow("SELECT review_upvotes, review_downvotes, star_rating, reply, review_text FROM bot_reviews WHERE id = $1", rid)
     if bot_rev is None:
@@ -192,7 +194,10 @@ async def get_bot_commands_api(request:  Request, bot_id: int, filter: Optional[
 @router.post(
     "/bots/{bot_id}/commands",
     response_model = BotCommandAddResponse, 
-    dependencies=[Depends(RateLimiter(times=20, minutes=1)), Depends(bot_auth_check)]
+    dependencies=[
+        Depends(RateLimiter(times=20, minutes=1)), 
+        Depends(bot_auth_check)
+    ]
 )
 async def add_bot_command_api(request: Request, bot_id: int, command: PartialBotCommand, force_add: Optional[bool] = False):
     """
@@ -215,7 +220,10 @@ async def add_bot_command_api(request: Request, bot_id: int, command: PartialBot
 @router.patch(
     "/bots/{bot_id}/commands", 
     response_model = APIResponse, 
-    dependencies=[Depends(RateLimiter(times=20, minutes=1)), Depends(bot_auth_check)]
+    dependencies=[
+        Depends(RateLimiter(times=20, minutes=1)), 
+        Depends(bot_auth_check)
+    ]
 )
 async def edit_bot_command_api(request: Request, bot_id: int, command: BotCommand):
     try:
@@ -239,12 +247,12 @@ async def edit_bot_command_api(request: Request, bot_id: int, command: BotComman
 @router.delete(
     "/bots/{bot_id}/commands", 
     response_model = APIResponse, 
-    dependencies=[Depends(RateLimiter(times=20, minutes=1)), Depends(bot_auth_check)]
+    dependencies=[
+        Depends(RateLimiter(times=20, minutes=1)), 
+        Depends(bot_auth_check)
+    ]
 )
 async def delete_bot_command_api_(request: Request, bot_id: int, command: BotCommandDelete):
-    id = await bot_auth(bot_id, Authorization)
-    if id is None:
-        return abort(401)
     if command.id:
         cmd = await db.fetchval("SELECT id FROM bot_commands WHERE id = $1 AND bot_id = $2", command.id, bot_id)
     elif command.cmd_name:
@@ -271,7 +279,9 @@ async def get_maintenance_mode(request: Request, bot_id: int):
 @router.patch(
     "/bots/{bot_id}/maintenance", 
     response_model = APIResponse,
-    dependencies = [Depends(bot_auth_check)]
+    dependencies = [
+        Depends(bot_auth_check)
+    ]
 )
 async def set_maintenance_mode(request: Request, bot_id: int, api: BotMaintenancePartial):
     """This is just an endpoint for enabling or disabling maintenance mode.
@@ -284,27 +294,33 @@ async def set_maintenance_mode(request: Request, bot_id: int, api: BotMaintenanc
     if api.mode not in [0, 1]:
         return api_error("The mode you are using is invalid", 36281)
 
-    id = await bot_auth(bot_id, Authorization)
-    if id is None:
-        return abort(401)
-    await add_maint(id["bot_id"], api.mode, api.reason)
+    await add_maint(bot_id, api.mode, api.reason)
     return api_success()
 
-@router.get("/features/{name}", response_model = FLFeature)
+@router.get(
+    "/features/{name}", 
+    response_model = FLFeature
+)
 async def get_feature_api(request: Request, name: str):
     """Gets a feature given its internal name (custom_prefix, open_source etc)"""
     if name not in features.keys():
         return abort(404)
     return features[name]
 
-@router.get("/tags/{name}", response_model = FLTag)
+@router.get(
+    "/tags/{name}", 
+    response_model = FLTag
+)
 async def get_tags_api(request: Request, name: str):
     """Gets a tag given its internal name (custom_prefix, open_source etc)"""
     if name not in TAGS.keys():
         return abort(404)
     return {"name": name.replace("_", " ").title(), "iconify_data": TAGS[name], "id": name}
 
-@router.get("/code/{vanity}", response_model = BotVanity)
+@router.get(
+    "/code/{vanity}", 
+    response_model = BotVanity
+)
 async def get_vanity_api(request: Request, vanity: str):
     vb = await vanity_bot(vanity)
     logger.trace(f"Vanity is {vanity} and vb is {vb}")
@@ -312,22 +328,40 @@ async def get_vanity_api(request: Request, vanity: str):
         return abort(404)
     return {"type": vb[1], "redirect": str(vb[0])}
 
-@router.get("/index/bots", response_model = BotIndex)
+@router.get(
+    "/index/bots", 
+    response_model = BotIndex
+)
 async def bots_index_page(request: Request, csrf_protect: CsrfProtect = Depends()):
     """For any potential Android/iOS app, crawlers etc."""
     return await render_index(request = request, api = True, csrf_protect = csrf_protect)
 
-@router.get("/search/bots", response_model = BotSearch)
+@router.get(
+    "/search/bots", 
+    response_model = BotSearch
+)
 async def bots_search_page(request: Request, q: str):
     """For any potential Android/iOS app, crawlers etc. Q is the query to search for"""
     return await render_search(request = request, q = q, api = True)
 
-@router.get("/search/profiles", response_model = ProfileSearch)
+@router.get(
+    "/search/profiles", 
+    response_model = ProfileSearch,
+    dependencies=[
+        Depends(RateLimiter(times=20, minutes=1))
+    ]
+)
 async def profiles_search_page(request: Request, q: str):
     """For any potential Android/iOS app, crawlers etc. Q is the query to search for"""
     return await render_profile_search(request = request, q = q, api = True)
 
-@router.post("/preview", response_model = PrevResponse, dependencies=[Depends(RateLimiter(times=20, minutes=1))])
+@router.post(
+    "/preview", 
+    response_model = PrevResponse, 
+    dependencies=[
+        Depends(RateLimiter(times=20, minutes=1))
+    ]
+)
 async def preview_api(request: Request, data: PrevRequest, lang: str = "default"):
     if not data.html_long_description:
         html = emd(markdown.markdown(intl_text(data.data, lang), extensions=["extra", "abbr", "attr_list", "def_list", "fenced_code", "footnotes", "tables", "admonition", "codehilite", "meta", "nl2br", "sane_lists", "toc", "wikilinks", "smarty", "md_in_html"]))
@@ -364,11 +398,13 @@ async def get_user_api(request: Request, user_id: int):
         badges = get_badges(user_dpy, badges, approved_bots)
     return {"bots": bots, "approved_bots": approved_bots, "certified_bots": certified_bots, "bot_developer": approved_bots != [], "certified_developer": certified_bots != [], "profile": user_ret, "badges": badges, "defunct": user_dpy is None} | user_obj
 
-@router.patch("/users/{user_id}/bots/{bot_id}/reminders")
-async def set_vote_reminder(request: Request, user_id: int, bot_id: int, data: VoteReminderPatch, Authorization: str = Header("USER_TOKEN")):
-    id = await user_auth(user_id, Authorization)
-    if id is None:
-        return abort(401)
+@router.patch(
+    "/users/{user_id}/bots/{bot_id}/reminders",
+    dependencies = [
+        Depends(user_auth_check)
+    ]
+)
+async def set_vote_reminder(request: Request, user_id: int, bot_id: int, data: VoteReminderPatch):
     if data.remind:
         check = await db.fetchval("SELECT DISTINCT bot_id FROM user_reminders WHERE user_id = $1 AND bot_id = $2", user_id, bot_id)
         if check == 0:
@@ -380,16 +416,20 @@ async def set_vote_reminder(request: Request, user_id: int, bot_id: int, data: V
         await db.execute("DELETE FROM user_reminders WHERE user_id = $1 AND bot_id = $2", user_id, bot_id)
         return api_success()
 
-@router.post("/users/{user_id}/servers/prepare", dependencies=[Depends(RateLimiter(times=3, seconds=35))], response_model = ServerListAuthed)
-async def prepare_servers_api(request: Request, user_id: int, data: ServerCheck, Authorization: str = Header("USER_TOKEN")):
+@router.post(
+    "/users/{user_id}/servers/prepare",
+    response_model = ServerListAuthed,
+    dependencies=[
+        Depends(RateLimiter(times=3, seconds=35)),
+        Depends(user_auth_check)
+    ]
+)
+async def prepare_servers_api(request: Request, user_id: int, data: ServerCheck):
     """
     Prepares a user to add servers and returns available servers for said user. Scopes must have guild permission
 
     This request may change the access token and this should be set on the client and will be returned in the json response as well
     """
-    id = await user_auth(user_id, Authorization)
-    if id is None:
-        return abort(401)
     valid = {}
     access_token = await discord_o.access_token_check(data.scopes, data.access_token.dict())
     request.session["access_token"] = access_token
@@ -416,8 +456,13 @@ async def prepare_servers_api(request: Request, user_id: int, data: ServerCheck,
     logger.debug(f"Valid servers are {valid}")
     return {"servers": valid, "access_token": access_token}
 
-@router.post("/servers/{guild_id}")
-async def add_guild_api(request: Request, guild_id: int, user_id: int, data: ServersAdd, Authorization: str = Header("USER_TOKEN")):
+@router.post(
+    "/servers/{guild_id}",
+    dependencies=[
+        Depends(user_auth_check)
+    ]
+)
+async def add_guild_api(request: Request, guild_id: int, user_id: int, data: ServersAdd):
     id = await user_auth(user_id, Authorization)
     if id is None:
         return abort(401)
@@ -434,8 +479,14 @@ async def add_guild_api(request: Request, guild_id: int, user_id: int, data: Ser
         return api_success()
     return api_error(rc[0], rc[1])
 
-@router.patch("/users/{user_id}/description", response_model = APIResponse)
-async def set_user_description_api(request: Request, user_id: int, desc: UserDescEdit, Authorization: str = Header("USER_TOKEN")):
+@router.patch(
+    "/users/{user_id}/description", 
+    response_model = APIResponse,
+    dependencies = [
+        Depends(user_auth_check)
+    ]
+)
+async def set_user_description_api(request: Request, user_id: int, desc: UserDescEdit):
     id = await user_auth(user_id, Authorization)
     if id is None:
         return abort(401)
