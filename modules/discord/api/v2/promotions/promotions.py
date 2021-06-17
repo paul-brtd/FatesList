@@ -8,25 +8,34 @@ router = APIRouter(
     tags = [f"API v{API_VERSION} - Promotions"]
 )
 
-@router.get("/bots/{bot_id}/promotions", response_model = BotPromotions)
+@router.get(
+    "/bots/{bot_id}/promotions", 
+    response_model = BotPromotions
+)
 async def get_promotion(request:  Request, bot_id: int):
     promos = await get_promotions(bot_id)
     if promos == []:
         return abort(404)
     return {"promotions": promos}
 
-@router.post("/bots/{bot_id}/promotions",
+@router.post(
+    "/bots/{bot_id}/promotions",
     response_model = APIResponse, 
-    dependencies = [Depends(bot_auth_check)]
+    dependencies = [
+        Depends(bot_auth_check)
+    ]
 )
 async def add_promotion(request: Request, bot_id: int, promo: BotPromotionPartial):
     """Creates a promotion for a bot. Type can be 1 for announcement, 2 for promotion or 3 for generic"""
     await add_promotion(bot_id, promo.title, promo.info, promo.css, promo.type)
     return api_success()
 
-@router.patch("/bots/{bot_id}/promotions", 
+@router.patch(
+    "/bots/{bot_id}/promotions", 
     response_model = APIResponse,
-    dependencies = [Depends(bot_auth_check)]
+    dependencies = [
+        Depends(bot_auth_check)
+    ]
 )
 async def edit_promotion(request: Request, bot_id: int, promo: BotPromotion):
     """Edits an promotion for a bot given its promotion ID.
@@ -47,11 +56,14 @@ async def edit_promotion(request: Request, bot_id: int, promo: BotPromotion):
         bot_id, 
         promo.id
     )
-    return {"done": True, "reason": None, "code": 1000}
+    return api_success()
 
-@router.delete("/bots/{bot_id}/promotions", 
+@router.delete(
+    "/bots/{bot_id}/promotions", 
     response_model = APIResponse,
-    dependencies = [Depends(bot_auth_check)]
+    dependencies = [
+        Depends(bot_auth_check)
+    ]
 )
 async def delete_promotion(request: Request, bot_id: int, promo: BotPromotionDelete):
     """Deletes a promotion for a bot or deletes all promotions from a bot
