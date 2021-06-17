@@ -35,8 +35,18 @@ async def edit_promotion(request: Request, bot_id: int, promo: BotPromotion):
     """
     pid = await db.fetchrow("SELECT id FROM bot_promotions WHERE id = $1 AND bot_id = $2", promo.id, bot_id)
     if pid is None:
-        return ORJSONResponse({"done":  False, "reason": "Promotion Not Found", "code": 2917}, status_code = 400)
-    await db.execute("UPDATE bot_promotions SET title = $1, info = $2, type = $3 WHERE bot_id = $4 AND id = $5", promo.title, promo.info, promo.type, bot_id, promo.id)
+        return api_error(
+            "Promotion not found",
+            status_code = 404
+        )
+    await db.execute(
+        "UPDATE bot_promotions SET title = $1, info = $2, type = $3 WHERE bot_id = $4 AND id = $5", 
+        promo.title, 
+        promo.info, 
+        promo.type,
+        bot_id, 
+        promo.id
+    )
     return {"done": True, "reason": None, "code": 1000}
 
 @router.delete("/bots/{bot_id}/promotions", 
@@ -51,7 +61,10 @@ async def delete_promotion(request: Request, bot_id: int, promo: BotPromotionDel
     if promo.id is not None:
         eid = await db.fetchrow("SELECT id FROM bot_promotions WHERE id = $1", promo.id)
         if eid is None:
-            return ORJSONResponse({"done":  False, "reason": "Promotion Not Found", "code": 4848}, status_code = 400)
+            return api_error(
+                "Promotion not found",
+                status_code = 404
+            )
         await db.execute("DELETE FROM bot_promotions WHERE bot_id = $1 AND id = $2", bot_id, promo.id)
     else:
         await db.execute("DELETE FROM bot_promotions WHERE bot_id = $1", bot_id)
