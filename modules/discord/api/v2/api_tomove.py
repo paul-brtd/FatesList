@@ -371,7 +371,10 @@ async def preview_api(request: Request, data: PrevRequest, lang: str = "default"
     html = html.replace("<h1", "<h2 style='text-align: center'").replace("<h2", "<h3").replace("<h4", "<h5").replace("<h6", "<p").replace("<a", "<a class='long-desc-link'").replace("ajax", "").replace("http://", "https://").replace(".alert", "")
     return {"html": html}
 
-@router.get("/users/{user_id}")
+# TODO: Properly document the actual API
+@router.get(
+    "/users/{user_id}"
+)
 async def get_user_api(request: Request, user_id: int):
     user = await db.fetchrow("SELECT badges, state, description, css FROM users WHERE user_id = $1", user_id)
     if user is None or user["state"] == enums.UserState.ddr_ban:
@@ -389,7 +392,7 @@ async def get_user_api(request: Request, user_id: int):
     guild = client.get_guild(main_server)
     if guild is None:
         return abort(503)
-    user_dpy = guild.get_member(int(user_id))
+    user_dpy = guild.get_member(user_id)
     if user_dpy is None:
         user_dpy = await client.fetch_user(user_id)
     if user_dpy is None: # Still connecting to dpy or whatever
@@ -434,23 +437,28 @@ async def prepare_servers_api(request: Request, user_id: int, data: ServerCheck)
     access_token = await discord_o.access_token_check(data.scopes, data.access_token.dict())
     request.session["access_token"] = access_token
     access_token["current_time"] = str(access_token["current_time"])
-    servers = await discord_o.get_guilds(access_token["access_token"], permissions = [0x8, 0x20]) # Check for all guilds with 0x8 and 0x20
-    for server in servers:
-        try:
-            guild = client_servers.get_guild(int(server))
-        except:
-            guild = None
-        if guild is None:
+    guilds = await discord_o.get_guilds(access_token["access_token"], permissions = [0x8, 0x20]) # Check for all guilds with 0x8 and 0x20
+    for guild in guilds:
+        if (isinstance(guild, str) and guild.isdigit()) or isinstance(guild, int):
+            guild_obj = client_servers.get_guild(int(server))
+            if guild_obj is None:
+                continue
+        else:
             continue
-        try:
-            member = guild.get_member(int(user_id))
-        except:
-            member = None
+       
+        member = guild.get_member(user_id)
         if member is None:
             continue
+            
         if member.guild_permissions.administrator or member.guild_permissions.manage_guild:
             logger.debug(f"Adding {guild.id} to prepared server list")
-            guild_json = {"icon": str(guild.icon_url), "name": guild.name, "member_count": guild.member_count, "created_at": str(guild.created_at.timestamp()), "code": get_token(37)}
+            guild_json = {
+                "icon": str(guild.icon_url),
+                "name": guild.name, 
+                "member_count": guild.member_count,
+                "created_at": str(guild.created_at.timestamp()), 
+                "code": get_token(37)
+            }
             await redis_db.hset(str(guild.id), key = "cache", value = orjson.dumps(guild_json))
             valid = valid | {str(guild.id): guild_json}
     logger.debug(f"Valid servers are {valid}")
@@ -463,16 +471,13 @@ async def prepare_servers_api(request: Request, user_id: int, data: ServerCheck)
     ]
 )
 async def add_guild_api(request: Request, guild_id: int, user_id: int, data: ServersAdd):
-    id = await user_auth(user_id, Authorization)
-    if id is None:
-        return abort(401)
     guild_data = await redis_db.hget(str(guild_id), key = "cache")
     if guild_data is None:
         logger.trace(f"Guild data is {guild_data}")
         return abort(404)
     guild_data = orjson.loads(guild_data)
     if guild_data["code"] != data.code:
-        return api_error("Bad code provided", 6767)
+        return api_error("Bad code provided")
     server_actions = ServerActions(data.dict() | {"data": guild_data, "guild_id": guild_id, "user_id": user_id})
     rc = await server_actions.add_server()
     if rc is None:
@@ -487,31 +492,32 @@ async def add_guild_api(request: Request, guild_id: int, user_id: int, data: Ser
     ]
 )
 async def set_user_description_api(request: Request, user_id: int, desc: UserDescEdit):
-    id = await user_auth(user_id, Authorization)
-    if id is None:
-        return abort(401)
     await db.execute("UPDATE users SET description = $1 WHERE user_id = $2", desc.description, user_id)
     return api_success()
 
-@router.patch("/users/{user_id}/token", response_model = APIResponse)
-async def regenerate_user_token(request: Request, user_id: int, Authorization: str = Header("USER_TOKEN")):
+@router.patch(
+    "/users/{user_id}/token", 
+    response_model = APIResponse,
+    dependencies = [
+        Depends(user_auth_check)
+    ]
+)
+async def regenerate_user_token(request: Request, user_id: int):
     """Regenerate the User API token
 
     ** User API Token**: You can get this by clicking your profile and scrolling to the bottom and you will see your API Token
     """
-    id = await user_auth(user_id, Authorization)
-    if id is None:
-        return abort(401)
     await db.execute("UPDATE users SET api_token = $1 WHERE user_id = $2", get_token(132), id)
     return api_success()
 
-@router.patch("/users/{user_id}/js")
-async def set_js_mode(request: Request, user_id: int, Authorization: str = Header("USER_TOKEN")):
-    id = await user_auth(user_id, Authorization)
-    if id is None:
-        return abort(401)
-
-    js = await db.fetchval("UPDATE users SET js_allowed = NOT(COALESCE(js_allowed, TRUE)) RETURNING js_allowed")
-    request.session["js_allowed"] = js
-    return api_success(status_code = 206, js = js)
+@router.patch(
+    "/users/{user_id}/js",
+    dependencies = [
+        Depends(user_auth_check)
+    ]
+)
+async def set_js_mode(request: Request, user_id: int, data: UserJSPatch):
+    await db.execute("UPDATE users SET js_allowed = $1", data.js_allowed)
+    request.session["js_allowed"] = data.js_allowed
+    return api_success()
 
