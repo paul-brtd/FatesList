@@ -23,7 +23,7 @@ async def add_promotion(request: Request, bot_id: int, promo: BotPromotionPartia
     """Creates a promotion for a bot. Type can be 1 for announcement, 2 for promotion or 3 for generic"""
     if len(promo.title) < 3:
         return api_error(
-            "Text is to small"
+            "Text is too small"
         )
     if promo.type not in [1, 2, 3]:
         return api_error( 
