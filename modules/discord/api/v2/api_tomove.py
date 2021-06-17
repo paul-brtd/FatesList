@@ -187,11 +187,6 @@ async def add_bot_command_api(request: Request, bot_id: int, command: PartialBot
     """
         Self explaining command. Note that if force_add is set, the API will not check if your command already exists and will forcefully add it, this may lead to duplicate commands on your bot. If ret_id is not set, you will not get the command id back in the api response
     """
-    try:
-        _tmp = enums.CommandType(command.cmd_type)
-    except ValueError:
-        return api_error("This command type is not yet supported", 4658)
-
     if force_add is False:
         check = await db.fetchrow("SELECT name FROM bot_commands WHERE cmd_name = $1 AND bot_id = $2", command.cmd_name, bot_id)
         if check is not None:
@@ -210,11 +205,6 @@ async def add_bot_command_api(request: Request, bot_id: int, command: PartialBot
     ]
 )
 async def edit_bot_command_api(request: Request, bot_id: int, command: BotCommand):
-    try:
-        _tmp = enums.CommandType(command.cmd_type)
-    except ValueError:
-        return api_error("This command type is not yet supported", 4658)
-
     data = await db.fetchrow(f"SELECT id, cmd_type, cmd_groups, cmd_name, friendly_name, description, args, examples, premium_only, notes, doc_link FROM bot_commands WHERE id = $1 AND bot_id = $2", command.id, bot_id)
     if data is None:
         return abort(404)
