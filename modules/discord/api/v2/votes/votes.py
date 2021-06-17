@@ -9,16 +9,19 @@ router = APIRouter(
     tags = [f"API v{API_VERSION} - Votes"]
 )
 
-@router.get("/{bot_id}/votes", response_model = BotVoteCheck, dependencies=[Depends(RateLimiter(times=5, minutes=1))])
-async def get_votes(request: Request, bot_id: int, user_id: Optional[int] = None, Authorization: str = Header("BOT_TOKEN_OR_USER_TOKEN")):
+@router.get(
+    "/{bot_id}/votes", 
+    response_model = BotVoteCheck, 
+    dependencies=[
+        Depends(RateLimiter(times=5, minutes=1)),
+        Depends(bot_user_auth_check)
+    ]
+)
+async def get_votes(request: Request, bot_id: int, user_id: Optional[int] = None):
     """Endpoint to check amount of votes a user or the whole bot has."""
     if user_id is None:
         votes = await db.fetchval("SELECT votes FROM bots WHERE bot_id = $1", bot_id)
         return {"votes": votes, "voted": votes != 0, "type": "BotVote", "reason": "No User ID set", "partial": True}
-    id = await bot_auth(bot_id, Authorization)
-    id_bak = await user_auth(user_id, Authorization) # Give bot owners or users access to votes
-    if id is None and id_bak is None:
-        return abort(401)
     voter_ts = await db.fetchval("SELECT timestamps FROM bot_voters WHERE bot_id = $1 AND user_id = $2", int(bot_id), int(user_id))
     voter_count = len(voter_ts) if voter_ts else 0
     ret = await vote_bot(user_id = user_id, bot_id = bot_id, autovote = False, test = False, pretend = True)
