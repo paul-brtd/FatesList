@@ -35,7 +35,10 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
     # Check user token
     id = await user_auth(data.mod, Snowfall)
     if id is None:
-        return abort(401)
+        return api_error(
+            "Snowfall auth failed. Please recheck your user token and try again!",
+            status_code = 403
+        )
 
     # Get user
     guild = client.get_guild(main_server)
