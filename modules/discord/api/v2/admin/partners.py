@@ -90,7 +90,7 @@ async def _invite_resolver(code):
 
 @router.post("/partners", response_model = IDResponse)
 async def new_partner(request: Request, partner: BotListPartner, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
-    if not secure_strcmp(Authorization, test_server_manager_key) and not secure_strcmp(Authorization, root_key):
+    if not secure_strcmp(Authorization, test_server_manager_key):
         return abort(401)
     guild = client.get_guild(main_server)
     user = guild.get_member(int(partner.mod))

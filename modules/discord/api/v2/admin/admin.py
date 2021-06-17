@@ -29,7 +29,7 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
     """Performs a bot admin operation. This is internal and only meant for our test server manager bot. 0 is the recursion bot for botlist-wide actions like vote resets every month. Snowfall is the user token header for staff api requests"""
     
     # Manager key check (only redbot can use this api) 
-    if not secure_strcmp(Authorization, test_server_manager_key) and not secure_strcmp(Authorization, root_key):
+    if not secure_strcmp(Authorization, test_server_manager_key):
         return abort(401)
     
     # Check user token
