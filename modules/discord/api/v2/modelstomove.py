@@ -232,3 +232,6 @@ class ServersAdd(BaseModel):
     long_description: str
     tags: List[str]
     vanity: str
+        
+class UserJSPatch(BaseModel):
+    js_allowed: bool
