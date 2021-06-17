@@ -21,10 +21,6 @@ async def get_promotion(request:  Request, bot_id: int):
 )
 async def add_promotion(request: Request, bot_id: int, promo: BotPromotionPartial):
     """Creates a promotion for a bot. Type can be 1 for announcement, 2 for promotion or 3 for generic"""
-    if promo.type not in [1, 2, 3]:
-        return api_error( 
-            "Invalid promotion type provided"
-        )
     await add_promotion(bot_id, promo.title, promo.info, promo.css, promo.type)
     return api_success()
 
@@ -37,8 +33,6 @@ async def edit_promotion(request: Request, bot_id: int, promo: BotPromotion):
     **API Token**: You can get this by clicking your bot and clicking edit and scrolling down to API Token or clicking APIWeb
     **Promotion ID**: This is the ID of the promotion you wish to edit 
     """
-    if promo.type not in [1, 2, 3]:
-        return ORJSONResponse({"done":  False, "reason": "Invalid promotion type provided ", "code": 9897}, status_code = 400)
     pid = await db.fetchrow("SELECT id FROM bot_promotions WHERE id = $1 AND bot_id = $2", promo.id, bot_id)
     if pid is None:
         return ORJSONResponse({"done":  False, "reason": "Promotion Not Found", "code": 2917}, status_code = 400)
