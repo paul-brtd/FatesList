@@ -33,5 +33,5 @@ async def bot_user_auth_check(bot_id: int, user_id: Optional[int] = None, Author
     id = await bot_auth(bot_id, Authorization)
     if id is None and user_id:
         id = await user_auth(user_id, Authorization)
-    if id is None:
+    if id is None and user_id: # Recheck here after checking user token
         raise HTTPException(status_code=401, detail="Invalid Bot Token or User Token")
