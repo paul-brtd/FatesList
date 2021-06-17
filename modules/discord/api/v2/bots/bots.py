@@ -38,34 +38,40 @@ async def regenerate_bot_token(request: Request, bot_id: int, Authorization: str
 
 @router.get("/random", response_model = BotRandom, dependencies=[Depends(RateLimiter(times=7, seconds=5))])
 async def fetch_random_bot(request: Request, lang: str = "default"):
-    random_unp = await db.fetchrow("SELECT description, banner, state, votes, servers, bot_id, invite FROM bots WHERE state = 0 OR state = 6 ORDER BY RANDOM() LIMIT 1") # Unprocessed, use the random function to get a random bot
-    try:
-        bot = (await get_bot(random_unp["bot_id"])) | dict(random_unp) # Get bot from cache and add that in
-    except:
-        return await random_bots_api(request) 
-    bot["bot_id"] = str(bot["bot_id"]) # Make sure bot id is a string to prevent corruption issues
+    random_unp = await db.fetchrow(
+        "SELECT description, banner, state, votes, servers, bot_id, invite FROM bots WHERE state = 0 OR state = 6 ORDER BY RANDOM() LIMIT 1"
+    ) # Unprocessed, use the random function to get a random bot
+    bot_obj = await get_bot(random_unp["bot_id"])
+    if bot_obj is None:
+        return await fetch_random_bot(request, lang) # Get a new bot
+    bot = bot_obj | dict(random_unp) # Get bot from cache and add that in
+    bot["bot_id"] = str(bot["bot_id"]) # Make sure bot id is a string to prevent corruption issues in javascript
     bot["servers"] = human_format(bot["servers"]) # Format the servers field
-    bot["description"] = cleaner.clean_html(intl_text(bot["description"], lang)) # Prevent some basic attacks in short description
-    if bot["banner"] is None:
-        bot["banner"] = "" # Make sure banner is always a string
+    bot["description"] = cleaner.clean_html(intl_text(bot["description"], lang)) # Prevent XSS attacks in short description
+    if bot["banner"] is None: # Ensure banner is always a string
+        bot["banner"] = "" 
     return bot
 
 @router.get("/{bot_id}", response_model = Bot, dependencies=[Depends(RateLimiter(times=5, minutes=3))])
 async def fetch_bot(request: Request, bot_id: int):
     """Fetches bot information given a bot ID. If not found, 404 will be returned."""
-    api_ret = await db.fetchrow("SELECT banner, description, long_description_type, long_description, servers AS server_count, shard_count, shards, prefix, invite, invite_amount, features, bot_library AS library, state, website, discord AS support, github, user_count, votes, css, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", bot_id)
+    api_ret = await db.fetchrow(
+        "SELECT banner, description, long_description_type, long_description, servers AS server_count, shard_count, shards, prefix, invite, invite_amount, features, bot_library AS library, state, website, discord AS support, github, user_count, votes, css, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", 
+        bot_id
+    )
     if api_ret is None:
         return abort(404)
     api_ret = dict(api_ret)
     tags = await db.fetch("SELECT tag FROM bot_tags WHERE bot_id = $1", bot_id)
     api_ret["tags"] = [tag["tag"] for tag in tags]
-    owners = await db.fetch("SELECT DISTINCT ON (owner) owner, main FROM bot_owner WHERE bot_id = $1 ORDER BY owner", bot_id)
-    _owners = []
+    owners_db = await db.fetch("SELECT DISTINCT ON (owner) owner, main FROM bot_owner WHERE bot_id = $1 ORDER BY owner", bot_id)
+    owners = []
     # Preperly sort owners
-    for owner in owners:
-        if owner["main"]: _owners.insert(0, owner)
-        else: _owners.append(owner)
-    owners = _owners
+    for owner in owners_db:
+        if owner["main"]: 
+            owners.insert(0, owner)
+        else: 
+            owners.append(owner)
 
     api_ret["owners"] = [{"user": (await get_user(obj["owner"])), "main": obj["main"]} for obj in _owners]
     if api_ret["features"] is None:
@@ -75,7 +81,10 @@ async def fetch_bot(request: Request, bot_id: int):
     if bot_obj is None:
         return abort(404)
     api_ret = api_ret | bot_obj
-    api_ret["vanity"] = await db.fetchval("SELECT vanity_url FROM vanity WHERE redirect = $1", bot_id)
+    api_ret["vanity"] = await db.fetchval(
+        "SELECT vanity_url FROM vanity WHERE redirect = $1", 
+        bot_id
+    )
     return api_ret
 
 @router.get("/{bot_id}/widget")
@@ -91,25 +100,19 @@ async def get_raw_bot_api(request: Request, bot_id: int, bt: BackgroundTasks):
     """
     return await render_bot(request, bt, bot_id, api = True)
 
-@router.post("/{bot_id}/stats", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=5, minutes=1))])
+@router.post("/{bot_id}/stats", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=5, minutes=1)), Depends(bot_auth_check)])
 async def set_bot_stats(request: Request, bot_id: int, api: BotStats, Authorization: str = Header("BOT_API_TOKEN")):
-    """
-    This endpoint allows you to set the guild + shard counts for your bot
-    """
-    id = await bot_auth(bot_id, Authorization, fields = "shard_count, shards, user_count")
-    if id is None:
-        return abort(401)
-    if api.shard_count is None:
-        shard_count = id["shard_count"]
-    else:
-        shard_count = api.shard_count
-    if api.shards is None:
-        shards = id["shards"]
-    else:
-        shards = api.shards
-    if api.user_count is None:
-        user_count = id["user_count"]
-    else:
-        user_count = api.user_count
-    await set_stats(bot_id = id["bot_id"], guild_count = api.guild_count, shard_count = shard_count, shards = shards, user_count = user_count)
+    """This endpoint allows you to set the guild + shard counts for your bot"""
+    stats_old = await db.fetchrow(
+        "SELECT servers AS guild_count, shard_count, shards, user_count FROM bots WHERE bot_id = $1",
+        bot_id
+    )
+    stats_new = api.dict()
+    stats = {}
+    for stat in stats_new.keys():
+        if stats_new[stat] is None:
+            stats[stat] = stats_old[stat]
+        else:
+            stats[stat] = stats_new[stat]
+    await set_stats(bot_id = bot_id, **stats)
     return api_success()

@@ -1,5 +1,5 @@
 # Put all needed imports here
-from fastapi import FastAPI, Request, APIRouter, BackgroundTasks, Form as FForm, Header, WebSocket, WebSocketDisconnect, File, UploadFile, Depends, Query, Response
+from fastapi import FastAPI, Request, APIRouter, BackgroundTasks, Form as FForm, Header, WebSocket, WebSocketDisconnect, File, UploadFile, Depends, Query, Response, HTTPException
 from fastapi.openapi.utils import get_openapi
 import importlib
 import traceback as tblib

@@ -24,7 +24,6 @@ def get_csrf_config():
 builtins.CsrfProtect = CsrfProtect
 
 # Setup exception handling
-@app.exception_handler(401)
 @app.exception_handler(403)
 @app.exception_handler(404)
 @app.exception_handler(RequestValidationError)

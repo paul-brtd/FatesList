@@ -40,9 +40,7 @@ class WebError():
             else: # Internal Server Error (500)
                 exc.status_code = 500
         path = str(request.url.path)
-        if exc.status_code == 401:
-            return ORJSONResponse({"done": False, "reason": "Unauthorized", "code": 9999}, status_code = exc.status_code)
-        elif exc.status_code == 500:
+        if exc.status_code == 500:
             if log:
                 asyncio.create_task(WebError.log(request, exc, error_id, curr_time)) # Try and log what happened
             if str(request.url.path).startswith("/api"):

@@ -54,32 +54,6 @@ async def delete_bot(request: Request, bot_id: int):
         await add_rmq_task("bot_delete_queue", {"user_id": int(request.session["user_id"]), "bot_id": bot_id})
     return RedirectResponse("/", status_code = 303)
 
-@router.post("/{bot_id}/ban", dependencies=[Depends(RateLimiter(times=1, minutes=2))])
-async def ban_bot(request: Request, bot_id: int, ban: int = FForm(1), reason: str = FForm('There was no reason specified')):
-    guild = client.get_guild(main_server)
-    if ban not in [0, 1]:
-        return RedirectResponse(f"/bot/{bot_id}", status_code = 303)
-    if reason == "":
-        reason = "There was no reason specified"
-
-    if "user_id" in request.session.keys():
-        check = await db.fetchval("SELECT state FROM bots WHERE bot_id = $1", bot_id)
-        if check is None:
-            return await templates.TemplateResponse("message.html", {"request": request, "message": "This bot doesn't exist in our database."})
-        user = guild.get_member(int(request.session.get("user_id")))
-        if is_staff(staff_roles, user.roles, 3)[0]:
-            pass
-        else:
-            return await templates.TemplateResponse("message.html", {"request": request, "message": "You aren't the owner of this bot.", "context": "Only owners, admins and moderators can unban bots. Please contact them if you accidentally denied a bot."})
-    admin_tool = BotListAdmin(bot_id, int(request.session.get("user_id")))
-    if ban == 1:
-        await admin_tool.ban_bot(reason)
-        return "Bot Banned :)"
-    else:
-        await admin_tool.unban_requeue_bot(check)
-        return "Bot Unbanned :)"
-    return RedirectResponse("/", status_code = 303)
-
 @router.post("/{bot_id}/reviews/new")
 async def new_reviews(request: Request, bot_id: int, bt: BackgroundTasks, rating: float = FForm(5.1), review: str = FForm("This is a placeholder review as the user has not posted anything...")):
     if "user_id" not in request.session.keys():

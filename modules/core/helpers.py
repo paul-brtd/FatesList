@@ -105,16 +105,7 @@ async def add_promotion(bot_id: int, title: str, info: str, css: str, type: int)
     return await db.execute("INSERT INTO bot_promotions (bot_id, title, info, css, type) VALUES ($1, $2, $3, $4, $5)", bot_id, title, info, css, type)
 
 async def vote_bot(user_id: int, bot_id: int, autovote: bool, test: bool = False, pretend: bool = False) -> Optional[tuple]:
-    if not test:
-        user = await get_any(user_id)
-        if user is None:
-            return None
-        await get_user_token(user_id, user["username"]) # Make sure we have a user profile first
-    else:
-        votes = 0
-
     epoch = await db.fetchval("SELECT vote_epoch FROM users WHERE user_id = $1", user_id)
-
     if not epoch or test:
         pass
     else:
