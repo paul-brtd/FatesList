@@ -75,7 +75,11 @@ async def add_bot(request: Request, bot_id: int, bot: BotAdd, Authorization: str
         return api_success(f"{site_url}/bot/{bot_id}", status_code = 202)
     return api_error(rc[0], rc[1])
 
-@router.patch("/bots/{bot_id}", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=5, minutes=3))])
+@router.patch(
+    "/bots/{bot_id}", 
+    response_model = APIResponse, 
+    dependencies=[Depends(RateLimiter(times=5, minutes=3))]
+)
 async def edit_bot(request: Request, bot_id: int, bot: BotEdit, Authorization: str = Header("USER_TOKEN_OR_BOTBLOCK_EDIT_KEY")):
     """
     Edits a bot, the owner here should be the owner editing the bot.
@@ -105,14 +109,20 @@ async def edit_bot(request: Request, bot_id: int, bot: BotEdit, Authorization: s
         return api_success(f"{site_url}/bot/{bot_id}", status_code = 202)
     return api_error(rc[0], rc[1])
 
-@router.get("/bots/{bot_id}/reviews", response_model = BotReviews)
+@router.get(
+    "/bots/{bot_id}/reviews", 
+    response_model = BotReviews
+)
 async def get_bot_reviews(request: Request, bot_id: int, page: Optional[int] = 1):
     reviews = await parse_reviews(bot_id, page = page)
     if reviews[0] == []:
         return abort(404)
     return {"reviews": reviews[0], "average_stars": reviews[1], "pager": {"total_count": reviews[2], "total_pages": reviews[3], "per_page": reviews[4], "from": ((page - 1) * reviews[4]) + 1, "to": (page - 1) * reviews[4] + len(reviews[0])}}
 
-@router.patch("/bots/{bot_id}/reviews/{rid}/votes", response_model = APIResponse)
+@router.patch(
+    "/bots/{bot_id}/reviews/{rid}/votes", 
+    response_model = APIResponse
+)
 async def vote_review_api(request: Request, bot_id: int, rid: uuid.UUID, vote: BotReviewVote, Authorization: str = Header("USER_TOKEN")):
     id = await user_auth(vote.user_id, Authorization)
     if id is None:
@@ -141,7 +151,10 @@ async def vote_review_api(request: Request, bot_id: int, rid: uuid.UUID, vote: B
     await bot_add_event(bot_id, enums.APIEvents.review_vote, {"user": str(vote.user_id), "id": str(rid), "star_rating": bot_rev["star_rating"], "reply": bot_rev["reply"], "review": bot_rev["review_text"], "upvotes": len(bot_rev["review_upvotes"]), "downvotes": len(bot_rev["review_downvotes"]), "upvote": vote.upvote})
     return api_success()
 
-@router.delete("/bots/{bot_id}/reviews/{rid}", response_model = APIResponse)
+@router.delete(
+    "/bots/{bot_id}/reviews/{rid}", 
+    response_model = APIResponse
+)
 async def delete_review(request: Request, bot_id: int, rid: uuid.UUID, bt: BackgroundTasks, data: BotReviewAction, Authorization: str = Header("USER_TOKEN")):
     id = await user_auth(data.user_id, Authorization)
     if id is None:
@@ -166,14 +179,18 @@ async def delete_review(request: Request, bot_id: int, rid: uuid.UUID, bt: Backg
     await bot_add_event(bot_id, enums.APIEvents.review_delete, {"user": str(data.user_id), "reply": event_data["reply"], "id": str(rid), "star_rating": event_data["star_rating"], "review": event_data["review_text"]})
     return api_success()
 
-@router.get("/bots/{bot_id}/commands", response_model = BotCommandsGet)
+@router.get(
+    "/bots/{bot_id}/commands", 
+    response_model = BotCommandsGet
+)
 async def get_bot_commands_api(request:  Request, bot_id: int, filter: Optional[str] = None, lang: str = "default"):
     cmd = await get_bot_commands(bot_id, lang, filter)
     if cmd == {}:
         return abort(404)
     return cmd
 
-@router.post("/bots/{bot_id}/commands",
+@router.post(
+    "/bots/{bot_id}/commands",
     response_model = BotCommandAddResponse, 
     dependencies=[Depends(RateLimiter(times=20, minutes=1)), Depends(bot_auth_check)]
 )
@@ -195,7 +212,8 @@ async def add_bot_command_api(request: Request, bot_id: int, command: PartialBot
     await bot_add_event(bot_id, enums.APIEvents.command_add, {"user": None, "id": id})
     return api_success(id = id)
 
-@router.patch("/bots/{bot_id}/commands", 
+@router.patch(
+    "/bots/{bot_id}/commands", 
     response_model = APIResponse, 
     dependencies=[Depends(RateLimiter(times=20, minutes=1)), Depends(bot_auth_check)]
 )
@@ -218,11 +236,12 @@ async def edit_bot_command_api(request: Request, bot_id: int, command: BotComman
     await bot_add_event(bot_id, enums.APIEvents.command_edit, {"user": None, "id": command.id})
     return api_success()
 
-@router.delete("/bots/{bot_id}/commands", 
+@router.delete(
+    "/bots/{bot_id}/commands", 
     response_model = APIResponse, 
     dependencies=[Depends(RateLimiter(times=20, minutes=1)), Depends(bot_auth_check)]
 )
-async def delete_bot_command_api_(request: Request, bot_id: int, command: BotCommandDelete, Authorization: str = Header("BOT_TOKEN")):
+async def delete_bot_command_api_(request: Request, bot_id: int, command: BotCommandDelete):
     id = await bot_auth(bot_id, Authorization)
     if id is None:
         return abort(401)
@@ -239,16 +258,23 @@ async def delete_bot_command_api_(request: Request, bot_id: int, command: BotCom
     await bot_add_event(bot_id, enums.APIEvents.command_delete, {"user": None, "id": command.id})
     return api_success()
 
-@router.get("/bots/{bot_id}/maintenance", response_model = BotMaintenance)
+@router.get(
+    "/bots/{bot_id}/maintenance", 
+    response_model = BotMaintenance
+)
 async def get_maintenance_mode(request: Request, bot_id: int):
     ret = await get_maint(bot_id = bot_id)
     if ret.get("fail"):
         return abort(404)
     return ret
 
-@router.post("/bots/{bot_id}/maintenance", response_model = APIResponse)
-async def set_maintenance_mode(request: Request, bot_id: int, api: BotMaintenancePartial, Authorization: str = Header("BOT_TOKEN")):
-    """This is just an endpoint for enabling or disabling maintenance mode. As of the new API Revamp, this is the only way to enable or disable maintenance mode as of right now
+@router.patch(
+    "/bots/{bot_id}/maintenance", 
+    response_model = APIResponse,
+    dependencies = [Depends(bot_auth_check)]
+)
+async def set_maintenance_mode(request: Request, bot_id: int, api: BotMaintenancePartial):
+    """This is just an endpoint for enabling or disabling maintenance mode.
 
     **API Token**: You can get this by clicking your bot and clicking edit and scrolling down to API Token
 
