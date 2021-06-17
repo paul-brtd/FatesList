@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 import modules.models.enums as enums
 from ..base_models import BaseUser, APIResponse
 from typing import Optional, List
@@ -17,6 +17,12 @@ class BotPromotionPartial(BaseModel):
     info: str
     css: Optional[str] = None
     type: int
+    
+    @validator("title")
+    def title_length(cls, v, values, **kwargs):
+        if len(v) <= 5:
+            raise ValueError('Promotion title must be more than 5 characters')
+        return v
 
 class BotPromotion(BotPromotionPartial):
     """
