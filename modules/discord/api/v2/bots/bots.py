@@ -24,15 +24,12 @@ async def get_bot_token(request: Request, bot_id: int, user_id: int, Authorizati
         return abort(403)
     return await db.fetchrow("SELECT api_token FROM bots WHERE bot_id = $1", bot_id)
 
-@router.patch("/{bot_id}/token", response_model = APIResponse)
-async def regenerate_bot_token(request: Request, bot_id: int, Authorization: str = Header("BOT_TOKEN")):
+@router.patch("/{bot_id}/token", response_model = APIResponse, dependencies = [Depends(bot_auth_check)])
+async def regenerate_bot_token(request: Request, bot_id: int):
     """
     Regenerates the Bot token
     **Bot Token**: You can get this by clicking your bot and clicking edit and clicking Show (under API Token section)
     """
-    id = await bot_auth(bot_id, Authorization)
-    if id is None:
-        return abort(401)
     await db.execute("UPDATE bots SET api_token = $1 WHERE bot_id = $2", get_token(132), id)
     return api_success()
 
