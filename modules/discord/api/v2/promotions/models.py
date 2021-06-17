@@ -16,7 +16,7 @@ class BotPromotionPartial(BaseModel):
     title: str
     info: str
     css: Optional[str] = None
-    type: int
+    type: enums.PromotionType
     
     @validator("title")
     def title_length(cls, v, values, **kwargs):
