@@ -26,11 +26,10 @@ async def get_bot_events_api(request: Request, bot_id: int, exclude: Optional[li
             return abort(401)
     return await bot_get_events(bot_id = bot_id, filter = filter, exclude = exclude)
 
-@router.get("/bots/{bot_id}/ws_events")
-async def get_bot_ws_events(request: Request, bot_id: int, Authorization: str = Header("BOT_TOKEN_OR_TEST_MANAGER_KEY")):
-    id = await bot_auth(bot_id, Authorization)
-    if id is None:
-        return abort(401)
+@router.get("/bots/{bot_id}/ws_events",
+    dependencies = [Depends(bot_auth_check)]
+)
+async def get_bot_ws_events(request: Request, bot_id: int):
     ini_events = {}
     events = await redis_db.hget(str(bot_id), key = "ws")
     if events is None:
@@ -165,8 +164,11 @@ async def get_bot_commands_api(request:  Request, bot_id: int, filter: Optional[
         return abort(404)
     return cmd
 
-@router.post("/bots/{bot_id}/commands", response_model = BotCommandAddResponse, dependencies=[Depends(RateLimiter(times=20, minutes=1))])
-async def add_bot_command_api(request: Request, bot_id: int, command: PartialBotCommand, Authorization: str = Header("BOT_TOKEN"), force_add: Optional[bool] = False):
+@router.post("/bots/{bot_id}/commands",
+    response_model = BotCommandAddResponse, 
+    dependencies=[Depends(RateLimiter(times=20, minutes=1)), Depends(bot_auth_check)]
+)
+async def add_bot_command_api(request: Request, bot_id: int, command: PartialBotCommand, force_add: Optional[bool] = False):
     """
         Self explaining command. Note that if force_add is set, the API will not check if your command already exists and will forcefully add it, this may lead to duplicate commands on your bot. If ret_id is not set, you will not get the command id back in the api response
     """
@@ -174,10 +176,6 @@ async def add_bot_command_api(request: Request, bot_id: int, command: PartialBot
         _tmp = enums.CommandType(command.cmd_type)
     except ValueError:
         return api_error("This command type is not yet supported", 4658)
-
-    id = await bot_auth(bot_id, Authorization)
-    if id is None:
-        return abort(401)
 
     if force_add is False:
         check = await db.fetchrow("SELECT name FROM bot_commands WHERE cmd_name = $1 AND bot_id = $2", command.cmd_name, bot_id)
@@ -188,16 +186,16 @@ async def add_bot_command_api(request: Request, bot_id: int, command: PartialBot
     await bot_add_event(bot_id, enums.APIEvents.command_add, {"user": None, "id": id})
     return api_success(id = id)
 
-@router.patch("/bots/{bot_id}/commands", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=20, minutes=1))])
-async def edit_bot_command_api(request: Request, bot_id: int, command: BotCommand, Authorization: str = Header("BOT_TOKEN")):
+@router.patch("/bots/{bot_id}/commands", 
+    response_model = APIResponse, 
+    dependencies=[Depends(RateLimiter(times=20, minutes=1)), Depends(bot_auth_check)]
+)
+async def edit_bot_command_api(request: Request, bot_id: int, command: BotCommand):
     try:
         _tmp = enums.CommandType(command.cmd_type)
     except ValueError:
         return api_error("This command type is not yet supported", 4658)
 
-    id = await bot_auth(bot_id, Authorization)
-    if id is None:
-        return abort(401)
     data = await db.fetchrow(f"SELECT id, cmd_type, cmd_groups, cmd_name, friendly_name, description, args, examples, premium_only, notes, doc_link FROM bot_commands WHERE id = $1 AND bot_id = $2", command.id, bot_id)
     if data is None:
         return abort(404)
@@ -211,7 +209,10 @@ async def edit_bot_command_api(request: Request, bot_id: int, command: BotComman
     await bot_add_event(bot_id, enums.APIEvents.command_edit, {"user": None, "id": command.id})
     return api_success()
 
-@router.delete("/bots/{bot_id}/commands", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=20, minutes=1))])
+@router.delete("/bots/{bot_id}/commands", 
+    response_model = APIResponse, 
+    dependencies=[Depends(RateLimiter(times=20, minutes=1)), Depends(bot_auth_check)]
+)
 async def delete_bot_command_api_(request: Request, bot_id: int, command: BotCommandDelete, Authorization: str = Header("BOT_TOKEN")):
     id = await bot_auth(bot_id, Authorization)
     if id is None:
