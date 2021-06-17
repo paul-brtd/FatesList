@@ -16,8 +16,12 @@ router = APIRouter(
     tags = [f"API v{API_VERSION} - To Move"]
 )
 
-@router.get("/bots/{bot_id}/events", response_model = BotEvents)
-async def get_bot_events_api(request: Request, bot_id: int, exclude: Optional[list] = None, filter: Optional[list] = None, Authorization: str = Header("BOT_TOKEN_OR_TEST_MANAGER_KEY")):
+@router.get(
+    "/bots/{bot_id}/events", 
+    response_model = BotEvents,
+    dependencies = [Depends(bot_auth_check)]
+)
+async def get_bot_events_api(request: Request, bot_id: int, exclude: Optional[list] = None, filter: Optional[list] = None):
     if secure_strcmp(Authorization, test_server_manager_key):
         pass
     else:
@@ -26,7 +30,8 @@ async def get_bot_events_api(request: Request, bot_id: int, exclude: Optional[li
             return abort(401)
     return await bot_get_events(bot_id = bot_id, filter = filter, exclude = exclude)
 
-@router.get("/bots/{bot_id}/ws_events",
+@router.get(
+    "/bots/{bot_id}/ws_events",
     dependencies = [Depends(bot_auth_check)]
 )
 async def get_bot_ws_events(request: Request, bot_id: int):
@@ -36,7 +41,11 @@ async def get_bot_ws_events(request: Request, bot_id: int):
         events = {} # Nothing
     return events
 
-@router.post("/bots/{bot_id}", response_model = APIResponse, dependencies=[Depends(RateLimiter(times=5, minutes=3))])
+@router.post(
+    "/bots/{bot_id}", 
+    response_model = APIResponse, 
+    dependencies=[Depends(RateLimiter(times=5, minutes=3))]
+)
 async def add_bot(request: Request, bot_id: int, bot: BotAdd, Authorization: str = Header("USER_TOKEN_OR_BOTBLOCK_ADD_KEY")):
     """
     Adds a bot to fates list. Owner must be the owner adding the bot
