@@ -58,10 +58,26 @@ async def ws_close(websocket: WebSocket, code: int):
         return
 
 def ws_identity_payload():
-    return {"m": {"e": enums.APIEvents.ws_identity, "t": [enums.APIEventTypes.auth_token, enums.APIEventTypes.auth_manager_key], "ts": time.time(), "eid": str(uuid.uuid4())}, "ctx": {}}
+    return {
+        "m": {
+            "e": enums.APIEvents.ws_identity, 
+            "t": [enums.APIEventTypes.auth_token, enums.APIEventTypes.auth_manager_key], 
+            "ts": time.time(), 
+            "eid": str(uuid.uuid4())
+        },
+        "ctx": {
+        }
+    }
 
 async def ws_kill(manager: ConnectionManager, websocket: Websocket, type, code):
-    await manager.send_personal_message({"m": {"e": enums.APIEvents.ws_kill, "t": type, "ts": time.time(), "eid": str(uuid.uuid4())}}, websocket)
+    await manager.send_personal_message({
+        "m": {
+            "e": enums.APIEvents.ws_kill,
+            "t": type,
+            "ts": time.time(),
+            "eid": str(uuid.uuid4())
+        }
+    }, websocket)
     return await ws_close(websocket, code = code)
 
 async def ws_kill_invalid(manager: ConnectionManager, websocket: Websocket):
