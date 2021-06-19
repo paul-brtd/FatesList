@@ -481,7 +481,7 @@ async def regenerate_user_token(request: Request, user_id: int):
 
     ** User API Token**: You can get this by clicking your profile and scrolling to the bottom and you will see your API Token
     """
-    await db.execute("UPDATE users SET api_token = $1 WHERE user_id = $2", get_token(132), id)
+    await db.execute("UPDATE users SET api_token = $1 WHERE user_id = $2", get_token(132), user_id)
     return api_success()
 
 @router.patch(
