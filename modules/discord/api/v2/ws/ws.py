@@ -60,7 +60,7 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
         if not websocket.manager_bot:
             ini_events = {}
             for bot in websocket.bot_id:
-                events = await redis_db.hget("bot_" + str(bot), key = "ws")
+                events = await redis_db.hget(f"bot-{bot}", key = "ws")
             if events is None:
                 events = {} # Nothing
             else:
@@ -82,18 +82,18 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
             logger.debug(f"Got message {msg} with manager status of {websocket.manager_bot}")
             if msg is None or type(msg.get("data")) != bytes:
                 continue
+            data = orjson.loads(msg.get("data"))
+            event_id = list(data.keys())[0]
+            bot_id = msg.get("channel").decode("utf-8").split("-")[1]
             try:
-                data = orjson.loads(msg.get("data"))
-                if not event_filter or data[list(data.keys())[0]]["m"]["e"] in event_filter:
+                if not event_filter or data[event_id]["m"]["e"] in event_filter:
                     flag = True
                 else:
                     flag = False
             except Exception as exc:
-                print(exc)
-                raise exc
                 flag = False
             if flag:
-                rc = await manager.send_personal_message({"m": {"e": enums.APIEvents.ws_event, "eid": str(uuid.uuid4()), "t": enums.APIEventTypes.ws_event_single, "ts": time.time()}, "ctx": {msg.get("channel").decode("utf-8"): orjson.loads(msg.get("data"))}}, websocket)
+                rc = await manager.send_personal_message({"m": {"e": enums.APIEvents.ws_event, "eid": str(uuid.uuid4()), "t": enums.APIEventTypes.ws_event_single, "ts": time.time(), "id": bot_id}, "ctx": data[event_id]}, websocket)
             else:
                 rc = True
             if not rc:
