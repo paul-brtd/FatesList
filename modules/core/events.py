@@ -17,7 +17,7 @@ async def add_ws_event(target: int, ws_event: dict, *, id: Optional[uuid.UUID] =
         ws_event["m"] = {}
     ws_event["m"]["eid"] = id
     ws_event["m"]["ts"] = time.time()
-    curr_ws_events = await redis_db.hget(type + "-" + str(target), key = "ws") # Get all the websocket events from the ws key
+    curr_ws_events = await redis_db.hget(f"{type}-{target}", key = "ws") # Get all the websocket events from the ws key
     if curr_ws_events is None:
         curr_ws_events = {} # No ws events means empty dict
     else:
