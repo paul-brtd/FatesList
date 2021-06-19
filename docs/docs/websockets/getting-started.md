@@ -4,7 +4,7 @@ Fates List offers websockets to allow you to get real time stats about your bot.
 
 ### What are Websockets?
 
-Please read [this nice MDN doc on WebSockets](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API) first before attempting this
+Please read [this nice MDN doc on WebSockets](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API) first before attempting this. Check if your library supports this and is a v2 library as v1 had a completely different process
 
 ### The Steps
 
