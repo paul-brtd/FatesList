@@ -19,8 +19,8 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
         try:
             data = await websocket.receive_json()
             logger.debug("Got response from websocket. Checking response...")
-            if data["m"]["e"] != enums.APIEvents.ws_identity_res 
-            or enums.APIEventTypes(data["m"]["t"]) not in [enums.APIEventTypes.auth_token, enums.APIEventTypes.auth_manager_key]:
+            if (data["m"]["e"] != enums.APIEvents.ws_identity_res 
+                or enums.APIEventTypes(data["m"]["t"]) not in [enums.APIEventTypes.auth_token, enums.APIEventTypes.auth_manager_key]):
                 return await ws_kill_invalid(manager, websocket)
         except Exception:
             return await ws_kill_invalid(manager, websocket)
