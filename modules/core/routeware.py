@@ -25,6 +25,10 @@ async def routeware(app, fl_exception_handler, request: Request, call_next):
     # Fuck CORS
     response.headers["Access-Control-Allow-Origin"] = request.headers.get('Origin') if request.headers.get('Origin') else "*"
     response.headers["Access-Control-Allow-Credentials"] = "true"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS"
+    if request.method == "OPTIONS" and str(request.url.path).startswith("/api") and response.status_code == 405:
+        response.status_code = 204
+        response.headers["Allow"] = "GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS"
     asyncio.create_task(print_req(request, response))
     return response if response else ORJSONResponse({"detail": "Internal Server Error V2"}, status_code = 500) 
 
