@@ -60,7 +60,7 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
                     return await ws_kill_no_auth(manager, websocket)
                 logger.debug("Authenticated successfully to websocket")
                 websocket.authorized = True
-                await manager.send_personal_message({"m": {"e": enums.APIEvents.ws_status, "eid": str(uuid.uuid4()), "t": enums.APIEventTypes.ws_ready}, "ctx": {"bots": [{"id": bot['id'], "wsapi": f"/api/bots/{bot['id']}/ws_events"} for bot in websocket.bots]}}, websocket)
+                await manager.send_personal_message({"m": {"e": enums.APIEvents.ws_status, "eid": str(uuid.uuid4()), "t": enums.APIEventTypes.ws_ready}, "ctx": {"bots": [{"id": bot['id'], "ws_api": f"/api/bots/{bot['id']}/ws_events"} for bot in websocket.bots]}}, websocket)
             case enums.APIEventTypes.auth_manager_key:
                 try:
                     if secure_strcmp(data["ctx"]["key"], test_server_manager_key) or secure_strcmp(data["ctx"]["key"], root_key):
