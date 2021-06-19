@@ -121,6 +121,8 @@ async def vote_bot(user_id: int, bot_id: int, autovote: bool, test: bool = False
         ts = await db.fetchval("SELECT timestamps FROM bot_voters WHERE bot_id = $1 AND user_id = $2", bot_id, user_id)
         if votes is None:
             return None
+    else:
+        votes = 11
     if pretend:
         return True
     if not test:

@@ -1,4 +1,5 @@
 function submitBot(e) {
+    modalShow("Adding Bot..", "Please wait...")
     try {
     	json = $j('#botform').serializeJSON()
     	tags = document.querySelector("#tags").values
@@ -24,7 +25,7 @@ function submitBot(e) {
 	}
 	json.owner = context.user_id
 	$j.ajax({
-		url: `/api/bots/${json.bot_id}?user_id=${context.user_id}`,
+		url: `/api/bots/${json.bot_id}`,
 		method: method,
 		headers: {'Authorization': context.user_token},
 		contentType: "application/json",
