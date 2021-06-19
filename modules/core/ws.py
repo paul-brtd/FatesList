@@ -10,7 +10,7 @@ class ConnectionManager:
     async def connect(self, websocket: WebSocket, api: bool = True):
         await websocket.accept()
         websocket.api_token = []
-        websocket.bot_id = []
+        websocket.bots = []
         websocket.authorized = False
         websocket.manager_bot = False
         self.active_connections.append(websocket)
@@ -26,7 +26,7 @@ class ConnectionManager:
             pass
         # Delete stale websocket credentials
         websocket.api_token = []
-        websocket.bot_id = [] # Bot ID
+        websocket.bots = [] # Bot ID
         websocket.manager_bot = False
         websocket.authorized = False
 
@@ -52,6 +52,7 @@ class ConnectionManager:
             await connection.send_json(message)
 
 async def ws_close(websocket: WebSocket, code: int):
+    websocket.authorized = False
     try:
         return await websocket.close(code=code)
     except:

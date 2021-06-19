@@ -25,21 +25,29 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
         match data["m"]["t"]:
             case enums.APIEventTypes.auth_token:
                 try:
-                    api_token = data["ctx"]["token"]
+                    auth_dict = data["ctx"]["auth"]
                     event_filter = data["ctx"].get("filter")
                 except:
                     return await ws_kill_invalid(manager, websocket) 
-                if api_token is None or type(api_token) == int or type(api_token) == str:
+                if not isinstance(auth_dict, list): 
                     return await ws_kill_invalid(manager, websocket)
-                for bot in api_token:
-                    bid = await db.fetchrow("SELECT bot_id FROM bots WHERE api_token = $1", str(bot))
+                for bot in auth_dict:
+                    if not isinstance(bot, dict):
+                        continue
+                    id = bot.get("id")
+                    token = bot.get("token")
+                    if not token or not isinstance(token, str):
+                        continue
+                    if not id or not isinstance(id, str) or not id.isdigit():
+                        continue
+                    bid = await db.fetchrow("SELECT bot_id FROM bots WHERE api_token = $1 AND bot_id = $2", token, int(id))
                     if bid:
-                        websocket.api_token.append(api_token)
-                        websocket.bot_id.append(bid["bot_id"])
-                if websocket.api_token == [] or websocket.bot_id == []:
+                        websocket.bots.append(bot)
+                if websocket.bots == []:
                     return await ws_kill_no_auth(manager, websocket)
                 logger.debug("Authenticated successfully to websocket")
-                await manager.send_personal_message({"m": {"e": enums.APIEvents.ws_status, "eid": str(uuid.uuid4()), "t": enums.APIEventTypes.ws_ready}, "ctx": {"bots": [str(bid) for bid in websocket.bot_id]}}, websocket)
+                websocket.authorized = True
+                await manager.send_personal_message({"m": {"e": enums.APIEvents.ws_status, "eid": str(uuid.uuid4()), "t": enums.APIEventTypes.ws_ready}, "ctx": {"bots": [{"id": bot['id'], "ws_api": f"/api/bots/{bot['id']}/ws_events"} for bot in websocket.bots]}}, websocket)
             case enums.APIEventTypes.auth_manager_key:
                 try:
                     if secure_strcmp(data["ctx"]["key"], test_server_manager_key) or secure_strcmp(data["ctx"]["key"], root_key):
@@ -49,7 +57,7 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
                         return await ws_kill_no_auth(manager, websocket) 
                 except:
                     return await ws_kill_invalid(manager, websocket)
-                await manager.send_personal_message({"m": {"e": enums.APIEvents.ws_status, "eid": str(uuid.uuid4()), "t": enums.APIEventTypes.ws_ready}, "ctx": None}, websocket)
+                await manager.send_personal_message({"m": {"e": enums.APIEvents.ws_status, "eid": str(uuid.uuid4()), "t": enums.APIEventTypes.ws_ready}, "ctx": {}}, websocket)
     try:
         if isinstance(event_filter, int):
             event_filter = [event_filter]
@@ -58,22 +66,9 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
         else:
             event_filter = None
         if not websocket.manager_bot:
-            ini_events = {}
-            for bot in websocket.bot_id:
-                events = await redis_db.hget(f"bot-{bot}", key = "ws")
-            if events is None:
-                events = {} # Nothing
-            else:
-                try:
-                    events = orjson.loads(events)
-                except Exception as exc:
-                    logger.exception()
-                    events = {}
-                ini_events[str(bot)] = events
-            await manager.send_personal_message({"m": {"e": enums.APIEvents.ws_event, "eid": str(uuid.uuid4()), "t": enums.APIEventTypes.ws_event_multi, "ts": time.time()}, "ctx": ini_events}, websocket)
             pubsub = redis_db.pubsub()
-            for bot in websocket.bot_id:
-                await pubsub.subscribe("bot_" + str(bot))
+            for bot in websocket.bots:
+                await pubsub.subscribe(f"bot-{bot['id']}")
         else:
             pubsub = redis_db.pubsub()
             await pubsub.psubscribe("*")
@@ -82,22 +77,28 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
             logger.debug(f"Got message {msg} with manager status of {websocket.manager_bot}")
             if msg is None or type(msg.get("data")) != bytes:
                 continue
-            data = orjson.loads(msg.get("data"))[
+            data = orjson.loads(msg.get("data"))
             event_id = list(data.keys())[0]
+            event = data[event_id]
             bot_id = msg.get("channel").decode("utf-8").split("-")[1]
+            event["m"]["id"] = bot_id
+            logger.debug(f"Parsing event {event} with manager status of {websocket.manager_bot}")
             try:
-                if not event_filter or data[event_id]["m"]["e"] in event_filter:
+                if not event_filter or event["m"]["e"] in event_filter:
                     flag = True
                 else:
                     flag = False
             except Exception as exc:
                 flag = False
+                raise exc
             if flag:
-                rc = await manager.send_personal_message(data[event_id], websocket)
-                if not rc:
+                logger.debug("Sending event now...")
+                rc = await manager.send_personal_message(event, websocket)
+                if not websocket.authorized:
                     await ws_close(websocket, 4007) 
-      except Exception as exc:
+    except Exception as exc:
         print(exc)
+        websocket.authorized = False
         try:
             await pubsub.unsubscribe()
         except:

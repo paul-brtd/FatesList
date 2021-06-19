@@ -24,7 +24,7 @@ function submitBot(e) {
 	}
 	json.owner = context.user_id
 	$j.ajax({
-		url: `/api/bots/${json.bot_id}`,
+		url: `/api/bots/${json.bot_id}?user_id=${context.user_id}`,
 		method: method,
 		headers: {'Authorization': context.user_token},
 		contentType: "application/json",
@@ -139,7 +139,7 @@ function showToken(but) {
 function testHook(url, type) {
 	headers = {"Authorization": context.api_token}
 	$j.ajax({
-		url: `/api/bots/${context.bot_id}/votes/test`,
+		url: `/api/bots/${context.bot_id}/votes/test?user_id=${context.user_id}`,
 		dataType: "json",
 		headers: headers,
 		type: "POST",

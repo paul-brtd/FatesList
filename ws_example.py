@@ -6,16 +6,20 @@ import uuid
 import time
 
 async def run():
-    async with websockets.connect("wss://fateslist.xyz/api/v2/ws/rtstats", max_size=1_000_000_000_000) as websocket:
+    async with websockets.connect("wss://fateslist.xyz/api/v2/ws/rtstats") as websocket:
         while True:
             event = await websocket.recv()
             event = json.loads(event)
             print(f"DEBUG: Got {event}")
             if enums.APIEvents(event["m"]["e"]) == enums.APIEvents.ws_identity:
                 print("Got IDENTITY payload")
-                token = input("Enter API Tokens seperated by a space if multiple: ")
-                token = token.split(" ")
-                payload = {"m": {"e": enums.APIEvents.ws_identity_res, "t": enums.APIEventTypes.auth_token, "eid": str(uuid.uuid4()), "ts": time.time()}, "ctx": {"token": token, "filter": 0}}
+                bots = input("Enter Bot ID:API Token seperated by a comma if multiple: ")
+                bots = bots.split(",")
+                auth = []
+                for bot in bots:
+                    bot_id, token = bot.replace(" ", "").split(":")
+                    auth.append({"id": bot_id, "token": token})
+                payload = {"m": {"e": enums.APIEvents.ws_identity_res, "t": enums.APIEventTypes.auth_token, "eid": str(uuid.uuid4()), "ts": time.time()}, "ctx": {"auth": auth, "filter": 0}}
                 await websocket.send(json.dumps(payload))
                 print(f"Sending {json.dumps(payload)}")
                 res = await websocket.recv()
