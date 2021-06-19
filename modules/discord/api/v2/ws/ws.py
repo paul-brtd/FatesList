@@ -42,6 +42,19 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
                         continue
                     bid = await db.fetchrow("SELECT bot_id FROM bots WHERE api_token = $1 AND bot_id = $2", token, int(id))
                     if bid:
+                        rl = await redis_db.get(f"identity-{id}")
+                        if not rl:
+                            rl = []
+                            exp = {"ex": 60*60*24}
+                        else:
+                            rl = orjson.loads(rl)
+                            exp = {"keepttl": True}
+                        if len(rl) > 100: 
+                            continue
+                        elif time.time() - rl[-1] > 5 and time.time() - rl[-1] < 65:
+                            continue
+                        rl.append(time.time())
+                        await redis_db.set(f"identity-{id}", orjson.dumps(rl), **exp)
                         websocket.bots.append(bot)
                 if websocket.bots == []:
                     return await ws_kill_no_auth(manager, websocket)
