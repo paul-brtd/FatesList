@@ -20,10 +20,20 @@ async def ws_command_handler(websocket):
                 pass # Not yet implemented
             else:
                 websocket.authorized = False
+                await unsub(pubsub)
+                return await ws_kill_invalid(manager, websocket)
         except Exception:
             websocket.authorized = False
-            return
+            await unsub(pubsub)
+            return await ws_kill_invalid(manager, websocket)
 
+ async def unsub(pubsub):
+    """Force unsubscribe a pubsub"""
+    try:
+        await pubsub.unsubscribe()
+    except:
+        pass
+        
 @router.websocket("/api/v2/ws/rtstats")
 async def websocket_bot_rtstats_v1(websocket: WebSocket):
     logger.debug("Got websocket connection request. Connecting...")
@@ -128,7 +138,10 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
  
         async for msg in pubsub.listen():
             if not websocket.authorized:
-                return await ws_kill_invalid(manager, websocket)
+                try:
+                    return await ws_kill_invalid(manager, websocket)
+                except Exception as exc
+                    return
             logger.debug(f"Got message {msg} with manager status of {websocket.manager_bot}")
             if msg is None or type(msg.get("data")) != bytes:
                 continue
@@ -161,10 +174,7 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
         print(exc)
         websocket.authorized = False
     
-        try:
-            await pubsub.unsubscribe()
-        except:
-            pass
+        await unsub(pubsub)
         
         await ws_close(websocket, 4006)
         raise exc
