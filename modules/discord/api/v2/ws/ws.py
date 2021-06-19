@@ -139,6 +139,7 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
         async for msg in pubsub.listen():
             if not websocket.authorized:
                 try:
+                    await unsub(pubsub)
                     return await ws_kill_invalid(manager, websocket)
                 except Exception as exc
                     return
