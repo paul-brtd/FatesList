@@ -8,11 +8,27 @@ router = APIRouter(
 
 builtins.manager = ConnectionManager()
 
+async def ws_command_handler(websocket):
+    """Websocket Command Handling"""
+    while True:
+        data = await websocket.receive_json()
+        if not websocket.authorized:
+            return # Stop command handling
+        await asyncio.sleep(0) # Ensure other tasks don't mess up
+        try:
+            if data["cmd"] == enums.WebSocketCommand.agg_old:
+                pass # Not yet implemented
+            else:
+                websocket.authorized = False
+        except Exception:
+            websocket.authorized = False
+            return
+
 @router.websocket("/api/v2/ws/rtstats")
 async def websocket_bot_rtstats_v1(websocket: WebSocket):
     logger.debug("Got websocket connection request. Connecting...")
     await manager.connect(websocket)
-    if websocket.api_token == [] and not websocket.manager_bot:
+    if not websocket.authorized:
         logger.debug("Sending IDENTITY to websocket")
         await manager.send_personal_message(ws_identity_payload(), websocket)
         
@@ -62,7 +78,6 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
                 if websocket.bots == []:
                     return await ws_kill_no_auth(manager, websocket)
                 logger.debug("Authenticated successfully to websocket")
-                websocket.authorized = True
                 await manager.send_personal_message({
                     "m": {
                         "e": enums.APIEvents.ws_status, 
@@ -73,6 +88,7 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
                         "bots": [{"id": bot['id'], "ws_api": f"/api/bots/{bot['id']}/ws_events"} for bot in websocket.bots]
                     }
                 }, websocket)
+                websocket.authorized = True
         
             case enums.APIEventTypes.auth_manager_key:
                 try:
@@ -92,6 +108,7 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
                     "ctx": {
                     }
                 }, websocket)
+                websocket.authorized = True
     
     try:
         if isinstance(event_filter, int):
@@ -100,6 +117,7 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
             event_filter = None
     
         if not websocket.manager_bot:
+            asyncio.create_task(ws_command_handler(websocket))
             pubsub = redis_db.pubsub()
             for bot in websocket.bots:
                 await pubsub.subscribe(f"bot-{bot['id']}")
@@ -107,8 +125,10 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
         else:
             pubsub = redis_db.pubsub()
             await pubsub.psubscribe("*")
-    
+ 
         async for msg in pubsub.listen():
+            if not websocket.authorized:
+                return await ws_kill_invalid(manager, websocket)
             logger.debug(f"Got message {msg} with manager status of {websocket.manager_bot}")
             if msg is None or type(msg.get("data")) != bytes:
                 continue
