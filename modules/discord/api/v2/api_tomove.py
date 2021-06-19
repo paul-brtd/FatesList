@@ -34,7 +34,7 @@ async def get_bot_events_api(request: Request, bot_id: int, exclude: Optional[li
 )
 async def get_bot_ws_events(request: Request, bot_id: int):
     ini_events = {}
-    events = await redis_db.hget(str(bot_id), key = "ws")
+    events = await redis_db.hget(f"{type}-{bot_id}", key = "ws")
     if events is None:
         events = {} # Nothing
     return events
