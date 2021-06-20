@@ -45,7 +45,7 @@ async def get_bot_ws_events(request: Request, bot_id: int):
     response_model = APIResponse, 
     dependencies=[
         Depends(RateLimiter(times=5, minutes=3)),
-        Depends(user_bb_auth_check)
+        Depends(user_auth_check)
     ]
 )
 async def add_bot(request: Request, user_id: int, bot_id: int, bot: BotMeta):
@@ -60,6 +60,7 @@ async def add_bot(request: Request, user_id: int, bot_id: int, bot: BotMeta):
     bot.banner = bot.banner.replace("http://", "https://").replace("(", "").replace(")", "")
     bot_dict = bot.dict()
     bot_dict["bot_id"] = bot_id
+    bot_dict["user_id"] = user_id
     bot_adder = BotActions(bot_dict)
     rc = await bot_adder.add_bot()
     if rc is None:
@@ -71,7 +72,7 @@ async def add_bot(request: Request, user_id: int, bot_id: int, bot: BotMeta):
     response_model = APIResponse, 
     dependencies=[
         Depends(RateLimiter(times=5, minutes=3)),
-        Depends(user_bb_auth_check)
+        Depends(user_auth_check)
     ]
 )
 async def edit_bot(request: Request, user_id: int, bot_id: int, bot: BotMeta):
@@ -86,6 +87,7 @@ async def edit_bot(request: Request, user_id: int, bot_id: int, bot: BotMeta):
     bot.banner = bot.banner.replace("http://", "https://").replace("(", "").replace(")", "")
     bot_dict = bot.dict()
     bot_dict["bot_id"] = bot_id
+    bot_dict["user_id"] = user_id
     bot_editor = BotActions(bot_dict)
     rc = await bot_editor.edit_bot()
     if rc is None:

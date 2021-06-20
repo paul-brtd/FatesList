@@ -17,7 +17,12 @@ async def rl_key_func(request: Request) -> str:
             r = request.headers["authorization"]
         check = await db.fetchrow("SELECT bot_id, state FROM bots WHERE api_token = $1", r) # Check api token
         if check is None:
-            return ip_check(request) # Invalid api token, fallback to ip
+            # Check user token too
+            check_user = await db.fetchval("SELECT user_id FROM users WHERE api_token = $1", r) # Check api token
+            if check_user is None:
+                return ip_check(request) # Invalid api token, fallback to ip
+            else:
+                return str(check_user)
         if check["state"] == enums.BotState.certified:
             return None
         return str(check["bot_id"]) # Otherwise, ratelimit using bot id

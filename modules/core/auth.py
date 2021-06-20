@@ -22,11 +22,6 @@ async def user_auth_check(user_id: int, Authorization: str = Header("Put User To
     if id is None:
         raise HTTPException(status_code=401, detail="Invalid User Token")
 
-async def user_bb_auth_check(user_id: int, Authorization: str = Header("Put User Token Or BotBlock key here")):
-    if secure_strcmp(Authorization, bb_key):
-        return True
-    return await user_auth_check(user_id, Authorization)
-
 async def bot_user_auth_check(bot_id: int, user_id: Optional[int] = None, Authorization: str = Header("Put Bot Token or User Token here")):
     id = await bot_auth(bot_id, Authorization)
     if id is None and user_id:
