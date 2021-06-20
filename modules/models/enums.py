@@ -9,6 +9,7 @@ class PromotionType(IntEnum):
     announcement = 0, "Announcement"
     promotion = 1, "Promotion"
     generic = 2, "Generic"
+    
 class WebSocketCommand(IntEnum):
     _init_ = 'value __doc__'
     dispatch_old = 0, "Dispatch Old Events"
