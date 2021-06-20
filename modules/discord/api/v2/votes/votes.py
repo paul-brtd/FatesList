@@ -1,5 +1,5 @@
 from modules.core import *
-from .models import APIResponse, BotVoteCheck, BotVote
+from .models import APIResponse, BotVoteCheck
 from ..base import API_VERSION
 from math import ceil
 
@@ -36,9 +36,9 @@ async def get_votes(request: Request, bot_id: int, user_id: Optional[int] = None
         Depends(user_auth_check)
     ]
 )
-async def create_vote(user_id: int, bot_id: int, data: BotVote):
+async def create_vote(user_id: int, bot_id: int):
     """Endpoint to create a vote for a bot"""
-    ret = await vote_bot(user_id = data.user_id, bot_id = bot_id, autovote = False, test = False, pretend = False)
+    ret = await vote_bot(user_id = user_id, bot_id = bot_id, autovote = False, test = False, pretend = False)
     if ret is True: 
         return api_success()
     elif ret is None: 
