@@ -40,30 +40,6 @@ async def get_bot_ws_events(request: Request, bot_id: int):
         events = {} # Nothing
     return events
 
-@router.patch(
-    "/users/{user_id}/bots/{bot_id}", 
-    response_model = APIResponse, 
-    dependencies=[
-        Depends(RateLimiter(times=5, minutes=3)),
-        Depends(user_auth_check)
-    ]
-)
-async def edit_bot(request: Request, user_id: int, bot_id: int, bot: BotMeta):
-    """
-    Edits a bot, the owner here should be the owner editing the bot.
-
-    Due to how Fates List edits bota using RabbitMQ, this will return a 202 and not a 200 on success
-    """
-    bot.banner = bot.banner.replace("http://", "https://").replace("(", "").replace(")", "")
-    bot_dict = bot.dict()
-    bot_dict["bot_id"] = bot_id
-    bot_dict["user_id"] = user_id
-    bot_editor = BotActions(bot_dict)
-    rc = await bot_editor.edit_bot()
-    if rc is None:
-        return api_success(f"{site_url}/bot/{bot_id}", status_code = 202)
-    return api_error(rc[0])
-
 @router.get(
     "/bots/{bot_id}/reviews", 
     response_model = BotReviews
