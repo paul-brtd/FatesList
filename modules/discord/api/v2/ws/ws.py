@@ -15,7 +15,7 @@ async def dispatch_events(websocket, bot, pubsub):
     
     
 
-async def ws_command_handler(websocket, pubsub):
+async def ws_command_handler(websocket):
     """Websocket Command Handling"""
     while True:
         data = await websocket.receive_json()
@@ -34,7 +34,6 @@ async def ws_command_handler(websocket, pubsub):
                         websocket.tasks[str(uuid.uuid4())] = asyncio.create_task(dispatch_events(websocket, bot, pubsub)) # Store task in dict
                 if not flag:
                     websocket.authorized = False
-                    await unsub(pubsub)
                     return await ws_kill_no_auth(manager, websocket)
                 
             else:
@@ -146,16 +145,16 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
             event_filter = None
     
         if not websocket.manager_bot:
-            pubsub = redis_db.pubsub()
+            websocket.pubsub = redis_db.pubsub()
             for bot in websocket.bots:
-                await pubsub.subscribe(f"bot-{bot['id']}")
-            websocket.tasks[str(uuid.uuid4())] = asyncio.create_task(ws_command_handler(websocket, pubsub)) # Begin command handling and add it to tasks list
+                await websocket.pubsub.subscribe(f"bot-{bot['id']}")
+            websocket.tasks[str(uuid.uuid4())] = asyncio.create_task(ws_command_handler(websocket)) # Begin command handling and add it to tasks list
         
         else:
-            pubsub = redis_db.pubsub()
-            await pubsub.psubscribe("*")
+            websocket.pubsub = redis_db.pubsub()
+            await websocket.pubsub.psubscribe("*")
  
-        async for msg in pubsub.listen():
+        async for msg in websocket.pubsub.listen():
             if not websocket.authorized:
                 try:
                     await unsub(pubsub)
@@ -198,4 +197,3 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
         
         await ws_close(websocket, 4006)
         raise exc
-        await manager.disconnect(websocket)
