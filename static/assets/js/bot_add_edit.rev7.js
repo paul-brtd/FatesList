@@ -85,6 +85,7 @@ function previewLongDesc(){
            type: 'POST',
            dataType: 'json',
 	   headers: headers,
+	   contentType: "application/json",
 	   url: `/api/preview?lang=${context.site_lang}`,
            data: JSON.stringify({"html_long_description": html, "data": ld}),
 	   statusCode: {
