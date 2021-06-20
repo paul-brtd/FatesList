@@ -8,7 +8,7 @@ router = APIRouter(
 
 builtins.manager = ConnectionManager()
 
-async def dispatch_events(websocket, bot, pubsub):
+async def dispatch_events_old(websocket, bot):
     """Dispatch old events to the requester"""
     if not websocket.authorized:
         return # Stop sending if not authorized 
@@ -29,16 +29,13 @@ async def ws_command_handler(websocket):
                     if bot == auth_bot["id"]:
                         # We have a match
                         flag = True
-                        websocket.tasks[str(uuid.uuid4())] = asyncio.create_task(dispatch_events(websocket, bot, pubsub)) # Store task in dict
+                        websocket.tasks[str(uuid.uuid4())] = asyncio.create_task(dispatch_events_old(websocket, bot)) # Store task in dict
                 if not flag:
-                    websocket.authorized = False
                     return await ws_kill_no_auth(manager, websocket)
                 
             else:
-                websocket.authorized = False
                 return await ws_kill_invalid(manager, websocket)
         except Exception:
-            websocket.authorized = False
             return await ws_kill_invalid(manager, websocket)
         
 @router.websocket("/api/v2/ws/rtstats")
@@ -129,9 +126,9 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
     
     try:
         if isinstance(event_filter, int):
-            event_filter = [event_filter]
+            websocket.event_filter = [event_filter]
         elif not isinstance(event_filter, list):
-            event_filter = None
+            websocket.event_filter = None
     
         if not websocket.manager_bot:
             websocket.pubsub = redis_db.pubsub()
@@ -142,43 +139,38 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
         else:
             websocket.pubsub = redis_db.pubsub()
             await websocket.pubsub.psubscribe("*")
- 
+            
+        websocket.tasks[str(uuid.uuid4())] = asyncio.create_task(ws_dispatch_events_new(websocket))
+        try:
+            while True:
+                asyncio.sleep(0)
+        except Exception:
+            await ws_close(websocket, 4008)
 
-        async for msg in websocket.pubsub.listen():
-            if not websocket.authorized:
-                try:
-                    await unsub(pubsub)
-                    return await ws_kill_invalid(manager, websocket)
-                except Exception as exc
-                    return
-            logger.debug(f"Got message {msg} with manager status of {websocket.manager_bot}")
-            if msg is None or type(msg.get("data")) != bytes:
-                continue
+async def dispatch_events_new(websocket):
+    async for msg in websocket.pubsub.listen():
+        if not websocket.authorized:
+            await ws_close(websocket, 4007)
+        logger.debug(f"Got message {msg} with manager status of {websocket.manager_bot}")
+        if msg is None or not isinstance(msg.get("data"), bytes):
+            continue
         
-            data = orjson.loads(msg.get("data"))
-            event_id = list(data.keys())[0]
-            event = data[event_id]
-            bot_id = msg.get("channel").decode("utf-8").split("-")[1]
-            event["m"]["id"] = bot_id
+        data = orjson.loads(msg.get("data"))
+        event_id = list(data.keys())[0]
+        event = data[event_id]
+        bot_id = msg.get("channel").decode("utf-8").split("-")[1]
+        event["m"]["id"] = bot_id
             
-            logger.debug(f"Parsing event {event} with manager status of {websocket.manager_bot}")
-            try:
-                if not event_filter or event["m"]["e"] in event_filter:
-                    flag = True
-                else:
-                    flag = False
-            
-            except Exception as exc:
+        logger.debug(f"Parsing event {event} with manager status of {websocket.manager_bot}")
+        try:
+            if not websocket.event_filter or event["m"]["e"] in websocket.event_filter:
+                flag = True
+            else:
                 flag = False
-                raise exc
             
-            if flag:
-                logger.debug("Sending event now...")
-                rc = await manager.send_personal_message(event, websocket)
-            
-                if not websocket.authorized:
-                    await ws_close(websocket, 4007) 
-    
-    except Exception as exc:
-        await ws_close(websocket, 4006)
-        raise exc
+        except Exception as exc:
+            flag = False
+
+        if flag:
+            logger.debug("Sending event now...")
+            rc = await manager.send_personal_message(event, websocket) 
