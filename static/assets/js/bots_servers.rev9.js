@@ -123,11 +123,10 @@ function voteBot() {
 		window.location.replace(`/auth/login?redirect=/${context.type}/${context.id}/vote&pretty=to vote for this bot`)
 	modalShow("Voting...", "Please wait...")
 	$.ajax({
-		url: `/api/${context.type}s/${context.id}/votes`,
+		url: `/api/users/${context.user_id}/${context.type}s/${context.id}/votes`,
 		method: "PATCH",
 		headers: {"Authorization": context.user_token},
 		contentType: "application/json",
-		data: JSON.stringify({"user_id": context.user_id}),
 		statusCode: {
 			200: function(data) {
 				modalShow("Voted!", "You have successfully voted for this bot")
