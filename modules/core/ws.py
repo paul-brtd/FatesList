@@ -11,25 +11,43 @@ class ConnectionManager:
         await websocket.accept()
         websocket.bots = []
         websocket.tasks = {}
+        websocket.pubsub = None
         websocket.authorized = False
         websocket.manager_bot = False
         self.active_connections.append(websocket)
 
-    async def disconnect(self, websocket: WebSocket):
+    async def disconnect(self, websocket: WebSocket, code: int = 4005):
+        websocket.authorized = False
+        
         # Unsubscribe from pubsub
         try:
             if websocket.pubsub:
-                await websocket.pusub.unsubscribe()
+                await websocket.pubsub.unsubscribe()
+                websocket.pubsub = None
         except Exception:
-            pass
+            websocket.pubsub = None
+        
+         # Stop all websocket tasks in websocket.tasks
+         try:
+            for task_id in websocket.tasks.keys():
+                await websocket.tasks[task_id].cancel()
+                del websocket.tasks[task_id]
+         except Exception:
+            websocket.tasks = {}
+        
+        
+        # Kill the websocket
         try:
-            await websocket.close(code=4005)
+            await websocket.close(code=code)
         except Exception:
             pass
+        
+        # Remove from active connections
         try:
             self.active_connections.remove(websocket)
         except Exception:
             pass
+        
         # Delete stale websocket credentials
         websocket.bots = [] # Bot ID
         websocket.tasks = {}
@@ -47,10 +65,6 @@ class ConnectionManager:
                 i = 6
             except:
                 if i == 5:
-                    # Stop all websocket tasks in websocket.tasks
-                    for task_id in websocket.tasks.keys():
-                        await websocket.tasks[task_id].cancel()
-                        del websocket.tasks[task_id]
                     await manager.disconnect(websocket)
                     return False
                 else:
@@ -62,11 +76,7 @@ class ConnectionManager:
             await connection.send_json(message)
 
 async def ws_close(websocket: WebSocket, code: int):
-    websocket.authorized = False
-    try:
-        return await websocket.close(code=code)
-    except:
-        return
+    await manager.disconnect(websocket)
 
 def ws_identity_payload():
     return {
