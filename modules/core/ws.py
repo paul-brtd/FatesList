@@ -9,24 +9,29 @@ class ConnectionManager:
 
     async def connect(self, websocket: WebSocket, api: bool = True):
         await websocket.accept()
-        websocket.api_token = []
         websocket.bots = []
+        websocket.tasks = {}
         websocket.authorized = False
         websocket.manager_bot = False
         self.active_connections.append(websocket)
 
     async def disconnect(self, websocket: WebSocket):
         try:
+            if websocket.pubsub:
+                await websocket.pusub.unsubscribe()
+            except Exception:
+                pass
+        try:
             await websocket.close(code=4005)
-        except:
+        except Exception:
             pass
         try:
             self.active_connections.remove(websocket)
-        except:
+        except Exception:
             pass
         # Delete stale websocket credentials
-        websocket.api_token = []
         websocket.bots = [] # Bot ID
+        websocket.tasks = {}
         websocket.manager_bot = False
         websocket.authorized = False
 
@@ -41,6 +46,10 @@ class ConnectionManager:
                 i = 6
             except:
                 if i == 5:
+                    # Stop all websocket tasks in websocket.tasks
+                    for task_id in websocket.tasks.keys():
+                        await websocket.tasks[task_id].cancel()
+                        del websocket.tasks[task_id]
                     await manager.disconnect(websocket)
                     return False
                 else:
