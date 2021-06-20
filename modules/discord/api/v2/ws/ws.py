@@ -64,6 +64,7 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
                     return await ws_kill_invalid(manager, websocket) 
                 if not isinstance(auth_dict, list): 
                     return await ws_kill_invalid(manager, websocket)
+                rl_lst = []
                 for bot in auth_dict:
                     if not isinstance(bot, dict):
                         continue
@@ -83,14 +84,16 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
                             rl = orjson.loads(rl)
                             exp = {"keepttl": True}
                         if len(rl) > 100: 
+                            rl_lst.append(id)
                             continue
                         elif time.time() - rl[-1] > 5 and time.time() - rl[-1] < 65:
+                            rl_lst.append(id)
                             continue
                         rl.append(time.time())
                         await redis_db.set(f"identity-{id}", orjson.dumps(rl), **exp)
                         websocket.bots.append(bot)
                 if websocket.bots == []:
-                    return await ws_kill_no_auth(manager, websocket)
+                    return await ws_kill_no_auth(manager, websocket, ratelimited = rl_lst)
                 logger.debug("Authenticated successfully to websocket")
                 await manager.send_personal_message({
                     "m": {
@@ -144,6 +147,8 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
     websocket.tasks[str(uuid.uuid4())] = asyncio.create_task(dispatch_events_new(websocket))
     try:
         while True:
+            if not websocket.authorized:
+                return
             await asyncio.sleep(0)
     except Exception:
         return await ws_close(websocket, 4008)
@@ -151,6 +156,8 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
 async def dispatch_events_new(websocket):
     logger.debug("Running")
     async for msg in websocket.pubsub.listen():
+        if not websocket.authorized:
+            return
         logger.debug(f"Got message {msg} with manager status of {websocket.manager_bot}")
         if msg is None or not isinstance(msg.get("data"), bytes):
             continue

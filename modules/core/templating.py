@@ -6,6 +6,7 @@ from .imports import *
 from .permissions import *
 
 _templates = Jinja2Templates(directory="templates") # Setup templates folder
+discord_o = Oauth(OauthConfig)
 
 def intl_text(text: str, lang: str, link: bool = False, linked_langs: dict = {}, dbg = False):
     logger.trace(f"Called intl_text with text of {text}, lang of {lang}, link of {link} and linked_langs of {linked_langs}")
@@ -113,6 +114,7 @@ class templates():
             arg_dict["intl_text"] = intl_text
             arg_dict["site_lang"] = request.session.get("site_lang", "default")
             try:
+                request.session["access_token"] = await discord_o.access_token_check(request.session.get("scopes"), request.session.get("access_token"))
                 arg_dict["access_token"] = orjson.dumps(request.session.get("access_token")).decode("utf-8")
             except:
                 pass

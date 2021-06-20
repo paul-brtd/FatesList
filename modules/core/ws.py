@@ -103,19 +103,22 @@ def ws_identity_payload():
         }
     }
 
-async def ws_kill(manager: ConnectionManager, websocket: Websocket, type, code):
+async def ws_kill(manager: ConnectionManager, websocket: Websocket, type, code, ratelimited = []):
     await manager.send_personal_message({
         "m": {
             "e": enums.APIEvents.ws_kill,
             "t": type,
             "ts": time.time(),
-            "eid": str(uuid.uuid4())
+            "eid": str(uuid.uuid4()),
+        },
+        "ctx": {
+            "rl": ratelimited    
         }
     }, websocket)
     return await ws_close(websocket, code = code)
 
-async def ws_kill_invalid(manager: ConnectionManager, websocket: Websocket):
-    return await ws_kill(manager, websocket, enums.APIEventTypes.ws_invalid, 4000)
+async def ws_kill_invalid(manager: ConnectionManager, websocket: Websocket, ratelimited = []):
+    return await ws_kill(manager, websocket, enums.APIEventTypes.ws_invalid, 4000, ratelimited = ratelimited)
 
-async def ws_kill_no_auth(manager: ConnectionManager, websocket: Websocket):
-    return await ws_kill(manager, websocket, enums.APIEventTypes.ws_no_auth, 4004)
+async def ws_kill_no_auth(manager: ConnectionManager, websocket: Websocket, ratelimited = []):
+    return await ws_kill(manager, websocket, enums.APIEventTypes.ws_no_auth, 4004, ratelimited = ratelimited)

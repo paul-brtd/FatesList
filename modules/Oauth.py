@@ -12,7 +12,6 @@ def get_token(length: str) -> str:
     secure_str = "".join((secrets.choice(string.ascii_letters + string.digits) for i in range(length)))
     return secure_str
 
-
 class Oauth():
     def __init__(self, oc: OauthConfig):
         self.client_id = oc.client_id
@@ -41,9 +40,12 @@ class Oauth():
         headers = {
             'Content-Type': 'application/x-www-form-urlencoded'
         }
-        res = await requests.post(self.discord_token_url, data=payload, headers=headers)
-        json = await res.json()
-        return {"access_token": json.get("access_token"), "refresh_token": json.get("refresh_token"), "expires_in": json.get("expires_in"), "current_time": time.time(), "real": json}
+        async with aiohttp.ClientSession() as sess:
+            async with sess.post(self.discord_token_url, data=payload, headers=headers) as res:
+                if res.status != 200:
+                    return None
+                json = await res.json()
+                return json | {"current_time": time.time()}
 
     async def access_token_check(self, scope: str, access_token_dict: dict) -> str:
         if float(access_token_dict["current_time"]) + float(access_token_dict["expires_in"]) > time.time():
@@ -62,11 +64,10 @@ class Oauth():
         headers = {
             'Content-Type': 'application/x-www-form-urlencoded'
         }
-
-        res = await requests.post(self.discord_token_url, data=payload, headers=headers)
-        json = await res.json()
-        logger.debug("Got json of {json}")
-        return {"access_token": json.get("access_token"), "refresh_token": json.get("refresh_token"), "expires_in": json.get("expires_in"), "current_time": time.time()}
+        async with aiohttp.ClientSession() as sess:
+            async with ss.post(self.discord_token_url, data=payload, headers=headers) as res:
+                json = await res.json()
+                return json | {"current_time": time.time()}
 
     async def get_user_json(self, access_token):
         url = self.discord_api_url + "/users/@me"
@@ -74,19 +75,22 @@ class Oauth():
         headers = {
             "Authorization": f"Bearer {access_token}"
         }
-        res = await requests.get(url, headers=headers)
-        user_json = await res.json()
-        id = user_json.get("id")
-        name = user_json.get("username")
-        dash = user_json.get("discriminator")
-        avatar = user_json.get("avatar")
-        return user_json
+        async with aiohttp.ClientSession() as sess:
+            async with sess.get(url, headers=headers) as res:
+                if res.status == 401:
+                    return None
+                return await res.json()
 
     async def get_guilds(self, access_token: str, permissions: Optional[hex] = None):
         url = self.discord_api_url + "/users/@me/guilds"
-        headers = {'Content-Type': 'application/x-www-form-urlencoded', "Authorization": "Bearer " + access_token}
-        res = await requests.get(url, headers=headers)
-        guild_json = await res.json()
+        headers = {
+            "Authorization": f"Bearer {access_token}"
+        }
+        async with aiohttp.ClientSession() as sess:
+            async with sess.get(url, headers = headers) as res:
+                if res.status != 200:
+                    return []
+                guild_json = await res.json()
         try:
             guilds = []
             for guild in guild_json:
@@ -114,5 +118,9 @@ class Oauth():
         headers = {
             "Authorization": f"Bot {TOKEN_MAIN}"
         }
-        rc = await requests.put(url, headers=headers,json={"access_token":access_token})
-
+        async with aiohttp.ClientSession() as sess:
+            async with sess.put(url, headers = headers, json = {"access_token": access_token}) as res:
+                if res.status not in (201, 204):
+                    return False
+                return True
+                

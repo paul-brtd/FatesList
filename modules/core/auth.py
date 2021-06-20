@@ -22,24 +22,10 @@ async def user_auth_check(user_id: int, Authorization: str = Header("Put User To
     if id is None:
         raise HTTPException(status_code=401, detail="Invalid User Token")
 
-async def user_bb_auth_check(request: Request, Authorization: str = Header("Put User Token Or BotBlock key here")):
+async def user_bb_auth_check(user_id: int, Authorization: str = Header("Put User Token Or BotBlock key here")):
     if secure_strcmp(Authorization, bb_key):
         return True
-    try:
-        data = await request.json() # Workaround fastapi shortcomings
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid User Token or Botblock Key")
-    if data.get("owner"):
-        user_id = data.get("owner")
-    elif data.get("user_id"):
-        user_id = data.get("user_id")
-    else:
-        user_id = "1984"
-    if isinstance(user_id, int):
-        user_id = "1984"
-    id = await user_auth(user_id if user_id.isdigit() else "1984", Authorization)
-    if id is None:
-        raise HTTPException(status_code=401, detail="Invalid User Token or Botblock Key")
+    return await user_auth_check(user_id, Authorization)
 
 async def bot_user_auth_check(bot_id: int, user_id: Optional[int] = None, Authorization: str = Header("Put Bot Token or User Token here")):
     id = await bot_auth(bot_id, Authorization)

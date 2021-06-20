@@ -4,8 +4,9 @@ from uuid import UUID
 from fastapi.responses import HTMLResponse
 from typing import List, Dict
 from modules.discord.api.v2.modelstomove import * #TODO
-from modules.models.bot_actions import BotAdd, BotEdit
+from modules.models.bot_actions import BotMeta
 from modules.badges import get_badges
+
 discord_o = Oauth(OauthConfig)
 
 API_VERSION = 2 # This is the API version
@@ -40,60 +41,56 @@ async def get_bot_ws_events(request: Request, bot_id: int):
     return events
 
 @router.post(
-    "/bots/{bot_id}", 
+    "/users/{user_id}/bots/{bot_id}", 
     response_model = APIResponse, 
     dependencies=[
         Depends(RateLimiter(times=5, minutes=3)),
         Depends(user_bb_auth_check)
     ]
 )
-async def add_bot(request: Request, bot_id: int, bot: BotAdd):
+async def add_bot(request: Request, user_id: int, bot_id: int, bot: BotMeta):
     """
-    Adds a bot to fates list. Owner must be the owner adding the bot
+    Adds a bot to fates list. Owner must be the owner adding the bot and access token must be provided
 
     Due to how Fates List adds and edits bots using RabbitMQ, this will return a 202 and not a 200 on success
     """
-    if bot.oauth_enforced:
-        user_json = await discord_o.get_user_json(bot.oauth_access_token)
-        if user_json.get("id") is None or str(user_json.get("id")) != str(user):
-            return abort(401) # OAuth abort
+    user_json = await discord_o.get_user_json(bot.access_token)
+    if user_json is None or user_json.get("id") != str(user_id):
+        return abort(401) # OAuth abort
     bot.banner = bot.banner.replace("http://", "https://").replace("(", "").replace(")", "")
     bot_dict = bot.dict()
     bot_dict["bot_id"] = bot_id
-    bot_dict["user_id"] = bot.owner
     bot_adder = BotActions(bot_dict)
     rc = await bot_adder.add_bot()
     if rc is None:
         return api_success(f"{site_url}/bot/{bot_id}", status_code = 202)
-    return api_error(rc[0], rc[1])
+    return api_error(rc[0])
 
 @router.patch(
-    "/bots/{bot_id}", 
+    "/users/{user_id}/bots/{bot_id}", 
     response_model = APIResponse, 
     dependencies=[
         Depends(RateLimiter(times=5, minutes=3)),
         Depends(user_bb_auth_check)
     ]
 )
-async def edit_bot(request: Request, bot_id: int, bot: BotEdit, Authorization: str = Header("USER_TOKEN_OR_BOTBLOCK_EDIT_KEY")):
+async def edit_bot(request: Request, user_id: int, bot_id: int, bot: BotMeta):
     """
     Edits a bot, the owner here should be the owner editing the bot.
 
     Due to how Fates List edits bota using RabbitMQ, this will return a 202 and not a 200 on success
     """
-    if bot.oauth_enforced:
-        user_json = await discord_o.get_user_json(bot.oauth_access_token)
-        if user_json.get("id") is None or str(user_json.get("id")) != str(user):
-            return abort(401) # OAuth abort
+    user_json = await discord_o.get_user_json(bot.access_token)
+    if user_json is None or user_json.get("id") != str(user_id):
+        return abort(401) # OAuth abort
     bot.banner = bot.banner.replace("http://", "https://").replace("(", "").replace(")", "")
     bot_dict = bot.dict()
     bot_dict["bot_id"] = bot_id
-    bot_dict["user_id"] = bot.owner
     bot_editor = BotActions(bot_dict)
     rc = await bot_editor.edit_bot()
     if rc is None:
         return api_success(f"{site_url}/bot/{bot_id}", status_code = 202)
-    return api_error(rc[0], rc[1])
+    return api_error(rc[0])
 
 @router.get(
     "/bots/{bot_id}/reviews", 
@@ -350,7 +347,7 @@ async def preview_api(request: Request, data: PrevRequest, lang: str = "default"
     "/users/{user_id}"
 )
 async def get_user_api(request: Request, user_id: int):
-    user = await db.fetchrow("SELECT badges, state, description, css FROM users WHERE user_id = $1", user_id)
+    user = await db.fetchrow("SELECT badges, state, description, css, coins, js_allowed, vote_epoch FROM users WHERE user_id = $1", user_id)
     if user is None or user["state"] == enums.UserState.ddr_ban:
         return abort(404)
     user_obj = await get_user(user_id)
@@ -373,7 +370,7 @@ async def get_user_api(request: Request, user_id: int):
         badges = None # Still not prepared to deal with it since we havent connected to discord yet 
     else:
         badges = get_badges(user_dpy, badges, approved_bots)
-    return {"bots": bots, "approved_bots": approved_bots, "certified_bots": certified_bots, "bot_developer": approved_bots != [], "certified_developer": certified_bots != [], "profile": user_ret, "badges": badges, "defunct": user_dpy is None} | user_obj
+    return {"bots": bots, "approved_bots": approved_bots, "certified_bots": certified_bots, "bot_developer": approved_bots != [], "certified_developer": certified_bots != [], "profile": user_ret, "badges": badges, "defunct": user_dpy is None, "user": user_obj, ""}
 
 @router.patch(
     "/users/{user_id}/bots/{bot_id}/reminders",

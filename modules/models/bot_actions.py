@@ -33,19 +33,6 @@ class BotMeta(BaseModel):
     webhook: Optional[str] = ""
     webhook_secret: Optional[str] = ""
     vanity: Optional[str] = ""
-
-class BotAPIMeta(BotMeta):
-    """
-        OAuth access token is not *required* but is recommended for security
-    """
     features: Optional[list] = []
     tags: list
-    oauth_access_token: Optional[str] = None # Not passing this will disable oauth check
-    oauth_enforced: Optional[bool] = False # NOT RECOMMENDED TO SET THIS TO FALSE IF YOU ARE A AUTOMATED SERVER LIKE BOTBLOCK
-    owner: str
-
-class BotAdd(BotAPIMeta):
-    pass
-
-class BotEdit(BotAPIMeta):
-    pass
+    access_token: str

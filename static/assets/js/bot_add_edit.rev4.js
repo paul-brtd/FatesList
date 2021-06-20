@@ -23,9 +23,9 @@ function submitBot(e) {
 	    modalShow("Error", "You need to select tags for your bot!")
 	    return
 	}
-	json.owner = context.user_id
+	json.access_token = context.access_token
 	$j.ajax({
-		url: `/api/bots/${json.bot_id}`,
+		url: `/api/users/${context.user_id}/bots/${json.bot_id}`,
 		method: method,
 		headers: {'Authorization': context.user_token},
 		contentType: "application/json",

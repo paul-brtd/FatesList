@@ -139,7 +139,7 @@ CREATE TABLE users (
     css text default '',
     state integer default 0, -- 0 = No Ban, 1 = Global Ban
     coins INTEGER DEFAULT 0,
-    nojs BOOLEAN DEFAULT false
+    js_allowed BOOLEAN DEFAULT false
 );
 
 CREATE TABLE user_reminders (

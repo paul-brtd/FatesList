@@ -81,12 +81,14 @@ async def auth_callback_handler(request: Request, code: str, state: str):
 async def login_user(request: Request, data: Login):
     try:
         access_token = await discord_o.get_access_token(data.code, "%20".join(data.scopes))
+        if not access_token:
+            raise ValueError("Invalid access token")
         userjson = await discord_o.get_user_json(access_token["access_token"])
-        if not userjson["id"]:
+        if not userjson:
             raise ValueError("Invalid user json")
-    except Exception:
+    except Exception as exc:
         return api_error(
-            "We have encountered an issue while logging you in (could not create user json)...",
+            f"We have encountered an issue while logging you in ({exc})...",
             banned = False
         )
     

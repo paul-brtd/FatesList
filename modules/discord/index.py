@@ -78,6 +78,7 @@ async def vanity_invite(request: Request, vanity: str):
         return abort(404)
     eurl = "/".join([site_url, vurl[1], str(vurl[0]), "invite"])
     return RedirectResponse(eurl)
+
 @router.get("/v/{a:path}")
 async def v_legacy(request: Request, a: str):
     return RedirectResponse(str(request.url).replace("/v/", "/"))
@@ -101,8 +102,4 @@ async def api_docs_view(request: Request):
 @router.get("/fates/tos")
 async def tos_page(request: Request):
     return await templates.TemplateResponse("tos.html", {"request": request})
-
-@router.get("/coins/buy")
-async def stripetest(request: Request):
-    return await templates.TemplateResponse("coin_buy.html", {"request": request, "stripe_publishable_key": stripe_publishable_key})
 
