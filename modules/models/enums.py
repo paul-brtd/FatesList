@@ -9,7 +9,10 @@ class PromotionType(IntEnum):
     announcement = 0, "Announcement"
     promotion = 1, "Promotion"
     generic = 2, "Generic"
-
+class WebSocketCommand(IntEnum):
+    _init_ = 'value __doc__'
+    dispatch_old = 0, "Dispatch Old Events"
+    
 class KnownClients(Enum):
     _init_ = 'value __key__ __banned__ __verified__ __noprompt__'
     fates_list = "Fates List", client_key_fateslist, False, True, True
