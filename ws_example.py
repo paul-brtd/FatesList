@@ -19,7 +19,7 @@ async def run():
                 for bot in bots:
                     bot_id, token = bot.replace(" ", "").split(":")
                     auth.append({"id": bot_id, "token": token})
-                payload = {"m": {"e": enums.APIEvents.ws_identity_res, "t": enums.APIEventTypes.auth_token, "eid": str(uuid.uuid4()), "ts": time.time()}, "ctx": {"auth": auth, "filter": 0}}
+                payload = {"m": {"e": enums.APIEvents.ws_identity_res, "t": enums.APIEventTypes.auth_token, "eid": str(uuid.uuid4()), "ts": time.time()}, "ctx": {"auth": auth, "filter": None}}
                 await websocket.send(json.dumps(payload))
                 print(f"Sending {json.dumps(payload)}")
                 res = await websocket.recv()

@@ -30,11 +30,11 @@ class ConnectionManager:
             websocket.pubsub = None
         
          # Stop all websocket tasks in websocket.tasks
-         try:
+        try:
             for task_id in websocket.tasks.keys():
                 await websocket.tasks[task_id].cancel()
                 del websocket.tasks[task_id]
-         except Exception:
+        except Exception:
             websocket.tasks = {}
         
         
@@ -65,7 +65,7 @@ class ConnectionManager:
         
     async def send_personal_message(self, message, websocket: WebSocket):
         # Do not allow sending to unauthorized sources unless websocket.identified is False
-        if not websocket.authorized and not websocket.identified:
+        if not websocket.authorized and websocket.identified:
             return await ws_close(websocket, 4007)
         
         i = 0
