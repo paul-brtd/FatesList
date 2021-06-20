@@ -50,13 +50,10 @@ async def get_bot_ws_events(request: Request, bot_id: int):
 )
 async def add_bot(request: Request, user_id: int, bot_id: int, bot: BotMeta):
     """
-    Adds a bot to fates list. Owner must be the owner adding the bot and access token must be provided
-
+    Adds a bot to fates list. 
+    
     Due to how Fates List adds and edits bots using RabbitMQ, this will return a 202 and not a 200 on success
     """
-    user_json = await discord_o.get_user_json(bot.access_token)
-    if user_json is None or user_json.get("id") != str(user_id):
-        return abort(401) # OAuth abort
     bot.banner = bot.banner.replace("http://", "https://").replace("(", "").replace(")", "")
     bot_dict = bot.dict()
     bot_dict["bot_id"] = bot_id
@@ -81,9 +78,6 @@ async def edit_bot(request: Request, user_id: int, bot_id: int, bot: BotMeta):
 
     Due to how Fates List edits bota using RabbitMQ, this will return a 202 and not a 200 on success
     """
-    user_json = await discord_o.get_user_json(bot.access_token)
-    if user_json is None or user_json.get("id") != str(user_id):
-        return abort(401) # OAuth abort
     bot.banner = bot.banner.replace("http://", "https://").replace("(", "").replace(")", "")
     bot_dict = bot.dict()
     bot_dict["bot_id"] = bot_id

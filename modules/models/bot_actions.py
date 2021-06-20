@@ -35,4 +35,3 @@ class BotMeta(BaseModel):
     vanity: Optional[str] = ""
     features: Optional[list] = []
     tags: list
-    access_token: str

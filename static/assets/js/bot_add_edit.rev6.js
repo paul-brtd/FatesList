@@ -70,7 +70,7 @@ function submitBot(e) {
 };
 
 function previewLongDesc(){
-	html = document.querySelector("#long_description_type").value == "0";
+	html = document.querySelector("#long_description_type").value;
 	ld = document.querySelector("#long_description").value;
 	if(context.mode == "edit") {
 		headers = {"Authorization": context.api_token}
@@ -91,10 +91,12 @@ function previewLongDesc(){
            "200": function(data) {
                $j("#ld-preview").html(data.html)
            },
-           "429": function(data)
-           {
-		alert("You have been rate limited from using previews")
-           }
+           "429": function(data) {
+		modalShow("Rate Limited", "You have been rate limited from using the preview API.")
+           },
+	   "422": function(data) {
+	   	modalShow("Error", JSON.stringify(data))
+	   }
 	}
     });
 
