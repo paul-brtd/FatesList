@@ -42,7 +42,7 @@ async def ws_command_handler(websocket):
 async def websocket_bot_rtstats_v1(websocket: WebSocket):
     logger.debug("Got websocket connection request. Connecting...")
     await manager.connect(websocket)
-    if not websocket.authorized:
+    if not websocket.identified:
         logger.debug("Sending IDENTITY to websocket")
         await manager.send_personal_message(ws_identity_payload(), websocket)
         
@@ -140,7 +140,7 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
             websocket.pubsub = redis_db.pubsub()
             await websocket.pubsub.psubscribe("*")
             
-        websocket.tasks[str(uuid.uuid4())] = asyncio.create_task(ws_dispatch_events_new(websocket))
+        websocket.tasks[str(uuid.uuid4())] = asyncio.create_task(dispatch_events_new(websocket))
         try:
             while True:
                 asyncio.sleep(0)
@@ -150,7 +150,7 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
 async def dispatch_events_new(websocket):
     async for msg in websocket.pubsub.listen():
         if not websocket.authorized:
-            await ws_close(websocket, 4007)
+            return # Stop dispatching
         logger.debug(f"Got message {msg} with manager status of {websocket.manager_bot}")
         if msg is None or not isinstance(msg.get("data"), bytes):
             continue
