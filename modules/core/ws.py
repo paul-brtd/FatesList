@@ -14,6 +14,8 @@ class ConnectionManager:
         websocket.pubsub = None
         websocket.authorized = False
         websocket.manager_bot = False
+        websocket.event_filter = None
+        websocket.identified = False
         self.active_connections.append(websocket)
 
     async def disconnect(self, websocket: WebSocket, code: int = 4005):
@@ -53,8 +55,19 @@ class ConnectionManager:
         websocket.tasks = {}
         websocket.manager_bot = False
         websocket.authorized = False
+        websocket.event_filter = None
+        websocket.identified = False
 
+    async def identify(self, websocket):
+        """Helper function to finish auth, call this always after auth"""
+        websocket.authorized = True
+        websocket.identified = True
+        
     async def send_personal_message(self, message, websocket: WebSocket):
+        # Do not allow sending to unauthorized sources unless websocket.identified is False
+        if not websocket.authorized and not websocket.identified:
+            return await ws_close(websocket, 4007)
+        
         i = 0
         if websocket not in self.active_connections:
             await manager.disconnect(websocket)
@@ -76,7 +89,7 @@ class ConnectionManager:
             await connection.send_json(message)
 
 async def ws_close(websocket: WebSocket, code: int):
-    await manager.disconnect(websocket)
+    await manager.disconnect(websocket, code = code)
 
 def ws_identity_payload():
     return {
