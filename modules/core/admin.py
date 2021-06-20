@@ -29,13 +29,13 @@ class BotActions():
     async def base_check(self) -> Optional[str]:
         """Perform basic checks for adding/editting bots. A check returning None means success, otherwise error should be returned to client"""
         if self.bot_id == "" or self.prefix == "" or self.description == "" or self.long_description == "" or len(self.prefix) > 9: # Check base fields
-            return "Please ensure you have filled out all the required fields and that your prefix is less than 9 characters.", 1
+            return "Please ensure you have filled out all the required fields and that your prefix is less than 9 characters."
 
         if self.tags == "":
-            return "You must select tags for your bot", 2 # Check tags
+            return "You must select tags for your bot" #Check tags
 
         if not self.banner.startswith("https://") and self.banner not in ["", "none"]:
-            return "Your banner does not use https://. Please change it", 3 # Check banner and ensure HTTPS
+            return "Your banner does not use https://. Please change it" # Check banner and ensure HTTPS
         
         if self.invite:
             if self.invite.startswith("P:"): # Check if perm auto is specified
@@ -45,19 +45,19 @@ class BotActions():
                 except ValueError:
                     return "Invalid Bot Invite: Your permission number must be a integer", 4 # Invalid Invite
             elif not self.invite.startswith("https://discord.com") or "oauth" not in self.invite:
-                return "Invalid Bot Invite: Your bot invite must be in the format of https://discord.com/api/oauth2... or https://discord.com/oauth2...", 4 # Invalid Invite
+                return "Invalid Bot Invite: Your bot invite must be in the format of https://discord.com/api/oauth2... or https://discord.com/oauth2..." # Invalid Invite
             self.generated.invite = self.invite # By default, this is None but if explicitly set, use that
 
         if len(self.description) > 110:
-            return "Your short description must be shorter than 110 characters", 5 # Short Description Check
+            return "Your short description must be shorter than 110 characters" # Short Description Check
 
         try:
             bot_object = await get_bot(self.bot_id) # Check if bot exists
         except ValueError: # Just in case someone tries to send a string and not a integer
-            return "According to Discord's API and our cache, your bot does not exist. Please try again after 2 hours.", 6
+            return "According to Discord's API and our cache, your bot does not exist. Please try again after 2 hours."
 
         if not bot_object:
-            return "According to Discord's API and our cache, your bot does not exist. Please try again after 2 hours.", 7
+            return "According to Discord's API and our cache, your bot does not exist. Please try again after 2 hours."
         
         if type(self.tags) != list:
             self.generated.tags = self.tags.split(",")
@@ -67,7 +67,7 @@ class BotActions():
         flag = False
         for test in self.generated.tags:
             if test not in TAGS:
-                return "One of your tags doesn't exist internally. Please check your tags again", 8 # Check tags internally
+                return "One of your tags doesn't exist internally. Please check your tags again" # Check tags internally
             flag = True
 
         if not flag:
@@ -79,10 +79,10 @@ class BotActions():
             except:
                 img = None
             if img is None or img.headers.get("Content-Type") is None or img.headers.get("Content-Type").split("/")[0] != "image":
-                return "Banner URL is not an image. Please make sure it is setting the proper Content-Type", 10
+                return "Banner URL is not an image. Please make sure it is setting the proper Content-Type"
 
         if self.donate != "" and not (self.donate.startswith("https://patreon.com") or self.donate.startswith("https://paypal.me")):
-            return "Only Patreon and Paypal.me are allowed for donation links as of right now.", 11 # Check donation link for approved source (paypal.me and patreon
+            return "Only Patreon and Paypal.me are allowed for donation links as of right now." # Check donation link for approved source (paypal.me and patreon
 
         if self.extra_owners == "": # Generate extra owners list by either adding directly if list or splitting to list, removing extra ones
             self.generated.extra_owners = []
@@ -93,22 +93,23 @@ class BotActions():
                 self.generated.extra_owners = self.extra_owners
 
         try:
-            self.generated.extra_owners = [int(id.replace(" ", "")) for id in self.generated.extra_owners if int(id.replace(" ", "")) not in self.generated.extra_owners] # Remove extra ones and make all ints
+            self.generated.extra_owners = [int(id.replace(" ", "")) for id in self.generated.extra_owners]
+            self.generated.extra_owners = list(set(ids)) # Remove extra ones and make all ints
         except:
-            return "One of your extra owners doesn't exist or you haven't comma-seperated them.", 12
+            return "One of your extra owners doesn't exist or you haven't comma-seperated them."
 
         if self.github != "" and not self.github.startswith("https://www.github.com"): # Check github for github.com if not empty string
-            return "Your github link must start with https://www.github.com", 13
+            return "Your github link must start with https://www.github.com"
 
         self.privacy_policy = self.privacy_policy.replace("http://", "https://") # Force https on privacy policy
         if self.privacy_policy != "" and not self.privacy_policy.startswith("https://"): # Make sure we actually have a HTTPS privacy policy
-            return "Your privacy policy must be a proper URL starting with https://. URLs which start with http:// will be automatically converted to HTTPS", 14
+            return "Your privacy policy must be a proper URL starting with https://. URLs which start with http:// will be automatically converted to HTTPS while adding"
         check = await vanity_check(self.bot_id, self.vanity) # Check if vanity is already being used or is reserved
         if check:
-            return "Your custom vanity URL is already in use or is reserved", 15
+            return "Your custom vanity URL is already in use or is reserved"
         if self.webhook_secret:
             if len(self.webhook_secret) < 8:
-                return "Your webhook secret must be at least 8 characters long", 16
+                return "Your webhook secret must be at least 8 characters long"
             self.generated.webhook_secret = self.webhook_secret
 
     async def edit_check(self):
@@ -120,15 +121,15 @@ class BotActions():
         lock = await db.fetchval("SELECT lock FROM bots WHERE bot_id = $1", int(self.bot_id))
         lock = enums.BotLock(lock)
         if lock != enums.BotLock.unlocked:
-            return f"This bot cannot be edited as it has been locked with a code of {int(lock)}: ({lock.__doc__}). If this bot is not staff staff locked, join the support server and run +unlock <BOT> to unlock it.", 20
+            return f"This bot cannot be edited as it has been locked with a code of {int(lock)}: ({lock.__doc__}). If this bot is not staff staff locked, join the support server and run +unlock <BOT> to unlock it."
 
         check = await is_bot_admin(int(self.bot_id), int(self.user_id)) # Check for owner
         if not check:
-            return "You aren't the owner of this bot.", 17
+            return "You aren't the owner of this bot."
 
         check = await get_user(self.user_id)
         if check is None: # Check if owner exists
-            return "You do not exist on the Discord API. Please wait for a few hours and try again", 18
+            return "You do not exist on the Discord API. Please wait for a few hours and try again"
 
     async def add_check(self):
         """Perform extended checks for adding bots"""
@@ -137,7 +138,7 @@ class BotActions():
             return check # Base check erroring means return base check without continuing as string return means error
 
         if (await db.fetchrow("SELECT bot_id FROM bots WHERE bot_id = $1", self.bot_id)) is not None:
-            return "This bot already exists on Fates List", 19 # Dont add bots which already exist
+            return "This bot already exists on Fates List" # Dont add bots which already exist
 
     async def add_bot(self):
         """Add a bot"""
