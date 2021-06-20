@@ -16,11 +16,12 @@ class ConnectionManager:
         self.active_connections.append(websocket)
 
     async def disconnect(self, websocket: WebSocket):
+        # Unsubscribe from pubsub
         try:
             if websocket.pubsub:
                 await websocket.pusub.unsubscribe()
-            except Exception:
-                pass
+        except Exception:
+            pass
         try:
             await websocket.close(code=4005)
         except Exception:
