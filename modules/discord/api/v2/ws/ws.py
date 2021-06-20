@@ -102,7 +102,7 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
                         "bots": [{"id": bot['id'], "ws_api": f"/api/bots/{bot['id']}/ws_events"} for bot in websocket.bots]
                     }
                 }, websocket)
-                websocket.authorized = True
+                await manager.identify(websocket)
         
             case enums.APIEventTypes.auth_manager_key:
                 try:
@@ -122,7 +122,7 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
                     "ctx": {
                     }
                 }, websocket)
-                websocket.authorized = True
+                await manager.identify(websocket) 
     
     try:
         if isinstance(event_filter, int):
