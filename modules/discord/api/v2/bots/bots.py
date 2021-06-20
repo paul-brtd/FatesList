@@ -1,5 +1,5 @@
 from modules.core import *
-from .models import APIResponse, BotRandom, Bot, BotStats
+from .models import APIResponse, BotRandom, Bot, BotStats, BotMeta
 from ..base import API_VERSION
 from lxml.html.clean import Cleaner
 
@@ -175,4 +175,4 @@ async def add_bot(request: Request, user_id: int, bot_id: int, bot: BotMeta):
     rc = await bot_adder.add_bot()
     if rc is None:
         return api_success(f"{site_url}/bot/{bot_id}", status_code = 202)
-    return api_error(rc[0])
+    return api_error(rc)
