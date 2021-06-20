@@ -11,9 +11,7 @@ builtins.manager = ConnectionManager()
 async def dispatch_events(websocket, bot, pubsub):
     """Dispatch old events to the requester"""
     if not websocket.authorized:
-        return # Stop sending if not authorized
-    
-    
+        return # Stop sending if not authorized 
 
 async def ws_command_handler(websocket):
     """Websocket Command Handling"""
@@ -38,19 +36,10 @@ async def ws_command_handler(websocket):
                 
             else:
                 websocket.authorized = False
-                await unsub(pubsub)
                 return await ws_kill_invalid(manager, websocket)
         except Exception:
             websocket.authorized = False
-            await unsub(pubsub)
             return await ws_kill_invalid(manager, websocket)
-
- async def unsub(pubsub):
-    """Force unsubscribe a pubsub"""
-    try:
-        await pubsub.unsubscribe()
-    except:
-        pass
         
 @router.websocket("/api/v2/ws/rtstats")
 async def websocket_bot_rtstats_v1(websocket: WebSocket):
@@ -154,6 +143,7 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
             websocket.pubsub = redis_db.pubsub()
             await websocket.pubsub.psubscribe("*")
  
+
         async for msg in websocket.pubsub.listen():
             if not websocket.authorized:
                 try:
@@ -190,10 +180,5 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
                     await ws_close(websocket, 4007) 
     
     except Exception as exc:
-        print(exc)
-        websocket.authorized = False
-    
-        await unsub(pubsub)
-        
         await ws_close(websocket, 4006)
         raise exc
