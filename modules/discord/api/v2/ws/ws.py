@@ -8,16 +8,35 @@ router = APIRouter(
 
 builtins.manager = ConnectionManager()
 
-async def ws_command_handler(websocket):
+async def dispatch_events(websocket, bot, pubsub):
+    """Dispatch old events to the requester"""
+    pass
+    
+    
+
+async def ws_command_handler(websocket, pubsub):
     """Websocket Command Handling"""
+    websocket.tasks = {}
     while True:
         data = await websocket.receive_json()
         if not websocket.authorized:
             return # Stop command handling
         await asyncio.sleep(0) # Ensure other tasks don't mess up
         try:
-            if data["cmd"] == enums.WebSocketCommand.agg_old:
-                pass # Not yet implemented
+            # Dispatch old events
+            if data["cmd"] == enums.WebSocketCommand.dispatch_old:
+                bot = data["id"]
+                flag = False
+                for auth_bot in websocket.bots:
+                    if bot == auth_bot["id"]:
+                        # We have a match
+                        flag = True
+                        asyncio.create_task(dispatch_events(websocket, bot, pubsub))
+                if not flag:
+                    websocket.authorized = False
+                    await unsub(pubsub)
+                    return await ws_kill_no_auth(manager, websocket)
+                
             else:
                 websocket.authorized = False
                 await unsub(pubsub)
@@ -127,10 +146,10 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
             event_filter = None
     
         if not websocket.manager_bot:
-            asyncio.create_task(ws_command_handler(websocket))
             pubsub = redis_db.pubsub()
             for bot in websocket.bots:
                 await pubsub.subscribe(f"bot-{bot['id']}")
+            asyncio.create_task(ws_command_handler(websocket, pubsub))
         
         else:
             pubsub = redis_db.pubsub()
