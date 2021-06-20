@@ -10,13 +10,13 @@ builtins.manager = ConnectionManager()
 
 async def dispatch_events(websocket, bot, pubsub):
     """Dispatch old events to the requester"""
-    pass
+    if not websocket.authorized:
+        return # Stop sending if not authorized
     
     
 
 async def ws_command_handler(websocket, pubsub):
     """Websocket Command Handling"""
-    websocket.tasks = {}
     while True:
         data = await websocket.receive_json()
         if not websocket.authorized:
@@ -31,7 +31,7 @@ async def ws_command_handler(websocket, pubsub):
                     if bot == auth_bot["id"]:
                         # We have a match
                         flag = True
-                        asyncio.create_task(dispatch_events(websocket, bot, pubsub))
+                        websocket.tasks[str(uuid.uuid4())] = asyncio.create_task(dispatch_events(websocket, bot, pubsub)) # Store task in dict
                 if not flag:
                     websocket.authorized = False
                     await unsub(pubsub)
@@ -149,7 +149,7 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
             pubsub = redis_db.pubsub()
             for bot in websocket.bots:
                 await pubsub.subscribe(f"bot-{bot['id']}")
-            asyncio.create_task(ws_command_handler(websocket, pubsub))
+            websocket.tasks[str(uuid.uuid4())] = asyncio.create_task(ws_command_handler(websocket, pubsub)) # Begin command handling and add it to tasks list
         
         else:
             pubsub = redis_db.pubsub()
