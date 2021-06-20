@@ -4,13 +4,13 @@ from ..base import API_VERSION
 from math import ceil
 
 router = APIRouter(
-    prefix = f"/api/v{API_VERSION}/bots",
+    prefix = f"/api/v{API_VERSION}",
     include_in_schema = True,
     tags = [f"API v{API_VERSION} - Votes"]
 )
 
 @router.get(
-    "/{bot_id}/votes", 
+    "/bots/{bot_id}/votes", 
     response_model = BotVoteCheck, 
     dependencies=[
         Depends(RateLimiter(times=5, minutes=1)),
@@ -29,12 +29,15 @@ async def get_votes(request: Request, bot_id: int, user_id: Optional[int] = None
         return {"votes": voter_count, "voted": voter_count != 0, "type": "VNFVote", "reason": "Voter not found!", "partial": True}
     return {"votes": voter_count, "voted": voter_count != 0, "vote_epoch": ret[0].timestamp() if isinstance(ret, tuple) else 0, "vts": voter_ts, "time_to_vote": ret[1].total_seconds() if isinstance(ret, tuple) else 0, "vote_right_now": ret == True, "type": "Vote", "reason": None, "partial": False}
 
-@router.patch("/{bot_id}/votes", dependencies=[Depends(RateLimiter(times=5, minutes=1))])
-async def create_vote(bot_id: int, data: BotVote, Authorization: str = Header("USER_TOKEN")):
+@router.patch(
+    "/users/user_id}/bots/{bot_id}/votes", 
+    dependencies=[
+        Depends(RateLimiter(times=5, minutes=1)),
+        Depends(user_auth_check)
+    ]
+)
+async def create_vote(user_id: int, bot_id: int, data: BotVote):
     """Endpoint to create a vote for a bot"""
-    id = await user_auth(data.user_id, Authorization)
-    if id is None:
-        return abort(401)
     ret = await vote_bot(user_id = data.user_id, bot_id = bot_id, autovote = False, test = False, pretend = False)
     if ret is True: 
         return api_success()
