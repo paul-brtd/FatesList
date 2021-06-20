@@ -370,7 +370,7 @@ async def get_user_api(request: Request, user_id: int):
         badges = None # Still not prepared to deal with it since we havent connected to discord yet 
     else:
         badges = get_badges(user_dpy, badges, approved_bots)
-    return {"bots": bots, "approved_bots": approved_bots, "certified_bots": certified_bots, "bot_developer": approved_bots != [], "certified_developer": certified_bots != [], "profile": user_ret, "badges": badges, "defunct": user_dpy is None, "user": user_obj, ""}
+    return {"bots": bots, "approved_bots": approved_bots, "certified_bots": certified_bots, "bot_developer": approved_bots != [], "certified_developer": certified_bots != [], "profile": user_ret, "badges": badges, "defunct": user_dpy is None, "user": user_obj}
 
 @router.patch(
     "/users/{user_id}/bots/{bot_id}/reminders",
