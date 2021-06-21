@@ -308,19 +308,10 @@
       width: 90%;
     "
   />
-  <div>
-	  <div class="form-group" style="width: 80%; margin: 0 auto; height: auto; margin-top: 30px; color: rgba(255, 255, 255, 0.87)">
-		<div class="form-group" class="d-flex justify-content-center" style="margin: 15px auto; width: 85%;text-align: center; color: white; font-weight: bold; overflow-wrap: anywhere;">
-			<div style="margin 15px auto">
-    				<h6 style="margin-top: 30px;">Delete Bot</h6>
-    				<p style="margin-bottom: 3px;">Warning: This cannot be undone</p>
-    				<form method="POST" action="/bot/{{data.bot_id}}/delete">
-        				<button class="btn btn-danger" type="submit" style="margin-top: 20px; margin-bottom: 30px">Delete Bot</button>
-    					<input type="hidden" name="confirmer" value="{{epoch}}"/>
-    				</form>
-    			</div>
-		</div>
-	</div>
+  <div id="delete-bot">
+  	<h6 style="margin-top: 30px;">Delete Bot</h6>
+	<p style="margin-bottom: 3px;">Warning: This cannot be undone</p>	
+        <button class="btn btn-danger" style="margin-top: 20px; margin-bottom: 30px" onsubmit="event.preventDefault(); deleteBot(event)">Delete Bot</button>
 </div>
 {% endif %}
 <script src="https://cdn.jsdelivr.net/npm/jquery-serializejson@3.2.1/jquery.serializejson.min.js"></script>
@@ -336,7 +327,7 @@
 		access_token: JSON.parse('{{access_token|safe}}')
 	}
 </script>
-<script src="https://cdn.jsdelivr.net/gh/Fates-List/FatesList@master/static/assets/js/bot_add_edit.rev7.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/Fates-List/FatesList@master/static/assets/js/bot_add_edit.rev8.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select-pure@latest/dist/index.js"></script>
 {% endblock %} 
 {% block footer %} 
