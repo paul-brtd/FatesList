@@ -82,7 +82,6 @@ function deleteBot() {
 		method: "DELETE",
 		headers: {'Authorization': context.user_token},
 		contentType: "application/json",
-		data: JSON.stringify(json),
 		statusCode: {
 			202: function(data) {
 				modalShow("Bot Deleted :(", "This bot has been added to our queue of bots to delete and will be deleted in just a second or two")
