@@ -17,7 +17,7 @@ function submitBot(e) {
 	    method = "PATCH"
 	}
 	else {
-	    method = "POST"
+	    method = "PUT"
 	}
 	if(json.tags.length == 0 || json.tags[0] == "") {
 	    modalShow("Error", "You need to select tags for your bot!")
@@ -68,6 +68,38 @@ function submitBot(e) {
     	alert(err)
     }
 };
+
+function deleteBot(e){
+	bot_id_prompt = prompt("In order to confirm your request, please enter the Bot ID for your bot", "Bot ID...")
+	if(!bot_id_prompt || bot_id_prompt != context.bot_id) {
+             	// User did not type proper bot id
+		modalShow("Failed to delete bot", "This bot couldn't be deleted as you did not confirm that you wanted to do this!")
+		return
+	}
+	modalShow("Deleting Bot..", "Please wait...")
+	$j.ajax({
+		url: `/api/users/${context.user_id}/bots/${context.bot_id}`,
+		method: "DELETE",
+		headers: {'Authorization': context.user_token},
+		contentType: "application/json",
+		data: JSON.stringify(json),
+		statusCode: {
+			202: function(data) {
+				modalShow("Bot Deleted :(", "This bot has been added to our queue of bots to delete and will be deleted in just a second or two")
+				setTimeout(setInterval(function(){
+				$j.ajax({
+					url: `/api/bots/${context.bot_id}`,
+					method: "GET",
+					statusCode: {
+						404: function(data){
+							window.location.replace(`/`)
+						}
+					}
+				})
+				}, 2000), 1000);
+			}
+		}
+}
 
 function previewLongDesc(){
 	html = document.querySelector("#long_description_type").value;
