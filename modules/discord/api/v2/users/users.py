@@ -74,5 +74,10 @@ async def delete_bot(request: Request, bot_id: int):
         return api_error(
             "You aren't the owner of this bot. Only bot owners and authorized staff may delete bots"
         )
+    lock = await db.fetchval("SELECT lock FROM bots WHERE bot_id = $1", bot_id)
+    lock = enums.BotLock(lock)
+    if lock != enums.BotLock.unlocked:
+        return f"This bot cannot be deleted as it has been locked with a code of {int(lock)}: ({lock.__doc__}). If this bot is not staff locked, join the support server and run +unlock <BOT> to unlock it."
+
     await add_rmq_task("bot_delete_queue", {"user_id": user_id, "bot_id": bot_id})
     
