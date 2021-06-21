@@ -69,8 +69,8 @@ function submitBot(e) {
     }
 };
 
-function deleteBot(e) {
-	bot_id_prompt = prompt("In order to confirm your request, please enter the Bot ID for your bot", "Bot ID...")
+function deleteBot() {
+	bot_id_prompt = prompt("In order to confirm your request, please enter the Bot ID for your bot", "")
 	if(!bot_id_prompt || bot_id_prompt != context.bot_id) {
              	// User did not type proper bot id
 		modalShow("Failed to delete bot", "This bot couldn't be deleted as you did not confirm that you wanted to do this!")
