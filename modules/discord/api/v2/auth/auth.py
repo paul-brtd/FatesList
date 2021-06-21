@@ -80,7 +80,10 @@ async def auth_callback_handler(request: Request, code: str, state: str):
 @router.post("/users", response_model = LoginResponse)
 async def login_user(request: Request, data: Login):
     try:
-        access_token = await discord_o.get_access_token(data.code, "%20".join(data.scopes))
+        if data.access_token:
+            access_token = {"access_token": data.access_token}
+        else:
+            access_token = await discord_o.get_access_token(data.code, "%20".join(data.scopes))
         if not access_token:
             raise ValueError("Invalid access token")
         userjson = await discord_o.get_user_json(access_token["access_token"])
