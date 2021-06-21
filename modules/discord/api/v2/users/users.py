@@ -57,3 +57,22 @@ async def edit_bot(request: Request, user_id: int, bot_id: int, bot: BotMeta):
     if rc is None:
         return api_success(f"{site_url}/bot/{bot_id}", status_code = 202)
     return api_error(rc)
+
+
+@router.delete(
+    "/{user_id}/bots/{bot_id}", 
+    dependencies=[
+        Depends(RateLimiter(times=1, minutes=2)),
+        Depends(user_auth_check)
+    ]
+)
+async def delete_bot(request: Request, bot_id: int):
+    check = await is_bot_admin(bot_id, user_id)
+    if check is None:
+        return abort(404)
+    elif check == False:
+        return api_error(
+            "You aren't the owner of this bot. Only bot owners and authorized staff may delete bots"
+        )
+    await add_rmq_task("bot_delete_queue", {"user_id": user_id, "bot_id": bot_id})
+    
