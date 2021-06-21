@@ -1,5 +1,18 @@
+from modules.core import *
+from .models import APIResponse, BotMeta
+from ..base import API_VERSION
+from lxml.html.clean import Cleaner
+
+cleaner = Cleaner(remove_unknown_tags=False)
+
+router = APIRouter(
+    prefix = f"/api/v{API_VERSION}/users",
+    include_in_schema = True,
+    tags = [f"API v{API_VERSION} - Bots"]
+)
+
 @router.post(
-    "/users/{user_id}/bots/{bot_id}", 
+    "/{user_id}/bots/{bot_id}", 
     response_model = APIResponse, 
     dependencies=[
         Depends(RateLimiter(times=5, minutes=3)),
@@ -23,7 +36,7 @@ async def add_bot(request: Request, user_id: int, bot_id: int, bot: BotMeta):
     return api_error(rc)
 
 @router.patch(
-    "/users/{user_id}/bots/{bot_id}", 
+    "/{user_id}/bots/{bot_id}", 
     response_model = APIResponse, 
     dependencies=[
         Depends(RateLimiter(times=5, minutes=3)),
