@@ -1,5 +1,5 @@
 from modules.core import *
-from .models import APIResponse, BotRandom, Bot, BotStats, BotMeta
+from .models import APIResponse, BotRandom, Bot, BotStats
 from ..base import API_VERSION
 from lxml.html.clean import Cleaner
 

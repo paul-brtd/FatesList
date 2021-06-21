@@ -8,7 +8,7 @@ cleaner = Cleaner(remove_unknown_tags=False)
 router = APIRouter(
     prefix = f"/api/v{API_VERSION}/users",
     include_in_schema = True,
-    tags = [f"API v{API_VERSION} - Bots"]
+    tags = [f"API v{API_VERSION} - Users"]
 )
 
 @router.post(

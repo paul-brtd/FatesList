@@ -94,7 +94,7 @@ class BotActions():
 
         try:
             self.generated.extra_owners = [int(id.replace(" ", "")) for id in self.generated.extra_owners]
-            self.generated.extra_owners = list(set(ids)) # Remove extra ones and make all ints
+            self.generated.extra_owners = list(set(self.generated.extra_owners)) # Remove extra ones and make all ints
         except:
             return "One of your extra owners doesn't exist or you haven't comma-seperated them."
 
