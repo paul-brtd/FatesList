@@ -33,7 +33,7 @@ async def login_stage2(request: Request, redirect: str, join_servers: str = FFor
     async with aiohttp.ClientSession() as sess:
         async with sess.post(f"{site_url}/api/v2/oauth", json = {
             "redirect": redirect, 
-            "scopes": scopes, 
+            "scopes": scopes,
             "callback": {
                 "url": "https://fateslist.xyz/auth/login/confirm",
                 "name": "Fates List",
@@ -51,7 +51,12 @@ async def login_confirm(request: Request, code: str, scopes: str, redirect: str)
         return RedirectResponse("/")
     else:
         async with aiohttp.ClientSession() as sess:
-            async with sess.post(f"{site_url}/api/users", json = {"code": code, "scopes": scopes.split(" "), "redirect": redirect}) as res:
+            async with sess.post(f"{site_url}/api/users", json = {
+                "code": code, 
+                "scopes": scopes.split(" "),
+                "redirect": redirect,
+                "auth_type": enums.TokenType.full # Get permanent token
+            }) as res:
                 json = await res.json()
                 if res.status == 400:
                     if not json["banned"]:
