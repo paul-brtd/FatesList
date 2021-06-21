@@ -15,11 +15,12 @@ class BaseLoginInfo(BaseModel):
     redirect: Optional[str] = "/"
       
 class Login(BaseLoginInfo):
-    """Code must be used normally. 
-    Access token is only if darkstalker key (field name of darkstalker) matches
+    """
+    Code must be used normally. 
+    Access token is only if darkstalker key (BotBlock proxy) is used and its key matches
     """
     code: str
-    darkstalker: Optional[str] = None
+    darkstalker_key: Optional[str] = None
     auth_type: enums.TokenTypes
     access_token: Optional[str] = None
     

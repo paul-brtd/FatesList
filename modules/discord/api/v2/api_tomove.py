@@ -429,7 +429,7 @@ async def regenerate_user_token(request: Request, user_id: int):
     return api_success()
 
 @router.patch(
-    "/users/{user_id}/js",
+    "/users/{user_id}/js_allowed",
     dependencies = [
         Depends(user_auth_check)
     ]

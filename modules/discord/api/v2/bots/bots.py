@@ -12,7 +12,7 @@ router = APIRouter(
 )
 
 @router.get(
-    "/{bot_id}/token",
+    "/bots/{bot_id}/token",
     dependencies=[
         Depends(RateLimiter(times=5, minutes=1)), 
         Depends(user_auth_check)

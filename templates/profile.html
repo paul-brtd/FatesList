@@ -125,10 +125,10 @@
                 }
         }
   function toggleJS() {
-  	json = JSON.stringify({"js": !context.js_allowed})
+  	json = JSON.stringify({"js_allowed": !context.js_allowed})
 	headers = {"Authorization": context.user_token}
         $.ajax({
-		url: `/api/users/${context.user_id}/js`,
+		url: `/api/users/${context.user_id}/js_allowed`,
 		dataType: "json",
 		headers: headers,
 		method: "PATCH",
@@ -136,7 +136,7 @@
 		contentType: 'application/json',
 		data: json,
 		statusCode: {
-			206: function(data) {
+			200: function(data) {
 				window.location.reload()
 			}
 		}

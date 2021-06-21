@@ -55,7 +55,7 @@ async def login_confirm(request: Request, code: str, scopes: str, redirect: str)
                 "code": code, 
                 "scopes": scopes.split(" "),
                 "redirect": redirect,
-                "auth_type": enums.TokenType.full # Get permanent token
+                "auth_type": enums.TokenTypes.full # Get permanent token
             }) as res:
                 json = await res.json()
                 if res.status == 400:
