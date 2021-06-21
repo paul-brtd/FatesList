@@ -11,7 +11,7 @@ router = APIRouter(
     tags = [f"API v{API_VERSION} - Users"]
 )
 
-@router.post(
+@router.put(
     "/{user_id}/bots/{bot_id}", 
     response_model = APIResponse, 
     dependencies=[
@@ -55,7 +55,7 @@ async def edit_bot(request: Request, user_id: int, bot_id: int, bot: BotMeta):
     bot_editor = BotActions(bot_dict)
     rc = await bot_editor.edit_bot()
     if rc is None:
-        return api_success(f"{site_url}/bot/{bot_id}", status_code = 202)
+        return api_success(status_code = 202)
     return api_error(rc)
 
 
@@ -81,4 +81,4 @@ async def delete_bot(request: Request, bot_id: int):
             f"This bot cannot be deleted as it has been locked with a code of {int(lock)}: ({lock.__doc__}). If this bot is not staff locked, join the support server and run +unlock <BOT> to unlock it."
         )
     await add_rmq_task("bot_delete_queue", {"user_id": user_id, "bot_id": bot_id})
-    
+    return api_success(status_code = 202)
