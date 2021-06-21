@@ -97,8 +97,25 @@ function deleteBot(e){
 					}
 				})
 				}, 2000), 1000);
+			},
+			400: function(data) {
+				modalShow("Error", data.responseJSON.reason)
+			},
+			422: function(data) {
+				json = JSON.stringify(data.responseJSON)
+				modalShow("An error occurred during initial proccessing. Try again later", json)
+			},
+			429: function(data) {
+				modalShow("Ratelimited", "You are being ratelimited, try again in 5 minutes")
+			},
+			404: function(data) {
+				modalShow("API is down", "Unfortunately, the Fates List API is down right now. Please try again later")
+			},
+			500: function(data) {
+				modalShow("Internal Server Error", "We had an error internally on our side when proccessing your request. Please try again later.")
 			}
 		}
+	}
 }
 
 function previewLongDesc(){
