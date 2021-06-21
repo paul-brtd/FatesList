@@ -4,7 +4,7 @@ import uuid
 from aenum import Enum, IntEnum
 from config import *
 
-class TokenType(IntEnum):
+class TokenTypes(IntEnum):
     _init_ = "value __doc__"
     full = 0, "Regular user token"
     temp = 1, "Temporary user token"
