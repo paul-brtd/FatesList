@@ -30,7 +30,7 @@ async def get_votes(request: Request, bot_id: int, user_id: Optional[int] = None
     return {"votes": voter_count, "voted": voter_count != 0, "vote_epoch": ret[0].timestamp() if isinstance(ret, tuple) else 0, "vts": voter_ts, "time_to_vote": ret[1].total_seconds() if isinstance(ret, tuple) else 0, "vote_right_now": ret == True, "type": "Vote", "reason": None, "partial": False}
 
 @router.patch(
-    "/users/user_id}/bots/{bot_id}/votes", 
+    "/users/{user_id}/bots/{bot_id}/votes", 
     dependencies=[
         Depends(RateLimiter(times=5, minutes=1)),
         Depends(user_auth_check)
