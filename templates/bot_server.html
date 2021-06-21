@@ -270,9 +270,14 @@
 			    </section>
 		    	    {% endfor %}
 		    <div class="text-center">
-		    {% for page in range(1, total_review_pages + 1) %} 
-		    <a href="{{site_url}}/{{type}}/{{id}}?rev_page={{page}}#review-tab-button-fl" id="review-page-{{page}}" class="white review-pages" style="font-size: large;">{{page}}</a>
-		    {% endfor %}
+			<nav aria-label="Bot Review Paginatiom">
+				<ul class="pagination">	
+					<li class="page-item {% if rev_page == 1 %}disabled{% endif %}"><a class="page-link" href="{{site_url}}/{{type}}/{{id}}?rev_page={{rev_page - 1}}#review-tab-button-fl" {% if rev_page == 1 %}tabindex=1{% endif %}>Previous</a></li>
+					{% for page in range(1, total_review_pages + 1) %}
+						<li class="page-item"><a class="page-link" href="{{site_url}}/{{type}}/{{id}}?rev_page={{page}}#review-tab-button-fl">{{page}}</a></li>
+					{% endfor %}
+				</ul>
+			</nav>
 		    </div>
 		    </article>
 		    <script defer>
