@@ -13,19 +13,24 @@ class Callback(BaseModel):
 class BaseLoginInfo(BaseModel):
     scopes: List[str]
     redirect: Optional[str] = "/"
-
+      
 class Login(BaseLoginInfo):
     """Code must be used normally. 
-    Access token is only if bb_key matches and the user token you will get in the case of botblock will be a temp user token limited to add bot and edit bot
+    Access token is only if bb_key matches and auth type must be temp_limited
     """
     code: str
     bb_key: Optional[str] = None
+    auth_type: enums.AuthTypes
     access_token: Optional[str] = None
-    auth_type: Optional[str] = "full"
     
     @validator("access_token")
     def access_token_bb_check(cls, v, values, **kwargs):
-        pass
+        if not v:
+            return v 
+        if not secure_strcmp(values["bb_key"], bb_key):
+            raise ValueError('Invalid BotBlock key')
+        if values["auth_type"] != enums.AuthTypes.temp_limited:
+            raise ValueError('Invalid auth type. BotBlock auth type must be temp_limited')
         
 class LoginInfo(BaseLoginInfo):
     callback: Callback
