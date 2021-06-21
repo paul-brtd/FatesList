@@ -43,10 +43,14 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
     # Get user
     guild = client.get_guild(main_server)
     if not guild: # Guild is None when still connecting to discord
-        return api_error("Not yet connected to discord", 2761, status_code = 503, headers = {"Retry-After": 5})
+        return api_error(
+            "Not yet connected to discord", 
+            status_code = 503, 
+            headers = {"Retry-After": 5}
+        )
     user = guild.get_member(data.mod)
     
-    # Get permission handling recursive operations, which have a tuple where first element is for non recursive and second is for recursive
+    # Get permission while also handling multi/recursive operations, which have a tuple where first element is for non multi/recusive and second is for multi/recursive
     if isinstance(data.op.__perm__, tuple):
         if data.op.__recursive__:
             perm = data.op.__perm__[0] if bot_id != 0 else data.op.__perm__[1]
