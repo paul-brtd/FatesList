@@ -20,7 +20,7 @@ class Login(BaseLoginInfo):
     """
     code: str
     bb_key: Optional[str] = None
-    auth_type: enums.AuthTypes
+    auth_type: enums.TokenType
     access_token: Optional[str] = None
     
     @validator("access_token")
@@ -29,7 +29,7 @@ class Login(BaseLoginInfo):
             return v 
         if not secure_strcmp(values["bb_key"], bb_key):
             raise ValueError('Invalid BotBlock key')
-        if values["auth_type"] != enums.AuthTypes.temp_limited:
+        if values["auth_type"] != enums.TokenType.temp_limited:
             raise ValueError('Invalid auth type. BotBlock auth type must be temp_limited')
         
 class LoginInfo(BaseLoginInfo):
