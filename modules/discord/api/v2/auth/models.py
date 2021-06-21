@@ -16,10 +16,10 @@ class BaseLoginInfo(BaseModel):
       
 class Login(BaseLoginInfo):
     """Code must be used normally. 
-    Access token is only if bb_key matches and auth type must be temp_limited
+    Access token is only if darkstalker key (field name of darkstalker) matches
     """
     code: str
-    bb_key: Optional[str] = None
+    darkstalker: Optional[str] = None
     auth_type: enums.TokenTypes
     access_token: Optional[str] = None
     
@@ -27,10 +27,8 @@ class Login(BaseLoginInfo):
     def access_token_bb_check(cls, v, values, **kwargs):
         if not v:
             return v 
-        if not secure_strcmp(values["bb_key"], bb_key):
-            raise ValueError('Invalid BotBlock key')
-        if values["auth_type"] != enums.TokenTypes.temp_limited:
-            raise ValueError('Invalid auth type. BotBlock auth type must be temp_limited')
+        if not secure_strcmp(values["darkstalker"], darkstalker_key):
+            raise ValueError('Invalid Darkstalker key. Access token method can only be used by Darkstalker')
         
 class LoginInfo(BaseLoginInfo):
     callback: Callback
