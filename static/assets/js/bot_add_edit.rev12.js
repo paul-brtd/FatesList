@@ -53,7 +53,7 @@ function submitBot(e) {
 				modalShow("An error occurred during initial proccessing. Try again later", json)
 			},
 			429: function(data) {
-				modalShow("Ratelimited", "You are being ratelimited, try again in 5 minutes")
+				modalShow("Ratelimited", data.responseJSON.detail)
 			},
 			404: function(data) {
 				modalShow("API is down", "Unfortunately, the Fates List API is down right now. Please try again later")
@@ -105,7 +105,7 @@ function deleteBot() {
 				modalShow("An error occurred during initial proccessing. Try again later", json)
 			},
 			429: function(data) {
-				modalShow("Ratelimited", "You are being ratelimited, try again in 5 minutes")
+				modalShow("Ratelimited", data.responseJSON.detail)
 			},
 			404: function(data) {
 				modalShow("API is down", "Unfortunately, the Fates List API is down right now. Please try again later")
@@ -141,7 +141,7 @@ function previewLongDesc(){
                $j("#ld-preview").html(data.html)
            },
            "429": function(data) {
-		modalShow("Rate Limited", "You have been rate limited from using the preview API.")
+		modalShow("Rate Limited", data.responseJSON.detail)
            },
 	   "422": function(data) {
 	   	modalShow("Error", JSON.stringify(data))
