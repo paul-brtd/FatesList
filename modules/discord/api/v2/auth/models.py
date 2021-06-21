@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 import modules.models.enums as enums
 from ..base_models import BaseUser, APIResponse, AccessToken
 from typing import Optional, List, Union
@@ -15,7 +15,17 @@ class BaseLoginInfo(BaseModel):
     redirect: Optional[str] = "/"
 
 class Login(BaseLoginInfo):
+    """Code must be used normally. 
+    Access token is only if bb_key matches and the user token you will get in the case of botblock will be a temp user token limited to add bot and edit bot
+    """
     code: str
+    bb_key: Optional[str] = None
+    access_token: Optional[str] = None
+    auth_type: Optional[str] = "full"
+    
+    @validator("access_token")
+    def access_token_bb_check(cls, v, values, **kwargs):
+        pass
         
 class LoginInfo(BaseLoginInfo):
     callback: Callback
