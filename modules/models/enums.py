@@ -8,7 +8,6 @@ class TokenTypes(IntEnum):
     _init_ = "value __doc__"
     full = 0, "Regular user token"
     temp = 1, "Temporary user token"
-    temp_limited = 2, "Temporary user token limited to add bot and edit bot and set bot stats"
 
 class PromotionType(IntEnum):
     _init_ = 'value __doc__'
