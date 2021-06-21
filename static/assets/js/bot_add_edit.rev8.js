@@ -69,7 +69,7 @@ function submitBot(e) {
     }
 };
 
-function deleteBot(e){
+function deleteBot(e) {
 	bot_id_prompt = prompt("In order to confirm your request, please enter the Bot ID for your bot", "Bot ID...")
 	if(!bot_id_prompt || bot_id_prompt != context.bot_id) {
              	// User did not type proper bot id
@@ -115,7 +115,7 @@ function deleteBot(e){
 				modalShow("Internal Server Error", "We had an error internally on our side when proccessing your request. Please try again later.")
 			}
 		}
-	}
+	})
 }
 
 function previewLongDesc(){
