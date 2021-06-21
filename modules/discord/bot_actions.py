@@ -43,17 +43,6 @@ async def bot_settings_page(request: Request, bot_id: int, csrf_protect: CsrfPro
     else:
         return RedirectResponse("/")
 
-@router.post("/{bot_id}/delete", dependencies=[Depends(RateLimiter(times=1, minutes=2))])
-async def delete_bot(request: Request, bot_id: int):
-    if "user_id" in request.session.keys():
-        check = await is_bot_admin(int(bot_id), int(request.session.get("user_id")))
-        if check is None:
-            return await templates.TemplateResponse("message.html", {"request": request, "message": "This bot doesn't exist in our database."})
-        elif check == False:
-            return await templates.TemplateResponse("message.html", {"request": request, "message": "You aren't the owner of this bot.", "context": "Only owners and admins can delete bots"})
-        await add_rmq_task("bot_delete_queue", {"user_id": int(request.session["user_id"]), "bot_id": bot_id})
-    return RedirectResponse("/", status_code = 303)
-
 @router.post("/{bot_id}/reviews/new")
 async def new_reviews(request: Request, bot_id: int, bt: BackgroundTasks, rating: float = FForm(5.1), review: str = FForm("This is a placeholder review as the user has not posted anything...")):
     if "user_id" not in request.session.keys():
