@@ -7,7 +7,10 @@ This is the source code for [Fates List](https://fateslist.xyz/)
 BTW please add your bots there if you want to support us
 
 !!! danger
-    Fates List is extremely difficult to the point of almost impossible (without knowledge in python) to self host. It requires Ubuntu (support for Windows and MacOS will never be happening since we do not use it). It also needs a huge amount of moving parts including PostgreSQL 14 (older versions *may* work but will never be tested), Redis and RabbitMQ. In short: **This page is only meant for people who are developing or wish to contribute to Fates List**
+    Fates List is extremely difficult to the point of almost impossible (without knowledge in python) to self host. It requires Ubuntu (support for Windows and MacOS will never be happening since we do not use it). It also needs a huge amount of moving parts including PostgreSQL 14 (older versions *may* work but will never be tested), Redis and RabbitMQ. In short: **This page is only meant for people who wish to contribute to Fates List**
+
+!!! note
+    Developers should use the private NextCloud to get a proper PostgreSQL 14 + Redis container instead of installing and configuring postgres
 
 **How to deploy**
 
