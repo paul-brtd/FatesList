@@ -70,6 +70,7 @@ async def _new_task(queue):
         if backends.ackall(queue) or not _ret["err"]: # If no errors recorded
             message.ack()
         logger.opt(ansi = True).info(f"<m>Message {curr} Handled</m>")
+        logger.debug(f"Message JSON of {_json}")
         await redis_db.incr(f"{instance_name}.rmq_total_msgs", 1)
         stats.total_msgs += 1
         stats.handled += 1
@@ -107,17 +108,18 @@ class Stats():
         self.load_time = None # Amount of time taken to load site
         self.total_msgs = 0 # Total messages
 
-    def cure(self, index):
+    async def cure(self, index):
         """'Cures a error that has been handled"""
         self.errors -= 1
-        del self.exc[index]
-        del self.err_msgs[index]
+        await self.err_msgs[index].ack()
 
-    def cureall(self):
+    async def cureall(self):
         i = 0
         while i < len(self.err_msgs):
-            self.cure(i)
+            await self.cure(i)
             i+=1
+        self.err_msgs = []
+        return "Be sure to reload rabbitmq after this to clear exceptions"
 
     def __str__(self):
         s = []
@@ -133,9 +135,9 @@ async def run_worker(loop):
     asyncio.create_task(client.start(TOKEN_MAIN))
     asyncio.create_task(client_server.start(TOKEN_SERVER))
     builtins.rabbitmq_db = await aio_pika.connect_robust(
-        f"amqp://fateslist:{rabbitmq_pwd}@127.0.0.1/"
+        f"amqp://fateslist:{rabbitmq_pwd}@127.0.0.1"
     )
-    builtins.db = await asyncpg.create_pool(host="localhost", port=12345, user=pg_user, database=f"fateslist_{instance_name}")
+    builtins.db = await asyncpg.create_pool(host="localhost", port=12345, user=pg_user, database=f"fateslist_{instance_name}", password = pg_pwd)
     builtins.redis_db = await aioredis.from_url('redis://localhost:12348', db = 1)
     logger.opt(ansi = True).debug("Connected to databases (postgres, redis and rabbitmq)")
     await backends.loadall() # Load all the backends and run prehooks

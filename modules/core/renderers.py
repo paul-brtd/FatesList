@@ -102,13 +102,9 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
     owners_lst = tuple([(await get_user(obj["owner"], user_only = True)) for obj in owners if obj["owner"] is not None])
     owners_html = gen_owner_html(owners_lst)
     if bot["features"] is None:
-        features = []
+        bot_features = ""
     else:
-        features = bot["features"]
-    
-    bot_features = ", ".join([f"<a class='long-desc-link' href='/feature/{feature}'>{feature.replace('_', ' ').title()}</a>" for feature in features])
-    if len(features) > 1:
-        bot_features = replace_last(bot_features, ",", " and")
+        bot_features = "<br/>".join([f"<a class='long-desc-link' href='/feature/{feature}'>{features[feature]['name']}</a>" for feature in bot["features"]])
     if bot_info:
         bot = dict(bot)
         user = await get_bot(bot_id)

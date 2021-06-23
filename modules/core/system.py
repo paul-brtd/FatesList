@@ -108,7 +108,7 @@ def calc_tags(TAGS):
 
 async def setup_db():
     """Function to setup the asyncpg connection pool"""
-    db = await asyncpg.create_pool(host="localhost", port=12345, user=pg_user, database=f"fateslist_{instance_name}")
+    db = await asyncpg.create_pool(host="localhost", port=12345, user=pg_user, database=f"fateslist_{instance_name}", password = pg_pwd)
     return db
 
 def fl_openapi(app):
