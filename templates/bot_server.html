@@ -174,8 +174,8 @@
 			</span>
 			<div style="text-align: left;">
 				{% macro review(rev, index) %}
-				<div class="review-user" style="margin-left: 2.5%; border: solid;">
-		   			<div class="review-left">
+				<div class="review-user" style="margin-left: 3%; border: solid;">
+		   			<div class="review-left" style="margin-bottom: 23px">
 						<div class="review-header" style="margin-bottom: 7px; font-weight: bold;">
 							<a href='/profile/{{rev.user_id}}' class="white">
 								<img style="border-radius: 50%; width: 24px;" data-src="{{rev.user.avatar.replace('.gif', '.webp')}}" class="lozad review-avatar" alt="{{rev.user.username}}'s avatar">
@@ -196,7 +196,6 @@
 							{% endif %}
 							{% if user_id == rev.user_id or staff[0] %}
 								<a href='javascript:void' style='font-weight: bold; margin-left: 3px;' class="long-desc-link" onclick="botReviewEditPane(this, '{{rev.id}}')">Edit</a>
-								<a href='javascript:void' style='font-weight: bold; margin-left: 3px;' class="long-desc-link" onclick="deleteReview('{{rev.id}}')">Delete</a>
 							{% endif %}
 							</div>
 							<span style="margin-left: 30px !important; color: white" id="review_text-{{rev.id}}">{{rev.review}}</span>
@@ -212,18 +211,21 @@
 							</form>
 							{% endif %}
 							{% if user_id == rev.user_id or staff[0] %}
-       								<form method="POST" id="review-{{rev.id}}" style="display: none; width: 100%;" action="/bot/{{id}}/reviews/{{rev.id}}/edit" class="white">
+								<div id="review-{{rev.id}}" style="display: none; width: 100%; margin-bottom: 10px;">
+       								<form method="POST" id="revieweditor-{{rev.id}}" style="width: 100%;" action="/bot/{{id}}/reviews/{{rev.id}}/edit" class="white">
 									<input type="hidden" name="id" value="{{rev.id}}" /> <!-- The ID to update -->
 									<label for="rating">On a scale of 1 to 10, how much did you like this bot?</label><br/>
 									<input class='slider range-slider' type="range" name="rating" min="0.1" max="10" value='{{rev.star_rating}}' step='0.1' style="width:100%;" output="rating-desc-{{rev.id}}-{{index}}"/>
 									<strong><p id='rating-desc-{{rev.id}}-{{index}}' style="color: white;"></p></strong>
 									<label for="review">Please write a few words about the bot (in your opinion)</label>
 									<textarea id='rating-review' name="review" type="text" class="form-control fform" style="min-height: 100px; height: 100px;" required minlength="9" placeholder="This bot is a really good bot because of X, Y and Z however...">{{rev.review}}</textarea>
-									<button type="submit" class="btn btn-outline-light">Edit</button>
+									<button type="submit" class="btn btn-outline-light" style="float: left; margin-right: 10px">Edit</button>
 								</form>
+								<button class="btn btn-danger" onclick="deleteReview('{{rev.id}}')">Delete</button>
+								</div>
 							{% endif %}
 						</div>
-					<div>
+					<div style="margin-left: 17px">
 						{% for rep in rev.replies %}
        							{{ review(rep, loop.index) }}
 						{% endfor %}
@@ -270,12 +272,17 @@
 			    </section>
 		    	    {% endfor %}
 		    <div class="text-center">
-			<nav aria-label="Bot Review Paginatiom">
-				<ul class="pagination">	
-					<li class="page-item {% if rev_page == 1 %}disabled{% endif %}"><a class="page-link" href="{{site_url}}/{{type}}/{{id}}?rev_page={{rev_page - 1}}#review-tab-button-fl" {% if rev_page == 1 %}tabindex=1{% endif %}>Previous</a></li>
+			<nav aria-label="Bot Review Pagination">
+				<ul class="pagination justify-content-center">
+					{% if review_page > 1 %}
+						<li class="page-item"><a class="page-link white" href="{{site_url}}/{{type}}/{{id}}?rev_page={{review_page - 1}}#review-tab-button-fl">Previous</a></li>
+					{% endif %}
 					{% for page in range(1, total_review_pages + 1) %}
-						<li class="page-item"><a class="page-link" href="{{site_url}}/{{type}}/{{id}}?rev_page={{page}}#review-tab-button-fl">{{page}}</a></li>
+						<li class="page-item {% if review_page == page %}active{% endif %}"><a class="page-link white" href="{{site_url}}/{{type}}/{{id}}?rev_page={{page}}#review-tab-button-fl">{{page}}</a></li>
 					{% endfor %}
+					{% if review_page < total_review_pages %}
+						<li class="page-item"><a class="page-link white" href="{{site_url}}/{{type}}/{{id}}?rev_page={{review_page + 1}}#review-tab-button-fl">Next</a></li>
+					{% endif %}
 				</ul>
 			</nav>
 		    </div>

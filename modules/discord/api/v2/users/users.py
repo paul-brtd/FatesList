@@ -66,7 +66,7 @@ async def edit_bot(request: Request, user_id: int, bot_id: int, bot: BotMeta):
         Depends(user_auth_check)
     ]
 )
-async def delete_bot(request: Request, bot_id: int):
+async def delete_bot(request: Request, user_id: int, bot_id: int):
     check = await is_bot_admin(bot_id, user_id)
     if check is None:
         return abort(404)

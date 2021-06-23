@@ -61,7 +61,7 @@ async def startup_tasks(app):
     logger.info("Discord init beginning")
     asyncio.create_task(client.start(TOKEN_MAIN))
     asyncio.create_task(client_servers.start(TOKEN_SERVER))
-    builtins.redis_db = await aioredis.from_url('redis://localhost', db = 1)
+    builtins.redis_db = await aioredis.from_url('redis://localhost:12348', db = 1)
     workers = os.environ.get("WORKERS")
     asyncio.create_task(status(workers))
     await asyncio.sleep(4)

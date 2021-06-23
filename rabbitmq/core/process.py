@@ -136,7 +136,7 @@ async def run_worker(loop):
         f"amqp://fateslist:{rabbitmq_pwd}@127.0.0.1/"
     )
     builtins.db = await asyncpg.create_pool(host="localhost", port=12345, user=pg_user, database=f"fateslist_{instance_name}")
-    builtins.redis_db = await aioredis.from_url('redis://localhost', db = 1)
+    builtins.redis_db = await aioredis.from_url('redis://localhost:12348', db = 1)
     logger.opt(ansi = True).debug("Connected to databases (postgres, redis and rabbitmq)")
     await backends.loadall() # Load all the backends and run prehooks
     builtins.stats = Stats()
