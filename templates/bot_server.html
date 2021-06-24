@@ -347,22 +347,10 @@
 	</section>
 </div>	
 <script>
-	var context = {
-		"id": "{{id}}",
-		"user_id": "{{user_id}}",
-		"bot_token": "{% if data.api_token %}{{data.api_token}}{% endif %}",
-		"user_token": "{{user_token}}",
-		"type": "{{type}}",
-		"logged_in": {% if user_id %}true{% else %}false{% endif %},
-		"bot_admin": {% if data.api_token %}true{% else %}false{% endif %},
-		"reviews": {
-			"average_rating": {{average_rating}}
-		},
-		"site_lang": "{{site_lang}}"
-	}
-	</script>
-	<script src="https://cdn.jsdelivr.net/gh/Fates-List/FatesList@main/static/assets/js/bots_servers.rev9.min.js" defer></script>
-	</div>
+	var context = {{ orjson.dumps(context) }}
+</script>
+<script src="https://cdn.jsdelivr.net/gh/Fates-List/FatesList@main/static/assets/js/bots_servers.rev9.min.js" defer></script>
+</div>
 {% endblock %} 
 {% block footer %} 
 {% endblock %}
