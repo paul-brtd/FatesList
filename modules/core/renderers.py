@@ -116,6 +116,17 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
     _tags_fixed_bot = [tag for tag in tags_fixed if tag["id"] in bot["tags"]]
     bt.add_task(add_ws_event, bot_id, {"m": {"e": enums.APIEvents.bot_view}, "ctx": {"user": request.session.get('user_id'), "widget": False}})
     reviews = await parse_reviews(bot_id, page = rev_page)
+    
+    context = {
+        "id": bot_id, 
+        "bot_token": bot["api_token"] if bot["api_token"] else "",
+        "type": "bot",
+        "bot_admin": bot_admin,
+        "reviews": {
+            "average_rating": reviews[1]
+        }
+    }
+    
     data = {"data": bot, "type": "bot", "id": bot_id, "tags_fixed": _tags_fixed_bot, "promos": promos, "maint": maint, "admin": bot_admin, "guild": main_server, "bot_reviews": reviews[0], "average_rating": reviews[1], "total_reviews": reviews[2], "review_page": rev_page, "total_review_pages": reviews[3], "per_page": reviews[4]}
 
     if not api:
