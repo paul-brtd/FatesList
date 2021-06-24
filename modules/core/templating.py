@@ -52,15 +52,22 @@ def intl_text(text: str, lang: str, link: bool = False, linked_langs: dict = {},
         # List of metadata attributes about our section to forward handle (abc=def abcx fgh=a will give {"abc" def abcx, "fgh": a} where abcx is forward handled)
         forward_handling = None # Whether we are currently processing something that needs to be handled
         for split in meta_str.split(" "): # Split it into [a=b, c=d] where original was a=b c=d
+            
             split_list = split.replace(" ", "").split("=") # Then make the a=b into [a, b]
+            
             if len(split_list) != 1: # We have a equal to sign!!!
+                
                 if split_list[1].startswith('"') or split_list[1].startswith("'"):
                     forward_handling = split_list[0] # Start forward handle at begin quotes
+                    
                 elif split_list[1].endswith('"') or split_list[1].endswith("'"):
                     forward_handling = None # Stop forward handle at quotes
+                    
                 meta |= {split_list[0]: split_list[1]} # Add to meta
+                
             elif forward_handling: # Handle forward handling
                 meta[forward_handling] += " " + split_list[0] # Add on split stuff
+                
         pre = None # Default no pre (inheritance)
         
         link_opt = meta.get("link")
@@ -128,18 +135,25 @@ class templates():
         arg_dict["len"] = len
         arg_dict["ireplace"] = ireplace
         arg_dict["ireplacem"] = ireplacem
+        
         base_context = {
             "user_id": arg_dict.get("user_id"),
             "user_token": arg_dict.get("user_token"),
             "site_lang": arg_dict.get("site_lang"),
             "logged_in": True if "user_id" in arg_dict.keys() else False
         }
+        
+        arg_dict["context"] = context | base_context
+        
         if status is None:
             ret = _templates.TemplateResponse(f, arg_dict)
+            
         else:
             ret = _templates.TemplateResponse(f, arg_dict, status_code = status)
+            
         if arg_dict.get("csrf_protect"):
             arg_dict["csrf_protect"].set_csrf_cookie(ret)
+            
         return ret
 
     @staticmethod
