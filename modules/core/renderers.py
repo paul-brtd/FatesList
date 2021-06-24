@@ -119,7 +119,7 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
     
     context = {
         "id": bot_id, 
-        "bot_token": bot["api_token"] if bot["api_token"] else "",
+        "bot_token": bot["api_token"] if bot["api_token"] else None,
         "type": "bot",
         "bot_admin": bot_admin,
         "reviews": {
@@ -130,7 +130,7 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
     data = {"data": bot, "type": "bot", "id": bot_id, "tags_fixed": _tags_fixed_bot, "promos": promos, "maint": maint, "admin": bot_admin, "guild": main_server, "bot_reviews": reviews[0], "average_rating": reviews[1], "total_reviews": reviews[2], "review_page": rev_page, "total_review_pages": reviews[3], "per_page": reviews[4]}
 
     if not api:
-        return await templates.TemplateResponse("bot_server.html", {"request": request, "replace_last": replace_last, "csrf_protect": csrf_protect} | data)
+        return await templates.TemplateResponse("bot_server.html", {"request": request, "replace_last": replace_last, "csrf_protect": csrf_protect} | data, context = context)
     else:
         data["bot_id"] = str(bot_id)
         return data
