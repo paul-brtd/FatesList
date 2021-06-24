@@ -83,7 +83,7 @@ def intl_text(text: str, lang: str, link: bool = False, linked_langs: dict = {},
 # Template class renderer
 class templates():
     @staticmethod
-    async def TemplateResponse(f, arg_dict, not_error = True):
+    async def TemplateResponse(f, arg_dict: dict, *, context: dict = {}, not_error: bool = True):
         guild = client.get_guild(main_server)
         try:
             request = arg_dict["request"]
@@ -128,6 +128,12 @@ class templates():
         arg_dict["len"] = len
         arg_dict["ireplace"] = ireplace
         arg_dict["ireplacem"] = ireplacem
+        base_context = {
+            "user_id": arg_dict.get("user_id"),
+            "user_token": arg_dict.get("user_token"),
+            "site_lang": arg_dict.get("site_lang"),
+            "logged_in": True if "user_id" in arg_dict.keys() else False
+        }
         if status is None:
             ret = _templates.TemplateResponse(f, arg_dict)
         else:
