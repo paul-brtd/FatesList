@@ -1,2 +1,0 @@
-/home/meow/.local/lib/python3.10/site-packages/websockets/protocol.py
-/home/meow/.local/lib/python3.10/site-packages/fastapi_csrf_protect/core.py
