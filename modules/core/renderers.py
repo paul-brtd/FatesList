@@ -18,7 +18,13 @@ async def render_index(request: Request, api: bool):
     top_voted = await do_index_query(add_query = "ORDER BY votes DESC", state = [0])
     new_bots = await do_index_query(add_query = "ORDER BY created_at DESC", state = [0]) # and certified = true ORDER BY votes
     certified_bots = await do_index_query(add_query = "ORDER BY votes DESC", state = [6]) # State 6 is certified
-    base_json = {"tags_fixed": tags_fixed, "top_voted": top_voted, "new_bots": new_bots, "certified_bots": certified_bots, "roll_api": "/api/bots/random"}
+    base_json = {
+        "tags_fixed": tags_fixed, 
+        "top_voted": top_voted, 
+        "new_bots": new_bots, 
+        "certified_bots": certified_bots, 
+        "roll_api": "/api/bots/random"
+    }
     if not api:
         return await templates.TemplateResponse("index.html", {"request": request, "random": random} | base_json)
     else:
@@ -26,25 +32,12 @@ async def render_index(request: Request, api: bool):
 
 #@jit(nopython = True)
 def gen_owner_html(owners_lst: tuple):
-    """
-    Generate the owner html, this is JIT'd for better performance
-    """
+    """Generate the owner html"""
     first_done = False
     last_done = False
-    owners_html = '<span class="iconify" data-icon="mdi-crown" data-inline="false"></span>' # First owner will always be main and hence should have the crown
-    for i in range(0, len(owners_lst)):
-        owner = owners_lst[i]
-        if owner is None: 
-            continue
-        if last_done:
-            owners_html += " and "
-        elif first_done:
-            owners_html += ", "
-        owners_html += "<a class='long-desc-link' href='/profile/" + owner[0] + "'>" + owner[1] + "</a>"
-        if i >= len(owners_lst) - 2: # Twi to get last guy
-            last_done = True
-        else:
-            first_done = True
+    # First owner will always be main and hence should have the crown
+    owners_html = '<span class="iconify" data-icon="mdi-crown" data-inline="false"></span>'
+    owners_html += "<br/>".join([f"<a class='long-desc-link' href='/profile/{owner[0]}'>{owner[1]}</a>" for owner in owners_lst if owner]
     return owners_html
 
 async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bool, rev_page: int = 1):
@@ -64,7 +57,9 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
             main = "Bot Not Found"
         ) # Otherwise HTML error
     bot = dict(bot) | {"tags": [tag["tag"] for tag in tags]}
-    owners = await db.fetch("SELECT DISTINCT ON (owner) owner, main FROM bot_owner WHERE bot_id = $1 ORDER BY owner, main DESC", bot_id) # Get all bot owners
+                             
+    # Get all bot owners
+    owners = await db.fetch("SELECT DISTINCT ON (owner) owner, main FROM bot_owner WHERE bot_id = $1 ORDER BY owner, main DESC", bot_id)
     _owners = []
     for owner in owners:
         if owner["main"]: _owners.insert(0, owner)
@@ -85,7 +80,23 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
             ldesc = bleach.clean(ldesc)
 
         # Take the h1...h5 anad drop it one lower and fix peoples stupidity and some nice patches to the site to improve accessibility
-    long_desc_replace_tuple = (("<h1", "<h2 style='text-align: center'"), ("h2", "h3"), ("h4", "h5"), ("h6", "p"), ("<a", "<a class='long-desc-link ldlink'"), ("<!DOCTYPE", ""), ("html>", ""), ("<body", ""), ("div", "article"), (".click", ""), ("bootstrap.min.css", ""), ("bootstrap.css", ""), ("jquery.min.js", ""), ("jquery.js", ""), ("fetch(", ""))
+    long_desc_replace_tuple = (
+        ("<h1", "<h2 style='text-align: center'"), 
+        ("h2", "h3"),
+        ("h4", "h5"),
+        ("h6", "p"),
+        ("<a", "<a class='long-desc-link ldlink'"), 
+        ("<!DOCTYPE", ""), 
+        ("html>", ""), 
+        ("<body", ""), 
+        ("div", "article"), 
+        (".click", ""),
+        ("bootstrap.min.css", ""),
+        ("bootstrap.css", ""), 
+        ("jquery.min.js", ""), 
+        ("jquery.js", ""), 
+        ("fetch(", "")
+    )
     ldesc = ireplacem(long_desc_replace_tuple, ldesc)
 
     if "user_id" in request.session.keys():
