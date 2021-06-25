@@ -44,7 +44,10 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
     if bot_id >= 9223372036854775807: # Max size of bigint
         return abort(404)
     bot = await db.fetchrow(
-        "SELECT js_allowed, prefix, shard_count, state, description, bot_library AS library, banner, website, votes, servers, bot_id, discord AS support, banner, github, features, invite_amount, css, long_description_type, long_description, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", 
+        """SELECT js_allowed, prefix, shard_count, state, description, bot_library AS library, 
+        banner, website, votes, servers, bot_id, discord AS support, banner, github, features, 
+        invite_amount, css, long_description_type, long_description, donate, privacy_policy, 
+        nsfw FROM bots WHERE bot_id = $1""", 
         bot_id
     )
     tags = await db.fetch("SELECT tag FROM bot_tags WHERE bot_id = $1", bot_id)
@@ -59,7 +62,10 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
     bot = dict(bot) | {"tags": [tag["tag"] for tag in tags]}
                              
     # Get all bot owners
-    owners = await db.fetch("SELECT DISTINCT ON (owner) owner, main FROM bot_owner WHERE bot_id = $1 ORDER BY owner, main DESC", bot_id)
+    owners = await db.fetch(
+        "SELECT DISTINCT ON (owner) owner, main FROM bot_owner WHERE bot_id = $1 ORDER BY owner, main DESC", 
+        bot_id
+    )
     _owners = []
     for owner in owners:
         if owner["main"]: _owners.insert(0, owner)
