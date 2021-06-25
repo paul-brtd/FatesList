@@ -109,3 +109,18 @@ class Bot(DiscordUser):
     
     async def invite_url(self):
         """Fetch the discord invite URL without any side effects"""
+        bot = await db.fetchrow("SELECT invite, invite_amount FROM bots WHERE bot_id = $1", self.id)
+        if bot is None:
+            return None
+        
+        if not bot["invite"] or bot["invite"].startswith("P:"):
+            perm = bot["invite"].split(":")[1].split("|")[0] if bot["invite"] and bot["invite"].startswith("P:") else 0
+            return f"https://discord.com/api/oauth2/authorize?client_id={self.id}&permissions={perm}&scope=bot%20applications.commands"
+        
+        return bot["invite"]
+    
+    async def invite(self, user_id: Optional[int] = None):
+        """Invites a user to a bot updating invite amount"""
+        await db.execute("UPDATE bots SET invite_amount = invite_amount + 1 WHERE bot_id = $2", self.id)
+        await add_ws_event(bot_id, {"m": {"e": enums.APIEvents.bot_invite}, "ctx": {"user": str(user_id)}})
+        return await self.invite_url()
