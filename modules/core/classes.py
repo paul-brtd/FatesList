@@ -13,4 +13,4 @@ class DiscordUser(BaseModel):
 class User(DiscordUser):
     async def fetch(self):
         """Fetch a user object from the discord API"""
-        return await get_any(self.id)
+        return await get_user(self.id)
