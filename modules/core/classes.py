@@ -101,3 +101,11 @@ class User(DiscordUser):
     else:
         badges = user["badges"] = Badge.from_user(user_dpy, badges, approved_bots)
     return {"bots": bots, "approved_bots": approved_bots, "certified_bots": certified_bots, "bot_developer": approved_bots != [], "certified_developer": certified_bots != [], "profile": user_ret, "badges": badges, "defunct": user_dpy is None, "user": user_obj}
+
+class Bot(DiscordUser):
+    async def fetch(self):
+        """Fetch a user object from our cache"""
+        return await get_user(self.id)
+    
+    async def invite_url(self):
+        """Fetch the discord invite URL without any side effects"""
