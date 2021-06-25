@@ -5,7 +5,6 @@ import uuid
 from typing import List, Optional, Union
 
 import aiohttp
-from aiohttp_requests import requests
 from pydantic import BaseModel
 
 from config import *

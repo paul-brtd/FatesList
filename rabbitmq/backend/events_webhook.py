@@ -75,13 +75,20 @@ async def backend(json, *, webhook_url, webhook_type, api_token, id, webhook_tar
     # Webhook sending with 7 retries
     resolved_error = False 
     for i in range(0, 7):
-        res = await requests.post(webhook_url, json = json, headers = {"Authorization": webhook_key}, timeout = 15)
         try:
-            if int(str(res.status)[0]) in (2, 4):
-                logger.success(f"Webhook Post Returned {res.status}. Not retrying as this is either a success or a client side error")
-                return await _resolve_event(event_id, enums.WebhookResolver.posted)
-            else:
-                logger.warning(f"URL did not return 2xx or a client-side 4xx error and sent {res.status} instead. Retrying...", "red")
+            async with aiohttp.ClientSession() as sess:
+                async with sess.post(webhook_url, json = json, headers = {"Authorization": webhook_key}, timeout = 15) as res:
+                    if int(str(res.status)[0]) in (2, 4):
+                        logger.success(
+                            f"Webhook Post Returned {res.status}. Not retrying as this is either a success or a client side error"
+                        )
+                        return await _resolve_event(event_id, enums.WebhookResolver.posted)
+                
+                    else:
+                        logger.warning(
+                            f"URL did not return 2xx or a client-side 4xx error and sent {res.status} instead. Retrying...", 
+                            "red"
+                        )
         except Exception as exc:
             # Had an error sending
             logger.warning(f"Error when sending -> {type(exc).__name__}: {exc}")

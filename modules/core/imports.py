@@ -30,7 +30,6 @@ import lxml
 import markdown
 import orjson
 import sentry_sdk
-from aiohttp_requests import requests
 from aioredis.exceptions import ConnectionError as ServerConnectionClosedError
 from discord_components import Button, DiscordComponents
 from fastapi import APIRouter, BackgroundTasks, Depends, FastAPI, File
