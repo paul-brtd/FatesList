@@ -92,7 +92,7 @@ async def login_user(request: Request, data: Login):
         if not access_token:
             raise ValueError("Invalid access token")
         userjson = await discord_o.get_user_json(access_token["access_token"])
-        if not userjson:
+        if not userjson or not userjson.get("id"):
             raise ValueError("Invalid user json")
     except Exception as exc:
         return api_error(
