@@ -2,24 +2,25 @@
 Handles rendering of bots, index, search and profile search etc.
 """
 
-from .imports import *
-from .permissions import *
-from .helpers import *
-from .templating import *
-from .events import *
-from .reviews import *
 import bleach
 from lxml.html.clean import Cleaner
 
+from .events import *
+from .helpers import *
+from .imports import *
+from .permissions import *
+from .reviews import *
+from .templating import *
+
 cleaner = Cleaner()
 
-async def render_index(request: Request, api: bool, csrf_protect: CsrfProtect):
+async def render_index(request: Request, api: bool):
     top_voted = await do_index_query(add_query = "ORDER BY votes DESC", state = [0])
     new_bots = await do_index_query(add_query = "ORDER BY created_at DESC", state = [0]) # and certified = true ORDER BY votes
     certified_bots = await do_index_query(add_query = "ORDER BY votes DESC", state = [6]) # State 6 is certified
     base_json = {"tags_fixed": tags_fixed, "top_voted": top_voted, "new_bots": new_bots, "certified_bots": certified_bots, "roll_api": "/api/bots/random"}
     if not api:
-        return await templates.TemplateResponse("index.html", {"request": request, "random": random, "csrf_protect": csrf_protect} | base_json)
+        return await templates.TemplateResponse("index.html", {"request": request, "random": random} | base_json)
     else:
         return base_json
 
@@ -46,15 +47,22 @@ def gen_owner_html(owners_lst: tuple):
             first_done = True
     return owners_html
 
-async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bool, rev_page: int = 1, csrf_protect: CsrfProtect = None):
+async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bool, rev_page: int = 1):
     if bot_id >= 9223372036854775807: # Max size of bigint
         return abort(404)
-    bot = await db.fetchrow("SELECT js_allowed, prefix, shard_count, state, description, bot_library AS library, banner, website, votes, servers, bot_id, discord AS support, banner, github, features, invite_amount, css, long_description_type, long_description, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", bot_id)
+    bot = await db.fetchrow(
+        "SELECT js_allowed, prefix, shard_count, state, description, bot_library AS library, banner, website, votes, servers, bot_id, discord AS support, banner, github, features, invite_amount, css, long_description_type, long_description, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", 
+        bot_id
+    )
     tags = await db.fetch("SELECT tag FROM bot_tags WHERE bot_id = $1", bot_id)
     if not bot or not tags:
         if api:
             return abort(404) # If API, just regular 404 JSON
-        return await templates.e(request, "It might still be in our RabbitMQ queue waiting to be added to our database if you recently added it. Try reloading!", main = "Bot Not Found") # Otherwise HTML error
+        return await templates.e(
+            request, 
+            "It might still be in our RabbitMQ queue waiting to be added to our database if you recently added it. Try reloading!",
+            main = "Bot Not Found"
+        ) # Otherwise HTML error
     bot = dict(bot) | {"tags": [tag["tag"] for tag in tags]}
     owners = await db.fetch("SELECT DISTINCT ON (owner) owner, main FROM bot_owner WHERE bot_id = $1 ORDER BY owner, main DESC", bot_id) # Get all bot owners
     _owners = []
@@ -105,32 +113,60 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
         bot_features = ""
     else:
         bot_features = "<br/>".join([f"<a class='long-desc-link' href='/feature/{feature}'>{features[feature]['name']}</a>" for feature in bot["features"]])
+    
     if bot_info:
         bot = dict(bot)
         user = await get_bot(bot_id)
         user["name"] = user["username"]
-        bot = bot | {"votes": human_format(bot["votes"]), "servers": human_format(bot["servers"]), "banner": banner.replace("\"", "").replace("'", "").replace("http://", "https://").replace("(", "").replace(")", "").replace("file://", ""), "shards": human_format(bot["shard_count"]), "owners_html": owners_html, "features": bot_features, "long_description": ldesc.replace("window.location", "").replace("document.ge", ""), "info": user, "long_description_type": bot["long_description_type"]}
-        #await db.execute("UPDATE bots SET username_cached = $2 WHERE bot_id = $1", int(bot_id), bot_info["username"])   
+        bot_extra = {
+            "votes": human_format(bot["votes"]), 
+            "servers": human_format(bot["servers"]),
+            "banner": ireplacem(banner_replace_tuple, banner),
+            "shards": human_format(bot["shard_count"]), 
+            "owners_html": owners_html, 
+            "features": bot_features,
+            "long_description": ireplacem(ldesc_replace_tuple, ldesc),
+            "info": user, 
+            "long_description_type": bot["long_description_type"]
+        }
+        bot |= bot_extra
+    
     else:
         return await templates.e(request, "Bot Not Found")
+    
     _tags_fixed_bot = [tag for tag in tags_fixed if tag["id"] in bot["tags"]]
     bt.add_task(add_ws_event, bot_id, {"m": {"e": enums.APIEvents.bot_view}, "ctx": {"user": request.session.get('user_id'), "widget": False}})
     reviews = await parse_reviews(bot_id, page = rev_page)
     
     context = {
-        "id": bot_id, 
+        "id": str(bot_id), 
         "bot_token": bot["api_token"] if bot["api_token"] else None,
         "type": "bot",
         "bot_admin": bot_admin,
         "reviews": {
-            "average_rating": reviews[1]
+            "average_rating": float(reviews[1])
         }
     }
     
-    data = {"data": bot, "type": "bot", "id": bot_id, "tags_fixed": _tags_fixed_bot, "promos": promos, "maint": maint, "admin": bot_admin, "guild": main_server, "bot_reviews": reviews[0], "average_rating": reviews[1], "total_reviews": reviews[2], "review_page": rev_page, "total_review_pages": reviews[3], "per_page": reviews[4]}
+    data = {
+        "data": bot, 
+        "type": "bot", 
+        "id": bot_id, 
+        "tags_fixed": _tags_fixed_bot, 
+        "promos": promos, 
+        "maint": maint, 
+        "admin": bot_admin, 
+        "guild": main_server, 
+        "bot_reviews": reviews[0], 
+        "average_rating": reviews[1], 
+        "total_reviews": reviews[2], 
+        "review_page": rev_page, 
+        "total_review_pages": reviews[3], 
+        "per_page": reviews[4]
+    }
 
     if not api:
-        return await templates.TemplateResponse("bot_server.html", {"request": request, "replace_last": replace_last, "csrf_protect": csrf_protect} | data, context = context)
+        return await templates.TemplateResponse("bot_server.html", {"request": request, "replace_last": replace_last} | data, context = context)
     else:
         data["bot_id"] = str(bot_id)
         return data
@@ -140,7 +176,7 @@ async def render_bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, 
     if not bot:
         if api:
             return abort(404)
-        return "No Bot Found, cannot display wifget"
+        return "No Bot Found, cannot display widget"
     bot = dict(bot)
     bot["votes"] = human_format(bot["votes"])
     bot["servers"] = human_format(bot["servers"])
@@ -183,7 +219,7 @@ async def render_profile_search(request: Request, q: str, api: bool):
     else:
         return {"profiles": profile_obj, "tags_fixed": tags_fixed, "query": q, "profile_search": True}
 
-async def render_server(request: Request, guild_id: int, bt: BackgroundTasks, csrf_protect: CsrfProtect = None, **kwargs):
+async def render_server(request: Request, guild_id: int, bt: BackgroundTasks, **kwargs):
     guild = client_servers.get_guild(guild_id)
     if not guild:
         return abort(404)
@@ -192,4 +228,4 @@ async def render_server(request: Request, guild_id: int, bt: BackgroundTasks, cs
         return await templates.e(request, "Ask a server manager or admin to add this server to finish adding this server to our list!")
     bt.add_task(add_ws_event, guild_id, {"m": {"e": enums.APIEvents.server_view}, "ctx": {"user": request.session.get('user_id'), "widget": False}}, type = "server")
     data = {"data": guild_data | {"name": guild.name}, "type": "server", "id": guild_id, "tags_fixed": []} # TODO: Add tags, reviews and voting
-    return await templates.TemplateResponse("bot_server.html", {"request": request, "replace_last": replace_last, "csrf_protect": csrf_protect} | data)
+    return await templates.TemplateResponse("bot_server.html", {"request": request, "replace_last": replace_last} | data)

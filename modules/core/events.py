@@ -2,9 +2,10 @@
 Handle API Events, webhooks and websockets
 """
 
+from .cache import get_bot, get_user
 from .imports import *
-from .cache import get_user, get_bot
 from .rabbitmq import *
+
 
 async def add_ws_event(target: int, ws_event: dict, *, id: Optional[uuid.UUID] = None, type: str = "bot") -> None:
     """A WS Event must have the following format:

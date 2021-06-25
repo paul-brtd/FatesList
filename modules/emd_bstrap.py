@@ -1,7 +1,7 @@
 from xml.etree.ElementTree import Element
 
-from markdown.treeprocessors import Treeprocessor
 from markdown.extensions import Extension
+from markdown.treeprocessors import Treeprocessor
 
 
 class BootstrapTreeprocessor(Treeprocessor):

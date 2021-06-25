@@ -1,5 +1,7 @@
 import orjson
+
 from .core import *
+
 
 def get_badges(user_dpy, blist, bots):
     states = [obj["state"] for obj in bots]

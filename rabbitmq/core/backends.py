@@ -1,5 +1,7 @@
 # Import all needed backends
-import os, importlib
+import importlib
+import os
+
 
 class Backends():
     def __init__(self):

@@ -1,7 +1,10 @@
-import modules.models.enums as enums
-from pydantic import BaseModel
-from typing import Optional, Union
 import uuid
+from typing import Optional, Union
+
+from pydantic import BaseModel
+
+import modules.models.enums as enums
+
 
 class BaseUser(BaseModel):
     """

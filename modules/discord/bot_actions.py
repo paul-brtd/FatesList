@@ -1,4 +1,5 @@
 from ..core import *
+
 router = APIRouter(
     prefix = "/bot",
     tags = ["Actions"],
@@ -15,7 +16,7 @@ async def add_bot(request: Request):
         return RedirectResponse("/auth/login?redirect=/bot/admin/add&pretty=to add a bot")
 
 @router.get("/{bot_id}/settings")
-async def bot_settings_page(request: Request, bot_id: int, csrf_protect: CsrfProtect = Depends()):
+async def bot_settings_page(request: Request, bot_id: int):
     if "user_id" in request.session.keys():
         check = await is_bot_admin(int(bot_id), int(request.session.get("user_id")))
         if not check:
@@ -39,12 +40,12 @@ async def bot_settings_page(request: Request, bot_id: int, csrf_protect: CsrfPro
         if vanity is None:
             vanity = {"vanity": None}
         bot = fetch | dict(vanity)
-        return await templates.TemplateResponse("bot_add_edit.html", {"request": request, "mode": "edit", "tags_fixed": tags_fixed, "username": request.session.get("username", False),"data": bot, "avatar": request.session.get("avatar"), "epoch": time.time(), "vanity": vanity["vanity"], "csrf_protect": csrf_protect, "features": features})
+        return await templates.TemplateResponse("bot_add_edit.html", {"request": request, "mode": "edit", "tags_fixed": tags_fixed, "username": request.session.get("username", False),"data": bot, "avatar": request.session.get("avatar"), "epoch": time.time(), "vanity": vanity["vanity"], "features": features})
     else:
         return RedirectResponse("/")
 
 @router.post("/{bot_id}/reviews/new")
-async def new_reviews(request: Request, bot_id: int, bt: BackgroundTasks, rating: float = FForm(5.1), review: str = FForm("This is a placeholder review as the user has not posted anything...")):
+async def new_reviews(request: Request, bot_id: int, bt: BackgroundTasks, rating: float = FForm(5.1), review: str = FForm(...)):
     if "user_id" not in request.session.keys():
         return RedirectResponse(f"/auth/login?redirect=/bot/{bot_id}&pretty=to review this bot", status_code = 303)
     check = await db.fetchrow("SELECT bot_id FROM bot_reviews WHERE bot_id = $1 AND user_id = $2 AND reply = false", bot_id, int(request.session["user_id"]))
@@ -56,7 +57,7 @@ async def new_reviews(request: Request, bot_id: int, bt: BackgroundTasks, rating
     return await templates.TemplateResponse("message.html", {"request": request, "message": f"Successfully made a review for this bot!<script>window.location.replace('/bot/{bot_id}')</script>"}) 
 
 @router.post("/{bot_id}/reviews/{rid}/edit")
-async def edit_review(request: Request, bot_id: int, rid: uuid.UUID, bt: BackgroundTasks, rating: float = FForm(5.1), review: str = FForm("This is a placeholder review as the user has not posted anything...")):
+async def edit_review(request: Request, bot_id: int, rid: uuid.UUID, bt: BackgroundTasks, rating: float = FForm(5.1), review: str = FForm(...)):
     if "user_id" not in request.session.keys():
         return RedirectResponse(f"/auth/login?redirect=/bot/{bot_id}&pretty=to edit reviews", status_code = 303)
     guild = client.get_guild(main_server)
@@ -80,7 +81,7 @@ async def edit_review(request: Request, bot_id: int, rid: uuid.UUID, bt: Backgro
     return await templates.TemplateResponse("message.html", {"request": request, "message": f"Successfully editted your/this review for this bot!<script>window.location.replace('/bot/{bot_id}')</script>"})
 
 @router.post("/{bot_id}/reviews/{rid}/reply")
-async def edit_review(request: Request, bot_id: int, rid: uuid.UUID, bt: BackgroundTasks, rating: float = FForm(5.1), review: str = FForm("This is a placeholder review as the user has not posted anything...")):
+async def edit_review(request: Request, bot_id: int, rid: uuid.UUID, bt: BackgroundTasks, rating: float = FForm(5.1), review: str = FForm(...)):
     if "user_id" not in request.session.keys():
         return RedirectResponse(f"/auth/login?redirect=/bot/{bot_id}&pretty=to reply to reviews", status_code = 303)
     check = await db.fetchrow("SELECT replies FROM bot_reviews WHERE id = $1", rid)
@@ -108,7 +109,7 @@ async def resubmit_bot(request: Request, bot_id: int):
     return await templates.TemplateResponse("resubmit.html", {"request": request, "bot": bot, "bot_id": bot_id})
 
 @router.post("/{bot_id}/resubmit")
-async def resubmit_bot(request: Request, bot_id: int, appeal: str = FForm("No appeal provided"), qtype: str = FForm("off")):
+async def resubmit_bot(request: Request, bot_id: int, appeal: str = FForm(...), qtype: str = FForm("off")):
     if "user_id" in request.session.keys():
         check = await is_bot_admin(bot_id, int(request.session.get("user_id")))
         if not check:

@@ -1,6 +1,7 @@
 from modules.core import *
 from rabbitmq.core import *
 
+
 class Config:
     queue = "server_add_queue"
     name = "Add Server"

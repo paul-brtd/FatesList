@@ -8,19 +8,16 @@ router = APIRouter(
 
 
 @router.get("/login")
-async def login_get(request: Request, redirect: Optional[str] = None, pretty: Optional[str] = "to access this page", csrf_protect: CsrfProtect = Depends()):
+async def login_get(request: Request, redirect: Optional[str] = None, pretty: Optional[str] = "to access this page"):
     if redirect:
         if not redirect.startswith("/") and not redirect.startswith("https://fateslist.xyz"):
             return ORJSONResponse({"detail": "Invalid redirect. You may only redirect to pages on Fates List"}, status_code = 400)
     if "user_id" in request.session.keys():
         return RedirectResponse("/", status_code=HTTP_303_SEE_OTHER)
-    return await templates.TemplateResponse("login.html", {"request": request, "perm_needed": redirect is not None, "perm_pretty": pretty, "csrf_protect": csrf_protect, "redirect": redirect if redirect else '/'})
+    return await templates.TemplateResponse("login.html", {"request": request, "perm_needed": redirect is not None, "perm_pretty": pretty, "redirect": redirect if redirect else '/'})
 
 @router.post("/login")
-async def login_stage2(request: Request, redirect: str, join_servers: str = FForm("off"), server_list: str = FForm("off"), csrf_protect: CsrfProtect = Depends()):
-    ret = await verify_csrf(request, csrf_protect)
-    if ret:
-        return ret
+async def login_stage2(request: Request, redirect: str, join_servers: str = FForm("off"), server_list: str = FForm("off")):
     scopes = ["identify"]
 
     # Join Server

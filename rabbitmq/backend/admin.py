@@ -1,5 +1,5 @@
-from rabbitmq.core import *
 from modules.core import *
+from rabbitmq.core import *
 
 # Some functions
 

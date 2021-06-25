@@ -1,5 +1,6 @@
 from .imports import *
 
+
 async def _user_fetch(user_id: str, user_type: int, user_only: bool = False) -> Optional[dict]:
     # Check if a suitable version is in the cache first before querying Discord
 

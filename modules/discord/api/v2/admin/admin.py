@@ -1,10 +1,14 @@
-from modules.core import *
-from .models import APIResponse, BotQueueGet, IDResponse, enums, BotAdminOpEndpoint
-from modules.discord.admin import admin_dashboard
-from ..base import API_VERSION
 import uuid
+
 import bleach
 from lxml.html.clean import Cleaner
+
+from modules.core import *
+from modules.discord.admin import admin_dashboard
+
+from ..base import API_VERSION
+from .models import (APIResponse, BotAdminOpEndpoint, BotQueueGet, IDResponse,
+                     enums)
 
 cleaner = Cleaner()
 

@@ -1,6 +1,8 @@
 from modules.core import *
-from .models import BotPromotionPartial, BotPromotion, BotPromotions, BotPromotionPartial, BotPromotionDelete, APIResponse
+
 from ..base import API_VERSION
+from .models import (APIResponse, BotPromotion, BotPromotionDelete,
+                     BotPromotionPartial, BotPromotions)
 
 router = APIRouter(
     prefix = f"/api/v{API_VERSION}",

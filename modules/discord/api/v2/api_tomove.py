@@ -1,10 +1,12 @@
 """Modules to move"""
-from modules.core import *
+from typing import Dict, List
 from uuid import UUID
+
 from fastapi.responses import HTMLResponse
-from typing import List, Dict
-from modules.discord.api.v2.modelstomove import * #TODO
+
 from modules.badges import get_badges
+from modules.core import *
+from modules.discord.api.v2.modelstomove import *  # TODO
 
 discord_o = Oauth(OauthConfig)
 
@@ -250,9 +252,9 @@ async def get_vanity_api(request: Request, vanity: str):
     "/index/bots", 
     response_model = BotIndex
 )
-async def bots_index_page(request: Request, csrf_protect: CsrfProtect = Depends()):
+async def bots_index_page(request: Request):
     """For any potential Android/iOS app, crawlers etc."""
-    return await render_index(request = request, api = True, csrf_protect = csrf_protect)
+    return await render_index(request = request, api = True)
 
 @router.get(
     "/search/bots", 

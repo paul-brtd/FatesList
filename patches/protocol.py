@@ -16,34 +16,17 @@ import random
 import struct
 import sys
 import warnings
-from typing import (
-    Any,
-    AsyncIterable,
-    AsyncIterator,
-    Awaitable,
-    Deque,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    Union,
-    cast,
-)
+from typing import (Any, AsyncIterable, AsyncIterator, Awaitable, Deque, Dict,
+                    Iterable, List, Optional, Union, cast)
 
-from .exceptions import (
-    ConnectionClosed,
-    ConnectionClosedError,
-    ConnectionClosedOK,
-    InvalidState,
-    PayloadTooBig,
-    ProtocolError,
-)
+from .exceptions import (ConnectionClosed, ConnectionClosedError,
+                         ConnectionClosedOK, InvalidState, PayloadTooBig,
+                         ProtocolError)
 from .extensions.base import Extension
 from .framing import *
 from .handshake import *
 from .http import Headers
 from .typing import Data
-
 
 __all__ = ["WebSocketCommonProtocol"]
 

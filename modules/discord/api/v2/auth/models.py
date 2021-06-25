@@ -1,8 +1,12 @@
-from pydantic import BaseModel, validator
-import modules.models.enums as enums
-from ..base_models import BaseUser, APIResponse, AccessToken
-from typing import Optional, List, Union
 import uuid
+from typing import List, Optional, Union
+
+from pydantic import BaseModel, validator
+
+import modules.models.enums as enums
+
+from ..base_models import AccessToken, APIResponse, BaseUser
+
 
 class Callback(BaseModel):
     key: str

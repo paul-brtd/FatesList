@@ -1,4 +1,5 @@
 from ..core import *
+
 router = APIRouter(
     tags = ["Servers Index"],
     include_in_schema = False

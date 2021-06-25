@@ -6,14 +6,19 @@ This is part of Fates List. You can use this in any library you wish. For best A
 Depends: enums.py
 """
 
-from typing import List, Dict, Optional, ForwardRef, Union
-from pydantic import BaseModel, validator
-import uuid
 import sys
+import uuid
+from typing import Dict, ForwardRef, List, Optional, Union
+
+from pydantic import BaseModel, validator
+
 sys.path.append("modules/models") # Libraries should remove this
-import enums # as enums (for libraries)
 import datetime
-from .base_models import BaseUser, APIResponse, AccessToken
+
+import enums  # as enums (for libraries)
+
+from .base_models import AccessToken, APIResponse, BaseUser
+
 
 class BasePager(BaseModel):
     """Information given by the API for pagination"""

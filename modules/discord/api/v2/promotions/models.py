@@ -1,8 +1,12 @@
-from pydantic import BaseModel, validator
-import modules.models.enums as enums
-from ..base_models import BaseUser, APIResponse
-from typing import Optional, List
 import uuid
+from typing import List, Optional
+
+from pydantic import BaseModel, validator
+
+import modules.models.enums as enums
+
+from ..base_models import APIResponse, BaseUser
+
 
 class BotPromotionDelete(BaseModel):
     """Represents a promotion delete request. Your library should internally be using this but you shouldn't need to handle this yourself """

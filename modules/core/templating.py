@@ -137,22 +137,19 @@ class templates():
         arg_dict["ireplacem"] = ireplacem
         
         base_context = {
-            "user_id": arg_dict.get("user_id"),
+            "user_id": str(arg_dict["user_id"]) if "user_id" in arg_dict.keys() else None,
             "user_token": arg_dict.get("user_token"),
             "site_lang": arg_dict.get("site_lang"),
             "logged_in": True if "user_id" in arg_dict.keys() else False
         }
         
         arg_dict["context"] = context | base_context
-        
+
         if status is None:
             ret = _templates.TemplateResponse(f, arg_dict)
             
         else:
             ret = _templates.TemplateResponse(f, arg_dict, status_code = status)
-            
-        if arg_dict.get("csrf_protect"):
-            arg_dict["csrf_protect"].set_csrf_cookie(ret)
             
         return ret
 
@@ -163,4 +160,4 @@ class templates():
 
     @staticmethod
     async def e(request, reason: str, status_code: int = 404, *, main: Optional[str] = ""):
-        return await templates.error("message.html", {"request": request, "message": main, "context": reason, "retmain": True}, status_code)
+        return await templates.error("message.html", {"request": request, "message": main, "reason": reason, "retmain": True}, status_code)

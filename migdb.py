@@ -1,15 +1,23 @@
 """
     RabbitMQ worker
 """
-import asyncpg, asyncio, uvloop, aioredis
+import asyncio
 import sys
+
+import aioredis
+import asyncpg
+import uvloop
+
 sys.path.append("..")
-from config import *
-from aio_pika import *
-import discord
-import orjson
 import builtins
 from copy import deepcopy
+
+import discord
+import orjson
+from aio_pika import *
+
+from config import *
+
 
 async def main():
     """

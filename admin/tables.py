@@ -1,10 +1,16 @@
 import sys
+
 sys.path.append("..")
-import modules.models.enums as enums
-from piccolo.table import Table
 import datetime
-from piccolo.columns.column_types import Integer, Varchar, BigInt, Text, Secret, Array, Timestamptz, Boolean, ForeignKey, UUID, Float
+
+from piccolo.columns.column_types import (UUID, Array, BigInt, Boolean, Float,
+                                          ForeignKey, Integer, Secret, Text,
+                                          Timestamptz, Varchar)
 from piccolo.columns.readable import Readable
+from piccolo.table import Table
+
+import modules.models.enums as enums
+
 
 class Vanity(Table, tablename="vanity"):
     type = Integer()

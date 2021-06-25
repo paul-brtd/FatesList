@@ -1,6 +1,8 @@
 import uvloop
+
 uvloop.install()
 from modules.core import *
+
 builtins.boot_time = time.time()
 
 sentry_sdk.init(sentry_dsn)
@@ -12,16 +14,6 @@ app = FastAPI(default_response_class = ORJSONResponse, redoc_url = "/api/docs/re
 
 # Add Sentry
 app.add_middleware(SentryAsgiMiddleware)
-
-# Setup CSRF protection
-class CsrfSettings(BaseModel):
-    secret_key: str = csrf_secret
-
-@CsrfProtect.load_config
-def get_csrf_config():
-    return CsrfSettings()
-
-builtins.CsrfProtect = CsrfProtect
 
 # Setup exception handling
 @app.exception_handler(403)

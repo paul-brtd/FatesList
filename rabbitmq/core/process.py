@@ -1,7 +1,10 @@
 from modules.core import *
+
 sys.path.append("..")
-from . import *
 import nest_asyncio
+
+from . import *
+
 nest_asyncio.apply()
 
 # Import all needed backends

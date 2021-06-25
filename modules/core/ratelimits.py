@@ -1,5 +1,6 @@
 from .imports import *
 
+
 def ip_check(request: Request) -> str:
     forwarded = request.headers.get("X-Forwarded-For")
     if forwarded:

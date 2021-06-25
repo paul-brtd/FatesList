@@ -1,8 +1,12 @@
-from pydantic import BaseModel
-import modules.models.enums as enums
-from ..base_models import BaseUser, APIResponse
-from typing import Optional, List
 import uuid
+from typing import List, Optional
+
+from pydantic import BaseModel
+
+import modules.models.enums as enums
+
+from ..base_models import APIResponse, BaseUser
+
 
 class BotRandom(BaseModel):
     """

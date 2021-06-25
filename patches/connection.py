@@ -10,40 +10,20 @@ import time
 import warnings
 from distutils.version import StrictVersion
 from itertools import chain
-from typing import (
-    Any,
-    Iterable,
-    List,
-    Mapping,
-    Optional,
-    Set,
-    Tuple,
-    Type,
-    TypeVar,
-    Union,
-)
+from typing import (Any, Iterable, List, Mapping, Optional, Set, Tuple, Type,
+                    TypeVar, Union)
 from urllib.parse import ParseResult, parse_qs, unquote, urlparse
 
 import async_timeout
 
 from .compat import Protocol, TypedDict
-from .exceptions import (
-    AuthenticationError,
-    AuthenticationWrongNumberOfArgsError,
-    BusyLoadingError,
-    ChildDeadlockedError,
-    ConnectionError,
-    DataError,
-    ExecAbortError,
-    InvalidResponse,
-    ModuleError,
-    NoPermissionError,
-    NoScriptError,
-    ReadOnlyError,
-    RedisError,
-    ResponseError,
-    TimeoutError,
-)
+from .exceptions import (AuthenticationError,
+                         AuthenticationWrongNumberOfArgsError,
+                         BusyLoadingError, ChildDeadlockedError,
+                         ConnectionError, DataError, ExecAbortError,
+                         InvalidResponse, ModuleError, NoPermissionError,
+                         NoScriptError, ReadOnlyError, RedisError,
+                         ResponseError, TimeoutError)
 from .utils import str_if_bytes
 
 NONBLOCKING_EXCEPTION_ERROR_NUMBERS = {

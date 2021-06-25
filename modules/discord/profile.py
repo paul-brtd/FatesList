@@ -1,5 +1,5 @@
-from ..core import *
 from ..badges import *
+from ..core import *
 
 router = APIRouter(
     prefix = "/profile",

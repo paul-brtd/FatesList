@@ -1,7 +1,10 @@
-from ..core import *
+import io
+
 import markdown
 from starlette.responses import StreamingResponse
-import io
+
+from ..core import *
+
 router = APIRouter(
     prefix = "/bot",
     tags = ["Bots"],
@@ -13,8 +16,14 @@ async def bot_rdir(request: Request):
     return RedirectResponse("/")
 
 @router.get("/{bot_id}")
-async def bot_index(request: Request, bot_id: int, bt: BackgroundTasks, csrf_protect: CsrfProtect = Depends(), rev_page: int = 1):
-    return await render_bot(request, bot_id = bot_id, bt = bt, api = False, rev_page = rev_page, csrf_protect = csrf_protect)
+async def bot_index(request: Request, bot_id: int, bt: BackgroundTasks, rev_page: int = 1):
+    return await render_bot(
+        request, 
+        bot_id = bot_id, 
+        bt = bt, 
+        api = False, 
+        rev_page = rev_page, 
+    )
 
 @router.get("/{bot_id}/widget")
 async def bot_widget(request: Request, bot_id: int, bt: BackgroundTasks):
@@ -48,7 +57,7 @@ async def banner(request: Request, bot_id: int):
     return StreamingResponse(io.BytesIO(banner), media_type = img.headers.get("Content-Type"))
 
 @router.get("/{bot_id}/vote")
-async def vote_bot_get(request: Request, bot_id: int, csrf_protect: CsrfProtect = Depends()):
+async def vote_bot_get(request: Request, bot_id: int):
     bot = await db.fetchrow("SELECT bot_id, votes, state FROM bots WHERE bot_id = $1", bot_id)
     if bot is None:
         return abort(404)
@@ -56,4 +65,4 @@ async def vote_bot_get(request: Request, bot_id: int, csrf_protect: CsrfProtect 
     if bot_obj is None:
         return abort(404)
     bot = dict(bot) | bot_obj
-    return await templates.TemplateResponse("vote.html", {"request": request, "bot": bot, "csrf_protect": csrf_protect})
+    return await templates.TemplateResponse("vote.html", {"request": request, "bot": bot})

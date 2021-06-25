@@ -1,7 +1,9 @@
-from loguru import logger
-import sys
 import builtins
 import logging
+import sys
+
+from loguru import logger
+
 logger.remove()
 logger.add(sys.stderr, backtrace=True, diagnose=True)
 logger.add("logs/full.log", rotation="500 MB")

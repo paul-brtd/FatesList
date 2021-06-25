@@ -1,11 +1,11 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import ORJSONResponse
+from piccolo.engine import engine_finder
 from piccolo_admin.endpoints import create_admin
 from piccolo_api.crud.endpoints import PiccoloCRUD
 from piccolo_api.fastapi.endpoints import FastAPIWrapper
-from piccolo.engine import engine_finder
-from tables import Vanity, User, Bot, BotTag, BotReview
 from starlette.routing import Mount
+from tables import Bot, BotReview, BotTag, User, Vanity
 
 admin = create_admin([Vanity, User, Bot, BotTag, BotReview], allowed_hosts = ["staff.fateslist.xyz"], production = True)
 app = FastAPI(routes=[Mount("/", admin)])

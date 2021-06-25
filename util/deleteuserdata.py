@@ -8,10 +8,16 @@
     import deleteuserdata
     deleteuserdata.run(USER_Id)
 """
-import asyncpg, asyncio, uvloop, aioredis
+import asyncio
 import sys
+
+import aioredis
+import asyncpg
+import uvloop
+
 sys.path.append("..")
 from config import *
+
 
 async def _delud(user_id: int):
     db = await asyncpg.create_pool(host="127.0.0.1", port=5432, user=pg_user, password=pg_pwd, database="fateslist")

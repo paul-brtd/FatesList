@@ -1,7 +1,9 @@
-from modules.core import *
-from .models import APIResponse, BotMeta, enums
-from ..base import API_VERSION
 from lxml.html.clean import Cleaner
+
+from modules.core import *
+
+from ..base import API_VERSION
+from .models import APIResponse, BotMeta, enums
 
 cleaner = Cleaner(remove_unknown_tags=False)
 

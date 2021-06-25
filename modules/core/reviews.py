@@ -1,6 +1,7 @@
-from .imports import *
 from .cache import *
 from .events import *
+from .imports import *
+
 
 async def parse_reviews(bot_id: int, rev_id: uuid.uuid4 = None, page: int = None) -> List[dict]:
     per_page = 9

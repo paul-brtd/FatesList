@@ -1,7 +1,9 @@
-from modules.core import *
-from .models import BotListStats
-from ..base import API_VERSION
 from typing import Optional
+
+from modules.core import *
+
+from ..base import API_VERSION
+from .models import BotListStats
 
 router = APIRouter(
     prefix = f"/api/v{API_VERSION}/blstats",

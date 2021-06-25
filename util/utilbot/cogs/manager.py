@@ -1,6 +1,9 @@
-from deps import *
-from modules.core import *
 import os
+
+from deps import *
+
+from modules.core import *
+
 
 def splitc(s, l = 1990):
     o = []

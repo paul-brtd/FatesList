@@ -1,8 +1,13 @@
-from modules.core import *
-from .models import APIResponse, Login, LoginInfo, OAuthInfo, LoginResponse, LoginBan, BaseUser, Callback
-from ..base import API_VERSION
 from urllib.parse import unquote
+
 from itsdangerous import URLSafeSerializer
+
+from modules.core import *
+
+from ..base import API_VERSION
+from .models import (APIResponse, BaseUser, Callback, Login, LoginBan,
+                     LoginInfo, LoginResponse, OAuthInfo)
+
 router = APIRouter(
     prefix = f"/api/v{API_VERSION}",
     include_in_schema = True,
@@ -24,7 +29,7 @@ async def get_login_link(request: Request, data: LoginInfo):
         "scopes": data.scopes, 
         "redirect": data.redirect if data.redirect else "/", 
         "callback": data.callback.dict()
-    }), ex = 90)
+    }), ex = 120)
     return api_success(url = discord_o.get_discord_oauth(auth_s.dumps(str(id)), data.scopes))
 
 @router.get("/auth/callback")

@@ -1,7 +1,7 @@
 """Fates List Error System"""
 from .imports import *
 from .templating import *
-from fastapi_csrf_protect.exceptions import CsrfProtectError, MissingTokenError
+
 
 def etrace(ex):
      return "".join(tblib.format_exception(ex)) # COMPAT: Python 3.10 only

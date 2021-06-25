@@ -1,6 +1,7 @@
 from .imports import *
 from .ratelimits import *
 
+
 def setup_discord():
     intent_main = discord.Intents.default()
     intent_main.typing = False

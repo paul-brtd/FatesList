@@ -1,6 +1,6 @@
 """This is a example+base for making new rabbitmq backends for use in Fates List"""
 
-from rabbitmq.core import * # Critical import, this imports a lot of rabbitmq worker functions here
+from rabbitmq.core import *  # Critical import, this imports a lot of rabbitmq worker functions here
 
 """
 Builtins

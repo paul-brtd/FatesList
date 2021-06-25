@@ -1,13 +1,17 @@
-import discord
-from discord.ext.commands import Bot, AutoShardedBot
+import asyncio
+import builtins
 import os
 import sys
-import asyncio
-import aioredis
+
 import aio_pika
-import builtins
+import aioredis
+import discord
+from discord.ext.commands import AutoShardedBot, Bot
+
 sys.path.append("../..")
-from config import TOKEN_MAIN, bots_role, bot_dev_role, owner, rabbitmq_pwd, worker_key
+from config import (TOKEN_MAIN, bot_dev_role, bots_role, owner, rabbitmq_pwd,
+                    worker_key)
+
 intents = discord.Intents.default()
 intents.members = True
 intents.typing = False

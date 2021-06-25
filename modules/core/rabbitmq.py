@@ -1,10 +1,11 @@
-from .imports import orjson, aio_pika
-from copy import deepcopy
-from config import *
-
+import asyncio
 # Needed for it to actually work in manager
 import uuid
-import asyncio
+from copy import deepcopy
+
+from config import *
+
+from .imports import aio_pika, orjson
 
 RMQ_META = {
     "pv": 1, # Protocol Version

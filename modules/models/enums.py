@@ -1,8 +1,11 @@
-from typing import List, Dict, Optional, ForwardRef
-from pydantic import BaseModel
 import uuid
+from typing import Dict, ForwardRef, List, Optional
+
 from aenum import Enum, IntEnum
+from pydantic import BaseModel
+
 from config import *
+
 
 class TokenTypes(IntEnum):
     _init_ = "value __doc__"

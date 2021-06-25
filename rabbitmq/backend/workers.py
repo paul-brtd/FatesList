@@ -1,9 +1,12 @@
-from rabbitmq.core import *
 import asyncio
-import orjson
 import builtins
 import time
+
+import orjson
+
 from modules.core import *
+from rabbitmq.core import *
+
 
 class PIDRecorder():
     def __init__(self):

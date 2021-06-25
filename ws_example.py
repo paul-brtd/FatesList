@@ -1,9 +1,12 @@
-import websockets
 import asyncio
-from modules.models import enums
 import json
-import uuid
 import time
+import uuid
+
+import websockets
+
+from modules.models import enums
+
 
 async def run():
     async with websockets.connect("wss://fateslist.xyz/api/v2/ws/rtstats") as websocket:

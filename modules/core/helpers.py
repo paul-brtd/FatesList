@@ -3,14 +3,17 @@ Helper functions for mundane tasks like getting maint, promotion or bot commands
 and/or setting bot stats and voting for a bot
 """
 
-from .imports import *
-from .events import *
+import re
+
+import bleach
+from lxml.html.clean import Cleaner
+
 from .auth import *
 from .cache import *
+from .events import *
+from .imports import *
 from .templating import *
-from lxml.html.clean import Cleaner
-import bleach
-import re
+
 cleaner = Cleaner(remove_unknown_tags=False)
 
 # API returners
@@ -39,12 +42,6 @@ def api_success(reason: str = None, status_code: int = 200, **kwargs):
     if kwargs and status_code == 200:
         status_code = 206
     return api_return(done = True, reason = reason, status_code = status_code, **kwargs)
-
-async def verify_csrf(request, csrf_protect):
-    try:
-        csrf_protect.validate_csrf_in_cookies(request)
-    except Exception as exc:
-        return await templates.e(request, main = f"CSRF Error ({type(exc).__name__})", reason = f"Try disabling any extension that blocks cookies and/or join the support server for assistance giving {type(exc).__name__} as the reason.", status_code = 400)
 
 async def get_maint(bot_id: str) -> Union[bool, Optional[dict]]:
     api_data = await db.fetchrow("SELECT type, reason, epoch FROM bot_maint WHERE bot_id = $1", bot_id)

@@ -1,8 +1,10 @@
+import sys
+
 from piccolo.conf.apps import AppRegistry
 from piccolo.engine.postgres import PostgresEngine
-import sys
+
 sys.path.append("..")
-from config import pg_user, pg_pwd
+from config import pg_pwd, pg_user
 
 DB = PostgresEngine(config={
     "database": "fateslist",

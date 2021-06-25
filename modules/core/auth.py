@@ -1,5 +1,6 @@
 from .imports import *
 
+
 async def bot_auth(bot_id: int, api_token: str):
     return await db.fetchval("SELECT bot_id FROM bots WHERE bot_id = $1 AND api_token = $2", bot_id, str(api_token))
 

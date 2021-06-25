@@ -1,6 +1,7 @@
 from modules.core import *
 from rabbitmq.core import *
 
+
 class Config:
     queue = "bot_add_queue"
     name = "Bot Add"

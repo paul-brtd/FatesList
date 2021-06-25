@@ -1,7 +1,9 @@
-from discord import Embed, Webhook, AsyncWebhookAdapter
 import aiohttp
-from rabbitmq.core import *
+from discord import AsyncWebhookAdapter, Embed, Webhook
+
 from modules.core import *
+from rabbitmq.core import *
+
 
 class Config:
     queue = "events_webhook_queue"

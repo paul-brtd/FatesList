@@ -1,6 +1,7 @@
 """RabbitMQ worker"""
 import asyncio
-from rabbitmq.core.process import run_worker, disconnect_worker
+
+from rabbitmq.core.process import disconnect_worker, run_worker
 
 # Run the task
 if __name__ == "__main__":

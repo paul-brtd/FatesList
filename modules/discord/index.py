@@ -1,15 +1,16 @@
-from ..core import *
 from modules.discord.bots import vote_bot_get
+
+from ..core import *
 
 router = APIRouter(
         tags = ["Index"],
         include_in_schema = False
 )
 
-@router.get("/exp/1")
+@router.get("/dm/help")
 async def exp1(request: Request):
-    # Experiment 1
-    request.session["test"] = "hello"
+    return request.session.get("user_id")
+
 
 @router.get("/discord")
 def reroute_support():
@@ -22,8 +23,8 @@ def reroute_support():
 @router.delete("/")
 @router.put("/")
 @router.head("/")
-async def index_fend(request: Request, response: Response, csrf_protect: CsrfProtect = Depends()):
-    return await render_index(request = request, api = False, csrf_protect = csrf_protect)
+async def index_fend(request: Request, response: Response):
+    return await render_index(request = request, api = False)
 
 @router.get("/legal")
 async def legal_router():
@@ -38,13 +39,13 @@ async def nonerouter():
     return RedirectResponse("/static/assets/img/banner.webp", status_code = 301)
 
 @router.get("/{vanity}")
-async def vanity_bot_uri(request: Request, bt: BackgroundTasks, vanity: str, csrf_protect: CsrfProtect = Depends()):
+async def vanity_bot_uri(request: Request, bt: BackgroundTasks, vanity: str):
     vurl = await vanity_bot(vanity)
     logger.trace("Vanity for this object: ", vurl)
     if vurl is None:
         return await templates.e(request, "Invalid Vanity")
     if vurl[1] == "bot":
-        return await render_bot(bt = bt, bot_id = vurl[0], request = request, api = False, csrf_protect = csrf_protect)
+        return await render_bot(bt = bt, bot_id = vurl[0], request = request, api = False)
     else:
         return await templates.e(request, f"This is a {vurl[1]}. This is a work in progress :)", status_code = 400)
 
@@ -59,14 +60,14 @@ async def vanity_edit(request: Request, vanity: str, bt: BackgroundTasks):
     return RedirectResponse(eurl)
 
 @router.get("/{vanity}/vote")
-async def vanity_vote(request: Request, vanity: str, csrf_protect: CsrfProtect = Depends()):
+async def vanity_vote(request: Request, vanity: str):
     vurl = await vanity_bot(vanity)
     if vurl is None:
         return await templates.e(request, "Invalid Vanity")
     if vurl[1] == "profile":
         return abort(404)
     if vurl[1] == "bot":
-        return await vote_bot_get(request, bot_id = vurl[0], csrf_protect = csrf_protect)
+        return await vote_bot_get(request, bot_id = vurl[0])
 
 
 @router.get("/{vanity}/invite")

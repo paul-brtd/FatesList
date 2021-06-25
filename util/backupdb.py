@@ -1,5 +1,6 @@
 import os
 import time
+
 while True:
     print(f"Backup DB at {time.time()}")
     try:
