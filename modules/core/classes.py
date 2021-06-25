@@ -30,7 +30,11 @@ class Badge():
             except:
                 continue
                 
-            all_badges[badge_data["id"]] = {"name": badge_data["name"], "description": badge_data["description"], "image": badge_data["image"]}
+            all_badges[badge_data["id"]] = {
+                "name": badge_data["name"], 
+                "description": badge_data["description"], 
+                "image": badge_data["image"]
+            }
     
     # Special staff + certified badges (if present)
     for badge_id, badge_data in special_badges.items():
@@ -68,7 +72,7 @@ class User(DiscordUser):
         """Gets a users profile"""
         user = await db.fetchrow(
             "SELECT badges, state, description, css, coins, js_allowed, vote_epoch FROM users WHERE user_id = $1", 
-            user_id
+            self.id
         )
         
         if user is None:
@@ -85,7 +89,7 @@ class User(DiscordUser):
             """SELECT bots.description, bots.prefix, bots.banner, bots.state, bots.votes, bots.servers, bots.bot_id, bots.nsfw, bot_owner.main FROM bots 
             INNER JOIN bot_owner ON bot_owner.bot_id = bots.bot_id 
             WHERE bot_owner.owner = $1""",
-            user_id
+            self.id
         )
     bots = [dict(obj) | {"invite": await Bot(id = obj["bot_id"]).invite_url() for obj in _bots]
     approved_bots = [obj for obj in bots if obj["state"] in (enums.BotState.approved, enums.BotState.certified)]    
@@ -96,9 +100,9 @@ class User(DiscordUser):
         badges = None
                          
     else:                      
-        user_dpy = guild.get_member(user_id)
+        user_dpy = guild.get_member(self.id)
         if user_dpy is None:
-            user_dpy = await client.fetch_user(user_id)
+            user_dpy = await client.fetch_user(self.id)
     
     if user_dpy is None: # Still connecting to dpy or whatever
         badges = None # Still not prepared to deal with it since we havent connected to discord yet 
@@ -106,7 +110,17 @@ class User(DiscordUser):
     else:
         badges = user["badges"] = Badge.from_user(user_dpy, badges, approved_bots)
                          
-    return {"bots": bots, "approved_bots": approved_bots, "certified_bots": certified_bots, "bot_developer": approved_bots != [], "certified_developer": certified_bots != [], "profile": user_ret, "badges": badges, "defunct": user_dpy is None, "user": user_obj}
+    return {
+        "bots": bots, 
+        "approved_bots": approved_bots, 
+        "certified_bots": certified_bots, 
+        "bot_developer": approved_bots != [], 
+        "certified_developer": certified_bots != [], 
+        "profile": user, 
+        "badges": badges,
+        "defunct": user_dpy is None, 
+        "user": user_obj
+    }
 
 class Bot(DiscordUser):
     async def fetch(self):
