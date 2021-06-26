@@ -10,7 +10,7 @@ class Badge():
         user_flags = {}
         
         # Get core information
-        states = map(lambda: bot: bot["state"], bots)
+        states = [bot["state"] for bot in bots]
         user_flags["certified"] = enums.BotState.certified in states
         user_flags["bot_dev"] = enums.BotState.certified in states or enums.BotState.approved in states
         
