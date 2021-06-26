@@ -15,6 +15,7 @@ def setup_discord():
     intent_main.members = True
     intent_main.presences = True
     client = discord.Client(intents=intent_main)
+    client.ready = False
     intent_server = deepcopy(intent_main)
     intent_server.presences = False
     client_server = discord.Client(intents=intent_server)
