@@ -7,27 +7,26 @@ class Badge():
     @staticmethod
     def from_user(member: discord.Member, badges: Optional[List[str]] = [], bots: list):
         """Make badges from a user given the member, badges and bots"""
-        # Get core informatiom
-        states = [obj["state"] for obj in bots]
-        certified = True if enums.BotState.certified in states else False 
-        bot_dev = True if (enums.BotState.certified in states or enums.BotState.approved in states) else False
+        user_flags = {}
+        
+        # Get core information
+        states = map(lambda: bot: bot["state"], bots)
+        user_flags["certified"] = enums.BotState.certified in states
+        user_flags["bot_dev"] = enums.BotState.certified in states or enums.BotState.approved in states
         
         badges = badges if badges else []
 
         # A discord.Member is part of the support server
         if isinstance(user_dpy, discord.Member):
-            staff = is_staff(staff_roles, user_dpy.roles, 2)[0]
-            support_server_member = True
-            
-        else:
-            staff = False
-            support_server_member = False
+            user_flags["staff"] = is_staff(staff_roles, user_dpy.roles, 2)[0]
+            user_flags["support_server_member"] = True
         
         all_badges = {}
         for badge in badges: # Add in user created badges from blist
             try:
                 badge_data = orjson.loads(badge)
             except:
+                loguru.warning("Failed to open user badge")
                 continue
                 
             all_badges[badge_data["id"]] = {
@@ -38,17 +37,10 @@ class Badge():
     
     # Special staff + certified badges (if present)
     for badge_id, badge_data in special_badges.items():
-        if badge_data.get("staff") and staff:
-            all_badges[badge_id] = badge_data
-            
-        elif badge_data.get("certified") and certified:
-            all_badges[badge_id] = badge_data
-            
-        elif badge_data.get("bot_dev") and bot_dev:
-            all_badges[badge_id] = badge_data
-            
-        elif badge_data.get("support_server_member") and support_server_member:
-            all_badges[badge_id] = badge_data
+        for key in ("staff", "certified", "bot_dev", "support_server_member"):
+            # Check if user is allowed to get badge and if so, give it
+            if badge_data.get(key) and user_flags.get(key):
+                all_badges[badge_id] = badge_data
             
         if badge_data.get("everyone"):
             all_badges[badge_id] = badge_data
@@ -91,8 +83,9 @@ class User(DiscordUser):
             WHERE bot_owner.owner = $1""",
             self.id
         )
+        
     bots = [dict(obj) | {"invite": await Bot(id = obj["bot_id"]).invite_url() for obj in _bots]
-    approved_bots = [obj for obj in bots if obj["state"] in (enums.BotState.approved, enums.BotState.certified)]    
+    approved_bots = [obj for obj in bots if obj["state"] in (enums.BotState.approved, enums.BotState.certified)]
     certified_bots = [obj for obj in bots if obj["state"] == enums.BotState.certified]
                          
     guild = client.get_guild(main_server)
