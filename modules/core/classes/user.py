@@ -23,7 +23,7 @@ class User(DiscordUser):
     
         # TODO: This whole section
         _bots = await self.db.fetch(
-            """SELECT bots.description, bots.prefix, bots.banner, bots.state, bots.votes, bots.servers, bots.bot_id, bots.nsfw, bot_owner.main FROM bots 
+            """SELECT bots.description, bots.prefix, bots.banner, bots.state, bots.votes, bots.servers, bots.bot_id, bots.nsfw FROM bots 
             INNER JOIN bot_owner ON bot_owner.bot_id = bots.bot_id 
             WHERE bot_owner.owner = $1""",
             self.id
