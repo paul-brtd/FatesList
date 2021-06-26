@@ -5,10 +5,12 @@ import modules.models.enums as enums
 from discord import Member
 import orjson
 from config import special_badges
+from pydantic import BaseModel
 from . import Bot
 
-class Badge():
+class Badge(BaseModel):
     """Handle badges"""
+    
     @staticmethod
     def from_user(member: Member, badges: Optional[List[str]] = [], bots: List[Bot]):
         """Make badges from a user given the member, badges and bots"""
