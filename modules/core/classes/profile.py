@@ -12,11 +12,16 @@ class ProfileBot(BaseModel):
     votes: int
     guild_count: int
     nsfw: bool       
-        
+  
+class ProfileData(BaseModel):
+    badges: List[Badge]
+    description: str
+
 class Profile(BaseModel):
     bots: List[ProfileBot]
     approved_bots: List[ProfileBot]
     certified_bots: List[ProfileBot]
     bot_dev: bool, 
     cert_dev: bool
-    badges: List[Badge]
+    profile: ProfileData
+    dup: bool
