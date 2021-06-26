@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional, List
 import modules.models.enums as enums
+from .badge import Badge
 
 class ProfileBot(BaseModel):
     bot_id: int
@@ -18,3 +19,4 @@ class Profile(BaseModel):
     certified_bots: List[ProfileBot]
     bot_dev: bool, 
     cert_dev: bool
+    badges: List[Badge]
