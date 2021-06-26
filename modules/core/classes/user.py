@@ -8,7 +8,7 @@ class User(DiscordUser):
     async def profile(self):
         """Gets a users profile"""
         user = await self.db.fetchrow(
-            "SELECT badges, state, description, css, coins, js_allowed, vote_epoch FROM users WHERE user_id = $1", 
+            "SELECT badges, state, description, css, js_allowed FROM users WHERE user_id = $1", 
             self.id
         )
         
