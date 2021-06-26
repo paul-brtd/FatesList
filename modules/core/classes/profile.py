@@ -15,9 +15,12 @@ class ProfileBot(BaseModel):
   
 class ProfileData(BaseModel):
     badges: List[Badge]
-    description: str
+    description: Optional[str] = "This user prefers to be a enigma"
+    css: Optional[str] = None
+    js_allowed: Optional[bool] = True
     bot_dev: bool
     cert_dev: bool
+    state: enums.UserState
 
 class Profile(BaseModel):
     bots: List[ProfileBot]
