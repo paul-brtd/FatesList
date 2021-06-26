@@ -47,14 +47,14 @@ class User(DiscordUser):
                          
     else:
         user["badges"] = Badge.from_user(user_dpy, badges, approved_bots)
+    user["bot_dev"] = approved_bots != []
+    user["cert_dev"] = certified_bots != []
                          
     return {
         "bots": bots, 
         "approved_bots": approved_bots, 
         "certified_bots": certified_bots, 
-        "bot_developer": approved_bots != [], 
-        "certified_developer": certified_bots != [], 
         "profile": user, 
-        "defunct": user_dpy is None, 
+        "dup": user_dpy is None, 
         "user": user_obj
     }
