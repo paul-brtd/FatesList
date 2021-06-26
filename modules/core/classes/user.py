@@ -7,7 +7,7 @@ class User(DiscordUser):
 
     async def profile(self):
         """Gets a users profile"""
-        user = await db.fetchrow(
+        user = await self.db.fetchrow(
             "SELECT badges, state, description, css, coins, js_allowed, vote_epoch FROM users WHERE user_id = $1", 
             self.id
         )
@@ -22,7 +22,7 @@ class User(DiscordUser):
         user = dict(user)
     
         # TODO: This whole section
-        _bots = await db.fetch(
+        _bots = await self.db.fetch(
             """SELECT bots.description, bots.prefix, bots.banner, bots.state, bots.votes, bots.servers, bots.bot_id, bots.nsfw, bot_owner.main FROM bots 
             INNER JOIN bot_owner ON bot_owner.bot_id = bots.bot_id 
             WHERE bot_owner.owner = $1""",
@@ -33,14 +33,14 @@ class User(DiscordUser):
     approved_bots = [obj for obj in bots if obj["state"] in (enums.BotState.approved, enums.BotState.certified)]
     certified_bots = [obj for obj in bots if obj["state"] == enums.BotState.certified]
                          
-    guild = client.get_guild(main_server)
+    guild = self.client.get_guild(main_server)
     if guild is None:
         badges = None
                          
     else:                      
         user_dpy = guild.get_member(self.id)
         if user_dpy is None:
-            user_dpy = await client.fetch_user(self.id)
+            user_dpy = await self.client.fetch_user(self.id)
     
     if user_dpy is None: # Still connecting to dpy or whatever
         badges = None # Still not prepared to deal with it since we havent connected to discord yet 
