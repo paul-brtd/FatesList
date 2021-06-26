@@ -4,9 +4,11 @@ from modules.core.logger import logger
 import modules.models.enums as enums
 from discord import Member
 import orjson
-from config import special_badges
+from config import special_badges as _sbs
 from pydantic import BaseModel
 from . import Bot
+
+special_badges = [_sbs[id] | {"id": id} for id in sbs.keys()] # Until we rewrite config for badges
 
 class Badge(BaseModel):
     """Handle badges"""
