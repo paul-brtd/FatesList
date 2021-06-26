@@ -6,6 +6,7 @@ from .badge import Badge
 class ProfileBot(BaseModel):
     bot_id: int
     description: str
+    invite: str
     prefix: str
     banner: str
     state: enums.BotState
