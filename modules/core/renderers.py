@@ -37,7 +37,7 @@ def gen_owner_html(owners_lst: tuple):
     last_done = False
     # First owner will always be main and hence should have the crown
     owners_html = '<span class="iconify" data-icon="mdi-crown" data-inline="false"></span>'
-    owners_html += "<br/>".join([f"<a class='long-desc-link' href='/profile/{owner[0]}'>{owner[1]}</a>" for owner in owners_lst if owner]
+    owners_html += "<br/>".join([f"<a class='long-desc-link' href='/profile/{owner[0]}'>{owner[1]}</a>" for owner in owners_lst if owner])
     return owners_html
 
 async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bool, rev_page: int = 1):
