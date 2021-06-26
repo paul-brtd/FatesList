@@ -10,8 +10,10 @@ class ProfileBot(BaseModel):
     state: enums.BotState
     votes: int
     guild_count: int
-    nsfw: bool
-
+    nsfw: bool       
+        
 class Profile(BaseModel):
     bots: List[ProfileBot]
+    approved_bots: List[ProfileBot]
+    certified_bots: List[ProfileBot]
     
