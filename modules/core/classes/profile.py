@@ -16,12 +16,12 @@ class ProfileBot(BaseModel):
 class ProfileData(BaseModel):
     badges: List[Badge]
     description: str
+    bot_dev: bool
+    cert_dev: bool
 
 class Profile(BaseModel):
     bots: List[ProfileBot]
     approved_bots: List[ProfileBot]
     certified_bots: List[ProfileBot]
-    bot_dev: bool, 
-    cert_dev: bool
     profile: ProfileData
     dup: bool
