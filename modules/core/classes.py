@@ -68,7 +68,7 @@ class User(DiscordUser):
         )
         
         if user is None:
-            return Nome
+            return None
         
         user_obj = await self.fetch()
         if user_obj is None:
