@@ -49,6 +49,7 @@ async def close():
 # Two events to let us know when discord.py is up and ready
 @client.event
 async def on_ready():
+    client.ready = False
     DiscordComponents(client)
     logger.info(f"{client.user} up")
 
