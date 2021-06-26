@@ -43,10 +43,10 @@ class User(DiscordUser):
             user_dpy = await self.client.fetch_user(self.id)
     
     if user_dpy is None: # Still connecting to dpy or whatever
-        badges = None # Still not prepared to deal with it since we havent connected to discord yet 
+        user["badges"] = None # Still not prepared to deal with it since we havent connected to discord yet 
                          
     else:
-        badges = user["badges"] = Badge.from_user(user_dpy, badges, approved_bots)
+        user["badges"] = Badge.from_user(user_dpy, badges, approved_bots)
                          
     return {
         "bots": bots, 
@@ -55,7 +55,6 @@ class User(DiscordUser):
         "bot_developer": approved_bots != [], 
         "certified_developer": certified_bots != [], 
         "profile": user, 
-        "badges": badges,
         "defunct": user_dpy is None, 
         "user": user_obj
     }
