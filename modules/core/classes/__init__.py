@@ -1,1 +1,1 @@
-from .badges import Badges # Badges
+from .badges import Badge # Badges
