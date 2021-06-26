@@ -1,6 +1,7 @@
 from .base import DiscordUser
     
 class User(DiscordUser):
+    """A user on Fates List"""
     async def fetch(self):
         """Fetch a user object from our cache"""
         return await get_user(self.id)
@@ -29,7 +30,7 @@ class User(DiscordUser):
             self.id
         )
         
-    bots = [dict(obj) | {"invite": await Bot(id = obj["bot_id"]).invite_url() for obj in _bots]
+    bots = [dict(bot) | {"invite": await Bot(id = bot["bot_id"]).invite_url() for bot in _bots]
     approved_bots = [obj for obj in bots if obj["state"] in (enums.BotState.approved, enums.BotState.certified)]
     certified_bots = [obj for obj in bots if obj["state"] == enums.BotState.certified]
     
