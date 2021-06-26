@@ -6,7 +6,6 @@ from discord import Member
 import orjson
 from config import special_badges as _sbs
 from pydantic import BaseModel
-from . import Bot
 
 special_badges = [_sbs[id] | {"id": id} for id in sbs.keys()] # Until we rewrite config for badges
 
@@ -24,14 +23,12 @@ class Badge(BaseModel):
     
     
     @staticmethod
-    def from_user(member: Member, badges: Optional[List[str]] = [], bots: List[Bot]):
+    def from_user(member: Member, badges: Optional[List[str]] = [], bot_dev: Optional[bool] = False, cert_dev: Optional[bool] = False):
         """Make badges from a user given the member, badges and bots"""
         user_flags = {}
         
-        # Get core information
-        states = [bot["state"] for bot in bots]
-        user_flags["certified"] = enums.BotState.certified in states
-        user_flags["bot_dev"] = enums.BotState.certified in states or enums.BotState.approved in states
+        user_flags["certified"] = cert_dev
+        user_flags["bot_dev"] = bot_dev
         
         badges = badges if badges else []
 
