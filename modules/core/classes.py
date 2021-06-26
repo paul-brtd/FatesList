@@ -1,6 +1,7 @@
 # Work in progress partial rewrite of Fates List
 from pydantic import BaseModel
 from .cache import get_bot, get_user, get_any
+from .badges import Badge
 
 class DiscordUser(BaseModel):
     id: int
