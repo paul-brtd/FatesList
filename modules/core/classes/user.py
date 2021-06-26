@@ -56,6 +56,6 @@ class User(DiscordUser):
             "approved_bots": approved_bots, 
             "certified_bots": certified_bots, 
             "profile": user,
-            "dup": Fakse
+            "dup": self.client.ready
             "user": user_obj
         }
