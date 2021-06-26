@@ -17,7 +17,7 @@ class ProfileData(BaseModel):
     badges: List[Badge]
     description: Optional[str] = "This user prefers to be a enigma"
     css: Optional[str] = None
-    js_allowed: Optional[bool] = True
+    js_allowed: bool
     bot_dev: bool
     cert_dev: bool
     state: enums.UserState
