@@ -32,6 +32,9 @@ class User(DiscordUser):
     bots = [dict(obj) | {"invite": await Bot(id = obj["bot_id"]).invite_url() for obj in _bots]
     approved_bots = [obj for obj in bots if obj["state"] in (enums.BotState.approved, enums.BotState.certified)]
     certified_bots = [obj for obj in bots if obj["state"] == enums.BotState.certified]
+    
+    user["bot_dev"] = approved_bots != []
+    user["cert_dev"] = certified_bots != []                      
                          
     guild = self.client.get_guild(main_server)
     if guild is None:
@@ -46,9 +49,7 @@ class User(DiscordUser):
         user["badges"] = None # Still not prepared to deal with it since we havent connected to discord yet 
                          
     else:
-        user["badges"] = Badge.from_user(user_dpy, badges, approved_bots)
-    user["bot_dev"] = approved_bots != []
-    user["cert_dev"] = certified_bots != []
+        user["badges"] = Badge.from_user(user_dpy, badges, user["bot_dev"], user["cert_dev"])
                          
     return {
         "bots": bots, 
