@@ -1,4 +1,5 @@
 from .base import DiscordUser
+from modules.core.cache import get_user
     
 class User(DiscordUser):
     """A user on Fates List"""
