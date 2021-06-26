@@ -1,5 +1,5 @@
 from .base import DiscordUser
-
+    
 class User(DiscordUser):
     async def fetch(self):
         """Fetch a user object from our cache"""
