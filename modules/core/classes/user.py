@@ -31,8 +31,11 @@ class User(DiscordUser):
             WHERE bot_owner.owner = $1""",
             self.id
         )
+    bots = []
+    for bot in _bots:
+        bot_obj = Bot(id = bot["bot_id"])
+        bots.append(bot | {"invite": await bot_obj.invite_url(), "user": await bot_obj.fetch()})
         
-    bots = [dict(bot) | {"invite": await Bot(id = bot["bot_id"]).invite_url() for bot in _bots]
     approved_bots = [obj for obj in bots if obj["state"] in (enums.BotState.approved, enums.BotState.certified)]
     certified_bots = [obj for obj in bots if obj["state"] == enums.BotState.certified]
     
