@@ -6,31 +6,6 @@ from pydantic import BaseModel
 
 from config import *
 
-class BaseUser(BaseModel):
-    """
-    Represents a base user class on Fates List.
-    """
-    id: str
-    username: str
-    avatar: str
-    disc: str
-    status: enums.Status
-    bot: bool
-
-    def __str__(self):
-        """
-        :return: Returns the username
-        :rtype: str
-        """
-        return self.username
-
-    def get_status(self):
-        """
-        :return: Returns a status object for the bot
-        :rtype: Status
-        """
-        return Status(status = self.status)
-
 class TokenTypes(IntEnum):
     _init_ = "value __doc__"
     full = 0, "Regular user token"
@@ -137,6 +112,31 @@ class Status(IntEnum):
     idle = 3, "Idle"
     dnd = 4, "Do Not Disturb"
 
+class BaseUser(BaseModel):
+    """
+    Represents a base user class on Fates List.
+    """
+    id: str
+    username: str
+    avatar: str
+    disc: str
+    status: Status
+    bot: bool
+
+    def __str__(self):
+        """
+        :return: Returns the username
+        :rtype: str
+        """
+        return self.username
+
+    def get_status(self):
+        """
+        :return: Returns a status object for the bot
+        :rtype: Status
+        """
+        return Status(status = self.status)    
+    
 class BotState(IntEnum):
     _init_ = 'value __doc__'
     approved = 0, "Verified"
