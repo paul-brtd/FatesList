@@ -1,15 +1,16 @@
 from pydantic import BaseModel
 from typing import Optional, List
+import modules.models.enums as enums
 
 class ProfileBot(BaseModel):
-    bot_id
-    description
-    prefix
-    banner
-    state
-    votes
-    servers
-    nsfw 
+    bot_id: int
+    description: str
+    prefix: str
+    banner: str
+    state: enums.BotState
+    votes: int
+    guild_count: int
+    nsfw: bool
 
 class Profile(BaseModel):
     bots: List[ProfileBot]
