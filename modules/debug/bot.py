@@ -1,51 +1,14 @@
 import asyncio
-import builtins
 import os
 import sys
 
-import aio_pika
-import aioredis
 import discord
-from discord.ext.commands import AutoShardedBot, Bot
 
-sys.path.append("../..")
 from modules.core import *
-from config import (TOKEN_MAIN, bot_dev_role, bots_role, owner, rabbitmq_pwd,
-                    worker_key)
 
-intents = discord.Intents.default()
-intents.members = True
-intents.typing = False
-class ASB(AutoShardedBot):
-    async def is_owner(self, user: discord.User):
-        if user.id == owner:
-            return True
-        return False
-
-
-# Set the roles in client
-client = ASB(command_prefix = "fl!", intents = intents)
-
-client.load_extension("jishaku")
-client.bots_role = bots_role
-client.bot_dev_role = bot_dev_role
-
-
-async def setup_db():
-    builtins.redis_db = await aioredis.from_url('redis://localhost:12348', db = 1)
-    builtins.rabbitmq_db = await aio_pika.connect_robust(
-        f"amqp://fateslist:{rabbitmq_pwd}@127.0.0.1/"
-    )
-
-@client.event
-async def on_ready():
-    print(client.user)
-    await setup_db()
-    try:
-        while True:
-            await asyncio.sleep(3)
-    except:
-        await redis_db.close()
+client_manager.load_extension("jishaku")
+client_manager.bots_role = bots_role
+client_manager.bot_dev_role = bot_dev_role
 
 def splitc(s, l = 1990):
     o = []
@@ -110,7 +73,4 @@ return [dict(obj) for obj in db_lst]
         for r in retl:
             await ctx.send(f"```{r}```")
 
-client.add_cog(Manager(client))
-
-if __name__ == "__main__":
-    client.run(TOKEN_MAIN)
+client_manager.add_cog(Manager(client_manager))
