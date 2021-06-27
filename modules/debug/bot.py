@@ -1,10 +1,7 @@
 import asyncio
-import builtins
 import os
 import sys
 
-import aio_pika
-import aioredis
 import discord
 from discord.ext.commands import AutoShardedBot, Bot
 
@@ -29,23 +26,6 @@ client = ASB(command_prefix = "fl!", intents = intents)
 client.load_extension("jishaku")
 client.bots_role = bots_role
 client.bot_dev_role = bot_dev_role
-
-
-async def setup_db():
-    builtins.redis_db = await aioredis.from_url('redis://localhost:12348', db = 1)
-    builtins.rabbitmq_db = await aio_pika.connect_robust(
-        f"amqp://fateslist:{rabbitmq_pwd}@127.0.0.1/"
-    )
-
-@client.event
-async def on_ready():
-    print(client.user)
-    await setup_db()
-    try:
-        while True:
-            await asyncio.sleep(3)
-    except:
-        await redis_db.close()
 
 def splitc(s, l = 1990):
     o = []
