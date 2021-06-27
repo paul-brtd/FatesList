@@ -86,15 +86,23 @@ async def startup_tasks(app):
     await vote_reminder()
 
 async def start_dbg():
-    await asyncio.sleep(20) # Ensure all workers are up
-    worker_ret = await add_rmq_task_with_ret("_worker", {})
-    if worker_ret[1]:
-        worker_lst = worker_ret[0]["ret"]
-    else:
-        worker_lst = []
-    if worker_lst and worker_lst[0] == os.getpid():
-        asyncio.create_task(client_dbg.start(TOKEN_MAIN))
-    
+    up = False
+    ctime = time.time()
+    await asyncio.sleep(10) # Give RabbitMQ a chance to clean state
+    while True:
+        worker_ret = await add_rmq_task_with_ret("_worker", {})
+        if worker_ret[1]:
+            worker_lst = worker_ret[0]["ret"]
+        else:
+            worker_lst = []
+        if worker_lst:
+            if worker_lst[0] == os.getpid():
+                asyncio.create_task(client_dbg.start(TOKEN_MAIN))
+            return
+        if time.time() - ctime > 30:
+            logger.warning("Worker One not yet up. Timed out...")
+            return
+           
 async def status(workers):
     pubsub = redis_db.pubsub()
     await pubsub.subscribe(f"{instance_name}._worker")
