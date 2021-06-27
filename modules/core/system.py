@@ -1,7 +1,14 @@
 from .imports import *
 from .ratelimits import *
-
-
+from discord import Client
+from discord.ext.commands import Bot
+    
+class FatesDebug(Bot):
+    async def is_owner(self, user: discord.User):
+        if user.id == owner:
+            return True
+        return False
+    
 def setup_discord():
     intent_main = discord.Intents.default()
     intent_main.typing = False
@@ -14,17 +21,18 @@ def setup_discord():
     intent_main.messages = False
     intent_main.members = True
     intent_main.presences = True
-    client = discord.Client(intents=intent_main)
+    client = Client(intents=intent_main)
     client.ready = False
     intent_server = deepcopy(intent_main)
     intent_server.presences = False
-    client_server = discord.Client(intents=intent_server)
-    return client, client_server
+    client_server = Client(intents=intent_server)
+    client_manager = FatesDebug(command_prefix = "fl!", intents=intents_server)
+    return client, client_server, client_manager
 
 # Include all the modules by looping through and using importlib to import them and then including them in fastapi
 def include_routers(app, fname, rootpath):
     for root, dirs, files in os.walk(rootpath):
-        if not root.startswith("_") and not root.startswith("."):
+        if not root.startswith("_") and not root.startswith(".") and not root.startswith("debug"):
             rrep = root.replace("/", ".")
             for f in files:
                 if not f.startswith("_") and not f.startswith(".") and not f.endswith("pyc") and not f.startswith("models") and not f.startswith("base"):
@@ -74,8 +82,27 @@ async def startup_tasks(app):
     )
     builtins.up = True
     await redis_db.publish(f"{instance_name}._worker", f"UP WORKER {os.getpid()} 0 {workers}") # Announce that we are up and not a repeat
+    asyncio.create_task(start_dbg())
     await vote_reminder()
 
+async def start_dbg():
+    up = False
+    ctime = time.time()
+    await asyncio.sleep(10) # Give RabbitMQ a chance to clean state
+    while True:
+        worker_ret = await add_rmq_task_with_ret("_worker", {})
+        if worker_ret[1]:
+            worker_lst = worker_ret[0]["ret"]
+        else:
+            worker_lst = []
+        if worker_lst:
+            if worker_lst[0] == os.getpid():
+                asyncio.create_task(client_dbg.start(TOKEN_MAIN))
+            return
+        if time.time() - ctime > 30:
+            logger.warning("Worker One not yet up. Timed out...")
+            return
+           
 async def status(workers):
     pubsub = redis_db.pubsub()
     await pubsub.subscribe(f"{instance_name}._worker")

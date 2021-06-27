@@ -7,7 +7,7 @@ builtins.boot_time = time.time()
 
 sentry_sdk.init(sentry_dsn)
 
-builtins.client, builtins.client_servers = setup_discord()
+builtins.client, builtins.client_servers, builtins.client_dbg = setup_discord()
 
 # Setup FastAPI with required urls and orjson for faster json handling
 app = FastAPI(default_response_class = ORJSONResponse, redoc_url = "/api/docs/redoc", docs_url = "/api/docs/swagger", openapi_url = "/api/docs/openapi")
@@ -57,6 +57,11 @@ async def on_ready():
 async def on_ready():
     DiscordComponents(client_servers)
     logger.info(f"{client_servers.user} up")
+
+@client_dbg.event
+async def on_ready():
+    DiscordComponents(client_servers)
+    logger.info("Debug manager is up")
 
 @app.middleware("http")
 async def fateslist_request_handler(request: Request, call_next):
