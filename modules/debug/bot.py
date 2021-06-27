@@ -7,8 +7,6 @@ from discord.ext.commands import AutoShardedBot, Bot
 
 from modules.core import *
 
-client = ASB(command_prefix = "fl!", intents = intents)
-
 client.load_extension("jishaku")
 client.bots_role = bots_role
 client.bot_dev_role = bot_dev_role
