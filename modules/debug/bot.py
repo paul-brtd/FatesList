@@ -3,7 +3,6 @@ import os
 import sys
 
 import discord
-from discord.ext.commands import AutoShardedBot, Bot
 
 from modules.core import *
 
