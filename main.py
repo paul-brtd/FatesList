@@ -62,11 +62,6 @@ async def on_ready():
 async def on_ready():
     DiscordComponents(client_servers)
     logger.info("Debug manager is up")
-    
-@client_dbg.event
-async def on_message(message):
-    pass
-    
 
 @app.middleware("http")
 async def fateslist_request_handler(request: Request, call_next):
