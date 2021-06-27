@@ -1,13 +1,9 @@
 from .imports import *
 from .ratelimits import *
-
-class FatesBot(discord.AutoShardedClient):
-    async def is_owner(self, user: discord.User):
-        if user.id == owner:
-            return True
-        return False
+from discord import Client
+from discord.ext.commands import Bot
     
-class FatesManager(discord.AutoShardedBot):
+class FatesDebug(Bot):
     async def is_owner(self, user: discord.User):
         if user.id == owner:
             return True
@@ -25,12 +21,12 @@ def setup_discord():
     intent_main.messages = False
     intent_main.members = True
     intent_main.presences = True
-    client = FatesBot(intents=intent_main)
+    client = Client(intents=intent_main)
     client.ready = False
     intent_server = deepcopy(intent_main)
     intent_server.presences = False
-    client_server = FatesBot(intents=intent_server)
-    client_manager = FatesManager(command_prefix = "fl!", intents=intents_server)
+    client_server = Client(intents=intent_server)
+    client_manager = FatesDebug(command_prefix = "fl!", intents=intents_server)
     return client, client_server, client_manager
 
 # Include all the modules by looping through and using importlib to import them and then including them in fastapi
