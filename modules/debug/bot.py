@@ -3,12 +3,9 @@ import os
 import sys
 
 import discord
+from discord.ext.commands import Cog, command, is_owner
 
 from modules.core import *
-
-client_manager.load_extension("jishaku")
-client_manager.bots_role = bots_role
-client_manager.bot_dev_role = bot_dev_role
 
 def splitc(s, l = 1990):
     o = []
@@ -73,4 +70,3 @@ return [dict(obj) for obj in db_lst]
         for r in retl:
             await ctx.send(f"```{r}```")
 
-client_manager.add_cog(Manager(client_manager))

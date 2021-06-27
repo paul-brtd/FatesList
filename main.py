@@ -51,17 +51,17 @@ async def close():
 async def on_ready():
     client.ready = True
     DiscordComponents(client)
-    logger.info(f"{client.user} up")
+    logger.info(f"{client.user} (Main) up")
 
 @client_servers.event
 async def on_ready():
     DiscordComponents(client_servers)
-    logger.info(f"{client_servers.user} up")
+    logger.info(f"{client_servers.user} (Server) up")
 
 @client_dbg.event
 async def on_ready():
-    DiscordComponents(client_servers)
-    logger.info("Debug manager is up")
+    DiscordComponents(client_dbg)
+    logger.info(f"{client_dbg.user} (Debug) is up on one worker")
 
 @app.middleware("http")
 async def fateslist_request_handler(request: Request, call_next):

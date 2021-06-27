@@ -1,5 +1,6 @@
 from .imports import *
 from .ratelimits import *
+from .rabbitmq import *
 from discord import Client
 from discord.ext.commands import Bot
     
@@ -26,8 +27,8 @@ def setup_discord():
     intent_server = deepcopy(intent_main)
     intent_server.presences = False
     client_server = Client(intents=intent_server)
-    client_manager = FatesDebug(command_prefix = "fl!", intents=intents_server)
-    return client, client_server, client_manager
+    client_dbg = FatesDebug(command_prefix = "fl!", intents=discord.Intents.default())
+    return client, client_server, client_dbg
 
 # Include all the modules by looping through and using importlib to import them and then including them in fastapi
 def include_routers(app, fname, rootpath):
@@ -97,10 +98,15 @@ async def start_dbg():
             worker_lst = []
         if worker_lst:
             if worker_lst[0] == os.getpid():
+                client_dbg.bots_role = bots_role
+                client_dbg.bot_dev_role = bot_dev_role
+                client_dbg.load_extension("jishaku")
+                manager = importlib.import_module("modules.debug.bot")
+                client_dbg.add_cog(manager.Manager(client_dbg))
                 asyncio.create_task(client_dbg.start(TOKEN_MAIN))
             return
         if time.time() - ctime > 30:
-            logger.warning("Worker One not yet up. Timed out...")
+            logger.warning("Worker one not yet up. Timed out...")
             return
            
 async def status(workers):
@@ -114,7 +120,7 @@ async def status(workers):
             case ["UP", "RMQ", _]:
                 await redis_db.publish(f"{instance_name}._worker", f"UP WORKER {os.getpid()} 1 {workers}") # Announce that we are up and sending to repeat a message
             case ["REGET", "WORKER", reason]:
-                logger.warning(f"RabbitMQ requesting REGET with reason {reason}")
+                logger.info(f"RabbitMQ requesting REGET with reason {reason}")
                 await redis_db.publish(f"{instance_name}._worker", f"UP WORKER {os.getpid()} 1 {workers}") # Announce that we are up and sending to repeat a message
             case _:
                 pass # Ignore the rest for now
