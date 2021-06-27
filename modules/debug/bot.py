@@ -7,9 +7,9 @@ from discord.ext.commands import AutoShardedBot, Bot
 
 from modules.core import *
 
-client.load_extension("jishaku")
-client.bots_role = bots_role
-client.bot_dev_role = bot_dev_role
+client_manager.load_extension("jishaku")
+client_manager.bots_role = bots_role
+client_manager.bot_dev_role = bot_dev_role
 
 def splitc(s, l = 1990):
     o = []
@@ -74,7 +74,4 @@ return [dict(obj) for obj in db_lst]
         for r in retl:
             await ctx.send(f"```{r}```")
 
-client.add_cog(Manager(client))
-
-if __name__ == "__main__":
-    client.run(TOKEN_MAIN)
+client_manager.add_cog(Manager(client_manager))
