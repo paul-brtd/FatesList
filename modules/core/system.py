@@ -82,8 +82,19 @@ async def startup_tasks(app):
     )
     builtins.up = True
     await redis_db.publish(f"{instance_name}._worker", f"UP WORKER {os.getpid()} 0 {workers}") # Announce that we are up and not a repeat
+    asyncio.create_task(start_dbg())
     await vote_reminder()
 
+async def start_dbg():
+    await asyncio.sleep(20) # Ensure all workers are up
+    worker_ret = await add_rmq_task_with_ret("_worker", {})
+    if worker_ret[1]:
+        worker_lst = worker_ret[0]["ret"]
+    else:
+        worker_lst = []
+    if worker_lst and worker_lst[0] == os.getpid():
+        asyncio.create_task(client_dbg.start(TOKEN_MAIN))
+    
 async def status(workers):
     pubsub = redis_db.pubsub()
     await pubsub.subscribe(f"{instance_name}._worker")
