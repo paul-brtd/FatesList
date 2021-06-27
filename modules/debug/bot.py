@@ -5,22 +5,8 @@ import sys
 import discord
 from discord.ext.commands import AutoShardedBot, Bot
 
-sys.path.append("../..")
 from modules.core import *
-from config import (TOKEN_MAIN, bot_dev_role, bots_role, owner, rabbitmq_pwd,
-                    worker_key)
 
-intents = discord.Intents.default()
-intents.members = True
-intents.typing = False
-class ASB(AutoShardedBot):
-    async def is_owner(self, user: discord.User):
-        if user.id == owner:
-            return True
-        return False
-
-
-# Set the roles in client
 client = ASB(command_prefix = "fl!", intents = intents)
 
 client.load_extension("jishaku")
