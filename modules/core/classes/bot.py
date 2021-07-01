@@ -1,4 +1,6 @@
 from .base import DiscordUser
+from typing import Optional, List
+from modules.core.cache import get_bot
 
 class Bot(DiscordUser):
     async def fetch(self):
@@ -13,7 +15,7 @@ class Bot(DiscordUser):
             perm = invite.split(":")[1].split("|")[0] if invite and invite.startswith("P:") else 0
             return f"https://discord.com/api/oauth2/authorize?client_id={self.id}&permissions={perm}&scope=bot%20applications.commands"
         
-        return bot["invite"]
+        return invite
     
     async def invite(self, user_id: Optional[int] = None):
         """Invites a user to a bot updating invite amount"""

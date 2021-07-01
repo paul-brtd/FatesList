@@ -6,6 +6,7 @@ from .badge import Badge
 class ProfileBot(BaseModel):
     """A bot attached to a users profile"""
     bot_id: int
+    avatar: str
     description: str
     invite: str
     prefix: str

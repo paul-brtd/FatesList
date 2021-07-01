@@ -15,3 +15,4 @@ from .routeware import *  # Routing middleware
 from .system import *  # System module
 from .templating import *  # Import the HTML templating system
 from .ws import *  # Import websocket management
+import modules.core.classes as core

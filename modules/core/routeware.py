@@ -1,6 +1,5 @@
 from .imports import *
 
-
 async def routeware(app, fl_exception_handler, request: Request, call_next):
     """
         Simple middleware to:
@@ -10,6 +9,8 @@ async def routeware(app, fl_exception_handler, request: Request, call_next):
     """
     request.scope["error_id"] = str(uuid.uuid4()) # Create a error id for just in case
     request.scope["curr_time"] = str(datetime.datetime.now()) # Get time request was made
+    request.scope["db"] = db
+    request.scope["discord_client"] = client
     logger.trace(request.headers.get("X-Forwarded-For"))
     if str(request.url.path).startswith("/bots/"):
         request.scope["path"] = str(request.url.path).replace("/bots", "/bot", 1)

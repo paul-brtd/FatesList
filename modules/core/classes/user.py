@@ -1,6 +1,10 @@
 from .base import DiscordUser
+from .bot import Bot
+from .badge import Badge
 from modules.core.cache import get_user
-    
+import modules.models.enums as enums    
+from config import main_server
+
 class User(DiscordUser):
     """A user on Fates List"""
     async def fetch(self):
@@ -34,8 +38,8 @@ class User(DiscordUser):
         
         bots = []
         for bot in _bots:
-            bot_obj = Bot(id = bot["bot_id"])
-            bots.append(bot | {"invite": await bot_obj.invite_url(), "user": await bot_obj.fetch()})
+            bot_obj = Bot(id = bot["bot_id"], db = self.db, client = self.client)
+            bots.append(dict(bot) | {"invite": await bot_obj.invite_url(), "user": await bot_obj.fetch()})
         
         approved_bots = [obj for obj in bots if obj["state"] in (enums.BotState.approved, enums.BotState.certified)]
         certified_bots = [obj for obj in bots if obj["state"] == enums.BotState.certified]
@@ -45,17 +49,17 @@ class User(DiscordUser):
                          
         guild = self.client.get_guild(main_server)
         if guild is None:
-            user["badges"] = None
+            user["badges"] = []
                          
-        else:                      
+        else:    
             user_dpy = guild.get_member(self.id)            
-            user["badges"] = Badge.from_user(user_dpy, badges, user["bot_dev"], user["cert_dev"])
+            user["badges"] = Badge.from_user(user_dpy, user["badges"], user["bot_dev"], user["cert_dev"])
                          
         return {
             "bots": bots, 
             "approved_bots": approved_bots, 
             "certified_bots": certified_bots, 
             "profile": user,
-            "dup": self.client.ready
+            "dup": self.client.ready,
             "user": user_obj
         }

@@ -4,7 +4,7 @@ from asyncpg import Pool
 from discord import Client
 
 class DiscordUser():
-    def __init__(self, id: int, db: Pool, client: Client):
+    def __init__(self, *, id: int, db: Pool, client: Client):
         self.id = id
         self.db = db
         self.client = client

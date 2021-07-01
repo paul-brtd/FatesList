@@ -321,30 +321,8 @@ async def preview_api(request: Request, data: PrevRequest, lang: str = "default"
     "/users/{user_id}"
 )
 async def get_user_api(request: Request, user_id: int):
-    user = await db.fetchrow("SELECT badges, state, description, css, coins, js_allowed, vote_epoch FROM users WHERE user_id = $1", user_id)
-    if user is None or user["state"] == enums.UserState.ddr_ban:
-        return abort(404)
-    user_obj = await get_user(user_id)
-    if user_obj is None:
-        return abort(404)
-    user_ret = dict(user)
-    badges = user_ret["badges"]
-    del user_ret["badges"]
-    _bots = await db.fetch("SELECT bots.description, bots.prefix, bots.banner, bots.state, bots.votes, bots.servers, bots.bot_id, bots.nsfw, bot_owner.main FROM bots INNER JOIN bot_owner ON bot_owner.bot_id = bots.bot_id WHERE bot_owner.owner = $1", user_id)
-    bots = [dict(obj) | {"invite": await invite_bot(obj["bot_id"], api = True)} for obj in _bots]
-    approved_bots = [obj for obj in bots if obj["state"] in (0, 6)]
-    certified_bots = [obj for obj in bots if obj["state"] == 6]
-    guild = client.get_guild(main_server)
-    if guild is None:
-        return abort(503)
-    user_dpy = guild.get_member(user_id)
-    if user_dpy is None:
-        user_dpy = await client.fetch_user(user_id)
-    if user_dpy is None: # Still connecting to dpy or whatever
-        badges = None # Still not prepared to deal with it since we havent connected to discord yet 
-    else:
-        badges = get_badges(user_dpy, badges, approved_bots)
-    return {"bots": bots, "approved_bots": approved_bots, "certified_bots": certified_bots, "bot_developer": approved_bots != [], "certified_developer": certified_bots != [], "profile": user_ret, "badges": badges, "defunct": user_dpy is None, "user": user_obj}
+    user = await core.User(id = user_id, db = request.scope["db"], client = request.scope["discord_client"]).profile()
+    return user
 
 @router.patch(
     "/users/{user_id}/bots/{bot_id}/reminders",

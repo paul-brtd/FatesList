@@ -12,13 +12,13 @@
 			    <span class="iconify bot-card-cert" data-icon="fa-solid:certificate" data-inline="false" data-height="3em"></span>
             {% endif %}
             <a href="/{{type}}/{{id}}" class="bot-card-view-link">
-                    <img alt="bot avatar" class="lozad bot-card-avatar" data-placeholder-background="black" data-src="{{data.avatar}}" width="30%"/>
+                    <img alt="bot avatar" class="lozad bot-card-avatar" data-placeholder-background="black" data-src="{{data.avatar or data.user.avatar}}" width="30%"/>
             </a>
         </div>
         <div>
 		<a href="/{{type}}/{{id}}" class="bot-card-view-link">
                 <div class="bot-card-username">
-                        <p class="text-nowrap text-break text-center bot-card-username-txt white-bold">{{data.username}}</p>
+                        <p class="text-nowrap text-break text-center bot-card-username-txt white-bold">{{data.username or data.user.username}}</p>
                 </div>
 		</a>
         </div>

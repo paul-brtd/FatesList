@@ -74,32 +74,36 @@ staff_roles = {
 } 
 
 # TODO: Add Timed Badges
-special_badges = {
-    "STAFF": {
+special_badges = (
+    {
+        "id": "STAFF",
         "name": "Staff",
         "description": "This is a Fates List Staff Member",
         "image": "/static/assets/img/staff.png",
-        "staff": True # Is this badge only for staff?
+        "req": ("staff",) # Is this badge only for staff?
     },
-    "CERTIFIED": {
+    {
+        "id": "CERTDEV",
         "name": "Certified Bot Developer",
         "description": "This is a certified bot developer",
         "image": "/static/assets/img/certified.png",
-        "certified": True # Certified
+        "req": ("cert_dev",) # Certified
     },
-    "BOTDEV": {
+    {
+        "id": "BOTDEV",
         "name": "Bot Developer",
         "description": "This is a bot developer",
         "image": "/static/assets/img/botdev.png",
-        "bot_dev": True
+        "req": ("bot_dev",)
     },
-    "DISCORD_MEMBER": {
+    {
+        "id": "DISCORD_MEMBER",
         "name": "Discord Member",
         "description": "This user is on our support server",
         "image": "/static/assets/img/dmember.png",
-        "support_server_member": True
+        "req": ("discord_member",)
     }
-}
+)
 
 features = {
     "custom_prefix": {

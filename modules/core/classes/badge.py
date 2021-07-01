@@ -4,10 +4,8 @@ from modules.core.logger import logger
 import modules.models.enums as enums
 from discord import Member
 import orjson
-from config import special_badges as _sbs
+from config import staff_roles, special_badges
 from pydantic import BaseModel
-
-special_badges = [_sbs[id] | {"id": id} for id in sbs.keys()] # Until we rewrite config for badges
 
 class Badge(BaseModel):
     """Handle badges"""
@@ -16,26 +14,26 @@ class Badge(BaseModel):
     description: str
     image: str
     staff: Optional[bool] = False
-    certified: Optional[bool] = False
+    cert_dev: Optional[bool] = False
     bot_dev: Optional[bool] = False
     support_server_member: Optional[bool] = False
     everyone: Optional[bool] = False
-    
     
     @staticmethod
     def from_user(member: Member, badges: Optional[List[str]] = [], bot_dev: Optional[bool] = False, cert_dev: Optional[bool] = False):
         """Make badges from a user given the member, badges and bots"""
         user_flags = {}
         
-        user_flags["certified"] = cert_dev
+        user_flags["cert_dev"] = cert_dev
         user_flags["bot_dev"] = bot_dev
+        user_flags["everyone"] = True
         
         badges = badges if badges else []
 
         # A discord.Member is part of the support server
-        if isinstance(user_dpy, discord.Member):
-            user_flags["staff"] = is_staff(staff_roles, user_dpy.roles, 2)[0]
-            user_flags["support_server_member"] = True
+        if isinstance(member, Member):
+            user_flags["staff"] = is_staff(staff_roles, member.roles, 2)[0]
+            user_flags["discord_member"] = True
         
         all_badges = []
         for badge in badges: # Add in user created badges from blist
@@ -47,14 +45,11 @@ class Badge(BaseModel):
                 
             all_badges.append(badge_data)
     
-    # Special staff + certified badges (if present)
-    for badge_id, badge_data in special_badges.items():
-        for key in ("staff", "certified", "bot_dev", "support_server_member"):
+        # Special staff + certified badges (if present)
+        for badge in special_badges:
             # Check if user is allowed to get badge and if so, give it
-            if badge_data.get(key) and user_flags.get(key):
-                all_badges.append(badge_data)
+            check = len([key for key in badge["req"] if user_flags.get(key)])
+            if check:
+                all_badges.append(badge)
             
-        if badge_data.get("everyone"):
-            all_badges.append(badge_data)
-            
-    return all_badges
+        return all_badges

@@ -16,23 +16,22 @@
 {% endblock %}
 
 {% block content %}
-    <div class="d-flex d-xl-flex flex-column justify-content-center align-items-center justify-content-xl-center align-items-xl-center"><img style="border-radius: 50%;width: 128px;" src="{{user.avatar}}">
-        <h3 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;">{{user.username}}</h3>
-	<span class="white"><span style="margin-right: 3px;" class="iconify white" data-icon="fa-solid:coins" data-inline="false"></span>{{coins}} coins</span>
+    <div class="d-flex d-xl-flex flex-column justify-content-center align-items-center justify-content-xl-center align-items-xl-center"><img style="border-radius: 50%;width: 128px;" src="{{user.user.avatar}}">
+        <h3 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;">{{user.user.username}}</h3>
 	<span style="font-size: 20px" class="white">
-		<span id="bio_text-0" style="opacity: 0.7">{% if not user_info.description %}This user prefers to be an enigma{% else %}{{user_info.description}}{% endif %}</span>
+		<span id="bio_text-0" style="opacity: 0.7">{{user.profile.description}}</span>
 		{% if personal %}
 		<a role="button" aria-label="Edit Profile" href="javascript:void" class="long-desc-link" style="color: white !important; opacity: 0.7; font-size: 14px" onclick="pbioEditPane(this, 0)">Edit</a>
 		<form id="bio-0" style="display: none" onsubmit="updateBio()">
-			<input type="text" class="fform" id="bio-form-0" value="{% if not user_info.description %}This user prefers to be an enigma{% else %}{{user_info.description}}{% endif %}" placeholder="Enter your bio here" minlength="13" required>
+			<input type="text" class="fform" id="bio-form-0" value="{{user.profile.description}}" placeholder="Enter your bio here" minlength="13" required>
 			<button type="submit" class="btn btn-outline-light">Edit</button>
 		</form>
                 {% endif %}
 	</span>
 	<section style="margin-top: 7px; padding: 3px;" id="badges">
 		<div>
-			{% for badge_id, badge_dict in badges.items()%} <!-- Badges -->
-				<a href="javascript:void(0)"><img src='{{badge_dict.image}}' alt='{{badge_dict.name}} badge' height="40px" width="45px" class="modalux" onclick="modalShow('{{badge_dict.name}}', '{{badge_dict.description}}')"/></a>
+			{% for badge in user.profile.badges %} <!-- Badges -->
+				<a href="javascript:void(0)"><img src='{{badge.image}}' alt='{{badge.name}} badge' height="40px" width="45px" class="modalux" onclick="modalShow('{{badge.name}}', '{{badge.description}}')"/></a>
         		{% endfor %}
 		</div>
 	</section>
@@ -51,10 +50,10 @@
     <aside class="white" style="text-align: left; opacity: 0.8">JavaScript in bots is a huge power and responsibility Fates List gives to bot owners to make their bot pages more interactive. Some (rare) bot owners however, despite all our testing and reporting abuse JavaScript and iframes to deliver potentially malicious content. You can disable or enable javascript and iframes in bot pages here! Note that this does not apply to markdown content which is anyways secure but this may be changed in the future...</aside>
     </div>
     <div class="d-flex pane">
-	    <span style="font-size: 18px; margin-top: 5px" class="white padspan">JavaScript Enabled: {{user_info.js_allowed}} <span style="font-size: 11px"></span></span><br/>
+	    <span style="font-size: 18px; margin-top: 5px" class="white padspan">JavaScript Enabled: {{user.profile.js_allowed}} <span style="font-size: 11px"></span></span><br/>
     </div>
     <div class="d-flex pane">
-	    <button class="btn btn-outline-light" onclick="toggleJS()">{% if user_info.js_allowed %}Disable{% else %}Enable{% endif %}</a></span></p>
+	    <button class="btn btn-outline-light" onclick="toggleJS()">{% if user.profile.js_allowed %}Disable{% else %}Enable{% endif %}</a></span></p>
     </div>
     <br/>
     </div>
@@ -81,23 +80,21 @@
 
     <hr style="font-size: 20px;border-top-width: 1px;border-top-color: #eee;width: 90%;">
     <div class="d-flex" style="margin-left: 5%;"><span class="iconify" data-icon="fa-solid:robot" data-inline="false" data-height="3em" style="color: white"></span>
-	    <h4 style="color: rgba(255,255,255,0.87);margin-left: 15px;">{% if not personal %}{{user.username}}'s Bots{%else%}Your Bots{%endif%}</h4>
+	    <h4 style="color: rgba(255,255,255,0.87);margin-left: 15px;">{% if not personal %}{{user.user.username}}'s Bots{%else%}Your Bots{%endif%}</h4>
     </div>
     <div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center" id="tt-1" style="width: 90%;margin: 10px 5%;">
-        {% for bot in user_bots %}
-		{{ flCard(bot, False, 'bot') }}
+        {% for bot in user.bots %}
+		{% if (personal or admin) or bot.state in (enums.BotState.verified, enums.BotState.certified) %}
+			{{ flCard(bot, False, 'bot') }}
+		{% endif %}
 	{% endfor %}
     </div>
 
-    {% if personal %}
+    {% if personal or admin %}
     <aside class="white" style="margin-left: 10px; opacity: 0.8; margin-bottom: 11px;">Note that the above list of bots includes your bots in the queue, denied bots (resubmit your bot once its fixed!) and banned bots (make a support ticket to learn why and how to fix it). These bots are hidden to only you and staff until it is approved or unbanned or requeued and approved</aside>
     {% endif %}
     <script>
-        var context = {
-		user_id: "{{user_info.user_id}}",
-		user_token: "{{user_info.api_token}}",
-		js_allowed: {{user_info.js_allowed.__str__().lower()}}
-	}
+	var context = {{context|tojson}}
 	    
 	function showToken() {
 		but = document.querySelector("#sat")
