@@ -84,13 +84,13 @@
     </div>
     <div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center" id="tt-1" style="width: 90%;margin: 10px 5%;">
         {% for bot in user.bots %}
-		{% if (personal or admin) or bot.state in (enums.BotState.verified, enums.BotState.certified) %}
+		{% if personal or bot.state in (enums.BotState.verified, enums.BotState.certified) %}
 			{{ flCard(bot, False, 'bot') }}
 		{% endif %}
 	{% endfor %}
     </div>
 
-    {% if personal or admin %}
+    {% if personal %}
     <aside class="white" style="margin-left: 10px; opacity: 0.8; margin-bottom: 11px;">Note that the above list of bots includes your bots in the queue, denied bots (resubmit your bot once its fixed!) and banned bots (make a support ticket to learn why and how to fix it). These bots are hidden to only you and staff until it is approved or unbanned or requeued and approved</aside>
     {% endif %}
     <script>

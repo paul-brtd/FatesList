@@ -143,7 +143,7 @@ class templates():
             "logged_in": True if "user_id" in arg_dict.keys() else False
         }
         
-        arg_dict["context"] = context | base_context
+        arg_dict["context"] = base_context | context
 
         if status is None:
             ret = _templates.TemplateResponse(f, arg_dict)

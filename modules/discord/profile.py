@@ -21,34 +21,33 @@ async def get_user_profile(request, user_id: int, preview: bool):
     if guild is None:
         return await templates.e(request, "Site is still loading...")
     
-    if request.session.get("user_id"):
-        dpy_viewer = guild.get_member(int(request.session.get("user_id")))
+    viewer = guild.get_member(int(request.session.get("user_id", -1)))
+    admin = is_staff(staff_roles, viewer.roles, 4)[0] if viewer else False
     
-    else:
-        dpy_viewer = None
+    personal = user_id == int(request.session.get("user_id", -1))
 
-    dpy_member = guild.get_member(user_id)
-    if dpy_viewer is None:
-        admin = False
-    
-    else:
-        admin = is_staff(staff_roles, dpy_viewer.roles, 4)[0]
-    
-    if user_id == int(request.session.get("user_id", -1)) and not preview:
-        personal = True
-    else:
-        personal = False
+    user = await core.User(
+        id = user_id, 
+        db = request.scope["app"].state.worker_session.postgres, 
+        client = request.scope["discord_client"]
+    ).profile()
 
-    user = await core.User(id = user_id, db = request.scope["db"], client = request.scope["discord_client"]).profile()
     if not user:
         return await templates.e(request, "Profile Not Found", 404)
     
+    personal = personal or admin and not preview
+
+    context = {}
+    if personal:
+        context["user_token"] = await db.fetchval("SELECT api_token FROM users WHERE user_id = $1", user_id)
+
     return await templates.TemplateResponse(
         "profile.html", 
         {
             "request": request, 
             "user": user, 
-            "personal": personal, 
+            "personal": (personal or admin) and not preview, 
             "admin": admin
-        }
+        },
+        context = context
     )
