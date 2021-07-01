@@ -1,6 +1,6 @@
 """
 Helper functions for mundane tasks like getting maint, promotion or bot commands
-and/or setting bot stats and voting for a bot
+and/or setting bot stats and voting for a bot. Also has replace tuples to be handled
 """
 
 import re
@@ -13,6 +13,12 @@ from .cache import *
 from .events import *
 from .imports import *
 from .templating import *
+
+# Some replace tuples
+# TODO: Move this elsewhere
+js_rem_tuple = (("onclick", ""), ("onhover", ""), ("script", ""), ("onload", ""))
+banner_replace_tuple = (("\"", ""), ("'", ""), ("http://", "https://"), ("(", ""), (")", ""), ("file://", ""))
+ldesc_replace_tuple = (("window.location", ""), ("document.ge", ""))
 
 cleaner = Cleaner(remove_unknown_tags=False)
 
