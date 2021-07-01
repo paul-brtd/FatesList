@@ -4,7 +4,6 @@ Fates List Templating System
 
 from .imports import *
 from .permissions import *
-from lynxfall.string import intl_text
 
 _templates = Jinja2Templates(directory="templates") # Setup templates folder
 discord_o = Oauth(OauthConfig)
