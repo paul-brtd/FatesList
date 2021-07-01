@@ -13,10 +13,7 @@ class templates():
     @staticmethod
     async def TemplateResponse(f, arg_dict: dict, *, context: dict = {}, not_error: bool = True):
         guild = client.get_guild(main_server)
-        try:
-            request = arg_dict["request"]
-        except:
-            raise KeyError
+        request = arg_dict["request"]
         status = arg_dict.get("status_code")
         if "user_id" in request.session.keys():
             arg_dict["css"] = request.session.get("user_css")
@@ -25,7 +22,7 @@ class templates():
             except:
                 user = None
             state = await db.fetchval("SELECT state FROM users WHERE user_id = $1", int(request.session["user_id"]))
-            if (state == enums.UserState.global_ban or state == enums.UserState.ddr_ban) and not_error:
+            if (state == enums.UserState.global_ban) and not_error:
                 ban_type = enums.UserState(state).__doc__
                 return await templates.e(request, f"You have been {ban_type} banned from Fates List<br/>", status_code = 403)
             if user is not None:
@@ -39,7 +36,7 @@ class templates():
             arg_dict["user_id"] = int(request.session.get("user_id"))
             if request.session.get("user_id"):
                 arg_dict["user_token"] = await db.fetchval("SELECT api_token FROM users WHERE user_id = $1", arg_dict["user_id"]) 
-            arg_dict["intl_text"] = intl_text
+            arg_dict["intl_text"] = intl_text # This comes from lynxfall.utils.string
             arg_dict["site_lang"] = request.session.get("site_lang", "default")
             try:
                 request.session["access_token"] = await discord_o.access_token_check(request.session.get("scopes"), request.session.get("access_token"))
