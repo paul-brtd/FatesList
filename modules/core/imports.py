@@ -19,7 +19,7 @@ import traceback as tblib
 import uuid
 from copy import deepcopy
 from http import HTTPStatus
-from typing import List, Optional, Union, Any, Callable
+from typing import List, Optional, Union
 
 import aio_pika
 import aiohttp
@@ -63,15 +63,3 @@ from config import *
 from modules.emd_hab import emd
 from modules.Oauth import Oauth
 from modules.utils import *
-
-
-def is_coroutine_callable(call: Callable[..., Any]) -> bool:
-    if inspect.isroutine(call):
-        return inspect.iscoroutinefunction(call) or asyncio.iscoroutine(call)
-    if inspect.isclass(call):
-        return False
-    call = getattr(call, "__call__", None)
-    return asyncio.iscoroutinefunction(call) or asyncio.iscoroutine(call)
-
-from fastapi import utils
-utils.is_coroutine_callable = is_coroutine_callable
