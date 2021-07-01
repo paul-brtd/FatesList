@@ -16,7 +16,11 @@ router = APIRouter(
 @router.get(
     "/bots/{bot_id}/token",
     dependencies=[
-        Depends(RateLimiter(times=5, minutes=1)), 
+        Depends(
+            Ratelimiter(
+                global_limit = Limit(times=5, minutes=1)
+            )    
+        ), 
         Depends(user_auth_check)
     ]
 )
@@ -33,7 +37,11 @@ async def get_bot_token(request: Request, bot_id: int, user_id: int):
     "/{bot_id}/token", 
     response_model = APIResponse, 
     dependencies = [
-        Depends(RateLimiter(times=7, minutes=3)), 
+        Depends(
+            Ratelimiter(
+                global_limit = Limit(times=7, minutes=3)
+            )
+        ), 
         Depends(bot_auth_check)
     ]
 )
@@ -49,7 +57,11 @@ async def regenerate_bot_token(request: Request, bot_id: int):
     "/random", 
     response_model = BotRandom, 
     dependencies=[
-        Depends(RateLimiter(times=7, seconds=5))
+        Depends(
+            Ratelimiter(
+                global_limit = Limit(times=7, seconds=5)
+            )
+        )
     ]
 )
 async def fetch_random_bot(request: Request, lang: str = "default"):
@@ -71,7 +83,11 @@ async def fetch_random_bot(request: Request, lang: str = "default"):
     "/{bot_id}", 
     response_model = Bot, 
     dependencies=[
-        Depends(RateLimiter(times=5, minutes=2))
+        Depends(
+            Ratelimiter(
+                global_limit = Limit(times=5, minutes=2)
+            )
+        )
     ]
 )
 async def fetch_bot(request: Request, bot_id: int):
@@ -111,7 +127,11 @@ async def fetch_bot(request: Request, bot_id: int):
 @router.get(
     "/{bot_id}/widget",
     dependencies=[
-        Depends(RateLimiter(times=5, minutes=2))
+        Depends(
+            Ratelimiter(
+                global_limit = Limit(times=5, minutes=2)
+            )
+        )
     ]
 )
 async def get_bot_widget(request: Request, bot_id: int, bt: BackgroundTasks):
@@ -120,10 +140,14 @@ async def get_bot_widget(request: Request, bot_id: int, bt: BackgroundTasks):
 @router.get(
     "/{bot_id}/raw",
     dependencies=[
-        Depends(RateLimiter(times=5, minutes=4))
+        Depends(
+            Ratelimiter(
+                global_limit = Limit(times=5, minutes=4)
+            )
+        )
     ]
 )
-async def get_raw_bot_api(request: Request, bot_id: int, bt: BackgroundTasks):
+async def get_raw_bot(request: Request, bot_id: int, bt: BackgroundTasks):
     """
     Gets the raw given to the template with a few differences (bot_id being string and not int and passing auth manually to the function (coming soon) as the API aims to be as stateless as possible)
     Note that you likely want the Get Bot API and not this in most cases
@@ -135,7 +159,11 @@ async def get_raw_bot_api(request: Request, bot_id: int, bt: BackgroundTasks):
     "/{bot_id}/stats", 
     response_model = APIResponse, 
     dependencies=[
-        Depends(RateLimiter(times=5, minutes=1)), 
+        Depends(
+            Ratelimiter(
+                global_limit = Limit(times=5, minutes=1)
+            ) 
+        ),
         Depends(bot_auth_check)
     ]
 )

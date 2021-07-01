@@ -4,8 +4,6 @@ from typing import Dict, ForwardRef, List, Optional
 from aenum import Enum, IntEnum
 from pydantic import BaseModel
 
-from config import *
-
 class TokenTypes(IntEnum):
     _init_ = "value __doc__"
     full = 0, "Regular user token"
@@ -22,10 +20,10 @@ class WebSocketCommand(IntEnum):
     dispatch_old = 0, "Dispatch Old Events"
     
 class KnownClients(Enum):
-    _init_ = 'value __key__ __banned__ __verified__ __noprompt__'
-    fates_list = "Fates List", client_key_fateslist, False, True, True
-    lynx = "Lynx", client_key_lynx, False, False, False
-    unknown = "Unknown", None, False, False, False
+    _init_ = 'value  __banned__ __verified__ __noprompt__'
+    fates_list = "Fates List", False, True, True
+    lynx = "Lynx", False, False, False
+    unknown = "Unknown", False, False, False
     
 cooldown_buckets = {
     "requeue": 60*0.2,

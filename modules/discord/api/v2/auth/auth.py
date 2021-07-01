@@ -29,58 +29,42 @@ async def get_login_link(request: Request, data: LoginInfo):
         "scopes": data.scopes, 
         "redirect": data.redirect if data.redirect else "/", 
         "callback": data.callback.dict()
-    }), ex = 120)
+    }), ex = 150)
     return api_success(url = discord_o.get_discord_oauth(auth_s.dumps(str(id)), data.scopes))
 
 @router.get("/auth/callback")
 async def auth_callback_handler(request: Request, code: str, state: str):
     try:
         id = auth_s.loads(state)
+    
     except Exception:
         return api_error(
-            "Invalid state provided"
+            "Invalid state provided. Please try logging in again using https://fateslist.xyz/auth/login"
         )
+    
     oauth = await redis_db.get(f"oauth-{id}")
     if not oauth:
         return api_error(
-            "Invalid state. There is no oauth data associated with this state. Please try and login again"        
+            "Invalid state. There is no oauth data associated with this state. Please try logging in again using https://fateslist.xyz/auth/login"        
         )
+    
     oauth = orjson.loads(oauth)
     callback = Callback(**oauth["callback"])
+    
     try:
         client = enums.KnownClients(callback.name)
-        if client.__key__ != callback.key:
-            return api_error(
-                "Invalid client key for known client"
-            )
+    
     except ValueError:
         client = enums.KnownClients.unknown
         
     url = f"{callback.url}?code={code}&scopes={discord_o.get_scopes(oauth['scopes'])}&redirect={oauth['redirect']}"
     
-    if not callback.url.startswith("http://localhost:"):
-        async with aiohttp.ClientSession() as sess:
-            async with sess.put(callback.url, headers = {"Snowfall": callback.verify_key}) as res:
-                if res.status != 200:
-                    return api_error(
-                        "Callback URL does not return 200 on PUT!"
-                    )
-                try:
-                    json = await res.json()
-                except Exception:
-                    return api_error(
-                        "Callback URL not returning a proper JSON"
-                    )
-                if json.get("key", "") != callback.key or json.get("name", "") != callback.name:
-                    return api_error(
-                        "Callback URL not returning name in performed oauth request"
-                    )
     if client.__noprompt__:
         await redis_db.delete(f"oauth-{id}")
         return RedirectResponse(url)
-    return api_error(
-        "Prompt auth is not yet implemented!"
-    )
+    
+    await redis_db.expire(f"oauth-{id}", 120)
+    return await templates.TemplateResponse("prompt_auth.html", {"request": request, "code": code, "state": state})
 
 @router.post("/users", response_model = LoginResponse)
 async def login_user(request: Request, data: Login):

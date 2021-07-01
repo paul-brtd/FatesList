@@ -40,7 +40,7 @@ class Bot(BaseUser):
     server_count: int
     shard_count: Optional[int] = 0
     user_count: int
-    shards: Optional[list] = []
+    shards: Optional[List[int]] = []
     prefix: str
     library: str
     invite: Optional[str] = None
@@ -63,7 +63,7 @@ class Bot(BaseUser):
 class BotStats(BaseModel):
     guild_count: int
     shard_count: Optional[int] = None
-    shards: Optional[list] = None
+    shards: Optional[List[int]] = None
     user_count: Optional[int] = None
 
              

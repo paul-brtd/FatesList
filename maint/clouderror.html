@@ -37,21 +37,39 @@
 			<ul>
 				<li>
 					<h5 class="tip">
-					If you are here to vote for a bot or just see the site, just wait a few minutes as the site is likely down for a update or bug fix.
+						If you are here to vote for a bot or just see the site, just wait a few minutes as the site is likely down for a update or bug fix.
 					</h5>
 				</li>
 				<li>
 					<h5 class="tip">
-					Join the <em><a href="https://discord.gg/cMAnfu8AJB">Fates List Support Server</a></em> if you wish to know when the site will be back up.
+						Join the <em><a href="https://discord.gg/cMAnfu8AJB">Fates List Support Server</a></em> if you wish to know when the site will be back up.
 					</h5>
 				</li>
 				<li>
-				<h5 class="tip">
-					Do not ask on the bots support server (MewBot, DuckHunt etc.). These servers have <em>no</em> idea when Fates List will be back up and asking there may not get you a reply.
-				</h5>
+					<h5 class="tip">
+						Do not ask on the bots support server (MewBot, DuckHunt etc.). These servers have <em>no</em> idea when Fates List will be back up and asking there may not get you a reply.
+					</h5>
 				</li>
 			</ul>
 		</div>
 	</body>
-	<script>setTimeout(function(data){window.location.reload()}, 3000)</script>
+	<script>
+		function checkSiteStatus() {
+			fetch("https://fateslist.xyz")
+			.then(
+				function(response) {
+					if (response.status === 200) {
+						window.location.reload()
+					}
+				}
+			)
+		}
+	setTimeout(
+		function(data) {
+			checkSiteStatus()
+		}, 
+		5000
+	)
+
+	</script>
 </html>

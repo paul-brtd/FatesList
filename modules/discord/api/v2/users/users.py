@@ -17,7 +17,11 @@ router = APIRouter(
     "/{user_id}/bots/{bot_id}", 
     response_model = APIResponse, 
     dependencies=[
-        Depends(RateLimiter(times=5, minutes=3)),
+        Depends(
+            Ratelimiter(
+                global_limit = Limit(times=10, minutes=3)
+            )
+        ),
         Depends(user_auth_check)
     ]
 )
@@ -41,7 +45,11 @@ async def add_bot(request: Request, user_id: int, bot_id: int, bot: BotMeta):
     "/{user_id}/bots/{bot_id}", 
     response_model = APIResponse, 
     dependencies=[
-        Depends(RateLimiter(times=5, minutes=3)),
+        Depends(
+            Ratelimiter(
+                global_limit = Limit(times=5, minutes=3)
+            )
+        ),
         Depends(user_auth_check)
     ]
 )
@@ -60,11 +68,14 @@ async def edit_bot(request: Request, user_id: int, bot_id: int, bot: BotMeta):
         return api_success(status_code = 202)
     return api_error(rc)
 
-
 @router.delete(
     "/{user_id}/bots/{bot_id}", 
     dependencies=[
-        Depends(RateLimiter(times=1, minutes=2)),
+        Depends(
+            Ratelimiter(
+                global_limit = Limit(times=1, minutes=5)
+            )
+        ),
         Depends(user_auth_check)
     ]
 )

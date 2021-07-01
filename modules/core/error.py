@@ -1,7 +1,6 @@
-"""Fates List Error System"""
 from .imports import *
 from .templating import *
-
+from .helpers import *
 
 def etrace(ex):
      return "".join(tblib.format_exception(ex)) # COMPAT: Python 3.10 only
@@ -11,77 +10,124 @@ class WebError():
     async def log(request, exc, error_id, curr_time):
         traceback = exc.__traceback__ # Get traceback from exception
         site_errors = client.get_channel(site_errors_channel) # Get site errors channel
+
         try:
             fl_info = f"Error ID: {error_id}\n\n" # Initial header
             fl_info += etrace(exc)
+        
         except:
             pass
-        msg = (f"500 (Internal Server Error) at {str(request.url).replace('https://', '')}\n\n**Error**: {exc}\n\n**Error ID**: {error_id}\n**Time When Error Happened**: {curr_time}") # Send the 500 message to site errors
-        print(msg)
+        
+        url = str(request.url).replace('https://', '')
+        msg = inspect.cleandoc(f"""500 (Internal Server Error) at {url}
+
+        **Error**: {exc}
+
+        **Error ID**: {error_id}
+
+        **Time When Error Happened**: {curr_time}""") 
+        
         try:
             await site_errors.send(msg)
+        
         except:
-            pass
+            raise exc # Reraise the error
+        
         fl_file = discord.File(io.BytesIO(bytes(fl_info, 'utf-8')), f'{error_id}.txt') # Create a file on discord
+
         if fl_file is not None:
             await site_errors.send(file=fl_file) # Send it
+        
         else:
-            await site_errors.send("No extra information could be logged and/or send right now") # Could not send it
+            await site_errors.send("No extra information could be logged and/or sent right now") # Could not send it
 
     @staticmethod
     async def error_handler(request, exc, log: bool = True):
-        error_id = request.scope["error_id"] # Create a error id
-        curr_time = request.scope["curr_time"] # Get time error happened
-        try:
-            status_code = exc.status_code # Check for 422 and 500 using status code presence
-        except: # 500 and 422 do not have status code
-            if type(exc) == RequestValidationError: # This is when incorrect arguments were passed (422)
-                exc.status_code = 422
-            else: # Internal Server Error (500)
-                exc.status_code = 500
-        path = str(request.url.path)
-        if exc.status_code == 500:
-            if log:
-                asyncio.create_task(WebError.log(request, exc, error_id, curr_time)) # Try and log what happened
-            if str(request.url.path).startswith("/api"):
-                return ORJSONResponse({"done": False, "reason": f"Internal Server Error\nError ID: {error_id}\nTime when error happened: {curr_time}\nOur developers have been notified and are looking into it."}, status_code = exc.status_code)
-            tb_full = "".join(tblib.format_exception(exc)) # COMPAT: Python 3.10 only
-            errmsg = f"Fates List had a slight issue and our developers and looking into what happened<br/><br/>Error ID: {error_id}<br/><br/>Please check our support server at <a href='{support_url}'>{support_url}</a> for more information<br/><br/>Please send the below traceback if asked:<br/><br/><pre>{tb_full}</pre>Time When Error Happened: {curr_time}<br/>"
-            return HTMLResponse(errmsg, status_code = exc.status_code)
-        elif exc.status_code == 404: 
-            if path.startswith("/bot"): # Bot 404
-                msg = "Bot Not Found"
-                code = 404
-            elif path.startswith("/profile"): # Profile 404
-                msg = "Profile Not Found"
-                code = 404
-            else: # Regular 404
-                msg = "404\nNot Found"
-                code = 404
-        elif exc.status_code == 401:
-            msg = "401\nNot Authorized"
-            code = 401
-        elif exc.status_code == 403:
-            msg = "403\nForbidden"
-            code = 403
-        elif exc.status_code == 422:
-            if path.startswith("/bot"): # Bot 422 which is actually 404 to us
-                msg = "Bot Not Found"
-                code = 404
-            elif path.startswith("/profile"): # Profile 422 which is actually 404 to us
-                msg = "Profile Not Found"
-                code = 404
-            else:
-                msg = "Invalid Data Provided<br/>" + str(exc) # Regular 422
-                code = 422
-        else:
-            msg = f"Unknown Error: {exc}" # Unknown error, no case for it yet
-            code = 400
+        error_id = request.scope["error_id"] 
+        curr_time = request.scope["curr_time"] 
 
-        json = path.startswith("/api") # Check if api route, return JSON if it is
-        if json: # If api route, return JSON
-            if exc.status_code != 422:
-                return await http_exception_handler(request, exc) # 422 needs special request handler, all others can use this
+        try:
+            # All status codes other than most 500 and 422s
+            status_code = exc.status_code 
+        
+        except: 
+            # 500 and 422 do not have status code
+            if isinstance(exc, RequestValidationError): 
+                # 422 (Unprocessable Entity)
+                status_code = 422
+            
+            else: 
+                # 500 (Internal Server Error)
+                status_code = 500
+        
+        path = str(request.url.path)
+        
+        try:
+            code_str = HTTPStatus(code_str).phrase
+            fixed_code = status_code
+
+        except:
+            # Fallback
+            code_str = "Unknown Error"
+            fixed_code = 400
+
+        if status_code == 500:
+            if log:
+                # Log the error
+                asyncio.create_task(WebError.log(request, exc, error_id, curr_time)) 
+            
+            if str(request.url.path).startswith("/api"):
+                return api_error(
+                    "Internal Server Error", 
+                    error_id = error_id, 
+                    status_code = status_code
+                )
+            
+            tb_full = "".join(tblib.format_exception(exc))
+
+            errmsg = inspect.cleandoc(f"""
+                Fates List had a slight issue and our developers and looking into what happened<br/><br/>
+                
+                Error ID: {error_id}<br/><br/>
+
+                Please check our support server at <a href='{support_url}'>{support_url}</a> for more information<br/><br/>
+
+                Please send the below traceback if asked:<br/><br/>
+
+                <pre>{tb_full}</pre>
+
+                Time When Error Happened: {curr_time}<br/>""")
+
+            return HTMLResponse(errmsg, status_code = status_code)
+
+        # Special error messages (some with custom-set status code)
+        elif status_code == 404: 
+            if path.startswith("/bot"):
+                code_str = "Bot Not Found"
+        
+            elif path.startswith("/profile"): 
+                code_str = "Profile Not Found"
+            
+        elif status_code == 422:
+            if path.startswith("/bot"): 
+                code_str = "Bot Not Found"
+                fixed_code = 404
+            
+            elif path.startswith("/profile"): 
+                code_str = "Profile Not Found"
+                fixed_code = 404
+        
+        api = path.startswith("/api") 
+        
+        # API route handling
+        if api: 
+            if status_code != 422:
+                # Normal handling
+                return await http_exception_handler(request, exc) 
+        
             else:
-                return await request_validation_exception_handler(request, exc) # Other codes can use normal one, 422 needs this
-        return await templates.e(request, msg, code) # Otherwise return error
+                # Special 422 handling
+                return await request_validation_exception_handler(request, exc) 
+       
+        # Return error to user as jinja2 template
+        return await templates.e(request, code_str, fixed_code)

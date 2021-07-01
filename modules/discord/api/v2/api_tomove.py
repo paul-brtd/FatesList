@@ -125,7 +125,12 @@ async def get_bot_commands_api(request:  Request, bot_id: int, filter: Optional[
     "/bots/{bot_id}/commands",
     response_model = BotCommandAddResponse, 
     dependencies=[
-        Depends(RateLimiter(times=20, minutes=1)), 
+        Depends(
+            Ratelimiter(
+                global_limit = Limit(times=20, minutes=1),
+                sub_limits = [Limit(times=5, seconds=15)]
+            )
+        ),
         Depends(bot_auth_check)
     ]
 )
@@ -146,7 +151,12 @@ async def add_bot_command_api(request: Request, bot_id: int, command: PartialBot
     "/bots/{bot_id}/commands", 
     response_model = APIResponse, 
     dependencies=[
-        Depends(RateLimiter(times=20, minutes=1)), 
+        Depends(
+            Ratelimiter(
+                global_limit = Limit(times=20, minutes=1),
+                sub_limits = [Limit(times=5, seconds=15)]
+            )
+        ), 
         Depends(bot_auth_check)
     ]
 )
@@ -168,7 +178,12 @@ async def edit_bot_command_api(request: Request, bot_id: int, command: BotComman
     "/bots/{bot_id}/commands", 
     response_model = APIResponse, 
     dependencies=[
-        Depends(RateLimiter(times=20, minutes=1)), 
+        Depends(
+            Ratelimiter(
+                global_limit = Limit(times=20, minutes=1),
+                sub_limits = [Limit(times=5, seconds=15)]
+            )
+        ), 
         Depends(bot_auth_check)
     ]
 )
@@ -268,7 +283,12 @@ async def bots_search_page(request: Request, q: str):
     "/search/profiles", 
     response_model = ProfileSearch,
     dependencies=[
-        Depends(RateLimiter(times=20, minutes=1))
+        Depends(
+            Ratelimiter(
+                global_limit = Limit(times=20, minutes=1),
+                sub_limits = [Limit(times=5, seconds=15)]
+            )
+        )
     ]
 )
 async def profiles_search_page(request: Request, q: str):
@@ -279,7 +299,12 @@ async def profiles_search_page(request: Request, q: str):
     "/preview", 
     response_model = PrevResponse, 
     dependencies=[
-        Depends(RateLimiter(times=20, minutes=1))
+        Depends(
+            Ratelimiter(
+                global_limit = Limit(times=20, minutes=1),
+                sub_limits = [Limit(times=5, seconds=15)]
+            )
+        )
     ]
 )
 async def preview_api(request: Request, data: PrevRequest, lang: str = "default"):
@@ -343,7 +368,11 @@ async def set_vote_reminder(request: Request, user_id: int, bot_id: int, data: V
     "/users/{user_id}/servers/prepare",
     response_model = ServerListAuthed,
     dependencies=[
-        Depends(RateLimiter(times=3, seconds=35)),
+        Depends(
+            Ratelimiter(
+                global_limit = Limit(times=3, seconds=35)
+            )
+        ),
         Depends(user_auth_check)
     ]
 )
@@ -353,6 +382,7 @@ async def prepare_servers_api(request: Request, user_id: int, data: ServerCheck)
 
     This request may change the access token and this should be set on the client and will be returned in the json response as well
     """
+    return abort(503)
     valid = {}
     access_token = await discord_o.access_token_check(data.scopes, data.access_token.dict())
     request.session["access_token"] = access_token

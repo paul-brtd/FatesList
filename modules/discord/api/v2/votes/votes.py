@@ -15,7 +15,11 @@ router = APIRouter(
     "/users/{user_id}/bots/{bot_id}/votes", 
     response_model = BotVoteCheck, 
     dependencies=[
-        Depends(RateLimiter(times=5, minutes=1)),
+        Depends(
+            Ratelimiter(
+                global_limit = Limit(times=5, minutes=1)
+            )
+        ),
         Depends(bot_user_auth_check)
     ]
 )
@@ -60,7 +64,11 @@ async def get_user_votes(request: Request, bot_id: int, user_id: int):
 @router.patch(
     "/users/{user_id}/bots/{bot_id}/votes", 
     dependencies=[
-        Depends(RateLimiter(times=5, minutes=1)),
+        Depends(
+            Ratelimiter(
+                global_limit = Limit(times=5, minutes=1)
+            )
+        ),
         Depends(user_auth_check)
     ]
 )

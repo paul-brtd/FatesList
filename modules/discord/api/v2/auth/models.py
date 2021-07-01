@@ -9,8 +9,6 @@ from ..base_models import AccessToken, APIResponse, BaseUser
 
 
 class Callback(BaseModel):
-    key: str
-    verify_key: str
     name: str
     url: str
 

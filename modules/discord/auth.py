@@ -34,8 +34,6 @@ async def login_stage2(request: Request, redirect: str, join_servers: str = FFor
             "callback": {
                 "url": "https://fateslist.xyz/auth/login/confirm",
                 "name": "Fates List",
-                "key": client_key_fateslist,
-                "verify_key": client_key_fateslistp
             }
         }) as res:
             json = await res.json()
@@ -69,12 +67,6 @@ async def login_confirm(request: Request, code: str, scopes: str, redirect: str)
                 request.session["user_css"] = json["css"]
                 request.session["js_allowed"] = json["js_allowed"]
                 return HTMLResponse(f"<script>window.location.replace('{redirect}')</script>")
-            
-@router.put("/login/confirm")
-async def confirm_auditor(request: Request, Snowfall: str = Header(...)):
-    if not secure_strcmp(Snowfall, client_key_fateslistp):
-        return abort(401)
-    return {"key": client_key_fateslist, "name": "Fates List"}
             
 @router.get("/logout")
 async def logout(request: Request):

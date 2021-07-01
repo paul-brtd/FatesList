@@ -217,7 +217,7 @@
 	<h5 style="font-weight: bold; margin-bottom: 15px;">{% if mode == "templ_add" or mode == "templ_edit" %}Server Template Features{% else %}Bot Features + Privacy{% endif %}</h5>
 	    <select-pure name="tags" id="features" default-label="Choose any features that your bot supports" multiple>
 		{% for feature in features.keys() %}
-		<option-pure value="{{feature}}" {% if feature in data.features %}selected{% endif %}>{{features[feature].name}}</option-pure>
+		<option-pure value="{{feature}}" {% if mode == 'edit' and feature in data.features %}selected{% endif %}>{{features[feature].name}}</option-pure>
 		{% endfor %}
 	    </select-pure>
      <h5 style="font-weight: bold; margin-bottom: 15px; margin-top: 5px">Bot Purpose</h5>

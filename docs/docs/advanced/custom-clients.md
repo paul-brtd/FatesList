@@ -12,7 +12,7 @@ This page will describe some common tasks that your custom client/frontend shoul
 
 One of the main things you will need to implement is login. To do so:
 
-First send a POST request to /api/oauth (see [Endpoints](endpoints.md) to learn how to do this). You will get a `url` field and this is where you should redorect users to for oauth. You may wish to specify a different redirect uri, do this by setting the `oauth_redirect` field. For custom clients, you will also need to set the `callback` field as a dict/object with the following (for callback):
+First send a POST request to /api/oauth (see [Endpoints](../basics/endpoints.md) to learn how to do this). You will get a `url` field and this is where you should redorect users to for oauth. You may wish to specify a different redirect uri, do this by setting the `oauth_redirect` field. For custom clients, you will also need to set the `callback` field as a dict/object with the following (for callback):
 
 | Key | Description | Type |
 | :--- | :--- | :--- |
@@ -27,4 +27,4 @@ The URL, on a `PUT` request with no query parameters and no request body *should
 
 
 
-This will give you the user token (the `token` field), a [BaseUser](basic-structures.md#baseuser) (the `user` field), the user state (the `state` field), whether they have js enabled (the `js_allowed` field), their user css (the `css` field), the site language they have chosen (the `site_lang` field), whether they have been site banned or not (the `banned` field), their access token object (the `access_token` field, you will need to send this on some endpoints) and the url you should redirect users to (the `redirect` field)
+This will give you the user token (the `token` field), a [BaseUser](../structures/basic-structures.md#baseuser) (the `user` field), the user state (the `state` field), whether they have js enabled (the `js_allowed` field), their user css (the `css` field), the site language they have chosen (the `site_lang` field), whether they have been site banned or not (the `banned` field), their access token object (the `access_token` field, you will need to send this on some endpoints) and the url you should redirect users to (the `redirect` field)
