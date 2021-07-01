@@ -43,7 +43,6 @@ from fastapi.exceptions import (HTTPException, RequestValidationError,
 from fastapi.openapi.utils import get_openapi
 from fastapi.responses import HTMLResponse, ORJSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
-from fastapi_limiter import FastAPILimiter
 from fastapi_limiter.depends import Ratelimiter, Limit
 from fastapi_utils.tasks import repeat_every
 from pydantic import BaseModel
@@ -62,5 +61,7 @@ import modules.models.enums as enums
 from config import *
 from lynxfall.mdextend import *
 from lynxfall.utils import *
+from lynxfall.ratelimits import LynxfallLimiter
+from lynxfall.ratelimits.depends import Ratelimiter, Limit
 from modules.Oauth import Oauth
 from modules.utils import *
