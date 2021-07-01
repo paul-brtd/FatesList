@@ -4,7 +4,6 @@ from uuid import UUID
 
 from fastapi.responses import HTMLResponse
 
-from modules.badges import get_badges
 from modules.core import *
 from modules.discord.api.v2.modelstomove import *  # TODO
 

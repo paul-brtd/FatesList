@@ -1,4 +1,3 @@
-from ..badges import *
 from ..core import *
 
 router = APIRouter(

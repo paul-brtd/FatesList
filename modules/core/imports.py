@@ -60,6 +60,6 @@ from websockets.exceptions import ConnectionClosedError, ConnectionClosedOK
 
 import modules.models.enums as enums
 from config import *
-from modules.emd_hab import emd
+from mdextend.emd_hab import emd
 from modules.Oauth import Oauth
 from modules.utils import *
