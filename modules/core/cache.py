@@ -64,7 +64,7 @@ async def _user_fetch(user_id: str, user_type: int, user_only: bool = False) -> 
 
     if valid_user: # Get username, avatar and disc
         username = bot_obj.name
-        avatar = str(bot_obj.avatar_url)
+        avatar = bot_obj.avatar.url
         disc = bot_obj.discriminator
     else:
         username = ""

@@ -11,6 +11,7 @@ from rabbitmq.core import *
 class PIDRecorder():
     def __init__(self):
         self.pids = []
+        self.session_id = None
 
     def record(self, pid):
         if pid in self.pids:
@@ -40,25 +41,45 @@ async def status(pidrec):
     flag = True
     async for msg in pubsub.listen():
         if flag:
-            await redis_db.publish(f"{instance_name}._worker", "UP RMQ 0") # Announce that we are up
+            await redis_db.publish(f"{instance_name}._worker", "NOSESSION UP RMQ 0") # Announce that we are up
             flag = False
         print(msg)
         if msg is None or type(msg.get("data")) != bytes:
             continue
         msg = tuple(msg.get("data").decode("utf-8").split(" "))
+        
         match msg:
-            case ("UP", ("RMQ" | "WORKER") as tgt, pid, reload, worker_amt) if pid.isdigit() and reload.isdigit() and worker_amt.isdigit():
+            case (session_id, "UP", ("RMQ" | "WORKER") as tgt, pid, reload, worker_amt) if pid.isdigit() and reload.isdigit() and worker_amt.isdigit():
+            
                 logger.info(f"{tgt} {pid} is now up with reload mode {reload}. Amount of workers is {worker_amt}")
+
+                if not pidrec.session_id:
+                    pidrec.session_id = session_id
+
+                elif session_id != pidrec.session_id:
+                    # Assume new session
+                    logger.info("Made new worker session due to new session state")
+                    pidrec.reset()
+                    pidrec.session_id = session_id
+
                 pidrec.record(int(pid)) if tgt == "WORKER" else None
+
                 if pidrec.worker_amt() > int(worker_amt) and tgt == "WORKER":
                     logger.warning(f"Invalid worker {worker_amt} with pid {pid} added. Restting config and publishing REGET")
                     pidrec.reset()
                     await asyncio.sleep(1)
-                    await redis_db.publish(f"{instance_name}._worker", "REGET WORKER INVALID_STATE")
+                    await redis_db.publish(f"{instance_name}._worker", f"{pidrec.session_id} REGET WORKER INVALID_STATE")
+
+                if pidrec.worker_amt() == int(worker_amt) and tgt == "WORKER":
+                    logger.success("All workers are now up")
+                    await asyncio.sleep(1)
+                    worker_pids = " ".join([str(pid) for pid in pidrec.list()])
+                    await redis_db.publish(f"{instance_name}._worker", f"{pidrec.session_id} FUP {worker_pids}")
 
             case ("DOWN", ("RMQ" | "WORKER") as tgt, pid) if pid.isdigit():
                 logger.info(f"{tgt} {pid} is now down")
                 pidrec.remove(int(pid)) if tgt == "RMQ" else None
+            
             case _:
                 logger.warning(f"Unhandled message {msg}")
 

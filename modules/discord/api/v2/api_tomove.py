@@ -321,6 +321,8 @@ async def preview_api(request: Request, data: PrevRequest, lang: str = "default"
 )
 async def get_user_api(request: Request, user_id: int):
     user = await core.User(id = user_id, db = request.scope["db"], client = request.scope["discord_client"]).profile()
+    if not user:
+        return abort(404)
     return user
 
 @router.patch(

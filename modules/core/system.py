@@ -2,32 +2,66 @@ from .imports import *
 from .ratelimits import *
 from .rabbitmq import *
 from discord import Client
-from discord.ext.commands import Bot
+from discord.ext import commands
     
-class FatesDebug(Bot):
+class FatesDebugBot(commands.Bot):
+    def __init__(self, *, intents):
+        self.ready = False
+        super().__init__(command_prefix=commands.when_mentioned_or('fl!'), intents = intents)
+
     async def is_owner(self, user: discord.User):
         if user.id == owner:
             return True
         return False
-    
+
+    async def on_ready(self):
+        self.ready = True
+        logger.info(f"{self.user} (DEBUG BOT) should now be up on first worker")
+
+class FatesWorkerSession():
+    """Stores a worker session"""
+    def __init__(self, *, id, postgres, redis, rabbit):
+        self.id = id
+        self.postgres = postgres
+        self.redis = redis
+        self.rabbit = rabbit
+        self.up = False
+        self.workers = None
+        self.fup = False # FUP = finally up/all workers are now up
+
+    def up(self):
+        self.up = True
+
+    def publish_workers(self, workers):
+        self.workers = workers
+        self.fup = True
+
+    def primary_worker(self):
+        return self.fup and self.workers[0] == os.getpid()
+
+class FatesBot(Client):
+    def __init__(self, *, intents):
+        self.ready = False
+        super().__init__(intents = intents)
+
+    async def on_ready(self):
+        self.ready = True
+        logger.info(f"{self.user} now up!")
+
 def setup_discord():
-    intent_main = discord.Intents.default()
-    intent_main.typing = False
-    intent_main.bans = False
-    intent_main.emojis = False
-    intent_main.integrations = False
-    intent_main.webhooks = False
-    intent_main.invites = False
-    intent_main.voice_states = False
-    intent_main.messages = False
+    intent_main = discord.Intents.none()
+    intent_main.guilds = True
     intent_main.members = True
     intent_main.presences = True
-    client = Client(intents=intent_main)
-    client.ready = False
-    intent_server = deepcopy(intent_main)
-    intent_server.presences = False
-    client_server = Client(intents=intent_server)
-    client_dbg = FatesDebug(command_prefix = "fl!", intents=discord.Intents.default())
+    intent_servers = discord.Intents.none()
+    intent_servers.guilds = True
+    intent_servers.members = True
+    intent_dbg = discord.Intents.none()
+    intent_dbg.guilds = True
+    intent_dbg.dm_messages = True # We only want DM messages, not guild
+    client = FatesBot(intents=intent_main)
+    client_server = FatesBot(intents=intent_servers)
+    client_dbg = FatesDebugBot(intents=intent_dbg)
     return client, client_server, client_dbg
 
 # Include all the modules by looping through and using importlib to import them and then including them in fastapi
@@ -41,7 +75,6 @@ def include_routers(app, fname, rootpath):
                     logger.debug(f"{fname}: {root}: Loading {f} with path {path}")
                     route = importlib.import_module(path)
                     app.include_router(route.router)
-
                          
 async def startup_tasks(app):
     """
@@ -55,8 +88,21 @@ async def startup_tasks(app):
         - Start repeated task for vote reminder posting
         - Listen for broadcast events
     """
-    builtins.up = False
+    # TODO: This is still builtins for backward compatibility. Move all code to use worker session and new code should always use this
+
     builtins.db = await setup_db()
+    builtins.redis_db = await aioredis.from_url('redis://localhost:12348', db = 1)
+    builtins.rabbitmq_db = await aio_pika.connect_robust(
+        f"amqp://fateslist:{rabbitmq_pwd}@127.0.0.1/"
+    )
+    logger.success("Connected to postgres, rabbitmq and redis")
+    
+    app.state.worker_session = FatesWorkerSession(
+        id = os.environ.get("SESSION_ID"),
+        postgres = db, 
+        redis = redis_db, 
+        rabbit = rabbitmq_db
+    )
 
     # Set bot tags
     def _tags(tag_db):
@@ -72,56 +118,69 @@ async def startup_tasks(app):
     logger.info("Discord init beginning")
     asyncio.create_task(client.start(TOKEN_MAIN))
     asyncio.create_task(client_servers.start(TOKEN_SERVER))
-    builtins.redis_db = await aioredis.from_url('redis://localhost:12348', db = 1)
     workers = os.environ.get("WORKERS")
-    asyncio.create_task(status(workers))
-    await asyncio.sleep(4)
     app.add_middleware(SessionMiddleware, secret_key=session_key, https_only = True, max_age = 60*60*12, same_site = 'strict') # 1 day expiry cookie
     LynxfallLimiter.init(redis_db, identifier = rl_key_func)
-    builtins.rabbitmq_db = await aio_pika.connect_robust(
-        f"amqp://fateslist:{rabbitmq_pwd}@127.0.0.1/"
-    )
-    builtins.up = True
-    await redis_db.publish(f"{instance_name}._worker", f"UP WORKER {os.getpid()} 0 {workers}") # Announce that we are up and not a repeat
-    asyncio.create_task(start_dbg())
-    await vote_reminder()
 
-async def start_dbg():
-    up = False
-    ctime = time.time()
-    await asyncio.sleep(10) # Give RabbitMQ a chance to clean state
-    while True:
-        worker_ret = await add_rmq_task_with_ret("_worker", {})
-        if worker_ret[1]:
-            worker_lst = worker_ret[0]["ret"]
-        else:
-            worker_lst = []
-        if worker_lst:
-            if worker_lst[0] == os.getpid():
-                client_dbg.bots_role = bots_role
-                client_dbg.bot_dev_role = bot_dev_role
-                client_dbg.load_extension("jishaku")
-                manager = importlib.import_module("modules.debug.bot")
-                client_dbg.add_cog(manager.Manager(client_dbg))
-                asyncio.create_task(client_dbg.start(TOKEN_MAIN))
-            return
-        if time.time() - ctime > 30:
-            logger.warning("Worker one not yet up. Timed out...")
-            return
-           
-async def status(workers):
+    # Announce that we are up and not a repeat
+    asyncio.create_task(status(workers, app.state.worker_session))
+
+    logger.debug("Started status task")
+
+    app.state.worker_session.up = True
+    asyncio.create_task(vote_reminder())
+
+async def start_dbg(session):
+    if session.primary_worker():
+        client_dbg.bots_role = bots_role
+        client_dbg.bot_dev_role = bot_dev_role
+        client_dbg.load_extension("jishaku")
+        manager = importlib.import_module("modules.debug.bot")
+        client_dbg.add_cog(manager.Manager(client_dbg))
+        asyncio.create_task(client_dbg.start(TOKEN_MAIN))
+        return
+        
+async def status(workers, session):
+    await redis_db.publish(f"{instance_name}._worker", f"{session.id} UP WORKER {os.getpid()} 0 {workers}")
     pubsub = redis_db.pubsub()
+    
     await pubsub.subscribe(f"{instance_name}._worker")
     async for msg in pubsub.listen():
         if msg is None or type(msg.get("data")) != bytes:
             continue
-        msg = msg.get("data").decode("utf-8").split(" ")
+        msg = tuple(msg.get("data").decode("utf-8").split(" "))
+        logger.debug(f"Got {msg}") 
         match msg:
-            case ["UP", "RMQ", _]:
-                await redis_db.publish(f"{instance_name}._worker", f"UP WORKER {os.getpid()} 1 {workers}") # Announce that we are up and sending to repeat a message
-            case ["REGET", "WORKER", reason]:
-                logger.info(f"RabbitMQ requesting REGET with reason {reason}")
-                await redis_db.publish(f"{instance_name}._worker", f"UP WORKER {os.getpid()} 1 {workers}") # Announce that we are up and sending to repeat a message
+            # RabbitMQ going up has no session id yet
+            case ("NOSESSION", "UP", "RMQ", _):
+                # Announce that we are up and sending to repeat a message
+                logger.info("Sending RMQ info due to new worker")
+                await redis_db.publish(f"{instance_name}._worker", f"{session.id} UP WORKER {os.getpid()} 1 {workers}") 
+   
+            case (session_id, "REGET", "WORKER", reason):
+                if session_id != session.id:
+                    # Ignore this
+                    continue
+
+                logger.warning(f"RabbitMQ requesting REGET with reason {reason}")
+                # Announce that we are up and sending to repeat a message
+                await redis_db.publish(f"{instance_name}._worker", f"{session.id} UP WORKER {os.getpid()} 1 {workers}") 
+            
+            # FUP = finally up
+            case (session_id, "FUP", *worker_lst):
+                logger.success("All workers are up!")
+                if session_id != session.id:
+                    continue
+
+                # Finally up!
+                try:
+                    session.publish_workers([int(worker) for worker in worker_lst])
+                
+                except ValueError:
+                    logger.warning(f"Got invalid workers from rabbitmq ({workers})")
+
+                await start_dbg(session)
+
             case _:
                 pass # Ignore the rest for now
 

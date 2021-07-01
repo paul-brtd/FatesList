@@ -1,5 +1,5 @@
 import aiohttp
-from discord import AsyncWebhookAdapter, Embed, Webhook
+from discord import Embed, Webhook
 
 from modules.core import *
 from rabbitmq.core import *
@@ -51,7 +51,11 @@ async def backend(json, *, webhook_url, webhook_type, api_token, id, webhook_tar
             )
             username = f"Fates List - {user['username']}#{user['disc']} ({user['id']})"
             async with aiohttp.ClientSession() as session:
-                webhook = Webhook.from_url(webhook_url, adapter=AsyncWebhookAdapter(session))
+                try:
+                    webhook = Webhook.from_url(webhook_url, session = session)
+                except discord.InvalidArgument:
+                    return False
+
                 await webhook.send(embed = embed, username = username)
             return True
     

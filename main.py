@@ -39,32 +39,19 @@ async def startup():
 @app.on_event("shutdown")
 async def close():
     """Close all connections on shutdown"""
-    logger.info("Killing Fates List")
-    await redis_db.publish("_worker", f"DOWN WORKER {os.getpid()}") # Announce that we are down
-    await redis_db.close()
-    await rabbitmq_db.close()
-    await db.close()
+    try:
+        logger.info("Killing Fates List")
+        await redis_db.publish("_worker", f"DOWN WORKER {os.getpid()}") # Announce that we are down
+        await redis_db.close()
+        await rabbitmq_db.close()
+        await db.close()
+    except Exception:
+        pass
     logger.info("Killed")
-
-# Two events to let us know when discord.py is up and ready
-@client.event
-async def on_ready():
-    client.ready = True
-    DiscordComponents(client)
-    logger.info(f"{client.user} (Main) up")
-
-@client_servers.event
-async def on_ready():
-    DiscordComponents(client_servers)
-    logger.info(f"{client_servers.user} (Server) up")
-
-@client_dbg.event
-async def on_ready():
-    DiscordComponents(client_dbg)
-    logger.info(f"{client_dbg.user} (Debug) is up on one worker")
 
 @app.middleware("http")
 async def fateslist_request_handler(request: Request, call_next):
+    request.scope["app"] = app
     try:
         return await routeware(app, fl_exception_handler, request, call_next)
     except:

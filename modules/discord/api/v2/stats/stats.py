@@ -29,17 +29,13 @@ async def botlist_stats_api(
 
         An additional workers list will be populated from RabbitMQ if possible
     """
+    up = request.scope["app"].state.worker_session.up
     if up:
         bot_count_total = await db.fetchval("SELECT COUNT(1) FROM bots")
         bot_count = await db.fetchval("SELECT COUNT(1) FROM bots WHERE state = 0 OR state = 6")
     else:
         bot_count = 0
         bot_count_total = 0
-    worker_ret = await add_rmq_task_with_ret("_worker", {})
-    if worker_ret[1]:
-        worker_lst = worker_ret[0]["ret"]
-    else:
-        worker_lst = []
     return {
         "uptime": time.time() - boot_time, 
         "pid": os.getpid(), 
@@ -47,5 +43,5 @@ async def botlist_stats_api(
         "dup": (client.user is not None), 
         "bot_count": bot_count, 
         "bot_count_total": bot_count_total,
-        "workers": worker_lst
+        "workers": request.scope["app"].state.worker_session.workers
     }

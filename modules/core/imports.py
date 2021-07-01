@@ -31,7 +31,6 @@ import markdown
 import orjson
 import sentry_sdk
 from aioredis.exceptions import ConnectionError as ServerConnectionClosedError
-from discord_components import Button, DiscordComponents
 from fastapi import APIRouter, BackgroundTasks, Depends, FastAPI, File
 from fastapi import Form as FForm
 from fastapi import (Header, HTTPException, Query, Request, Response,
@@ -43,7 +42,6 @@ from fastapi.exceptions import (HTTPException, RequestValidationError,
 from fastapi.openapi.utils import get_openapi
 from fastapi.responses import HTMLResponse, ORJSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
-from fastapi_limiter.depends import Ratelimiter, Limit
 from fastapi_utils.tasks import repeat_every
 from pydantic import BaseModel
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
@@ -64,4 +62,3 @@ from lynxfall.utils import *
 from lynxfall.ratelimits import LynxfallLimiter
 from lynxfall.ratelimits.depends import Ratelimiter, Limit
 from modules.Oauth import Oauth
-from modules.utils import *
