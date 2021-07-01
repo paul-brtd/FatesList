@@ -14,7 +14,7 @@ async def routeware(app, fl_exception_handler, request: Request, call_next):
     logger.trace(request.headers.get("X-Forwarded-For"))
     if str(request.url.path).startswith("/bots/"):
         request.scope["path"] = str(request.url.path).replace("/bots", "/bot", 1)
-    request.scope, api_ver = version_scope(request, 2) # Transparently redirect /api to /api/vX excluding docs and already /api/vX'd apis
+    request.scope, api_ver = api_versioner(request, 2) # Transparently redirect /api to /api/vX excluding docs and already /api/vX'd apis
     start_time = time.time() # Get process time start
     try:
         response = await call_next(request) # Process request
