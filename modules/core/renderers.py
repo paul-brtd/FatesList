@@ -47,7 +47,7 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
         """SELECT js_allowed, prefix, shard_count, state, description, bot_library AS library, 
         banner, website, votes, servers, bot_id, discord AS support, banner, github, features, 
         invite_amount, css, long_description_type, long_description, donate, privacy_policy, 
-        nsfw FROM bots WHERE bot_id = $1""", 
+        nsfw, last_stats_post, created_at FROM bots WHERE bot_id = $1""", 
         bot_id
     )
     tags = await db.fetch("SELECT tag FROM bot_tags WHERE bot_id = $1", bot_id)

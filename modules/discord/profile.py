@@ -7,19 +7,34 @@ router = APIRouter(
 )
 
 @router.get("/me")
-async def redirect_me(request: Request, preview: bool = False):
+async def redirect_me(request: Request, preview: bool = False, worker_session = Depends(worker_session)):
     if "user_id" not in request.session.keys():
         return RedirectResponse("/")
-    return await get_user_profile(request, int(request.session.get("user_id")), preview = preview)
+    return await get_user_profile(
+        request, 
+        int(request.session.get("user_id")), 
+        preview = preview, 
+        worker_session = worker_session
+    )
 
 @router.get("/{user_id}")
-async def profile_of_user_generic(request: Request, user_id: int, preview: bool = False):
-    return await get_user_profile(request, user_id, preview = preview)
+async def profile_of_user_generic(
+    request: Request,
+    user_id: int, 
+    preview: bool = False, 
+    worker_session = Depends(worker_session)
+):
+    return await get_user_profile(request, user_id, preview = preview, worker_session = worker_session)
 
-async def get_user_profile(request, user_id: int, preview: bool):
-    guild = client.get_guild(main_server)
-    if guild is None:
+async def get_user_profile(request, user_id: int, preview: bool, worker_session):
+    discord = worker_session.discord
+    db = worker_session.db
+
+    if not discord.up():
         return await templates.e(request, "Site is still loading...")
+    
+    client = discord.main
+    guild = client.get_guild(main_server)
     
     viewer = guild.get_member(int(request.session.get("user_id", -1)))
     admin = is_staff(staff_roles, viewer.roles, 4)[0] if viewer else False
@@ -28,8 +43,8 @@ async def get_user_profile(request, user_id: int, preview: bool):
 
     user = await core.User(
         id = user_id, 
-        db = request.scope["app"].state.worker_session.postgres, 
-        client = request.scope["discord_client"]
+        db = db, 
+        client = client
     ).profile()
 
     if not user:

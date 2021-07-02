@@ -22,6 +22,9 @@ ldesc_replace_tuple = (("window.location", ""), ("document.ge", ""))
 
 cleaner = Cleaner(remove_unknown_tags=False)
 
+def worker_session(request: Request):
+    return request.app.state.worker_session
+
 async def get_maint(bot_id: str) -> Union[bool, Optional[dict]]:
     api_data = await db.fetchrow("SELECT type, reason, epoch FROM bot_maint WHERE bot_id = $1", bot_id)
     if api_data is None:
@@ -72,7 +75,7 @@ async def add_maint(bot_id: int, type: int, reason: str):
 async def set_stats(*, bot_id: int, guild_count: int, shard_count: int, user_count: int, shards: int):
     if int(guild_count) > 300000000000 or int(shard_count) > 300000000000:
         return
-    await db.execute("UPDATE bots SET servers = $1, shard_count = $2, user_count = $3, shards = $4 WHERE bot_id = $5", guild_count, shard_count, user_count, shards, bot_id)
+    await db.execute("UPDATE bots SET last_stats_post = NOW(), servers = $1, shard_count = $2, user_count = $3, shards = $4 WHERE bot_id = $5", guild_count, shard_count, user_count, shards, bot_id)
 
 async def add_promotion(bot_id: int, title: str, info: str, css: str, type: int):
     if css is not None:

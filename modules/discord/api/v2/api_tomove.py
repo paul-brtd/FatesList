@@ -319,8 +319,8 @@ async def preview_api(request: Request, data: PrevRequest, lang: str = "default"
 @router.get(
     "/users/{user_id}"
 )
-async def get_user_api(request: Request, user_id: int):
-    user = await core.User(id = user_id, db = request.scope["db"], client = request.scope["discord_client"]).profile()
+async def get_user_api(request: Request, user_id: int, worker_session = Depends(worker_session)):
+    user = await core.User(id = user_id, db = worker_session.db, client = worker_session.discord.main).profile()
     if not user:
         return abort(404)
     return user

@@ -18,16 +18,29 @@ class FatesDebugBot(commands.Bot):
         self.ready = True
         logger.info(f"{self.user} (DEBUG BOT) should now be up on first worker")
 
+class FatesWorkerSessionDiscord():
+    """Stores discord clients for a worker session"""
+    def __init__(self, *, main, servers):
+        self.dbg = None
+        self.main = main
+        self.servers = servers
+
+    def up(self):
+        """Returns whether the main client is up"""
+        return self.main.user is not None
+
 class FatesWorkerSession():
     """Stores a worker session"""
-    def __init__(self, *, id, postgres, redis, rabbit):
+    def __init__(self, *, id, db, redis, rabbit, discord):
         self.id = id
-        self.postgres = postgres
+        self.db = db
+        self.start_time = time.time()
         self.redis = redis
         self.rabbit = rabbit
         self.up = False
         self.workers = None
         self.fup = False # FUP = finally up/all workers are now up
+        self.discord = discord
 
     def up(self):
         self.up = True
@@ -99,9 +112,13 @@ async def startup_tasks(app):
     
     app.state.worker_session = FatesWorkerSession(
         id = os.environ.get("SESSION_ID"),
-        postgres = db, 
+        db = db, 
         redis = redis_db, 
-        rabbit = rabbitmq_db
+        rabbit = rabbitmq_db,
+        discord = FatesWorkerSessionDiscord(
+            main = client,
+            servers = client_servers
+        )
     )
 
     # Set bot tags

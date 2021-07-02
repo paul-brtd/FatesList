@@ -3,8 +3,6 @@ import uvloop
 uvloop.install()
 from modules.core import *
 
-builtins.boot_time = time.time()
-
 sentry_sdk.init(sentry_dsn)
 
 builtins.client, builtins.client_servers, builtins.client_dbg = setup_discord()
@@ -51,7 +49,6 @@ async def close():
 
 @app.middleware("http")
 async def fateslist_request_handler(request: Request, call_next):
-    request.scope["app"] = app
     try:
         return await routeware(app, fl_exception_handler, request, call_next)
     except:
