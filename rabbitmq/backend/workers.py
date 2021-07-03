@@ -35,13 +35,13 @@ class PIDRecorder():
     def list(self):
         return self.pids
 
-async def status(pidrec):
-    pubsub = redis_db.pubsub()
+async def status(state, pidrec):
+    pubsub = state.redis.pubsub()
     await pubsub.subscribe(f"{instance_name}._worker")
     flag = True
     async for msg in pubsub.listen():
         if flag:
-            await redis_db.publish(f"{instance_name}._worker", "NOSESSION UP RMQ 0") # Announce that we are up
+            await state.redis.publish(f"{instance_name}._worker", "NOSESSION UP RMQ 0") # Announce that we are up
             flag = False
         print(msg)
         if msg is None or type(msg.get("data")) != bytes:
@@ -68,13 +68,13 @@ async def status(pidrec):
                     logger.warning(f"Invalid worker {worker_amt} with pid {pid} added. Restting config and publishing REGET")
                     pidrec.reset()
                     await asyncio.sleep(1)
-                    await redis_db.publish(f"{instance_name}._worker", f"{pidrec.session_id} REGET WORKER INVALID_STATE")
+                    await state.redis.publish(f"{instance_name}._worker", f"{pidrec.session_id} REGET WORKER INVALID_STATE")
 
                 if pidrec.worker_amt() == int(worker_amt) and tgt == "WORKER":
                     logger.success("All workers are now up")
                     await asyncio.sleep(1)
                     worker_pids = " ".join([str(pid) for pid in pidrec.list()])
-                    await redis_db.publish(f"{instance_name}._worker", f"{pidrec.session_id} FUP {worker_pids}")
+                    await state.redis.publish(f"{instance_name}._worker", f"{pidrec.session_id} FUP {worker_pids}")
 
             case ("DOWN", ("RMQ" | "WORKER") as tgt, pid) if pid.isdigit():
                 logger.info(f"{tgt} {pid} is now down")
@@ -83,11 +83,11 @@ async def status(pidrec):
             case _:
                 logger.warning(f"Unhandled message {msg}")
 
-async def lock_unlock():
+async def lock_unlock(state):
     while True:
         try:
             # Handle Staff Requests
-            req = await redis_db.get(f"{instance_name}.fl_staff_req")
+            req = await state.redis.get(f"{instance_name}.fl_staff_req")
             req = orjson.loads(req) if req else None
             if req and isinstance(req, list):
                 for i in range(len(req)):
@@ -103,30 +103,30 @@ async def lock_unlock():
                     if not user:
                         continue
                     key = "lock-" + str(r["staff"]) + "-" + str(r["bot_id"])
-                    sa = await redis_db.get(f"{instance_name}.staff_access")
+                    sa = await state.redis.get(f"{instance_name}.staff_access")
                     sa = orjson.loads(sa) if sa else []
                     sa.append({"staff": r["staff"], "bot_id": r["bot_id"], "key": key, "time": time.time()})
-                    await redis_db.set("staff_access", orjson.dumps(sa))
-                    await redis_db.set(key, orjson.dumps(r["op"] == "unlock"), ex = 60*16) # Give one minute for us to handle staff_access
-                    await client.wait_until_ready()
-                    channel = client.get_channel(bot_logs)
+                    await state.redis.set("staff_access", orjson.dumps(sa))
+                    await state.redis_db.set(key, orjson.dumps(r["op"] == "unlock"), ex = 60*16) # Give one minute for us to handle staff_access
+                    await state.client.wait_until_ready()
+                    channel = state.client.get_channel(bot_logs)
                     bot = await get_bot(r["bot_id"])
                     if not bot:
                         bot = {"username": "Unknown", "disc": "0000"}
                     embed = discord.Embed(title = "Staff Access Alert!", description = f"Staff member {user['username']}#{user['disc']} have {r['op'] + 'ed'} {bot['username']}#{bot['disc']} for editing. This is normal but if it happens too much, open a ticket or contact any online or offline staff immediately")
                     await channel.send(embed = embed)
                     del req[i]
-                    await redis_db.set(f"{instance_name}.fl_staff_req", orjson.dumps(req)) 
+                    await state.redis.set(f"{instance_name}.fl_staff_req", orjson.dumps(req)) 
         except Exception:
             logger.exception("Something happened!")
         await asyncio.sleep(5)
 
-async def prehook(*args, **kwargs):
+async def prehook(state, *args, **kwargs):
     builtins.pidrec = PIDRecorder()
-    asyncio.create_task(status(pidrec))
-    asyncio.create_task(lock_unlock())
+    asyncio.create_task(status(state, pidrec))
+    asyncio.create_task(lock_unlock(state))
 
-async def backend(json, *args, **kwargs):
+async def backend(state, json, *args, **kwargs):
     return pidrec.list()
 
 class Config:   
