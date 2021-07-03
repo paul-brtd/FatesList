@@ -1,5 +1,5 @@
 from modules.core import *
-from rabbitmq.core import *
+from lynxfall.rabbit.core import *
 
 class Config:
     queue = "bot_add_queue"

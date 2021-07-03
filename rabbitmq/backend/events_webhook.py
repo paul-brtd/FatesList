@@ -2,7 +2,7 @@ import aiohttp
 from discord import Embed, Webhook
 
 from modules.core import *
-from rabbitmq.core import *
+from lynxfall.rabbit.core import *
 
 
 class Config:

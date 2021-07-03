@@ -5,7 +5,7 @@ import time
 import orjson
 
 from modules.core import *
-from rabbitmq.core import *
+from lynxfall.rabbit.core import *
 
 
 class PIDRecorder():

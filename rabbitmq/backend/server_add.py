@@ -1,5 +1,5 @@
 from modules.core import *
-from rabbitmq.core import *
+from lynxfall.rabbit.core import *
 
 
 class Config:
@@ -7,7 +7,7 @@ class Config:
     name = "Add Server"
     description = "Adds a server to Fates List"
 
-async def backend(json, *, user_id, guild_id, data, description, long_description_type, long_description, tags, vanity, **kwargs):
+async def backend(state, json, *, user_id, guild_id, data, description, long_description_type, long_description, tags, vanity, **kwargs):
     guild_id = int(guild_id)
     guild_name = data.get("name")
     await db.execute("DELETE FROM servers WHERE guild_id = $1", guild_id)
