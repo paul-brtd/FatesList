@@ -138,7 +138,7 @@ async def run_worker(loop):
     asyncio.create_task(client.start(TOKEN_MAIN))
     asyncio.create_task(client_server.start(TOKEN_SERVER))
     builtins.rabbitmq_db = await aio_pika.connect_robust(
-        f"amqp://fateslist:{rabbitmq_pwd}@127.0.0.1"
+        f"amqp://meow:{rabbitmq_pwd}@127.0.0.1"
     )
     builtins.db = await asyncpg.create_pool(host="localhost", port=12345, user=pg_user, database=f"fateslist_{instance_name}", password = pg_pwd)
     builtins.redis_db = await aioredis.from_url('redis://localhost:12348', db = 1)

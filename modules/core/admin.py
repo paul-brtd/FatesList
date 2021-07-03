@@ -77,7 +77,7 @@ class BotActions():
         if self.banner != "none" and self.banner != "":
             try:
                 img = await requests.get(self.banner) # Check content type of banner
-            except:
+            except Exception:
                 img = None
             if img is None or img.headers.get("Content-Type") is None or img.headers.get("Content-Type").split("/")[0] != "image":
                 return "Banner URL is not an image. Please make sure it is setting the proper Content-Type"
@@ -96,7 +96,7 @@ class BotActions():
         try:
             self.generated.extra_owners = [int(id.replace(" ", "")) for id in self.generated.extra_owners]
             self.generated.extra_owners = list(set(self.generated.extra_owners)) # Remove extra ones and make all ints
-        except:
+        except Exception:
             return "One of your extra owners doesn't exist or you haven't comma-seperated them."
 
         if self.github != "" and not self.github.startswith("https://www.github.com"): # Check github for github.com if not empty string
@@ -187,7 +187,7 @@ class BotListAdmin():
             try:
                 member = self.guild.get_member(int(user))
                 await member.add_roles(self.guild.get_role(role))
-            except:
+            except Exception:
                 pass
 
     async def claim_bot(self):
@@ -200,7 +200,7 @@ class BotListAdmin():
             owner = await self._get_main_owner()
             owner_dpy = self.guild.get_member(owner)
             await owner_dpy.send(embed = claim_embed)
-        except:
+        except Exception:
             pass
 
     async def unclaim_bot(self):
@@ -213,7 +213,7 @@ class BotListAdmin():
             owner = await self._get_main_owner()
             owner_dpy = self.guild.get_member(owner)
             await owner_dpy.send(embed = unclaim_embed)
-        except:
+        except Exception:
             pass
 
     async def approve_bot(self, feedback):
@@ -228,7 +228,7 @@ class BotListAdmin():
             member = self.guild.get_member(int(owner))
             if member is not None:
                 await member.send(embed = approve_embed)
-        except:
+        except Exception:
             pass
         await self.channel.send(embed = approve_embed)
 
@@ -250,7 +250,7 @@ class BotListAdmin():
             member = self.guild.get_member(int(owner))
             if member is not None:
                 await member.send(embed = deny_embed)
-        except:
+        except Exception:
             pass
 
     async def ban_bot(self, reason):
@@ -259,7 +259,7 @@ class BotListAdmin():
         await self.channel.send(embed = ban_embed)
         try:
             await self.guild.kick(self.guild.get_member(self.bot_id))
-        except:
+        except Exception:
             pass
         await db.execute("UPDATE bots SET state = 4 WHERE bot_id = $1", self.bot_id)
         await bot_add_event(self.bot_id, enums.APIEvents.bot_ban, {"user": self.str_mod, "reason": reason})

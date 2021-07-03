@@ -55,12 +55,12 @@ async def get_bot_commands(bot_id: int, lang: str, filter: Optional[str] = None)
                 if isinstance(_cmd[key], str):
                     try:
                         _cmd[key] = cleaner.clean_html(intl_text(_cmd[key], lang)).replace("<p>", "").replace("</p>", "")
-                    except:
+                    except Exception:
                         _cmd[key] = bleach.clean(intl_text(_cmd[key], lang)).replace("<p>", "").replace("</p>", "")
                 elif isinstance(_cmd[key], list):
                     try:
                         _cmd[key] = [cleaner.clean_html(intl_text(el, lang)).replace("<p>", "").replace("</p>", "") for el in _cmd[key]]
-                    except:
+                    except Exception:
                         _cmd[key] = [bleach.clean(intl_text(el, lang)).replace("<p>", "").replace("</p>", "") for el in _cmd[key]]
 
             cmd_dict[group].append(_cmd)
@@ -169,7 +169,9 @@ async def parse_index_query(fetch: List[asyncpg.Record]) -> list:
                 if bot_info.get("avatar") is None:
                     bot_info["avatar"] = ""
                 lst.append({"avatar": bot_info["avatar"].replace("?size=1024", "?size=128"), "username": bot_info["username"], "votes": human_format(votes), "servers": human_format(servers), "description": bot["description"], "banner": banner.replace("\"", "").replace("'", "").replace("http://", "https://").replace("file://", "")} | bot | bot_info)
-        except:
+        except KeyboardInterrupt:
+            return
+        except Exception:
             continue
     return lst
 

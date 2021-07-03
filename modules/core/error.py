@@ -15,7 +15,7 @@ class WebError():
             fl_info = f"Error ID: {error_id}\n\n" # Initial header
             fl_info += etrace(exc)
         
-        except:
+        except Exception:
             pass
         
         url = str(request.url).replace('https://', '')
@@ -30,7 +30,7 @@ class WebError():
         try:
             await site_errors.send(msg)
         
-        except:
+        except Exception:
             raise exc # Reraise the error
         
         fl_file = discord.File(io.BytesIO(bytes(fl_info, 'utf-8')), f'{error_id}.txt') # Create a file on discord
@@ -50,7 +50,7 @@ class WebError():
             # All status codes other than most 500 and 422s
             status_code = exc.status_code 
         
-        except: 
+        except Exception: 
             # 500 and 422 do not have status code
             if isinstance(exc, RequestValidationError): 
                 # 422 (Unprocessable Entity)
@@ -66,7 +66,7 @@ class WebError():
             code_str = HTTPStatus(code_str).phrase
             fixed_code = status_code
 
-        except:
+        except Exception:
             # Fallback
             code_str = "Unknown Error"
             fixed_code = 400

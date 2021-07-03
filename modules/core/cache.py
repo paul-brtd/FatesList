@@ -75,7 +75,7 @@ async def _user_fetch(user_id: str, user_type: int, user_only: bool = False) -> 
         logger.debug("Setting db username to " + username + " for " + str(user_id))
         try:
             await db.execute("UPDATE bots SET username_cached = $2 WHERE bot_id = $1", int(user_id), username)
-        except:
+        except Exception:
             pass # Sometimes this cannot be done
 
     cache = orjson.dumps({"fl_cache_ver": CACHE_VER, "epoch": time.time(), "bot": bot, "username": username, "avatar": avatar, "disc": disc, "valid_user": valid_user, "status": status}) # Create cache and dump it to string for caching

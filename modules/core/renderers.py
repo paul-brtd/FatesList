@@ -82,7 +82,7 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
     if not user_js_allowed or not bot["js_allowed"]:
         try:
             ldesc = cleaner.clean_html(ldesc)
-        except:
+        except Exception:
             ldesc = bleach.clean(ldesc)
 
         # Take the h1...h5 anad drop it one lower and fix peoples stupidity and some nice patches to the site to improve accessibility

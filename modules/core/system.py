@@ -106,7 +106,7 @@ async def startup_tasks(app):
     builtins.db = await setup_db()
     builtins.redis_db = await aioredis.from_url('redis://localhost:12348', db = 1)
     builtins.rabbitmq_db = await aio_pika.connect_robust(
-        f"amqp://fateslist:{rabbitmq_pwd}@127.0.0.1/"
+        f"amqp://meow:{rabbitmq_pwd}@127.0.0.1/"
     )
     logger.success("Connected to postgres, rabbitmq and redis")
     
