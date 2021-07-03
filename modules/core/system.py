@@ -102,12 +102,10 @@ async def startup_tasks(app):
         - Listen for broadcast events
     """
     # TODO: This is still builtins for backward compatibility. Move all code to use worker session and new code should always use this
-
-    builtins.db = await setup_db()
-    builtins.redis_db = await aioredis.from_url('redis://localhost:12348', db = 1)
-    builtins.rabbitmq_db = await aio_pika.connect_robust(
-        f"amqp://meow:{rabbitmq_pwd}@127.0.0.1/"
-    )
+    dbs = await setup_db()
+    builtins.db = dbs["postgres"]
+    builtins.redis_db = dbs["redis"]
+    builtins.rabbitmq = dbs["rabbit"]
     logger.success("Connected to postgres, rabbitmq and redis")
     
     app.state.worker_session = FatesWorkerSession(
@@ -219,8 +217,12 @@ def calc_tags(TAGS):
 
 async def setup_db():
     """Function to setup the asyncpg connection pool"""
-    db = await asyncpg.create_pool(host="localhost", port=12345, user=pg_user, database=f"fateslist_{instance_name}", password = pg_pwd)
-    return db
+    postgres = await asyncpg.create_pool(host="localhost", port=12345, user=pg_user, database=f"fateslist_{instance_name}", password = pg_pwd)
+    redis = await aioredis.from_url('redis://localhost:12348', db = 1)
+    rabbit = await aio_pika.connect_robust(
+        f"amqp://meow:{rabbitmq_pwd}@127.0.0.1/"
+    )
+    return {"postgres": postgres, "redis": redis, "rabbit": rabbit}
 
 def fl_openapi(app):
     def _openapi():
