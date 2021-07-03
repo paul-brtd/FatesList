@@ -21,5 +21,5 @@ class Config:
     ackall = False # Whether to ack all messages sent
     pre = None # What prehooks to run. These functions must be async, take no arguments and are run during worker start after all builtisn but stats and ones not in process.py (pidrec) is loaded
 
-async def backend(state, json, *args, **kwargs):
+async def backend(state, json, *, **kwargs):
     pass
