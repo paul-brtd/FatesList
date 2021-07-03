@@ -7,7 +7,6 @@ from .helpers import *  # Import helper functions
 from .imports import *  # Import all imports
 from .logger import *  # Enable loguru
 from .permissions import *  # Import permission functions
-from .rabbitmq import *  # RabbitMQ
 from .ratelimits import *  # Import ratelimit handler
 from .renderers import *  # Import the renderers for bot, index etc.
 from .reviews import *  # Import review parser
