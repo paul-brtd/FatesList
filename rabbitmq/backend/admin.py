@@ -35,7 +35,7 @@ class Config:
     description = "Perform/Evaluate commands in RabbitMQ worker for debugging. Note that this is not the same as the status protocol"
     ackall = True
 
-async def backend(json, **kwargs):
+async def backend(state, json, **kwargs):
     if json["meta"].get("op"):
         # Handle admin operations
         op = json["meta"]["op"]
