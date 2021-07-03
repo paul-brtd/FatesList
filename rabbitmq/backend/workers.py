@@ -121,7 +121,7 @@ async def lock_unlock(state):
             logger.exception("Something happened!")
         await asyncio.sleep(5)
 
-async def prehook(state, *args, **kwargs):
+async def prehook(config, *, state):
     builtins.pidrec = PIDRecorder()
     asyncio.create_task(status(state, pidrec))
     asyncio.create_task(lock_unlock(state))

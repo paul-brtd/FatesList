@@ -1,24 +1,25 @@
-"""RabbitMQ worker"""
+from lynxfall.rabbit import run
+from modules.core.system import setup_discord, setup_db
+from config import TOKEN_MAIN
+from config import worker_key
 import asyncio
+import builtins
+  
+async def startup_func(state, logger):
+    """Function that will be executed on startup"""
+    dbs = await setup_db()
+    state.__dict__.update(dbs)
+    discord = setup_discord()
+    state.client = discord[0]
+    asyncio.create_task(state.client.start(TOKEN_MAIN))
+    # For unfortunate backward compatibility
+    builtins.db = state.postgres
+    builtins.redis_db = state.redis
+    builtins.rabbitmq_db = state.rabbit
+    builtins.client = state.client
+    
+async def prepare_func(state, logger):
+    """Function that will prepare our worker"""
+    return await state.client.wait_until_ready()
 
-from rabbitmq.core.process import disconnect_worker, run_worker
-
-# Run the task
-if __name__ == "__main__":
-    try:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        loop.create_task(run_worker(loop))
-
-        # we enter a never-ending loop that waits for data and runs
-        # callbacks whenever necessary.
-        loop.run_forever()
-    except KeyboardInterrupt:
-        try:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            loop.run_until_complete(disconnect_worker())
-        except:
-            pass
-    except Exception as exc:
-        print(f"{type(exc).__name__}: {exc}")
+run(worker_key = worker_key, backend_folder = "rabbitmq/backend", startup_func = startup_func, prepare_func = prepare_func)

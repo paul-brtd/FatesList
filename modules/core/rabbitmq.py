@@ -25,7 +25,7 @@ async def add_rmq_task(queue_name: str, data: dict, **meta):
     await channel.set_qos(prefetch_count=1)
     await channel.default_exchange.publish(
         aio_pika.Message(orjson.dumps({"ctx": data, "meta": meta}), delivery_mode=aio_pika.DeliveryMode.PERSISTENT, headers = {"auth": worker_key}),
-        routing_key=instance_name + "." + queue_name
+        routing_key=queue_name
     )
 
 async def add_rmq_task_with_ret(queue_name, data: dict, **meta):
@@ -41,7 +41,7 @@ async def add_rmq_task_with_ret(queue_name, data: dict, **meta):
 async def rmq_get_ret(id):
     tries = 0
     while tries < 100:
-        ret = await redis_db.get(f"rabbit.{instance_name}-{id}")
+        ret = await redis_db.get(f"rabbit-{id}")
         if not ret:
             await asyncio.sleep(0.5) # Wait for half second before retrying
             tries += 1
