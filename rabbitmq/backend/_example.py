@@ -3,13 +3,12 @@
 from rabbitmq.core import *  # Critical import, this imports a lot of rabbitmq worker functions here
 
 """
-Builtins
+Builtins (in state)
 
     - stats (main stats class)
     - client (Discord client for main bot)
-    - client_server (Discord client for server bot)
-    - rabbitmq_db (RabbitMQ connection)
-    - redis_db (Redis connection)
+    - rabbit (RabbitMQ connection)
+    - redis (Redis connection)
     - pidrec (PIDRecorder, relies on worker.py)
 """
 
