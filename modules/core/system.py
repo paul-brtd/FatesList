@@ -106,6 +106,7 @@ async def startup_tasks(app):
     builtins.db = dbs["postgres"]
     builtins.redis_db = dbs["redis"]
     builtins.rabbitmq_db = dbs["rabbit"]
+    RabbitClient.setup(worker_key, dbs["redis"], dbs["rabbit"])
     logger.success("Connected to postgres, rabbitmq and redis")
     
     app.state.worker_session = FatesWorkerSession(
