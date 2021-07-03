@@ -20,3 +20,6 @@ class Config:
     description = "Lorem ipsum..." # Description to use, hidden right now, but may be used in future
     ackall = False # Whether to ack all messages sent
     pre = None # What prehooks to run. These functions must be async, take no arguments and are run during worker start after all builtisn but stats and ones not in process.py (pidrec) is loaded
+
+async def backend(state, json, *args, **kwargs):
+    pass
