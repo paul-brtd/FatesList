@@ -1,4 +1,4 @@
-from lynxfall.rabbit import run
+from lynxfall.rabbit.launcher import run
 from modules.core.system import setup_discord, setup_db
 from config import TOKEN_MAIN
 from config import worker_key
