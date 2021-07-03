@@ -10,7 +10,7 @@ class Config:
     name = "Events Webhook"
     description = "Send Webhooks for votes etc."
 
-async def backend(json, *, webhook_url, webhook_type, api_token, id, webhook_target, event, context, event_type, event_time, event_id, webhook_secret, **kwargs):
+async def backend(state, json, *, webhook_url, webhook_type, api_token, id, webhook_target, event, context, event_type, event_time, event_id, webhook_secret, **kwargs):
     """
         RabbitMQ Backend to send webhooks
 
@@ -86,7 +86,7 @@ async def backend(json, *, webhook_url, webhook_type, api_token, id, webhook_tar
                         logger.success(
                             f"Webhook Post Returned {res.status}. Not retrying as this is either a success or a client side error"
                         )
-                        return await _resolve_event(event_id, enums.WebhookResolver.posted)
+                        return await _resolve_event(state, event_id, enums.WebhookResolver.posted)
                 
                     else:
                         logger.warning(
@@ -100,5 +100,5 @@ async def backend(json, *, webhook_url, webhook_type, api_token, id, webhook_tar
                 await _resolve_event(event_id, enums.WebhookResolver.error)
             resolved_error = True
 
-async def _resolve_event(event_id, resolution):
-    await db.execute("UPDATE bot_api_event SET posted = $1 WHERE id = $2", resolution, event_id)
+async def _resolve_event(state, event_id, resolution):
+    await state.postgres.execute("UPDATE bot_api_event SET posted = $1 WHERE id = $2", resolution, event_id)
