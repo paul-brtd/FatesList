@@ -41,7 +41,7 @@ async def add_rmq_task_with_ret(queue_name, data: dict, **meta):
 async def rmq_get_ret(id):
     tries = 0
     while tries < 100:
-        ret = await redis_db.get(f"rabbit-{id}")
+        ret = await redis_db.get(f"rabbit.{id}")
         if not ret:
             await asyncio.sleep(0.5) # Wait for half second before retrying
             tries += 1
