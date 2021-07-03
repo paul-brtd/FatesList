@@ -1,9 +1,9 @@
 """This is a example+base for making new rabbitmq backends for use in Fates List"""
 
-from rabbitmq.core import *  # Critical import, this imports a lot of rabbitmq worker functions here
+from lynxfall.rabbit.core import *  # Critical import, this imports a lot of rabbitmq worker functions here
 
 """
-Builtins (in state)
+Builtins (in state. Only use stuff in state or logger)
 
     - stats (main stats class)
     - client (Discord client for main bot)
