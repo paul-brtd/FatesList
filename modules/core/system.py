@@ -2,7 +2,8 @@ from .imports import *
 from .ratelimits import *
 from discord import Client
 from discord.ext import commands
-    
+from lynxfall.core.classes import Singleton
+
 class FatesDebugBot(commands.Bot):
     def __init__(self, *, intents):
         self.ready = False
@@ -17,7 +18,7 @@ class FatesDebugBot(commands.Bot):
         self.ready = True
         logger.info(f"{self.user} (DEBUG BOT) should now be up on first worker")
 
-class FatesWorkerSessionDiscord():
+class FatesWorkerSessionDiscord(Singleton):
     """Stores discord clients for a worker session"""
     def __init__(self, *, main, servers):
         self.dbg = None
@@ -28,7 +29,7 @@ class FatesWorkerSessionDiscord():
         """Returns whether the main client is up"""
         return self.main.user is not None
 
-class FatesWorkerSession():
+class FatesWorkerSession(Singleton):
     """Stores a worker session"""
     def __init__(self, *, id, db, redis, rabbit, discord):
         self.id = id
