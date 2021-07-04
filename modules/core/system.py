@@ -218,11 +218,9 @@ def calc_tags(TAGS):
 
 async def setup_db():
     """Function to setup the asyncpg connection pool"""
-    postgres = await asyncpg.create_pool(host="localhost", port=12345, user=pg_user, database=f"fateslist_{instance_name}", password = pg_pwd)
-    redis = await aioredis.from_url('redis://localhost:12348', db = 1)
-    rabbit = await aio_pika.connect_robust(
-        f"amqp://meow:{rabbitmq_pwd}@127.0.0.1/"
-    )
+    postgres = await asyncpg.create_pool()
+    redis = await aioredis.from_url('redis://localhost:1001', db = 1)
+    rabbit = await aio_pika.connect_robust(host="localhost", port=1002)
     return {"postgres": postgres, "redis": redis, "rabbit": rabbit}
 
 def fl_openapi(app):

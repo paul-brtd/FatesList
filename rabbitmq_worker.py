@@ -25,4 +25,7 @@ async def on_prepare(state, logger):
 async def on_stop(state, logger):
     """Function that will run on stop"""
 
-run(worker_key = worker_key, backend_folder = "modules/rabbitmq", on_startup = on_startup, on_prepare = on_prepare, on_stop = on_stop)
+async def on_error(state, logger, message, exc, exc_type, exc_context):
+    pass
+
+run(worker_key = worker_key, backend_folder = "modules/rabbitmq", on_startup = on_startup, on_prepare = on_prepare, on_stop = on_stop, on_error = on_error)

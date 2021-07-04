@@ -21,7 +21,7 @@ class Manager(Cog):
     @is_owner()
     @command(pass_context = True)
     async def reload(self, ctx):
-        os.system("../../bin/reload")
+        os.system("bin/reload")
         return await ctx.send("Fates List Reload Triggered")
 
     @is_owner()
