@@ -7,7 +7,7 @@ class Config:
     name = "Bot Delete"
     description = "Bot Delete"
 
-async def backend(state, json, *, user_id, bot_id):
+async def backend(state, json, *, user_id, bot_id, **kwargs):
     await state.postgres.execute(f"DELETE FROM bots WHERE bot_id = $1", bot_id)
     await state.postgres.execute("DELETE FROM vanity WHERE redirect = $1", bot_id)
 
