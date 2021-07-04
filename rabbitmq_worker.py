@@ -22,4 +22,4 @@ async def prepare_func(state, logger):
     """Function that will prepare our worker"""
     return await state.client.wait_until_ready()
 
-run(worker_key = worker_key, backend_folder = "rabbitmq/backend", startup_func = startup_func, prepare_func = prepare_func)
+run(worker_key = worker_key, backend_folder = "modules/rabbitmq", startup_func = startup_func, prepare_func = prepare_func)

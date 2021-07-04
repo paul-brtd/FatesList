@@ -30,7 +30,7 @@
                 {% if type == 'bot' %}
                     <div class="bot-card-footer-stats">
                         <p class="text-center white-bold">
-				            <span class="iconify i-m3" data-icon="fa-solid:server" data-inline="false"></span><span style="margin-left: 3px;" class="bot-servers">{{data.servers}}</span>
+				            <span class="iconify i-m3" data-icon="fa-solid:server" data-inline="false"></span><span style="margin-left: 3px;" class="bot-servers">{{data.servers or data.guild_count}}</span>
 			            </p>
                     </div>
                 {% endif %}

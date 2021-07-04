@@ -1,6 +1,5 @@
 from .imports import *
 from .ratelimits import *
-from .rabbitmq import *
 from discord import Client
 from discord.ext import commands
     

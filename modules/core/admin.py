@@ -3,8 +3,6 @@ from .events import *
 from .helpers import *
 from .imports import *
 from .permissions import *
-from .rabbitmq import *
-
 
 class BotActions():
     class GeneratedObject():
