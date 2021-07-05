@@ -7,8 +7,8 @@ async def routeware(app, fl_exception_handler, request: Request, call_next):
             - Transparently redirect /bots to /bot and /servers to /servers/index by changing ASGI scope (no 303 since thats bad UX)
             - Set and record the process time for analytics
     """
-    request.scope["error_id"] = str(uuid.uuid4()) # Create a error id for just in case
-    request.scope["curr_time"] = str(datetime.datetime.now()) # Get time request was made
+    request.state.error_id = str(uuid.uuid4()) # Create a error id for just in case
+    request.state.curr_time = str(datetime.datetime.now()) # Get time request was made
     logger.trace(request.headers.get("X-Forwarded-For"))
     if str(request.url.path).startswith("/bots/"):
         request.scope["path"] = str(request.url.path).replace("/bots", "/bot", 1)

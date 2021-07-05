@@ -7,6 +7,7 @@ import re
 
 import bleach
 from lxml.html.clean import Cleaner
+import asyncpg
 
 from .auth import *
 from .cache import *

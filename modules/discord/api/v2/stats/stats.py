@@ -31,7 +31,7 @@ async def botlist_stats_api(
         An additional workers list will be populated from RabbitMQ if possible
     """
     up = worker_session.up
-    db = worker_session.db
+    db = worker_session.postgres
     if up:
         bot_count_total = await db.fetchval("SELECT COUNT(1) FROM bots")
         bot_count = await db.fetchval("SELECT COUNT(1) FROM bots WHERE state = 0 OR state = 6")

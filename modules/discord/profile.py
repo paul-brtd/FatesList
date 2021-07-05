@@ -28,7 +28,7 @@ async def profile_of_user_generic(
 
 async def get_user_profile(request, user_id: int, preview: bool, worker_session):
     discord = worker_session.discord
-    db = worker_session.db
+    db = worker_session.postgres
 
     if not discord.up():
         return await templates.e(request, "Site is still loading...")

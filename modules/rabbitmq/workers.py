@@ -37,11 +37,11 @@ class PIDRecorder():
 
 async def status(state, pidrec):
     pubsub = state.redis.pubsub()
-    await pubsub.subscribe(f"{instance_name}._worker")
+    await pubsub.subscribe(f"_worker")
     flag = True
     async for msg in pubsub.listen():
         if flag:
-            await state.redis.publish(f"{instance_name}._worker", "NOSESSION UP RMQ 0") # Announce that we are up
+            await state.redis.publish(f"_worker", "NOSESSION UP RMQ 0") # Announce that we are up
             flag = False
         print(msg)
         if msg is None or type(msg.get("data")) != bytes:
@@ -68,13 +68,13 @@ async def status(state, pidrec):
                     logger.warning(f"Invalid worker {worker_amt} with pid {pid} added. Restting config and publishing REGET")
                     pidrec.reset()
                     await asyncio.sleep(1)
-                    await state.redis.publish(f"{instance_name}._worker", f"{pidrec.session_id} REGET WORKER INVALID_STATE")
+                    await state.redis.publish(f"_worker", f"{pidrec.session_id} REGET WORKER INVALID_STATE")
 
                 if pidrec.worker_amt() == int(worker_amt) and tgt == "WORKER":
                     logger.success("All workers are now up")
                     await asyncio.sleep(1)
                     worker_pids = " ".join([str(pid) for pid in pidrec.list()])
-                    await state.redis.publish(f"{instance_name}._worker", f"{pidrec.session_id} FUP {worker_pids}")
+                    await state.redis.publish(f"_worker", f"{pidrec.session_id} FUP {worker_pids}")
 
             case ("DOWN", ("RMQ" | "WORKER") as tgt, pid) if pid.isdigit():
                 logger.info(f"{tgt} {pid} is now down")

@@ -10,7 +10,23 @@ class Config:
     name = "Events Webhook"
     description = "Send Webhooks for votes etc."
 
-async def backend(state, json, *, webhook_url, webhook_type, api_token, id, webhook_target, event, context, event_type, event_time, event_id, webhook_secret, **kwargs):
+async def backend(
+    state, 
+    json, 
+    *, 
+    webhook_url,
+    webhook_type,
+    api_token, 
+    id, 
+    webhook_target, 
+    event, 
+    context, 
+    event_type, 
+    event_time, 
+    event_id, 
+    webhook_secret, 
+    **kwargs
+):
     """
         RabbitMQ Backend to send webhooks
 

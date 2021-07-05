@@ -43,8 +43,8 @@ class WebError():
 
     @staticmethod
     async def error_handler(request, exc, log: bool = True):
-        error_id = request.scope["error_id"] 
-        curr_time = request.scope["curr_time"] 
+        error_id = request.state.error_id 
+        curr_time = request.state.curr_time
 
         try:
             # All status codes other than most 500 and 422s
