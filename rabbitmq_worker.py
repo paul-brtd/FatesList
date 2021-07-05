@@ -9,9 +9,8 @@ async def on_startup(state, logger):
     """Function that will be executed on startup"""
     dbs = await setup_db()
     state.__dict__.update(dbs)
-    discord = setup_discord()
-    state.client = discord[0]
-    asyncio.create_task(state.client.start(TOKEN_MAIN))
+    discord = await setup_discord()
+    state.client = discord["main"]
     # For unfortunate backward compatibility
     builtins.db = state.postgres
     builtins.redis_db = state.redis

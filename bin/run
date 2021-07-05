@@ -2,4 +2,4 @@ export WORKERS=2
 export SESSION_ID=$(uuidgen)
 export LOGURU_LEVEL="DEBUG" 
 
-gunicorn -p ~/flmain.pid -k fluvicorn.FatesWorker main:app -b 0.0.0.0:9999 -w $WORKERS
+gunicorn --log-level=debug -p ~/flmain.pid -k fluvicorn.FatesWorker main:app -b 0.0.0.0:9999 -w $WORKERS
