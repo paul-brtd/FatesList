@@ -1,30 +1,3 @@
 # Custom Clients
 
-If you wish to, you can make a custom third-party client/frontend/proxy for Fates List. This is officially allowed by us and you may ask for support when developing it.
-
-We are working on our own Vue frontend rewrite called Lynx which will use the same topics described here. We are also making a proxy for some future BotBlock APIs which will use these as well
-
-More APIs for more tasks will be added in the coming days/weeks to allow for Lynx.
-
-This page will describe some common tasks that your custom client/frontend should likely do.
-
-### Login
-
-One of the main things you will need to implement is login. To do so:
-
-First send a POST request to /api/oauth (see [Endpoints](../basics/endpoints.md) to learn how to do this). You will get a `url` field and this is where you should redorect users to for oauth. You may wish to specify a different redirect uri, do this by setting the `oauth_redirect` field. For custom clients, you will also need to set the `callback` field as a dict/object with the following (for callback):
-
-| Key | Description | Type |
-| :--- | :--- | :--- |
-| url | The url to redirect the user to after oauth and callback auth. This url will be given the code from Discord for login, the scopes and the redirect URL | String |
-| key | The key that is tied to your custom client. To create this, just use `utils/gensecret.py` | String |
-| name | The name of the custom client. Will be displayed in callback auth | String |
-
-The URL, on a `PUT` request with no query parameters and no request body *should* respond with the key you sent in the `key` field and the name you sent in the `name` field. If it does not, the callback will be aborted. This URL must also be accessible over the internet. This does not apply to sites which use exactly `http://localhost:5928` as their callback url.
-
-???+ warning
-    The `oauth_redirect` field must be either `https://fateslist.xyz/auth/login/confirm` or `https://fateslist.xyz/api/auth/callback` or users will get a `Invalid redirect_uri` error. Use externallcallback for custom clients or WIP clients like Lynx. Externalcallback needs the `ec` field to be set as well (see above)
-
-
-
-This will give you the user token (the `token` field), a [BaseUser](../structures/basic-structures.md#baseuser) (the `user` field), the user state (the `state` field), whether they have js enabled (the `js_allowed` field), their user css (the `css` field), the site language they have chosen (the `site_lang` field), whether they have been site banned or not (the `banned` field), their access token object (the `access_token` field, you will need to send this on some endpoints) and the url you should redirect users to (the `redirect` field)
+Custom clients used to be supported by Fates List but are not currently due to security issues. This may change in the future
