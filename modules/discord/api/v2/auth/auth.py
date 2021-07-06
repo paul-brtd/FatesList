@@ -1,7 +1,5 @@
 from urllib.parse import unquote
 
-from itsdangerous import URLSafeSerializer
-
 from modules.core import *
 
 from ..base import API_VERSION
@@ -14,11 +12,8 @@ router = APIRouter(
     tags = [f"API v{API_VERSION} - Auth"]
 )
 
-discord_o = Oauth(OauthConfig)
-auth_s = URLSafeSerializer(auth_jwt_key, "auth")
-
 @router.post("/oauth", response_model = OAuthInfo)
-async def get_login_link(request: Request, data: LoginInfo):
+async def get_login_link(request: Request, data: LoginInfo, worker_session = Depends(worker_session)):
     if data.redirect:
         if not data.redirect.startswith("/") and not data.redirect.startswith("https://fateslist.xyz"):
             return api_error(
