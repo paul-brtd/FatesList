@@ -29,39 +29,30 @@ async def get_login_link(request: Request, data: LoginInfo, worker_session = Dep
     return api_success(url = url.url)
 
 @router.get("/auth/callback")
-async def auth_callback_handler(request: Request, code: str, state: str):
-    try:
-        id = oauth.discord.get_state(state)
+async def auth_callback_handler(request: Request, code: str, state: str, worker_session = Depends(worker_session)):
+    oauth = worker_session.oauth
     
-    except Exception:
+    id = oauth.discord.get_state_id(state)
+    
+    if not id:
         return api_error(
             "Invalid state provided. Please try logging in again using https://fateslist.xyz/auth/login"
         )
     
-    oauth = await redis_db.get(f"oauth-{id}")
+    oauth = await oauth.discord.get_state(id)
     if not oauth:
         return api_error(
-            "Invalid state. There is no oauth data associated with this state. Please try logging in again using https://fateslist.xyz/auth/login"        
+            "Invalid state. Your state has expired. Please try logging in again using https://fateslist.xyz/auth/login"        
         )
-    
-    oauth = orjson.loads(oauth)
+     
     callback = Callback(**oauth["callback"])
-    
-    try:
-        client = enums.KnownClients(callback.name)
-    
-    except ValueError:
-        client = enums.KnownClients.unknown
         
-    url = f"{callback.url}?code={code}&scopes={discord_o.get_scopes(oauth['scopes'])}&redirect={oauth['redirect']}"
+    url = f"{callback.url}?code={code}&state_id={oauth['state_id']}"
     
-    if client.__noprompt__:
-        await redis_db.delete(f"oauth-{id}")
-        return RedirectResponse(url)
     
-    await redis_db.expire(f"oauth-{id}", 120)
-    return await templates.TemplateResponse("prompt_auth.html", {"request": request, "code": code, "state": state})
-
+    await redis_db.delete(f"oauth-{id}")
+    return RedirectResponse(url)
+    
 @router.post("/users", response_model = LoginResponse)
 async def login_user(request: Request, data: Login):
     try:
