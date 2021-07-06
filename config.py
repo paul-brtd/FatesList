@@ -151,11 +151,6 @@ bans_data = {
     }
 }
 
-class OauthConfig:
-    client_id = "798951566634778641" 
-    client_secret = oauth_client_secret
-    redirect_uri = "https://" + site + "/api/auth/callback"
-
 langs = {
     "default": "Default",
     "en": "English",

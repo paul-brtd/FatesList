@@ -75,7 +75,7 @@ class FatesWorkerOauth(Singleton):
 class FatesWorkerDiscord(Singleton):
     """Stores discord clients for a worker session"""
 
-    def __init__(self, *, main: FatesBot, servers: FatesBot, debug: FatesDebug):
+    def __init__(self, *, main: FatesBot, servers: FatesBot, debug: FatesDebugBot):
         self.debug = debug
         self.main = main
         self.servers = servers
@@ -93,7 +93,7 @@ class FatesWorkerSession(Singleton):
         *, 
         id: str,
         postgres: asyncpg.Pool,
-        redis: aioredis,Connection,
+        redis: aioredis.Connection,
         rabbit: aio_pika.RobustConnection,
         discord: FatesWorkerDiscord, 
         oauth: FatesWorkerOauth

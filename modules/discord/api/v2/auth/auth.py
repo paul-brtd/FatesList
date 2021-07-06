@@ -22,7 +22,7 @@ async def get_login_link(request: Request, data: LoginInfo, worker_session = Dep
             )
     redirect = data.redirect if data.redirect else "/"
     url = await oauth.discord.get_auth_url(
-        scopes,
+        data.scopes,
         {"callback": data.callback.dict(), "site_redirect": redirect}
     )
     return api_success(url = url.url)
@@ -56,6 +56,10 @@ async def login_user(request: Request, data: Login, worker_session = Depends(wor
     oauth = worker_session.oauth
     
     try:
+        state_id = oauth.discord.get_state_id(data.state)
+        state_data = await oauth.discord.get_state(state_id)
+        if not state_data:
+            raise ValueError("No state found")
         access_token = await oauth.discord.get_access_token(data.code, data.state, "https://fateslist.xyz/auth/login")
         userjson = await oauth.discord.get_user_json(access_token)
         if not userjson or not userjson.get("id"):
@@ -117,7 +121,7 @@ async def login_user(request: Request, data: Login, worker_session = Depends(wor
     
     user = await get_user(int(userjson["id"]))
 
-    if "guilds.join" in data.scopes:
+    if "guilds.join" in state_data["scopes"]:
         await oauth.discord.add_user_to_guild(access_token, userjson["id"], main_server, TOKEN_MAIN)
 
     return api_success(
@@ -134,6 +138,7 @@ async def login_user(request: Request, data: Login, worker_session = Depends(wor
         state = state,
         js_allowed = js_allowed,
         access_token = access_token,
-        banned = False
+        banned = False,
+        scopes = state_data["scopes"]
     )
 

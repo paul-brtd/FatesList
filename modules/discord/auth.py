@@ -56,8 +56,8 @@ async def login_confirm(request: Request, code: str, state: str, site_redirect: 
                         return await templates.e(request, json["reason"])
                     return await templates.e(request, reason = f"Please note that {json['ban']['desc']}", main=f'You have been {json["ban"]["type"]} banned on Fates List')
      
-                request.session["scopes"] = scopes
-                request.session["access_token"] = json["access_token"]
+                request.session["scopes"] = orjson.dumps(json["scopes"]).decode("utf-8")
+                request.session["access_token"] = orjson.dumps(json["access_token"]).decode("utf-8")
                 request.session["user_id"] = int(json["user"]["id"])
                 request.session["username"] = json["user"]["username"]
                 request.session["avatar"] = json["user"]["avatar"]

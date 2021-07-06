@@ -4,9 +4,9 @@ Fates List Templating System
 
 from .imports import *
 from .permissions import *
+from lynxfall.oauth.models import AccessToken
 
 _templates = Jinja2Templates(directory="templates") # Setup templates folder
-discord_o = Oauth(OauthConfig)
         
 # Template class renderer
 class templates():
@@ -39,7 +39,8 @@ class templates():
             arg_dict["intl_text"] = intl_text # This comes from lynxfall.utils.string
             arg_dict["site_lang"] = request.session.get("site_lang", "default")
             try:
-                request.session["access_token"] = await discord_o.access_token_check(request.session.get("scopes"), request.session.get("access_token"))
+                oauth = request.app.state.worker_session.oauth
+                request.session["access_token"] = oauth.discord.refresh_access_token(AccessToken(**request.session.get("access_token")))
                 arg_dict["access_token"] = orjson.dumps(request.session.get("access_token")).decode("utf-8")
             except:
                 pass
