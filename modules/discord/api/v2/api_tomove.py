@@ -7,8 +7,6 @@ from fastapi.responses import HTMLResponse
 from modules.core import *
 from modules.discord.api.v2.modelstomove import *  # TODO
 
-discord_o = Oauth(OauthConfig)
-
 API_VERSION = 2 # This is the API version
 
 router = APIRouter(
