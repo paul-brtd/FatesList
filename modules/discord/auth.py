@@ -41,23 +41,21 @@ async def login_stage2(request: Request, redirect: str, join_servers: str = FFor
     return RedirectResponse(url, status_code=HTTP_303_SEE_OTHER)
 
 @router.get("/login/confirm")
-async def login_confirm(request: Request, code: str, scopes: str, redirect: str):
+async def login_confirm(request: Request, code: str, state: str, site_redirect: str):
     if "user_id" in request.session.keys():
         return RedirectResponse("/")
     else:
         async with aiohttp.ClientSession() as sess:
             async with sess.post(f"{site_url}/api/users", json = {
                 "code": code, 
-                "scopes": scopes.split(" "),
-                "redirect": redirect,
-                "auth_type": enums.TokenTypes.full # Get permanent token
+                "state": state,
             }) as res:
                 json = await res.json()
                 if res.status == 400:
                     if not json["banned"]:
                         return await templates.e(request, json["reason"])
                     return await templates.e(request, reason = f"Please note that {json['ban']['desc']}", main=f'You have been {json["ban"]["type"]} banned on Fates List')
-                request.session["state"] = json["state"]
+     
                 request.session["scopes"] = scopes
                 request.session["access_token"] = json["access_token"]
                 request.session["user_id"] = int(json["user"]["id"])
@@ -66,7 +64,7 @@ async def login_confirm(request: Request, code: str, scopes: str, redirect: str)
                 request.session["user_token"] = json["token"]
                 request.session["user_css"] = json["css"]
                 request.session["js_allowed"] = json["js_allowed"]
-                return HTMLResponse(f"<script>window.location.replace('{redirect}')</script>")
+                return HTMLResponse(f"<script>window.location.replace('{site_redirect}')</script>")
             
 @router.get("/logout")
 async def logout(request: Request):
