@@ -1,6 +1,5 @@
 TOKEN_MAIN = "" # Main bot token
 TOKEN_SERVER = "" # Main bot token
-oauth_client_secret = "" # OAuth Client Secret
 csrf_secret = "" # CSRF secret
 session_key = "" # Session key
 test_server_manager_key = "" # Test server manager bot (+approve, +claim etc) key
@@ -11,7 +10,7 @@ bb_key = "" # Botblock key
 test_server_manager_key = "" # Test server manager bot (+approve, +claim etc) key
 rabbitmq_pwd = "" # RabbitMQ password
 worker_key = "" # RabbitMQ worker key
-client_key_fateslist = ""
-client_key_fateslistp = ""
-client_key_lynx = ""
-auth_jwt_key = ""
+lynxfall_key = ""
+
+discord_client_id = ""
+discord_client_secret = "" # OAuth Client Secret
