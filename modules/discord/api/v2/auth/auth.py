@@ -45,8 +45,9 @@ async def auth_callback_handler(request: Request, code: str, state: str, worker_
         )
      
     callback = Callback(**oauth["callback"])
+    site_redirect = oauth['site_redirect']
         
-    url = f"{callback.url}?code={code}&state={state}&site_redirect={oauth['site_redirect']}"
+    url = f"{callback.url}?code={code}&state={state}&site_redirect={site_redirect}"
     
     return RedirectResponse(url)
     
