@@ -14,18 +14,21 @@ router = APIRouter(
 
 @router.post("/oauth", response_model = OAuthInfo)
 async def get_login_link(request: Request, data: LoginInfo, worker_session = Depends(worker_session)):
+    oauth = worker_session.oauth
     if data.redirect:
         if not data.redirect.startswith("/") and not data.redirect.startswith("https://fateslist.xyz"):
             return api_error(
                 "Invalid redirect. You may only redirect to pages on Fates List"
             )
-    id = uuid.uuid4()
-    await redis_db.set(f"oauth-{id}", orjson.dumps({
-        "scopes": data.scopes, 
-        "redirect": data.redirect if data.redirect else "/", 
-        "callback": data.callback.dict()
-    }), ex = 150)
-    return api_success(url = discord_o.get_discord_oauth(auth_s.dumps(str(id)), data.scopes))
+    redirect = data.redirect if data.redirect else "/"
+    url = await oauth.discord.get_auth_url(
+        scopes,
+        redirect,
+        {
+            "callback": data.callback.dict()
+        }
+    )
+    return api_success(url = url.url)
 
 @router.get("/auth/callback")
 async def auth_callback_handler(request: Request, code: str, state: str):
