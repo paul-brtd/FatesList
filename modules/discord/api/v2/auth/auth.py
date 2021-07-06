@@ -23,8 +23,7 @@ async def get_login_link(request: Request, data: LoginInfo, worker_session = Dep
     redirect = data.redirect if data.redirect else "/"
     url = await oauth.discord.get_auth_url(
         scopes,
-        redirect,
-        {"callback": data.callback.dict()}
+        {"callback": data.callback.dict(), "site_redirect": redirect}
     )
     return api_success(url = url.url)
 
@@ -47,22 +46,20 @@ async def auth_callback_handler(request: Request, code: str, state: str, worker_
      
     callback = Callback(**oauth["callback"])
         
-    url = f"{callback.url}?code={code}&state_id={oauth['state_id']}"
+    url = f"{callback.url}?code={code}&state={state}&site_redirect={oauth['site_redirect']}"
     
     return RedirectResponse(url)
     
 @router.post("/users", response_model = LoginResponse)
-async def login_user(request: Request, data: Login):
+async def login_user(request: Request, data: Login, worker_session = Depends(worker_session)):
+    oauth = worker_session.oauth
+    
     try:
-        if data.access_token:
-            access_token = {"access_token": data.access_token}
-        else:
-            access_token = await discord_o.get_access_token(data.code, "%20".join(data.scopes))
-        if not access_token:
-            raise ValueError("Invalid access token")
-        userjson = await discord_o.get_user_json(access_token["access_token"])
+        access_token = await oauth.discord.get_access_token(data.code, data.state, "https://fateslist.xyz/auth/login")
+        userjson = await oauth.discord.get_user_json(access_token)
         if not userjson or not userjson.get("id"):
             raise ValueError("Invalid user json")
+            
     except Exception as exc:
         return api_error(
             f"We have encountered an issue while logging you in ({exc})...",
@@ -120,7 +117,7 @@ async def login_user(request: Request, data: Login):
     user = await get_user(int(userjson["id"]))
 
     if "guilds.join" in data.scopes:
-        await discord_o.join_user(access_token["access_token"], userjson["id"])
+        await oauth.discord.add_user_to_guild(access_token, userjson["id"], main_server, TOKEN_MAIN)
 
     return api_success(
         user = BaseUser(
@@ -136,7 +133,6 @@ async def login_user(request: Request, data: Login):
         state = state,
         js_allowed = js_allowed,
         access_token = access_token,
-        redirect = data.redirect.replace(site_url, ""),
         banned = False
     )
 
