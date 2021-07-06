@@ -49,8 +49,6 @@ async def auth_callback_handler(request: Request, code: str, state: str, worker_
         
     url = f"{callback.url}?code={code}&state_id={oauth['state_id']}"
     
-    
-    await redis_db.delete(f"oauth-{id}")
     return RedirectResponse(url)
     
 @router.post("/users", response_model = LoginResponse)
