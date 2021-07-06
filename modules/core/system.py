@@ -92,7 +92,7 @@ class FatesWorkerSession(Singleton):
         id: str,
         postgres: asyncpg.Pool,
         redis: aioredis,Connection,
-        rabbit: aio_pika.Connection,
+        rabbit: aio_pika.RobustConnection,
         discord: FatesWorkerDiscord, 
         oauth: FatesWorkerOauth
     ):
@@ -199,7 +199,13 @@ async def init_fates_worker(app):
         ),
         oauth=FatesWorkerOauth(
             discord=DiscordOauth(
-                
+                oc=OauthConfig(
+                    client_id=client_id,
+                    client_secret=client_secret,
+                    redirect_uri=redirect_uri,
+                    lynxfall_key=jwt_auth_key
+                ),
+                redis=dbs["redis"]
             )
         )
     )
