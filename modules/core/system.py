@@ -18,7 +18,8 @@ from discord.ext import commands
 from lynxfall.core.classes import Singleton
 from lynxfall.ratelimits import LynxfallLimiter
 from lynxfall.rabbit.client import RabbitClient
-from lynxfall.oauth.models import OauthConfig, AccessToken
+from lynxfall.oauth.models import OauthConfig
+from lynxfall.oauth.providers.discord import DiscordOauth
 import asyncpg
 import os
 import time
