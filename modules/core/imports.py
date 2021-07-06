@@ -44,4 +44,3 @@ from lynxfall.mdextend import *
 from lynxfall.utils import *
 from lynxfall.ratelimits.depends import Ratelimiter, Limit
 from lynxfall.rabbit.client.core import *
-from modules.Oauth import Oauth

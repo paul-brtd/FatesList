@@ -11,29 +11,14 @@ from ..base_models import AccessToken, APIResponse, BaseUser
 class Callback(BaseModel):
     name: str
     url: str
-
-class BaseLoginInfo(BaseModel):
+      
+class Login(BaseModel):
+    code: str
+    state: str
+        
+class LoginInfo(BaseModel):
     scopes: List[str]
     redirect: Optional[str] = "/"
-      
-class Login(BaseLoginInfo):
-    """
-    Code must be used normally. 
-    Access token is only if darkstalker key (BotBlock proxy) is used and its key matches
-    """
-    code: str
-    darkstalker_key: Optional[str] = None
-    auth_type: enums.TokenTypes
-    access_token: Optional[str] = None
-    
-    @validator("access_token")
-    def access_token_bb_check(cls, v, values, **kwargs):
-        if not v:
-            return v 
-        if not secure_strcmp(values["darkstalker"], darkstalker_key):
-            raise ValueError('Invalid Darkstalker key. Access token method can only be used by Darkstalker')
-        
-class LoginInfo(BaseLoginInfo):
     callback: Callback
  
 class OAuthInfo(APIResponse):

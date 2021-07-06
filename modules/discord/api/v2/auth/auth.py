@@ -1,7 +1,5 @@
 from urllib.parse import unquote
 
-from itsdangerous import URLSafeSerializer
-
 from modules.core import *
 
 from ..base import API_VERSION
@@ -14,70 +12,55 @@ router = APIRouter(
     tags = [f"API v{API_VERSION} - Auth"]
 )
 
-discord_o = Oauth(OauthConfig)
-auth_s = URLSafeSerializer(auth_jwt_key, "auth")
-
 @router.post("/oauth", response_model = OAuthInfo)
-async def get_login_link(request: Request, data: LoginInfo):
+async def get_login_link(request: Request, data: LoginInfo, worker_session = Depends(worker_session)):
+    oauth = worker_session.oauth
     if data.redirect:
         if not data.redirect.startswith("/") and not data.redirect.startswith("https://fateslist.xyz"):
             return api_error(
                 "Invalid redirect. You may only redirect to pages on Fates List"
             )
-    id = uuid.uuid4()
-    await redis_db.set(f"oauth-{id}", orjson.dumps({
-        "scopes": data.scopes, 
-        "redirect": data.redirect if data.redirect else "/", 
-        "callback": data.callback.dict()
-    }), ex = 150)
-    return api_success(url = discord_o.get_discord_oauth(auth_s.dumps(str(id)), data.scopes))
+    redirect = data.redirect if data.redirect else "/"
+    url = await oauth.discord.get_auth_url(
+        scopes,
+        {"callback": data.callback.dict(), "site_redirect": redirect}
+    )
+    return api_success(url = url.url)
 
 @router.get("/auth/callback")
-async def auth_callback_handler(request: Request, code: str, state: str):
-    try:
-        id = auth_s.loads(state)
+async def auth_callback_handler(request: Request, code: str, state: str, worker_session = Depends(worker_session)):
+    oauth = worker_session.oauth
     
-    except Exception:
+    id = oauth.discord.get_state_id(state)
+    
+    if not id:
         return api_error(
             "Invalid state provided. Please try logging in again using https://fateslist.xyz/auth/login"
         )
     
-    oauth = await redis_db.get(f"oauth-{id}")
+    oauth = await oauth.discord.get_state(id)
     if not oauth:
         return api_error(
-            "Invalid state. There is no oauth data associated with this state. Please try logging in again using https://fateslist.xyz/auth/login"        
+            "Invalid state. Your state has expired. Please try logging in again using https://fateslist.xyz/auth/login"        
         )
-    
-    oauth = orjson.loads(oauth)
+     
     callback = Callback(**oauth["callback"])
-    
-    try:
-        client = enums.KnownClients(callback.name)
-    
-    except ValueError:
-        client = enums.KnownClients.unknown
+    site_redirect = oauth['site_redirect']
         
-    url = f"{callback.url}?code={code}&scopes={discord_o.get_scopes(oauth['scopes'])}&redirect={oauth['redirect']}"
+    url = f"{callback.url}?code={code}&state={state}&site_redirect={site_redirect}"
     
-    if client.__noprompt__:
-        await redis_db.delete(f"oauth-{id}")
-        return RedirectResponse(url)
+    return RedirectResponse(url)
     
-    await redis_db.expire(f"oauth-{id}", 120)
-    return await templates.TemplateResponse("prompt_auth.html", {"request": request, "code": code, "state": state})
-
 @router.post("/users", response_model = LoginResponse)
-async def login_user(request: Request, data: Login):
+async def login_user(request: Request, data: Login, worker_session = Depends(worker_session)):
+    oauth = worker_session.oauth
+    
     try:
-        if data.access_token:
-            access_token = {"access_token": data.access_token}
-        else:
-            access_token = await discord_o.get_access_token(data.code, "%20".join(data.scopes))
-        if not access_token:
-            raise ValueError("Invalid access token")
-        userjson = await discord_o.get_user_json(access_token["access_token"])
+        access_token = await oauth.discord.get_access_token(data.code, data.state, "https://fateslist.xyz/auth/login")
+        userjson = await oauth.discord.get_user_json(access_token)
         if not userjson or not userjson.get("id"):
             raise ValueError("Invalid user json")
+            
     except Exception as exc:
         return api_error(
             f"We have encountered an issue while logging you in ({exc})...",
@@ -135,7 +118,7 @@ async def login_user(request: Request, data: Login):
     user = await get_user(int(userjson["id"]))
 
     if "guilds.join" in data.scopes:
-        await discord_o.join_user(access_token["access_token"], userjson["id"])
+        await oauth.discord.add_user_to_guild(access_token, userjson["id"], main_server, TOKEN_MAIN)
 
     return api_success(
         user = BaseUser(
@@ -151,7 +134,6 @@ async def login_user(request: Request, data: Login):
         state = state,
         js_allowed = js_allowed,
         access_token = access_token,
-        redirect = data.redirect.replace(site_url, ""),
         banned = False
     )
 
