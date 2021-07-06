@@ -48,11 +48,32 @@ class FatesDebugBot(commands.Bot):
         logger.info(
             f"{self.user} (DEBUG BOT) should now be up on first worker")
 
+        
+class FatesBot(discord.Client):
+    def __init__(self, *, intents):
+        self.ready = False
+        super().__init__(intents=intents)
 
+    async def on_ready(self):
+        self.ready = True
+        logger.info(f"{self.user} now up!")        
+
+        
+class FatesWorkerSessionOauth(Singleton):
+    """Stores all oauths (currently only discord)"""
+    
+    def __init__(
+        self,
+        *,
+        discord: DiscordOauth
+    ):
+        self.discord = discord
+
+        
 class FatesWorkerSessionDiscord(Singleton):
     """Stores discord clients for a worker session"""
 
-    def __init__(self, *, main, servers, debug):
+    def __init__(self, *, main: FatesBot, servers: FatesBot, debug: FatesDebug):
         self.debug = debug
         self.main = main
         self.servers = servers
@@ -65,7 +86,16 @@ class FatesWorkerSessionDiscord(Singleton):
 class FatesWorkerSession(Singleton):
     """Stores a worker session"""
 
-    def __init__(self, *, id, postgres, redis, rabbit, discord):
+    def __init__(
+        self,
+        *, 
+        id: str,
+        postgres: asyncpg.Pool,
+        redis: aioredis,Connection,
+        rabbit: aio_pika.Connection,
+        discord: FatesWorkerSessionDiscord, 
+        oauth: FatesWorkerSessionOauth
+    ):
         self.id = id
         self.postgres = postgres
         self.start_time = time.time()
@@ -75,6 +105,7 @@ class FatesWorkerSession(Singleton):
         self.workers = None
         self.fup = False  # FUP = finally up/all workers are now up
         self.discord = discord
+        self.oauth = oauth
 
     def up(self):
         self.up = True
@@ -85,16 +116,6 @@ class FatesWorkerSession(Singleton):
 
     def primary_worker(self):
         return self.fup and self.workers[0] == os.getpid()
-
-
-class FatesBot(discord.Client):
-    def __init__(self, *, intents):
-        self.ready = False
-        super().__init__(intents=intents)
-
-    async def on_ready(self):
-        self.ready = True
-        logger.info(f"{self.user} now up!")
 
 
 async def setup_discord():
