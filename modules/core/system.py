@@ -5,7 +5,9 @@ from .events import bot_add_event
 from config import (
     TOKEN_MAIN, TOKEN_SERVER, bots_role, 
     bot_dev_role, worker_key, session_key, 
-    owner, sentry_dsn
+    owner, sentry_dsn, lynxfall_key,
+    discord_client_id, discord_client_secret,
+    discord_redirect_uri
 )
 
 import sentry_sdk
@@ -200,10 +202,10 @@ async def init_fates_worker(app):
         oauth=FatesWorkerOauth(
             discord=DiscordOauth(
                 oc=OauthConfig(
-                    client_id=client_id,
-                    client_secret=client_secret,
-                    redirect_uri=redirect_uri,
-                    lynxfall_key=jwt_auth_key
+                    client_id=discord_client_id,
+                    client_secret=discord_client_secret,
+                    redirect_uri=discord_redirect_uri,
+                    lynxfall_key=lynxfall_key
                 ),
                 redis=dbs["redis"]
             )
