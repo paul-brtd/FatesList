@@ -24,16 +24,14 @@ async def get_login_link(request: Request, data: LoginInfo, worker_session = Dep
     url = await oauth.discord.get_auth_url(
         scopes,
         redirect,
-        {
-            "callback": data.callback.dict()
-        }
+        {"callback": data.callback.dict()}
     )
     return api_success(url = url.url)
 
 @router.get("/auth/callback")
 async def auth_callback_handler(request: Request, code: str, state: str):
     try:
-        id = auth_s.loads(state)
+        id = oauth.discord.get_state(state)
     
     except Exception:
         return api_error(
