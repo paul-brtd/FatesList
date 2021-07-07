@@ -369,7 +369,8 @@ async def status(workers, session):
 
 async def vote_reminder(session):
     if session.primary_worker():
-        bot_add_event = importlib.import_module("modules.core.events").bot_add_event
+        events = importlib.import_module("modules.core.events")
+        bot_add_event = events.bot_add_event
         reminders = await session.postgres.fetch(
             """SELECT user_id, bot_id FROM user_reminders 
             WHERE remind_time >= NOW() AND resolved = false"""
