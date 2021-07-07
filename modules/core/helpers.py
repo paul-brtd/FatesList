@@ -150,14 +150,14 @@ async def vanity_bot(vanity: str) -> Optional[str]:
     type = enums.Vanity(t["type"]).name # Get type using Vanity enum
     return int(t["redirect"]), type
 
-async def parse_index_query(fetch: List[asyncpg.Record]) -> list:
+async def parse_index_query(worker_session, fetch: List[asyncpg.Record]) -> list:
     """
     Parses a index query to a list of partial bots
     """
     lst = []
     for bot in fetch:
         try:
-            bot_info = await get_bot(bot["bot_id"])
+            bot_info = await get_bot(bot["bot_id"], worker_session = worker_session)
             if bot_info is not None:
                 bot = dict(bot)
                 votes = bot["votes"]
@@ -176,7 +176,12 @@ async def parse_index_query(fetch: List[asyncpg.Record]) -> list:
             continue
     return lst
 
-async def do_index_query(add_query: str = "", state: list = [0, 6], limit: Optional[int] = 12) -> List[asyncpg.Record]:
+async def do_index_query(
+    worker_session,
+    add_query: str = "",
+    state: list = [0, 6],
+    limit: Optional[int] = 12
+) -> List[asyncpg.Record]:
     """
     Performs a 'index' query which can also be used by other things as well
     """
@@ -188,7 +193,7 @@ async def do_index_query(add_query: str = "", state: list = [0, 6], limit: Optio
         end_query = ""
     logger.debug(base_query, add_query, end_query)
     fetch = await db.fetch(" ".join((base_query, add_query, end_query)))
-    return await parse_index_query(fetch)
+    return await parse_index_query(worker_session, fetch)
 
 async def vanity_check(id, vanity):
     """Check if a vanity exists or not given a id and a vanity"""
