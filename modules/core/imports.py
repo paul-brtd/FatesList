@@ -1,5 +1,4 @@
 # Put all needed imports here
-import ast
 import asyncio
 import datetime
 import inspect
@@ -27,7 +26,6 @@ from fastapi.exception_handlers import (http_exception_handler,
 from fastapi.exceptions import (HTTPException, RequestValidationError,
                                 ValidationError)
 from fastapi.responses import HTMLResponse, ORJSONResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from starlette.datastructures import URL
 from starlette.exceptions import HTTPException as StarletteHTTPException
