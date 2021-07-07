@@ -1,4 +1,5 @@
 from ..core import *
+from lynxfall.oauth.models import AccessToken
 
 router = APIRouter(
     prefix = "/server",

@@ -7,6 +7,8 @@ async def routeware(app, fl_exception_handler, request: Request, call_next):
             - Transparently redirect /bots to /bot and /servers to /servers/index by changing ASGI scope (no 303 since thats bad UX)
             - Set and record the process time for analytics
     """
+    if request.app.state.worker_session.dying:
+        return HTMLResponse("Fates List is going down for a reboot")
     request.state.error_id = str(uuid.uuid4()) # Create a error id for just in case
     request.state.curr_time = str(datetime.datetime.now()) # Get time request was made
     logger.trace(request.headers.get("X-Forwarded-For"))

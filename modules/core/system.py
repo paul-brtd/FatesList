@@ -6,7 +6,7 @@ from config import (
     bot_dev_role, worker_key, session_key, 
     owner, sentry_dsn, lynxfall_key,
     discord_client_id, discord_client_secret,
-    discord_redirect_uri
+    discord_redirect_uri, site
 )
 
 import sentry_sdk
@@ -34,6 +34,8 @@ import modules.models.enums as enums
 import signal
 import sys
 from fastapi.templating import Jinja2Templates
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 
 
 class FatesDebugBot(commands.Bot):
@@ -267,7 +269,14 @@ async def init_fates_worker(app):
     sentry_sdk.init(sentry_dsn)
     app.add_middleware(SentryAsgiMiddleware)
 
+    # Setup ratelimiter
     LynxfallLimiter.init(session.redis, identifier=rl_key_func)
+
+    # Setup trusted host middleware
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=[site])
+
+    # Add GZip handling
+    app.add_middleware(GZipMiddleware, minimum_size=500)
 
     # Include all routers
     include_routers(app, "Discord", "modules/discord")
