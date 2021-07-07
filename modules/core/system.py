@@ -34,6 +34,7 @@ import builtins
 import modules.models.enums as enums
 import signal
 import sys
+from fastapi.templating import Jinja2Templates
 
 
 class FatesDebugBot(commands.Bot):
