@@ -35,21 +35,6 @@ async def fl_exception_handler(request, exc, log = True):
 async def startup():
     await init_fates_worker(app)
 
-@app.on_event("shutdown")
-async def close():
-    """Close all connections on shutdown"""
-    try:
-        logger.info("Killing Fates List")
-        state = app.state.worker_session
-        await state.redis.publish("_worker", f"DOWN WORKER {os.getpid()}") # Announce that we are down
-        await state.redis.close()
-        await state.rabbit.close()
-        await db.close()
-    except Exception:
-        pass
-
-    logger.info("Killed")
-
 @app.middleware("http")
 async def fateslist_request_handler(request: Request, call_next):
     try:

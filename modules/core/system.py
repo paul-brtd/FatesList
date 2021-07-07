@@ -32,6 +32,8 @@ import asyncio
 import importlib
 import builtins
 import modules.models.enums as enums
+import signal
+import sys
 
 
 class FatesDebugBot(commands.Bot):
@@ -75,7 +77,13 @@ class FatesWorkerOauth(Singleton):
 class FatesWorkerDiscord(Singleton):
     """Stores discord clients for a worker session"""
 
-    def __init__(self, *, main: FatesBot, servers: FatesBot, debug: FatesDebugBot):
+    def __init__(
+        self, 
+        *, 
+        main: FatesBot, 
+        servers: FatesBot, 
+        debug: FatesDebugBot
+    ):
         self.debug = debug
         self.main = main
         self.servers = servers
@@ -108,6 +116,7 @@ class FatesWorkerSession(Singleton):
         self.fup = False  # FUP = finally up/all workers are now up
         self.discord = discord
         self.oauth = oauth
+        self.dying = False
 
     def up(self):
         self.up = True
@@ -212,6 +221,13 @@ async def init_fates_worker(app):
         )
     )
 
+    # Create the shutdown handler to work around uvicorn faults
+    loop = asyncio.get_event_loop()
+
+    for sig in (signal.SIGINT, signal.SIGTERM, signal.SIGABRT, signal.SIGQUIT):
+        loop.add_signal_handler(sig, shutdown_fates_list(app))
+
+    # Set the session for use in startup
     session = app.state.worker_session
 
     # Set bot tags
@@ -396,3 +412,41 @@ def fl_openapi(app):
         app.openapi_schema = openapi_schema
         return app.openapi_schema
     return _openapi
+
+
+def shutdown_fates_list(app):
+    worker_session = app.state.worker_session
+    db = worker_session.postgres
+    rabbit = worker_session.rabbit
+    redis = worker_session.redis
+
+    async def _close():
+        logger.info("Closing connections")
+        await asyncio.sleep(0)
+        await db.close()
+        await rabbit.close()
+        await redis.publish("_worker", f"DOWN WORKER {os.getpid()}")
+        await redis.close()
+        await asyncio.sleep(0)
+        logger.info("All connections closed")
+
+    def _signal_handler_entry():
+        """Entrypoint for signal handler"""
+
+        # Ensure only one stop task is executed
+        if worker_session.dying:
+            return
+
+        # We are going to die
+        worker_session.dying = True
+
+        # Begin killing fates list
+        logger.info("Killing Fates List")
+        task = asyncio.create_task(_close())
+        task.add_done_callback(_gohome)
+
+    def _gohome(task):
+        logger.info("Fates List is now down. Going back to the IceWings!")
+        sys.exit(0)
+
+    return _signal_handler_entry

@@ -38,12 +38,6 @@ class templates():
                 arg_dict["user_token"] = await db.fetchval("SELECT api_token FROM users WHERE user_id = $1", arg_dict["user_id"]) 
             arg_dict["intl_text"] = intl_text # This comes from lynxfall.utils.string
             arg_dict["site_lang"] = request.session.get("site_lang", "default")
-            try:
-                oauth = request.app.state.worker_session.oauth
-                request.session["access_token"] = oauth.discord.refresh_access_token(AccessToken(**request.session.get("access_token")))
-                arg_dict["access_token"] = orjson.dumps(request.session.get("access_token")).decode("utf-8")
-            except:
-                pass
             arg_dict["scopes"] = request.session.get("scopes")
         else:
             arg_dict["staff"] = [False]

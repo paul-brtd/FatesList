@@ -30,7 +30,7 @@ async def get_login_link(request: Request, data: LoginInfo, worker_session = Dep
 @router.get("/auth/callback")
 async def auth_callback_handler(request: Request, code: str, state: str, worker_session = Depends(worker_session)):
     oauth = worker_session.oauth
-    
+
     id = oauth.discord.get_state_id(state)
     
     if not id:
@@ -54,7 +54,8 @@ async def auth_callback_handler(request: Request, code: str, state: str, worker_
 @router.post("/users", response_model = LoginResponse)
 async def login_user(request: Request, data: Login, worker_session = Depends(worker_session)):
     oauth = worker_session.oauth
-    
+    db = worker_session.postgres
+
     try:
         state_id = oauth.discord.get_state_id(data.state)
         state_data = await oauth.discord.get_state(state_id)
