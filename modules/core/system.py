@@ -269,6 +269,11 @@ async def init_fates_worker(app):
     # We are now up (probably)
     app.state.worker_session.up = True
 
+    # Boast about oht success!
+    logger.success(
+        "Fates List worker has been bootstrapped successfully!"
+    )
+   
 
 async def start_dbg(session):
     if session.primary_worker():
