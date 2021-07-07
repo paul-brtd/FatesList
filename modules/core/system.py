@@ -271,7 +271,7 @@ async def init_fates_worker(app):
 
     # Boast about oht success!
     logger.success(
-        f"Fates List worker (pid: {os.getpid()}) has been bootstrapped successfully!"
+        f"Fates List worker (pid: {os.getpid()}) bootstrapped successfully!"
     )
    
 
