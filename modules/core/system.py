@@ -17,7 +17,7 @@ from fastapi.openapi.utils import get_openapi
 import discord
 from discord.ext import commands
 from lynxfall.core.classes import Singleton
-from lynxfall.utils.fastapi import include_routers
+from lynxfall.utils.fastapi import include_routers  # pylint: disable=no-name-in-module
 from lynxfall.ratelimits import LynxfallLimiter
 from lynxfall.rabbit.client import RabbitClient
 from lynxfall.oauth.models import OauthConfig
@@ -31,7 +31,7 @@ import aio_pika
 import asyncio
 import importlib
 import builtins
-import modules.models.enums as enums
+from modules.models import enums
 import signal
 import sys
 from fastapi.templating import Jinja2Templates
@@ -40,6 +40,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 
 
 class FatesDebugBot(commands.Bot):
+    """Fates List Debug Bot"""
     def __init__(self, *, intents):
         self.ready = False
         super().__init__(
@@ -57,6 +58,7 @@ class FatesDebugBot(commands.Bot):
 
         
 class FatesBot(discord.Client):
+    """Fates List Regular Bot"""
     def __init__(self, *, intents):
         self.ready = False
         super().__init__(intents=intents)
@@ -130,7 +132,7 @@ class FatesWorkerSession(Singleton):
         # Templating
         self.templates = Jinja2Templates(directory="templates")
 
-    def up(self):
+    def is_up(self):
         self.up = True
 
     def publish_workers(self, workers):
@@ -220,7 +222,7 @@ async def init_fates_worker(app):
     # Set bot tags
     def _tags(tag_db):
         tags = {}
-        for tag in tags_db:
+        for tag in tag_db:
             tags = tags | {tag["id"]: tag["icon"]}
         return tags
 
@@ -267,7 +269,7 @@ async def init_fates_worker(app):
     logger.debug("Started status task")
 
     # We are now up (probably)
-    app.state.worker_session.up = True
+    app.state.worker_session.is_up()
 
     # Boast about oht success!
     logger.success(
@@ -300,7 +302,7 @@ async def status(workers, session):
 
     await pubsub.subscribe("_worker")
     async for msg in pubsub.listen():
-        if msg is None or type(msg.get("data")) != bytes:
+        if not msg or not isinstance(msg.get("data"), bytes):
             continue
         msg = tuple(msg.get("data").decode("utf-8").split(" "))
         logger.debug(f"Got {msg}")
