@@ -1,4 +1,4 @@
-"""Fates List System Init/Maintenance"""
+"""Fates List System Bootstrapper"""
 from .ratelimits import rl_key_func
 from .events import bot_add_event
 
@@ -108,15 +108,24 @@ class FatesWorkerSession(Singleton):
     ):
         self.id = id
         self.postgres = postgres
-        self.start_time = time.time()
         self.redis = redis
         self.rabbit = rabbit
-        self.up = False
-        self.workers = None
-        self.fup = False  # FUP = finally up/all workers are now up
         self.discord = discord
         self.oauth = oauth
+        
+        # Record basic stats and initially set workers to None
+        self.start_time = time.time()
+        self.up = False
+        self.workers = None
+        
+        # FUP = finally up/all workers are now up
+        self.fup = False
+        
+        # Used in shutdown to check if already dead
         self.dying = False
+        
+        # Templating
+        self.templates = Jinja2Templates(directory="templates")
 
     def up(self):
         self.up = True
@@ -154,12 +163,12 @@ async def setup_discord():
 
 def include_routers(app, fname, rootpath):
     logger.info(f"Loading modules for Fates List: {fname}")
+    
     for root, dirs, files in os.walk(rootpath):
         if (not root.startswith("_") 
             and not root.startswith(".") 
             and not root.startswith("debug")
         ):
-
             rrep = root.replace("/", ".")
             for f in files:
                 if (not f.startswith("_") 
@@ -170,7 +179,8 @@ def include_routers(app, fname, rootpath):
                 ):
                     path = f"{rrep}.{f.replace('.py', '')}"
                     logger.debug(
-                        f"{fname}: {root}: Loading {f} with path {path}")
+                        f"{fname}: {root}: Loading {f} with path {path}"
+                    )
                     route = importlib.import_module(path)
                     app.include_router(route.router)
 
@@ -185,9 +195,9 @@ async def init_fates_worker(app):
         - Start repeated task for vote reminder posting
     """
     # TODO: This is still builtins for backward compatibility. 
-    # =======================================================
-    # Move all code to use worker session and new code should 
-    # always use worker session
+    # ========================================================
+    # Move all code to use worker session. All new code should 
+    # always use worker session instead of builtins
     dbs = await setup_db()
     discord = await setup_discord()
     builtins.db = dbs["postgres"]
@@ -229,7 +239,7 @@ async def init_fates_worker(app):
 
     # Set the session for use in startup
     session = app.state.worker_session
-
+    
     # Set bot tags
     def _tags(tag_db):
         tags = {}
