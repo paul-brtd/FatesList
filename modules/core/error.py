@@ -2,14 +2,14 @@ from .imports import *
 from .templating import *
 from .helpers import *
 import io
+import traceback
 
 def etrace(ex):
-     return "".join(tblib.format_exception(ex)) # COMPAT: Python 3.10 only
+     return "".join(traceback.format_exception(ex)) # COMPAT: Python 3.10 only
 
 class WebError():
     @staticmethod
     async def log(request, exc, error_id, curr_time):
-        traceback = exc.__traceback__ # Get traceback from exception
         site_errors = client.get_channel(site_errors_channel) # Get site errors channel
 
         try:
@@ -84,7 +84,7 @@ class WebError():
                     status_code = status_code
                 )
             
-            tb_full = "".join(tblib.format_exception(exc))
+            tb_full = "".join(traceback.format_exception(exc))
 
             errmsg = inspect.cleandoc(f"""
                 Fates List had a slight issue and our developers and looking into what happened<br/><br/>
