@@ -279,11 +279,15 @@ async def start_dbg(session):
     if session.primary_worker():
         session.discord.debug.bots_role = bots_role
         session.discord.debug.bot_dev_role = bot_dev_role
-        session.discord.debug.load_extension("jishaku")
+        
+        try:
+            session.discord.debug.load_extension("jishaku")
+        except Exception:
+            pass
+        
         manager = importlib.import_module("modules.debug.bot")
         session.discord.debug.add_cog(manager.Manager(session.discord.debug))
         asyncio.create_task(session.discord.debug.start(TOKEN_MAIN))
-        return
 
 
 async def status(workers, session):
