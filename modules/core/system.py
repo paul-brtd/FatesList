@@ -17,6 +17,7 @@ from fastapi.openapi.utils import get_openapi
 import discord
 from discord.ext import commands
 from lynxfall.core.classes import Singleton
+from lynxfall.utils.fastapi import include_router
 from lynxfall.ratelimits import LynxfallLimiter
 from lynxfall.rabbit.client import RabbitClient
 from lynxfall.oauth.models import OauthConfig
@@ -161,32 +162,6 @@ async def setup_discord():
 
 # Include all the modules by looping through 
 # and using importlib to import them and then including them in fastapi
-
-
-def include_routers(app, fname, rootpath):
-    logger.info(f"Loading modules for Fates List: {fname}")
-    
-    for root, dirs, files in os.walk(rootpath):
-        if (not root.startswith("_") 
-            and not root.startswith(".") 
-            and not root.startswith("debug")
-        ):
-            rrep = root.replace("/", ".")
-            for f in files:
-                if (not f.startswith("_") 
-                    and not f.startswith(".") 
-                    and not f.endswith("pyc") 
-                    and not f.startswith("models") 
-                    and not f.startswith("base")
-                ):
-                    path = f"{rrep}.{f.replace('.py', '')}"
-                    logger.debug(
-                        f"{fname}: {root}: Loading {f} with path {path}"
-                    )
-                    route = importlib.import_module(path)
-                    app.include_router(route.router)
-
-    logger.info(f"Done init of {fname}")
 
 
 async def init_fates_worker(app):
