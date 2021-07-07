@@ -11,7 +11,7 @@ async def _user_fetch(
     worker_session: FatesWorkerSession = None
 ) -> Optional[dict]:
     """Internal function to fetch a user. If worker_sessiom is not explicitly specified, a warning will be logged"""
-    if not redis:
+    if not worker_session:
         logger.warning("Not giving worker_sessiom explicity is deprecated. Please use worker_session")
         # TODO: Remove backward compat functions
         redis = redis_db
@@ -112,11 +112,11 @@ async def _user_fetch(
         return {"id": user_id, "username": username, "avatar": avatar, "disc": disc, "status": status, "bot": bot}
     return None
 
-async def get_user(user_id: int, user_only = False) -> Optional[dict]:
-    return await _user_fetch(str(int(user_id)), 1, user_only = user_only) # 1 means user
+async def get_user(user_id: int, user_only = False, *, worker_session = None) -> Optiona[dict]:
+    return await _user_fetch(str(int(user_id)), 1, user_only = user_only, worker_session = worker_session) # 1 means user
 
-async def get_bot(user_id: int, user_only = False) -> Optional[dict]:
-    return await _user_fetch(str(int(user_id)), 2, user_only = user_only) # 2 means bot
+async def get_bot(user_id: int, user_only = False, *, worker_session = None) -> Optional[dict]:
+    return await _user_fetch(str(int(user_id)), 2, user_only = user_only, worker_session = worker_session) # 2 means bot
 
-async def get_any(user_id: int, user_only = False) -> Optional[dict]:
-    return await _user_fetch(str(int(user_id)), 3, user_only = user_only) # 3 means all
+async def get_any(user_id: int, user_only = False, *, worker_session = None) -> Optional[dict]:
+    return await _user_fetch(str(int(user_id)), 3, user_only = user_only, worker_session = worker_session) # 3 means all
