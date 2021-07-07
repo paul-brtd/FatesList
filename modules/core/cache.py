@@ -1,7 +1,27 @@
 from .imports import *
+from aioredis import Connection
+from loguru import logger
+from modules.core.system import FatesWorkerSessiom
 
-
-async def _user_fetch(user_id: str, user_type: int, user_only: bool = False) -> Optional[dict]:
+async def _user_fetch(
+    user_id: str,
+    user_type: int,
+    user_only: bool = False,
+    *, 
+    worker_session: FatesWorkerSession = None
+) -> Optional[dict]:
+    """Internal function to fetch a user. If worker_sessiom is not explicitly specified, a warning will be logged"""
+    if not redis:
+        logger.warning("Not giving worker_sessiom explicity is deprecated. Please use worker_session")
+        # TODO: Remove backward compat functions
+        redis = redis_db
+        rabbit = rabbitmq_db
+    else:
+        db = worker_session.db
+        redis = worker_session.redis
+        rabbit = worker_session.rabbit
+        client = worker_session.discord.main
+    
     # Check if a suitable version is in the cache first before querying Discord
 
     CACHE_VER = 10 # Current cache ver
