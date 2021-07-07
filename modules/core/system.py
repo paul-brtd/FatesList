@@ -17,7 +17,7 @@ from fastapi.openapi.utils import get_openapi
 import discord
 from discord.ext import commands
 from lynxfall.core.classes import Singleton
-from lynxfall.utils.fastapi import include_router
+from lynxfall.utils.fastapi import include_routers
 from lynxfall.ratelimits import LynxfallLimiter
 from lynxfall.rabbit.client import RabbitClient
 from lynxfall.oauth.models import OauthConfig
