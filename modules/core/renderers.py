@@ -42,6 +42,9 @@ def gen_owner_html(owners_lst: tuple):
     return owners_html
 
 async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bool, rev_page: int = 1):
+    worker_session = request.app.state.worker_session
+    db = worker_session.postgres
+    
     if bot_id >= 9223372036854775807: # Max size of bigint
         return abort(404)
     bot = await db.fetchrow(
@@ -120,10 +123,10 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
     else:
         banner = ""
 
-    bot_info = await get_bot(bot["bot_id"])
+    bot_info = await get_bot(bot_id, worker_session = worker_session)
     
-    promos = await get_promotions(bot["bot_id"])
-    maint = await get_maint(bot["bot_id"])
+    promos = await get_promotions(bot_id)
+    maint = await get_maint(bot_id)
 
     owners_lst = tuple([(await get_user(obj["owner"], user_only = True)) for obj in owners if obj["owner"] is not None])
     owners_html = gen_owner_html(owners_lst)
@@ -134,7 +137,7 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
     
     if bot_info:
         bot = dict(bot)
-        user = await get_bot(bot_id)
+        user = dict(bot_info)
         user["name"] = user["username"]
         bot_extra = {
             "votes": human_format(bot["votes"]), 
