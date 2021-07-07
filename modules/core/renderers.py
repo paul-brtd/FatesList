@@ -193,6 +193,9 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
         return data
 
 async def render_bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, api: bool):
+    worker_session = request.app.state.worker_session
+    db = worker_session.postgres
+    
     bot = await db.fetchrow("SELECT bot_id, servers, votes FROM bots WHERE bot_id = $1", bot_id)
     if not bot:
         if api:
@@ -208,6 +211,9 @@ async def render_bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, 
     return await templates.TemplateResponse("widget.html", {"request": request} | data)
 
 async def render_search(request: Request, q: str, api: bool):
+    worker_session = request.app.state.worker_session
+    db = worker_session.postgres
+    
     if q == "":
         if api:
             return abort(404)
@@ -221,13 +227,16 @@ async def render_search(request: Request, q: str, api: bool):
         ORDER BY bots.votes LIMIT 6""", 
         f'%{q}%'
     )
-    search_bots = await parse_index_query(bots)
+    search_bots = await parse_index_query(worker_session, bots)
     if not api:
         return await templates.TemplateResponse("search.html", {"request": request, "search_bots": search_bots, "tags_fixed": tags_fixed, "query": q, "profile_search": False})
     else:
         return {"search_bots": search_bots, "tags_fixed": tags_fixed, "query": q, "profile_search": False}
 
 async def render_profile_search(request: Request, q: str, api: bool):
+    worker_session = request.app.state.worker_session
+    db = worker_session.postgres
+    
     if q == "" or q is None:
         if api:
             return abort(404)
@@ -247,7 +256,7 @@ async def render_profile_search(request: Request, q: str, api: bool):
         profiles = []
     profile_obj = []
     for profile in profiles:
-        profile_info = await get_user(profile["user_id"])
+        profile_info = await get_user(profile["user_id"], worker_session = worker_session)
         if profile_info:
             profile_obj.append({"banner": None, "description": profile["description"]}| profile_info)
     if not api:
