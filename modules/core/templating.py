@@ -4,9 +4,6 @@ Fates List Templating System
 
 from .imports import *
 from .permissions import *
-from lynxfall.oauth.models import AccessToken
-
-_templates = Jinja2Templates(directory="templates") # Setup templates folder
         
 # Template class renderer
 class templates():
@@ -57,7 +54,9 @@ class templates():
         }
         
         arg_dict["context"] = base_context | context
-
+        
+        _templates = request.state.worker_session.templates
+        
         if status is None:
             ret = _templates.TemplateResponse(f, arg_dict)
             
