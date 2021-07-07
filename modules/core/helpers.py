@@ -165,7 +165,7 @@ async def parse_index_query(worker_session, fetch: List[asyncpg.Record]) -> list
                 servers = bot["servers"]
                 del bot["votes"]
                 del bot["servers"]
-                banner = bot["banner"]
+                banner = bot["banner"] if bot["banner"] else ""
                 del bot["banner"]
                 if bot_info.get("avatar") is None:
                     bot_info["avatar"] = ""
@@ -179,8 +179,6 @@ async def parse_index_query(worker_session, fetch: List[asyncpg.Record]) -> list
                 } | bot | bot_info)
         except KeyboardInterrupt:
             return
-        except Exception:
-            continue
     return lst
 
 async def do_index_query(
@@ -193,6 +191,7 @@ async def do_index_query(
     Performs a 'index' query which can also be used by other things as well
     """
     db = worker_session.postgres
+    
     states = "WHERE " + " OR ".join([f"state = {s}" for s in state])
     base_query = f"SELECT description, banner, state, votes, servers, bot_id, invite, nsfw FROM bots {states}"
     if limit:

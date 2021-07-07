@@ -18,6 +18,9 @@ class templates():
             arg_dict["css"] = request.session.get("user_css")
             if guild:
                 user = guild.get_member(int(request.session.get("user_id", 0)))
+            else:
+                user = None
+
             state = await db.fetchval("SELECT state FROM users WHERE user_id = $1", int(request.session["user_id"]))
             if (state == enums.UserState.global_ban) and not_error:
                 ban_type = enums.UserState(state).__doc__

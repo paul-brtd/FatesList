@@ -128,7 +128,7 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
     promos = await get_promotions(bot_id)
     maint = await get_maint(bot_id)
 
-    owners_lst = tuple([(await get_user(obj["owner"], user_only = True)) for obj in owners if obj["owner"] is not None])
+    owners_lst = tuple([(await get_user(obj["owner"], user_only = True, worker_session = worker_session)) for obj in owners if obj["owner"] is not None])
     owners_html = gen_owner_html(owners_lst)
     if bot["features"] is None:
         bot_features = ""
@@ -157,7 +157,7 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
     
     _tags_fixed_bot = [tag for tag in tags_fixed if tag["id"] in bot["tags"]]
     bt.add_task(add_ws_event, bot_id, {"m": {"e": enums.APIEvents.bot_view}, "ctx": {"user": request.session.get('user_id'), "widget": False}})
-    reviews = await parse_reviews(bot_id, page = rev_page)
+    reviews = await parse_reviews(worker_session, bot_id, page = rev_page)
     
     context = {
         "id": str(bot_id), 
@@ -205,7 +205,7 @@ async def render_bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, 
     bot["votes"] = human_format(bot["votes"])
     bot["servers"] = human_format(bot["servers"])
     bt.add_task(add_ws_event, bot_id, {"m": {"e": enums.APIEvents.bot_view}, "ctx": {"user": request.session.get('user_id'), "widget": True}})
-    data = {"bot": bot, "user": await get_bot(bot_id)}
+    data = {"bot": bot, "user": await get_bot(bot_id, worker_session = request.app.state.worker_session)}
     if api:
         return data
     return await templates.TemplateResponse("widget.html", {"request": request} | data)

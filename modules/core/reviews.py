@@ -3,7 +3,9 @@ from .events import *
 from .imports import *
 
 
-async def parse_reviews(bot_id: int, rev_id: uuid.uuid4 = None, page: int = None) -> List[dict]:
+async def parse_reviews(worker_session, bot_id: int, rev_id: uuid.uuid4 = None, page: int = None) -> List[dict]:
+    db = worker_session.postgres
+
     per_page = 9
     if not rev_id:
         reply = False    
@@ -30,7 +32,7 @@ async def parse_reviews(bot_id: int, rev_id: uuid.uuid4 = None, page: int = None
         reviews[i]["time_past"] = str(time.time() - reviews[i]["epoch"][0])
         reviews[i]["epoch"] = [str(ep) for ep in reviews[i]["epoch"]]
         reviews[i]["id"] = str(reviews[i]["id"])
-        reviews[i]["user"] = await get_user(reviews[i]["user_id"])
+        reviews[i]["user"] = await get_user(reviews[i]["user_id"], worker_session = worker_session)
         reviews[i]["user_id"] = str(reviews[i]["user_id"])
         reviews[i]["star_rating"] = round(reviews[i]["star_rating"], 2)
         reviews[i]["replies"] = []
@@ -39,7 +41,7 @@ async def parse_reviews(bot_id: int, rev_id: uuid.uuid4 = None, page: int = None
         if not rev_id:
             stars += reviews[i]["star_rating"]
         for review_id in reviews[i]["_replies"]:
-            _parsed_reply = await parse_reviews(bot_id, review_id)
+            _parsed_reply = await parse_reviews(worker_session, bot_id, review_id)
             try:
                 reviews[i]["replies"].append(_parsed_reply[0][0])
             except:

@@ -1,6 +1,5 @@
 """Fates List System Bootstrapper"""
 from .ratelimits import rl_key_func
-from .events import bot_add_event
 
 from config import (
     TOKEN_MAIN, TOKEN_SERVER, bots_role, 
@@ -204,7 +203,7 @@ async def init_fates_worker(app):
     builtins.db = dbs["postgres"]
     builtins.redis_db = dbs["redis"]
     builtins.rabbitmq_db = dbs["rabbit"]
-    builtins.client = discord["main"]
+    builtins.client = builtins.dclient = discord["main"]
     builtins.client_server = discord["servers"]
     RabbitClient.setup(worker_key, dbs["redis"], dbs["rabbit"])
     logger.success("Connected to postgres, rabbitmq and redis")
@@ -361,6 +360,7 @@ async def status(workers, session):
 
 async def vote_reminder(session):
     if session.primary_worker():
+        bot_add_event = importlib.import_module("modules.core.events").bot_add_event
         reminders = await session.postgres.fetch(
             """SELECT user_id, bot_id FROM user_reminders 
             WHERE remind_time >= NOW() AND resolved = false"""

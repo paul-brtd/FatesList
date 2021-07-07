@@ -1,7 +1,7 @@
 from .imports import *
 from aioredis import Connection
 from loguru import logger
-from modules.core.system import FatesWorkerSessiom
+from modules.core.system import FatesWorkerSession
 
 async def _user_fetch(
     user_id: str,
@@ -12,12 +12,12 @@ async def _user_fetch(
 ) -> Optional[dict]:
     """Internal function to fetch a user. If worker_sessiom is not explicitly specified, a warning will be logged"""
     if not worker_session:
-        logger.warning("Not giving worker_sessiom explicity is deprecated. Please use worker_session")
-        # TODO: Remove backward compat functions
+        logger.debug("Using builtins is deprecated. Use worker session instead")
         redis = redis_db
         rabbit = rabbitmq_db
+        client = dclient
     else:
-        db = worker_session.db
+        db = worker_session.postgres
         redis = worker_session.redis
         rabbit = worker_session.rabbit
         client = worker_session.discord.main
@@ -112,7 +112,7 @@ async def _user_fetch(
         return {"id": user_id, "username": username, "avatar": avatar, "disc": disc, "status": status, "bot": bot}
     return None
 
-async def get_user(user_id: int, user_only = False, *, worker_session = None) -> Optiona[dict]:
+async def get_user(user_id: int, user_only = False, *, worker_session = None) -> Optional[dict]:
     return await _user_fetch(str(int(user_id)), 1, user_only = user_only, worker_session = worker_session) # 1 means user
 
 async def get_bot(user_id: int, user_only = False, *, worker_session = None) -> Optional[dict]:
