@@ -23,7 +23,6 @@ function submitBot(e) {
 	    modalShow("Error", "You need to select tags for your bot!")
 	    return
 	}
-	json.access_token = context.access_token.access_token
 	$j.ajax({
 		url: `/api/users/${context.user_id}/bots/${json.bot_id}`,
 		method: method,
