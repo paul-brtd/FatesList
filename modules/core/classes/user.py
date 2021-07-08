@@ -44,8 +44,8 @@ class User(DiscordUser):
         approved_bots = [obj for obj in bots if obj["state"] in (enums.BotState.approved, enums.BotState.certified)]
         certified_bots = [obj for obj in bots if obj["state"] == enums.BotState.certified]
     
-        user["bot_dev"] = approved_bots != []
-        user["cert_dev"] = certified_bots != []                      
+        user["bot_developer"] = approved_bots != []
+        user["certified_developer"] = certified_bots != []                      
                          
         guild = self.client.get_guild(main_server)
         if guild is None:
@@ -53,7 +53,7 @@ class User(DiscordUser):
                          
         else:    
             user_dpy = guild.get_member(self.id)            
-            user["badges"] = Badge.from_user(user_dpy, user["badges"], user["bot_dev"], user["cert_dev"])
+            user["badges"] = Badge.from_user(user_dpy, user["badges"], user["bot_developer"], user["certified_developer"])
                          
         return {
             "bots": bots, 

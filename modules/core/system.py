@@ -6,7 +6,7 @@ from config import (
     bot_dev_role, worker_key, session_key, 
     owner, sentry_dsn, lynxfall_key,
     discord_client_id, discord_client_secret,
-    discord_redirect_uri, site
+    discord_redirect_uri, site, TOKEN_DBG
 )
 
 import sentry_sdk
@@ -150,7 +150,7 @@ async def setup_discord():
     intent_main.presences = True
     intent_servers = discord.Intents.none()
     intent_servers.guilds = True
-    intent_servers.members = True
+    intent_servers.members = False
     intent_dbg = discord.Intents.none()
     intent_dbg.guilds = True
     intent_dbg.dm_messages = True  # We only want DM messages, not guild
@@ -289,7 +289,7 @@ async def start_dbg(session):
         
         manager = importlib.import_module("modules.debug.bot")
         session.discord.debug.add_cog(manager.Manager(session.discord.debug))
-        asyncio.create_task(session.discord.debug.start(TOKEN_MAIN))
+        asyncio.create_task(session.discord.debug.start(TOKEN_DBG))
 
 
 async def status(workers, session):

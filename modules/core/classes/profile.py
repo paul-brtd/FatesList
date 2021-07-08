@@ -22,8 +22,8 @@ class ProfileData(BaseModel):
     description: Optional[str] = "This user prefers to be a enigma"
     css: Optional[str] = None
     js_allowed: bool
-    bot_dev: bool
-    cert_dev: bool
+    bot_developer: bool
+    certified_developer: bool
     state: enums.UserState
 
 class Profile(BaseModel):
