@@ -17,7 +17,7 @@ from fastapi.openapi.utils import get_openapi
 import discord
 from discord.ext import commands
 from lynxfall.core.classes import Singleton
-from lynxfall.utils.fastapi import include_routers  # pylint: disable=no-name-in-module
+from lynxfall.utils.fastapi import include_routers, api_versioner  # pylint: disable=no-name-in-module
 from lynxfall.ratelimits import LynxfallLimiter
 from lynxfall.rabbit.client import RabbitClient
 from lynxfall.oauth.models import OauthConfig
@@ -34,9 +34,73 @@ import builtins
 from modules.models import enums
 import signal
 import sys
+from fastapi.responses import HTMLResponse, ORJSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
+
+
+class FatesListRequestHandler(BaseHTTPMiddleware):
+    """Request Handler for Fates List"""
+    def __init__(self, app, *, exc_handler):
+        super().__init__(app)
+        self.exc_handler = exc_handler
+        self.API_VERSION = 2
+        
+        # Methods that should be allowed by CORS
+        self.CORS_ALLOWED = "GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS"
+    
+    async def dispatch(self, request, call_next):
+        if request.app.state.worker_session.dying:
+            return HTMLResponse("Fates List is going down for a reboot")
+        
+        request.state.error_id = str(uuid.uuid4()) # Create a error id for just in case
+        request.state.curr_time = str(datetime.datetime.now()) # Get time request was made
+        
+        logger.trace(request.headers.get("X-Forwarded-For"))
+        
+        if str(request.url.path).startswith("/bots/"):
+            request.scope["path"] = str(request.url.path).replace("/bots", "/bot", 1)
+        
+        # Transparently handle /api as /api/vX excluding docs and already /api/vX'd apis
+        path = request.scope["path"]
+        
+        is_api = path.startswith("/api") and path.startswith("/api/docs")
+        
+        if is_api:
+            request.scope, api_ver = api_versioner(request, self.API_VERSION)
+    
+        start_time = time.time() # Get process time start
+        
+        # Process request with retry
+        try:
+            response = await call_next(request)
+        except Exception as exc:
+            logger.exception("Site Error Occurred")
+            response = await self.exc_handler(request, exc)
+
+        process_time = time.time() - start_time # Get time taken
+        response.headers["X-Process-Time"] = str(process_time) # Record time taken
+        response.headers["FL-API-Version"] = api_ver # Record currently used api version for debug
+    
+        # Fuck CORS by force setting headers with proper origin
+        origin = request.headers.get('Origin')
+        response.headers["Access-Control-Allow-Origin"] = origin if origin else "*"
+        
+        if is_api and origin:
+            response.headers["Access-Control-Allow-Credentials"] = "true"
+        else:
+            response.headers["Access-Control-Allow-Credentials"] = "false"
+        
+        response.headers["Access-Control-Allow-Methods"] = self.CORS_ALLOWED
+        if request.method == "OPTIONS" and is_api and response.status_code == 405:
+            response.status_code = 204
+            response.headers["Allow"] = self.CORS_ALLOWED
+            
+        asyncio.create_task(self.logger(request, response))
+        
+        default_res = ORJSONResponse({"detail": "Internal Server Error V2"}, status_code = 500) 
+        return response if response else default_res
 
 
 class FatesDebugBot(commands.Bot):
