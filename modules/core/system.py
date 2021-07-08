@@ -50,6 +50,9 @@ class FatesListRequestHandler(BaseHTTPMiddleware):
         # Methods that should be allowed by CORS
         self.CORS_ALLOWED = "GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS"
     
+        # Default response
+        self.default_res = HTMLResponse("Something happened!", status_code = 500) 
+        
     def logger(self, path, request, response):
         code = response.status_code
         phrase = HTTPStatus(response.status_code).phrase
@@ -104,20 +107,22 @@ class FatesListRequestHandler(BaseHTTPMiddleware):
         origin = request.headers.get('Origin')
         response.headers["Access-Control-Allow-Origin"] = origin if origin else "*"
         
+        # Made commonly repeated header names shorter
+        acac = "Access-Control-Allow-Credentials"
+            
         if is_api and origin:
-            response.headers["Access-Control-Allow-Credentials"] = "true"
+            response.headers[acac] = "true"
         else:
-            response.headers["Access-Control-Allow-Credentials"] = "false"
+            response.headers[acac] = "false"
         
         response.headers["Access-Control-Allow-Methods"] = self.CORS_ALLOWED
         if request.method == "OPTIONS" and is_api and response.status_code == 405:
             response.status_code = 204
             response.headers["Allow"] = self.CORS_ALLOWED
             
-        asyncio.create_task(self.logger(path, request, response))
+        self.logger(path, request, response)
         
-        default_res = ORJSONResponse({"detail": "Internal Server Error V2"}, status_code = 500) 
-        return response if response else default_res
+        return response if response else self.default_res
 
 
 class FatesDebugBot(commands.Bot):
