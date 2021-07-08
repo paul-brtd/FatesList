@@ -34,12 +34,3 @@ async def fl_exception_handler(request, exc, log = True):
 @app.on_event("startup")
 async def startup():
     await init_fates_worker(app)
-
-@app.middleware("http")
-async def fateslist_request_handler(request: Request, call_next):
-    try:
-        return await routeware(app, fl_exception_handler, request, call_next)
-    except Exception as exc:
-        logger.exception("Site Error Occurred") 
-        return await fl_exception_handler(request, exc)
-
