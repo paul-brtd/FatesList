@@ -13,6 +13,7 @@ import sentry_sdk
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 
 from starlette.middleware.sessions import SessionMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi.openapi.utils import get_openapi
 import discord
 from discord.ext import commands
@@ -66,10 +67,21 @@ class FatesListRequestHandler(BaseHTTPMiddleware):
             query_str = ""
             
         logger.info(f"{request.method} {path}{query_str} - {code} {phrase} ({host}, HTTP/{http_ver})")
-    
-    async def dispatch(self, request, call_next):
-        path = request.scope["path"]
         
+    async def dispatch(self, request, call_next):
+        """Run _dispatch, if that fails, log error and do exc handler"""
+        path = request.scope["path"]
+        try:
+            res = await self._dispatch(path, request, call_next)
+        except Exception as exc:
+            logger.exception("Site Error Occurred") 
+            res = await self.exc_handler(request, exc)
+        
+        self.logger(path, request, res)
+        return res if res else self.default_res
+    
+    async def _dispatch(self, path, request, call_next):
+        """Actual middleware"""
         if request.app.state.worker_session.dying:
             return HTMLResponse("Fates List is going down for a reboot")
         
@@ -119,10 +131,8 @@ class FatesListRequestHandler(BaseHTTPMiddleware):
         if request.method == "OPTIONS" and is_api and response.status_code == 405:
             response.status_code = 204
             response.headers["Allow"] = self.CORS_ALLOWED
-            
-        self.logger(path, request, response)
         
-        return response if response else self.default_res
+        return response
 
 
 class FatesDebugBot(commands.Bot):
@@ -252,7 +262,7 @@ async def setup_discord():
 # and using importlib to import them and then including them in fastapi
 
 
-async def init_fates_worker(app):
+async def init_fates_worker(app, exc_handler):
     """
     On startup:
         - Initialize Postgres, Redis, RabbitMQ and discord
@@ -341,6 +351,12 @@ async def init_fates_worker(app):
     # Add GZip handling
     app.add_middleware(GZipMiddleware, minimum_size=500)
 
+    # Add request handler
+    app.add_middleware(
+        FatesListRequestHandler, 
+        exc_handler = exc_handler
+    )
+    
     # Include all routers
     include_routers(app, "Discord", "modules/discord")
 
