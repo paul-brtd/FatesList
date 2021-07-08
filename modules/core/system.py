@@ -62,15 +62,18 @@ class FatesListRequestHandler(BaseHTTPMiddleware):
         logger.trace(request.headers.get("X-Forwarded-For"))
         
         if path.startswith("/bots/"):
-            request.scope["path"] = path.replace("/bots", "/bot", 1)
+            path = path.replace("/bots", "/bot", 1)
         
-        # Transparently handle /api as /api/vX excluding docs and already /api/vX'd apis
-        is_api = path.startswith("/api") and path.startswith("/api/docs")
+        # These are checks path should not start with
+        api_nchecks = ("/api/docs", "/api/v", "api/ws")
+        is_api = path.startswith("/api") and not path.startswith(api_nchecks)
+        request.scope["path"] = path
         
         if is_api:
+            # Handle /api as /api/vX excluding docs + pinned requests
             request.scope, api_ver = api_versioner(request, self.API_VERSION)
     
-        start_time = time.time() # Get process time start
+        start_time = time.time()
         
         # Process request with retry
         try:
@@ -79,9 +82,9 @@ class FatesListRequestHandler(BaseHTTPMiddleware):
             logger.exception("Site Error Occurred")
             response = await self.exc_handler(request, exc)
 
-        process_time = time.time() - start_time # Get time taken
-        response.headers["X-Process-Time"] = str(process_time) # Record time taken
-        response.headers["FL-API-Version"] = api_ver # Record currently used api version for debug
+        process_time = time.time() - start_time
+        response.headers["X-Process-Time"] = str(process_time)
+        response.headers["X-API-Version"] = api_ver
     
         # Fuck CORS by force setting headers with proper origin
         origin = request.headers.get('Origin')
