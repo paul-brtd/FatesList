@@ -51,6 +51,8 @@ class FatesListRequestHandler(BaseHTTPMiddleware):
         self.CORS_ALLOWED = "GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS"
     
     async def dispatch(self, request, call_next):
+        path = request.scope["path"]
+        
         if request.app.state.worker_session.dying:
             return HTMLResponse("Fates List is going down for a reboot")
         
@@ -59,12 +61,10 @@ class FatesListRequestHandler(BaseHTTPMiddleware):
         
         logger.trace(request.headers.get("X-Forwarded-For"))
         
-        if str(request.url.path).startswith("/bots/"):
-            request.scope["path"] = str(request.url.path).replace("/bots", "/bot", 1)
+        if path.startswith("/bots/"):
+            request.scope["path"] = path.replace("/bots", "/bot", 1)
         
         # Transparently handle /api as /api/vX excluding docs and already /api/vX'd apis
-        path = request.scope["path"]
-        
         is_api = path.startswith("/api") and path.startswith("/api/docs")
         
         if is_api:
