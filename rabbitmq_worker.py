@@ -16,7 +16,8 @@ async def on_startup(state, logger):
     builtins.redis_db = state.redis
     builtins.rabbitmq_db = state.rabbit
     builtins.client = state.client
-    
+    builtins.dclient = state.client
+
 async def on_prepare(state, logger):
     """Function that will prepare our worker"""
     return await state.client.wait_until_ready()

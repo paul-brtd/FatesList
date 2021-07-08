@@ -72,13 +72,25 @@ class BotActions():
         if not flag:
             return "You must select tags for your bot", 9 # No tags found
 
-        if self.banner != "none" and self.banner != "":
+        imgres = None
+        if self.banner:
             try:
-                img = await requests.get(self.banner) # Check content type of banner
-            except Exception:
-                img = None
-            if img is None or img.headers.get("Content-Type") is None or img.headers.get("Content-Type").split("/")[0] != "image":
-                return "Banner URL is not an image. Please make sure it is setting the proper Content-Type"
+                async with aiohttp.ClientSession() as sess:
+                    async with sess.head(self.banner, timeout=30) as res:
+                        if res.status != 200:
+                            # Banner URL does not support head, try get
+                            async with sess.get(self.banner, timeout=30) as res_fallback:
+                                if res_fallback.status != 200:
+                                    return "Could not download banner using either GET or HEAD! Is your URL correct"
+                                imgres = res_fallback
+                        else:
+                            imgres = res
+            except Exception as exc:
+                return f"Something happened when trying to get the url: {exc}"
+            
+            ct = imgres.headers.get("Content-Type", "").replace(" ", "")
+            if ct.split("/")[0] != "image":
+                return f"Banner URL is not an image. Please make sure it is setting the proper Content-Type. Got status code {imgres.status} and content type of {ct}."
 
         if self.donate != "" and not (self.donate.startswith("https://patreon.com") or self.donate.startswith("https://paypal.me")):
             return "Only Patreon and Paypal.me are allowed for donation links as of right now." # Check donation link for approved source (paypal.me and patreon
