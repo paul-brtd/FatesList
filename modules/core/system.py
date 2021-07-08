@@ -50,6 +50,13 @@ class FatesListRequestHandler(BaseHTTPMiddleware):
         # Methods that should be allowed by CORS
         self.CORS_ALLOWED = "GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS"
     
+    def logger(self, path, request, response):
+        code = response.status_code
+        phrase = HTTPStatus(response.status_code).phrase
+        http_ver = request.scope['http_version']
+        host = request.client.host 
+        logger.info(f"{host}: {request.method} {path}{query_str} HTTP/{http_ver} - {code} {phrase}")
+    
     async def dispatch(self, request, call_next):
         path = request.scope["path"]
         
@@ -100,7 +107,7 @@ class FatesListRequestHandler(BaseHTTPMiddleware):
             response.status_code = 204
             response.headers["Allow"] = self.CORS_ALLOWED
             
-        asyncio.create_task(self.logger(request, response))
+        asyncio.create_task(self.logger(path, request, response))
         
         default_res = ORJSONResponse({"detail": "Internal Server Error V2"}, status_code = 500) 
         return response if response else default_res
