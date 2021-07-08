@@ -18,7 +18,7 @@ from fastapi.openapi.utils import get_openapi
 import discord
 from discord.ext import commands
 from lynxfall.core.classes import Singleton
-from lynxfall.utils.fastapi import include_routers, api_versioner  # pylint: disable=no-name-in-module
+from lynxfall.utils.fastapi import include_routers, api_versioner  
 from lynxfall.ratelimits import LynxfallLimiter
 from lynxfall.rabbit.client import RabbitClient
 from lynxfall.oauth.models import OauthConfig
@@ -38,7 +38,7 @@ import builtins
 from modules.models import enums
 import signal
 import sys
-from fastapi.responses import HTMLResponse, ORJSONResponse
+from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -55,7 +55,10 @@ class FatesListRequestHandler(BaseHTTPMiddleware):
         self.CORS_ALLOWED = "GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS"
     
         # Default response
-        self.default_res = HTMLResponse("Something happened!", status_code = 500) 
+        self.default_res = HTMLResponse(
+            "Something happened!", 
+            status_code=500
+        ) 
         
     def logger(self, path, request, response):
         code = response.status_code
@@ -68,7 +71,9 @@ class FatesListRequestHandler(BaseHTTPMiddleware):
         else:
             query_str = ""
             
-        logger.info(f"{request.method} {path}{query_str} | {code} {phrase} ({host})")
+        logger.info(
+            f"{request.method} {path}{query_str} | {code} {phrase} ({host})"
+        )
         
     async def dispatch(self, request, call_next):
         """Run _dispatch, if that fails, log error and do exc handler"""
@@ -121,20 +126,24 @@ class FatesListRequestHandler(BaseHTTPMiddleware):
     
         # Fuck CORS by force setting headers with proper origin
         origin = request.headers.get('Origin')
-        response.headers["Access-Control-Allow-Origin"] = origin if origin else "*"
-        
-        # Made commonly repeated header names shorter
+
+        # Make commonly repepated headers shorter
         acac = "Access-Control-Allow-Credentials"
-            
+        acao = "Access-Control-Allow-Origin"
+        acam = "Access-Control-Allow-Methods"
+
+        response.headers[acao] = origin if origin else "*"
+        
         if is_api and origin:
             response.headers[acac] = "true"
         else:
             response.headers[acac] = "false"
         
-        response.headers["Access-Control-Allow-Methods"] = self.CORS_ALLOWED
-        if request.method == "OPTIONS" and is_api and response.status_code == 405:
-            response.status_code = 204
-            response.headers["Allow"] = self.CORS_ALLOWED
+        response.headers[acam] = self.CORS_ALLOWED
+        if response.status_code == 405:
+            if request.method == "OPTIONS" and is_api:
+                response.status_code = 204
+                response.headers["Allow"] = self.CORS_ALLOWED
         
         return response
 
@@ -358,7 +367,7 @@ async def init_fates_worker(app, exc_handler):
     # Add request handler
     app.add_middleware(
         FatesListRequestHandler, 
-        exc_handler = exc_handler
+        exc_handler=exc_handler
     )
     
     # Include all routers
