@@ -33,4 +33,4 @@ async def fl_exception_handler(request, exc, log = True):
 
 @app.on_event("startup")
 async def startup():
-    await init_fates_worker(app)
+    await init_fates_worker(app, fl_exception_handler)
