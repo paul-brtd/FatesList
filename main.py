@@ -10,7 +10,6 @@ from loguru import logger
 from fastapi.responses import ORJSONResponse
 from modules.core.system import init_fates_worker
 from modules.core.error import WebError
-from modules.core.routeware import routeware
 
 # Setup FastAPI with required urls and orjson for faster json handling
 app = FastAPI(

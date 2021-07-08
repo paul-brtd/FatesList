@@ -7,7 +7,6 @@ import random
 import time
 import uuid
 from copy import deepcopy
-from http import HTTPStatus
 from typing import List, Optional, Union
 
 import aiohttp

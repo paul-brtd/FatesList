@@ -26,11 +26,14 @@ from lynxfall.oauth.providers.discord import DiscordOauth
 import asyncpg
 import os
 import time
+import datetime
 from loguru import logger
 import aioredis
 import aio_pika
 import asyncio
 import importlib
+import uuid
+from http import HTTPStatus
 import builtins
 from modules.models import enums
 import signal
@@ -57,7 +60,6 @@ class FatesListRequestHandler(BaseHTTPMiddleware):
     def logger(self, path, request, response):
         code = response.status_code
         phrase = HTTPStatus(response.status_code).phrase
-        http_ver = request.scope['http_version']
         host = request.client.host
         query_str_raw = request.scope["query_string"]
         
@@ -66,13 +68,16 @@ class FatesListRequestHandler(BaseHTTPMiddleware):
         else:
             query_str = ""
             
-        logger.info(f"{request.method} {path}{query_str} - {code} {phrase} ({host}, HTTP/{http_ver})")
+        logger.info(f"{request.method} {path}{query_str} | {code} {phrase} ({host})")
         
     async def dispatch(self, request, call_next):
         """Run _dispatch, if that fails, log error and do exc handler"""
+        request.state.error_id = str(uuid.uuid4())
+        request.state.curr_time = str(datetime.datetime.now())
         path = request.scope["path"]
+
         try:
-            res = await self._dispatch(path, request, call_next)
+            res = await self._dispatcher(path, request, call_next)
         except Exception as exc:
             logger.exception("Site Error Occurred") 
             res = await self.exc_handler(request, exc)
@@ -80,13 +85,10 @@ class FatesListRequestHandler(BaseHTTPMiddleware):
         self.logger(path, request, res)
         return res if res else self.default_res
     
-    async def _dispatch(self, path, request, call_next):
+    async def _dispatcher(self, path, request, call_next):
         """Actual middleware"""
         if request.app.state.worker_session.dying:
             return HTMLResponse("Fates List is going down for a reboot")
-        
-        request.state.error_id = str(uuid.uuid4()) # Create a error id for just in case
-        request.state.curr_time = str(datetime.datetime.now()) # Get time request was made
         
         logger.trace(request.headers.get("X-Forwarded-For"))
         
@@ -113,7 +115,9 @@ class FatesListRequestHandler(BaseHTTPMiddleware):
 
         process_time = time.time() - start_time
         response.headers["X-Process-Time"] = str(process_time)
-        response.headers["X-API-Version"] = api_ver
+
+        if is_api:
+            response.headers["X-API-Version"] = api_ver
     
         # Fuck CORS by force setting headers with proper origin
         origin = request.headers.get('Origin')
