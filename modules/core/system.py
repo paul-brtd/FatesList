@@ -54,8 +54,15 @@ class FatesListRequestHandler(BaseHTTPMiddleware):
         code = response.status_code
         phrase = HTTPStatus(response.status_code).phrase
         http_ver = request.scope['http_version']
-        host = request.client.host 
-        logger.info(f"{host}: {request.method} {path}{query_str} HTTP/{http_ver} - {code} {phrase}")
+        host = request.client.host
+        query_str_raw = request.scope["query_string"]
+        
+        if query_str_raw:
+            query_str = f'?{query_str_raw.decode("utf-8")}'
+        else:
+            query_str = ""
+            
+        logger.info(f"{request.method} {path}{query_str} - {code} {phrase} ({host}, HTTP/{http_ver})")
     
     async def dispatch(self, request, call_next):
         path = request.scope["path"]
