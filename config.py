@@ -211,11 +211,19 @@ privacy_policy = {
         "You must follow Discord's Terms Of Service"
     ],
     "owner": "Rootspring#6701",
-    "data_collection": (
-        "We cache user information from Discord as well as handling ratelimits using Redis to significantly improve "
-        "site performance and your experience using the site. We store data on bots using PostgreSQL. Information you "
-        "give us, such as bots information, badges you or your bots earn in the future, and your profile information "
-        "is all stored on our servers. We also use RabbitMQ to store actions like bot adding, editing and deleting "
-        "for further processing by our RabbitMQ workers."
-    )
+    "data": {
+        "collection": (
+            "We cache user information from Discord as well as handling ratelimits using Redis to significantly improve "
+            "site performance and your experience using the site. We store data on bots using PostgreSQL. Information you "
+            "give us, such as bots information, badges you or your bots earn in the future, and your profile information "
+            "is all stored on our servers. We also use RabbitMQ to store actions like bot adding, editing and deleting "
+            "for further processing by our RabbitMQ workers."
+        ),
+        "deletion": (
+            "You can easily have your data deleted at any time. You may delete your account by opening a Data Deletion Request "
+            "on our support server. You can delete your bots from Bot Settings. Data Deletion Requests may take up to 24 hours "
+            "to process and the time of when you last vote will still be stored to prevent against abuse. All of your bots will "
+            "also be deleted permanently and this is irreversible"
+        )
+    }
 }
