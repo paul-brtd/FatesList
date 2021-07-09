@@ -192,7 +192,7 @@ langs = {
 }
 
 privacy_policy = {
-    "Terms Of Conditions": [
+    "tos": [
         "We Reserve the right to make changes to your bot's page at any time",
         "We may store cookies on your browser in order to keep you signed in and to improve site experience",
         "You to be at least 13 years old in prder to use this service",
@@ -209,5 +209,13 @@ privacy_policy = {
         ),
         "You agree that we are not responsible for any accidents that may happen such as leaked IP addresses",
         "You must follow Discord's Terms Of Service"
-    ]
+    ],
+    "owner": "Rootspring#6701",
+    "data_collection": (
+        "We cache user information from Discord as well as handling ratelimits using Redis to significantly improve "
+        "site performance and your experience using the site. We store data on bots using PostgreSQL. Information you "
+        "give us, such as bots information, badges you or your bots earn in the future, and your profile information "
+        "is all stored on our servers. We also use RabbitMQ to store actions like bot adding, editing and deleting "
+        "for further processing by our RabbitMQ workers."
+    )
 }
