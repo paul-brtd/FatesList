@@ -5,59 +5,31 @@
 .ppcontent {
   text-align: left;
   margin-left: 20px;
+  color: white;
+}
+
+.pptitle {
+  color: white;
+  margin-top: 100px;
 }
 </style>
 {% endblock %}
 
 {% block content %}
-<p class="white" style="text-align: left; margin-left: 20px;">
-Fates List Terms Of Service & Privacy Policy<br/>
-By using our service or visiting our website, you agree to the following terms<br/><br/>
-
-We Reserve the right to make changes to your bot's page at any time<br/>
-We may store cookies on your browser in order to keep you signed in and to improve site experience<br/>
-You to be at least 13 years old in prder to use this service<br/>
-You may not DDOS, attemot to exploit or otherwise harm the service without permission from the owner of Fates List<br/>
-You may not leak private information on another user's bots, such as API tokens, without permission from the bot owner or from a Head Admin or higher. This is legally binding and will be enforced to the fullest degree permitted by law<br/>
-May log you IP address which may be used by Fates List to protect against abuse of our service or by approved third parties, such as Digital Ocean and local law enforcement. Most sites log IP addresses and they are usually changed periodically by your Internet Service Provider<br/>
-You agree that we are not responsible for any accidents that may happen such as leaked IP addresses<br/>
-You must follow Discord's ToS<br/><br/>
-
-Ownership<br/><br/>
-
-Fates List is owned by Rootspring#6701 on Discord<br/><br/>
-
-Data Collection<br/><br/>
-
-We cache user information from Discord as well as handling ratelimits using Redis to significantly improve site performance and your experience using the site. We store data on bots using PostgreSQL. Information you give us, such as bots information, badges you or your bots earn in the future, and your profile information is all stored on our servers. We also use RabbitMQ to store actions like bot adding, editing and deleting for further processing by our RabbitMQ workers.<br/><br/>
-
-Data Deletion<br/><br/>
-
-You can easily have your data deleted at any time. You may delete your account by opening a Data Deletion Request on our support server, and you can delete your bots from Bot Settings. Data Deletion Requests may take up to 24 hours to process and the time of when you last vote will sitll be stored to prevent against abuse. All of your bots will also be deleted permanently and this is irreversible<br/><br/>
-
-Security<br/><br/>
-
-Our page is well-secured and guarantees that only you and Fates List Staff (for obvious reasons) can edit your bots' pages, and that our manager bot we use requires proper permissions and clearance to be accessible.<br/><br/>
-
-Contact<br/><br/>
-
-You can contact our staff by joining the Fates List support server<br/><br/>
-
-Updates<br/><br/>
-
-We update constantly, and changes are made often. By joining the support server, you may be notified of changes we make. This legal page may be changed at any time without notice<br/><br/>
-
-We are not affiliated with Discord Inc. or any of its partners or affiliates.<br/><br/>
-
-Fates List is completely open source. You can find our source code at <a href="https://github.com/Fates-List" class="long-desc-link">https://github.com/Fates-List</a><br/><br/>
-
-Permission's Break Down<br/><br/>
-
-We need to access your Username, Avatar And User ID in order to identify who you are on Discord so you can use the site. We also need to know what servers you are in for server listing if you choose to enable it. We also need the ability to join servers for you if you choose to be automatically added to the support server on login.<br/><br/>
-
-Your privacy matters to us. By continuing, you agree to your data being processed and/or stored for analytical purpose as per our privacy policy. The data we collect is your IP address, username, user id, avatar and current discord status and any info you submit to us. We may also use IPs for access logs and due to technical reasons and these cannot be deleted from our servers either so use a VPN if you do not want your IP to be exposed. We also store timestamps of when you vote for a bot and these timestamps are exposed to bots and may be used by bot owners for their own purposes such ss whether you can vote for a bot or not. 
-
-</p>
+<h3 class="pptitle">Terms Of Service</h3>
+  {% for tos_entry in policy.tos %}
+    <p class="ppcontent">{{loop.index}}. {{tos_entry}}</p>
+  {% endfor %}
+<h3 class="pptitle">Data Policies</h3>
+  {% for key, value in policy.data.items() %}
+    <h4 class="white">{{key.replace("_", " ").title()}}</h4>
+      <p class="ppcontent">{{value}}</p>
+  {% endfor %}
+<h3 class="pptitle">More Information</h3>
+{% for key, value in policy.extras.items() %}
+  <h4 class="white">{{key.replace("_", " ").title()}}</h4>
+    <p class="ppcontent">{{value}}</p>
+{% endfor %}
 {% endblock %}
 {% block footer %}
 

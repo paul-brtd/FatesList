@@ -1,7 +1,7 @@
 from modules.discord.bots import vote_bot_get
 
 from ..core import *
-
+from config import privacy_policy
 router = APIRouter(
         tags = ["Index"],
         include_in_schema = False
@@ -25,10 +25,6 @@ def reroute_support():
 @router.head("/")
 async def index_fend(request: Request, response: Response):
     return await render_index(request = request, api = False)
-
-@router.get("/legal")
-async def legal_router():
-    return RedirectResponse("/static/tos.html", status_code = 303)
 
 @router.get("/etest/{code}")
 async def test_error(code: int):
@@ -102,5 +98,5 @@ async def api_docs_view(request: Request):
 
 @router.get("/fates/tos")
 async def tos_page(request: Request):
-    return await templates.TemplateResponse("tos.html", {"request": request})
+    return await templates.TemplateResponse("tos.html", {"request": request, "policy": privacy_policy})
 

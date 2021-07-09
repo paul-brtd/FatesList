@@ -248,25 +248,34 @@ privacy_policy = {
             "added to the support server on login."
         )
     },
-    "security": (
-        "Our site is secure and we try to ensure that only you and Fates List Staff can edit your bot and that all "
-        "actions require proper permission and clearance to be used."
-    ),
-    "contact": (
-        "You can contact our staff by joining the Fates List support server"
-    ),
-    "privacy": (
-        "Your privacy matters to us. By continuing, you agree to your data being processed and/or stored for analytical "
-        "purpose as per our privacy policy. The data we collect is your IP address, username, user id, avatar and current "
-        "discord status and any info you submit to us. We may also use IPs for access logs and due to technical reasons and "
-        "these cannot be deleted from our servers either so use a VPN if you do not want your IP to be exposed. We also "
-        "store timestamps of when you vote for a bot and these timestamps are exposed to bots and may be used by bot "
-        "owners for their own purposes such as determining whether you can vote for a bot or not."
-    ),
-    "updates": (
-        "We update constantly, and changes are made often. By joining the support server, you may be notified of changes "
-        "we make, including privacy policy changes. This page may be changed at any time in the future."
-    ),
-    "src": "https://github.com/Fates-List",
-    "footer": "We are not affiliated with Discord Inc. or any of its partners or affiliates.",
+    "extras": {
+        "security": (
+            "Our site is secure and we try to ensure that only you and Fates List Staff can edit your bot and that all "
+            "actions require proper permission and clearance to be used."
+        ),
+        "contact": (
+            "You can contact our staff by joining the Fates List support server. Note that our support server is the only "
+            "official way of contacting the Fates List staff team and we may not respond elsewhere."
+        ),
+        "privacy": (
+            "Your privacy matters to us. By continuing, you agree to your data being processed and/or stored for analytical "
+            "purpose as per our privacy policy. The data we collect is your IP address, username, user id, avatar and current "
+            "discord status and any info you submit to us. We may also use IPs for access logs and due to technical reasons and "
+            "these cannot be deleted from our servers either so use a VPN if you do not want your IP to be exposed. We also "
+            "store timestamps of when you vote for a bot and these timestamps are exposed to bots and may be used by bot "
+            "owners for their own purposes such as determining whether you can vote for a bot or not."
+        ),
+        "updates": (
+            "We update constantly, and changes are made often. By joining the support server, you may be notified of changes "
+            "we make, including privacy policy changes. This page may be changed at any time in the future."
+        ),
+        "contributing": (
+            "Fates List was made possible thanks to the help of our staff team. In particular, Fates List would like to give "
+            "a shoutout to Skylarr#0001 for giving us a Digital Ocean droplet to host Fates List on. You can find the source "
+            "code for Fates List at https://github.com/Fates-List"
+        ),
+        "important_note": (
+            "We are not affiliated with Discord Inc. or any of its partners or affiliates."
+        ),
+    }
 }
