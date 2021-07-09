@@ -225,5 +225,9 @@ privacy_policy = {
             "to process and the time of when you last vote will still be stored to prevent against abuse. All of your bots will "
             "also be deleted permanently and this is irreversible"
         )
-    }
+    },
+    "security": (
+        "Our page is well-secured and guarantees that only you and Fates List Staff (for obvious reasons) can edit your bot pages "
+        "and that everything requires proper permissions and clearance to be used."
+    )
 }
