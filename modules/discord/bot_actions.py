@@ -14,7 +14,7 @@ async def add_bot(request: Request):
         context = {
             "mode": "add"
         }
-        return await templates.TemplateResponse("bot_add_edit.html", {"request": request, "tags_fixed": tags_fixed, "features": features}, context = context)
+        return await templates.TemplateResponse("bot_add_edit.html", {"request": request, "tags_fixed": tags_fixed, "features": features, "bot": {}}, context = context)
     else:
         return RedirectResponse("/auth/login?redirect=/bot/admin/add&pretty=to add a bot")
 

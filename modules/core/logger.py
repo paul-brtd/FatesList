@@ -8,7 +8,6 @@ logger.remove()
 logger.add(sys.stderr, backtrace=True, diagnose=True)
 logger.add("logs/full.log", rotation="500 MB")
 logger.add("logs/error.log", rotation = "500 MB", level = "ERROR")
-builtins.logger = logger
 
 class InterceptHandler(logging.Handler):
     """
@@ -32,7 +31,3 @@ class InterceptHandler(logging.Handler):
         logger.opt(depth=depth, exception=record.exc_info).log(
             level, record.getMessage()
         )
-
-# Just in case we need it
-for name in ("a", "b"):
-    logging.getLogger(name).handlers = [InterceptHandler()]
