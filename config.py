@@ -241,6 +241,12 @@ privacy_policy = {
             "on our support server. You can delete your bots from Bot Settings. Data Deletion Requests may take up to 24 hours "
             "to process and the time of when you last vote will still be stored to prevent against abuse. All of your bots will "
             "also be deleted permanently and this is irreversible"
+        ),
+        "access": (
+            "Fates List needs to access your username, avatar, status and user id in order to identify who you are on Discord "
+            "so you can use the site. Fates List also needs to know which servers you are in for server listing if you "
+            "choose to enable it. Fates List also needs the ability to join servers for you if you choose to be automatically "
+            "added to the support server on login."
         )
     },
     "security": (
@@ -255,5 +261,5 @@ privacy_policy = {
         "we make. This page may be changed at any time without notice, prior, during or afterwards"
     ),
     "src": "https://github.com/Fates-List",
-    "footer": "We are not affiliated with Discord Inc. or any of its partners or affiliates."
+    "footer": "We are not affiliated with Discord Inc. or any of its partners or affiliates.",
 }
