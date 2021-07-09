@@ -255,6 +255,14 @@ privacy_policy = {
     "contact": (
         "You can contact our staff by joining the Fates List support server"
     ),
+    "privacy": (
+        "Your privacy matters to us. By continuing, you agree to your data being processed and/or stored for analytical "
+        "purpose as per our privacy policy. The data we collect is your IP address, username, user id, avatar and current "
+        "discord status and any info you submit to us. We may also use IPs for access logs and due to technical reasons and "
+        "these cannot be deleted from our servers either so use a VPN if you do not want your IP to be exposed. We also "
+        "store timestamps of when you vote for a bot and these timestamps are exposed to bots and may be used by bot "
+        "owners for their own purposes such as determining whether you can vote for a bot or not."
+    ),
     "updates": (
         "We update constantly, and changes are made often. By joining the support server, you may be notified of changes "
         "we make, including privacy policy changes. This page may be changed at any time in the future."
