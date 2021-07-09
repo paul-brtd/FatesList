@@ -195,8 +195,7 @@ privacy_policy = {
     "tos": [
         (
             "We reserve the right to make changes to our privacy policy at any time "
-            "with or without any announcements. We also reserve the right to edit "
-            "bot pages at any time to protect our site"
+            "We also reserve the right to edit bot pages at any time to protect our site"
         ),
         (
             "We may store cookies on your browser in order to keep you signed in and to "
@@ -258,7 +257,7 @@ privacy_policy = {
     ),
     "updates": (
         "We update constantly, and changes are made often. By joining the support server, you may be notified of changes "
-        "we make. This page may be changed at any time without notice, prior, during or afterwards"
+        "we make. This page may be changed at any time in the future"
     ),
     "src": "https://github.com/Fates-List",
     "footer": "We are not affiliated with Discord Inc. or any of its partners or affiliates.",
