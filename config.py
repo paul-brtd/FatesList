@@ -242,8 +242,8 @@ privacy_policy = {
         )
     },
     "security": (
-        "Our page is well-secured and guarantees that only you and Fates List Staff (for obvious reasons) can edit your bot pages "
-        "and that everything requires proper permissions and clearance to be used."
+        "Our site is secure and we try to ensure that only you and Fates List Staff can edit your bot and that all "
+        "actions require proper permission and clearance to be used."
     ),
     "contact": (
         "You can contact our staff by joining the Fates List support server"
