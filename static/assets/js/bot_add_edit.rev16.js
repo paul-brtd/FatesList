@@ -155,6 +155,7 @@ function showToken(but) {
 	if(token.style.display == "none") {
 		document.querySelector("#hidden_token").style.display = "none";
 		document.querySelector("#apitok").style.display = "block";
+		document.querySelector("#apitok").innerHTML = context.bot_token
 		but.innerHTML = "Hide API Token"
 	}
 	else {

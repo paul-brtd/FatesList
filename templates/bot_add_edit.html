@@ -28,7 +28,7 @@
 	   <h6 style="color: white; margin-top: 1px !important;">Vanity URL: <span style="font-size: 14px; opacity: 0.9">{{site_url}}/{{bot.vanity}}</span></h6>
     {% endif %}
     </div>
-    <h6 style="color: white; margin-top: 1px !important; font-size: 12.5px; overflow-wrap: break-word;">API Token <span id="hidden_token">(Hidden)</span><span id="apitok" style="display: none; overflow-wrap: break-word !important; font-size: 11.5px; opacity: 0.9">{{bot.api_token}}</span></h6>
+    <h6 style="color: white; margin-top: 1px !important; font-size: 12.5px; overflow-wrap: break-word;">API Token <span id="hidden_token">(Hidden)</span><span id="apitok" style="display: none; overflow-wrap: break-word !important; font-size: 11.5px; opacity: 0.9"></span></h6>
    <button onclick='showToken(this)' class="btn btn-outline-light">Show API Token</button>
    <button onclick='regenToken()' class="btn btn-outline-light">Regenerate</button>
    <div>
@@ -319,7 +319,7 @@
 	var $j = jQuery.noConflict();
         var context = {{context|tojson}}
 </script>
-<script src="https://cdn.jsdelivr.net/gh/Fates-List/FatesList@master/static/assets/js/bot_add_edit.rev13.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/Fates-List/FatesList@master/static/assets/js/bot_add_edit.rev15.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select-pure@latest/dist/index.js"></script>
 {% endblock %} 
 {% block footer %} 
