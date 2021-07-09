@@ -193,10 +193,20 @@ langs = {
 
 privacy_policy = {
     "tos": [
-        "We Reserve the right to make changes to your bot's page at any time",
-        "We may store cookies on your browser in order to keep you signed in and to improve site experience",
-        "You to be at least 13 years old in prder to use this service",
-        "You may not DDOS, attemot to exploit or otherwise harm the service without permission from the owner of Fates List",
+        (
+            "We Reserve the right to make changes to your bot's page at any time"
+        ),
+        (
+            "We may store cookies on your browser in order to keep you signed in and to "
+            "potentially improve the site experience"
+        ),
+        (
+            "You must be at least 13 years old in order to use this service"
+        ),
+        (
+            "You may not DDOS, attempt to exploit or otherwise harm the service without "
+            "permission from the owner(s) of Fates List"
+        ),
         (
             "You may not leak private information on another user's bots, such as API tokens, without permission "
             "from the bot owner or from a Head Admin or higher. This is legally binding and will be enforced "
@@ -207,8 +217,14 @@ privacy_policy = {
             "or by approved third parties, such as Digital Ocean and local law enforcement. "
             "Most sites log IP addresses and they are usually changed periodically by your Internet Service Provider"
         ),
-        "You agree that we are not responsible for any accidents that may happen such as leaked IP addresses",
-        "You must follow Discord's Terms Of Service"
+        (
+            "You agree that we are not responsible for any possible accidents that may happen such as "
+            "leaked IP addresses or leaked API tokens. We aim to never have this happen but accidents can "
+            "and do happen at times"
+        ),
+        (
+            "You must follow Discord's Terms Of Service"
+        )
     ],
     "owner": "Rootspring#6701",
     "data": {
@@ -229,5 +245,8 @@ privacy_policy = {
     "security": (
         "Our page is well-secured and guarantees that only you and Fates List Staff (for obvious reasons) can edit your bot pages "
         "and that everything requires proper permissions and clearance to be used."
+    ),
+    "contact": (
+        "You can contact our staff by joining the Fates List support server"
     )
 }
