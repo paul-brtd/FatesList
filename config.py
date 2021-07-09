@@ -198,16 +198,16 @@ privacy_policy = {
         "You to be at least 13 years old in prder to use this service",
         "You may not DDOS, attemot to exploit or otherwise harm the service without permission from the owner of Fates List",
         (
-            "You may not leak private information on another user's bots, such as API tokens, without permission"
-            "from the bot owner or from a Head Admin or higher. This is legally binding and will be enforced"
+            "You may not leak private information on another user's bots, such as API tokens, without permission "
+            "from the bot owner or from a Head Admin or higher. This is legally binding and will be enforced "
             "to the fullest degree permitted by law"
         ),
         (
-            "May log you IP address which may be used by Fates List to protect against abuse of our service"
-            "or by approved third parties, such as Digital Ocean and local law enforcement."
+            "May log you IP address which may be used by Fates List to protect against abuse of our service "
+            "or by approved third parties, such as Digital Ocean and local law enforcement. "
             "Most sites log IP addresses and they are usually changed periodically by your Internet Service Provider"
         ),
         "You agree that we are not responsible for any accidents that may happen such as leaked IP addresses",
-        "You must follow Discord's ToS"
+        "You must follow Discord's Terms Of Service"
     ]
 }
