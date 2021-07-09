@@ -252,6 +252,6 @@ privacy_policy = {
     ),
     "updates": (
         "We update constantly, and changes are made often. By joining the support server, you may be notified of changes "
-        "we make. This page may be changed at any time without notice, prior or after"
+        "we make. This page may be changed at any time without notice, prior, during or afterwards"
     )
 }
