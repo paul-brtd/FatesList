@@ -253,5 +253,7 @@ privacy_policy = {
     "updates": (
         "We update constantly, and changes are made often. By joining the support server, you may be notified of changes "
         "we make. This page may be changed at any time without notice, prior, during or afterwards"
-    )
+    ),
+    "src": "https://github.com/Fates-List",
+    "footer": "We are not affiliated with Discord Inc. or any of its partners or affiliates."
 }
