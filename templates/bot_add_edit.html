@@ -9,7 +9,7 @@
   <div class="d-flex d-sm-flex d-md-flex d-lg-flex d-xl-flex flex-column justify-content-center align-items-center flex-sm-column justify-content-sm-center align-items-sm-center flex-md-column justify-content-md-center align-items-md-center flex-lg-column justify-content-lg-center align-items-lg-center flex-xl-column justify-content-xl-center align-items-xl-center">
     <h2 style="color: rgba(255, 255, 255, 0.87); font-weight: bold; margin-top: 40px;">Fates List</h2>
     <p style="color: rgba(255, 255, 255, 0.87); font-weight: bold; opacity: 0.78; font-size: 21px;">
-    	{%if mode == "edit" %}Bot Settings{%elif mode == "add"%}Add your bot here!{%endif%}
+    	{%if context.mode == "edit" %}Bot Settings{%elif context.mode == "add"%}Add your bot here!{%endif%}
     </p>
     {% if not error %}
     {% else %}
@@ -21,14 +21,14 @@
   <hr style="font-size: 20px; border-top-width: 1px; border-top-color: #eee; width: 70%;"/>
     <div class="form-group" style="color: blue; width: 80%; margin: 0 auto; height: auto; margin-top: 30px; color: rgba(255, 255, 255, 0.87)">
         <div class="form-group" class="d-flex" style="margin: 15px auto; width: 85%;color: white; font-weight: bold; overflow-wrap: anywhere;">
-   {% if mode == "edit" %}
+   {% if context.mode == "edit" %}
    <section style="border-style: solid; border-radius: 4px 4px 4px 4px; padding-left: 30px; padding: 5px;">
     <div style="margin 15px auto;">
-   {% if data.vanity != None %}
-	   <h6 style="color: white; margin-top: 1px !important;">Vanity URL: <span style="font-size: 14px; opacity: 0.9">{{site_url}}/{{data.vanity}}</span></h6>
+   {% if bot.vanity != None %}
+	   <h6 style="color: white; margin-top: 1px !important;">Vanity URL: <span style="font-size: 14px; opacity: 0.9">{{site_url}}/{{bot.vanity}}</span></h6>
     {% endif %}
     </div>
-    <h6 style="color: white; margin-top: 1px !important; font-size: 12.5px; overflow-wrap: break-word;">API Token <span id="hidden_token">(Hidden)</span><span id="apitok" style="display: none; overflow-wrap: break-word !important; font-size: 11.5px; opacity: 0.9">{{data.api_token}}</span></h6>
+    <h6 style="color: white; margin-top: 1px !important; font-size: 12.5px; overflow-wrap: break-word;">API Token <span id="hidden_token">(Hidden)</span><span id="apitok" style="display: none; overflow-wrap: break-word !important; font-size: 11.5px; opacity: 0.9">{{bot.api_token}}</span></h6>
    <button onclick='showToken(this)' class="btn btn-outline-light">Show API Token</button>
    <button onclick='regenToken()' class="btn btn-outline-light">Regenerate</button>
    <div>
@@ -58,13 +58,13 @@
 	>Bot ID <span style="color: red; font-weight: bold" aria-hidden="true">*</span>
       </label>
       <input
-	{% if mode == "edit" %}disabled{% endif %}
+	{% if context.mode == "edit" %}disabled{% endif %}
         required
         class="form-control fform"
         type="number"
         name="bot_id"
         placeholder="12345678998764"
-	value="{{data.bot_id}}"
+	value="{{bot.bot_id}}"
       />
       <label
         for="extra_owners"
@@ -73,7 +73,7 @@
         class="form-control fform"
         type="text"
         name="extra_owners"
-	value="{{data.extra_owners}}"
+	value="{{bot.extra_owners}}"
         placeholder="1234567899876,1234567865432"
         minlength="10"
       />
@@ -91,7 +91,7 @@
 	maxlength=9
         name="prefix"
         placeholder="w!"
-        value="{{data.prefix}}"
+        value="{{bot.prefix}}"
       />
       <label
         for="library"
@@ -106,7 +106,7 @@
         "
         name="library"
         placeholder="Discord.py"
-        value="{{data.library}}"
+        value="{{bot.library}}"
       />
   </div>
   <div class="col-lg">
@@ -118,7 +118,7 @@
         name="invite"
         placeholder="https://discord.com/oauth2/authorize?client_id=12345637172158464&amp;permissions=314432&amp;scope=bot"
         minlength="3"
-	value="{% if data.invite %}{{data.invite}}{% endif %}"
+	value="{% if bot.invite %}{{bot.invite}}{% endif %}"
        />
       <small style="margin-bottom: 5px;"><strong>You can use P:PERM_NUMBER instead of providing a Invite URL if your Bot ID and Client ID are the same</strong></small><br/>
       <label style="margin-top: 3px;" for="website">Website URL</label>
@@ -128,7 +128,7 @@
         name="website"
         placeholder="https://support.com"
         minlength="10"
-        value="{{data.website}}"
+        value="{{bot.website}}"
       />
       <label for="website">Banner URL (optimal: 255x143px)</label>
       <input
@@ -137,7 +137,7 @@
         name="banner"
         placeholder="https://cdn.discordapp.com/MySecretBanner.com"
         minlength="10"
-        value="{% if data.banner == "none" or data.banner == "" %}{%else%}{{data.banner}}{%endif%}"
+        value="{% if bot.banner == "none" or bot.banner == "" %}{%else%}{{bot.banner}}{%endif%}"
       />
       <label for="support">Support server</label>
       <input
@@ -146,7 +146,7 @@
         name="support"
         placeholder="https://discord.gg/738Hs"
         minlength="10"
-        value="{{data.support}}"/>
+        value="{{bot.support}}"/>
       <label for="donate">Donation Link</label>
       <input
       class="form-control fform"
@@ -154,12 +154,12 @@
       name="donate"
       placeholder="https://patreon.com/foo"
       minlength="5"
-      value="{% if data.donate %}{{data.donate}}{% endif %}"/>
+      value="{% if bot.donate %}{{bot.donate}}{% endif %}"/>
       <label for="webhook_type:number">Webhook Type (Click to change)</label>
       <select id="webhook-type" name="webhook_type:number" class="form-control fform select-fl">
-	      <option value="{{enums.WebhookType.vote.__int__()}}" {% if data.webhook_type == enums.WebhookType.vote %}selected{%endif%}>Vote Webhook</option>
-	      <option value="{{enums.WebhookType.discord.__int__()}}" {% if data.webhook_type == enums.WebhookType.discord %}selected{%endif%}>Discord Integration</option>
-	      <option value="{{enums.WebhookType.fc.__int__()}}" {% if data.webhook_type == enums.WebhookType.fc %}selected{%endif%}>Fates Client</option>
+	      <option value="{{enums.WebhookType.vote.__int__()}}" {% if bot.webhook_type == enums.WebhookType.vote %}selected{%endif%}>Vote Webhook</option>
+	      <option value="{{enums.WebhookType.discord.__int__()}}" {% if bot.webhook_type == enums.WebhookType.discord %}selected{%endif%}>Discord Integration</option>
+	      <option value="{{enums.WebhookType.fc.__int__()}}" {% if bot.webhook_type == enums.WebhookType.fc %}selected{%endif%}>Fates Client</option>
       </select>
       <label for="webhook">Webhook (max 1024 characters)</label>
     <input
@@ -170,7 +170,7 @@
       placeholder="http://129.332.123:5000/webhook"
       minlength="3"
       maxlength="1024"
-      {% if data.webhook %}value="{{data.webhook}}"{%endif%}
+      {% if bot.webhook %}value="{{bot.webhook}}"{%endif%}
     />
     <label for="webhook_secret">Webhook Secret (api token fallback)</label>
     <input 
@@ -180,9 +180,9 @@
      name="webhook_secret"
      placeholder="This is optional and API Token is fallback"
      minlength="8"
-     {% if data.webhook_secret %}value="{{data.webhook_secret}}"{%endif%}
+     {% if bot.webhook_secret %}value="{{bot.webhook_secret}}"{%endif%}
     />
-    {% if mode == "edit" %}
+    {% if context.mode == "edit" %}
     <button type="button" style="margin-bottom: 30px; margin-top: 0px !important;" class="btn btn-outline-light" onclick="testHook(document.querySelector('#webhook-url').value, document.querySelector('#webhook-type').value)">Test Webhook</button><br/>
     {% else %}
     <span style="margin: 3px">Testing webhooks can only be done once your bot is created</span>
@@ -196,12 +196,12 @@
       name="vanity"
       placeholder="cats"
       minlength="3"
-      {% if data.vanity != None %}value="{{data.vanity}}"{%endif%}
+      {% if bot.vanity != None %}value="{{bot.vanity}}"{%endif%}
     />
     <label for="github">Github (https://www.github.com/XYZ/XYZ)</label>
-    <input class="form-control fform" type="text" name="github" placeholder="https://www.github.com/XYZ/XYZ" minlength="3" {% if data.github != None %} value="{{data.github}}" {% endif %}/>
+    <input class="form-control fform" type="text" name="github" placeholder="https://www.github.com/XYZ/XYZ" minlength="3" {% if bot.github != None %} value="{{bot.github}}" {% endif %}/>
     <label for="privacy_policy">Privacy Policy URL</label>
-    <input class="form-control fform" type="text" name="privacy_policy" placeholder="https://..." minlength="3" {% if data.privacy_policy %} value="{{data.privacy_policy}}" {% endif %}>
+    <input class="form-control fform" type="text" name="privacy_policy" placeholder="https://..." minlength="3" {% if bot.privacy_policy %} value="{{bot.privacy_policy}}" {% endif %}>
     <label
         for="css"
         >Custom CSS</label
@@ -211,13 +211,13 @@
         name="css"
         style="border-radius: 4px 4px 4px 4px !important;"
         placeholder="p {color: red};"
-        >{{data.css}}</textarea>
+        >{{bot.css}}</textarea>
   </div>
   </div>
-	<h5 style="font-weight: bold; margin-bottom: 15px;">{% if mode == "templ_add" or mode == "templ_edit" %}Server Template Features{% else %}Bot Features + Privacy{% endif %}</h5>
+	<h5 style="font-weight: bold; margin-bottom: 15px;">Bot Features</h5>
 	    <select-pure name="tags" id="features" default-label="Choose any features that your bot supports" multiple>
 		{% for feature in features.keys() %}
-		<option-pure value="{{feature}}" {% if mode == 'edit' and feature in data.features %}selected{% endif %}>{{features[feature].name}}</option-pure>
+		<option-pure value="{{feature}}" {% if context.mode == 'edit' and feature in bot.features %}selected{% endif %}>{{features[feature].name}}</option-pure>
 		{% endfor %}
 	    </select-pure>
      <h5 style="font-weight: bold; margin-bottom: 15px; margin-top: 5px">Bot Purpose</h5>
@@ -234,21 +234,21 @@
         minlength="10"
         maxlength="105"
         style="border-radius: 4px 4px 4px 4px !important;"
-	value="{{data.description}}"
+	value="{{bot.description}}"
       />
       <label 
       for="long_description_type"
       >Long Description Type (Click to change)</label>
       <select id="long_description_type" name="long_description_type:number" class="form-control fform select-fl">
-              <option value="0" {% if data.long_description_type == enums.LongDescType.html %}selected{%endif%}>HTML/Raw - Recommended</option>
-	      <option value="1" {% if data.long_description_type == enums.LongDescType.markdown_pymarkdown %}selected{%endif%}>Markdown (python-markdown) - Recommended</option>
-	      <option value="2" {% if data.long_description_type == enums.LongDescType.markdown_marked %}selected{%endif%}>Markdown (marked) - Beta</option>
+              <option value="0" {% if bot.long_description_type == enums.LongDescType.html %}selected{%endif%}>HTML/Raw - Recommended</option>
+	      <option value="1" {% if bot.long_description_type == enums.LongDescType.markdown_pymarkdown %}selected{%endif%}>Markdown (python-markdown) - Recommended</option>
+	      <option value="2" {% if bot.long_description_type == enums.LongDescType.markdown_marked %}selected{%endif%}>Markdown (marked) - Beta</option>
       </select>
       <button type="button" class="btn btn-outline-light" onclick="longdescfaq();">Help me decide</button><br/><br/>
       <label for="nsfw">NSFW Bot (Click to change)</label>
       <select id="nsfw" name="nsfw:boolean" class="form-control fform select-fl">
-	      <option value="false" {% if not data.nsfw %}selected{% endif %}>No</option>
-	      <option value="true" {% if data.nsfw %}selected{% endif %}>Yes</option>
+	      <option value="false" {% if not bot.nsfw %}selected{% endif %}>No</option>
+	      <option value="true" {% if bot.nsfw %}selected{% endif %}>Yes</option>
       </select>
 
   <label
@@ -263,7 +263,7 @@
         minlength="300"
         id="long_description"
 	style="border-radius: 4px 4px 4px 4px !important;"
-	>{{data.long_description}}</textarea>
+	>{{bot.long_description}}</textarea>
       <button type="button" class="btn btn-outline-light" style="margin-bottom: 20px;" onclick="previewLongDesc()">Preview</button><br/>
       <small style="font-weight: bold; font-size: 15px; color: red;">You can only preview your long description 20 times every minute unless your bot is certified as this uses the preview API. THIS OPTION IS CURRENTLY LEGACY AND WILL BE UPDATED SOON. MARKED TYPE DOES NOT WITH THIS</small>
       <div id="ld-preview" style="display: block; min-height: 400px; overflow: auto; color: white; border-style: solid; border-radius: 4px 4px 4px 4px; margin-bottom: 20px; background: black; font-weight: normal; text-align: left;">
@@ -275,11 +275,11 @@
       <select-pure name="tags" id="tags" default-label="Please select tags for your bot" multiple>
 	<option-pure value="" disabled hidden>-- Please select tags for your bot --</option-pure>
 	{% for tag in tags_fixed %}
-	<option-pure value="{{tag.id}}" {% if data.tags and tag.id in data.tags %}selected{% endif %}>{{tag.name}}</option-pure>
+	<option-pure value="{{tag.id}}" {% if bot.tags and tag.id in bot.tags %}selected{% endif %}>{{tag.name}}</option-pure>
 	{% endfor %}
       </select-pure>
       <div class="d-flex justify-content-center">
-        <button class="btn btn-outline-light" type="submit" style="margin-top: 50px; margin-bottom: 30px">{% if mode == "edit" %}Edit Bot{%else%}Add Bot{%endif%}</button>
+        <button class="btn btn-outline-light" type="submit" style="margin-top: 50px; margin-bottom: 30px">{% if context.mode == "edit" %}Edit Bot{%else%}Add Bot{%endif%}</button>
       </div>
     </div>
   </form>
@@ -299,7 +299,7 @@
 	};
 
   </script>
-{% if mode == "edit" %}
+{% if context.mode == "edit" %}
   <hr
     style="
       font-size: 20px;
@@ -317,14 +317,7 @@
 <script src="https://cdn.jsdelivr.net/npm/jquery-serializejson@3.2.1/jquery.serializejson.min.js"></script>
 <script>
 	var $j = jQuery.noConflict();
-        var context = {
-		mode: "{{mode}}",
-		bot_id: "{{data.bot_id}}",
-		api_token: "{{data.api_token}}",
-		user_token: "{{user_token}}",
-		user_id: "{{user_id}}",
-		site_lang: "{{site_lang}}",
-	}
+        var context = {{context|tojson}}
 </script>
 <script src="https://cdn.jsdelivr.net/gh/Fates-List/FatesList@master/static/assets/js/bot_add_edit.rev13.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select-pure@latest/dist/index.js"></script>

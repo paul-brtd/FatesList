@@ -11,7 +11,10 @@ allowed_file_ext = [".gif", ".png", ".jpeg", ".jpg", ".webm", ".webp"]
 @router.get("/admin/add")
 async def add_bot(request: Request):
     if "user_id" in request.session.keys():
-        return await templates.TemplateResponse("bot_add_edit.html", {"request": request, "tags_fixed": tags_fixed, "features": features, "mode": "add"})
+        context = {
+            "mode": "add"
+        }
+        return await templates.TemplateResponse("bot_add_edit.html", {"request": request, "tags_fixed": tags_fixed, "features": features}, context = context)
     else:
         return RedirectResponse("/auth/login?redirect=/bot/admin/add&pretty=to add a bot")
 
@@ -22,7 +25,7 @@ async def bot_settings_page(request: Request, bot_id: int):
         if not check:
             return abort(403)
         try:
-            fetch = dict(await db.fetchrow("SELECT bot_id, prefix, bot_library AS library, invite, website, banner, long_description, description, webhook, webhook_secret, webhook_type, discord AS support, api_token, banner, github, features, long_description_type, css, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", bot_id))
+            fetch = dict(await db.fetchrow("SELECT bot_id, prefix, bot_library AS library, invite, website, banner, long_description, description, webhook, webhook_secret, webhook_type, discord AS support, banner, github, features, long_description_type, css, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", bot_id))
         except:
             return abort(404)
         tags = await db.fetch("SELECT tag FROM bot_tags WHERE bot_id = $1", bot_id)
@@ -31,16 +34,20 @@ async def bot_settings_page(request: Request, bot_id: int):
         logger.trace(owners)
         if owners is None:
             return "This bot has no found owners.\nPlease contact Fates List support"
-        fetch = fetch | {"extra_owners": [obj["owner"] for obj in owners if obj["main"] is False]}
-        if fetch["extra_owners"]:
-            fetch["extra_owners"] = ",".join([str(eo) for eo in fetch["extra_owners"]])
+        bot = fetch | {"extra_owners": [obj["owner"] for obj in owners if obj["main"] is False]}
+        if bot["extra_owners"]:
+            bot["extra_owners"] = ",".join([str(eo) for eo in fetch["extra_owners"]])
         else:
-            fetch["extra_owners"] = ""
-        vanity = await db.fetchrow("SELECT vanity_url AS vanity FROM vanity WHERE redirect = $1", bot_id)
-        if vanity is None:
-            vanity = {"vanity": None}
-        bot = fetch | dict(vanity)
-        return await templates.TemplateResponse("bot_add_edit.html", {"request": request, "mode": "edit", "tags_fixed": tags_fixed, "username": request.session.get("username", False),"data": bot, "avatar": request.session.get("avatar"), "epoch": time.time(), "vanity": vanity["vanity"], "features": features})
+            bot["extra_owners"] = ""
+        vanity = await db.fetchval("SELECT vanity_url AS vanity FROM vanity WHERE redirect = $1", bot_id)
+
+        context = {
+            "bot_token": await db.fetchval("SELECT api_token FROM bots WHERE bot_id = $1", bot_id),
+            "mode": "edit",
+            "bot_id": str(bot_id)
+        }
+
+        return await templates.TemplateResponse("bot_add_edit.html", {"request": request, "tags_fixed": tags_fixed, "bot": bot, "vanity": vanity, "features": features}, context = context)
     else:
         return RedirectResponse("/")
 

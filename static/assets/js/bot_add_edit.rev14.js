@@ -120,7 +120,7 @@ function previewLongDesc(){
 	html = document.querySelector("#long_description_type").value;
 	ld = document.querySelector("#long_description").value;
 	if(context.mode == "edit") {
-		headers = {"Authorization": context.api_token}
+		headers = {"Authorization": context.bot_token}
 	}
 	else {
 		headers = {}
@@ -167,7 +167,7 @@ function showToken(but) {
 	server_count = document.querySelector("#server-count").value
   	payload = {"guild_count": server_count}
 	$j.ajax({
-		headers: {'Authorization': context.api_token},
+		headers: {'Authorization': context.bot_token},
 		method: 'POST',
 		url: `/api/bots/${context.bot_id}/stats`,
 		contentType: 'application/json',
@@ -177,7 +177,7 @@ function showToken(but) {
   }
   function regenToken() {
 	$j.ajax({
-	   headers: {'Authorization': context.api_token},
+	   headers: {'Authorization': context.bot_token},
 	   type: 'PATCH',
 	   url: `/api/bots/${context.bot_id}/token`,
 	   processData: false,
@@ -188,7 +188,7 @@ function showToken(but) {
   }
 
 function testHook(url, type) {
-	headers = {"Authorization": context.api_token}
+	headers = {"Authorization": context.bot_token}
 	$j.ajax({
 		url: `/api/bots/${context.bot_id}/votes/test?user_id=${context.user_id}`,
 		dataType: "json",

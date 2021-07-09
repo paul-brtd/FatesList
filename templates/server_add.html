@@ -11,6 +11,7 @@
    <button onclick='doStep(false);' style="display: none; margin-right: 5px;" type="button" id="s1-back" class="btn btn-outline-light"><span class="iconify white" data-icon="fa-solid:arrow-left" data-inline="false" style="margin-right: 3px;"></span>Back</button>
    <button onclick='doStep(true);' type="button" id="s1-next" class="btn btn-outline-light">Continue<span class="iconify white" data-icon="fa-solid:arrow-right" data-inline="false" style="margin-left: 3px;"></span></button>
    <script>
+	  var context = {{ context|tojson }}
 	  var cont = 0;
 	  var old_text = document.querySelector("#js_msg").innerHTML;
 	  var old_text_front = document.querySelector("#js_msg").innerHTML;
@@ -24,7 +25,7 @@
 				cont = 1;
 			}
 			else {
-				document.querySelector("#js_msg").innerHTML = `The list of servers with the Fates List Bot that you can manage is listed below.<br/>Only servers that you are in while logging into Fates List and you have 'Manage Server' or 'Administrator' in is listed below:<br/><button type='button' onclick='checkGuilds();' class='btn btn-outline-light' style='margin-bottom: 10px;'>Recheck</button><div id='valid_servers'></div>`;
+				document.querySelector("#js_msg").innerHTML = `Only servers that you are in while logging into Fates List and you have 'Manage Server' or 'Administrator' in is listed below:<br/><button type='button' onclick='checkGuilds();' class='btn btn-outline-light' style='margin-bottom: 10px;'>Recheck</button><div id='valid_servers'></div>`;
 				document.querySelector("#s1-next").style.display = "none";
                                 checkGuilds();
 				cont = 2;
@@ -44,81 +45,82 @@
 	  }
 	function checkGuilds(){
 		document.querySelector("#valid_servers").innerHTML = "Getting Guilds... Please wait"
-		access_token = {{access_token|safe}}
+		access_token = "{{access_token}}"
 		try {
+		modalShow("Getting Guilds", "Please Wait...")
 		$.ajax({
-                url: "/api/users/{{user_id}}/servers/prepare",
-                method: "POST",
-		dataType: "json",
-		processData: false,
-		contentType: 'application/json',
-		data: JSON.stringify({"scopes": "{{scopes}}", "access_token": access_token}),
-		headers: {"Authorization": "{{user_token}}"},
-           	statusCode: {
-                	429: function(data) {
-				console.log(data)
-				modalShow('You are being ratelimited', `You are being ratelimited. Please try again in 30 seconds. Thank you for your patience!`)
-                	},
-			422: function(data) {
-				alert("Test")
-				alert(JSON.stringify(data.responseJSON))
-			},
-			200: function(data) {
-				server_data = ""
-				for(server in data.servers) {
-					server_data += `
-					<a style="color: white !important;" href='javascript:void' onclick='openGuild("${server}")'>
-					<div id='${server}' data-code='${data.servers[server].code}' style='width: 900px; min-width: 900px; max-width: 900px; padding: 3px; border-style: solid; border-radius: 4px 4px 4px 4px; background: black; display: inline-block;' data-hidden='true'>
-						<p><strong>${data.servers[server].name}</strong></p>
-						<p>Server ID: ${server}</p>
-					</div>
-					</a>
-					<div style='display: none; background: black; border-radius: 10px 10px 10px 10px' id='form-${server}' onclick="ignoreParent(); preventDefault()">
-						<label for="vanity-${server}">Vanity URL (optional)</label>
-						<input id="vanity-${server}" type="text" class="form-control fform" placeholder = "amongus">
-						<label for="description-${server}">Short Description</label>
-						<input id="description-${server}" type="text" class="form-control fform" name="description" placeholder="Great server, join now!">
-						<label 
-						for="long_description_type-${server}"
-					      	>Long Description Type (Click to change)</label>
-						<select id="long_description_type-${server}" name="long_description_type" class="form-control fform select-fl">
-						<option value="0">HTML - Recommended</option>
-						<option value="1">Markdown (python-markdown) - Recommended</option>
-						<option value="2">Markdown (marked) - Special Cases Only</option>
-						</select>
+	                url: `/api/users/${context.user_id}/servers/prepare`,
+        	        method: "POST",
+			dataType: "json",
+			processData: false,
+			contentType: 'application/json',
+			data: JSON.stringify({"scopes": "{{scopes}}", "access_token": access_token}),
+			headers: {"Authorization": context.user_token},
+           		statusCode: {
+                		429: function(data) {
+					console.log(data)
+					modalShow('You are being ratelimited', `You are being ratelimited. Please try again in 30 seconds. Thank you for your patience!`)
+	                	},
+				422: function(data) {
+					modalShow("Something happened!", JSON.stringify(data.responseJSON))
+				},
+				200: function(data) {
+					server_data = ""
+					for(server in data.servers) {
+						server_data += `
+						<a style="color: white !important;" href='javascript:void' onclick='openGuild("${server}")'>
+						<div id='${server}' data-code='${data.servers[server].code}' style='width: 900px; min-width: 900px; max-width: 900px; padding: 3px; border-style: solid; border-radius: 4px 4px 4px 4px; background: black; display: inline-block;' data-hidden='true'>
+							<p><strong>${data.servers[server].name}</strong></p>
+							<p>Server ID: ${server}</p>
+						</div>
+						</a>
+						<div style='display: none; background: black; border-radius: 10px 10px 10px 10px' id='form-${server}' onclick="ignoreParent(); preventDefault()">
+							<label for="vanity-${server}">Vanity URL (optional)</label>
+							<input id="vanity-${server}" type="text" class="form-control fform" placeholder = "amongus">
+							<label for="description-${server}">Short Description</label>
+							<input id="description-${server}" type="text" class="form-control fform" name="description" placeholder="Great server, join now!">
+							<label 
+							for="long_description_type-${server}"
+					      		>Long Description Type (Click to change)</label>
+							<select id="long_description_type-${server}" name="long_description_type" class="form-control fform select-fl">
+								<option value="0">HTML - Recommended</option>
+								<option value="1">Markdown (python-markdown) - Recommended</option>
+								<option value="2">Markdown (marked) - Special Cases Only</option>
+							</select>
 
-  						<label
-					        for="long_description"
-					        >Long description <span style="color: red; font-weight: bold" aria-hidden="true">*</span>
-						  </label><br/>
-						<textarea
-					        class="form-control fform"
-					        required
-						name="long_description"
-					        placeholder="Write about your bot using html or markdown"
-					        minlength="300"
-						id="long_description-${server}"
-					        style="border-radius: 4px 4px 4px 4px !important;"
-						></textarea>
-						<button type="button" class="btn btn-outline-light" style="margin-bottom: 20px;" onclick="previewLongDesc('${server}')">Preview</button><br/>
-						<small style="font-weight: bold; font-size: 15px; color: red;">You can only preview your long description 20 times every minute unless you are certified as this uses the preview API</small>
-						<div id="${server}-ld-preview" style="display: block; min-height: 400px; overflow: auto; color: white; border-style: solid; border-radius: 4px 4px 4px 4px; margin-bottom: 20px; background: black; font-weight: normal; text-align: left;">
-						Your Long Description will appear here when you click the Preview button :)
-					</div>
-					<label for="tags-${server}">Type tags (comma seperated)</label><br/>
-					<input id="tags-${server}" type="text" class="form-control fform" name="tags-${server}" placeholder="moderation, music"/><br/>
-					<button id="submit-${server}" class="btn btn-outline-light" onclick="addGuild('${server}')" style="margin-bottom: 3px;">Add Server</button>
-					</div>
-					<br/>
+  							<label
+					        	for="long_description"
+					        	>Long description <span style="color: red; font-weight: bold" aria-hidden="true">*</span>
+						  	</label><br/>
+							<textarea
+					        	class="form-control fform"
+					        	required
+							name="long_description"
+					        	placeholder="Write about your bot using html or markdown"
+					        	minlength="300"
+							id="long_description-${server}"
+					        	style="border-radius: 4px 4px 4px 4px !important;"
+							></textarea>
+							<button type="button" class="btn btn-outline-light" style="margin-bottom: 20px;" onclick="previewLongDesc('${server}')">Preview</button><br/>
+							<small style="font-weight: bold; font-size: 15px; color: red;">You can only preview your long description 20 times every minute unless you are certified as this uses the preview API</small>
+							<div id="${server}-ld-preview" style="display: block; min-height: 400px; overflow: auto; color: white; border-style: solid; border-radius: 4px 4px 4px 4px; margin-bottom: 20px; background: black; font-weight: normal; text-align: left;">
+							Your Long Description will appear here when you click the Preview button :)
+							</div>
+							<label for="tags-${server}">Type tags (comma seperated)</label><br/>
+							<input id="tags-${server}" type="text" class="form-control fform" name="tags-${server}" placeholder="moderation, music"/><br/>
+							<button id="submit-${server}" class="btn btn-outline-light" onclick="addGuild('${server}')" style="margin-bottom: 3px;">Add Server</button>
+						</div>
+						<br/>
 					</a>`
 				}
 				document.querySelector("#valid_servers").innerHTML = server_data
+				modalShow("Here you go!", "Here is a list of servers/guilds you can add. If you don't see yours, make sure you have added our server bot to your server with create invite perms and that you have Manage Server or Administrator on said server")
 			}
 		}
         })
 	}
 		catch (err) {
-		alert(err)
+		  alert(err)
 		}
 	};
 	function openGuild(gid) {
