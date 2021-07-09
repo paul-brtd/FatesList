@@ -194,7 +194,7 @@ langs = {
 privacy_policy = {
     "tos": [
         (
-            "We Reserve the right to make changes to your bot's page at any time"
+            "We reserve the right to make changes to your bot's page at any time"
         ),
         (
             "We may store cookies on your browser in order to keep you signed in and to "
