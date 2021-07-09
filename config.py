@@ -226,7 +226,6 @@ privacy_policy = {
             "You must follow Discord's Terms Of Service"
         )
     ],
-    "owner": "Rootspring#6701",
     "data": {
         "collection": (
             "We cache user information from Discord as well as handling ratelimits using Redis to significantly improve "
