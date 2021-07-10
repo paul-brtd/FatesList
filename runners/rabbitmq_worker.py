@@ -1,3 +1,5 @@
+import sys
+sys.path.append(".")
 from lynxfall.rabbit.launcher import run
 from modules.core.system import setup_discord, setup_db
 from config import TOKEN_MAIN

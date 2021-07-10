@@ -1,1 +1,1 @@
-PLAYGROUND=0 python rabbitmq_worker.py
+python3.10 runners/rabbitmq_worker.py
