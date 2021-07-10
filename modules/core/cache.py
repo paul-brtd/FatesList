@@ -24,31 +24,41 @@ async def _user_fetch(
     
     # Check if a suitable version is in the cache first before querying Discord
 
-    CACHE_VER = 10 # Current cache ver
+    CACHE_VER = 11 # Current cache ver
 
     if len(user_id) not in [17, 18, 19, 20]: # Snowflake can be 17 - 20
         logger.debug(f"Ignoring blatantly wrong User ID: {user_id}")
         return None # This is impossible to actually exist on the discord API or on our cache
 
     # Query redis cache for some important info
-    cache_redis = await redis_db.hget(str(user_id), key = 'cache') # This is bot in cache
-    if cache_redis is not None: # We got a match
-        cache = orjson.loads(cache_redis) # Make it JSON
+    cache = await redis_db.hgetall(f"{user_id}:cache") # This is bot in cache
+    if cache is not None: # We got a match
         cache_time = time.time() - cache['epoch']
-        if cache.get("fl_cache_ver") != CACHE_VER or (cache.get("valid_user") is None and time.time() - cache_time > 60*10) or cache_time > 60*60*8: # Check for cache expiry of 8 hours for proper user, 10 minutes for invalid, proper cache version and that its a valid user
+        if cache["fl_cache_ver"] != CACHE_VER or (not cache["valid_user"] and time.time() - cache_time > 60*10) or cache_time > 60*60*8: # Check for cache expiry of 8 hours for proper user, 10 minutes for invalid, proper cache version and that its a valid user
             # The cache is invalid, pass and make discord api call
             logger.debug(f"Not using cache for id {user_id}")
         else:
             logger.debug(f"Using cache for id {user_id}") # Use cache
             fetch = False
-            if cache.get("valid_user") and ((user_type == 2 and cache["bot"]) or user_type == 3): # Valid user and bot where bot is requested or all users requested
+            # Valid user and bot where bot is requested or all users requested
+            if cache.get("valid_user") and ((user_type == 2 and cache["bot"]) or user_type == 3):
                 fetch = True
-            elif cache.get("valid_user") and user_type == 1 and not cache["bot"]: # Valid users and user where user is requested or all users requested
+                
+            # Valid users and user where user is requested or all users requested
+            elif cache.get("valid_user") and user_type == 1 and not cache["bot"]: 
                 fetch = True
+                
             if fetch: # We got a match
                 if user_only:
                     return user_id, cache["username"]
-                return {"id": user_id, "username": cache['username'], "avatar": cache['avatar'], "disc": cache["disc"], "status": cache["status"], "bot": cache["bot"]}
+                return {
+                    "id": user_id, 
+                    "username": cache['username'], 
+                    "avatar": cache['avatar'], 
+                    "disc": cache["disc"], 
+                    "status": cache["status"], 
+                    "bot": cache["bot"]
+                }
             return None # We got a bot, but not fitting in constraints
 
     # Add ourselves to cache
@@ -98,8 +108,23 @@ async def _user_fetch(
         except Exception:
             pass # Sometimes this cannot be done
 
-    cache = orjson.dumps({"fl_cache_ver": CACHE_VER, "epoch": time.time(), "bot": bot, "username": username, "avatar": avatar, "disc": disc, "valid_user": valid_user, "status": status}) # Create cache and dump it to string for caching
-    await redis_db.hset(str(user_id), key = "cache", value = cache) # Add/Update redis
+    # Create cache and add to redis hash
+    cache = {
+        "fl_cache_ver": CACHE_VER,
+        "epoch": time.time(),
+        "bot": bot,
+        "username": username,
+        "avatar": avatar,
+        "disc": disc,
+        "valid_user": valid_user,
+        "status": status
+    }
+       
+    # Add/Update redis
+    await redis_db.hset(
+        f"{user_id}:cache", 
+        mapping = cache
+    ) 
 
     fetch = False
     if valid_user and ((user_type == 2 and bot) or user_type == 3): # Same as when cached, see that for this
@@ -109,7 +134,14 @@ async def _user_fetch(
     if fetch:
         if user_only:
             return user_id, username
-        return {"id": user_id, "username": username, "avatar": avatar, "disc": disc, "status": status, "bot": bot}
+        return {
+            "id": user_id, 
+            "username": username,
+            "avatar": avatar,
+            "disc": disc,
+            "status": status,
+            "bot": bot
+        }
     return None
 
 async def get_user(user_id: int, user_only = False, *, worker_session = None) -> Optional[dict]:
