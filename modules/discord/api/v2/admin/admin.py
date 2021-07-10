@@ -52,6 +52,7 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
             status_code = 503, 
             headers = {"Retry-After": 5}
         )
+      
     user = guild.get_member(data.mod)
     
     # Get permission while also handling multi/recursive operations, which have a tuple where first element is for non multi/recusive and second is for multi/recursive
@@ -240,6 +241,15 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
     # Staff lock
     elif data.op == enums.BotAdminOp.staff_lock:
         req = await redis_db.set(f"fl_staff_access-{user_id}:{bot_id}", 0, ex = 60*15)
+        embed = discord.Embed(
+            title = "Staff Access Alert!", 
+            description = (
+                f"Staff member {user} has unlocked <@{bot_id}> for editing. This is normal but if it "
+                "happens too much, open a ticket or otherwise contact any online or offline staff immediately"
+            )
+        )
+        bot_logs = guild.get_channel(bot_logs)
+        await bot_logs.send(embed = embed)
    
     # Staff unlock
     elif data.op == enums.BotAdminOp.staff_unlock:
