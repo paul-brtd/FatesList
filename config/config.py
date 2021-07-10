@@ -1,8 +1,3 @@
-import builtins
-import os
-
-from config_secrets import *
-
 bot_logs = 836326348326043648 # #bot-logs in support server
 server_logs = 837048691965034496 # Server logs in support server
 appeals_channel = 836326351387623454 # #resubmissions-and-appeals in support server
@@ -18,7 +13,6 @@ test_botsrole = 845940351339987004 # Bots role on test server
 test_staffrole = 846028433985503232 # Staff role on test server
 test_server = 845928429357367316 # Test Server
 owner = 563808552288780322
-instance_name = "main"
 
 # Messages
 approve_feedback = "There was no feedback given for this bot. It was likely a good bot, but you can ask any staff member about feedback if you wish"
