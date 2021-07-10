@@ -5,25 +5,9 @@ from .imports import *
 from .permissions import *
 
 class BotActions():
-    class GeneratedObject():
-        """Instead of crappily changing self, just use a generated object which is at least cleaner"""
-        extra_owners = []
-        tags = []
-        invite = None
-        webhook_secret = None
-
     def __init__(self, bot):
         self.__dict__.update(bot) # Add all kwargs to class
         logger.debug("Request Acknowledged")
-        self.generated = self.GeneratedObject() # To keep things clean, make sure we always put changed properties in generated
-
-    def gen_rabbit_dict(self):
-        rmq_dict = self.__dict__.copy()
-        del rmq_dict["generated"]
-        for key in self.generated.__dict__.keys():
-            rmq_dict[key] = self.generated.__dict__[key]
-        logger.trace(f"RabbitMQ dict is {rmq_dict}")
-        return rmq_dict
 
     async def base_check(self) -> Optional[str]:
         """Perform basic checks for adding/editting bots. A check returning None means success, otherwise error should be returned to client"""
@@ -45,32 +29,21 @@ class BotActions():
                     return "Invalid Bot Invite: Your permission number must be a integer", 4 # Invalid Invite
             elif not self.invite.startswith("https://discord.com") or "oauth" not in self.invite:
                 return "Invalid Bot Invite: Your bot invite must be in the format of https://discord.com/api/oauth2... or https://discord.com/oauth2..." # Invalid Invite
-            self.generated.invite = self.invite # By default, this is None but if explicitly set, use that
 
         if len(self.description) > 110:
             return "Your short description must be shorter than 110 characters" # Short Description Check
 
-        try:
-            bot_object = await get_bot(self.bot_id) # Check if bot exists
-        except ValueError: # Just in case someone tries to send a string and not a integer
-            return "According to Discord's API and our cache, your bot does not exist. Please try again after 2 hours."
+        bot_obj = await get_bot(self.bot_id) # Check if bot exists
 
-        if not bot_object:
+        if not bot_obj:
             return "According to Discord's API and our cache, your bot does not exist. Please try again after 2 hours."
         
-        if type(self.tags) != list:
-            self.generated.tags = self.tags.split(",")
-        else:
-            self.generated.tags = self.tags # Generate tags either directly or made to list and then added to generated
-
-        flag = False
-        for test in self.generated.tags:
-            if test not in TAGS:
+        for tag in self.tags:
+            if tag not in TAGS:
                 return "One of your tags doesn't exist internally. Please check your tags again" # Check tags internally
-            flag = True
 
-        if not flag:
-            return "You must select tags for your bot", 9 # No tags found
+        if not self.tags:
+            return "You must select tags for your bot" # No tags found
 
         imgres = None
         if self.banner:
@@ -95,19 +68,10 @@ class BotActions():
         if self.donate != "" and not (self.donate.startswith("https://patreon.com") or self.donate.startswith("https://paypal.me")):
             return "Only Patreon and Paypal.me are allowed for donation links as of right now." # Check donation link for approved source (paypal.me and patreon
 
-        if self.extra_owners == "": # Generate extra owners list by either adding directly if list or splitting to list, removing extra ones
-            self.generated.extra_owners = []
-        else:
-            if type(self.extra_owners) != list:
-                self.generated.extra_owners = self.extra_owners.split(",")
-            else:
-                self.generated.extra_owners = self.extra_owners
-
-        try:
-            self.generated.extra_owners = [int(id.replace(" ", "")) for id in self.generated.extra_owners]
-            self.generated.extra_owners = list(set(self.generated.extra_owners)) # Remove extra ones and make all ints
-        except Exception:
-            return "One of your extra owners doesn't exist or you haven't comma-seperated them."
+        for eo in self.extra_owners:
+            tmp = await get_user(eo)
+            if not tmp:
+                return "One of your extra owners doesn't exist"
 
         if self.github != "" and not self.github.startswith("https://www.github.com"): # Check github for github.com if not empty string
             return "Your github link must start with https://www.github.com"
@@ -118,10 +82,8 @@ class BotActions():
         check = await vanity_check(self.bot_id, self.vanity) # Check if vanity is already being used or is reserved
         if check:
             return "Your custom vanity URL is already in use or is reserved"
-        if self.webhook_secret:
-            if len(self.webhook_secret) < 8:
-                return "Your webhook secret must be at least 8 characters long"
-            self.generated.webhook_secret = self.webhook_secret
+        if self.webhook_secret and len(self.webhook_secret) < 8:
+            return "Your webhook secret must be at least 8 characters long"
 
     async def edit_check(self):
         """Perform extended checks for editting bots"""
@@ -157,7 +119,7 @@ class BotActions():
         if check is not None:
             return check # Returning a strung and not None means error to be returned to consumer
 
-        await add_rmq_task("bot_add_queue", self.gen_rabbit_dict()) # Add to add bot RabbitMQ
+        await add_rmq_task("bot_add_queue", self.__dict__) # Add to add bot RabbitMQ
 
     async def edit_bot(self):
         """Edit a bot"""
@@ -165,7 +127,7 @@ class BotActions():
         if check is not None:
             return check
 
-        await add_rmq_task("bot_edit_queue", self.gen_rabbit_dict()) # Add to edit bot RabbitMQ
+        await add_rmq_task("bot_edit_queue", self.__dict__) # Add to edit bot RabbitMQ
 
 class BotListAdmin():
     """Class to control and handle bots"""
@@ -363,13 +325,8 @@ class BotListAdmin():
         await bot_add_event(self.bot_id, enums.APIEvents.bot_unlock, {"user": self.str_mod, "reason": reason})
 
 class ServerActions():
-    class GeneratedObject():
-        """Instead of crappily changing self, just use a generated object which is at least cleaner"""
-        tags = []
-
     def __init__(self, guild):
         self.__dict__.update(guild) # Add kwargs to class
-        self.generated = self.GeneratedObject() # To keep things clean, make sure we always put changed properties in generated
 
     def gen_rabbit_dict(self):
         rmq_dict = self.__dict__.copy()
@@ -378,7 +335,6 @@ class ServerActions():
         return rmq_dict
 
     async def base_check(self) -> Optional[str]:
-        self.generated.tags = []
         for tag in self.tags:
             if tag not in self.generated.tags:
                 self.generated.tags.append(tag.lower().replace(" ", "_"))

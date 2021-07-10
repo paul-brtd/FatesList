@@ -101,16 +101,29 @@ async def fetch_bot(request: Request, bot_id: int):
     api_ret = dict(api_ret)
     tags = await db.fetch("SELECT tag FROM bot_tags WHERE bot_id = $1", bot_id)
     api_ret["tags"] = [tag["tag"] for tag in tags]
-    owners_db = await db.fetch("SELECT DISTINCT ON (owner) owner, main FROM bot_owner WHERE bot_id = $1 ORDER BY owner", bot_id)
+    owners_db = await db.fetch("SELECT owner, main FROM bot_owner WHERE bot_id = $1", bot_id)
     owners = []
+    _done = []
+
     # Preperly sort owners
     for owner in owners_db:
-        if owner["main"]: 
-            owners.insert(0, owner)
-        else: 
-            owners.append(owner)
+        if owner in _done: continue
+        
+        _done.append(owner["owner"])
+        user = await get_user(owner["owner"])
+        main = owner["main"]
 
-    api_ret["owners"] = [{"user": (await get_user(obj["owner"])), "main": obj["main"]} for obj in owners]
+        if not user: continue
+        
+        owner_obj = {
+            "user": user,
+            "main": main
+        }
+        
+        if main: owners.insert(0, owner_obj)
+        else: owners.append(owner_obj)
+
+    api_ret["owners"] = owners
     if api_ret["features"] is None:
         api_ret["features"] = []
     api_ret["invite_link"] = await invite_bot(bot_id, api = True)

@@ -20,36 +20,34 @@ async def add_bot(request: Request):
 
 @router.get("/{bot_id}/settings")
 async def bot_settings_page(request: Request, bot_id: int):
-    if "user_id" in request.session.keys():
-        check = await is_bot_admin(int(bot_id), int(request.session.get("user_id")))
-        if not check:
-            return abort(403)
-        try:
-            fetch = dict(await db.fetchrow("SELECT bot_id, prefix, bot_library AS library, invite, website, banner, long_description, description, webhook, webhook_secret, webhook_type, discord AS support, banner, github, features, long_description_type, css, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", bot_id))
-        except:
-            return abort(404)
-        tags = await db.fetch("SELECT tag FROM bot_tags WHERE bot_id = $1", bot_id)
-        fetch = fetch | {"tags": [tag["tag"] for tag in tags]}
-        owners = await db.fetch("SELECT owner, main FROM bot_owner WHERE bot_id = $1", bot_id)
-        logger.trace(owners)
-        if owners is None:
-            return "This bot has no found owners.\nPlease contact Fates List support"
-        bot = fetch | {"extra_owners": [obj["owner"] for obj in owners if obj["main"] is False]}
-        if bot["extra_owners"]:
-            bot["extra_owners"] = ",".join([str(eo) for eo in fetch["extra_owners"]])
-        else:
-            bot["extra_owners"] = ""
-        vanity = await db.fetchval("SELECT vanity_url AS vanity FROM vanity WHERE redirect = $1", bot_id)
+    if "user_id" not in request.session.keys():
+        return abort(403)
+    
+    check = await is_bot_admin(bot_id, int(request.session["user_id"]))
+    if not check:
+        return abort(403)
+    
+    bot = await db.fetchrow("SELECT bot_id, prefix, bot_library AS library, invite, website, banner, long_description, description, webhook, webhook_secret, webhook_type, discord AS support, banner, github, features, long_description_type, css, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", bot_id)
+    if not bot:
+        return abort(404)
+    
+    bot = dict(bot)
+    tags = await db.fetch("SELECT tag FROM bot_tags WHERE bot_id = $1", bot_id)
+    bot["tags"] = [tag["tag"] for tag in tags]
+    owners = await db.fetch("SELECT owner, main FROM bot_owner WHERE bot_id = $1", bot_id)
+    if not owners:
+        return "This bot has no found owners.\nPlease contact Fates List support"
+    
+    bot["extra_owners"] = ",".join([str(o["owner"]) for o in owners if not o["main"]])
+    vanity = await db.fetchval("SELECT vanity_url AS vanity FROM vanity WHERE redirect = $1", bot_id)
 
-        context = {
-            "bot_token": await db.fetchval("SELECT api_token FROM bots WHERE bot_id = $1", bot_id),
-            "mode": "edit",
-            "bot_id": str(bot_id)
-        }
+    context = {
+        "bot_token": await db.fetchval("SELECT api_token FROM bots WHERE bot_id = $1", bot_id),
+        "mode": "edit",
+        "bot_id": str(bot_id)
+    }
 
-        return await templates.TemplateResponse("bot_add_edit.html", {"request": request, "tags_fixed": tags_fixed, "bot": bot, "vanity": vanity, "features": features}, context = context)
-    else:
-        return RedirectResponse("/")
+    return await templates.TemplateResponse("bot_add_edit.html", {"request": request, "tags_fixed": tags_fixed, "bot": bot, "vanity": vanity, "features": features}, context = context)
 
 @router.post("/{bot_id}/reviews/new")
 async def new_reviews(request: Request, bot_id: int, bt: BackgroundTasks, rating: float = FForm(5.1), review: str = FForm(...)):
