@@ -32,7 +32,8 @@ async def _user_fetch(
 
     # Query redis cache for some important info
     cache = await redis_db.hget(user_id, key = "cache") # This is bot in cache
-    if cache is not None: # We got a match
+    if cache: # We got a match
+        cache = orjson.loads(cache)
         cache_time = time.time() - cache['epoch']
         if cache["fl_cache_ver"] != CACHE_VER or (not cache["valid_user"] and time.time() - cache_time > 60*10) or cache_time > 60*60*8: # Check for cache expiry of 8 hours for proper user, 10 minutes for invalid, proper cache version and that its a valid user
             # The cache is invalid, pass and make discord api call

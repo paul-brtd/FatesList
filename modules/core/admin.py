@@ -68,6 +68,7 @@ class BotActions():
         if self.donate != "" and not (self.donate.startswith("https://patreon.com") or self.donate.startswith("https://paypal.me")):
             return "Only Patreon and Paypal.me are allowed for donation links as of right now." # Check donation link for approved source (paypal.me and patreon
 
+        
         for eo in self.extra_owners:
             tmp = await get_user(eo)
             if not tmp:

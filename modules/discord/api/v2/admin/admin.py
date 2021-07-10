@@ -253,7 +253,7 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
    
     # Staff unlock
     elif data.op == enums.BotAdminOp.staff_unlock:
-        await redis_db.del(f"fl_staff_access-{user_id}:{bot_id}")
+        await redis_db.delete(f"fl_staff_access-{user_id}:{bot_id}")
 
     # Bot lock
     elif data.op == enums.BotAdminOp.bot_lock:
