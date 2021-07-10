@@ -42,6 +42,8 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
+from prometheus_fastapi_instrumentator import Instrumentator, metrics
+from prometheus_client import start_http_server
 
 
 class FatesListRequestHandler(BaseHTTPMiddleware):
@@ -251,6 +253,12 @@ class FatesWorkerSession(Singleton):
     def primary_worker(self):
         return self.fup and self.workers[0] == os.getpid()
 
+    def get_worker_index(self):
+        """
+        This function should only be called 
+        after workers are published
+        """
+        return self.workers.index(os.getpid())
 
 async def setup_discord():
     intent_main = discord.Intents.none()
@@ -286,6 +294,9 @@ async def init_fates_worker(app, exc_handler):
     # ========================================================
     # Move all code to use worker session. All new code should 
     # always use worker session instead of builtins
+    metric_p = Instrumentator()
+    metric_p.instrument(app)
+
     dbs = await setup_db()
     discord = await setup_discord()
     builtins.db = dbs["postgres"]
@@ -460,6 +471,8 @@ async def status(workers, session):
                     logger.warning(
                         f"Got invalid workers from rabbitmq ({workers})"
                     )
+                
+                start_http_server(3000 + session.get_worker_index())
 
                 await start_dbg(session)
                 asyncio.create_task(vote_reminder(session))

@@ -9,9 +9,6 @@ BTW please add your bots there if you wish to support us or even
 !!! danger
     Fates List is extremely difficult to the point of almost impossible (without knowledge in python) to self host. It requires Ubuntu (support for Windows and MacOS will never be happening since we do not use it). It also needs a huge amount of moving parts including PostgreSQL 14 (older versions *may* work but will never be tested), Redis and RabbitMQ. In short: **This page is only meant for people who wish to contribute to Fates List**
 
-!!! note
-    Developers should use the private NextCloud to get a proper PostgreSQL 14 + Redis container instead of installing and configuring postgres
-
 
 ## Domain Setup
 
@@ -33,15 +30,19 @@ BTW please add your bots there if you wish to support us or even
 
 1. Download this repo on the VPS using `git clone https://github.com/Fates-List/FatesList`. Make sure the location it is downloaded to is publicly accessible AKA not in a /root folder or anything like that.
 
-3. Enter Fates List directory, copy config_secrets_template.py to config_secrets.py and fill in the required information on there. You do not need to change site_url or mobile_site_url fields (site and mobile_site do need to be filled in without the https://). 
-4. Download, install and configure nginx, redis, rabbitmq, python3.10, PostgreSQL (using the pg_user and pg_pwd you setup in config.py). Run `su postgres` and then run `psql` and finally run  `\i schema.sql` to setup the postgres schema. Then install swarm64
-5. Admin Panel is a WIP. Ask Rootspring#6701 how to configure it if you want it
-6. Remove the /etc/nginx folder, then copy the nginx folder from this repo to /etc. Change the server_name values in /etc/nginx/conf.d/default.conf to reflect your domain and other.
-7. Restart nginx
-8. Install fastapi-limiter from [https://github.com/Fates-List/fastapi-limiter](https://github.com/Fates-List/fastapi-limiter) and aioredis from [https://github.com/Fates-List/aioredis-py](https://github.com/Fates-List/aioredis-py) and discord.py from [https://github.com/Fates-List/discord.py](https://github.com/Fates-List/discord.py)
-9. Run `pip3 install -r requirements.txt`
-10. Run `tmux new -s rabbit`. Then run `python3 rabbitmq_worker.py`. This must be run before running Fates as this will create a queue on RabbitMQ.
-11. Run `./run` in the repo folder
+2. Download snowtuft using `git clone https://github.com/Fates-List/FatesList`. Make sure you have xkcdpass, python3.10 and docker compose ready. Make sure gcc-c++, libffi-devel, libxslt-devel, libxml2-devel, libpq-devel packages are installed. Run `make install` to install Snowtuft
 
+3. Enter Fates List directory, copy config_secrets_template.py to config_secrets.py and fill in the required information on there. You do not need to change site_url or mobile_site_url fields (site and mobile_site do need to be filled in without the https://). 
+4. If you have a packup, copy it to /backups/latest.bak, then run `snowtuft dbs setup`. Setup venv using `snowtuft venv setup` (you may need to run this multiple times to install all development dependencies
+
+5. Copy the nginx conf in info/nginx to /etc/nginx
+
+6. Restart nginx
+
+7. Run `tmux new -s rabbit`. Then run `python3 rabbitmq_worker.py`. This must be run before running Fates as this will create a queue on RabbitMQ.
+
+8. Run `bin/run` in the repo folder
+
+9. Follow [this](https://stevescargall.com/2020/05/13/how-to-install-prometheus-and-grafana-on-fedora-server/) on setting up Prometheus and Grafana. Set Grafanas port to 5050. Use a firewall or digiocean firewall to block other ports. Do not open prometheus port in digiocean firewall.
 
 Fates List probihits the monetization or resale of coins or any part of Fates List for real money.
