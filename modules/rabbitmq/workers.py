@@ -83,51 +83,15 @@ async def status(state, pidrec):
             case _:
                 logger.warning(f"Unhandled message {msg}")
 
-async def lock_unlock(state):
-    while True:
-        try:
-            # Handle Staff Requests
-            req = await state.redis.get(f"fl_staff_req")
-            req = orjson.loads(req) if req else None
-            if req and isinstance(req, list):
-                for i in range(len(req)):
-                    try:
-                        r = req[i]
-                    except:
-                        continue # Already deleted
-
-                    if r["op"] not in ("lock", "unlock"):
-                        continue
-                    logger.info(f"Got {r['op']} request")
-                    user = await get_user(int(r["staff"]))
-                    if not user:
-                        continue
-                    key = "lock-" + str(r["staff"]) + "-" + str(r["bot_id"])
-                    sa = await state.redis.get(f"staff_access")
-                    sa = orjson.loads(sa) if sa else []
-                    sa.append({"staff": r["staff"], "bot_id": r["bot_id"], "key": key, "time": time.time()})
-                    await state.redis.set("staff_access", orjson.dumps(sa))
-                    await state.redis_db.set(key, orjson.dumps(r["op"] == "unlock"), ex = 60*16) # Give one minute for us to handle staff_access
-                    await state.client.wait_until_ready()
-                    channel = state.client.get_channel(bot_logs)
-                    bot = await get_bot(r["bot_id"])
-                    if not bot:
-                        bot = {"username": "Unknown", "disc": "0000"}
-                    embed = discord.Embed(title = "Staff Access Alert!", description = f"Staff member {user['username']}#{user['disc']} have {r['op'] + 'ed'} {bot['username']}#{bot['disc']} for editing. This is normal but if it happens too much, open a ticket or contact any online or offline staff immediately")
-                    await channel.send(embed = embed)
-                    del req[i]
-                    await state.redis.set(f"fl_staff_req", orjson.dumps(req)) 
-        except Exception:
-            logger.exception("Something happened!")
-        await asyncio.sleep(5)
-
+                
 async def prehook(config, *, state):
     builtins.pidrec = PIDRecorder()
     asyncio.create_task(status(state, pidrec))
-    asyncio.create_task(lock_unlock(state))
+
 
 async def backend(state, json, *args, **kwargs):
     return pidrec.list()
+
 
 class Config:   
     queue = "_worker"
