@@ -239,18 +239,11 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
 
     # Staff lock
     elif data.op == enums.BotAdminOp.staff_lock:
-        req = await redis_db.get(f"fl_staff_req")
-        req = orjson.loads(req) if req else []
-        op = "lock"
-        req.append({"op": "lock", "staff": data.mod, "bot_id": bot_id})
-        await redis_db.set(f"fl_staff_req", orjson.dumps(req))
+        req = await redis_db.set(f"fl_staff_access-{user_id}:{bot_id}", 0, ex = 60*15)
    
     # Staff unlock
     elif data.op == enums.BotAdminOp.staff_unlock:
-        req = await redis_db.get(f"fl_staff_req")
-        req = orjson.loads(req) if req else []
-        req.append({"op": "unlock", "staff": data.mod, "bot_id": bot_id})
-        await redis_db.set(f"fl_staff_req", orjson.dumps(req))
+        await redis_db.del(f"fl_staff_access-{user_id}:{bot_id}")
 
     # Bot lock
     elif data.op == enums.BotAdminOp.bot_lock:
