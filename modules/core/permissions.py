@@ -13,10 +13,7 @@ class StaffMember(BaseModel):
     staff_id: Union[str, int]
 
 async def is_staff_unlocked(bot_id: int, user_id: int):
-    key = "lock-" + str(user_id) + "-" + str(bot_id)
-    lock = await redis_db.get(key)
-    logger.info(f"{lock} gotten")
-    return orjson.loads(lock) if lock else False
+    return await redis_db.exists(f"fl_staff_access-{user_id}:{bot_id}")
 
 async def is_bot_admin(bot_id: int, user_id: int):
     try:
