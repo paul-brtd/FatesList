@@ -34,9 +34,7 @@ async def render_index(request: Request, api: bool):
 #@jit(nopython = True)
 def gen_owner_html(owners_lst: tuple):
     """Generate the owner html"""
-    first_done = False
-    last_done = False
-    # First owner will always be main and hence should have the crown
+    # First owner will always be main and hence should have the crown, set initial state to crown for that
     owners_html = '<span class="iconify" data-icon="mdi-crown" data-inline="false"></span>'
     owners_html += "<br/>".join([f"<a class='long-desc-link' href='/profile/{owner[0]}'>{owner[1]}</a>" for owner in owners_lst if owner])
     return owners_html
@@ -89,7 +87,8 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
         except Exception:
             ldesc = bleach.clean(ldesc)
 
-        # Take the h1...h5 anad drop it one lower and fix peoples stupidity and some nice patches to the site to improve accessibility
+        # Take the h1...h5 anad drop it one lower and bypass peoples stupidity 
+        # and some nice patches to the site to improve accessibility
     long_desc_replace_tuple = (
         ("<h1", "<h2 style='text-align: center'"),
         ("</h1", "</h2"),
@@ -131,7 +130,10 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
     promos = await get_promotions(bot_id)
     maint = await get_maint(bot_id)
 
-    owners_lst = tuple([(await get_user(obj["owner"], user_only = True, worker_session = worker_session)) for obj in owners if obj["owner"] is not None])
+    owners_lst = [
+        (await get_user(obj["owner"], user_only = True, worker_session = worker_session)) 
+        for obj in owners if obj["owner"] is not None
+    ]
     owners_html = gen_owner_html(owners_lst)
     if bot["features"] is None:
         bot_features = ""
