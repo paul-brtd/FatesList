@@ -24,14 +24,14 @@ async def _user_fetch(
     
     # Check if a suitable version is in the cache first before querying Discord
 
-    CACHE_VER = 11 # Current cache ver
+    CACHE_VER = 10 # Current cache ver
 
     if len(user_id) not in [17, 18, 19, 20]: # Snowflake can be 17 - 20
         logger.debug(f"Ignoring blatantly wrong User ID: {user_id}")
         return None # This is impossible to actually exist on the discord API or on our cache
 
     # Query redis cache for some important info
-    cache = await redis_db.hgetall(f"{user_id}:cache") # This is bot in cache
+    cache = await redis_db.hget(user_id, key = "cache") # This is bot in cache
     if cache is not None: # We got a match
         cache_time = time.time() - cache['epoch']
         if cache["fl_cache_ver"] != CACHE_VER or (not cache["valid_user"] and time.time() - cache_time > 60*10) or cache_time > 60*60*8: # Check for cache expiry of 8 hours for proper user, 10 minutes for invalid, proper cache version and that its a valid user
@@ -76,8 +76,9 @@ async def _user_fetch(
         valid_user, bot = False, False # Not a proper got, cache to avoid repitition
 
     try:
-        status = str(client.get_guild(main_server).get_member(int(user_id)).status) # Get the status by getting guild, getting member and then setting status, may fail if not in guild so catch that using try except above
-        logger.trace(status)
+        # Get the status by getting guild, getting member and then setting status.
+        # May fail if not in guild or still connecting to Discord so catch that using try except
+        status = str(client.get_guild(main_server).get_member(int(user_id)).status)
         if status == "online":
             status = 1 # Online
         elif status == "offline":
@@ -122,8 +123,9 @@ async def _user_fetch(
        
     # Add/Update redis
     await redis_db.hset(
-        f"{user_id}:cache", 
-        mapping = cache
+        str(user_id),
+        key = "cache",
+        value = orjson.dumps(cache)
     ) 
 
     fetch = False
