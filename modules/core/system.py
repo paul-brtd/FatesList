@@ -381,6 +381,17 @@ async def init_fates_worker(app, exc_handler):
         exc_handler=exc_handler
     )
     
+    # Setup exception handling
+    @app.exception_handler(403)
+    @app.exception_handler(404)
+    @app.exception_handler(RequestValidationError)
+    @app.exception_handler(ValidationError)
+    @app.exception_handler(500)
+    @app.exception_handler(HTTPException)
+    @app.exception_handler(Exception)
+    async def fl_exception_handler(request, exc, log = True):
+        return await WebError.error_handler(request, exc, log = log)
+    
     # Include all routers
     include_routers(app, "Discord", "modules/discord")
 
