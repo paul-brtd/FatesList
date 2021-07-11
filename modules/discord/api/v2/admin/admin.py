@@ -9,6 +9,7 @@ from modules.discord.admin import admin_dashboard
 from ..base import API_VERSION
 from .models import (APIResponse, BotAdminOpEndpoint, BotQueueGet, IDResponse,
                      enums)
+from config import bot_logs
 
 cleaner = Cleaner()
 
@@ -240,7 +241,7 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
 
     # Staff lock
     elif data.op == enums.BotAdminOp.staff_lock:
-        req = await redis_db.set(f"fl_staff_access-{user_id}:{bot_id}", 0, ex = 60*15)
+        req = await redis_db.set(f"fl_staff_access-{data.mod}:{bot_id}", 0, ex = 60*15)
         embed = discord.Embed(
             title = "Staff Access Alert!", 
             description = (
@@ -248,12 +249,12 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
                 "happens too much, open a ticket or otherwise contact any online or offline staff immediately"
             )
         )
-        bot_logs = guild.get_channel(bot_logs)
-        await bot_logs.send(embed = embed)
+        channel = guild.get_channel(bot_logs)
+        await channel.send(embed = embed)
    
     # Staff unlock
     elif data.op == enums.BotAdminOp.staff_unlock:
-        await redis_db.delete(f"fl_staff_access-{user_id}:{bot_id}")
+        await redis_db.delete(f"fl_staff_access-{data.mod}:{bot_id}")
 
     # Bot lock
     elif data.op == enums.BotAdminOp.bot_lock:
