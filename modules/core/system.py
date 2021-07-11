@@ -45,6 +45,11 @@ from fastapi.middleware.gzip import GZipMiddleware
 from prometheus_fastapi_instrumentator import Instrumentator, metrics
 from prometheus_client import start_http_server
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from fastapi.exceptions import (
+    HTTPException,
+    ValidationError,
+    RequestValidationError
+)
 
 
 class FatesListRequestHandler(BaseHTTPMiddleware):
