@@ -312,9 +312,14 @@ rules = {
                 "If your bot has level messages or welcome messages, it must be optional and disableable"
             ),
             (
-                "Your bot must not DM people on join unless it needs to DM the *owner* "
-                "important or sensitive information (such as Wick's rescue key)"
-            )
+                "Your bot should not DM users when it join unless it needs to DM the *owner* "
+                "important or sensitive information (such as Wick's rescue key) "
+            ),
+            (
+                "Your bot should not DM users when they join a server unless a server manager chooses to "
+                "enable such a feature. Bots that do need to DM users such as verification bots may be exempt "
+                "from this rule on a case by case basis"
+            ),
             (
                 "All commands of a bot should check user and their own permissions before doing any "
                 "action. For example, your bot should not kick users unless the user and the bot has the "
