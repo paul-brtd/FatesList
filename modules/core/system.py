@@ -42,7 +42,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from prometheus_fastapi_instrumentator import Instrumentator, metrics
+from prometheus_fastapi_instrumentator import Instrumentator
 from prometheus_client import start_http_server
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.exceptions import (
@@ -94,7 +94,7 @@ class FatesListRequestHandler(BaseHTTPMiddleware):
             res = await self._dispatcher(path, request, call_next)
         except Exception as exc:
             logger.exception("Site Error Occurred") 
-            res = await self.exc_handler(request, exc, log = True)
+            res = await self.exc_handler(request, exc, log=True)
         
         self.logger(path, request, res)
         return res if res else self.default_res
@@ -267,6 +267,7 @@ class FatesWorkerSession(Singleton):
         """
         return self.workers.index(os.getpid())
 
+
 async def setup_discord():
     intent_main = discord.Intents.none()
     intent_main.guilds = True
@@ -392,7 +393,7 @@ async def init_fates_worker(app):
     @app.exception_handler(Exception)
     @app.exception_handler(StarletteHTTPException)
     async def _fl_error_handler(request, exc):
-        return await WebError.error_handler(request, exc, log = True)
+        return await WebError.error_handler(request, exc, log=True)
     
     # Add request handler
     app.add_middleware(

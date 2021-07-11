@@ -1,4 +1,4 @@
-from .imports import *
+from http import HTTPStatus
 from .templating import *
 from .helpers import *
 import io
@@ -64,12 +64,11 @@ class WebError():
         path = str(request.url.path)
         
         try:
-            code_str = HTTPStatus(code_str).phrase
-            fixed_code = status_code
+            code_str = HTTPStatus(status_code).phrase
 
-        except Exception:
+        except Exception as e:
             # Fallback
-            code_str = "Unknown Error"
+            code_str = f"Unknown Error: {e}"
             fixed_code = 400
 
         if status_code == 500:
@@ -112,11 +111,11 @@ class WebError():
         elif status_code == 422:
             if path.startswith("/bot"): 
                 code_str = "Bot Not Found"
-                fixed_code = 404
+                status_code = 404
             
             elif path.startswith("/profile"): 
                 code_str = "Profile Not Found"
-                fixed_code = 404
+                status_code = 404
         
         api = path.startswith("/api") 
         
@@ -131,4 +130,4 @@ class WebError():
                 return await request_validation_exception_handler(request, exc) 
        
         # Return error to user as jinja2 template
-        return await templates.e(request, code_str, fixed_code)
+        return await templates.e(request, code_str, status_code)

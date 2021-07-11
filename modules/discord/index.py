@@ -28,7 +28,9 @@ async def index_fend(request: Request, response: Response):
 
 @router.get("/etest/{code}")
 async def test_error(code: int):
-    raise TypeError()
+    if code == 500:
+        raise TypeError("Test 500")
+    return abort(code)
 
 @router.get("/none")
 async def nonerouter():

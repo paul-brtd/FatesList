@@ -1,14 +1,13 @@
 from .imports import *
 from aioredis import Connection
 from loguru import logger
-from modules.core.system import FatesWorkerSession
 
 async def _user_fetch(
     user_id: str,
     user_type: int,
     user_only: bool = False,
     *, 
-    worker_session: FatesWorkerSession = None
+    worker_session = None
 ) -> Optional[dict]:
     """Internal function to fetch a user. If worker_sessiom is not explicitly specified, a warning will be logged"""
     if not worker_session:
