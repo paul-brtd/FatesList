@@ -289,6 +289,19 @@ rules = {
             (
                 "Your bot must respect the Discord API and ratelimits. This also means that your bot should not "
                 "spam messages or be a 'rainbow role' bot."
+            ),
+            (
+                "Custom bots based of/dependant on/running an instance of another bot such as bot" 
+                "makers not allowed by discord, BotGhost, MEE6 Premium, Wick VIP is prohibited "
+                "unless it has unique features that you have added to it and can be configured on other "
+                "servers by users."
+            ),
+            (
+                "For frameworks such as redbot, you must have at least 3 custom made cogs "
+                "(or the equivalent for other frameworks). You must give credits to any framework "
+                "you are using. **BDFD/BDScript/other bot makers are not allowed on Fates List "
+                "unless it is also allowed by Discord and your bot is high-quality and has "
+                "features**"
             )
         ],
         "commands": [
@@ -335,21 +348,7 @@ rules = {
             ),
             (
                 "Your bot must not have a copyrighted avatar or username."
-            )
-        ],
-            (
-                "For frameworks such as redbot, you must have at least 3 custom made cogs"
-                "(or the equivalent for other frameworks). You must give credits to any framework "
-                "you are using. **BDFD/BDScript/other bot makers are not allowed on Fates List "
-                "unless it is also allowed by Discord and your bot is high-quality and has "
-                "features**"
-            ),
-            (
-                "Custom bots based of/dependant on/running an instance of another bot such as bot" 
-                "makers not allowed by discord, BotGhost, MEE6 Premium, Wick VIP is prohibited "
-                "unless it has unique features that you have added to it and can be configured on other "
-                "servers by users."
-            ),
+            ),           
             (
                 "Abusing Discord (mass creating or deleting channels, mass DM/spam/nuke bots) is strictly "
                 "prohibited and doing so will get you and/or your bot banned from the list and server."
