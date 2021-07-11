@@ -314,7 +314,8 @@ rules = {
             (
                 "Commands must have a purpose (no filler commands). Filler commands are ignored and will "
                 "make your bot low-quality. An example of filler commands/commands with no purpose is a bot "
-                "with 20 purge commands."
+                "with 20 purge commands or commands which are repeated in different ways and serve the same "
+                "purpose"
             ),
             (
                 "Bots *should* have at least 5 working commands and at least 80% of commands shown in "
