@@ -273,3 +273,100 @@ privacy_policy = {
         ),
     }
 }
+
+rules = {
+    "botreq": {
+        "basics": [
+            (
+                "Your bot may not be a fork or instance of another bot without substantial modifications and prior "
+                "permission from the owner of the bot you have forked/made an instance of."
+            ),
+            (
+                "Your bot should handle errors in a user friendly way. A way of reporting errors is a nice extra "
+                "tidbit to have though not strictly required. Giving tracebacks is allowed if it does not leak "
+                "sensitive information such as bot tokens or private information on a user."
+            ),
+            (
+                "Your bot must respect the Discord API and ratelimits. This also means that your bot should not "
+                "spam messages or be a 'rainbow role' bot."
+            )
+        ],
+        "commands": [
+            (
+                "All commands of a bot should check user and their own permissions before doing any "
+                "action. For example, your bot should not kick users unless the user and the bot has the "
+                "Kick Members permission. Commands may not be admin locked"
+            ),
+            (
+                "Commands must have a purpose (no filler commands). Filler commands are ignored and will "
+                "make your bot low-quality. An example of filler commands/commands with no purpose is a bot "
+                "with 20 purge commands."
+            ),
+            (
+                "Bots *should* have at least 5 working commands and at least 80% of commands shown in "
+                "its help command working. If your bot has a really unique feature however, this rule may "
+                "be reconsidered for your bot."
+            ),
+            (
+                "Sensitive commands (such as eval) should be locked to bot owners only. Fates List is not "
+                "responsible for the code you run or for any arbitary code execution/privilege escalation on "
+                "your bot."
+            )
+        ],
+        "prefixes": [
+            (
+                "Bots with common prefixes (`!`, `?`, `.`, `;`, etc) should have configurable prefix systems "
+                "or they may be muted on the support server. You may change the prefix for just Fates List "
+                "if you want to."
+            ),
+            (
+                "You should use the Customizable Prefix feature in your bots settings to denote whather custom "
+                "prefixes are supported. This is to make it easier for users to know this"
+            )
+        ],
+        "safety": [
+            (
+                "Bots should not mass DM or be malicious in any way such as mass nuke, scam bots, "
+                "free nitro bots. This also applies to servers as well when server listing is done."
+            ),
+            (
+                "DMing staff to ask for your bot to be approved/reviewed is strictly prohibited. "
+                "Your bot will be denied or banned if you do so."
+            ),
+            (
+                "Your bot must not have a copyrighted avatar or username."
+            )
+        ],
+            (
+                "For frameworks such as redbot, you must have at least 3 custom made cogs"
+                "(or the equivalent for other frameworks). You must give credits to any framework "
+                "you are using. **BDFD/BDScript/other bot makers are not allowed on Fates List "
+                "unless it is also allowed by Discord and your bot is high-quality and has "
+                "features**"
+            ),
+            (
+                "Custom bots based of/dependant on/running an instance of another bot such as bot" 
+                "makers not allowed by discord, BotGhost, MEE6 Premium, Wick VIP is prohibited "
+                "unless it has unique features that you have added to it and can be configured on other "
+                "servers by users."
+            ),
+            (
+                "Abusing Discord (mass creating or deleting channels, mass DM/spam/nuke bots) is strictly "
+                "prohibited and doing so will get you and/or your bot banned from the list and server."
+            ),
+            (
+                "Your bot may not be hosted on Glitch/Repl Free Plan and use a software to ping your "
+                "project. This is also against Repl/Glitch ToS."
+            ),
+            (
+                "Your bot must be online during testing"
+            )
+        ], 
+        "notes": [
+            (
+                "You can always repeal a ban or resubmit your bot. To do so, just login, click your username "
+                "> My Profile > your bot > View and then click resubmit"
+            )
+        ]
+    }
+}
