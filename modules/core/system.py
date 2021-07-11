@@ -44,6 +44,7 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from prometheus_fastapi_instrumentator import Instrumentator, metrics
 from prometheus_client import start_http_server
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 
 class FatesListRequestHandler(BaseHTTPMiddleware):
@@ -389,6 +390,7 @@ async def init_fates_worker(app, exc_handler):
     @app.exception_handler(500)
     @app.exception_handler(HTTPException)
     @app.exception_handler(Exception)
+    @app.exception_handler(StarletteHTTPException)
     async def fl_exception_handler(request, exc, log = True):
         return await WebError.error_handler(request, exc, log = log)
     
