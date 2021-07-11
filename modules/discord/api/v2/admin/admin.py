@@ -241,7 +241,20 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
 
     # Staff lock
     elif data.op == enums.BotAdminOp.staff_lock:
-        req = await redis_db.set(f"fl_staff_access-{data.mod}:{bot_id}", 0, ex = 60*15)
+        await redis_db.delete(f"fl_staff_access-{data.mod}:{bot_id}")
+        embed = discord.Embed(
+            title = "Staff Access Alert!", 
+            description = (
+                f"Staff member {user} has locked/removed their access to <@{bot_id}>. This is perfectly "
+                "normal and is a safety measure against hacking and exploits"
+            )
+        )
+        channel = guild.get_channel(bot_logs)
+        await channel.send(embed = embed)
+   
+    # Staff unlock
+    elif data.op == enums.BotAdminOp.staff_unlock:
+        await redis_db.set(f"fl_staff_access-{data.mod}:{bot_id}", 0, ex = 60*15)
         embed = discord.Embed(
             title = "Staff Access Alert!", 
             description = (
@@ -251,11 +264,7 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
         )
         channel = guild.get_channel(bot_logs)
         await channel.send(embed = embed)
-   
-    # Staff unlock
-    elif data.op == enums.BotAdminOp.staff_unlock:
-        await redis_db.delete(f"fl_staff_access-{data.mod}:{bot_id}")
-
+        
     # Bot lock
     elif data.op == enums.BotAdminOp.bot_lock:
         if not is_bot_admin(bot_id, data.mod):
