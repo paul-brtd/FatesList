@@ -50,6 +50,7 @@ from fastapi.exceptions import (
     ValidationError,
     RequestValidationError
 )
+from modules.core.error import WebError
 
 
 class FatesListRequestHandler(BaseHTTPMiddleware):
@@ -93,7 +94,7 @@ class FatesListRequestHandler(BaseHTTPMiddleware):
             res = await self._dispatcher(path, request, call_next)
         except Exception as exc:
             logger.exception("Site Error Occurred") 
-            res = await self.exc_handler(request, exc)
+            res = await self.exc_handler(request, exc, log = True)
         
         self.logger(path, request, res)
         return res if res else self.default_res
@@ -289,7 +290,7 @@ async def setup_discord():
 # and using importlib to import them and then including them in fastapi
 
 
-async def init_fates_worker(app, exc_handler):
+async def init_fates_worker(app):
     """
     On startup:
         - Initialize Postgres, Redis, RabbitMQ and discord
@@ -380,12 +381,6 @@ async def init_fates_worker(app, exc_handler):
 
     # Add GZip handling
     app.add_middleware(GZipMiddleware, minimum_size=500)
-
-    # Add request handler
-    app.add_middleware(
-        FatesListRequestHandler, 
-        exc_handler=exc_handler
-    )
     
     # Setup exception handling
     @app.exception_handler(403)
@@ -396,8 +391,14 @@ async def init_fates_worker(app, exc_handler):
     @app.exception_handler(HTTPException)
     @app.exception_handler(Exception)
     @app.exception_handler(StarletteHTTPException)
-    async def fl_exception_handler(request, exc, log = True):
-        return await WebError.error_handler(request, exc, log = log)
+    async def _fl_error_handler(request, exc):
+        return await WebError.error_handler(request, exc, log = True)
+    
+    # Add request handler
+    app.add_middleware(
+        FatesListRequestHandler, 
+        exc_handler=WebError.error_handler
+    )
     
     # Include all routers
     include_routers(app, "Discord", "modules/discord")
