@@ -308,7 +308,8 @@ rules = {
             (
                 "All commands of a bot should check user and their own permissions before doing any "
                 "action. For example, your bot should not kick users unless the user and the bot has the "
-                "Kick Members permission. Commands may not be admin locked"
+                "Kick Members permission. **Commands may not be admin locked and NSFW commands must be "
+                "locked to NSFW channels"
             ),
             (
                 "Commands must have a purpose (no filler commands). Filler commands are ignored and will "
