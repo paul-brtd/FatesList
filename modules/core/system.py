@@ -6,7 +6,8 @@ from config import (
     bot_dev_role, worker_key, session_key, 
     owner, sentry_dsn, lynxfall_key,
     discord_client_id, discord_client_secret,
-    discord_redirect_uri, site, TOKEN_DBG
+    discord_redirect_uri, site, TOKEN_DBG,
+    API_VERSION
 )
 
 import sentry_sdk
@@ -58,7 +59,6 @@ class FatesListRequestHandler(BaseHTTPMiddleware):
     def __init__(self, app, *, exc_handler):
         super().__init__(app)
         self.exc_handler = exc_handler
-        self.API_VERSION = 2
         
         # Methods that should be allowed by CORS
         self.CORS_ALLOWED = "GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS"
@@ -110,13 +110,12 @@ class FatesListRequestHandler(BaseHTTPMiddleware):
             path = path.replace("/bots", "/bot", 1)
         
         # These are checks path should not start with
-        api_nchecks = ("/api/docs", "/api/v", "api/ws")
-        is_api = path.startswith("/api") and not path.startswith(api_nchecks)
+        is_api = path.startswith("/api")
         request.scope["path"] = path
         
         if is_api:
             # Handle /api as /api/vX excluding docs + pinned requests
-            request.scope, api_ver = api_versioner(request, self.API_VERSION)
+            request.scope, api_ver = api_versioner(request, API_VERSION)
     
         start_time = time.time()
         
