@@ -306,6 +306,16 @@ rules = {
         ],
         "commands": [
             (
+                "Your bot must have a working help command"
+            ),
+            (
+                "If your bot has level messages or welcome messages, it must be optional and disableable"
+            ),
+            (
+                "Your bot must not DM people on join unless it needs to DM the *owner* "
+                "important or sensitive information (such as Wick's rescue key)"
+            )
+            (
                 "All commands of a bot should check user and their own permissions before doing any "
                 "action. For example, your bot should not kick users unless the user and the bot has the "
                 "Kick Members permission. **Commands may not be admin locked and NSFW commands must be "
