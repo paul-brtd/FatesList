@@ -1,13 +1,7 @@
-import uvloop
-uvloop.install()
-from modules.core.system import init_fates_worker
-from fastapi.responses import ORJSONResponse
-from config import API_VERSION
-
+import subprocess
 import typer
 import importlib
 import uuid
-from fastapi import FastAPI
 
 app = typer.Typer()
 site = typer.Typer()
@@ -21,10 +15,23 @@ def run_site(
     workers: int = typer.Argument(3, envvar="SITE_WORKERS")
 ):
     session_id = uuid.uuid4()
-    os.system(f"python3.10 -m gunicorn 'manage:_appgen()'")
+    subprocess.Popen([
+        "python3.10",
+        "-m", 
+        "gunicorn", 
+        f"'manage:_appgen()'"
+    ])
     
-def _appgen(workers, session_id):
+def _appgen():
     """Make the FastAPI app for gunicorn"""
+    
+    import uvloop
+    uvloop.install()
+    from modules.core.system import init_fates_worker
+    from fastapi.responses import ORJSONResponse
+    from config import API_VERSION
+    from fastapi import FastAPI 
+    
     _app = FastAPI(
         default_response_class = ORJSONResponse, 
         redoc_url = f"/api/v{API_VERSION}/docs/redoc", 
