@@ -29,7 +29,9 @@ def run_site(
         "0.0.0.0:9999",
         "-w",
         str(workers)
-    ], env = {})
+    ], env = {
+        "LOGURU_LEVEL": "DEBUG"
+    })
     
 def _fappgen():
     """Make the FastAPI app for gunicorn"""
