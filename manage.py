@@ -40,7 +40,7 @@ def run_site(
     workers: int = typer.Argument(3, envvar="SITE_WORKERS")
 ):
     session_id = uuid.uuid4()
-    os.execle(
+    os.execlpe(
         "python3.10", "-m", "gunicorn",
         "--log-level=debug", 
         "-p", "~/flmain.pid",
@@ -48,7 +48,7 @@ def run_site(
         "-b", "0.0.0.0:9999", 
         "-w", str(workers),
         "'manage:_fappgen()'",
-        env = os.environ | {
+        os.environ | {
             "LOGURU_LEVEL": "DEBUG",
             "SESSION_ID": str(session_id),
             "WORKERS": str(workers)
