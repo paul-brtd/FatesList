@@ -78,6 +78,7 @@ def run_site(
 def run_rabbit():
     """Runs the Rabbit Worker"""
     from lynxfall.rabbit.launcher import run  # pylint: disable=import-outside-toplevel
+    
     async def on_startup(state, logger):
         """Function that will be executed on startup"""
         state.__dict__.update(( await setup_db() ))  # noqa: E201,E202
