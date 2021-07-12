@@ -40,19 +40,20 @@ def run_site(
     workers: int = typer.Argument(3, envvar="SITE_WORKERS")
 ):
     session_id = uuid.uuid4()
-    os.execvpe("gunicorn", [
-        "--log-level=debug", 
-        "-p", "/home/meow/flmain.pid",
+    subproces.Popen(" ".join([
+        "gunicorn", "--log-level=debug", 
+        "-p", "~/flmain.pid",
         "-k", "config._uvicorn.FatesWorker",
         "-b", "0.0.0.0:9999", 
         "-w", str(workers),
-        "'manage:_fappgen()'"],
-        os.environ | {
+        "'manage:_fappgen()'"]),
+        shell = True,
+        env = os.environ | {
             "LOGURU_LEVEL": "DEBUG",
             "SESSION_ID": str(session_id),
             "WORKERS": str(workers)
         }
-    )
+    ).wait()
 
 @rabbit.command("run")
 def run_rabbit():
