@@ -55,6 +55,7 @@ async def get_user_profile(request, user_id: int, preview: bool, worker_session)
     context = {}
     if personal:
         context["user_token"] = await db.fetchval("SELECT api_token FROM users WHERE user_id = $1", user_id)
+        context["js_allowed"] = user["profile"]["js_allowed"]
 
     return await templates.TemplateResponse(
         "profile.html", 

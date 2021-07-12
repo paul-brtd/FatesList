@@ -63,13 +63,7 @@ class WebError():
         
         path = str(request.url.path)
         
-        try:
-            code_str = HTTPStatus(status_code).phrase
-
-        except Exception as e:
-            # Fallback
-            code_str = f"Unknown Error: {e}"
-            fixed_code = 400
+        code_str = HTTPStatus(status_code).phrase
 
         if status_code == 500:
             if log:

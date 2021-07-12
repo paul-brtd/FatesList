@@ -3,8 +3,10 @@ from urllib.parse import unquote
 from modules.core import *
 
 from ..base import API_VERSION
-from .models import (APIResponse, BaseUser, Callback, Login, LoginBan,
+from .models import (APIResponse, BaseUser, Login, LoginBan,
                      LoginInfo, LoginResponse, OAuthInfo)
+
+from config import auth_namespaces
 
 router = APIRouter(
     prefix = f"/api/v{API_VERSION}",
@@ -23,7 +25,7 @@ async def get_login_link(request: Request, data: LoginInfo, worker_session = Dep
     redirect = data.redirect if data.redirect else "/"
     url = await oauth.discord.get_auth_url(
         data.scopes,
-        {"callback": data.callback.dict(), "site_redirect": redirect}
+        {"namespace": data.namespace, "site_redirect": redirect}
     )
     return api_success(url = url.url)
 
@@ -44,10 +46,10 @@ async def auth_callback_handler(request: Request, code: str, state: str, worker_
             "Invalid state. Your state has expired. Please try logging in again using https://fateslist.xyz/auth/login"        
         )
      
-    callback = Callback(**oauth["callback"])
+    callback = auth_namespaces[oauth["namespace"]]
     site_redirect = oauth['site_redirect']
         
-    url = f"{callback.url}?code={code}&state={state}&site_redirect={site_redirect}"
+    url = f"{callback}?code={code}&state={state}&site_redirect={site_redirect}"
     
     return RedirectResponse(url)
     

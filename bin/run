@@ -1,4 +1,4 @@
-export WORKERS=2
+export WORKERS=3
 export SESSION_ID=$(uuidgen)
 export LOGURU_LEVEL="DEBUG" 
 

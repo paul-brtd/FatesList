@@ -6,7 +6,6 @@ router = APIRouter(
     include_in_schema = False
 )
 
-
 @router.get("/login")
 async def login_get(request: Request, redirect: Optional[str] = None, pretty: Optional[str] = "to access this page"):
     if redirect:
@@ -31,10 +30,7 @@ async def login_stage2(request: Request, redirect: str, join_servers: str = FFor
         async with sess.post(f"{site_url}/api/v2/oauth", json = {
             "redirect": redirect, 
             "scopes": scopes,
-            "callback": {
-                "url": "https://fateslist.xyz/auth/login/confirm",
-                "name": "Fates List",
-            }
+            "namespace": "site",
         }) as res:
             json = await res.json()
             url = json["url"]

@@ -63,6 +63,10 @@ md_extensions = [
     "md_in_html"
 ]
 
+auth_namespaces = {
+    "site": "https://fateslist.xyz/auth/login/confirm"
+}
+
 staff_roles = {
     "user": {
         "id": 00000000000000000,

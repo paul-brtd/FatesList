@@ -6,12 +6,8 @@ from pydantic import BaseModel, validator
 import modules.models.enums as enums
 
 from ..base_models import AccessToken, APIResponse, BaseUser
+from config import auth_namespaces
 
-
-class Callback(BaseModel):
-    name: str
-    url: str
-      
 class Login(BaseModel):
     code: str
     state: str
@@ -19,7 +15,14 @@ class Login(BaseModel):
 class LoginInfo(BaseModel):
     scopes: List[str]
     redirect: Optional[str] = "/"
-    callback: Callback
+    namespace: str
+
+    @validator('namespace')
+    def namespace_check(cls, v, values, **kwargs):
+        if v not in auth_namespaces.keys():
+            raise ValueError("Invalid namespace")
+        return v
+
  
 class OAuthInfo(APIResponse):
     url: Optional[str] = "/"
