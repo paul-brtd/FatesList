@@ -1,4 +1,5 @@
 import subprocess
+import os
 import typer
 import importlib
 import uuid
@@ -15,19 +16,12 @@ def run_site(
     workers: int = typer.Argument(3, envvar="SITE_WORKERS")
 ):
     session_id = uuid.uuid4()
-    subprocess.Popen([
-        "python3.10", "-m", "gunicorn",
-        "--log-level=debug",
-        "-p", "~/flmain.pid",
-        "-k", "config._uvicorn.FatesWorker",
-        "'manage:_fappgen()'",
-        "-b", "0.0.0.0:9999",
-        "-w", str(workers)
-    ], env = {
+    subprocess.Popen(f"python3.10 -m gunicorn --log-level=debug -p ~/flmain.pid -k config._uvicorn.FatesWorker 'manage:_fappgen()' -b 0.0.0.0:9999 -w {workers}", shell = True, 
+    env = os.environ | {
         "LOGURU_LEVEL": "DEBUG",
-        "SESSION_ID": session_id,
+        "SESSION_ID": str(session_id),
         "WORKERS": str(workers)
-    })
+    }).wait()
     
 def _fappgen():
     """Make the FastAPI app for gunicorn"""
