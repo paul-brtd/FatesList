@@ -1,49 +1,54 @@
+"""Fates List Management"""
 import subprocess
 import os
-import typer
-import importlib
 import uuid
-import asyncio
 import signal
-import time
-import sys
+import builtins
+
+import uvloop
+import typer
+from fastapi import FastAPI
+from fastapi.responses import ORJSONResponse
+from config import worker_key, API_VERSION
+from modules.core.system import init_fates_worker, setup_db, setup_discord
+
 
 app = typer.Typer()
-site = typer.Typer()
+site = typer.Typer(
+    help="Fates List site management"
+)
 app.add_typer(site, name="site")
-rabbit = typer.Typer()
+rabbit = typer.Typer(
+    help="Fates List Rabbit Worker management"
+)
 app.add_typer(rabbit, name="rabbit")
 
 
 def _fappgen():
     """Make the FastAPI app for gunicorn"""
-    import uvloop 
     uvloop.install()
-    from modules.core.system import init_fates_worker
-    from fastapi.responses import ORJSONResponse
-    from config import API_VERSION
-    from fastapi import FastAPI 
      
-    site = FastAPI(
-        default_response_class = ORJSONResponse, 
-        redoc_url = f"/api/v{API_VERSION}/docs/redoc",
-        docs_url = f"/api/v{API_VERSION}/docs/swagger",
-        openapi_url = f"/api/v{API_VERSION}/docs/openapi"
+    _app = FastAPI(
+        default_response_class=ORJSONResponse, 
+        redoc_url=f"/api/v{API_VERSION}/docs/redoc",
+        docs_url=f"/api/v{API_VERSION}/docs/swagger",
+        openapi_url=f"/api/v{API_VERSION}/docs/openapi"
     )
 
-    @site.on_event("startup")
+    @_app.on_event("startup")
     async def startup():
-        await init_fates_worker(site)
+        await init_fates_worker(_app)
     
-    return site
+    return _app
 
 
 @site.command("run")
 def run_site(
     workers: int = typer.Argument(3, envvar="SITE_WORKERS")
 ):
+    "Runs the Fates List site"
     session_id = uuid.uuid4()
-    proc = subprocess.Popen(
+    proc = subprocess.Popen(  # pylint: disable=consider-using-with
         " ".join([
             "gunicorn", "--log-level=debug", 
             "-p", "~/flmain.pid",
@@ -53,14 +58,14 @@ def run_site(
             "'manage:_fappgen()'"
         ]),
         shell=True,
-        env = os.environ | {
+        env=os.environ | {
             "LOGURU_LEVEL": "DEBUG",
             "SESSION_ID": str(session_id),
             "WORKERS": str(workers),
         }
     )
 
-    def _kill(*args, **kwargs):
+    def _kill(*args, **kwargs):  # pylint: disable=unused-argument
         pass
 
     signal.signal(signal.SIGINT, _kill)
@@ -68,41 +73,45 @@ def run_site(
     signal.signal(signal.SIGTERM, _kill)
     proc.wait()
 
+
 @rabbit.command("run")
 def run_rabbit():
-    from lynxfall.rabbit.launcher import run
-    from modules.core.system import setup_discord, setup_db
-    from config import TOKEN_MAIN
-    from config import worker_key
-    import builtins
-
+    """Runs the Rabbit Worker"""
+    from lynxfall.rabbit.launcher import run  # pylint: disable=import-outside-toplevel
     async def on_startup(state, logger):
         """Function that will be executed on startup"""
-        state.__dict__.update(( await setup_db() ))
-        state.client = ( await setup_discord() )["main"]
+        state.__dict__.update(( await setup_db() ))  # noqa: E201,E202
+        state.client = ( await setup_discord() )["main"]  # noqa: E201,E202
         
-        # For unfortunate backward compatibility with functions that havent ported yet
-        builtins.db, builtins.redis_db, builtins.rabbitmq_db = state.postgres, state.redis, state.rabbit
+        # For unfortunate backward compatibility 
+        # with functions that havent ported yet
+        builtins.db = state.postgres
+        builtins.redis_db = state.redis
+        builtins.rabbitmq_db = state.rabbit
         builtins.client = builtins.dclient = state.client
+        logger.debug("Finished startup")
 
     async def on_prepare(state, logger):
         """Function that will prepare our worker"""
+        logger.debug("Waiting for discord")
         return await state.client.wait_until_ready()
 
     async def on_stop(state, logger):
         """Function that will run on stop"""
-        pass
+        state.dying = True
+        logger.debug("Running on_stop")
 
-    async def on_error(state, logger, message, exc, exc_type, exc_context):
-        pass
+    async def on_error(*args, **kwargs):  # pylint: disable=unused-argument
+        """Runs on error"""
+        ...
 
     run(
-        worker_key = worker_key, 
-        backend_folder = "modules/rabbitmq", 
-        on_startup = on_startup, 
-        on_prepare = on_prepare,
-        on_stop = on_stop, 
-        on_error = on_error
+        worker_key=worker_key, 
+        backend_folder="modules/rabbitmq", 
+        on_startup=on_startup, 
+        on_prepare=on_prepare,
+        on_stop=on_stop, 
+        on_error=on_error
     )  
     
     
