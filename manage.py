@@ -30,7 +30,8 @@ def run_site(
         "-w",
         str(workers)
     ], env = {
-        "LOGURU_LEVEL": "DEBUG"
+        "LOGURU_LEVEL": "DEBUG",
+        "SESSION_ID": session_id
     })
     
 def _fappgen():
