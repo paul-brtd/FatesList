@@ -59,15 +59,11 @@ def run_rabbit():
   
     async def on_startup(state, logger):
         """Function that will be executed on startup"""
-        dbs = await setup_db()
-        state.__dict__.update(dbs)
-        discord = await setup_discord()
-        state.client = discord["main"]
+        state.__dict__.update(( await setup_db() ))
+        state.client = ( await setup_discord() )["main"]
         
         # For unfortunate backward compatibility with functions that havent ported yet
-        builtins.db = state.postgres
-        builtins.redis_db = state.redis
-        builtins.rabbitmq_db = state.rabbit
+        builtins.db, builtins.redis_db, builtins.rabbitmq_db = state.postgres, state.redis, state.rabbit
         builtins.client = builtins.dclient = state.client
 
     async def on_prepare(state, logger):
@@ -76,6 +72,7 @@ def run_rabbit():
 
     async def on_stop(state, logger):
         """Function that will run on stop"""
+        pass
 
     async def on_error(state, logger, message, exc, exc_type, exc_context):
         pass
