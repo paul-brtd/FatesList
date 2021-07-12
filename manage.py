@@ -40,15 +40,14 @@ def run_site(
     workers: int = typer.Argument(3, envvar="SITE_WORKERS")
 ):
     session_id = uuid.uuid4()
-    subprocess.Popen(
+    os.execvp(
         f"python3.10 -m gunicorn --log-level=debug -p ~/flmain.pid -k config._uvicorn.FatesWorker 'manage:_fappgen()' -b 0.0.0.0:9999 -w {workers}", 
-        shell = True, 
         env = os.environ | {
             "LOGURU_LEVEL": "DEBUG",
             "SESSION_ID": str(session_id),
             "WORKERS": str(workers)
         }
-    ).wait()
+    )
 
 @rabbit.command("run")
 def run_rabbit():
