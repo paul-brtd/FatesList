@@ -37,8 +37,7 @@ def _fappgen():
     from config import API_VERSION
     from fastapi import FastAPI 
     
-    
-    
+   
     _app = FastAPI(
         default_response_class = ORJSONResponse, 
         redoc_url = f"/api/v{API_VERSION}/docs/redoc", 
