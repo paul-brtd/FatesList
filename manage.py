@@ -22,6 +22,8 @@ def run_site(
         "--log-level=debug",
         "-p",
         "~/flmain.pid",
+        "-k",
+        "config._uvicorn.FatesWorker",
         "'manage:_fappgen()'"
     ])
     
