@@ -48,7 +48,7 @@ def run_site(
             "SESSION_ID": str(session_id),
             "WORKERS": str(workers)
         }
-    )
+    ).wait()
 
 @rabbit.command("run")
 def run_rabbit():
