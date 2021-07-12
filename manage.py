@@ -41,7 +41,7 @@ def run_site(
 ):
     session_id = uuid.uuid4()
     os.execlpe(
-        "python3.10", "-m", "gunicorn",
+        "/usr/bin/python3.10", "-m", "gunicorn",
         "--log-level=debug", 
         "-p", "~/flmain.pid",
         "-k", "config._uvicorn.FatesWorker",
