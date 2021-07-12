@@ -20,7 +20,7 @@ def run_site(
         "-m", 
         "gunicorn",
         "--log-level=debug",
-        f"'manage:_fappgen({workers})'"
+        "'manage:_fappgen()'"
     ])
     
 def _fappgen():
