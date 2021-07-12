@@ -20,6 +20,8 @@ def run_site(
         "-m", 
         "gunicorn",
         "--log-level=debug",
+        "-p",
+        "~/flmain.pid",
         "'manage:_fappgen()'"
     ])
     
