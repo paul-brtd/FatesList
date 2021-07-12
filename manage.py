@@ -62,15 +62,12 @@ def run_site(
         }
     )
 
-    def killproc(proc):
-        def _kill(*args, **kwargs):
-            pass
+    def _kill(*args, **kwargs):
+        pass
 
-        return _kill
-
-    signal.signal(signal.SIGINT, killproc(proc))
-    signal.signal(signal.SIGQUIT, killproc(proc))
-    signal.signal(signal.SIGTERM, killproc(proc))
+    signal.signal(signal.SIGINT, _kill)
+    signal.signal(signal.SIGQUIT, _kill)
+    signal.signal(signal.SIGTERM, _kill)
     proc.wait()
 
 @rabbit.command("run")
