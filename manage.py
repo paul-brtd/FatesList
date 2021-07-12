@@ -20,7 +20,7 @@ def run_site(
         "-m", 
         "gunicorn",
         "--log-level=debug",
-        f"'manage:_fappgen()'"
+        f"'manage:_fappgen({workers})'"
     ])
     
 def _fappgen():
@@ -33,6 +33,8 @@ def _fappgen():
     from config import API_VERSION
     from fastapi import FastAPI 
     
+    
+    
     _app = FastAPI(
         default_response_class = ORJSONResponse, 
         redoc_url = f"/api/v{API_VERSION}/docs/redoc", 
@@ -42,7 +44,7 @@ def _fappgen():
 
     @_app.on_event("startup")
     async def startup():
-        await init_fates_worker(_app, workers, session_id)
+        await init_fates_worker(_app)
     
     return _app
 
