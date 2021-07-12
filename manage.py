@@ -19,10 +19,10 @@ def run_site(
         "python3.10",
         "-m", 
         "gunicorn", 
-        f"'manage:_appgen()'"
+        f"'manage:_fappgen()'"
     ])
     
-def _appgen():
+def _fappgen():
     """Make the FastAPI app for gunicorn"""
     
     import uvloop
