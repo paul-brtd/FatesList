@@ -40,9 +40,9 @@ def run_site(
     workers: int = typer.Argument(3, envvar="SITE_WORKERS")
 ):
     session_id = uuid.uuid4()
-    os.execvpe("gunicorn", [
+    os.execvp("gunicorn", [
         "--log-level=debug", 
-        "-p", "~/flmain.pid",
+        "-p", "/home/meow/flmain.pid",
         "-k", "config._uvicorn.FatesWorker",
         "-b", "0.0.0.0:9999", 
         "-w", str(workers),
