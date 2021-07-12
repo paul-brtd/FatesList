@@ -18,7 +18,8 @@ def run_site(
     subprocess.Popen([
         "python3.10",
         "-m", 
-        "gunicorn", 
+        "gunicorn",
+        "--log-level=debug",
         f"'manage:_fappgen()'"
     ])
     
