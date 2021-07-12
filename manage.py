@@ -16,22 +16,17 @@ def run_site(
 ):
     session_id = uuid.uuid4()
     subprocess.Popen([
-        "python3.10",
-        "-m", 
-        "gunicorn",
+        "python3.10", "-m", "gunicorn",
         "--log-level=debug",
-        "-p",
-        "~/flmain.pid",
-        "-k",
-        "config._uvicorn.FatesWorker",
+        "-p", "~/flmain.pid",
+        "-k", "config._uvicorn.FatesWorker",
         "'manage:_fappgen()'",
-        "-b",
-        "0.0.0.0:9999",
-        "-w",
-        str(workers)
+        "-b", "0.0.0.0:9999",
+        "-w", str(workers)
     ], env = {
         "LOGURU_LEVEL": "DEBUG",
-        "SESSION_ID": session_id
+        "SESSION_ID": session_id,
+        "WORKERS": str(workers)
     })
     
 def _fappgen():
