@@ -40,7 +40,7 @@ def run_site(
     workers: int = typer.Argument(3, envvar="SITE_WORKERS")
 ):
     session_id = uuid.uuid4()
-    os.execvpe("/usr/bin/python3.10", [
+    os.execve("/usr/bin/python3.10", [
         "/usr/bin/python3.10", "-m", "gunicorn",
         "--log-level=debug", 
         "-p", "~/flmain.pid",
