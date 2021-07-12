@@ -40,8 +40,7 @@ def run_site(
     workers: int = typer.Argument(3, envvar="SITE_WORKERS")
 ):
     session_id = uuid.uuid4()
-    os.execve("/usr/bin/python3.10", [
-        "-m", "gunicorn",
+    os.execve("gunicorn", [
         "--log-level=debug", 
         "-p", "~/flmain.pid",
         "-k", "config._uvicorn.FatesWorker",
