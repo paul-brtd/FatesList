@@ -4,8 +4,9 @@ import typer
 import importlib
 import uuid
 import asyncio
-import uvloop
-uvloop.install()
+import signal
+import time
+import sys
 
 app = typer.Typer()
 site = typer.Typer()
@@ -15,7 +16,9 @@ app.add_typer(rabbit, name="rabbit")
 
 
 def _fappgen():
-    """Make the FastAPI app for gunicorn"""   
+    """Make the FastAPI app for gunicorn"""
+    import uvloop 
+    uvloop.install()
     from modules.core.system import init_fates_worker
     from fastapi.responses import ORJSONResponse
     from config import API_VERSION
@@ -40,7 +43,7 @@ def run_site(
     workers: int = typer.Argument(3, envvar="SITE_WORKERS")
 ):
     session_id = uuid.uuid4()
-    subprocess.Popen(
+    proc = subprocess.Popen(
         " ".join(
             [
                 "gunicorn", "--log-level=debug", 
@@ -57,7 +60,18 @@ def run_site(
             "SESSION_ID": str(session_id),
             "WORKERS": str(workers)
         }
-    ).wait()
+    )
+
+    def killproc(proc):
+        def _kill(*args, **kwargs):
+            pass
+
+        return _kill
+
+    signal.signal(signal.SIGINT, killproc(proc))
+    signal.signal(signal.SIGQUIT, killproc(proc))
+    signal.signal(signal.SIGTERM, killproc(proc))
+    proc.wait()
 
 @rabbit.command("run")
 def run_rabbit():
@@ -65,7 +79,8 @@ def run_rabbit():
     from modules.core.system import setup_discord, setup_db
     from config import TOKEN_MAIN
     from config import worker_key
-  
+    import builtins
+
     async def on_startup(state, logger):
         """Function that will be executed on startup"""
         state.__dict__.update(( await setup_db() ))
