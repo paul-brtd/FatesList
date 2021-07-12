@@ -44,21 +44,19 @@ def run_site(
 ):
     session_id = uuid.uuid4()
     proc = subprocess.Popen(
-        " ".join(
-            [
-                "gunicorn", "--log-level=debug", 
-                "-p", "~/flmain.pid",
-                "-k", "config._uvicorn.FatesWorker",
-                "-b", "0.0.0.0:9999", 
-                "-w", str(workers),
-                "'manage:_fappgen()'"
-            ]
-        ),
-        shell = True,
+        " ".join([
+            "gunicorn", "--log-level=debug", 
+            "-p", "~/flmain.pid",
+            "-k", "config._uvicorn.FatesWorker",
+            "-b", "0.0.0.0:9999", 
+            "-w", str(workers),
+            "'manage:_fappgen()'"
+        ]),
+        shell=True,
         env = os.environ | {
             "LOGURU_LEVEL": "DEBUG",
             "SESSION_ID": str(session_id),
-            "WORKERS": str(workers)
+            "WORKERS": str(workers),
         }
     )
 
