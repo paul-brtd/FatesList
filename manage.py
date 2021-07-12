@@ -24,8 +24,12 @@ def run_site(
         "~/flmain.pid",
         "-k",
         "config._uvicorn.FatesWorker",
-        "'manage:_fappgen()'"
-    ])
+        "'manage:_fappgen()'",
+        "-b",
+        "0.0.0.0:9999",
+        "-w",
+        str(workers)
+    ], env = {})
     
 def _fappgen():
     """Make the FastAPI app for gunicorn"""
