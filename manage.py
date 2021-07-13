@@ -1,9 +1,10 @@
 """Fates List Management"""
-import subprocess
+from subprocess import Popen
 import os
 import uuid
 import signal
 import builtins
+from pathlib import Path
 
 import uvloop
 import typer
@@ -48,34 +49,60 @@ def run_site(
 ):
     "Runs the Fates List site"
     session_id = uuid.uuid4()
-    proc = subprocess.Popen(  # pylint: disable=consider-using-with
-        " ".join([
-            "gunicorn", "--log-level=debug", 
-            "-p", "~/flmain.pid",
-            "-k", "config._uvicorn.FatesWorker",
-            "-b", "0.0.0.0:9999", 
-            "-w", str(workers),
-            "'manage:_fappgen()'"
-        ]),
-        shell=True,
-        env=os.environ | {
-            "LOGURU_LEVEL": "DEBUG",
-            "SESSION_ID": str(session_id),
-            "WORKERS": str(workers),
-        }
-    )
+    
+    # Create the pids folder if it hasnt been created
+    Path("pids").mkdir(exist_ok = True)
+   
+    for sig in (signal.SIGINT, signal.SIGQUIT, signal.SIGTERM):
+        signal.signal(sig, lambda *args, **kwargs: ...)
 
-    def _kill(*args, **kwargs):  # pylint: disable=unused-argument
-        pass
+    cmd = [
+        "gunicorn", "--log-level=debug", 
+        "-p", "pids/gunicorn.pid",
+        "-k", "config._uvicorn.FatesWorker",
+        "-b", "0.0.0.0:9999", 
+        "-w", str(workers),
+        "manage:_fappgen()"
+    ]
+    
+    env=os.environ | {
+        "LOGURU_LEVEL": "DEBUG",
+        "SESSION_ID": str(session_id),
+        "WORKERS": str(workers),
+    }
 
-    signal.signal(signal.SIGINT, _kill)
-    signal.signal(signal.SIGQUIT, _kill)
-    signal.signal(signal.SIGTERM, _kill)
-    proc.wait()
+    with Popen(cmd, env=env) as proc:
+        proc.wait()
 
+
+@site.command("reload")
+def site_reload():
+    """Get the PID of the running site and reloads the site"""
+    try:
+        with open("pids/gunicorn.pid") as f:
+            pid = f.read().replace(" ", "").replace("\n", "")
+           
+            if not pid.isdigit():
+                typer.secho(
+                    "Invalid/corrupt PID file found (site/gunicorn.pid)",
+                    fg=typer.colors.RED,
+                    err=True
+                )
+                typer.Exit(code=1)
+           
+            pid = int(pid)
+            os.kill(pid, signal.SIGHUP) 
+    
+    except FileNotFoundError:
+        typer.secho(
+            "No PID file found. Is the site running?",
+            fg=typer.colors.RED,
+            err=True
+        )
+        typer.Exit(code=1)
 
 @rabbit.command("run")
-def run_rabbit():
+def rabbit_run():
     """Runs the Rabbit Worker"""
     from lynxfall.rabbit.launcher import run  # pylint: disable=import-outside-toplevel
     
