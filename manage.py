@@ -231,9 +231,11 @@ def staticfiles_relabel():
 
             # Rename and make new hash file
             p_new = p.rename(new_fname)
-            sha.unlink()
             
-            with p_new.open() as f:
+            if sha.exists():
+                sha.unlink()
+            
+            with p_new.open("rb") as f:
                 hfc = f.read()
                 hf = hashlib.sha512()
                 hf.update(hfc)
@@ -246,9 +248,10 @@ def staticfiles_relabel():
                 f"Relabelled {old_fname} to {new_fname}!")
     
     if relabels:
+        print("Pushing to github")
         repo = git.Repo('.')
-        repo.git.add("static/assets", update=True)
-        repo.git.commit("Static file relabel")
+        repo.git.add(*relabels.values())
+        repo.git.commit("-m", "Static file relabel")
         origin = repo.remote(name='origin')
         origin.push()
 
