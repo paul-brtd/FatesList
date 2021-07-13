@@ -6,9 +6,11 @@ import signal
 import builtins
 from pathlib import Path
 import secrets as secrets_lib
+import hashlib
 
 import uvloop
 import typer
+import git 
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
 from config import worker_key, API_VERSION
@@ -191,8 +193,64 @@ def secrets_mktemplate(
 
 @staticfiles.command("relabel")
 def staticfiles_relabel():
-    for p in Path("static/assets").glob
+    relabels = {}
+    for p in Path("static/assets").rglob("*.rev*.*"):
+        if str(p).endswith(".hash"):
+            continue
 
+        sha = Path(f"{p}.hash")
+        needs_relabel = False
+        
+        if not sha.exists():
+            needs_relabel = True
+
+        else:
+            with sha.open() as f:
+                h = f.read().replace(" ", "").replace("\n", "")
+            
+            with p.open("rb") as f:
+                hfc = f.read()
+                hf = hashlib.sha512()
+                hf.update(hfc)
+                hf = hf.hexdigest()
+
+            if h != hf:
+                needs_relabel = True
+        
+        typer.echo(f"{p} needs relabel? {needs_relabel}")
+        p.touch(exist_ok=True)
+
+        if needs_relabel:
+            # Get new file name
+            new_fname = str(p).split(".")
+            rev_id = int(new_fname[-2][3:]) + 1
+            new_fname[-2] = f"rev{rev_id}"
+            new_fname = ".".join(new_fname)
+            old_fname = str(p)
+            relabels[old_fname] = new_fname
+
+            # Rename and make new hash file
+            p_new = p.rename(new_fname)
+            sha.unlink()
+            
+            with p_new.open() as f:
+                hfc = f.read()
+                hf = hashlib.sha512()
+                hf.update(hfc)
+                hf = hf.hexdigest()
+
+            with open(f"{new_fname}.hash", "w") as sha_f:
+                sha_f.write(hf)
+
+            typer.echo(
+                f"Relabelled {old_fname} to {new_fname}!")
+    
+    if relabels:
+        repo = git.Repo('.')
+        repo.git.add("static/assets", update=True)
+        repo.git.commit("Static file relabel")
+        origin = repo.remote(name='origin')
+        origin.push()
 
 if __name__ == "__main__":
     app()
