@@ -5,7 +5,7 @@ import uuid
 import signal
 import builtins
 from pathlib import Path
-import secrets
+import secrets as secrets_lib
 
 import uvloop
 import typer
@@ -24,10 +24,15 @@ rabbit = typer.Typer(
     help="Fates List Rabbit Worker management"
 )
 app.add_typer(rabbit, name="rabbit")
-utils = typer.Typer(
-    help="Utilities for managing Fates List"
+secrets = typer.Typer(
+    help="Utilities to manage secrets"
 )
-app.add_typer(utils, name="utils")
+staticfiles = typer.Typer(
+    help="Utilities to manage static files"
+)
+app.add_typer(secrets, name="secrets")
+app.add_typer(staticfiles, name="staticfiles")
+
 
 def _fappgen():
     """Make the FastAPI app for gunicorn"""
@@ -147,17 +152,17 @@ def rabbit_run():
     )  
  
 
-@utils.command("gensecret")
-def utils_gensecret():
+@secrets.command("random")
+def secrets_random():
     """Generates a random secret"""
-    typer.echo(secrets.token_urlsafe())
+    typer.echo(secrets_lib.token_urlsafe())
 
 
-@utils.command("stripsecrets")
-def utils_stripsecrets(
+@secrets.command("mktemplate")
+def secrets_mktemplate(
     inp: str = typer.Argument(
         "config/config_secrets.py", 
-        envvar="CFG_INPUT"
+        envvar="CFG_IN"
     ),
     out: str = typer.Argument(
         "config/config_secrets_template.py", 
@@ -180,8 +185,13 @@ def utils_stripsecrets(
             begin, secret, end = line.split('"')
             out_lst.append("".join((begin, '""', end)))
         
-        with open(out, "w") as out_f:
-            out_f.write("\n".join(out_lst)) 
+    with open(out, "w") as out_f:
+        out_f.write("\n".join(out_lst)) 
+
+
+@staticfiles.command("relabel")
+def staticfiles_relabel():
+    for p in Path("static/assets").glob
 
 
 if __name__ == "__main__":
