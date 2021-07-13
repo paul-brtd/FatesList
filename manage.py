@@ -7,6 +7,7 @@ import builtins
 from pathlib import Path
 import secrets as secrets_lib
 import hashlib
+import datetime
 
 import uvloop
 import typer
@@ -32,8 +33,12 @@ secrets = typer.Typer(
 staticfiles = typer.Typer(
     help="Utilities to manage static files"
 )
+db = typer.Typer(
+    help="Utilities to manage databases such as backup etc."
+)
 app.add_typer(secrets, name="secrets")
 app.add_typer(staticfiles, name="staticfiles")
+app.add_typer(db, name="db")
 
 
 def _fappgen():
@@ -256,6 +261,26 @@ def staticfiles_relabel():
         repo.git.commit("-m", "Static file relabel")
         origin = repo.remote(name='origin')
         origin.push()
+
+
+@db.command("backup")
+def db_backup():
+    """Backs up the Fates List database"""
+    dt = datetime.datetime.now().strftime('%Y-%m-%d~%H:%M:%S')
+    cmd = f'pg_dump -Fc > /backups/full-{dt}.bak'
+    proc = Popen(cmd, shell=True, env=os.environ)
+    proc.wait()
+    try:
+        Path("/backups/latest.bak").unlink()
+    except FileNotFoundError:
+        pass
+
+    Path("/backups/latest.bak").symlink_to(f'/backups/full-{dt}.bak')
+    cmd = f'pg_dump -Fc --schema-only --no-owner > /backups/schema-{dt}.bak'
+    proc = Popen(cmd, shell=True, env=os.environ)
+    proc.wait()
+    # TODO: Save the file to gofile.io
+
 
 if __name__ == "__main__":
     app()
