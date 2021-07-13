@@ -1,7 +1,8 @@
 TOKEN_MAIN = "" # Main bot token
 TOKEN_SERVER = "" # Servers bot token
+TOKEN_DBG = "" # Debug bots token
 session_key = "" # Session key
-test_server_manager_key = "" # Test server manager bot (+approve, +claim etc) key
+manager_key = "" # Test server manager bot (+approve, +claim etc) key
 sentry_dsn = "" # Sentry DSN
 ratelimit_bypass_key = "" # Key for bypassing ratelimit
 worker_key = "" # RabbitMQ worker key

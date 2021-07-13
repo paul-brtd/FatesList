@@ -110,7 +110,7 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
         
             case enums.APIEventTypes.auth_manager_key:
                 try:
-                    if secure_strcmp(data["ctx"]["key"], test_server_manager_key):
+                    if secure_strcmp(data["ctx"]["key"], manager_key):
                         websocket.manager_bot = True
                         event_filter = data["ctx"].get("filter")
                     else:

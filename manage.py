@@ -5,6 +5,7 @@ import uuid
 import signal
 import builtins
 from pathlib import Path
+import secrets
 
 import uvloop
 import typer
@@ -23,7 +24,10 @@ rabbit = typer.Typer(
     help="Fates List Rabbit Worker management"
 )
 app.add_typer(rabbit, name="rabbit")
-
+utils = typer.Typer(
+    help="Utilities for managing Fates List"
+)
+app.add_typer(utils, name="utils")
 
 def _fappgen():
     """Make the FastAPI app for gunicorn"""
@@ -141,7 +145,44 @@ def rabbit_run():
         on_stop=on_stop, 
         on_error=on_error
     )  
+ 
+
+@utils.command("gensecret")
+def utils_gensecret():
+    """Generates a random secret"""
+    typer.echo(secrets.token_urlsafe())
+
+
+@utils.command("stripsecrets")
+def utils_stripsecrets(
+    inp: str = typer.Argument(
+        "config/config_secrets.py", 
+        envvar="CFG_INPUT"
+    ),
+    out: str = typer.Argument(
+        "config/config_secrets_template.py", 
+        envvar="CFG_OUT"
+    )
+):
+    """Converts config_secrets.py to config_secrets_template.py"""
+    with open(inp) as inp_f:
+        lines = inp_f.read()
+
+    out_lst = []
     
-    
+    for line in lines.split("\n"):
+        if line.replace(" ", ""):
+            if line.startswith(("if:", "else:")):
+                out_lst.append(line)
+                continue
+        
+            # Remove middle part/secret
+            begin, secret, end = line.split('"')
+            out_lst.append("".join((begin, '""', end)))
+        
+        with open(out, "w") as out_f:
+            out_f.write("\n".join(out_lst)) 
+
+
 if __name__ == "__main__":
     app()

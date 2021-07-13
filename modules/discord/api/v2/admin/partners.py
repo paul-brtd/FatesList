@@ -95,7 +95,7 @@ async def _invite_resolver(code):
 
 @router.post("/partners", response_model = IDResponse)
 async def new_partner(request: Request, partner: BotListPartner, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
-    if not secure_strcmp(Authorization, test_server_manager_key):
+    if not secure_strcmp(Authorization, manager_key):
         return abort(401)
     guild = client.get_guild(main_server)
     user = guild.get_member(int(partner.mod))
@@ -147,7 +147,7 @@ async def new_partner(request: Request, partner: BotListPartner, Authorization: 
 
 @router.patch("/partners/{pid}/ad/{ad_type}", response_model = APIResponse)
 async def set_partner_ad(request: Request, pid: uuid.UUID, ad_type: enums.PartnerAdType, partner: BotListPartnerAd, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
-    if not secure_strcmp(Authorization, test_server_manager_key) and not secure_strcmp(Authorization, root_key):
+    if not secure_strcmp(Authorization, manager_key):
         return abort(401)
     guild = client.get_guild(main_server)
     user = guild.get_member(partner.mod)
@@ -169,7 +169,7 @@ async def set_partner_ad(request: Request, pid: uuid.UUID, ad_type: enums.Partne
 
 @router.delete("/partners/{pid}", response_model = APIResponse)
 async def delete_partnership(request: Request, pid: uuid.UUID, partner: BotListAdminRoute, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
-    if not secure_strcmp(Authorization, test_server_manager_key) and not secure_strcmp(Authorization, root_key):
+    if not secure_strcmp(Authorization, manager_key):
         return abort(401)
     guild = client.get_guild(main_server)
     user = guild.get_member(partner.mod)
@@ -185,7 +185,7 @@ async def delete_partnership(request: Request, pid: uuid.UUID, partner: BotListA
 
 @router.patch("/partners/{pid}/publish_channel", response_model = APIResponse)
 async def set_partner_publish_channel(request: Request, pid: uuid.UUID, partner: BotListPartnerChannel, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
-    if not secure_strcmp(Authorization, test_server_manager_key) and not secure_strcmp(Authorization, root_key):
+    if not secure_strcmp(Authorization, manager_key):
         return abort(401)
     guild = client.get_guild(main_server)
     user = guild.get_member(partner.mod)
@@ -202,7 +202,7 @@ async def set_partner_publish_channel(request: Request, pid: uuid.UUID, partner:
 
 @router.post("/partners/{pid}/publish", response_model = APIResponse)
 async def publish_partnership(request: Request, pid: uuid.UUID, partner: BotListPartnerPublish, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
-    if not secure_strcmp(Authorization, test_server_manager_key) and not secure_strcmp(Authorization, root_key):
+    if not secure_strcmp(Authorization, manager_key):
         return abort(401)
     guild = client.get_guild(main_server)
     user = guild.get_member(partner.mod)
