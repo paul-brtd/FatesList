@@ -8,6 +8,7 @@ from pathlib import Path
 import secrets as secrets_lib
 import hashlib
 import datetime
+from getpass import getpass
 
 import uvloop
 import typer
@@ -95,8 +96,8 @@ def run_site(
 def site_reload():
     """Get the PID of the running site and reloads the site"""
     try:
-        with open("pids/gunicorn.pid") as f:
-            pid = f.read().replace(" ", "").replace("\n", "")
+        with open("pids/gunicorn.pid") as guni_pid:
+            pid = guni_pid.read().replace(" ", "").replace("\n", "")
            
             if not pid.isdigit():
                 typer.secho(
@@ -189,7 +190,7 @@ def secrets_mktemplate(
                 continue
         
             # Remove middle part/secret
-            begin, secret, end = line.split('"')
+            begin, _, end = line.split('"')
             out_lst.append("".join((begin, '""', end)))
         
     with open(out, "w") as out_f:
@@ -198,88 +199,99 @@ def secrets_mktemplate(
 
 @staticfiles.command("relabel")
 def staticfiles_relabel():
+    """Relabels all labelled (rev*) static files)"""
     relabels = []
-    for p in Path("static/assets").rglob("*.rev*.*"):
-        if str(p).endswith(".hash"):
+    for s_file in Path("static/assets").rglob("*.rev*.*"):
+        if str(s_file).endswith(".hash"):
             continue
 
-        sha = Path(f"{p}.hash")
+        sha = Path(f"{s_file}.hash")
         needs_relabel = False
         
         if not sha.exists():
             needs_relabel = True
 
         else:
-            with sha.open() as f:
-                h = f.read().replace(" ", "").replace("\n", "")
+            with sha.open() as sha_f:
+                hash_req = sha_f.read()
+                hash_req = hash_req.replace(" ", "").replace("\n", "")
             
-            with p.open("rb") as f:
-                hfc = f.read()
-                hf = hashlib.sha512()
-                hf.update(hfc)
-                hf = hf.hexdigest()
+            with s_file.open("rb") as static_f:
+                file_contents = static_f.read()
+                hasher_file = hashlib.sha512()
+                hasher_file.update(file_contents)
+                hash_got = hasher_file.hexdigest()
 
-            if h != hf:
+            if hash_req != hash_got:
                 needs_relabel = True
         
-        typer.echo(f"{p} needs relabel? {needs_relabel}")
-        p.touch(exist_ok=True)
+        typer.echo(f"{s_file} needs relabel? {needs_relabel}")
+        s_file.touch(exist_ok=True)
 
         if needs_relabel:
             # Get new file name
-            new_fname = str(p).split(".")
+            new_fname = str(s_file).split(".")
             rev_id = int(new_fname[-2][3:]) + 1
             new_fname[-2] = f"rev{rev_id}"
             new_fname = ".".join(new_fname)
-            old_fname = str(p)
             relabels.append(new_fname)
 
             # Rename and make new hash file
-            p_new = p.rename(new_fname)
+            s_file_new = s_file.rename(new_fname)
             
             if sha.exists():
                 sha.unlink()
             
-            with p_new.open("rb") as f:
-                hfc = f.read()
-                hf = hashlib.sha512()
-                hf.update(hfc)
-                hf = hf.hexdigest()
+            with s_file_new.open("rb") as static_f:
+                file_contents = static_f.read()
+                hasher_file = hashlib.sha512()
+                hasher_file.update(file_contents)
+                hash_got = hasher_file.hexdigest()
 
-            with open(f"{new_fname}.hash", "w") as sha_f:
-                sha_f.write(hf)
+            with open(f"{s_file_new}.hash", "w") as sha_f:
+                sha_f.write(hash_got)
             
-            relabels.append(f"{new_fname}.hash")
+            relabels.append(f"{s_file_new}.hash")
 
             typer.echo(
-                f"Relabelled {old_fname} to {new_fname}!")
+                f"Relabelled {s_file} to {s_file_new}!"
+            )
     
     if relabels:
         print("Pushing to github")
         repo = git.Repo('.')
         repo.git.add(*relabels)
         repo.git.commit("-m", "Static file relabel")
-        origin = repo.remote(name='origin')
-        origin.push()
+        repo.remote(name='origin').push()
 
 
 @db.command("backup")
 def db_backup():
     """Backs up the Fates List database"""
-    dt = datetime.datetime.now().strftime('%Y-%m-%d~%H:%M:%S')
-    cmd = f'pg_dump -Fc > /backups/full-{dt}.bak'
-    proc = Popen(cmd, shell=True, env=os.environ)
-    proc.wait()
+    bak_id = datetime.datetime.now().strftime('%Y-%m-%d~%H:%M:%S')
+    cmd = f'pg_dump -Fc > /backups/full-{bak_id}.bak'
+    
+    with Popen(cmd, shell=True, env=os.environ) as proc:
+        proc.wait()
+    
     try:
         Path("/backups/latest.bak").unlink()
     except FileNotFoundError:
         pass
 
-    Path("/backups/latest.bak").symlink_to(f'/backups/full-{dt}.bak')
-    cmd = f'pg_dump -Fc --schema-only --no-owner > /backups/schema-{dt}.bak'
-    proc = Popen(cmd, shell=True, env=os.environ)
-    proc.wait()
-    # TODO: Save the file to gofile.io
+    Path("/backups/latest.bak").symlink_to(f'/backups/full-{bak_id}.bak')
+    cmd = f'pg_dump -Fc --schema-only --no-owner > /backups/schema-{bak_id}.bak'
+    
+    with Popen(cmd, shell=True, env=os.environ) as proc:
+        proc.wait()
+   
+    conf_pwd = getpass(prompt="Enter rclone conf password: ")
+    for bak_type in ("full", "schema"):
+        cmd = f"rclone copy /backups/{bak_type}-{bak_id}.bak 'Fates List:fates_backups' "
+        cmd += f"--password-command 'printf {conf_pwd}'"
+
+        with Popen(cmd, env=os.environ, shell=True) as proc:
+            proc.wait()
 
 
 if __name__ == "__main__":

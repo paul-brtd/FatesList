@@ -21,7 +21,7 @@ class WebSocketCommand(IntEnum):
     
 class CooldownBucket(Enum):
     requeue = 60*0.2
-    ban = 60*0.3,
+    ban = 60*0.3
     transfer = 60*0.5
     reset = 60*1
     lock = 60*2

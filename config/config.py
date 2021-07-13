@@ -248,7 +248,8 @@ privacy_policy = {
     "extras": {
         "security": (
             "Our site is secure and we try to ensure that only you and Fates List Staff can edit your bot and that all "
-            "actions require proper permission and clearance to be used."
+            "actions require proper permission and clearance to be used. We may regenerate API tokens if needed. We backup "
+            "our database on Google Drive."
         ),
         "contact": (
             "You can contact our staff by joining the Fates List support server. Note that our support server is the only "

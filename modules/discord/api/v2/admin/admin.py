@@ -77,7 +77,7 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
                 status_code = 429, 
                 headers = {"X-OP-RL": "1", "Retry-After": str(coolkey)}
             )
-        await redis_db.set(f"cooldown-{data.op.__cooldown__}-{data.mod}", 0, ex = data.op.__cooldown__)
+        await redis_db.set(f"cooldown-{data.op.__cooldown__.name}-{data.mod}", 0, px = int(data.op.__cooldown__.value*1000))
 
     # Check that reason is given where needed
     if data.op.__reason_needed__ and not data.reason:
