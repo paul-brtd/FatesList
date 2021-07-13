@@ -193,7 +193,7 @@ def secrets_mktemplate(
 
 @staticfiles.command("relabel")
 def staticfiles_relabel():
-    relabels = {}
+    relabels = []
     for p in Path("static/assets").rglob("*.rev*.*"):
         if str(p).endswith(".hash"):
             continue
@@ -227,7 +227,7 @@ def staticfiles_relabel():
             new_fname[-2] = f"rev{rev_id}"
             new_fname = ".".join(new_fname)
             old_fname = str(p)
-            relabels[old_fname] = new_fname
+            relabels.append(new_fname)
 
             # Rename and make new hash file
             p_new = p.rename(new_fname)
@@ -243,6 +243,8 @@ def staticfiles_relabel():
 
             with open(f"{new_fname}.hash", "w") as sha_f:
                 sha_f.write(hf)
+            
+            relabels.append(f"{new_fname}.hash")
 
             typer.echo(
                 f"Relabelled {old_fname} to {new_fname}!")
@@ -250,7 +252,7 @@ def staticfiles_relabel():
     if relabels:
         print("Pushing to github")
         repo = git.Repo('.')
-        repo.git.add(*relabels.values())
+        repo.git.add(*relabels)
         repo.git.commit("-m", "Static file relabel")
         origin = repo.remote(name='origin')
         origin.push()
