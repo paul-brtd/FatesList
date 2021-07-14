@@ -3,13 +3,25 @@ from modules.discord.bots import vote_bot_get
 from ..core import *
 from config import privacy_policy
 router = APIRouter(
-        tags = ["Index"],
-        include_in_schema = False
+    tags = ["Index"],
+    include_in_schema = False
 )
 
 @router.get("/dm/help")
 async def exp1(request: Request):
-    return request.session.get("user_id")
+    data = {
+        "user_id": request.session.get("user_id"), 
+        "logged_in": "user_id" in request.session.keys(),
+        "vote_epoch": None,
+        "user_agent": request.headers.get("User-Agent"),
+        "user": None
+    }
+
+    if data["logged_in"]:
+        data["vote_epoch"] = await db.fetchval("SELECT vote_epoch FROM users WHERE user_id = $1", data["user_id"])
+        data["user"] = await get_user(data["user_id"], worker_session=request.app.state.worker_session)
+
+    return data
 
 
 @router.get("/discord")
@@ -29,6 +41,7 @@ async def index_fend(request: Request, response: Response):
 @router.get("/etest/{code}")
 async def test_error(code: int):
     if code == 500:
+        b = 1 + thisshoulderror
         raise TypeError("Test 500")
     return abort(code)
 
