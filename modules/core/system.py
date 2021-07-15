@@ -81,7 +81,7 @@ class FatesListRequestHandler(BaseHTTPMiddleware):
             query_str = ""
             
         logger.info(
-            f"{request.method} {path}{query_str} | {code} {phrase} ({host})"
+            f"{request.method} {path}{query_str} | {code} {phrase}"
         )
         
     async def dispatch(self, request, call_next):

@@ -201,7 +201,7 @@ def secrets_mktemplate(
 def staticfiles_relabel():
     """Relabels all labelled (rev*) static files)"""
     relabels = []
-    for s_file in Path("static/assets").rglob("*.rev*.*"):
+    for s_file in Path("data/static/assets").rglob("*.rev*.*"):
         if str(s_file).endswith(".hash"):
             continue
 
