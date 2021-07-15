@@ -72,7 +72,6 @@ class FatesListRequestHandler(BaseHTTPMiddleware):
     def logger(self, path, request, response):
         code = response.status_code
         phrase = HTTPStatus(response.status_code).phrase
-        host = request.client.host
         query_str_raw = request.scope["query_string"]
         
         if query_str_raw:
@@ -170,8 +169,9 @@ class FatesDebugBot(commands.Bot):
 
     async def on_ready(self):
         self.ready = True
-        logger.info(
-            f"{self.user} (DEBUG BOT) should now be up on first worker")
+        logger.success(
+            f"{self.user} (DEBUG BOT) should now be up on first worker"
+        )
 
         
 class FatesBot(discord.Client):
@@ -182,7 +182,7 @@ class FatesBot(discord.Client):
 
     async def on_ready(self):
         self.ready = True
-        logger.info(f"{self.user} now up!")        
+        logger.success(f"{self.user} now up!")        
 
         
 class FatesWorkerOauth(Singleton):
