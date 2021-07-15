@@ -48,7 +48,8 @@ class templates():
         arg_dict["len"] = len
         arg_dict["ireplace"] = ireplace
         arg_dict["ireplacem"] = ireplacem
-        
+        arg_dict["human_format"] = human_format
+
         base_context = {
             "user_id": str(arg_dict["user_id"]) if "user_id" in arg_dict.keys() else None,
             "user_token": arg_dict.get("user_token"),

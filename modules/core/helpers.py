@@ -76,7 +76,7 @@ async def add_maint(bot_id: int, type: int, reason: str):
 async def set_stats(*, bot_id: int, guild_count: int, shard_count: int, user_count: int, shards: int):
     if int(guild_count) > 300000000000 or int(shard_count) > 300000000000:
         return
-    await db.execute("UPDATE bots SET last_stats_post = NOW(), servers = $1, shard_count = $2, user_count = $3, shards = $4 WHERE bot_id = $5", guild_count, shard_count, user_count, shards, bot_id)
+    await db.execute("UPDATE bots SET last_stats_post = NOW(), guild_count = $1, shard_count = $2, user_count = $3, shards = $4 WHERE bot_id = $5", guild_count, shard_count, user_count, shards, bot_id)
 
 async def add_promotion(bot_id: int, title: str, info: str, css: str, type: int):
     if css is not None:
@@ -156,29 +156,15 @@ async def parse_index_query(worker_session, fetch: List[asyncpg.Record]) -> list
     """
     lst = []
     for bot in fetch:
-        try:
-            bot_info = await get_bot(bot["bot_id"], worker_session = worker_session)
-            if bot_info is not None:
-                bot = dict(bot)
-                votes = bot["votes"]
-                bot["bot_id"] = str(bot["bot_id"])
-                servers = bot["servers"]
-                del bot["votes"]
-                del bot["servers"]
-                banner = bot["banner"] if bot["banner"] else ""
-                del bot["banner"]
-                if bot_info.get("avatar") is None:
-                    bot_info["avatar"] = ""
-                lst.append({
-                    "avatar": bot_info["avatar"].replace("?size=1024", "?size=128"),
-                    "username": bot_info["username"],
-                    "votes": human_format(votes), 
-                    "servers": human_format(servers),
-                    "description": bot["description"], 
-                    "banner": banner.replace("\"", "").replace("'", "").replace("http://", "https://").replace("file://", "")
-                } | bot | bot_info)
-        except KeyboardInterrupt:
-            return
+        banner_replace_tup = (("\"", ""), ("'", ""), ("http://", "https://"), ("file://", ""))
+        _user = await get_bot(bot["bot_id"], worker_session = worker_session)
+        if _user:
+            bot_obj = dict(bot) | {
+                "user": _user,
+                "bot_id": str(bot["bot_id"]),
+                "banner": ireplacem(banner_replace_tup, bot["banner"]) if bot["banner"] else None,
+            }
+            lst.append(bot_obj)
     return lst
 
 async def do_index_query(
@@ -193,7 +179,7 @@ async def do_index_query(
     db = worker_session.postgres
     
     states = "WHERE " + " OR ".join([f"state = {s}" for s in state])
-    base_query = f"SELECT description, banner, state, votes, servers, bot_id, invite, nsfw FROM bots {states}"
+    base_query = f"SELECT description, banner, state, votes, guild_count, bot_id, invite, nsfw FROM bots {states}"
     if limit:
         end_query = f"LIMIT {limit}"
     else:

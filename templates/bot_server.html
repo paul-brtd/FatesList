@@ -11,8 +11,8 @@
 	<div id="{{type}}-content">
 		<div class="d-flex d-xl-flex flex-column justify-content-center align-items-center justify-content-xl-center align-items-xl-center">
 
-			<img style="border-radius: 50%; width: 120px;" class="lozad" data-src="{{data.info.avatar}}" id="{{type}}-avatar" alt="{{data.info.name}}'s avatar">
-			<a href="/{{type}}/{{id}}/invite" class="white"><h3 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;" id="{{type}}-name">{{data.info.name}} <span style="opacity: 0.65">({{data.prefix}})</span></h3></a>
+			<img style="border-radius: 50%; width: 120px;" class="lozad" data-src="{{data.user.avatar}}"$ id="{{type}}-avatar" alt="{{data.user.username}}'s avatar">
+			<a href="/{{type}}/{{id}}/invite" class="white"><h3 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;" id="{{type}}-name">{{data.user.username}} <span style="opacity: 0.65">({{data.prefix}})</span></h3></a>
 			{% if type == "bot" %}
 				{% if data.state == enums.BotState.denied %}
 				<div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
@@ -66,7 +66,7 @@
 		{% if data.state != enums.BotState.banned %}
 				<button onclick="voteBot()" class="btn buttons-all vote btn-outline-light" id="buttons-vote" style="color: white !important;">
 					<span class="iconify" data-icon="fa-solid:thumbs-up" data-inline="false"></span>
-					<span style="margin-left: 3px;">{{data.votes}}</span>
+					<span style="margin-left: 3px;">{{human_format(data.votes)}}</span>
 				</button>
 		{% endif %}
 		{% if type != "bot" or data.state != enums.BotState.banned %}
@@ -237,8 +237,8 @@
 			    		{
 				  		"@context" : "http://schema.org",
 				 		"@type" : "Product",
-				  		"name" : "{{data.info.name}}",
-				  		"image" : "{{data.info.avatar}}",
+				  		"name" : "{{data.user.username}}",
+				  		"image" : "{{data.user.avatar}}",
 				  		"description": "{{data.description}}",
 				  		"sku": "{{rev.id}}",
 				  		"offers": "",

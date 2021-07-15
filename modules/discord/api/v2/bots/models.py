@@ -7,6 +7,10 @@ import modules.models.enums as enums
 
 from ..base_models import APIResponse, BaseUser
 
+class GCVFormat(BaseModel):
+    """Represents a formatted for client data"""
+    guild_count: str
+    votes: str
 
 class BotRandom(BaseModel):
     """
@@ -18,10 +22,11 @@ class BotRandom(BaseModel):
     state: int
     username: str
     avatar: str
-    servers: str
+    guild_count: int
     invite: Optional[str] = None
     votes: int
-        
+    formatted: GCVFormat
+
 class BotOwner(BaseModel):
     user: BaseUser
     main: bool
@@ -37,7 +42,7 @@ class Bot(BaseUser):
     tags: list
     long_description_type: enums.LongDescType
     long_description: Optional[str] = None
-    server_count: int
+    guild_count: int
     shard_count: Optional[int] = 0
     user_count: int
     shards: Optional[List[int]] = []

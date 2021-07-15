@@ -99,7 +99,7 @@ async def v_legacy(request: Request, a: str):
 async def features_view(request: Request, name: str):
     if name not in features.keys():
         return abort(404)
-    bots = await db.fetch("SELECT description, banner, votes, servers, bot_id, invite, state FROM bots, unnest(features) feature WHERE feature = $1 and (state = 0 or state = 6) ORDER BY votes DESC LIMIT 12", name)
+    bots = await db.fetch("SELECT description, banner, votes, guild_count, bot_id, invite, state FROM bots, unnest(features) feature WHERE feature = $1 and (state = 0 or state = 6) ORDER BY votes DESC LIMIT 12", name)
     bot_obj = await parse_index_query(request.app.state.worker_session, bots)
     return await templates.TemplateResponse("feature.html", {"request": request, "name": name, "feature": features[name], "bots": bot_obj})
 

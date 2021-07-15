@@ -15,8 +15,9 @@ def splitc(s, l = 1990):
     return o
 
 class Manager(Cog):
-    def __init__(self, client):
+    def __init__(self, client, app):
         self.client = client
+        self.app = app
 
     @is_owner()
     @command(pass_context = True)

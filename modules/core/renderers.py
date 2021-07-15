@@ -47,7 +47,7 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
         return abort(404)
     bot = await db.fetchrow(
         """SELECT js_allowed, prefix, shard_count, state, description, bot_library AS library, 
-        banner, website, votes, servers, bot_id, discord AS support, banner, github, features, 
+        banner, website, votes, guild_count, bot_id, discord AS support, banner, github, features, 
         invite_amount, css, long_description_type, long_description, donate, privacy_policy, 
         nsfw, last_stats_post, created_at FROM bots WHERE bot_id = $1""", 
         bot_id
@@ -145,15 +145,11 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
         user = dict(bot_info)
         user["name"] = user["username"]
         bot_extra = {
-            "votes": human_format(bot["votes"]), 
-            "servers": human_format(bot["servers"]),
             "banner": ireplacem(banner_replace_tuple, banner),
-            "shards": human_format(bot["shard_count"]), 
             "owners_html": owners_html, 
             "features": bot_features,
             "long_description": ireplacem(ldesc_replace_tuple, ldesc),
-            "info": user, 
-            "long_description_type": bot["long_description_type"]
+            "user": user, 
         }
         bot |= bot_extra
     
@@ -201,14 +197,12 @@ async def render_bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, 
     worker_session = request.app.state.worker_session
     db = worker_session.postgres
     
-    bot = await db.fetchrow("SELECT bot_id, servers, votes FROM bots WHERE bot_id = $1", bot_id)
+    bot = await db.fetchrow("SELECT bot_id, guild_count, votes FROM bots WHERE bot_id = $1", bot_id)
     if not bot:
         if api:
             return abort(404)
         return "No Bot Found, cannot display widget"
     bot = dict(bot)
-    bot["votes"] = human_format(bot["votes"])
-    bot["servers"] = human_format(bot["servers"])
     bt.add_task(add_ws_event, bot_id, {"m": {"e": enums.APIEvents.bot_view}, "ctx": {"user": request.session.get('user_id'), "widget": True}})
     data = {"bot": bot, "user": await get_bot(bot_id, worker_session = request.app.state.worker_session)}
     if api:
@@ -225,14 +219,22 @@ async def render_search(request: Request, q: str, api: bool):
         else:
             return RedirectResponse("/")
     bots = await db.fetch(
-        """SELECT DISTINCT bots.bot_id, bots.state, bots.banner, bots.votes, bots.servers, bots.description, bots.invite, bots.nsfw FROM bots 
+        """SELECT DISTINCT bots.bot_id,
+        bots.description, bots.banner, bots.state, 
+        bots.votes, bots.guild_count, bot.invite, bot.nsfw
+        FROM bots 
         INNER JOIN bot_owner ON bots.bot_id = bot_owner.bot_id 
-        WHERE (bots.state = 0 OR bots.state = 6) 
-        AND (bots.description ilike $1 OR bots.long_description ilike $1 OR bots.username_cached ilike $1 OR bot_owner.owner::text ilike $1) 
+        WHERE (bots.description ilike $1 
+        OR bots.long_description ilike $1 
+        OR bots.username_cached ilike $1 
+        OR bot_owner.owner::text ilike $1) 
         ORDER BY bots.votes LIMIT 6""", 
         f'%{q}%'
     )
-    search_bots = await parse_index_query(worker_session, bots)
+    search_bots = await parse_index_query(
+        worker_session,
+        bots, 
+    )
     if not api:
         return await templates.TemplateResponse("search.html", {"request": request, "search_bots": search_bots, "tags_fixed": tags_fixed, "query": q, "profile_search": False})
     else:

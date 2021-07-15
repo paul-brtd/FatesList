@@ -410,7 +410,7 @@ async def init_fates_worker(app):
     workers = os.environ.get("WORKERS")
 
     # Begin worker sync
-    asyncio.create_task(status(workers, session))
+    asyncio.create_task(status(workers, session, app))
     logger.debug("Started status task")
 
     # We are now up (probably)
@@ -422,7 +422,7 @@ async def init_fates_worker(app):
     )
    
 
-async def start_dbg(session):
+async def start_dbg(session, app):
     if session.primary_worker():
         session.discord.debug.bots_role = bots_role
         session.discord.debug.bot_dev_role = bot_dev_role
@@ -433,11 +433,11 @@ async def start_dbg(session):
             pass
         
         manager = importlib.import_module("modules.debug.bot")
-        session.discord.debug.add_cog(manager.Manager(session.discord.debug))
+        session.discord.debug.add_cog(manager.Manager(session.discord.debug, app))
         asyncio.create_task(session.discord.debug.start(TOKEN_DBG))
 
 
-async def status(workers, session):
+async def status(workers, session, app):
     await session.redis.publish(
         "_worker", 
         f"{session.id} UP WORKER {os.getpid()} 0 {workers}"
@@ -493,7 +493,7 @@ async def status(workers, session):
                 
                 start_http_server(3000 + session.get_worker_index())
 
-                await start_dbg(session)
+                await start_dbg(session, app)
                 asyncio.create_task(vote_reminder(session))
 
             case _:
