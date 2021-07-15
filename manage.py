@@ -68,14 +68,14 @@ def run_site(
     session_id = uuid.uuid4()
     
     # Create the pids folder if it hasnt been created
-    Path("pids").mkdir(exist_ok = True)
+    Path("data/pids").mkdir(exist_ok = True)
    
     for sig in (signal.SIGINT, signal.SIGQUIT, signal.SIGTERM):
         signal.signal(sig, lambda *args, **kwargs: ...)
 
     cmd = [
         "gunicorn", "--log-level=debug", 
-        "-p", "pids/gunicorn.pid",
+        "-p", "data/pids/gunicorn.pid",
         "-k", "config._uvicorn.FatesWorker",
         "-b", "0.0.0.0:9999", 
         "-w", str(workers),
@@ -96,7 +96,7 @@ def run_site(
 def site_reload():
     """Get the PID of the running site and reloads the site"""
     try:
-        with open("pids/gunicorn.pid") as guni_pid:
+        with open("data/pids/gunicorn.pid") as guni_pid:
             pid = guni_pid.read().replace(" ", "").replace("\n", "")
            
             if not pid.isdigit():

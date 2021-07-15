@@ -221,7 +221,7 @@ async def render_search(request: Request, q: str, api: bool):
     bots = await db.fetch(
         """SELECT DISTINCT bots.bot_id,
         bots.description, bots.banner, bots.state, 
-        bots.votes, bots.guild_count, bot.invite, bot.nsfw
+        bots.votes, bots.guild_count, bots.invite, bots.nsfw
         FROM bots 
         INNER JOIN bot_owner ON bots.bot_id = bot_owner.bot_id 
         WHERE (bots.description ilike $1 
