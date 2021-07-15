@@ -1,6 +1,6 @@
 # Fates List
 
-Licensed under the MIT. We will not support self hosting or copying our list whatsoever, you are on your own and you MUST additionally give credit and follow the MIT license properly.
+Licensed under the [MIT](data/license/LICENSE). We will not support self hosting or copying our list whatsoever, you are on your own and you MUST additionally give credit and follow the MIT license properly.
 
 This is the source code for [Fates List](https://fateslist.xyz).
 

@@ -247,7 +247,7 @@ class FatesWorkerSession(Singleton):
         self.dying = False
         
         # Templating
-        self.templates = Jinja2Templates(directory="templates")
+        self.templates = Jinja2Templates(directory="data/templates")
 
     def is_up(self):
         self.up = True

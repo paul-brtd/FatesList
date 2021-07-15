@@ -6,8 +6,8 @@ from loguru import logger
 
 logger.remove()
 logger.add(sys.stderr, backtrace=True, diagnose=True)
-logger.add("logs/full.log", rotation="500 MB")
-logger.add("logs/error.log", rotation = "500 MB", level = "ERROR")
+logger.add("data/logs/full.log", rotation="500 MB")
+logger.add("data/logs/error.log", rotation = "500 MB", level = "ERROR")
 
 class InterceptHandler(logging.Handler):
     """
