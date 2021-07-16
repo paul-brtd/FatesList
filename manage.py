@@ -264,7 +264,7 @@ def staticfiles_relabel():
             )
     
     if relabels:
-        print("Pushing to github")
+        typer.echo("Pushing to github")
         repo = git.Repo('.')
         repo.git.add(*relabels)
         repo.git.commit("-m", "Static file relabel")
