@@ -319,6 +319,7 @@ def db_apply(module: str):
     """Apply Fates List database migration"""
     try:
         migration = importlib.import_module(module)
+        _ = migration.apply # Check for apply function
     except Exception as exc:
         return error(
             f"Could not import migration file: {exc}"
