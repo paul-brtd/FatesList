@@ -15,17 +15,9 @@ from getpass import getpass
 import importlib
 import asyncio
 
-import uvloop
-import asyncpg
-import aioredis
 from config._logger import logger
 import typer
-import git 
-from fastapi import FastAPI
-from fastapi.responses import ORJSONResponse
 from config import worker_key, API_VERSION
-from modules.core.system import init_fates_worker, setup_db, setup_discord
-
 
 app = typer.Typer()
 site = typer.Typer(
@@ -55,6 +47,10 @@ def error(msg: str, code: int = 1):
 
 def _fappgen():
     """Make the FastAPI app for gunicorn"""
+    from fastapi import FastAPI
+    from fastapi.responses import ORJSONResponse
+    from modules.core.system import init_fates_worker
+    import uvloop
     uvloop.install()
      
     _app = FastAPI(
@@ -75,7 +71,7 @@ def _fappgen():
 def run_site(
     workers: int = typer.Argument(3, envvar="SITE_WORKERS")
 ):
-    "Runs the Fates List site"
+    """Runs the Fates List site"""
     session_id = uuid.uuid4()
     
     # Create the pids folder if it hasnt been created
@@ -126,7 +122,9 @@ def site_reload():
 @rabbit.command("run")
 def rabbit_run():
     """Runs the Rabbit Worker"""
-    from lynxfall.rabbit.launcher import run  # pylint: disable=import-outside-toplevel
+    from lynxfall.rabbit.launcher import run
+    from modules.core.system import setup_db, setup_discord
+    
     for sig in (signal.SIGINT, signal.SIGQUIT, signal.SIGTERM):
         signal.signal(sig, lambda *args, **kwargs: ...)
 
@@ -206,6 +204,8 @@ def secrets_mktemplate(
 @staticfiles.command("relabel")
 def staticfiles_relabel():
     """Relabels all labelled (rev*) static files)"""
+    
+    import git 
     relabels = []
     for s_file in Path("data/static/assets").rglob("*.rev*.*"):
         if str(s_file).endswith(".hash"):
@@ -317,6 +317,12 @@ def db_shell():
 @db.command("apply")
 def db_apply(module: str):
     """Apply Fates List database migration"""
+    import uvloop
+    uvloop.install()
+    
+    import asyncpg
+    import aioredis
+    
     try:
         migration = importlib.import_module(module)
         _ = migration.apply # Check for apply function
@@ -340,6 +346,11 @@ def db_apply(module: str):
 @db.command("wipeuser")
 def db_wipeuser(user_id: int):
     """Wipes a user account (e.g. Data Deletion Request)"""
+    import uvloop
+    uvloop.install()
+    
+    import asyncpg
+    import aioredis
     
     async def _wipeuser():
         db = await asyncpg.create_pool()
