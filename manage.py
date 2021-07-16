@@ -125,9 +125,6 @@ def rabbit_run():
     from lynxfall.rabbit.launcher import run
     from modules.core.system import setup_db, setup_discord
     
-    for sig in (signal.SIGINT, signal.SIGQUIT, signal.SIGTERM):
-        signal.signal(sig, lambda *args, **kwargs: ...)
-
     async def on_startup(state, logger):
         """Function that will be executed on startup"""
         state.__dict__.update(( await setup_db() ))  # noqa: E201,E202
@@ -146,9 +143,9 @@ def rabbit_run():
         logger.debug("Waiting for discord")
         return await state.client.wait_until_ready()
 
-    async def on_stop(*_):
+    async def on_stop(state, logger):
         """Function that will run on stop"""
-        ...
+        logger.info("Going home!")
 
     async def on_error(*_, **__):  # pylint: disable=unused-argument
         """Runs on error"""

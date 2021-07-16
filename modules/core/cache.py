@@ -1,6 +1,6 @@
 from .imports import *
 from aioredis import Connection
-from loguru import logger
+from config._logger import logger
 
 async def _user_fetch(
     user_id: str,

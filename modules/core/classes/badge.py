@@ -1,10 +1,10 @@
 from typing import List, Optional
 from modules.core.permissions import is_staff
-from modules.core.logger import logger
 import modules.models.enums as enums
 from discord import Member
 import orjson
 from config import staff_roles, special_badges
+from config._logger import logger
 from pydantic import BaseModel
 
 class Badge(BaseModel):
