@@ -336,5 +336,40 @@ def db_apply(module: str):
     asyncio.set_event_loop(loop)
     loop.run_until_complete(_migrator())
 
+
+@db.command("wipeuser")
+def db_wipeuser(user_id: int):
+    """Wipes a user account (e.g. Data Deletion Request)"""
+    
+    async def _wipeuser():
+        db = await asyncpg.create_pool()
+        await db.execute("DELETE FROM users WHERE user_id = $1", user_id)
+        await db.execute("INSERT INTO users (user_id, vote_epoch) VALUES ($1, NOW())", user_id) # INSERT minimal data to prevent abuse
+        
+        bots = await db.fetch(
+            """SELECT DISTINCT bots.bot_id FROM bots 
+            INNER JOIN bot_owner ON bot_owner.bot_id = bots.bot_id 
+            WHERE bot_owner.owner = $1 AND bot_owner.main = true""", 
+            user_id
+        )
+        for bot in bots:
+            await db.execute("DELETE FROM bots WHERE bot_id = $1", bot["bot_id"])
+            
+        votes = await db.fetch("SELECT bot_id from bot_voters WHERE user_id = $1", user_id)
+        for vote in votes:
+            await db.execute("UPDATE bots SET votes = votes - 1 WHERE bot_id = $1", vote["bot_id"])
+            
+        await db.execute("DELETE FROM bot_voters WHERE user_id = $1", user_id)
+
+        redis_db = await aioredis.from_url('redis://localhost', db = 1)
+        await redis_db.hdel(str(user_id), 'cache')
+        await redis_db.hdel(str(user_id), 'ws')
+        await redis_db.close()
+
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(_wipeuser())
+    
+    
 if __name__ == "__main__":
     app()
