@@ -361,10 +361,10 @@ def db_wipeuser(user_id: int):
             
         await db.execute("DELETE FROM bot_voters WHERE user_id = $1", user_id)
 
-        redis_db = await aioredis.from_url('redis://localhost', db = 1)
-        await redis_db.hdel(str(user_id), 'cache')
-        await redis_db.hdel(str(user_id), 'ws')
-        await redis_db.close()
+        redis = aioredis.from_url('redis://localhost:1001', db=1)
+        await redis.hdel(str(user_id), 'cache')
+        await redis.hdel(str(user_id), 'ws')
+        await redis.close()
 
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
