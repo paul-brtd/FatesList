@@ -25,7 +25,6 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.openapi.utils import get_openapi
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
-from loguru import logger
 from lynxfall.core.classes import Singleton
 from lynxfall.oauth.models import OauthConfig
 from lynxfall.oauth.providers.discord import DiscordOauth
@@ -44,6 +43,7 @@ from config import (API_VERSION, TOKEN_DBG, TOKEN_MAIN, TOKEN_SERVER,
                     discord_client_secret, discord_redirect_uri, lynxfall_key,
                     owner, sentry_dsn, session_key, site, worker_key)
 from modules.core.error import WebError
+from modules.core.logger import logger
 from modules.models import enums
 
 from .ratelimits import rl_key_func

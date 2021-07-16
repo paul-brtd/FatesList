@@ -1,6 +1,7 @@
 """Fates List Management"""
 import sys
 sys.pycache_prefix = "data/pycache"
+
 from subprocess import Popen
 import os
 import uuid
@@ -11,8 +12,13 @@ import secrets as secrets_lib
 import hashlib
 import datetime
 from getpass import getpass
+import importlib
+import asyncio
 
 import uvloop
+import asyncpg
+import aioredis
+from modules.core.logger import logger
 import typer
 import git 
 from fastapi import FastAPI
@@ -43,6 +49,9 @@ app.add_typer(secrets, name="secrets")
 app.add_typer(staticfiles, name="staticfiles")
 app.add_typer(db, name="db")
 
+def error(msg: str, code: int = 1):
+    typer.secho(msg, fg=typer.colors.RED, err=True)
+    return typer.Exit(code=code)
 
 def _fappgen():
     """Make the FastAPI app for gunicorn"""
@@ -102,23 +111,17 @@ def site_reload():
             pid = guni_pid.read().replace(" ", "").replace("\n", "")
            
             if not pid.isdigit():
-                typer.secho(
-                    "Invalid/corrupt PID file found (site/gunicorn.pid)",
-                    fg=typer.colors.RED,
-                    err=True
+                return error(
+                    "Invalid/corrupt PID file found (site/gunicorn.pid)"
                 )
-                typer.Exit(code=1)
            
             pid = int(pid)
             os.kill(pid, signal.SIGHUP) 
     
     except FileNotFoundError:
-        typer.secho(
-            "No PID file found. Is the site running?",
-            fg=typer.colors.RED,
-            err=True
+        return error(
+            "No PID file found. Is the site running?"
         )
-        typer.Exit(code=1)
 
 @rabbit.command("run")
 def rabbit_run():
@@ -271,12 +274,16 @@ def staticfiles_relabel():
 @db.command("backup")
 def db_backup():
     """Backs up the Fates List database"""
+    logger.info("Starting backups")
+
     bak_id = datetime.datetime.now().strftime('%Y-%m-%d~%H:%M:%S')
     cmd = f'pg_dump -Fc > /backups/full-{bak_id}.bak'
     
     with Popen(cmd, shell=True, env=os.environ) as proc:
         proc.wait()
     
+    logger.info("Backup of full db done. Backing up only schema...")
+
     try:
         Path("/backups/latest.bak").unlink()
     except FileNotFoundError:
@@ -287,6 +294,8 @@ def db_backup():
     
     with Popen(cmd, shell=True, env=os.environ) as proc:
         proc.wait()
+
+    logger.info("Schema backup done")
    
     conf_pwd = getpass(prompt="Enter rclone conf password: ")
     for bak_type in ("full", "schema"):
@@ -295,7 +304,36 @@ def db_backup():
 
         with Popen(cmd, env=os.environ, shell=True) as proc:
             proc.wait()
+    
+    logger.success("Backups done!")
 
+@db.command("shell")
+def db_shell():
+    """Run a postgres shell"""
+    with Popen(["pgcli"], env=os.environ) as proc:
+        proc.wait()
+
+
+@db.command("apply")
+def db_apply(module: str):
+    """Apply Fates List database migration"""
+    try:
+        migration = importlib.import_module(module)
+    except Exception as exc:
+        return error(
+            f"Could not import migration file: {exc}"
+        )
+
+    async def _migrator():
+        postgres = await asyncpg.create_pool()
+        redis = aioredis.from_url('redis://localhost:1001', db=1)
+        logger.info("Starting migration")
+        ret = await migration.apply(postgres=postgres, redis=redis, logger=logger)
+        logger.success(f"Migration applied with return code of {ret}")
+
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(_migrator())
 
 if __name__ == "__main__":
     app()
