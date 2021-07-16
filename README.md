@@ -10,7 +10,9 @@ BTW please add your bots there if you want to support us
 
 Follow [Snowtuft's README](https://github.com/Fates-List/Snowtuft) to setup Snowtuft+Snowfall on your VPS and install the dependencies for Fates List.
 
+
 Then run ``python manage.py`` after activating the created venv to verify installation
 
 To start the rabbitmq worker (must be started before the main site): ``python manage.py rabbit run``
+
 To start the main site (must be started after rabbit): ``python manage.py site run``
