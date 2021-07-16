@@ -19,3 +19,5 @@ pids
 pids/*
 */pids/*
 data/pids/*
+data/pycache/*
+data/pycache

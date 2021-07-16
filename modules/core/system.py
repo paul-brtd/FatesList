@@ -1,57 +1,52 @@
 """Fates List System Bootstrapper"""
-from .ratelimits import rl_key_func
+import sys
+sys.pycache_prefix = "data/pycache"
 
-from config import (
-    TOKEN_MAIN, TOKEN_SERVER, bots_role, 
-    bot_dev_role, worker_key, session_key, 
-    owner, sentry_dsn, lynxfall_key,
-    discord_client_id, discord_client_secret,
-    discord_redirect_uri, site, TOKEN_DBG,
-    API_VERSION
-)
-
-import sentry_sdk
-from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
-
-from starlette.middleware.sessions import SessionMiddleware
-from starlette.middleware.base import BaseHTTPMiddleware
-from fastapi.openapi.utils import get_openapi
-import discord
-from discord.ext import commands
-from lynxfall.core.classes import Singleton
-from lynxfall.utils.fastapi import include_routers, api_versioner  
-from lynxfall.ratelimits import LynxfallLimiter
-from lynxfall.rabbit.client import RabbitClient
-from lynxfall.oauth.models import OauthConfig
-from lynxfall.oauth.providers.discord import DiscordOauth
-import asyncpg
-import os
-import time
-import datetime
-from loguru import logger
-import aioredis
-import aio_pika
 import asyncio
+import builtins
+import datetime
 import importlib
+import os
+import signal
+import time
 import uuid
 from http import HTTPStatus
-import builtins
-from modules.models import enums
-import signal
-import sys
+
+import aio_pika
+import aioredis
+import asyncpg
+import discord
+import sentry_sdk
+from discord.ext import commands
+from fastapi.exceptions import (HTTPException, RequestValidationError,
+                                ValidationError)
+from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.openapi.utils import get_openapi
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
-from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from fastapi.middleware.gzip import GZipMiddleware
-from prometheus_fastapi_instrumentator import Instrumentator
+from loguru import logger
+from lynxfall.core.classes import Singleton
+from lynxfall.oauth.models import OauthConfig
+from lynxfall.oauth.providers.discord import DiscordOauth
+from lynxfall.rabbit.client import RabbitClient
+from lynxfall.ratelimits import LynxfallLimiter
+from lynxfall.utils.fastapi import api_versioner, include_routers
 from prometheus_client import start_http_server
+from prometheus_fastapi_instrumentator import Instrumentator
+from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
-from fastapi.exceptions import (
-    HTTPException,
-    ValidationError,
-    RequestValidationError
-)
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.middleware.sessions import SessionMiddleware
+
+from config import (API_VERSION, TOKEN_DBG, TOKEN_MAIN, TOKEN_SERVER,
+                    bot_dev_role, bots_role, discord_client_id,
+                    discord_client_secret, discord_redirect_uri, lynxfall_key,
+                    owner, sentry_dsn, session_key, site, worker_key)
 from modules.core.error import WebError
+from modules.models import enums
+
+from .ratelimits import rl_key_func
 
 
 class FatesListRequestHandler(BaseHTTPMiddleware):
@@ -61,19 +56,21 @@ class FatesListRequestHandler(BaseHTTPMiddleware):
         self.exc_handler = exc_handler
         
         # Methods that should be allowed by CORS
-        self.CORS_ALLOWED = "GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS"
+        self.cors_allowed = "GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS"
     
         # Default response
         self.default_res = HTMLResponse(
             "Something happened!", 
             status_code=500
         ) 
-        
-    def logger(self, path, request, response):
+    
+    @staticmethod
+    def _log_req(path, request, response):
+        """Logs HTTP requests to console (and file)"""
         code = response.status_code
         phrase = HTTPStatus(response.status_code).phrase
         query_str_raw = request.scope["query_string"]
-        
+
         if query_str_raw:
             query_str = f'?{query_str_raw.decode("utf-8")}'
         else:
@@ -91,11 +88,11 @@ class FatesListRequestHandler(BaseHTTPMiddleware):
 
         try:
             res = await self._dispatcher(path, request, call_next)
-        except Exception as exc:
+        except Exception as exc:  # pylint: disable=broad-except
             logger.exception("Site Error Occurred") 
             res = await self.exc_handler(request, exc, log=True)
         
-        self.logger(path, request, res)
+        self._log_req(path, request, res)
         return res if res else self.default_res
     
     async def _dispatcher(self, path, request, call_next):
@@ -121,7 +118,7 @@ class FatesListRequestHandler(BaseHTTPMiddleware):
         # Process request with retry
         try:
             response = await call_next(request)
-        except Exception as exc:
+        except Exception as exc:  # pylint: disable=broad-except
             logger.exception("Site Error Occurred")
             response = await self.exc_handler(request, exc)
 
@@ -146,11 +143,11 @@ class FatesListRequestHandler(BaseHTTPMiddleware):
         else:
             response.headers[acac] = "false"
         
-        response.headers[acam] = self.CORS_ALLOWED
+        response.headers[acam] = self.cors_allowed
         if response.status_code == 405:
             if request.method == "OPTIONS" and is_api:
                 response.status_code = 204
-                response.headers["Allow"] = self.CORS_ALLOWED
+                response.headers["Allow"] = self.cors_allowed
         
         return response
 
@@ -163,11 +160,13 @@ class FatesDebugBot(commands.Bot):
             command_prefix=commands.when_mentioned_or('fl!'), intents=intents)
 
     async def is_owner(self, user: discord.User):
+        """Owner check patch"""
         if user.id == owner:
             return True
         return False
 
     async def on_ready(self):
+        """on_ready patch"""
         self.ready = True
         logger.success(
             f"{self.user} (DEBUG BOT) should now be up on first worker"
@@ -181,19 +180,20 @@ class FatesBot(discord.Client):
         super().__init__(intents=intents)
 
     async def on_ready(self):
+        """on_ready patch"""
         self.ready = True
         logger.success(f"{self.user} now up!")        
 
         
-class FatesWorkerOauth(Singleton):
+class FatesWorkerOauth(Singleton):  # pylint: disable=too-few-public-methods
     """Stores all oauths (currently only discord)"""
     
     def __init__(
         self,
         *,
-        discord: DiscordOauth
+        discord_oauth: DiscordOauth
     ):
-        self.discord = discord
+        self.discord = discord_oauth
 
         
 class FatesWorkerDiscord(Singleton):
@@ -215,24 +215,24 @@ class FatesWorkerDiscord(Singleton):
         return self.main.user is not None
 
 
-class FatesWorkerSession(Singleton):
+class FatesWorkerSession(Singleton):  # pylint: disable=too-many-instance-attributes
     """Stores a worker session"""
 
     def __init__(
         self,
         *, 
-        id: str,
+        session_id: str,
         postgres: asyncpg.Pool,
         redis: aioredis.Connection,
         rabbit: aio_pika.RobustConnection,
-        discord: FatesWorkerDiscord, 
+        worker_discord: FatesWorkerDiscord, 
         oauth: FatesWorkerOauth
     ):
-        self.id = id
+        self.id = session_id
         self.postgres = postgres
         self.redis = redis
         self.rabbit = rabbit
-        self.discord = discord
+        self.discord = worker_discord
         self.oauth = oauth
         
         # Record basic stats and initially set workers to None
@@ -249,14 +249,17 @@ class FatesWorkerSession(Singleton):
         # Templating
         self.templates = Jinja2Templates(directory="data/templates")
 
-    def is_up(self):
+    def set_up(self):
+        """Set the worker to up"""
         self.up = True
 
     def publish_workers(self, workers):
+        """Publish workers"""
         self.workers = workers
         self.fup = True
 
     def primary_worker(self):
+        """Returns if we are primary (first) worker"""
         return self.fup and self.workers[0] == os.getpid()
 
     def get_worker_index(self):
@@ -268,20 +271,23 @@ class FatesWorkerSession(Singleton):
 
 
 async def setup_discord():
-    intent_main = discord.Intents.none()
-    intent_main.guilds = True
-    intent_main.members = True
-    intent_main.presences = True
-    intent_servers = discord.Intents.none()
-    intent_servers.guilds = True
-    intent_servers.members = False
-    intent_dbg = discord.Intents.none()
-    intent_dbg.guilds = True
-    intent_dbg.dm_messages = True  # We only want DM messages, not guild
+    """Sets up discord clients"""
+    intent_main = discord.Intents(
+        guilds=True,
+        members=True,
+        presences=True
+    )
+    intent_servers = discord.Intents(
+        guilds = True
+    )
+    intent_dbg = discord.Intents(
+        guilds = True,
+        dm_messages = True  # Only allow DMs to pass through
+    ) 
     client = FatesBot(intents=intent_main)
     client_server = FatesBot(intents=intent_servers)
     client_dbg = FatesDebugBot(intents=intent_dbg)
-    logger.info("Discord init beginning")
+    logger.info("Discord init is beginning")
     asyncio.create_task(client.start(TOKEN_MAIN))
     asyncio.create_task(client_server.start(TOKEN_SERVER))
     return {"main": client, "servers": client_server, "debug": client_dbg}
@@ -297,7 +303,7 @@ async def init_fates_worker(app):
         - Setup the ratelimiter and RabbitMQ worker protocols
         - Start repeated task for vote reminder posting
     """
-    # TODO: This is still builtins for backward compatibility. 
+    # This is still builtins for backward compatibility. 
     # ========================================================
     # Move all code to use worker session. All new code should 
     # always use worker session instead of builtins
@@ -305,27 +311,27 @@ async def init_fates_worker(app):
     metric_p.instrument(app)
 
     dbs = await setup_db()
-    discord = await setup_discord()
+    _discord = await setup_discord()
     builtins.db = dbs["postgres"]
     builtins.redis_db = dbs["redis"]
     builtins.rabbitmq_db = dbs["rabbit"]
-    builtins.client = builtins.dclient = discord["main"]
-    builtins.client_server = discord["servers"]
+    builtins.client = builtins.dclient = _discord["main"]
+    builtins.client_server = _discord["servers"]
     RabbitClient.setup(worker_key, dbs["redis"], dbs["rabbit"])
     logger.success("Connected to postgres, rabbitmq and redis")
 
     app.state.worker_session = FatesWorkerSession(
-        id=os.environ.get("SESSION_ID"),
+        session_id=os.environ.get("SESSION_ID"),
         postgres=dbs["postgres"],
         redis=dbs["redis"],
         rabbit=dbs["rabbit"],
-        discord=FatesWorkerDiscord(
-            main=discord["main"],
-            servers=discord["servers"],
-            debug=discord["debug"]
+        worker_discord=FatesWorkerDiscord(
+            main=_discord["main"],
+            servers=_discord["servers"],
+            debug=_discord["debug"]
         ),
         oauth=FatesWorkerOauth(
-            discord=DiscordOauth(
+            discord_oauth=DiscordOauth(
                 oc=OauthConfig(
                     client_id=discord_client_id,
                     client_secret=discord_client_secret,
@@ -341,7 +347,7 @@ async def init_fates_worker(app):
     loop = asyncio.get_event_loop()
 
     for sig in (signal.SIGINT, signal.SIGTERM, signal.SIGABRT, signal.SIGQUIT):
-        loop.add_signal_handler(sig, shutdown_fates_list(app))
+        loop.add_signal_handler(sig, shutdown_fates_worker(app))
 
     # Set the session for use in startup
     session = app.state.worker_session
@@ -370,7 +376,7 @@ async def init_fates_worker(app):
     )  
     
     # Setup sentry
-    sentry_sdk.init(sentry_dsn)
+    sentry_sdk.init(sentry_dsn)  # pylint: disable=abstract-class-instantiated
     app.add_middleware(SentryAsgiMiddleware)
 
     # Setup ratelimiter
@@ -414,7 +420,7 @@ async def init_fates_worker(app):
     logger.debug("Started status task")
 
     # We are now up (probably)
-    app.state.worker_session.is_up()
+    app.state.worker_session.set_up()
 
     # Boast about oht success!
     logger.success(
@@ -423,13 +429,14 @@ async def init_fates_worker(app):
    
 
 async def start_dbg(session, app):
+    """Start the debug bot on primary worker"""
     if session.primary_worker():
         session.discord.debug.bots_role = bots_role
         session.discord.debug.bot_dev_role = bot_dev_role
         
         try:
             session.discord.debug.load_extension("jishaku")
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             pass
         
         manager = importlib.import_module("modules.debug.bot")
@@ -438,6 +445,7 @@ async def start_dbg(session, app):
 
 
 async def status(workers, session, app):
+    """The Fates List Status protocol"""
     await session.redis.publish(
         "_worker", 
         f"{session.id} UP WORKER {os.getpid()} 0 {workers}"
@@ -501,6 +509,7 @@ async def status(workers, session, app):
 
 
 async def vote_reminder(session):
+    """Vote reminders task"""
     if session.primary_worker():
         events = importlib.import_module("modules.core.events")
         bot_add_event = events.bot_add_event
@@ -525,18 +534,22 @@ async def vote_reminder(session):
             )
     
         await asyncio.sleep(60 * 15)
-        return await vote_reminder(session)
+        await vote_reminder(session)
 
 
-def calc_tags(TAGS):
+def calc_tags(list_tags):
+    """Calculate bot list tags"""
     # Tag calculation
     tags_fixed = []
-    for tag in TAGS.keys():
+    for tag in list_tags.keys():
         # For every key in tag dict, 
         # create the "fixed" tag information 
         # (friendly and easy to use data for tags)
-        tags_fixed.append({"name": tag.replace("_", " ").title(),
-                          "iconify_data": TAGS[tag], "id": tag})
+        tags_fixed.append({
+            "name": tag.replace("_", " ").title(),
+            "iconify_data": list_tags[tag], 
+            "id": tag
+        })
     return tags_fixed
 
 
@@ -549,6 +562,7 @@ async def setup_db():
 
 
 def fl_openapi(app):
+    """Fates List OpenAPI generator"""
     def _openapi():
         """Custom OpenAPI description"""
         if app.openapi_schema:
@@ -568,7 +582,8 @@ def fl_openapi(app):
     return _openapi
 
 
-def shutdown_fates_list(app):
+def shutdown_fates_worker(app):
+    """Shutdown the list properly"""
     worker_session = app.state.worker_session
     db = worker_session.postgres
     rabbit = worker_session.rabbit
@@ -599,7 +614,7 @@ def shutdown_fates_list(app):
         task = asyncio.create_task(_close())
         task.add_done_callback(_gohome)
 
-    def _gohome(task):
+    def _gohome(_):
         logger.info("Fates List is now down. Going back to the IceWings!")
         sys.exit(0)
 

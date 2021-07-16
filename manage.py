@@ -1,4 +1,6 @@
 """Fates List Management"""
+import sys
+sys.pycache_prefix = "data/pycache"
 from subprocess import Popen
 import os
 import uuid
@@ -122,7 +124,9 @@ def site_reload():
 def rabbit_run():
     """Runs the Rabbit Worker"""
     from lynxfall.rabbit.launcher import run  # pylint: disable=import-outside-toplevel
-    
+    for sig in (signal.SIGINT, signal.SIGQUIT, signal.SIGTERM):
+        signal.signal(sig, lambda *args, **kwargs: ...)
+
     async def on_startup(state, logger):
         """Function that will be executed on startup"""
         state.__dict__.update(( await setup_db() ))  # noqa: E201,E202
@@ -141,12 +145,11 @@ def rabbit_run():
         logger.debug("Waiting for discord")
         return await state.client.wait_until_ready()
 
-    async def on_stop(state, logger):
+    async def on_stop(*_):
         """Function that will run on stop"""
-        state.dying = True
-        logger.debug("Running on_stop")
+        ...
 
-    async def on_error(*args, **kwargs):  # pylint: disable=unused-argument
+    async def on_error(*_, **__):  # pylint: disable=unused-argument
         """Runs on error"""
         ...
 
