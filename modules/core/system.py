@@ -42,8 +42,8 @@ from config import (API_VERSION, TOKEN_DBG, TOKEN_MAIN, TOKEN_SERVER,
                     bot_dev_role, bots_role, discord_client_id,
                     discord_client_secret, discord_redirect_uri, lynxfall_key,
                     owner, sentry_dsn, session_key, site, worker_key)
+from config._logger import logger
 from modules.core.error import WebError
-from modules.core.logger import logger
 from modules.models import enums
 
 from .ratelimits import rl_key_func
