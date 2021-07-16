@@ -18,7 +18,7 @@ import asyncio
 import uvloop
 import asyncpg
 import aioredis
-from modules.core.logger import logger
+from config._logger import logger
 import typer
 import git 
 from fastapi import FastAPI
