@@ -5,7 +5,6 @@ from .error import *  # Import error handler
 from .events import *  # Import event/webhook functions
 from .helpers import *  # Import helper functions
 from .imports import *  # Import all imports
-from .logger import *  # Enable loguru
 from .permissions import *  # Import permission functions
 from .ratelimits import *  # Import ratelimit handler
 from .renderers import *  # Import the renderers for bot, index etc.
