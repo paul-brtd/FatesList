@@ -370,6 +370,16 @@ def db_wipeuser(user_id: int):
     asyncio.set_event_loop(loop)
     loop.run_until_complete(_wipeuser())
     
+
+@db.command("setup")
+def db_setup():
+    """Setup Snowfall (the Fates List database system)"""
+    pass
+    
+    
+    
+    
+    
     
 if __name__ == "__main__":
     app()
