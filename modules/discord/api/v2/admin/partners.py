@@ -22,7 +22,15 @@ class InvalidInvite(Exception):
     pass
 
 @router.get("/partners")
-async def get_partners(request: Request, f_ad: Optional[str] = None, f_site_ad: Optional[str] = None, f_server_ad: Optional[str] = None, id: Optional[uuid.UUID] = None, mod: Optional[int] = None, f_condition: Optional[str] = "AND"):
+async def get_partners(
+  request: Request, 
+  f_ad: Optional[str] = None, 
+  f_site_ad: Optional[str] = None, 
+  f_server_ad: Optional[str] = None, 
+  id: Optional[uuid.UUID] = None,
+  mod: Optional[int] = None, 
+  f_condition: Optional[str] = "AND"
+):
     """API to get partnerships:
 
     For clarification:
