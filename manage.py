@@ -512,7 +512,16 @@ def db_setup():
         
         sf_service.write("\n".join(lines))
     
+    cmds = (
+        ["systemctl", "daemon-reload"], 
+        ["snowfall-dbs-stop"],
+        ["systemctl", "start", "snowfall-dbs"],
+        ["systemctl", "restart", "snowfall-dbs"]
+    )
     
+    for cmd in cmds:
+        with Popen(cmd, env=os.environ) as proc:
+            proc.wait()
     
 if __name__ == "__main__":
     app()
