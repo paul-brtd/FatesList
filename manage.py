@@ -447,7 +447,7 @@ def db_setup():
         ]
         env_rabbit.write("\n".join(lines))
     
-    shutil.copy2("data/snowfall/docker", "/snowfall/docker/scripts")
+    shutil.copy2("data/snowfall/docker/scripts", "/snowfall/docker/scripts")
     
 if __name__ == "__main__":
     app()
