@@ -497,6 +497,7 @@ def db_setup():
             "Description=Docker Compose Snowfall 2.0",
             "Requires=docker.service",
             "After=docker.service",
+            "",
             "[Service]",
             "Type=oneshot",
             "RemainAfterExit=yes",
@@ -504,6 +505,7 @@ def db_setup():
             "ExecStart=/usr/bin/snowfall-dbs-start",
             "ExecStop=/usr/bin/snowfall-dbs-stop"
             "TimeoutStartSec=0",
+            "",
             "[Install]",
             "WantedBy=multi-user.target"
         ]
