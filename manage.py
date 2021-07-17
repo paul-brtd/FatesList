@@ -14,6 +14,7 @@ import datetime
 from getpass import getpass
 import importlib
 import asyncio
+import shutil
 
 from config._logger import logger
 import typer
@@ -445,6 +446,8 @@ def db_setup():
             f"RABBITMQ_ERLANG_COOKIE={erlang_shared_cookie}"
         ]
         env_rabbit.write("\n".join(lines))
+    
+    shutil.copy2("data/snowfall/docker", "/snowfall/docker/scripts")
     
 if __name__ == "__main__":
     app()
