@@ -489,7 +489,28 @@ def db_setup():
             ]
             action_script.write("\n".join(lines))
             
-        script_path.chmod(0o777)
+        script_path.chmod(755)
         
+    with open("/etc/systemd/system/snowfall-dbs.service", "w") as sf_service:
+        lines = [
+            "[Unit]",
+            "Description=Docker Compose Snowfall 2.0",
+            "Requires=docker.service",
+            "After=docker.service",
+            "[Service]",
+            "Type=oneshot",
+            "RemainAfterExit=yes",
+            "WorkingDirectory=/snowfall/docker",
+            "ExecStart=/usr/bin/snowfall-dbs-start",
+            "ExecStop=/usr/bin/snowfall-dbs-stop"
+            "TimeoutStartSec=0",
+            "[Install]",
+            "WantedBy=multi-user.target"
+        ]
+        
+        sf_service.write("\n".join(lines))
+    
+    
+    
 if __name__ == "__main__":
     app()
