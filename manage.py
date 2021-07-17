@@ -555,6 +555,9 @@ def db_setup():
         bashrc_f.write("\n".join(lines))
     
     if Path("/backups/latest.bak").exists():
+        
+        logger.info("Restoring backup...")
+        
         with open("/tmp/s2.bash") as sf_s2_f:
             lines = [
                 "source /snowfall/userenv",
@@ -567,6 +570,15 @@ def db_setup():
                 "pg_restore -cvd fateslist /backups/latest.bak"
             ]
             sf_s2_f.write("\n".join(lines))
+            
+        with Popen(["bash", "/tmp/s2.bash"]) as proc:
+            proc.wait()
+            
+    Path("/snowfall/docker/env_done").touch()
+    logger.info(f"Postgres password is {pg_pwd}")
+    logger.info(f"Erlang shared cookie is {erlang_shared_cookie}")
+    logger.success("Done setting up databases")
+    
     
 if __name__ == "__main__":
     app()
