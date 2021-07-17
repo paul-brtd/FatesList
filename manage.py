@@ -407,7 +407,9 @@ def db_setup():
         
         with Popen(["systemctl", "stop", "snowfall-dbs"], env=os.environ) as proc:
             proc.wait()
-            
+    
+    logger.info("Removing/Renaming old files")
+    
     def _rm_force(f_name):
         try:
             Path(f_name).unlink()
@@ -421,6 +423,28 @@ def db_setup():
         logger.info(f"Moving /snowfall to /snowfall.old/{id}")
         Pathlib("/snowfall.old").mkdir()
         Pathlib("/snowfall").rename(f"/snowfall.old/{id}")
+    
+    Path("/snowfall/docker/db/postgres").mkdir(parents=True)
+    Path("/snowfall/docker/db/_compose").mkdir(parents=True)
+    
+    pg_pwd = secrets_lib.token_urlsafe()
+    
+    with open("/snowfall/docker/env.pg", "w") as env_pg:
+        lines = [
+            "POSTGRES_DB=fateslist"
+            "POSTGRES_USER=fateslist"
+            f"POSTGRES_PASSWORD={pg_pwd}"
+        ]
+        env_pg.write("\n".join(lines))
+    
+    erlang_shared_cookie = secrets_lib.token_urlsafe()
+    
+    with open("/snowfall/docker/env.rabbit") as env_rabbit:
+        lines = [
+            "NODENAME=fateslist_rabbit"
+            f"RABBITMQ_ERLANG_COOKIE={erlang_shared_cookie}"
+        ]
+        env_rabbit.write("\n".join(lines))
     
 if __name__ == "__main__":
     app()
