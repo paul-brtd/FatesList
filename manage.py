@@ -401,10 +401,26 @@ def db_setup():
     with Popen(["sysctl", "-p"], env=os.environ) as proc:
         proc.wait()
     
+    if Path("/snowfall/docker/env_done").exists():
+        logger.info("Existing docker setup found. Backing it up...")
+        db_backup()
+        
+        with Popen(["systemctl", "stop", "snowfall-dbs"], env=os.environ) as proc:
+            proc.wait()
+            
+    def _rm_force(f_name):
+        try:
+            Path(f_name).unlink()
+        except Exception:
+            pass
     
+    _rm_force("/etc/systemd/system/snowfall-dbs.service")
     
-    
-    
+    if Path("/snowfall").exists():
+        id = str(uuid.uuid4())
+        logger.info(f"Moving /snowfall to /snowfall.old/{id}")
+        Pathlib("/snowfall.old").mkdir()
+        Pathlib("/snowfall").rename(f"/snowfall.old/{id}")
     
 if __name__ == "__main__":
     app()
