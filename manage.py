@@ -478,14 +478,15 @@ def db_setup():
     with Popen(cmd, env=os.environ) as proc:
         proc.wait()
     
-    with open("/usr/bin/snowfall-dbs-start", "w") as start_script:
-        lines = [
-            "#!/bin/bash",
-            "/usr/bin/docker start snowfall.postgres",
-            "/usr/bin/docker start snowfall.redis",
-            "/usr/bin/docker start snowfall.rabbit"
-        ]
-        start_script.write("\n".join(lines))
+    for op in ("start", "stop"):
+        with open(f"/usr/bin/snowfall-dbs-{op}", "w") as action_script:
+            lines = [
+                "#!/bin/bash",
+                f"/usr/bin/docker {op} snowfall.postgres",
+                f"/usr/bin/docker {op} snowfall.redis",
+                f"/usr/bin/docker {op} snowfall.rabbit"
+            ]
+            action_script.write("\n".join(lines))
         
 if __name__ == "__main__":
     app()
