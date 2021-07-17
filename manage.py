@@ -448,6 +448,21 @@ def db_setup():
         env_rabbit.write("\n".join(lines))
     
     shutil.copy2("data/snowfall/docker/scripts", "/snowfall/docker/scripts")
+    shutil.copy2("data/snowfall/docker/config/docker-compose.yml", "/snowfall/docker")
+    
+    cmd = [
+        "docker-compose", 
+        "-f",
+        "/snowfall/docker/docker-compose.yml",
+        "up",
+        "-d"
+    ]
+    
+    with Popen(cmd, env=os.environ) as proc:
+        proc.wait()
+    
+    
+    
     
 if __name__ == "__main__":
     app()
