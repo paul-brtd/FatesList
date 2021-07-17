@@ -468,9 +468,15 @@ def db_setup():
     
     logger.info("Fixing postgres password")
     
+    cmd = [
+        "docker", "exec", "snowfall.postgres", 
+        "psql", "-U", "fateslist", 
+        "-d", "fateslist", 
+        "-c", f"ALTER USER fateslist WITH PASSWORD '{pg_pwd}'"
+    ]
     
-    docker exec snowfall.postgres psql -U fateslist -d fateslist -c "ALTER USER fateslist WITH PASSWORD '$PASSWD'"
-    
+    with Popen(cmd, env=os.environ) as proc:
+        proc.wait()
     
 if __name__ == "__main__":
     app()
