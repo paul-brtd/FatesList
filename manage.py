@@ -15,6 +15,7 @@ from getpass import getpass
 import importlib
 import asyncio
 import shutil
+import time
 
 from config._logger import logger
 import typer
@@ -426,7 +427,8 @@ def db_setup():
         Pathlib("/snowfall").rename(f"/snowfall.old/{id}")
     
     Path("/snowfall/docker/db/postgres").mkdir(parents=True)
-    Path("/snowfall/docker/db/_compose").mkdir(parents=True)
+    Path("/snowfall/docker/db/redis").mkdir(parents=True)
+    Path("/snowfall/docker/db/rabbit").mkdir(parents=True)
     
     pg_pwd = secrets_lib.token_urlsafe()
     
@@ -450,6 +452,7 @@ def db_setup():
     shutil.copy2("data/snowfall/docker/scripts", "/snowfall/docker/scripts")
     shutil.copy2("data/snowfall/docker/config/docker-compose.yml", "/snowfall/docker")
     
+    logger.info("Starting up docker compose...")
     cmd = [
         "docker-compose", 
         "-f",
@@ -461,7 +464,12 @@ def db_setup():
     with Popen(cmd, env=os.environ) as proc:
         proc.wait()
     
+    time.sleep(5)
     
+    logger.info("Fixing postgres password")
+    
+    
+    docker exec snowfall.postgres psql -U fateslist -d fateslist -c "ALTER USER fateslist WITH PASSWORD '$PASSWD'"
     
     
 if __name__ == "__main__":
