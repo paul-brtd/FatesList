@@ -350,6 +350,7 @@ def db_wipeuser(user_id: int):
     import aioredis
     
     async def _wipeuser():
+        logger.info("Wiping user info in db")
         db = await asyncpg.create_pool()
         await db.execute("DELETE FROM users WHERE user_id = $1", user_id)
         await db.execute("INSERT INTO users (user_id, vote_epoch) VALUES ($1, NOW())", user_id) # INSERT minimal data to prevent abuse
@@ -368,12 +369,15 @@ def db_wipeuser(user_id: int):
             await db.execute("UPDATE bots SET votes = votes - 1 WHERE bot_id = $1", vote["bot_id"])
             
         await db.execute("DELETE FROM bot_voters WHERE user_id = $1", user_id)
-
+           
+        logger.info("Clearing redis info on user...")
         redis = aioredis.from_url('redis://localhost:1001', db=1)
         await redis.hdel(str(user_id), 'cache')
         await redis.hdel(str(user_id), 'ws')
+        
         await redis.close()
-
+        logger.success("Done wiping user")
+        
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     loop.run_until_complete(_wipeuser())
@@ -382,7 +386,20 @@ def db_wipeuser(user_id: int):
 @db.command("setup")
 def db_setup():
     """Setup Snowfall (the Fates List database system)"""
-    pass
+    typer.confirm(
+        "Setting up Snowfall databases is a potentially destructive operation. Continue?",
+        abort=True
+    )
+    logger.info("Preparing to setup snowtuft")
+    with open("/etc/sysctl.conf", "w") as sysctl_file:
+        lines = [
+            "fs.file-max=17500",
+            "vm.overcommit_memory = 1"
+        ]
+        sysctl_file.write("\n".join(lines))
+    
+    with Popen(["sysctl", "-p"], env=os.environ) as proc:
+        proc.wait()
     
     
     
