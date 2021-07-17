@@ -2,7 +2,7 @@
 import sys
 sys.pycache_prefix = "data/pycache"
 
-from subprocess import Popen
+from subprocess import Popen, DEVNULL
 import os
 import uuid
 import signal
@@ -386,13 +386,21 @@ def db_wipeuser(user_id: int):
     
 
 @db.command("setup")
-def db_setup():
+def db_setup(
+    primary_user: str = typer.Argument("meow", envvar="HOME_DIR")
+):
     """Setup Snowfall (the Fates List database system)"""
     typer.confirm(
         "Setting up Snowfall databases is a potentially destructive operation. Continue?",
         abort=True
     )
     logger.info("Preparing to setup snowtuft")
+    
+    home = Path("/home") / primary_user
+
+    if not home.exists():
+        return error("Invalid user specified for primary_user")
+
     with open("/etc/sysctl.conf", "w") as sysctl_file:
         lines = [
             "fs.file-max=17500",
@@ -400,13 +408,17 @@ def db_setup():
         ]
         sysctl_file.write("\n".join(lines))
     
-    with Popen(["sysctl", "-p"], env=os.environ) as proc:
+    with Popen(["sysctl", "-p"], env=os.environ, stdout=DEVNULL) as proc:
         proc.wait()
     
     if Path("/snowfall/docker/env_done").exists():
         logger.info("Existing docker setup found. Backing it up...")
-        db_backup()
-        
+        try:
+            db_backup()
+        except Exception as exc:
+            logger.error(f"Backup failed. Error is {exc}")
+            typer.confirm("Continue? ", abort=True)
+
         with Popen(["systemctl", "stop", "snowfall-dbs"], env=os.environ) as proc:
             proc.wait()
     
@@ -423,8 +435,8 @@ def db_setup():
     if Path("/snowfall").exists():
         id = str(uuid.uuid4())
         logger.info(f"Moving /snowfall to /snowfall.old/{id}")
-        Pathlib("/snowfall.old").mkdir()
-        Pathlib("/snowfall").rename(f"/snowfall.old/{id}")
+        Path("/snowfall.old").mkdir(exist_ok=True)
+        Path("/snowfall").rename(f"/snowfall.old/{id}")
     
     Path("/snowfall/docker/db/postgres").mkdir(parents=True)
     Path("/snowfall/docker/db/redis").mkdir(parents=True)
@@ -434,22 +446,22 @@ def db_setup():
     
     with open("/snowfall/docker/env.pg", "w") as env_pg:
         lines = [
-            "POSTGRES_DB=fateslist"
-            "POSTGRES_USER=fateslist"
+            "POSTGRES_DB=fateslist",
+            "POSTGRES_USER=fateslist",
             f"POSTGRES_PASSWORD={pg_pwd}"
         ]
         env_pg.write("\n".join(lines))
     
     erlang_shared_cookie = secrets_lib.token_urlsafe()
     
-    with open("/snowfall/docker/env.rabbit") as env_rabbit:
+    with open("/snowfall/docker/env.rabbit", "w") as env_rabbit:
         lines = [
-            "NODENAME=fateslist_rabbit"
+            "NODENAME=fateslist_rabbit",
             f"RABBITMQ_ERLANG_COOKIE={erlang_shared_cookie}"
         ]
         env_rabbit.write("\n".join(lines))
     
-    shutil.copy2("data/snowfall/docker/scripts", "/snowfall/docker/scripts")
+    shutil.copytree("data/snowfall/docker/scripts", "/snowfall/docker/scripts", dirs_exist_ok=True)
     shutil.copy2("data/snowfall/docker/config/docker-compose.yml", "/snowfall/docker")
     
     logger.info("Starting up docker compose...")
@@ -466,7 +478,7 @@ def db_setup():
     
     time.sleep(5)
     
-    logger.info("Fixing postgres password")
+    logger.info("Fixing postgres password. Do not worry if this fails")
     
     cmd = [
         "docker", "exec", "snowfall.postgres", 
@@ -527,7 +539,7 @@ def db_setup():
     
     logger.info("Fixing up user env")
     
-    with open("/snowfall/userenv") as sf_userenv:
+    with open("/snowfall/userenv", "w") as sf_userenv:
         lines = [
             "source /etc/profile",
             "export PGUSER=fateslist",
@@ -539,15 +551,14 @@ def db_setup():
         
         sf_userenv.write("\n".join(lines))
     
-    with open("/home/meow/.bashrc") as bashrc_f:
+    with Path(home / ".bashrc").open("a") as bashrc_f:
         lines = [
             "source /snowfall/userenv",
-            "source /home/meow/flvenv/bin/activate"
         ]
         
         bashrc_f.write("\n".join(lines))
     
-    with open("/root/.bashrc") as bashrc_f:
+    with open("/root/.bashrc", "w") as bashrc_f:
         lines = [
             "source /snowfall/userenv"
         ]
@@ -558,7 +569,7 @@ def db_setup():
         
         logger.info("Restoring backup...")
         
-        with open("/tmp/s2.bash") as sf_s2_f:
+        with open("/tmp/s2.bash", "w") as sf_s2_f:
             lines = [
                 "source /snowfall/userenv",
                 'psql -c "CREATE ROLE meow"',
