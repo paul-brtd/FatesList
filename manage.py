@@ -479,7 +479,8 @@ def db_setup():
         proc.wait()
     
     for op in ("start", "stop"):
-        with open(f"/usr/bin/snowfall-dbs-{op}", "w") as action_script:
+        script_path = Path(f"/usr/bin/snowfall-dbs-{op}")
+        with script_path.open("w") as action_script:
             lines = [
                 "#!/bin/bash",
                 f"/usr/bin/docker {op} snowfall.postgres",
@@ -487,6 +488,8 @@ def db_setup():
                 f"/usr/bin/docker {op} snowfall.rabbit"
             ]
             action_script.write("\n".join(lines))
+            
+        script_path.chmod(0o777)
         
 if __name__ == "__main__":
     app()
