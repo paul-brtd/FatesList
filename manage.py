@@ -523,5 +523,50 @@ def db_setup():
         with Popen(cmd, env=os.environ) as proc:
             proc.wait()
     
+    time.sleep(2)
+    
+    logger.info("Fixing up user env")
+    
+    with open("/snowfall/userenv") as sf_userenv:
+        lines = [
+            "source /etc/profile",
+            "export PGUSER=fateslist",
+            "export PGHOST=localhost",
+            "export PGPORT=1000",
+            f"export PGPASSWORD='{pg_pwd}'",
+            "export PGDATABASE=fateslist"
+        ]
+        
+        sf_userenv.write("\n".join(lines))
+    
+    with open("/home/meow/.bashrc") as bashrc_f:
+        lines = [
+            "source /snowfall/userenv",
+            "source /home/meow/flvenv/bin/activate"
+        ]
+        
+        bashrc_f.write("\n".join(lines))
+    
+    with open("/root/.bashrc") as bashrc_f:
+        lines = [
+            "source /snowfall/userenv"
+        ]
+    
+        bashrc_f.write("\n".join(lines))
+    
+    if Path("/backups/latest.bak").exists():
+        with open("/tmp/s2.bash") as sf_s2_f:
+            lines = [
+                "source /snowfall/userenv",
+                'psql -c "CREATE ROLE meow"',
+                'psql -c "CREATE ROLE readaccess"',
+                'psql -c "CREATE ROLE postgres"',
+                'psql -c "CREATE ROLE root"',
+                'psql -c "CREATE SCHEMA IF NOT EXISTS public"',
+                "psql -c 'CREATE EXTENSION IF NOT EXISTS " + '"uuid-ossp"' + "'",
+                "pg_restore -cvd fateslist /backups/latest.bak"
+            ]
+            sf_s2_f.write("\n".join(lines))
+    
 if __name__ == "__main__":
     app()
