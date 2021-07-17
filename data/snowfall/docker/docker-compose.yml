@@ -1,0 +1,36 @@
+services:
+  postgres:
+    image: postgres:13.3
+    container_name: snowfall.postgres
+    ports:
+      - "1000:5432"
+    env_file:
+      - /snowfall/docker/env.pg
+    volumes:
+      - /snowfall/docker/db/postgres:/var/lib/postgresql/data
+      - /snowfall/docker/scripts/postgres:/docker-entrypoint-initdb.d
+    restart: always
+  
+  redis:
+    image: redis:6.2.4
+    container_name: snowfall.redis
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "1001:6379"
+    volumes:
+      - /snowfall/docker/db/redis:/data
+      - /snowfall/docker/scripts/redis:/docker-entrypoint-initdb.d
+    restart: always
+
+  rabbit:
+    image: rabbitmq:3.8.18-management
+    container_name: snowfall.rabbit
+    hostname: fateslist_rabbit
+    ports:
+      - "1002:5672"
+      - "1003:15672"
+    env_file:
+      - /snowfall/docker/env.rabbit
+    volumes:
+      - /snowfall/docker/db/rabbit:/var/lib/rabbitmq/mnesia
+    restart: always
