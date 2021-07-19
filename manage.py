@@ -603,9 +603,11 @@ def db_setup(
     
  
 @venv.command("setup")
-def venv_setup():
-    pass
-
+def venv_setup(
+    python: str = typer.Argument("python3.10", envvar="PYTHON")
+):
+    home = Path.home()
+    Path(home / "flvenv").unlink()
 
 if __name__ == "__main__":
     app()
