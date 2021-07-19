@@ -609,6 +609,19 @@ def venv_setup(
     logger.info("Backing up old venv")
     home = Path.home()
     Path(home / "flvenv").rename(home / "flvenv.old")
-
+    
+    cmd = [
+        python,
+        "-m", 
+        "venv", 
+        str(home / "flvenv")
+    ]
+    
+    with Popen(cmd, env=os.environ) as proc:
+        proc.wait()
+    
+    
+    
+    
 if __name__ == "__main__":
     app()
