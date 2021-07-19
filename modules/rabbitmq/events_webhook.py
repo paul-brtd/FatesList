@@ -113,7 +113,7 @@ async def backend(
             # Had an error sending
             logger.warning(f"Error when sending -> {type(exc).__name__}: {exc}")
             if not resolved_error:
-                await _resolve_event(event_id, enums.WebhookResolver.error)
+                await _resolve_event(state, event_id, enums.WebhookResolver.error)
             resolved_error = True
 
 async def _resolve_event(state, event_id, resolution):

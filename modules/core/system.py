@@ -256,6 +256,7 @@ class FatesWorkerSession(Singleton):  # pylint: disable=too-many-instance-attrib
     def publish_workers(self, workers):
         """Publish workers"""
         self.workers = workers
+        self.workers.sort()
         self.fup = True
 
     def primary_worker(self):
@@ -307,8 +308,11 @@ async def init_fates_worker(app):
     # ========================================================
     # Move all code to use worker session. All new code should 
     # always use worker session instead of builtins
-    metric_p = Instrumentator()
-    metric_p.instrument(app)
+    try:
+        metric_p = Instrumentator()
+        metric_p.instrument(app)
+    except Exception:
+        pass
 
     dbs = await setup_db()
     _discord = await setup_discord()
@@ -498,8 +502,11 @@ async def status(workers, session, app):
                     logger.warning(
                         f"Got invalid workers from rabbitmq ({workers})"
                     )
-                
-                start_http_server(3000 + session.get_worker_index())
+               
+                try:
+                    start_http_server(3000 + session.get_worker_index())
+                except Exception:
+                    pass
 
                 await start_dbg(session, app)
                 asyncio.create_task(vote_reminder(session))
