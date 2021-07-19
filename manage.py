@@ -620,7 +620,7 @@ def venv_setup(
     with Popen(cmd, env=os.environ) as proc:
         proc.wait()
     
-    
+    new_python = home / "flvenv/bin/python"
     
     
 if __name__ == "__main__":
