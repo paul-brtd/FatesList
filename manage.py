@@ -22,26 +22,37 @@ import typer
 from config import worker_key, API_VERSION
 
 app = typer.Typer()
+
 site = typer.Typer(
     help="Fates List site management"
 )
 app.add_typer(site, name="site")
+
 rabbit = typer.Typer(
     help="Fates List Rabbit Worker management"
 )
 app.add_typer(rabbit, name="rabbit")
+
 secrets = typer.Typer(
     help="Utilities to manage secrets"
 )
+app.add_typer(secrets, name="secrets")
+
 staticfiles = typer.Typer(
     help="Utilities to manage static files"
 )
+app.add_typer(staticfiles, name="staticfiles")
+
 db = typer.Typer(
     help="Utilities to manage databases such as backup etc."
 )
-app.add_typer(secrets, name="secrets")
-app.add_typer(staticfiles, name="staticfiles")
 app.add_typer(db, name="db")
+
+venv = typer.Typer(
+    help="Utilities to manage the Fates List VENV"
+)
+app.add_typer(venv, name="venv")
+
 
 def error(msg: str, code: int = 1):
     typer.secho(msg, fg=typer.colors.RED, err=True)
@@ -590,6 +601,11 @@ def db_setup(
     logger.info(f"Erlang shared cookie is {erlang_shared_cookie}")
     logger.success("Done setting up databases")
     
-    
+ 
+@venv.command("setup")
+def venv_setup():
+    pass
+
+
 if __name__ == "__main__":
     app()
