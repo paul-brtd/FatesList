@@ -118,11 +118,11 @@
 				random_bots = document.querySelector("#random-bots")
 
 				// Get banner
-				if (data.banner == "" || data.banner == "none") {
+				if (!data.banner_card) {
 					banner = "/static/assets/img/banner.webp"
 				}
 				else {
-					banner = data.banner
+					banner = data.banner_card
 				}
 				if (data.state == 6) { // State 6 is certified
 					certified_ico = "visible"

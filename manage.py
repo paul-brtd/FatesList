@@ -71,7 +71,7 @@ def _fappgen():
 
 @site.command("run")
 def run_site(
-    workers: int = typer.Argument(3, envvar="SITE_WORKERS")
+    workers: int = typer.Argument(4, envvar="SITE_WORKERS")
 ):
     """Runs the Fates List site"""
     session_id = uuid.uuid4()

@@ -6,7 +6,7 @@ class Config:
     name = "Bot Add"
     description = "Adds a bot to the queue"
 
-async def backend(state, json, *, user_id, bot_id, prefix, library, website, banner, support, long_description, description, tags, extra_owners, invite, features, long_description_type, css, donate, github, webhook, webhook_type, webhook_secret, vanity, privacy_policy, nsfw, **kwargs):
+async def backend(state, json, *, user_id, bot_id, prefix, library, website, banner_card, banner_page, support, long_description, description, tags, extra_owners, invite, features, long_description_type, css, donate, github, webhook, webhook_type, webhook_secret, vanity, privacy_policy, nsfw, **kwargs):
     user_id, bot_id = int(user_id), int(bot_id) # I am stupid and made this a string
     logger.trace(f"Got bot id {bot_id}")
     await state.postgres.execute("DELETE FROM bots WHERE bot_id = $1", bot_id)
@@ -15,10 +15,10 @@ async def backend(state, json, *, user_id, bot_id, prefix, library, website, ban
     await state.postgres.execute("DELETE FROM bot_tags WHERE bot_id = $1", bot_id)
     await state.postgres.execute("""INSERT INTO bots (
             bot_id, prefix, bot_library,
-            invite, website, banner, 
+            invite, website, banner_card, banner_page,
             discord, long_description, description,
             api_token, features, long_description_type, 
-            css, donate, github, 
+            css, donate, github,
             webhook, webhook_type, webhook_secret,
             privacy_policy, nsfw, id) VALUES(
             $1, $2, $3,
@@ -27,14 +27,14 @@ async def backend(state, json, *, user_id, bot_id, prefix, library, website, ban
             $10, $11, $12, 
             $13, $14, $15, 
             $16, $17, $18, 
-            $19, $20, $1)""", 
+            $19, $20, $21, $1)""", 
             bot_id, prefix, library, 
-            invite, website, banner, 
+            invite, website, banner_card, banner_page,
             support, long_description, description,
             get_token(132), features, long_description_type,
             css, donate, github, webhook, webhook_type, webhook_secret,
             privacy_policy, nsfw) # Add new bot info
-    if vanity.replace(" ", "") != '':
+    if vanity and vanity.replace(" ", ""):
         await state.postgres.execute("INSERT INTO vanity (type, vanity_url, redirect) VALUES ($1, $2, $3)", enums.Vanity.bot, vanity, bot_id) # Add new vanity if not empty string
 
 

@@ -18,22 +18,23 @@ class BotMeta(BaseModel):
     prefix: str
     library: str
     invite: str
-    website: Optional[str] = ""
+    website: Optional[str] = None
     description: str
-    banner: Optional[str] = ""
-    extra_owners: List[str] # Int in reality but JSON
-    support: Optional[str] = ""
+    banner_card: Optional[str] = None
+    banner_page: Optional[str] = None
+    extra_owners: List[str] # List of strings that can be turned into a integer
+    support: Optional[str] = None
     long_description: str
-    css: Optional[str] = ""
+    css: Optional[str] = None
     long_description_type: Optional[enums.LongDescType] = enums.LongDescType.html
     nsfw: Optional[bool] = False
-    donate: Optional[str] = ""
-    privacy_policy: Optional[str] = ""
-    github: Optional[str] = ""
+    donate: Optional[str] = None
+    privacy_policy: Optional[str] = None
+    github: Optional[str] = None
     webhook_type: Optional[int] = 0
-    webhook: Optional[str] = ""
-    webhook_secret: Optional[str] = ""
-    vanity: Optional[str] = ""
+    webhook: Optional[str] = None
+    webhook_secret: Optional[str] = None
+    vanity: Optional[str] = None
     features: Optional[List[str]] = []
     tags: List[str]
 

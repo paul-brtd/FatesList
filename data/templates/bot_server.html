@@ -3,32 +3,30 @@
 {% block head %}
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Fates-List/FatesList@main/data/static/assets/css/bots_servers.rev4.min.css" media="none" onload="if(media!='all')media='all'"/>
 <style>
-.codehilite {background-color: white}
+.buttons-all {background-color: black !important;}
+.codehilite {background-color: white;}
 {{ireplace(".alert", "", data.css)}}
 </style>
 {% endblock %}
 {% block content %}
-	<div id="{{type}}-content">
-		<div class="d-flex d-xl-flex flex-column justify-content-center align-items-center justify-content-xl-center align-items-xl-center">
+	<div id="{{type}}-content" class="bot-card-banner lozad" data-background-image="{{data.banner}}">
+		<div class="d-flex d-xl-flex flex-column align-items-center align-items-xl-center">
 
 			<img style="border-radius: 50%; width: 120px;" class="lozad" data-src="{{data.user.avatar}}"$ id="{{type}}-avatar" alt="{{data.user.username}}'s avatar">
 			<a href="/{{type}}/{{id}}/invite" class="white"><h3 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;" id="{{type}}-name">{{data.user.username}} <span style="opacity: 0.65">({{data.prefix}})</span></h3></a>
 			{% if type == "bot" %}
-				{% if data.state == enums.BotState.denied %}
-				<div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
-					<strong>This bot has been DENIED from this list for violating our rules or being a low-quality bot. Please do not invite it.</strong>	
-					{% if admin %}
-						<br/><strong>Since you are the owner/extra owners of this bot, you can resubmit your bot or request a ban appeal (if your bot was banned and not denied) by clicking <a class="long-desc-link" href="/bot/{{id}}/resubmit">here</a></strong>
+				{% if data.state in (enums.BotState.denied, enums.BotState.banned) %}
+					<div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
+					{% if data.state == enums.BotState.denied %}
+						<strong>This bot has been DENIED from this list for being a low-quality bot. Please do not invite it.</strong>	
+					{% elif data.state == enums.BotState.banned %}
+						<strong>This bot has been BANNED from this bot list for violating our rules or being a low-quality bot. Please do not invite it until further notice!</strong>
 					{% endif %}
-				</div>
-				{% elif data.state == enums.BotState.banned %}
-				<div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
-					<strong>This bot has been BANNED from this bot list for violating our rules or being a low-quality bot. Please do not invite it.</strong>
 					{% if admin %}
 						<br/><strong>Since you are the owner/extra owners of this bot, you can resubmit your bot or request a ban appeal (if your bot was banned and not denied) by clicking <a class="long-desc-link" href="/bot/{{data.id}}/resubmit">here</a></strong>
 					{% endif %}
 				</div>
-				{% elif data.state == enums.BotState.pending or data.state == enums.BotState.under_review %}
+				{% elif data.state in (enums.BotState.pending, enums.BotState.under_review) %}
 				<div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
 					<strong>This bot has not yet been verified/approved and may violate our rules and/or be low-quality or a "nuke bot". Please do not invite it until we have approved it</strong>
 				</div>
@@ -37,17 +35,6 @@
 					<div class="alert alert-info" style="text-align: center; justify-content: center; color: white !important;" role="alert">
 						<strong>This bot is currently under review now right now and will be approved (or denied) soon!</strong>
 					</div>
-				{% endif %}
-				{% if data.state == enums.BotState.archived %}
-					<div class="alert alert-info" style="text-align: center; justify-content: center; color: white !important;" role="alert">
-						<strong>This bot has been archived by its owner and may not be working anymore</strong>
-					</div>
-				{% endif %}
-				{% if (data.state == enums.BotState.pending or data.state == enums.BotState.under_review) and staff[0] %}
-					<div class="alert alert-info" style="text-align: center; justify-content: center; color: white !important;" role="alert">
-						<strong>You are in review mode. Test the bot by inviting it to the staff server by clicking the Invite button and choosing the Testing Server. Once you are done reviewing the bot, click Admin to approve/deny it</strong>
-					</div>
-				</div>
 				{% endif %}
 		{% endif %}
 	{% if data.nsfw %}
@@ -63,29 +50,27 @@
 	<p style="color: rgba(255,255,255,0.87); font-weight: bold; font-size: 18px;" id="{{type}}-description">{{data.description}}</p>
 	</div>
 	<div class="d-flex justify-content-center align-items-center flex-wrap" style="width: 80%;margin: 0 auto;max-width: 1000px; margin-bottom: 3px !important;" id="{{type}}-buttons">
-		{% if data.state != enums.BotState.banned %}
-				<button onclick="voteBot()" class="btn buttons-all vote btn-outline-light" id="buttons-vote" style="color: white !important;">
-					<span class="iconify" data-icon="fa-solid:thumbs-up" data-inline="false"></span>
-					<span style="margin-left: 3px;">{{human_format(data.votes)}}</span>
-				</button>
-		{% endif %}
-		{% if type != "bot" or data.state != enums.BotState.banned %}
+		{% if data.state not in (enums.BotState.pending, enums.BotState.under_review, enums.BotState.denied, enums.BotState.banned) %}
+			<button onclick="voteBot()" class="btn buttons-all vote btn-outline-light" id="buttons-vote" style="color: white !important;">
+				<span class="iconify" data-icon="fa-solid:thumbs-up" data-inline="false"></span>
+				<span style="margin-left: 3px;">{{human_format(data.votes)}}</span>
+			</button>
 			<a target=”_blank” href="/{{type}}/{{id}}/invite"><button class="btn btn-outline-light buttons-all" id="buttons-invite">Invite</button></a>
-		{% endif %}
-		{% if data.support and data.support.replace(" ", "") %}
-			<a target=”_blank” href="{{data.support}}"><button class="btn btn-outline-light buttons-all" id="buttons-support">Support</button></a>
-		{% endif %}
-		{% if data.donate and data.donate.replace(" ", "") %}
-			<a target=”_blank” href="{{data.donate}}"><button class="btn btn-outline-light buttons-all" id="buttons-donate">Donate</button></a>
-		{% endif %}
-		{% if data.github and data.github.replace(" ", "") %}
-			<a target=”_blank” href="{{data.github}}"><button class="btn btn-outline-light buttons-all" id="buttons-github">Github</button></a>
-		{% endif %}
-		{% if data.privacy_policy %}
-			<a target="_blank" href="{{data.privacy_policy}}"><button class="btn btn-outline-light buttons-all" id="buttons-privacy">Privacy Policy</button></a>
-		{% endif %}
-		{% if data.website %}
-			<a target=”_blank” href="{{data.website}}"><button class="btn btn-outline-light buttons-all" id="buttons-website">Website</button></a>
+			{% if data.support and data.support.replace(" ", "") %}
+				<a target=”_blank” href="{{data.support}}"><button class="btn btn-outline-light buttons-all" id="buttons-support">Support</button></a>
+			{% endif %}
+			{% if data.donate and data.donate.replace(" ", "") %}
+				<a target=”_blank” href="{{data.donate}}"><button class="btn btn-outline-light buttons-all" id="buttons-donate">Donate</button></a>
+			{% endif %}
+			{% if data.github and data.github.replace(" ", "") %}
+				<a target=”_blank” href="{{data.github}}"><button class="btn btn-outline-light buttons-all" id="buttons-github">Github</button></a>
+			{% endif %}
+			{% if data.privacy_policy %}
+				<a target="_blank" href="{{data.privacy_policy}}"><button class="btn btn-outline-light buttons-all" id="buttons-privacy">Privacy Policy</button></a>
+			{% endif %}
+			{% if data.website %}
+				<a target=”_blank” href="{{data.website}}"><button class="btn btn-outline-light buttons-all" id="buttons-website">Website</button></a>
+			{% endif %}
 		{% endif %}
 		{% if admin %}
 			<a href="/{{type}}/{{id}}/settings"><button class="btn btn-outline-light buttons-all" id="buttons-settings">Settings</button></a>

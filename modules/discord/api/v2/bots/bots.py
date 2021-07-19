@@ -67,7 +67,7 @@ async def regenerate_bot_token(request: Request, bot_id: int):
 )
 async def fetch_random_bot(request: Request, lang: str = "default"):
     random_unp = await db.fetchrow(
-        "SELECT description, banner, state, votes, guild_count, bot_id, invite FROM bots WHERE state = 0 OR state = 6 ORDER BY RANDOM() LIMIT 1"
+        "SELECT description, banner_card, state, votes, guild_count, bot_id, invite FROM bots WHERE state = 0 OR state = 6 ORDER BY RANDOM() LIMIT 1"
     ) # Unprocessed, use the random function to get a random bot
     bot_obj = await get_bot(random_unp["bot_id"], worker_session = request.app.state.worker_session)
     if bot_obj is None:
@@ -79,8 +79,8 @@ async def fetch_random_bot(request: Request, lang: str = "default"):
         "guild_count": human_format(bot["guild_count"])
     }
     bot["description"] = cleaner.clean_html(intl_text(bot["description"], lang)) # Prevent XSS attacks in short description
-    if bot["banner"] is None: # Ensure banner is always a string
-        bot["banner"] = "" 
+    if not bot["banner_card"]: # Ensure banner is always a string
+        bot["banner_card"] = "" 
     return bot
 
 @router.get(
@@ -97,7 +97,7 @@ async def fetch_random_bot(request: Request, lang: str = "default"):
 async def fetch_bot(request: Request, bot_id: int):
     """Fetches bot information given a bot ID. If not found, 404 will be returned."""
     api_ret = await db.fetchrow(
-        "SELECT banner, description, long_description_type, long_description, guild_count, shard_count, shards, prefix, invite, invite_amount, features, bot_library AS library, state, website, discord AS support, github, user_count, votes, css, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", 
+        "SELECT banner_card, banner_page, description, long_description_type, long_description, guild_count, shard_count, shards, prefix, invite, invite_amount, features, bot_library AS library, state, website, discord AS support, github, user_count, votes, css, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", 
         bot_id
     )
     if api_ret is None:

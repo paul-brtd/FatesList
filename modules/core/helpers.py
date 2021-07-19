@@ -179,7 +179,7 @@ async def do_index_query(
     db = worker_session.postgres
     
     states = "WHERE " + " OR ".join([f"state = {s}" for s in state])
-    base_query = f"SELECT description, banner, state, votes, guild_count, bot_id, invite, nsfw FROM bots {states}"
+    base_query = f"SELECT description, banner_card AS banner, state, votes, guild_count, bot_id, invite, nsfw FROM bots {states}"
     if limit:
         end_query = f"LIMIT {limit}"
     else:

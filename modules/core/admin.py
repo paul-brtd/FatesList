@@ -17,9 +17,6 @@ class BotActions():
         if self.tags == "":
             return "You must select tags for your bot" #Check tags
 
-        if not self.banner.startswith("https://") and self.banner not in ["", "none"]:
-            return "Your banner does not use https://. Please change it" # Check banner and ensure HTTPS
-        
         if self.invite:
             if self.invite.startswith("P:"): # Check if perm auto is specified
                 perm_num = self.invite.split(":")[1].split("|")[0]
@@ -46,40 +43,47 @@ class BotActions():
             return "You must select tags for your bot" # No tags found
 
         imgres = None
-        if self.banner:
-            try:
-                async with aiohttp.ClientSession() as sess:
-                    async with sess.head(self.banner, timeout=30) as res:
-                        if res.status != 200:
-                            # Banner URL does not support head, try get
-                            async with sess.get(self.banner, timeout=30) as res_fallback:
-                                if res_fallback.status != 200:
-                                    return "Could not download banner using either GET or HEAD! Is your URL correct"
-                                imgres = res_fallback
-                        else:
-                            imgres = res
-            except Exception as exc:
-                return f"Something happened when trying to get the url: {exc}"
+        
+        for banner_key in ("banner_page", "banner_card"):
+            banner = self.__dict__[banner_key]
+            banner_name = banner_key.replace("_", " ")
+            if banner:
+                banner = ireplacem((("(", ""), (")", ""), ("http://", "https://")), banner)
+                if not banner.startswith("https://"):
+                    return f"Your {banner_name} does not use https://. Please change it" # Check banner and ensure HTTPS
+                try:
+                    async with aiohttp.ClientSession() as sess:
+                        async with sess.head(banner, timeout=30) as res:
+                            if res.status != 200:
+                                # Banner URL does not support head, try get
+                                async with sess.get(self.banner, timeout=30) as res_fallback:
+                                    if res_fallback.status != 200:
+                                        return f"Could not download {banner_name} using either GET or HEAD! Is your URL correct"
+                                    imgres = res_fallback
+                            else:
+                                imgres = res
+                except Exception as exc:
+                    return f"Something happened when trying to get the url for {banner_name}: {exc}"
             
-            ct = imgres.headers.get("Content-Type", "").replace(" ", "")
-            if ct.split("/")[0] != "image":
-                return f"Banner URL is not an image. Please make sure it is setting the proper Content-Type. Got status code {imgres.status} and content type of {ct}."
+                ct = imgres.headers.get("Content-Type", "").replace(" ", "")
+                if ct.split("/")[0] != "image":
+                    return f"A banner has an issue: {banner_name} is not an image. Please make sure it is setting the proper Content-Type. Got status code {imgres.status} and content type of {ct}."
 
-        if self.donate != "" and not (self.donate.startswith("https://patreon.com") or self.donate.startswith("https://paypal.me")):
-            return "Only Patreon and Paypal.me are allowed for donation links as of right now." # Check donation link for approved source (paypal.me and patreon
-
+        if self.donate and not self.donate.startswith(("https://patreon.com", "https://paypal.me")):
+            return "Only Patreon and Paypal.me are allowed for donation links as of right now." 
         
         for eo in self.extra_owners:
             tmp = await get_user(eo)
             if not tmp:
                 return "One of your extra owners doesn't exist"
 
-        if self.github != "" and not self.github.startswith("https://www.github.com"): # Check github for github.com if not empty string
+        if self.github and not self.github.startswith("https://www.github.com"): # Check github for github.com if not empty string
             return "Your github link must start with https://www.github.com"
 
-        self.privacy_policy = self.privacy_policy.replace("http://", "https://") # Force https on privacy policy
-        if self.privacy_policy != "" and not self.privacy_policy.startswith("https://"): # Make sure we actually have a HTTPS privacy policy
-            return "Your privacy policy must be a proper URL starting with https://. URLs which start with http:// will be automatically converted to HTTPS while adding"
+        if self.privacy_policy:
+            self.privacy_policy = self.privacy_policy.replace("http://", "https://") # Force https on privacy policy
+            if not self.privacy_policy.startswith("https://"): # Make sure we actually have a HTTPS privacy policy
+                return "Your privacy policy must be a proper URL starting with https://. URLs which start with http:// will be automatically converted to HTTPS while adding"
         check = await vanity_check(self.bot_id, self.vanity) # Check if vanity is already being used or is reserved
         if check:
             return "Your custom vanity URL is already in use or is reserved"

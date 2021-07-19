@@ -18,7 +18,7 @@ class BotRandom(BaseModel):
     """
     bot_id: str
     description: str
-    banner: str
+    banner_card: Optional[str] = None
     state: int
     username: str
     avatar: str
@@ -63,7 +63,10 @@ class Bot(BaseUser):
     donate: Optional[str] = None
     privacy_policy: Optional[str] = None
     nsfw: bool
-    banner: Optional[str] = None
+    banner_card: Optional[str] = None
+    banner_page: Optional[str] = None
+
+
 
 class BotStats(BaseModel):
     guild_count: int

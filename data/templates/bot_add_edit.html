@@ -130,14 +130,23 @@
         minlength="10"
         value="{{bot.website}}"
       />
-      <label for="website">Banner URL (optimal: 255x143px)</label>
+      <label for="banner_card">Banner URL for bot card (255x143px)</label>
       <input
         class="form-control fform"
         type="text"
-        name="banner"
-        placeholder="https://cdn.discordapp.com/MySecretBanner.com"
-        minlength="10"
-        value="{% if bot.banner == "none" or bot.banner == "" %}{%else%}{{bot.banner}}{%endif%}"
+        name="banner_card"
+        placeholder="https://cdn.discordapp.com/MySecretBanner.png"
+        minlength="7"
+	value="{% if bot.banner_card %}{{bot.banner_card}}{%endif%}"
+      />
+      <label for="banner_page">Banner URL for bot page</label>
+      <input
+	class="form-control fform"
+	type="text"
+	name="banner_page"
+	placeholder="https://cdn.discordapp.com/MySecretBanner.png"
+	minlength="7"
+	value="{% if bot.banner_page %}{{bot.banner_page}}{%endif%}"
       />
       <label for="support">Support server</label>
       <input
