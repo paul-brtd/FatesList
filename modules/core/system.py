@@ -297,7 +297,7 @@ async def setup_discord():
 # and using importlib to import them and then including them in fastapi
 
 
-async def init_fates_worker(app):
+async def init_fates_worker(app, session_id, workers):
     """
     On startup:
         - Initialize Postgres, Redis, RabbitMQ and discord
@@ -325,7 +325,7 @@ async def init_fates_worker(app):
     logger.success("Connected to postgres, rabbitmq and redis")
 
     app.state.worker_session = FatesWorkerSession(
-        session_id=os.environ.get("SESSION_ID"),
+        session_id=session_id,
         postgres=dbs["postgres"],
         redis=dbs["redis"],
         rabbit=dbs["rabbit"],
@@ -415,9 +415,6 @@ async def init_fates_worker(app):
 
     # Setup oenapi
     app.openapi = fl_openapi(app)
-
-    # Get number of workers for worker syncing
-    workers = os.environ.get("WORKERS")
 
     # Begin worker sync
     asyncio.create_task(status(workers, session, app))

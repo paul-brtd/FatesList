@@ -4,6 +4,8 @@ sys.pycache_prefix = "data/pycache"
 
 from subprocess import Popen, DEVNULL
 import os
+os.environ["LOGURU_LEVEL"] = "DEBUG"
+
 import uuid
 import signal
 import builtins
@@ -16,10 +18,13 @@ import importlib
 import asyncio
 import shutil
 import time
+import multiprocessing
+from typing import Any, Callable, Dict
 
 from config._logger import logger
 import typer
 from config import worker_key, API_VERSION
+
 
 app = typer.Typer()
 
@@ -58,13 +63,11 @@ def error(msg: str, code: int = 1):
     typer.secho(msg, fg=typer.colors.RED, err=True)
     return typer.Exit(code=code)
 
-def _fappgen():
+def _fappgen(session_id, workers):
     """Make the FastAPI app for gunicorn"""
     from fastapi import FastAPI
     from fastapi.responses import ORJSONResponse
     from modules.core.system import init_fates_worker
-    import uvloop
-    uvloop.install()
      
     _app = FastAPI(
         default_response_class=ORJSONResponse, 
@@ -75,16 +78,21 @@ def _fappgen():
 
     @_app.on_event("startup")
     async def startup():
-        await init_fates_worker(_app)
+        await init_fates_worker(_app, session_id, workers)
     
     return _app
 
 
+default_workers_num = lambda: (multiprocessing.cpu_count() * 2) + 1
+
+
 @site.command("run")
 def run_site(
-    workers: int = typer.Argument(4, envvar="SITE_WORKERS")
+    workers: int = typer.Argument(default_workers_num, envvar="SITE_WORKERS"),
 ):
     """Runs the Fates List site"""
+    from gunicorn.app.base import BaseApplication
+
     session_id = uuid.uuid4()
     
     # Create the pids folder if it hasnt been created
@@ -92,24 +100,35 @@ def run_site(
    
     for sig in (signal.SIGINT, signal.SIGQUIT, signal.SIGTERM):
         signal.signal(sig, lambda *args, **kwargs: ...)
-
-    cmd = [
-        "gunicorn", "--log-level=debug", 
-        "-p", "data/pids/gunicorn.pid",
-        "-k", "config._uvicorn.FatesWorker",
-        "-b", "0.0.0.0:9999", 
-        "-w", str(workers),
-        "manage:_fappgen()"
-    ]
     
-    env=os.environ | {
-        "LOGURU_LEVEL": "DEBUG",
-        "SESSION_ID": str(session_id),
-        "WORKERS": str(workers),
+    class FatesRunner(BaseApplication):
+        def __init__(self, application: Callable, options: Dict[str, Any] = {}):
+            self.options = options
+            self.application = application
+            super().__init__()
+
+        def load_config(self):
+            config = {
+                key: value
+                for key, value in self.options.items()
+                if key in self.cfg.settings and value is not None
+            }
+            for key, value in config.items():
+                self.cfg.set(key.lower(), value)
+
+        def load(self):
+            return self.application
+
+    options = {
+        "worker_class": "config._uvicorn.FatesWorker",
+        "workers": workers,
+        "bind": "0.0.0.0:9999",
+        "loglevel": "debug",
+        "pidfile": "data/pids/gunicorn.pid"
     }
 
-    with Popen(cmd, env=env) as proc:
-        proc.wait()
+    app = _fappgen(str(session_id), workers)
+    FatesRunner(app, options).run()
 
 
 @site.command("reload")
