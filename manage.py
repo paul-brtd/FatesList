@@ -237,13 +237,14 @@ def staticfiles_relabel():
     import git 
     relabels = []
     for s_file in Path("data/static/assets").rglob("*.rev*.*"):
-        if str(s_file).endswith(".hash"):
+        if str(s_file).endswith((".hash", ".min.js")):
             continue
 
         sha = Path(f"{s_file}.hash")
+        minjs = Path(str(s_file).replace(".js", ".min.js"))
         needs_relabel = False
         
-        if not sha.exists():
+        if not sha.exists() or (not minjs.exists() and str(s_file).endswith(".js")):
             needs_relabel = True
 
         else:
@@ -288,16 +289,19 @@ def staticfiles_relabel():
             
             relabels.append(f"{s_file_new}.hash")
 
+            cmd = [
+                "google-closure-compiler", 
+                "--js", str(s_file_new), 
+                "--js_output_file", str(s_file_new).replace(".js", ".min.js")
+            ]
+            
+            if str(s_file_new).endswith(".js"):
+                with Popen(cmd, env=os.environ) as proc:
+                    proc.wait()
+            
             typer.echo(
                 f"Relabelled {s_file} to {s_file_new}!"
             )
-    
-    if relabels:
-        typer.echo("Pushing to github")
-        repo = git.Repo('.')
-        repo.git.add(*relabels)
-        repo.git.commit("-m", "Static file relabel")
-        repo.remote(name='origin').push()
 
 
 @db.command("backup")

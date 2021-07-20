@@ -309,11 +309,11 @@
 			</tr>
 			<tr>
 				<th>Servers</th>
-				<td>{{data.servers}}</td>
+				<td>{{data.guild_count}}</td>
 			</tr>
 			<tr>
 				<th>Shards</th>
-				<td>{{data.shards}}</td>
+				<td>{{data.shard_count}}</td>
 			</tr>
 			<tr>
 				<th>Invites</th>
@@ -335,8 +335,8 @@
 <script>
 	var context = {{ context|tojson }}
 </script>
-<script src="https://cdn.jsdelivr.net/gh/Fates-List/FatesList@main/data/static/assets/js/bots_servers.rev14.min.js" defer></script>
-<script src="https://cdn.jsdelivr.net/gh/Fates-List/FatesList@main/data/static/assets/js/vote.rev5.min.js" defer></script>
+<script src="/static/assets/js/bots_servers.rev19.min.js"></script>
+<script src="/static/assets/js/vote.rev9.min.js"></script>
 </div>
 {% endblock %} 
 {% block footer %} 

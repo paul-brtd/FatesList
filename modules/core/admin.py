@@ -121,15 +121,15 @@ class BotActions():
     async def add_bot(self):
         """Add a bot"""
         check = await self.add_check() # Perform add bot checks
-        if check is not None:
-            return check # Returning a strung and not None means error to be returned to consumer
+        if check:
+            return check # Returning a string and not None means error to be returned to consumer
 
         await add_rmq_task("bot_add_queue", self.__dict__) # Add to add bot RabbitMQ
 
     async def edit_bot(self):
         """Edit a bot"""
         check = await self.edit_check() # Perform edit bot checks
-        if check is not None:
+        if check:
             return check
 
         await add_rmq_task("bot_edit_queue", self.__dict__) # Add to edit bot RabbitMQ
