@@ -31,7 +31,6 @@ async def add_bot(request: Request, user_id: int, bot_id: int, bot: BotMeta):
     
     Due to how Fates List adds and edits bots using RabbitMQ, this will return a 202 and not a 200 on success
     """
-    bot.banner = bot.banner.replace("http://", "https://").replace("(", "").replace(")", "")
     bot_dict = bot.dict()
     bot_dict["bot_id"] = bot_id
     bot_dict["user_id"] = user_id

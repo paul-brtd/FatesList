@@ -132,7 +132,7 @@ async def fetch_bot(request: Request, bot_id: int):
         api_ret["features"] = []
     api_ret["invite_link"] = await invite_bot(bot_id, api = True)
     bot_obj = await get_bot(bot_id)
-    if bot_obj is None:
+    if not bot_obj:
         return abort(404)
     api_ret = api_ret | bot_obj
     api_ret["vanity"] = await db.fetchval(
@@ -140,6 +140,13 @@ async def fetch_bot(request: Request, bot_id: int):
         bot_id
     )
     return api_ret
+
+
+@router.head("/{bot_id}")
+async def bot_exists(request: Request, bot_id: int):
+    count = await db.fetchval("SELECT bot_id FROM bots WHERE bot_id = $1", bot_id)
+    return PlainTextResponse("", status_code=200 if count else 404) 
+
 
 @router.get(
     "/{bot_id}/widget",

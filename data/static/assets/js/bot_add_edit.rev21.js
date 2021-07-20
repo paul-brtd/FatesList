@@ -1,5 +1,5 @@
 function submitBot(e) {
-    modalShow("Adding Bot..", "Please wait...")
+    modalShow("Adding Bot..", "Please wait for a few minutes...")
     try {
     	json = $j('#botform').serializeJSON()
     	tags = document.querySelector("#tags").values
@@ -35,7 +35,7 @@ function submitBot(e) {
 				setTimeout(setInterval(function(){
 				$j.ajax({
 					url: `/api/bots/${json.bot_id}`,
-					method: "GET",
+					method: "HEAD",
 					statusCode: {
 						200: function(data){
 							window.location.replace(`/bot/${json.bot_id}`)
