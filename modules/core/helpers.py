@@ -23,6 +23,21 @@ ldesc_replace_tuple = (("window.location", ""), ("document.ge", ""))
 
 cleaner = Cleaner(remove_unknown_tags=False)
 
+def id_check(check_t: str):
+    def check(id: int, fn: str):
+        if id > INT64_MAX:
+            raise HTTPException(status_code=400, detail=f"{fn} out of int64 range")
+
+    def bot(bot_id: int):
+        return check(bot_id, "bot_id")
+
+    def user(user_id: int):
+        return check(user_id, "user_id")
+
+    if check_t == "bot":
+        return bot
+    return user
+
 def worker_session(request: Request):
     return request.app.state.worker_session
 

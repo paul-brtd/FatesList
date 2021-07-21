@@ -217,8 +217,3 @@ class APIEventTypes(IntEnum):
     auth_token = 20, "Token Auth"
     auth_manager_key = 21, "Manager Auth"
     vote_webhook = 40, "Vote Webhook Event"
-
-class ObjTypes(IntEnum):
-    _init_ = "value __doc__"
-    bot = 0, "Bot"
-    server = 1, "Server"

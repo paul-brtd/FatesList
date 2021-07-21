@@ -207,7 +207,7 @@ function deleteReview(rev_id) {
 		processData: false,
 		contentType: 'application/json',
 		statusCode: {
-			400: function(data) {alert(data.error)}
+			400: function(data) {modalShow("Error", data.error)}
 		}	
 	});
 	modalShow("Success!", "Deleted Review Successfully")

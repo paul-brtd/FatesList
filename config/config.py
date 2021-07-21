@@ -1,3 +1,4 @@
+INT64_MAX = 9223372036854775807
 bot_logs = 836326348326043648 # #bot-logs in support server
 server_logs = 837048691965034496 # Server logs in support server
 appeals_channel = 836326351387623454 # #resubmissions-and-appeals in support server

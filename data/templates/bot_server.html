@@ -1,7 +1,7 @@
 {% extends "base/base.html" %}
 
 {% block head %}
-	<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Fates-List/FatesList@main/data/static/assets/css/bots_servers.rev4.min.css" media="none" onload="if(media!='all')media='all'"/>
+	<link rel="stylesheet" href="/static/assets/css/bots_servers.rev7.css" media="none" onload="if(media!='all')media='all'"/>
 <style>
 .buttons-all {background-color: black !important;}
 .codehilite {background-color: white;}
@@ -23,7 +23,7 @@
 						<strong>This bot has been BANNED from this bot list for violating our rules or being a low-quality bot. Please do not invite it until further notice!</strong>
 					{% endif %}
 					{% if admin %}
-						<br/><strong>Since you are the owner/extra owners of this bot, you can resubmit your bot or request a ban appeal (if your bot was banned and not denied) by clicking <a class="long-desc-link" href="/bot/{{data.id}}/resubmit">here</a></strong>
+						<br/><strong>Since you are the owner/extra owners of this bot, you can resubmit your bot or request a ban appeal (if your bot was banned and not denied) by clicking <a class="long-desc-link" href="/bot/{{id}}/appeal">here</a></strong>
 					{% endif %}
 				</div>
 				{% elif data.state in (enums.BotState.pending, enums.BotState.under_review) %}

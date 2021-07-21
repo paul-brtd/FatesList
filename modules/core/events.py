@@ -55,20 +55,15 @@ async def bot_add_event(bot_id: int, event: int, context: dict, t: Optional[int]
         return
     event_time = time.time()
     asyncio.create_task(db.execute("INSERT INTO bot_api_event (bot_id, event, type, context, id) VALUES ($1, $2, $3, $4, $5)", bot_id, event, t, orjson.dumps(context).decode("utf-8"), id))
-    webh = await db.fetchrow("SELECT webhook, webhook_type, webhook_secret FROM bots WHERE bot_id = $1", int(bot_id))
-    if webh and send_event:
+    if send_event:
         await add_rmq_task("events_webhook_queue", {
-            "webhook_url": webh["webhook"], 
-            "webhook_type": webh["webhook_type"],
-            "webhook_secret": webh["webhook_secret"],
-            "api_token": api_token, 
             "id": bot_id, 
-            "webhook_target": enums.ObjTypes.bot, 
+            "target": "bot", 
             "event": event, 
-            "context": context,
-            "event_type": t,
-            "event_time": event_time,
-            "event_id": id
+            "ctx": context,
+            "t": t,
+            "ts": event_time,
+            "eid": id
         })
         asyncio.create_task(add_ws_event(bot_id, {"ctx": context, "m": {"t": t, "ts": event_time, "e": event}}, id = id))
     return id

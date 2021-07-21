@@ -19,7 +19,7 @@ async def add_bot(request: Request):
         return RedirectResponse("/auth/login?redirect=/bot/admin/add&pretty=to add a bot")
 
 @router.get("/{bot_id}/settings")
-async def bot_settings_page(request: Request, bot_id: int):
+async def bot_settings(request: Request, bot_id: int):
     if "user_id" not in request.session.keys():
         return abort(403)
     
@@ -100,43 +100,21 @@ async def edit_review(request: Request, bot_id: int, rid: uuid.UUID, bt: Backgro
     await bot_add_event(bot_id, enums.APIEvents.review_add, {"user": str(request.session["user_id"]), "reply": True, "id": str(reply_id), "star_rating": rating, "review": review, "root": str(rid)})
     return await templates.TemplateResponse("message.html", {"request": request, "message": f"Successfully replied to your/this review for this bot!<script>window.location.replace('/bot/{bot_id}')</script>"})
 
-@router.get("/{bot_id}/resubmit")
+@router.get("/{bot_id}/appeal")
 async def resubmit_bot(request: Request, bot_id: int):
     if "user_id" in request.session.keys():
         check = await is_bot_admin(bot_id, int(request.session.get("user_id")))
         if not check:
             return abort(403)
     else:
-        return RedirectResponse("/")
-    bot = await get_bot(bot_id)
-    if not bot:
-        return abort(404)
-    return await templates.TemplateResponse("resubmit.html", {"request": request, "bot": bot, "bot_id": bot_id})
+        return abort(403)
+    context = {
+        "id": str(bot_id),
+        "bot_token": await db.fetchval("SELECT api_token FROM bots WHERE bot_id = $1", bot_id),
+        "state": await db.fetchval("SELECT state FROM bots WHERE bot_id = $1", bot_id)
+    }
 
-@router.post("/{bot_id}/resubmit")
-async def resubmit_bot(request: Request, bot_id: int, appeal: str = FForm(...), qtype: str = FForm("off")):
-    if "user_id" in request.session.keys():
-        check = await is_bot_admin(bot_id, int(request.session.get("user_id")))
-        if not check:
-            return abort(403)
-    else:
-        return RedirectResponse("/")
-    bot = await get_bot(bot_id)
-    if bot is None:
-        return abort(404)
-    resubmit = qtype == "on"
-    reschannel = client.get_channel(appeals_channel)
-    if resubmit:
-        title = "Bot Resubmission"
-        type = "Context"
-    else:
-        title = "Ban Appeal"
-        type = "Appeal"
-    resubmit_embed = discord.Embed(title=title, color=0x00ff00)
-    resubmit_embed.add_field(name="Username", value = bot['username'])
-    resubmit_embed.add_field(name="Bot ID", value = str(bot_id))
-    resubmit_embed.add_field(name="Resubmission", value = str(resubmit))
-    resubmit_embed.add_field(name=type, value = appeal)
-    await reschannel.send(embed = resubmit_embed)
-    return await templates.TemplateResponse("message.html", {"request": request, "message": "Appeal sent successfully!."})
+    if context["state"] not in (enums.BotState.denied, enums.BotState.banned):
+        return await templates.e("Bot not banned or denied")
 
+    return await templates.TemplateResponse("appeal.html", {"request": request}, context=context)

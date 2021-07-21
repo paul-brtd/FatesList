@@ -2,20 +2,22 @@ from lxml.html.clean import Cleaner
 
 from modules.core import *
 from lynxfall.utils.string import human_format
+from fastapi.responses import PlainTextResponse
 
 from ..base import API_VERSION
-from .models import APIResponse, Bot, BotRandom, BotStats
+from .models import APIResponse, Bot, BotRandom, BotStats, BotAppeal
 
 cleaner = Cleaner(remove_unknown_tags=False)
 
 router = APIRouter(
     prefix = f"/api/v{API_VERSION}/bots",
     include_in_schema = True,
-    tags = [f"API v{API_VERSION} - Bots"]
+    tags = [f"API v{API_VERSION} - Bots"],
+    dependencies=[Depends(id_check("bot"))]
 )
 
 @router.get(
-    "/bots/{bot_id}/token",
+    "/{bot_id}/token",
     dependencies=[
         Depends(
             Ratelimiter(
@@ -205,4 +207,47 @@ async def set_bot_stats(request: Request, bot_id: int, api: BotStats):
         else:
             stats[stat] = stats_new[stat]
     await set_stats(bot_id = bot_id, **stats)
+    return api_success()
+
+@router.post(
+    "/{bot_id}/appeal",
+    response_model=APIResponse,
+    dependencies=[
+        Depends(
+            Ratelimiter(
+                global_limit = Limit(times=5, minutes=1)
+            )
+        ),
+        Depends(bot_auth_check)
+    ]
+)
+async def appeal_bot(request: Request, bot_id: int, data: BotAppeal):
+    if len(data.appeal) < 7:
+        return api_error(
+            "Appeal must be at least 7 characters long"
+        )
+    client = request.app.state.worker_session.discord.main
+    db = request.app.state.worker_session.postgres
+
+    state = await db.fetchval("SELECT state FROM bots WHERE bot_id = $1", bot_id)
+
+    if state == enums.BotState.denied:
+        title = "Bot Resubmission"
+        appeal_title = "Context"
+    elif state == enums.BotState.banned:
+        title = "Ban Appeal"
+        appeal_title = "Appeal"
+    else:
+        return api_error(
+            "You cannot send an appeal for a bot that is not banned or denied!"
+        )
+    await client.wait_until_ready()
+    reschannel = client.get_channel(appeals_channel)
+    resubmit_embed = discord.Embed(title=title, color=0x00ff00)
+    bot = await get_bot(bot_id)
+    resubmit_embed.add_field(name="Username", value = bot['username'])
+    resubmit_embed.add_field(name="Bot ID", value = str(bot_id))
+    resubmit_embed.add_field(name="Resubmission", value = str(state == enums.BotState.denied))
+    resubmit_embed.add_field(name=appeal_title, value = data.appeal)
+    await reschannel.send(embed = resubmit_embed)
     return api_success()

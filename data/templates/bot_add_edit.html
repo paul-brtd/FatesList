@@ -164,12 +164,12 @@
       placeholder="https://patreon.com/foo"
       minlength="5"
       value="{% if bot.donate %}{{bot.donate}}{% endif %}"/>
-      <label for="webhook_type:number">Webhook Type (Click to change)</label>
-      <select id="webhook-type" name="webhook_type:number" class="form-control fform select-fl">
-	      <option value="{{enums.WebhookType.vote.__int__()}}" {% if bot.webhook_type == enums.WebhookType.vote %}selected{%endif%}>Vote Webhook</option>
-	      <option value="{{enums.WebhookType.discord.__int__()}}" {% if bot.webhook_type == enums.WebhookType.discord %}selected{%endif%}>Discord Integration</option>
-	      <option value="{{enums.WebhookType.fc.__int__()}}" {% if bot.webhook_type == enums.WebhookType.fc %}selected{%endif%}>Fates Client</option>
-      </select>
+      <label for="webhook_type:number">Webhook Type</label>
+      <select-pure id="webhook-type" name="webhook_type:number" default-label="Select webhook type">
+	      <option-pure value="{{enums.WebhookType.vote.__int__()}}" {% if bot.webhook_type == enums.WebhookType.vote %}selected{%endif%}>Vote Webhook</option-pure>
+	      <option-pure value="{{enums.WebhookType.discord.__int__()}}" {% if bot.webhook_type == enums.WebhookType.discord %}selected{%endif%}>Discord Integration</option-pure>
+	      <option-pure value="{{enums.WebhookType.fc.__int__()}}" {% if bot.webhook_type == enums.WebhookType.fc %}selected{%endif%}>Fates Client</option-pure>
+      </select-pure>
       <label for="webhook">Webhook (max 1024 characters)</label>
     <input
       id="webhook-url"
@@ -247,18 +247,18 @@
       />
       <label 
       for="long_description_type"
-      >Long Description Type (Click to change)</label>
-      <select id="long_description_type" name="long_description_type:number" class="form-control fform select-fl">
-              <option value="0" {% if bot.long_description_type == enums.LongDescType.html %}selected{%endif%}>HTML/Raw - Recommended</option>
-	      <option value="1" {% if bot.long_description_type == enums.LongDescType.markdown_pymarkdown %}selected{%endif%}>Markdown (python-markdown) - Recommended</option>
-	      <option value="2" {% if bot.long_description_type == enums.LongDescType.markdown_marked %}selected{%endif%}>Markdown (marked) - Beta</option>
-      </select>
+      >Long Description Type</label>
+      <select-pure id="long_description_type" name="long_description_type:number" default-label="Choose your long description type">
+              <option-pure value="0" {% if bot.long_description_type == enums.LongDescType.html %}selected{%endif%}>HTML/Raw - Recommended</option-pure>
+	      <option-pure value="1" {% if bot.long_description_type == enums.LongDescType.markdown_pymarkdown %}selected{%endif%}>Markdown (python-markdown) - Recommended</option-pure>
+	      <option-pure value="2" {% if bot.long_description_type == enums.LongDescType.markdown_marked %}selected{%endif%}>Markdown (marked) - Beta</option-pure>
+      </select-pure>
       <button type="button" class="btn btn-outline-light" onclick="longdescfaq();">Help me decide</button><br/><br/>
       <label for="nsfw">NSFW Bot (Click to change)</label>
-      <select id="nsfw" name="nsfw:boolean" class="form-control fform select-fl">
-	      <option value="false" {% if not bot.nsfw %}selected{% endif %}>No</option>
-	      <option value="true" {% if bot.nsfw %}selected{% endif %}>Yes</option>
-      </select>
+      <select-pure id="nsfw" name="nsfw:boolean" default-label="NSFW Support?">
+	      <option-pure value="false" {% if not bot.nsfw %}selected{% endif %}>No</option-pure>
+	      <option-pure value="true" {% if bot.nsfw %}selected{% endif %}>Yes</option-pure>
+      </select-pure>
 
   <label
         for="long_description"

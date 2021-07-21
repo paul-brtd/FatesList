@@ -1,0 +1,116 @@
+{% extends "base/base.html" %}
+
+{% block head %}
+{% endblock %}
+
+{% block content %}
+<div
+  style="
+    border-radius: 15px;
+  "
+>
+  <div
+    class="d-flex d-sm-flex d-md-flex d-lg-flex d-xl-flex flex-column justify-content-center align-items-center flex-sm-column justify-content-sm-center align-items-sm-center flex-md-column justify-content-md-center align-items-md-center flex-lg-column justify-content-lg-center align-items-lg-center flex-xl-column justify-content-xl-center align-items-xl-center"
+  >
+    <h2
+      style="
+        color: rgba(255, 255, 255, 0.87);
+        font-weight: bold;
+        margin-top: 40px;
+      "
+    >
+      Fates List
+    </h2>
+    <p
+      style="
+        color: rgba(255, 255, 255, 0.87);
+        font-weight: bold;
+        opacity: 0.78;
+        font-size: 21px;
+      "
+    >
+    {% if context.state == enums.BotState.denied %}
+    Need to resubmit? 
+    {% else %}
+    Need to appeal your bots ban?
+    {% endif %}
+    Here you go!
+    </p>
+  </div>
+  <hr
+    style="
+      font-size: 20px;
+      border-top-width: 1px;
+      border-top-color: #eee;
+      width: 70%;
+    "
+  />
+    <div class="form-group" style="color: blue; width: 80%; margin: 0 auto; height: auto; margin-top: 30px; color: rgba(255, 255, 255, 0.87)">
+        <div class="form-group" class="d-flex" style="margin: 15px auto; width: 85%;color: white; font-weight: bold; overflow-wrap: anywhere;">
+
+     <p style="text-align: left; font-weight: bold; margin-bottom: 15px;">
+	{% if context.state == enums.BotState.denied %}
+     	   Did you fix the issues you were asked to fix? Do you feel like your bot was denied for a wrong reason? Mention your reasoning here!
+	{% else %}
+     	   Do you understand why your bot was banned and do you promise to never do it again? Make your appeal as convincing as possible.
+	{% endif %}
+     </p>
+      <label
+	class="form-control"
+	style="text-align: left; margin-top: 7px;"
+        for="appeal"
+        >Write appeal here <span style="color: red; font-weight: bold" aria-hidden="true">*</span>
+      </label>
+      <textarea
+        required
+        class="form-control fform"
+	style="border-radius: 4px 4px 4px 4px !important; height: 120px;"
+        type="text"
+	id="appeal"
+        name="appeal"
+	{% if context.state == enums.BotState.denied %}
+        placeholder="I feel like my bot should have been approved because..."
+	{% else %}
+	placeholder="I feel like my bot was banned unfairly...!"
+	{% endif %}
+	></textarea>
+	  </div>
+  </div>
+  <button type="button" class="btn btn-outline-light" style="margin-top: 30px;" onclick="submitAppeal()">Submit</button>
+  <script>
+	context = {{context|tojson}}
+	function submitAppeal() {
+		modalShow("Sending appeal...", "Please wait while Fates List sends your appeal real quick!")
+		appeal = document.querySelector("#appeal").value
+		if(appeal.length < 7) {
+			modalShow("Error", "Your appeal must be at least 7 characters long")
+		}
+		headers = {"Authorization": context.bot_token}
+		json = JSON.stringify({"appeal": appeal})
+		$.ajax({
+			url: `/api/v2/bots/${context.id}/appeal`,
+			method: "POST",
+			dataType: "json",
+			processData: false,
+			contentType: 'application/json',
+			data: json,
+			headers: headers,
+			statusCode: {
+				200: function() {
+					modalShow("Success", "Done posting appeal. Please wait while our staff reviews it!")
+					setTimeout(function(){window.location.replace(`/bot/${context.id}`)}, 3000)
+				},
+				400: function(data) {
+					modalShow("Error", data.responseJSON.reason)
+				},
+				404: function(data) {
+					modalShow("Error", "This bot could not be found. Has it been deleted?")
+				},
+			}
+		})
+	}
+  </script>
+{% endblock %}
+{% block footer %}
+
+{% endblock %}
