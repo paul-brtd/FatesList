@@ -49,3 +49,4 @@ class LoginResponse(APIResponse):
     access_token: AccessToken = AccessToken(access_token = "", refresh_token = "", expires_in = 0, current_time = 0)
     redirect: str = "/"
     scopes: List[str]
+    site_lang: str = "default"

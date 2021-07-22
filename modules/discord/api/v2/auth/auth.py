@@ -75,12 +75,12 @@ async def login_user(request: Request, data: Login, worker_session = Depends(wor
         )
     
     user_info = await db.fetchrow(
-        "SELECT state, api_token, css, js_allowed, username FROM users WHERE user_id = $1", 
+        "SELECT state, api_token, css, js_allowed, username, site_lang FROM users WHERE user_id = $1", 
         int(userjson["id"])
     )
     
-    if not user_info or user_info["state"] is None:
-        token = get_token(101) 
+    if not user_info or not user_info["state"]:
+        token = get_token(101)
         await db.execute(
             "DELETE FROM users WHERE user_id = $1", 
             int(userjson["id"])
@@ -93,7 +93,7 @@ async def login_user(request: Request, data: Login, worker_session = Depends(wor
             token
         )
 
-        css, state, js_allowed = None, 0, True
+        css, state, js_allowed, site_lang = None, 0, True, "default"
 
     else:
         state = enums.UserState(user_info["state"])
@@ -114,7 +114,7 @@ async def login_user(request: Request, data: Login, worker_session = Depends(wor
                 userjson["username"]
             ) 
 
-        token, css, state, js_allowed = user_info["api_token"], user_info["css"] if user_info["css"] else None, state, user_info["js_allowed"]
+        token, css, state, js_allowed, site_lang = user_info["api_token"], user_info["css"] if user_info["css"] else None, state, user_info["js_allowed"], user_info["site_lang"]
 
     if userjson["avatar"]:
         avatar = f'https://cdn.discordapp.com/avatars/{userjson["id"]}/{userjson["avatar"]}.webp'
@@ -142,6 +142,7 @@ async def login_user(request: Request, data: Login, worker_session = Depends(wor
         js_allowed = js_allowed,
         access_token = access_token,
         banned = False,
-        scopes = state_data["scopes"]
+        scopes = state_data["scopes"],
+        site_lang = site_lang
     )
 

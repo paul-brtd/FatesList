@@ -8,48 +8,80 @@
 <div style="text-align: center; display: block; color: white;">
 	<h3 style="font-weight: bold;">Login</h3>
 	<h4>We're glad to see you again!</h4>
-	{% if perm_needed %}
-	<h5><span style="color: red">Whoops!</span><br />You need to login {{perm_pretty}}</h5>
+	{% if context.perm_needed %}
+	<h5><span style="color: red">Whoops!</span><br />You need to login {{context.perm_pretty}}</h5>
 	{% endif %}
 </div>
-<form method="POST" action="/auth/login?redirect={{redirect}}" style="text-align: left">
-	<div style="text-align: center; display: block;">
-		<button type="submit" class="btn btn-outline-light btn-lg" style="color: red; margin-bottom: 20px;">Login</button>
-	</div>
-	<small>
-		<div style="text-align: center;">
-			<div style="display: inline-block; text-align: left;">
-				<div style="padding: 3px; display: inline-block;">
-					<div class="form-group"
-						style="color: blue; display: block; height: auto; color: rgba(255, 255, 255, 0.87);">
-						<div class="form-group" class="d-flex" style="color: white; font-weight: bold;">
-							<div class="form-group">
-								<div style="display: block;" />
-								<input type="checkbox" tabindex="0" id="join_servers" name="join_servers"
-									aria-label="Join Servers" style="margin-right: 5px;" />
-								<label class="custom-control-label" for="join_servers">Join Servers (Join The Support Server) -> Would you like to be added to the support server? Turn this on if you do</label>
-							</div>
-						</div>
-					</div>
-				</div>
-				<div class="form-group"
-					style="color: blue; display: inline-block; height: auto; color: rgba(255, 255, 255, 0.87);">
-					<div class="form-group" class="d-flex" style="color: white; font-weight: bold;">
-						<div class="form-group">
-							<div style="display: block;" />
-							<input type="checkbox" tabindex="0" id="server_list" name="server_list"
-								aria-label="Join Servers" style="margin-right: 5px;" checked="true" />
-							<label for="server_list">Server List -> Would you like us to access your server list for server listing? Keep this ticked if unsure.</label>
-						</div>
+<div style="text-align: center; display: block;">
+	<button onclick="getLoginLink()" class="btn btn-outline-light btn-lg" style="margin-bottom: 20px;">Login</button>
+</div>
+<small>
+	<div style="text-align: left;">
+		<div style="margin-left: 50px">
+			<div style="padding: 3px; display: inline-block;">
+				<div class="form-group white" style="color: blue; display: block; height: auto;">
+					<div style="display: block;" />
+						<input type="checkbox" tabindex="0" id="join_servers" name="join_servers"
+							aria-label="Join Servers" style="margin-right: 5px;" />
+							<label class="custom-control-label" for="join_servers">Join Servers (Join The Support Server) -> Would you like to be added to the support server? Turn this on if you do</label>
+						</div>	
 					</div>
 				</div>
 			</div>
 		</div>
-		</div>
+	</div>
+	<div style="margin-left: 50px">
+		<div style="padding: 3px; display: inline-block;">
+			<div class="form-group white" style="color: blue; display: inline-block; height: auto;">
+				<div style="display: block;" />
+					<input type="checkbox" tabindex="0" id="server_list" name="server_list"
+						aria-label="Join Servers" style="margin-right: 5px;" checked="true" />
+						<label for="server_list">Server List -> Would you like us to access your server list for server listing? Keep this ticked if unsure.</label>
+					</div>
+				</div>
+			</div>
 		</div>
 	</small>
-</form>
 </div>
+<script>
+	context = {{context|tojson}}
+	function getLoginLink() {
+		modalShow("Logging you in...", "Please wait...")
+		scopes = ["identify"]
+		scopes_total = {
+			"server_list": "guilds",
+			"join_servers": "guilds.join"
+		}
+		$.each(scopes_total, function(k, v){
+			selected = document.querySelector(`#${k}`).checked
+			if(selected) {
+				scopes.push(v)
+			}
+		})
+		data = {
+			"namespace": "site",
+			"redirect": context.redirect,
+			"scopes": scopes
+		}
+		$.ajax({
+			method: "POST",
+			url: "/api/v2/oauth",
+			dataType: "json",
+			processData: false,
+			contentType: 'application/json',
+			data: JSON.stringify(data),
+			statusCode: {
+				206: function(data) {
+					window.location.href = data.url	
+				},
+				400: function(data) {
+					modalShow("Error", data.responseJSON.reason)
+				}
+			}
+
+		})
+	}
+</script>
 {% endblock %}
 {% block footer %}
 
