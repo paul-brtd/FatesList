@@ -1,6 +1,6 @@
 from modules.core import *
 from ..base import API_VERSION
-from config import privacy_policy as pp
+from config import privacy_policy as pp, rules
 
 router = APIRouter(
     prefix = f"/api/v{API_VERSION}/policies",
@@ -11,3 +11,7 @@ router = APIRouter(
 @router.get("/privacy")
 async def privacy_policy(request: Request):
     return pp
+
+@router.get("/rules")
+async def rules(request: Request):
+    return rules

@@ -115,3 +115,6 @@ async def api_docs_view(request: Request):
 async def tos_page(request: Request):
     return await templates.TemplateResponse("tos.html", {"request": request, "policy": privacy_policy})
 
+@router.get("/fates/rules")
+async def rules_page(request: Request):
+    return await templates.TemplateResponse("rules.html", {"request": request, "policy": rules})

@@ -280,7 +280,7 @@ privacy_policy = {
 }
 
 rules = {
-    "botreq": {
+    "bot_requirements": {
         "basics": [
             (
                 "Your bot may not be a fork or instance of another bot without substantial modifications and prior "
@@ -296,6 +296,10 @@ rules = {
                 "spam messages or be a 'rainbow role' bot."
             ),
             (
+                "Your bot must follow the Discord ToS and guidelines. This also includes no invite rewards, no nuking "
+                "etc."
+            ),
+            (
                 "Custom bots based of/dependant on/running an instance of another bot such as bot" 
                 "makers not allowed by discord, BotGhost, MEE6 Premium, Wick VIP is prohibited "
                 "unless it has unique features that you have added to it and can be configured on other "
@@ -304,9 +308,9 @@ rules = {
             (
                 "For frameworks such as redbot, you must have at least 3 custom made cogs "
                 "(or the equivalent for other frameworks). You must give credits to any framework "
-                "you are using. **BDFD/BDScript/other bot makers are not allowed on Fates List "
+                "you are using. *BDFD/BDScript/other bot makers are not allowed on Fates List "
                 "unless it is also allowed by Discord and your bot is high-quality and has "
-                "features**"
+                "features*"
             )
         ],
         "commands": [
@@ -328,8 +332,8 @@ rules = {
             (
                 "All commands of a bot should check user and their own permissions before doing any "
                 "action. For example, your bot should not kick users unless the user and the bot has the "
-                "Kick Members permission. **Commands may not be admin locked and NSFW commands must be "
-                "locked to NSFW channels"
+                "Kick Members permission. *Commands may not be admin locked and NSFW commands must be "
+                "locked to NSFW channels*"
             ),
             (
                 "Commands must have a purpose (no filler commands). Filler commands are ignored and will "
@@ -350,13 +354,17 @@ rules = {
         ],
         "prefixes": [
             (
-                "Bots with common prefixes (`!`, `?`, `.`, `;`, etc) should have configurable prefix systems "
+                "Bots with common prefixes (`!`, `?`, `.`, `;`, etc) should have a customizable prefix "
                 "or they may be muted on the support server. You may change the prefix for just Fates List "
-                "if you want to."
+                "if you want to and staff can do it for you if you tell them the command."
             ),
             (
                 "You should use the Customizable Prefix feature in your bots settings to denote whather custom "
                 "prefixes are supported. This is to make it easier for users to know this"
+            ),
+            (
+                "Your bot must have an easy way to find its prefix. Some good places for this are on "
+                "bot mentions and bot status"   
             )
         ],
         "safety": [
@@ -366,10 +374,12 @@ rules = {
             ),
             (
                 "DMing staff to ask for your bot to be approved/reviewed is strictly prohibited. "
-                "Your bot will be denied or banned if you do so."
+                "Your bot will be denied or banned if you do so. You may however ask staff politely "
+                "to review/show off your bot on your support server if it needs to be verified."
             ),
             (
-                "Your bot must not have a copyrighted avatar or username."
+                "Your bot must not have a copyrighted avatar or username. All assets used in your bot "
+                "must be either owned by you or with permission from the copyright owner."
             ),           
             (
                 "Abusing Discord (mass creating or deleting channels, mass DM/spam/nuke bots) is strictly "
@@ -385,8 +395,9 @@ rules = {
         ], 
         "notes": [
             (
-                "You can always repeal a ban or resubmit your bot. To do so, just login, click your username "
-                "> My Profile > your bot > View and then click resubmit"
+                "You can always appeal a ban or resubmit your bot. To do so, just login, click your username "
+                "> My Profile > *your bot* > View and then click the link underneath the ban message to "
+                "start the ban appeal or resubmission process"
             )
         ]
     }

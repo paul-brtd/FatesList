@@ -58,7 +58,7 @@ class templates():
         }
         
         arg_dict["context"] = base_context | context
-        
+        arg_dict["md"] = lambda s: emd(markdown.markdown(s, extensions = md_extensions))        
         _templates = worker_session.templates
         
         if status is None:
