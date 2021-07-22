@@ -13,7 +13,6 @@ class ConnectionManager:
         websocket.tasks = {}
         websocket.pubsub = None
         websocket.authorized = False
-        websocket.manager_bot = False
         websocket.event_filter = None
         websocket.identified = False
         self.active_connections.append(websocket)
@@ -53,7 +52,6 @@ class ConnectionManager:
         # Delete stale websocket credentials
         websocket.bots = [] # Bot ID
         websocket.tasks = {}
-        websocket.manager_bot = False
         websocket.authorized = False
         websocket.event_filter = None
         websocket.identified = False
@@ -95,7 +93,7 @@ def ws_identity_payload():
     return {
         "m": {
             "e": enums.APIEvents.ws_identity, 
-            "t": [enums.APIEventTypes.auth_token, enums.APIEventTypes.auth_manager_key], 
+            "t": enums.APIEventTypes.auth_token, 
             "ts": time.time(), 
             "eid": str(uuid.uuid4())
         },

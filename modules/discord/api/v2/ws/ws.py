@@ -85,10 +85,10 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
                             rl = orjson.loads(rl)
                             exp = {"keepttl": True}
                         if len(rl) > 100: 
-                            rl_lst.append(id)
+                            rl.append(id)
                             continue
-                        elif time.time() - rl[-1] > 5 and time.time() - rl[-1] < 65:
-                            rl_lst.append(id)
+                        elif rl and time.time() - rl[-1] > 5 and time.time() - rl[-1] < 65:
+                            rl.append(id)
                             continue
                         rl.append(time.time())
                         await redis_db.set(f"identity-{id}", orjson.dumps(rl), **exp)
@@ -114,15 +114,11 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
         elif not isinstance(event_filter, list):
             websocket.event_filter = None
     
-        if not websocket.manager_bot:
-            websocket.pubsub = redis_db.pubsub()
-            for bot in websocket.bots:
-                await websocket.pubsub.subscribe(f"bot-{bot['id']}")
-            websocket.tasks[str(uuid.uuid4())] = asyncio.create_task(ws_command_handler(websocket)) # Begin command handling and add it to tasks list
+        websocket.pubsub = redis_db.pubsub()
+        for bot in websocket.bots:
+            await websocket.pubsub.subscribe(f"bot-{bot['id']}")
+        websocket.tasks[str(uuid.uuid4())] = asyncio.create_task(ws_command_handler(websocket)) # Begin command handling and add it to tasks list
         
-        else:
-            websocket.pubsub = redis_db.pubsub()
-            await websocket.pubsub.psubscribe("*")
     except Exception:
         return await ws_close(websocket, 4009)
     websocket.tasks[str(uuid.uuid4())] = asyncio.create_task(dispatch_events_new(websocket))
@@ -138,8 +134,9 @@ async def dispatch_events_new(websocket):
     logger.debug("Running")
     async for msg in websocket.pubsub.listen():
         if not websocket.authorized:
+            raise Exception("No longer authorized")
             return
-        logger.debug(f"Got message {msg} with manager status of {websocket.manager_bot}")
+        logger.debug(f"Got message {msg}")
         if msg is None or not isinstance(msg.get("data"), bytes):
             continue
         
@@ -149,7 +146,7 @@ async def dispatch_events_new(websocket):
         bot_id = msg.get("channel").decode("utf-8").split("-")[1]
         event["m"]["id"] = bot_id
             
-        logger.debug(f"Parsing event {event} with manager status of {websocket.manager_bot}")
+        logger.debug(f"Parsing event {event}")
         try:
             if not websocket.event_filter or event["m"]["e"] in websocket.event_filter:
                 flag = True
