@@ -79,7 +79,7 @@ async def login_user(request: Request, data: Login, worker_session = Depends(wor
         int(userjson["id"])
     )
     
-    if not user_info or not user_info["state"]:
+    if not user_info or user_info["state"] is None:
         token = get_token(101)
         await db.execute(
             "DELETE FROM users WHERE user_id = $1", 
