@@ -57,7 +57,7 @@ async def regenerate_bot_token(request: Request, bot_id: int):
     return api_success()
 
 @router.get(
-    "/random", 
+    "/{bot_id}/random", 
     response_model = BotRandom, 
     dependencies=[
         Depends(
@@ -67,7 +67,13 @@ async def regenerate_bot_token(request: Request, bot_id: int):
         )
     ]
 )
-async def fetch_random_bot(request: Request, lang: str = "default"):
+async def fetch_random_bot(request: Request, bot_id: int, lang: str = "default"):
+    """Fetch a random bot. Bot ID should be the recursive/root bot 0"""
+    if bot_id != 0:
+        return api_error(
+            "This bot cannot use the fetch random bot API"
+        )
+
     random_unp = await db.fetchrow(
         "SELECT description, banner_card, state, votes, guild_count, bot_id, invite FROM bots WHERE state = 0 OR state = 6 ORDER BY RANDOM() LIMIT 1"
     ) # Unprocessed, use the random function to get a random bot

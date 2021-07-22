@@ -1,42 +1,43 @@
 {% macro flCard(data, rand, type) %}
     <!--Get type of card and parse it-->
-    {% if type == 'bot' %}
+    {% if not rand %}
+      {% if type == 'bot' %}
         {% set id = data.bot_id %}
-    {% elif type == 'profile' %} 
+      {% elif type == 'profile' %} 
         {% set id = data.id %}
+      {% endif %}
     {% endif %}
-
     <section class="bot-card">
-        <div class="lozad bot-card-banner" data-background-image="{{data.banner}}">
+	    <div class="lozad bot-card-banner" data-background-image="{% if not rand %}{{data.banner}}{% endif %}">
             {% if type == 'bot' and (data.state == enums.BotState.certified or rand) %}
 			    <span class="iconify bot-card-cert" data-icon="fa-solid:certificate" data-inline="false" data-height="3em"></span>
             {% endif %}
             <a href="/{{type}}/{{id}}" class="bot-card-view-link">
-                    <img alt="bot avatar" class="lozad bot-card-avatar" data-placeholder-background="black" data-src="{{data.avatar or data.user.avatar}}" width="30%"/>
+		    <img alt="Bot Avatar" class="lozad bot-card-avatar" data-placeholder-background="black" data-src="{% if not rand %}{{data.user.avatar}}{% endif %}" width="30%"/>
             </a>
         </div>
         <div>
 		<a href="/{{type}}/{{id}}" class="bot-card-view-link">
                 <div class="bot-card-username">
-                        <p class="text-nowrap text-break text-center bot-card-username-txt white-bold">{{data.username or data.user.username}}</p>
+			<p class="text-nowrap text-break text-center bot-card-username-txt white-bold">{% if rand %}Fetching random bot{% else %}{{data.user.username}}{% endif %}</p>
                 </div>
 		</a>
         </div>
         <p class="bot-card-description">
-                <strong class="bot-card-description-txt" style="overflow-wrap: anywhere;">{{data.description}}</strong>
+		<strong class="bot-card-description-txt" style="overflow-wrap: anywhere;">{% if not rand %}{{data.description}}{% endif %}</strong>
         </p>
         {% if type == 'bot' or type == 'server' %}
             <div class="d-flex bot-card-footer">
                 {% if type == 'bot' %}
                     <div class="bot-card-footer-stats">
                         <p class="text-center white-bold">
-				            <span class="iconify i-m3" data-icon="fa-solid:server" data-inline="false"></span><span style="margin-left: 3px;" class="bot-servers">{{human_format(data.guild_count)}}</span>
+			<span class="iconify i-m3" data-icon="fa-solid:server" data-inline="false"></span><span style="margin-left: 3px;" class="bot-servers">{% if rand %}N/A{% else %}{{human_format(data.guild_count)}}{% endif %}</span>
 			            </p>
                     </div>
                 {% endif %}
                 <div class="bot-card-footer-stats">
                     <p class="text-center white-bold">
-			<span class="iconify i-m3" data-icon="fa-solid:thumbs-up" data-inline="false"></span><span style="margin-left: 3px;" class="bot-votes">{{human_format(data.votes)}}</span>
+			    <span class="iconify i-m3" data-icon="fa-solid:thumbs-up" data-inline="false"></span><span style="margin-left: 3px;" class="bot-votes">{% if rand %}N/A{% else %}{{human_format(data.votes)}}{% endif %}</span>
 		    </p>
                 </div>
             </div>

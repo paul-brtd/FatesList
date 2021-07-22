@@ -23,7 +23,7 @@ from typing import Any, Callable, Dict
 
 from config._logger import logger
 import typer
-from config import worker_key, API_VERSION
+from config import worker_key, API_VERSION, TOKEN_MAIN, TOKEN_SERVER
 
 
 app = typer.Typer()
@@ -126,7 +126,7 @@ def run_site(
         "loglevel": "debug",
         "pidfile": "data/pids/gunicorn.pid"
     }
-
+    
     app = _fappgen(str(session_id), workers)
     FatesRunner(app, options).run()
 
@@ -160,7 +160,8 @@ def rabbit_run():
     async def on_startup(state, logger):
         """Function that will be executed on startup"""
         state.__dict__.update(( await setup_db() ))  # noqa: E201,E202
-        state.client = ( await setup_discord() )["main"]  # noqa: E201,E202
+        state.discord = setup_discord()
+        state.client = state.discord["main"]  # noqa: E201,E202
         
         # For unfortunate backward compatibility 
         # with functions that havent ported yet

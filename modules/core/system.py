@@ -271,7 +271,7 @@ class FatesWorkerSession(Singleton):  # pylint: disable=too-many-instance-attrib
         return self.workers.index(os.getpid())
 
 
-async def setup_discord():
+def setup_discord():
     """Sets up discord clients"""
     intent_main = discord.Intents(
         guilds=True,
@@ -315,7 +315,7 @@ async def init_fates_worker(app, session_id, workers):
         pass
 
     dbs = await setup_db()
-    _discord = await setup_discord()
+    _discord = setup_discord()
     builtins.db = dbs["postgres"]
     builtins.redis_db = dbs["redis"]
     builtins.rabbitmq_db = dbs["rabbit"]

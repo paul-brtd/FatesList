@@ -30,6 +30,7 @@ CREATE TABLE bots (
     state integer DEFAULT 1,
     banner_card text,
     banner_page text,
+    keep_banner_decor boolean default true,
     created_at timestamptz DEFAULT NOW(),
     invite text,
     invite_amount integer DEFAULT 0,

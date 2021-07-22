@@ -6,7 +6,7 @@ class Config:
     name = "Bot Add"
     description = "Adds a bot to the queue"
 
-async def backend(state, json, *, user_id, bot_id, prefix, library, website, banner_card, banner_page, support, long_description, description, tags, extra_owners, invite, features, long_description_type, css, donate, github, webhook, webhook_type, webhook_secret, vanity, privacy_policy, nsfw, **kwargs):
+async def backend(state, json, *, user_id, bot_id, prefix, library, website, banner_card, banner_page, support, long_description, description, tags, extra_owners, invite, features, long_description_type, css, donate, github, webhook, webhook_type, webhook_secret, vanity, privacy_policy, nsfw, keep_banner_decor, **kwargs):
     user_id, bot_id = int(user_id), int(bot_id) # I am stupid and made this a string
     logger.debug(f"Got bot id {bot_id}")
     await state.postgres.execute("DELETE FROM bots WHERE bot_id = $1", bot_id)
@@ -20,20 +20,22 @@ async def backend(state, json, *, user_id, bot_id, prefix, library, website, ban
             api_token, features, long_description_type, 
             css, donate, github,
             webhook, webhook_type, webhook_secret,
-            privacy_policy, nsfw, id) VALUES(
+            privacy_policy, nsfw, keep_banner_decor, 
+            id) VALUES(
             $1, $2, $3,
             $4, $5, $6,
             $7, $8, $9,
             $10, $11, $12, 
             $13, $14, $15, 
             $16, $17, $18, 
-            $19, $20, $21, $1)""", 
+            $19, $20, $21, 
+            $22, $1)""", 
             bot_id, prefix, library, 
             invite, website, banner_card, banner_page,
             support, long_description, description,
             get_token(132), features, long_description_type,
             css, donate, github, webhook, webhook_type, webhook_secret,
-            privacy_policy, nsfw) # Add new bot info
+            privacy_policy, nsfw, keep_banner_decor) # Add new bot info
     if vanity and vanity.replace(" ", ""):
         await state.postgres.execute("INSERT INTO vanity (type, vanity_url, redirect) VALUES ($1, $2, $3)", enums.Vanity.bot, vanity, bot_id) # Add new vanity if not empty string
 

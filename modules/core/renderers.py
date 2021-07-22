@@ -49,7 +49,7 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
         """SELECT js_allowed, prefix, shard_count, state, description, bot_library AS library, 
         website, votes, guild_count, discord AS support, banner_page AS banner, github, features, 
         invite_amount, css, long_description_type, long_description, donate, privacy_policy, 
-        nsfw, last_stats_post, created_at FROM bots WHERE bot_id = $1""", 
+        nsfw, keep_banner_decor, last_stats_post, created_at FROM bots WHERE bot_id = $1""", 
         bot_id
     )
     tags = await db.fetch("SELECT tag FROM bot_tags WHERE bot_id = $1", bot_id)
@@ -62,7 +62,12 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
             main = "Bot Not Found"
         ) # Otherwise HTML error
     bot = dict(bot) | {"tags": [tag["tag"] for tag in tags]}
-                             
+    
+    # Ensure bot banner_page is disable if not approved or certified
+    if bot["state"] not in (enums.BotState.approved, enums.BotState.certified):
+        bot["banner"] = None
+        bot["js_allowed"] = False
+
     # Get all bot owners
     owners = await db.fetch(
         "SELECT DISTINCT ON (owner) owner, main FROM bot_owner WHERE bot_id = $1 ORDER BY owner, main DESC", 

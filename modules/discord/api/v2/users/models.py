@@ -22,12 +22,13 @@ class BotMeta(BaseModel):
     description: str
     banner_card: Optional[str] = None
     banner_page: Optional[str] = None
+    keep_banner_decor: bool
     extra_owners: List[str] # List of strings that can be turned into a integer
     support: Optional[str] = None
     long_description: str
     css: Optional[str] = None
-    long_description_type: Optional[enums.LongDescType] = enums.LongDescType.html
-    nsfw: Optional[bool] = False
+    long_description_type: enums.LongDescType
+    nsfw: bool
     donate: Optional[str] = None
     privacy_policy: Optional[str] = None
     github: Optional[str] = None
@@ -35,7 +36,7 @@ class BotMeta(BaseModel):
     webhook: Optional[str] = None
     webhook_secret: Optional[str] = None
     vanity: Optional[str] = None
-    features: Optional[List[str]] = []
+    features: List[str]
     tags: List[str]
 
     @validator("extra_owners")

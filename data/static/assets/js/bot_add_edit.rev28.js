@@ -19,6 +19,10 @@ function submitBot(e) {
 	else {
 	    method = "PUT"
 	}
+	keys = ["long_description_type", "nsfw", "keep_banner_decor", "webhook_type"]
+	keys.forEach(function (key) {
+		json[key] = document.querySelector(`#${key}`).value
+	})
 	if(json.tags.length == 0 || json.tags[0] == "") {
 	    modalShow("Error", "You need to select tags for your bot!")
 	    return
