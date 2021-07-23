@@ -223,7 +223,7 @@ function voteReview(rev_id, upvote) {
 		vote_type = "downvote"
 	}	
 	$.ajax({
-		type: 'PATCH',
+		method: 'PATCH',
 		url: `/api/${context.type}s/${context.id}/reviews/${rev_id}/votes`,
 		data: JSON.stringify({"upvote": upvote, "user_id": context.user_id}),
 		headers: {"Authorization": context.user_token},
@@ -248,3 +248,7 @@ function voteReview(rev_id, upvote) {
 
 }
 
+function newReview() {
+	modalShow("Error", "Not yet done!")
+	review = document.querySelector("#review")
+}
