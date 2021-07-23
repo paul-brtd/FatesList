@@ -354,7 +354,7 @@ rules = {
         ],
         "prefixes": [
             (
-                "Bots with common prefixes (`!`, `?`, `.`, `;`, etc) should have a customizable prefix "
+                "Bots with common prefixes (`!`, `?`, `.`, `;`) should have a customizable prefix "
                 "or they may be muted on the support server. You may change the prefix for just Fates List "
                 "if you want to and staff can do it for you if you tell them the command."
             ),
