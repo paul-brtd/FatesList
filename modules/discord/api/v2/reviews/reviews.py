@@ -28,8 +28,8 @@ async def new_review(request: Request, user_id: int, bot_id: int, data: BotRevie
                 id=check
             )
     else:
-        replies = await db.fetchval("SELECT replies FROM bot_reviews WHERE id = $1", data.id)
-        if not replies:
+        check = await db.fetchval("SELECT id FROM bot_reviews WHERE id = $1", data.id)
+        if not check:
             return api_error(
                 "You are not allowed to reply to this review as it doesn't actually exist"
             )
@@ -47,9 +47,18 @@ async def new_review(request: Request, user_id: int, bot_id: int, data: BotRevie
     )
     
     if data.reply:
-        replies.append(id)
         await db.execute("UPDATE bot_reviews SET replies = replies || $1 WHERE id = $2", id, data.id)
-
-    
-    await bot_add_event(bot_id, enums.APIEvents.review_add, {"user": str(user_id), "reply": False, "id": str(id), "star_rating": rating, "review": review, "root": None})
+        
+    await bot_add_event(
+        bot_id, 
+        enums.APIEvents.review_add,
+        {
+            "user": str(user_id), 
+            "reply": data.reply,
+            "id": str(id),
+            "star_rating": data.star_rating,
+            "review": data.review,
+            "root": data.id
+        }
+    )
     return api_success()
