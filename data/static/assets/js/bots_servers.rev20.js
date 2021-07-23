@@ -216,6 +216,7 @@ function deleteReview(rev_id) {
 
 
 function voteReview(rev_id, upvote) {
+	
 	if(upvote) {
 		vote_type = "upvote"
 	}
@@ -231,7 +232,7 @@ function voteReview(rev_id, upvote) {
 		contentType: 'application/json',
 		statusCode: {
 			400: function(data) {
-				modalShow(`Already ${vote_type}`, `You have already ${vote_type}d this review. You cannot ${vote_type} it again`);
+				modalShow("Error", data.responseJSON.reason);
 			},
 			200: function(data) {
 				modalShow("Success!", `Successfully ${vote_type} this review`)
@@ -248,7 +249,29 @@ function voteReview(rev_id, upvote) {
 
 }
 
-function newReview() {
-	modalShow("Error", "Not yet done!")
-	review = document.querySelector("#review")
+function newReview(reply, root) {
+	// Reply is a boolean signifying reply or not, root is the root review to reply on
+	modalShow("Creating Review", "Please wait while Fates List adds your review...")
+	review = document.querySelector("#review").value
+	star_rating = document.querySelector("#star_rating").value
+	$.ajax({
+		method: 'PATCH',
+		url: `/api/users/${context.user_id}/${context.type}s/${context.id}/reviews`,
+		data: JSON.stringify({"reply": reply, "id": root, "review": review, "star_rating": star_rating}),
+		headers: {"Authorization": context.user_token},
+		processData: false,
+		contentType: 'application/json',
+		statusCode: {
+			200: function(data) {
+				modalShow("Success", "Successfully created your review!")
+				setTimeout(() => window.location.reload(), 1500)
+			},
+			400: function(data) {
+				modalShow("Error", data.responseJSON.reason);
+			},
+			401: function(data) {
+				modalShow("Unauthorized", "We could not authenticate you, make sure you are logged in")
+			}
+		}
+	}
 }
