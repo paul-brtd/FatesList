@@ -10,3 +10,4 @@ from ..base_models import APIResponse, BaseUser
 class BotReviewPartial(BaseModel):
     review: str
     star_rating: float
+    reply: bool
