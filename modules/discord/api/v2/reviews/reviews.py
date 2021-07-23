@@ -16,6 +16,7 @@ router = APIRouter(
 
 @router.post("/{user_id}/bots/{bot_id}/reviews", response_model=APIResponse)
 async def new_review(request: Request, user_id: int, bot_id: int, data: BotReviewPartial):
+    db = request.app.state.worker_session.postgres
     if not data.reply:
         check = await db.fetchval(
             "SELECT id FROM bot_reviews WHERE bot_id = $1 AND user_id = $2 AND reply = false", bot_id, user_id
@@ -46,7 +47,9 @@ async def new_review(request: Request, user_id: int, bot_id: int, data: BotRevie
     )
     
     if data.reply:
-        
+        replies.append(id)
+        await db.execute("UPDATE bot_reviews SET replies = replies || $1 WHERE id = $2", id, data.id)
+
     
     await bot_add_event(bot_id, enums.APIEvents.review_add, {"user": str(user_id), "reply": False, "id": str(id), "star_rating": rating, "review": review, "root": None})
     return api_success()
