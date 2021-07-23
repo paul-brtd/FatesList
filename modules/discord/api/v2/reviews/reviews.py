@@ -26,6 +26,12 @@ async def new_review(request: Request, user_id: int, bot_id: int, data: BotRevie
                 "You have already made a review for this bot, please edit that one instead of making a new one!",
                 id=check
             )
+    else:
+        replies = await db.fetchval("SELECT replies FROM bot_reviews WHERE id = $1", data.id)
+        if not replies:
+            return api_error(
+                "You are not allowed to reply to this review as it doesn't actually exist"
+            )
         
     id = uuid.uuid4()
     await db.execute(
@@ -38,5 +44,9 @@ async def new_review(request: Request, user_id: int, bot_id: int, data: BotRevie
         [time.time()],
         data.reply
     )
+    
+    if data.reply:
+        
+    
     await bot_add_event(bot_id, enums.APIEvents.review_add, {"user": str(user_id), "reply": False, "id": str(id), "star_rating": rating, "review": review, "root": None})
     return api_success()
