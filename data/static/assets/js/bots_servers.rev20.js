@@ -213,20 +213,28 @@ function deleteReview(rev_id) {
 	modalShow("Success!", "Deleted Review Successfully")
 }
 
-function upvoteReview(rev_id) {
+
+
+function voteReview(rev_id, upvote) {
+	if(upvote) {
+		vote_type = "upvote"
+	}
+	else {
+		vote_type = "downvote"
+	}	
 	$.ajax({
 		type: 'PATCH',
 		url: `/api/${context.type}s/${context.id}/reviews/${rev_id}/votes`,
-		data: JSON.stringify({"upvote": true, "user_id": context.user_id}),
+		data: JSON.stringify({"upvote": upvote, "user_id": context.user_id}),
 		headers: {"Authorization": context.user_token},
 		processData: false,
 		contentType: 'application/json',
 		statusCode: {
 			400: function(data) {
-				modalShow("Already Upvoted", "You have already upvoted this review. You cannot upvote it again");
+				modalShow(`Already ${vote_type}`, `You have already ${vote_type}d this review. You cannot ${vote_type} it again`);
 			},
 			200: function(data) {
-				modalShow("Success!", "Successfully upvoted this review")
+				modalShow("Success!", `Successfully ${vote_type} this review`)
 				setTimeout(() => window.location.reload(), 1500)
 			},
 			404: function(data) {
@@ -240,29 +248,3 @@ function upvoteReview(rev_id) {
 
 }
 
-function downvoteReview(rev_id) {
-	$.ajax({
-		type: 'PATCH',
-		url: `/api/${context.type}s/${context.id}/reviews/${rev_id}/votes`,
-		data: JSON.stringify({"upvote": false, "user_id": context.user_id}),
-		headers: {"Authorization": context.user_token},
-		processData: false,
-		contentType: 'application/json',
-		statusCode: {
-			400: function(data) {
-				modalShow("Already Downvoted", "You have already downvoted this review. You cannot downvote it again");
-			},
-			200: function(data) {
-				modalShow("Success!", "Successfully downvoted this review")
-				setTimeout(() => window.location.reload(), 1500)
-			},
-			404: function(data) {
-				alert("Review does not exist or this feature isn't done yet!")
-			},
-			401: function(data) {
-				alert("We could not authenticate you, make sure you are logged in")
-			}
-		}
-	});
-
-}
