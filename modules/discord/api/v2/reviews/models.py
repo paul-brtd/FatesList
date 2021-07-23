@@ -12,3 +12,9 @@ class BotReviewPartial(BaseModel):
     review: str
     star_rating: float
     reply: bool
+
+    @validator("reply")
+    def id_or_no_reply(cls, v, values, **kwargs):
+        if v and not id:
+            raise ValueError("ID must be provided if reply is set")
+        return v
