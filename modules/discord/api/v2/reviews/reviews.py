@@ -1,3 +1,20 @@
+from modules.core import *
+from lynxfall.utils.string import human_format, intl_text
+from fastapi.responses import PlainTextResponse
+
+from ..base import API_VERSION
+from .models import APIResponse, Bot, BotRandom, BotStats, BotAppeal
+
+cleaner = Cleaner(remove_unknown_tags=False)
+
+router = APIRouter(
+    prefix = f"/api/v{API_VERSION}/bots",
+    include_in_schema = True,
+    tags = [f"API v{API_VERSION} - Bots"],
+    dependencies=[Depends(id_check("bot"))]
+)
+
+
 if "user_id" not in request.session.keys():
         return RedirectResponse(f"/auth/login?redirect=/bot/{bot_id}&pretty=to review this bot", status_code = 303)
     check = await db.fetchrow("SELECT bot_id FROM bot_reviews WHERE bot_id = $1 AND user_id = $2 AND reply = false", bot_id, int(request.session["user_id"]))
