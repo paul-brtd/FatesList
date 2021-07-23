@@ -252,8 +252,14 @@ function voteReview(rev_id, upvote) {
 function newReview(reply, root) {
 	// Reply is a boolean signifying reply or not, root is the root review to reply on
 	modalShow("Creating Review", "Please wait while Fates List adds your review...")
-	review = document.querySelector("#review").value
-	star_rating = document.querySelector("#star_rating").value
+        
+	rev_id = ''
+	if(reply) {
+           rev_id = `-${root}`
+        }
+
+	review = document.querySelector(`#review${rev_id}`).value
+	star_rating = document.querySelector(`#star_rating${rev_id}`).value
 	$.ajax({
 		method: 'PATCH',
 		url: `/api/users/${context.user_id}/${context.type}s/${context.id}/reviews`,
