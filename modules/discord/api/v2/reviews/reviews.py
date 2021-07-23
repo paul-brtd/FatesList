@@ -15,7 +15,7 @@ router = APIRouter(
 )
 
 @router.post("/{user_id}/bots/{bot_id}/reviews", response_model=APIResponse)
-async def new_review(request: Request, user_id: int, bot_id: int, data: BotReview):
+async def new_review(request: Request, user_id: int, bot_id: int, data: BotReviewPartial):
     check = await db.fetchval(
         "SELECT id FROM bot_reviews WHERE bot_id = $1 AND user_id = $2 AND reply = false", bot_id, user_id
     )
@@ -30,7 +30,7 @@ async def new_review(request: Request, user_id: int, bot_id: int, data: BotRevie
         id,
         bot_id, 
         user_id,
-        data.rating, 
+        data.star_rating, 
         data.review, 
         [time.time()]
     )
