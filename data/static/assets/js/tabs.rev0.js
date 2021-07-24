@@ -20,3 +20,21 @@ function openf(evt, idp, data) {
 	evt.currentTarget.className += " active";
 	window.location.hash = data.id + "-fl";
 }
+
+try {
+	$(document).ready(function(){	
+		if(window.location.hash == "")
+			document.querySelector(context.default_tab).click()
+		else {
+			try {
+				document.querySelector(window.location.hash.replace("-fl", "")).click()
+			}
+			catch {
+				document.querySelector(context.default_tab).click()
+			}
+		}
+	});
+    }
+    catch (err) {
+    	alert(err)
+    }
