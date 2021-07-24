@@ -18,10 +18,7 @@ function openf(evt, idp, data) {
 	// Show the current tab, and add an "active" class to the button that opened the tab
 	document.getElementById(id).style.display = "block";
 	evt.currentTarget.className += " active";
-	if(data.id != "bot-long-desc-tab-button")
-		window.location.hash = data.id + "-fl";
-	else 
-		window.location.hash = ""
+	window.location.hash = data.id + "-fl";
 }
 
 var rating = 0;
