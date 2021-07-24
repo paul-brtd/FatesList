@@ -24,13 +24,13 @@ function openf(evt, idp, data) {
 try {
 	$(document).ready(function(){	
 		if(window.location.hash == "")
-			document.querySelector(context.default_tab).click()
+			document.querySelector(context.default_tab_button).click()
 		else {
 			try {
 				document.querySelector(window.location.hash.replace("-fl", "")).click()
 			}
 			catch {
-				document.querySelector(context.default_tab).click()
+				document.querySelector(context.default_tab_button).click()
 			}
 		}
 	});
