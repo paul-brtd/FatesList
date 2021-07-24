@@ -40,23 +40,6 @@ function parseState(v) {
 	return state
 }
 
-
-    try {
-	$(document).ready(function(){	
-		if(window.location.hash == "")
-			document.querySelector('#long-desc-tab-button').click()
-		else {
-			try {
-				document.querySelector(window.location.hash.replace("-fl", "")).click()
-			}
-			catch {
-				document.querySelector('#long-desc-tab-button').click()
-			}
-		}
-	});
-    }
-    catch (err) {}
-
 var ds = 0; // Whether the user is doing something
 function botReviewEditPane(el, id) {
 	rev = document.querySelector(`#reviewopt-${id}`)
