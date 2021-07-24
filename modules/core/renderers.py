@@ -172,7 +172,8 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
         "bot_admin": bot_admin,
         "reviews": {
             "average_rating": float(reviews[1])
-        }
+        },
+        "replace_list": long_desc_replace_tuple
     }
     
     data = {
@@ -189,7 +190,8 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
         "total_reviews": reviews[2], 
         "review_page": rev_page, 
         "total_review_pages": reviews[3], 
-        "per_page": reviews[4]
+        "per_page": reviews[4],
+        "botp": True,
     }
 
     if not api:

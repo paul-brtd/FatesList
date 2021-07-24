@@ -124,22 +124,21 @@
 				<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 				<pre style="display: none" id="marked-ld">{{data.long_description|safe}}</pre>
 				<script>
-					
+					replace_list = {{context.replace_list|tojson}}
 					String.prototype.replaceAll = function(strReplace, strWith) {
-						    // See http://stackoverflow.com/a/3561711/556609
-						    var esc = strReplace.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-						    var reg = new RegExp(esc, 'ig');
-						    return this.replace(reg, strWith);
-					};
+						// See http://stackoverflow.com/a/3561711/556609
+						var esc = strReplace.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+						var reg = new RegExp(esc, 'ig');
+						return this.replace(reg, strWith);
+					}
 					String.prototype.replacem = function(replaceList) {
 						var new_str = this
 						for(var i = 0; i < replaceList.length; i++) {
 							new_str = new_str.replaceAll(replaceList[i][0], replaceList[i][1])
 						}
 						return new_str;
-					};
-					long_desc_replace_tup = [["<a", "<a class='long-desc-link ldlink'"], ["h1", "h2 style='text-align: center'"], ["h3", "h4"], ["bootstrap.min.css", ""], ["bootstrap.css", ""], ["jquery.min.js", ""]] // Event though we are markdown, we still have some needed patches
-					var md = marked(document.querySelector("#marked-ld").innerHTML).replacem(long_desc_replace_tup) // Markdown it and apply some patches though not all used in python markdown
+					}
+					var md = marked(document.querySelector("#marked-ld").innerHTML).replacem(replace_list)
 					document.querySelector("#long-description").innerHTML = md;
 				</script>
 			{% endif %}
@@ -183,12 +182,12 @@
 								<span>{{rev.star_rating}}/10.0</span>
 							</span>
 							{% if username %}
-							<a class="long-desc-link" style="color: white !important" href="javascript:void" onclick="replyReview(this, '{{rev.id}}')">
+							<a class="long-desc-link" style="color: white !important" href="javascript:void(0)" onclick="replyReview(this, '{{rev.id}}')">
 				  				<span class="white" style="margin-left: 3px;">Reply</span>
 							</a>
 							{% endif %}
 							{% if user_id == rev.user_id or staff[0] %}
-								<a href='javascript:void' style='font-weight: bold; margin-left: 3px;' class="long-desc-link" onclick="botReviewEditPane(this, '{{rev.id}}')">Edit</a>
+								<a href='javascript:void(0)' style='font-weight: bold; margin-left: 3px;' class="long-desc-link" onclick="botReviewEditPane(this, '{{rev.id}}')">Edit</a>
 							{% endif %}
 							</div>
 							<span style="margin-left: 30px !important; color: white" id="review_text-{{rev.id}}">{{rev.review}}</span>
@@ -203,16 +202,16 @@
 							</section>
 							{% endif %}
 							{% if user_id == rev.user_id or staff[0] %}
-								<div id="review-{{rev.id}}" style="display: none; width: 100%; margin-bottom: 10px;">
-       								<form method="POST" id="revieweditor-{{rev.id}}" style="width: 100%;" action="/bot/{{id}}/reviews/{{rev.id}}/edit" class="white">
+								<div id="reviewopt-{{rev.id}}" style="display: none; width: 100%; margin-bottom: 10px;">
+       								<section id="reviewedit-{{rev.id}}" style="width: 100%;" class="white">
 									<input type="hidden" name="id" value="{{rev.id}}" /> <!-- The ID to update -->
 									<label for="rating">On a scale of 1 to 10, how much did you like this bot?</label><br/>
 									<input class='slider range-slider' type="range" name="rating" min="0.1" max="10" value='{{rev.star_rating}}' step='0.1' style="width:100%;" output="rating-desc-{{rev.id}}-{{index}}"/>
 									<strong><p id='rating-desc-{{rev.id}}-{{index}}' style="color: white;"></p></strong>
 									<label for="review">Please write a few words about the bot (in your opinion)</label>
 									<textarea id='rating-review' name="review" type="text" class="form-control fform" style="min-height: 100px; height: 100px;" required minlength="9" placeholder="This bot is a really good bot because of X, Y and Z however...">{{rev.review}}</textarea>
-									<button type="submit" class="btn btn-outline-light" style="float: left; margin-right: 10px">Edit</button>
-								</form>
+									<button onclick="editReview('{{rev.id}}')" class="btn btn-outline-light" style="float: left; margin-right: 10px">Edit</button>
+								</section>
 								<button class="btn btn-danger" onclick="deleteReview('{{rev.id}}')">Delete</button>
 								</div>
 							{% endif %}
@@ -341,7 +340,7 @@
 <script>
 	var context = {{ context|tojson }}
 </script>
-<script src="/static/assets/js/bots_servers.rev20.min.js"></script>
+<script src="/static/assets/js/bots_servers.rev24.min.js"></script>
 <script src="/static/assets/js/vote.rev9.min.js"></script>
 </div>
 </article>

@@ -2,7 +2,7 @@ from modules.core import *
 from lynxfall.utils.string import intl_text
 
 from ..base import API_VERSION
-from .models import APIResponse
+from .models import APIResponse, BotReviewPartial
 
 router = APIRouter(
     prefix = f"/api/v{API_VERSION}/users",
@@ -16,6 +16,12 @@ router = APIRouter(
 
 @router.post("/{user_id}/bots/{bot_id}/reviews", response_model=APIResponse)
 async def new_review(request: Request, user_id: int, bot_id: int, data: BotReviewPartial):
+    minlength = 10
+    if len(data.review) < minlength:
+        return api_error(
+            f"Reviews must be at least {minlength} characters long"
+        )
+
     db = request.app.state.worker_session.postgres
     if not data.reply:
         check = await db.fetchval(
@@ -25,7 +31,7 @@ async def new_review(request: Request, user_id: int, bot_id: int, data: BotRevie
         if check:
             return api_error(
                 "You have already made a review for this bot, please edit that one instead of making a new one!",
-                id=check
+                id=str(check)
             )
     else:
         check = await db.fetchval("SELECT id FROM bot_reviews WHERE id = $1", data.id)
@@ -47,7 +53,7 @@ async def new_review(request: Request, user_id: int, bot_id: int, data: BotRevie
     )
     
     if data.reply:
-        await db.execute("UPDATE bot_reviews SET replies = replies || $1 WHERE id = $2", id, data.id)
+        await db.execute("UPDATE bot_reviews SET replies = replies || $1 WHERE id = $2", [id], data.id)
         
     await bot_add_event(
         bot_id, 

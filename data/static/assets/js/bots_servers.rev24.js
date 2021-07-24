@@ -83,21 +83,21 @@ function parseState(v) {
     }
     catch (err) {}
 
-		var ds = 0; // Whether the user is doing something
-		function botReviewEditPane(el, id) {
-			rev = document.querySelector('#review-' + id)
-			if(rev.style.display == "none" && ds == 0) {
-				rev.style.display = 'block';
-				el.innerHTML = 'Close';
-				ds = 1;
-				return
-			}
-			else if(ds == 1) {
-				rev.style.display = 'none';
-				el.innerHTML = 'Edit';
-				ds = 0;
-			}
-		}
+var ds = 0; // Whether the user is doing something
+function botReviewEditPane(el, id) {
+	rev = document.querySelector(`#reviewopt-${id}`)
+	if(rev.style.display == "none" && ds == 0) {
+		rev.style.display = 'block';
+		el.innerHTML = 'Close';
+		ds = 1;
+		return
+	}
+	else if(ds == 1) {
+		rev.style.display = 'none';
+		el.innerHTML = 'Edit';
+		ds = 0;
+	}
+}
 
 function replyReview(el, id) {
 	rev = document.querySelector('#reviewreply-' + id)
@@ -261,7 +261,7 @@ function newReview(reply, root) {
 	review = document.querySelector(`#review${rev_id}`).value
 	star_rating = document.querySelector(`#star_rating${rev_id}`).value
 	$.ajax({
-		method: 'PATCH',
+		method: 'POST',
 		url: `/api/users/${context.user_id}/${context.type}s/${context.id}/reviews`,
 		data: JSON.stringify({"reply": reply, "id": root, "review": review, "star_rating": star_rating}),
 		headers: {"Authorization": context.user_token},
@@ -279,5 +279,5 @@ function newReview(reply, root) {
 				modalShow("Unauthorized", "We could not authenticate you, make sure you are logged in")
 			}
 		}
-	}
+	})
 }
