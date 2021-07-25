@@ -62,7 +62,8 @@ async def get_user_votes(request: Request, bot_id: int, user_id: int):
     }
 
 @router.patch(
-    "/users/{user_id}/bots/{bot_id}/votes", 
+    "/users/{user_id}/bots/{bot_id}/votes",
+    response_model = APIResponse,
     dependencies=[
         Depends(
             Ratelimiter(

@@ -1,5 +1,6 @@
 import uuid
 from typing import List, Optional
+import datetime
 
 from pydantic import BaseModel
 
@@ -34,12 +35,14 @@ class BotOwner(BaseModel):
 class BotOwners(BaseModel):
     __root__: List[BotOwner]
         
-class Bot(BaseUser):
+class Bot(BaseModel):
     """
     Represents a bot on Fates List
     """
+    user: BaseUser
     description: str
     tags: list
+    last_stats_post: Optional[datetime.datetime] = None
     long_description_type: enums.LongDescType
     long_description: Optional[str] = None
     guild_count: int
@@ -65,7 +68,7 @@ class Bot(BaseUser):
     nsfw: bool
     banner_card: Optional[str] = None
     banner_page: Optional[str] = None
-
+    keep_banner_decor: bool
 
 
 class BotStats(BaseModel):

@@ -1,4 +1,4 @@
-function openf(evt, idp, data) {
+function openf(evt, idp, data, defaultTab) {
 	var id = `${idp}-tab`
 	// Declare all variables
 	var i, tabcontent, tablinks;
@@ -18,11 +18,22 @@ function openf(evt, idp, data) {
 	// Show the current tab, and add an "active" class to the button that opened the tab
 	document.getElementById(id).style.display = "block";
 	evt.currentTarget.className += " active";
-	window.location.hash = data.id + "-fl";
+	if(defaultTab) {
+		try {
+			history.replaceState(null, "", " ")
+		}
+		catch {
+			window.location.hash = ""
+		}
+	}
+	else {
+		window.location.hash = data.id + "-fl";
+	}
 }
 
-try {
-	$(document).ready(function(){	
+function tabSetup(jq) {
+    try {
+	jq(document).ready(function(){	
 		if(window.location.hash == "") {
 			document.querySelector(`#${context.default_tab_button}`).click()
 		}
@@ -39,3 +50,10 @@ try {
     catch (err) {
     	alert(err)
     }
+}
+
+if(window.$)
+	tabSetup($)
+else
+	tabSetup($j)
+

@@ -37,6 +37,7 @@ class BotMaintenancePartial(BaseModel):
 
 class BotMaintenance(BotMaintenancePartial):
     epoch: Optional[str] = None
+    fail: Optional[bool] = False
 
 BotReviewList = ForwardRef('BotReviewList')
 

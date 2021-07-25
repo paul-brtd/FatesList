@@ -23,7 +23,7 @@ async def add_bot(request: Request, new: Optional[bool] = False):
         return RedirectResponse("/auth/login?redirect=/bot/admin/add&pretty=to add a bot")
 
 @router.get("/{bot_id}/settings")
-async def bot_settings(request: Request, bot_id: int):
+async def bot_settings(request: Request, bot_id: int, new: Optional[bool] = False):
     if "user_id" not in request.session.keys():
         return abort(403)
     
@@ -31,7 +31,10 @@ async def bot_settings(request: Request, bot_id: int):
     if not check:
         return abort(403)
     
-    bot = await db.fetchrow("SELECT bot_id, prefix, bot_library AS library, invite, website, banner_card, banner_page, long_description, description, webhook, webhook_secret, webhook_type, discord AS support, github, features, long_description_type, css, donate, privacy_policy, nsfw, keep_banner_decor FROM bots WHERE bot_id = $1", bot_id)
+    bot = await db.fetchrow(
+        "SELECT bot_id, state, prefix, bot_library AS library, invite, website, banner_card, banner_page, long_description, description, webhook, webhook_secret, webhook_type, discord AS support, github, features, long_description_type, css, donate, privacy_policy, nsfw, keep_banner_decor FROM bots WHERE bot_id = $1", 
+        bot_id
+    )
     if not bot:
         return abort(404)
     
@@ -41,8 +44,12 @@ async def bot_settings(request: Request, bot_id: int):
     owners = await db.fetch("SELECT owner, main FROM bot_owner WHERE bot_id = $1", bot_id)
     if not owners:
         return "This bot has no found owners.\nPlease contact Fates List support"
-    
+     
     bot["extra_owners"] = ",".join([str(o["owner"]) for o in owners if not o["main"]])
+    bot["user"] = await get_bot(bot_id)
+    if not bot["user"]:
+        return abort(404)
+
     vanity = await db.fetchval("SELECT vanity_url AS vanity FROM vanity WHERE redirect = $1", bot_id)
 
     context = {
@@ -50,8 +57,13 @@ async def bot_settings(request: Request, bot_id: int):
         "mode": "edit",
         "bot_id": str(bot_id)
     }
+    
+    if new:
+        fn = "bot_add_edit_v2.html"
+    else:
+        fn = "bot_add_edit.html"
 
-    return await templates.TemplateResponse("bot_add_edit.html", {"request": request, "tags_fixed": tags_fixed, "bot": bot, "vanity": vanity, "features": features}, context = context)
+    return await templates.TemplateResponse(fn, {"request": request, "tags_fixed": tags_fixed, "bot": bot, "vanity": vanity, "features": features}, context = context)
 
 
 @router.post("/{bot_id}/reviews/{rid}/edit")

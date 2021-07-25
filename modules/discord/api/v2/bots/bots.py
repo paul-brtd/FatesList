@@ -105,7 +105,7 @@ async def fetch_random_bot(request: Request, bot_id: int, lang: str = "default")
 async def fetch_bot(request: Request, bot_id: int):
     """Fetches bot information given a bot ID. If not found, 404 will be returned."""
     api_ret = await db.fetchrow(
-        "SELECT banner_card, banner_page, description, long_description_type, long_description, guild_count, shard_count, shards, prefix, invite, invite_amount, features, bot_library AS library, state, website, discord AS support, github, user_count, votes, css, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", 
+        "SELECT banner_card, banner_page, keep_banner_decor, last_stats_post, description, long_description_type, long_description, guild_count, shard_count, shards, prefix, invite, invite_amount, features, bot_library AS library, state, website, discord AS support, github, user_count, votes, css, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", 
         bot_id
     )
     if api_ret is None:
@@ -136,13 +136,11 @@ async def fetch_bot(request: Request, bot_id: int):
         else: owners.append(owner_obj)
 
     api_ret["owners"] = owners
-    if api_ret["features"] is None:
-        api_ret["features"] = []
+    api_ret["features"] = api_ret["features"] if api_ret["features"] else []
     api_ret["invite_link"] = await invite_bot(bot_id, api = True)
-    bot_obj = await get_bot(bot_id)
-    if not bot_obj:
+    api_ret["user"] = await get_bot(bot_id)
+    if not api_ret["user"]:
         return abort(404)
-    api_ret = api_ret | bot_obj
     api_ret["vanity"] = await db.fetchval(
         "SELECT vanity_url FROM vanity WHERE redirect = $1", 
         bot_id

@@ -1,0 +1,73 @@
+{% extends "base/base.html" %}
+
+{% block head %}
+	<link rel="stylesheet" href="/static/assets/css/bots_servers.rev7.css" media="none" onload="if(media!='all')media='all'"/>
+	<style>
+		#api-token {word-wrap: break-word; background-color: black;}
+		#api-button {margin-top: 7px;}
+		#save {margin-top: 40px;}
+		#regen-token-header {margin-top: 10px;}
+		.info-content {text-align: left; margin-left: 20px;}
+	</style>
+{% endblock %}
+
+{% block content %}
+	{% if context.mode == "edit" %}
+		<img style="border-radius: 50%; width: 120px;" class="lozad" data-src="{{bot.user.avatar}}" id="bot-avatar" alt="{{bot.user.username}}'s avatar">
+	{% else %}
+		<img style="border-radius: 50%; width: 120px;" class="lozad" data-src="/static/botlisticon.webp" id="bot-avatar" alt="Fates List Logo">
+	{% endif %}
+	<h4 class="white">{% if context.mode == "add" %}Fates List{% else %}{{bot.user.username}}{% endif %}</h4>
+	<h5 class="white" style="opacity: 0.8; margin-bottom: 30px;">{% if context.mode == "add" %}Welcome!{% else %}Bot Settings{% endif %}</h5>
+	<div id="parent">
+		<div id="switcher" style='margin-bottom: 3px;' class='blackbar'>
+			<div class="tab">
+				{% if context.mode == "edit" %}
+					<button id="about-button" class="tablinks" onclick="openf(event, 'about', this, false)">About</button>
+				{% endif %}
+				<button id="basic-settings-button" class="tablinks" onclick="openf(event, 'basic-settings', this, true)">Basics</button>
+				<button id="webhook-button" class="tablinks" onclick="openf(event, 'webhook', this, false)">Webhooks</button>
+			</div>
+			{% if context.mode == "edit" %}
+			<section id="about-tab" class="tabcontent">
+				<h5 class="white">Bot Info</h5>
+				<div class="info-content">	
+					<h6 class="white">Username: {{bot.user.username}}</h6>
+					<h6 class="white">Avatar: <a class="ldlink" href="{{bot.user.avatar}}">{{bot.user.avatar}}</a></h6>
+				</div>
+				<h5 class="white">API Token</h5>
+				<code class="white" id="api-token">Click 'Show' to see your bots token</code>
+				<br/>
+				<button id="api-button" class="btn btn-outline-light" onclick="showToken(this)">Show</button>
+				<h6 class="white" id="regen-token-header">Regenerate</h6>
+				<p class="white info-content"><em>Accidentally</em> leaked your API token? Just be sure to change the token everywhere you use it and make sure it doesn't happen again!</p>
+				<button onclick='regenToken()' class="btn btn-outline-light">Regenerate</button>
+			</section>
+			{% endif %}
+			<section id="basic-settings-tab" class="tabcontent">
+				<p class="white">Bot Settings Here</p>
+			</section>
+			<section id="webhook-tab" class="tabcontent">
+				<p class="white">Webhook Settings Here</p>
+			</section>
+			<section id="edit-button">
+				<br/>
+				<button class="btn btn-outline-light" id="save">{{context.mode}}</button>
+			</section>
+		</div>
+	</div>
+
+	<!-- Javascript here -->
+	<script>
+		var $j = jQuery.noConflict();
+		var context = {{context|tojson}}
+		context.default_tab_button = "basic-settings-button"
+	</script>
+	<script src="/static/assets/js/tabs.rev14.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/jquery-serializejson@3.2.1/jquery.serializejson.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/select-pure@latest/dist/index.js"></script>
+	<script src="/static/assets/js/bot_add_edit_v2.rev1.min.js"></script>
+{% endblock %}
+{% block footer %}
+
+{% endblock %}

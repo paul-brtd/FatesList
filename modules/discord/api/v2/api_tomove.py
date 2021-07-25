@@ -204,8 +204,6 @@ async def delete_bot_command_api_(request: Request, bot_id: int, command: BotCom
 )
 async def get_maintenance_mode(request: Request, bot_id: int):
     ret = await get_maint(bot_id = bot_id)
-    if ret.get("fail"):
-        return abort(404)
     return ret
 
 @router.patch(

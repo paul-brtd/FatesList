@@ -1,0 +1,112 @@
+{% extends "base/base.html" %}
+{% macro optional() %}
+	<div class="d-inline-block white alert alert-info" role="alert">
+		Everything in this section is completely optional
+	</div>
+{% endmacro %}
+
+{% macro save() %}
+	<section class="save-changes">
+		<br/>
+		<p class="white info-content">Once you feel like your bot is as good as it can be, click the {{context.mode.title()}} button to save your changes. Make sure that you have previewed your long description beforehand if possible (marked is not yet supported by previews yet) and that you have read our <a class="long-desc-link" href="/fates/rules">rules</a> before {{context.mode}}ing.</p>
+		<button class="btn btn-outline-light btn-save">{{context.mode}}</button>
+	</section>
+{% endmacro %}
+{% macro text_input(label, id, type, name, placeholder, min=None, max=None) %}
+	<label for="{{id}}">{{label}}</label>
+	<input 
+	  class="form-control fform text-input" 
+       	  placeholder="{{placeholder}}" 
+	  type="{{type}}" 
+	  name="{{name}}" 
+	  {% if min %}minlength="{{min}}"{% endif %}
+	  {% if max %}maxlength="{{max}}"{% endif %} 
+	  {% if context.mode == "edit" and bot.get(id) %}value="{{bot[id]}}"{% endif %}>
+	</input>
+{% endmacro %}
+
+
+{% block head %}
+	<link rel="stylesheet" href="/static/assets/css/bots_servers.rev7.css" media="none" onload="if(media!='all')media='all'"/>
+	<style>
+		#api-token {word-wrap: break-word; background-color: black;}
+		#api-button {margin-top: 7px;}
+		.section {margin-top: 20px;}
+		.info-content {text-align: left; margin-left: 20px;}
+		.text-input {border-radius: 4px 4px 4px 4px !important;}
+	</style>
+{% endblock %}
+
+{% block content %}
+	{% if context.mode == "edit" %}
+		<img style="border-radius: 50%; width: 120px;" class="lozad" data-src="{{bot.user.avatar}}" id="bot-avatar" alt="{{bot.user.username}}'s avatar">
+	{% else %}
+		<img style="border-radius: 50%; width: 120px;" class="lozad" data-src="/static/botlisticon.webp" id="bot-avatar" alt="Fates List Logo">
+	{% endif %}
+	<h4 class="white">{% if context.mode == "add" %}Fates List{% else %}{{bot.user.username}}{% endif %}</h4>
+	<h5 class="white" style="opacity: 0.8; margin-bottom: 30px;">{% if context.mode == "add" %}Welcome!{% else %}Bot Settings{% endif %}</h5>
+	<div id="parent">
+		<div id="switcher" style='margin-bottom: 3px;' class='blackbar'>
+			<div class="tab">
+				{% if context.mode == "edit" %}
+					<button id="about-button" class="tablinks" onclick="openf(event, 'about', this, true)">About</button>
+				{% endif %}
+				<button id="basic-settings-button" class="tablinks" onclick="openf(event, 'basic-settings', this, {% if context.mode == 'add' %}true{% else %}false{% endif %})">Basics</button>
+				<button id="webhook-button" class="tablinks" onclick="openf(event, 'webhook', this, false)">Webhooks</button>
+			</div>
+			{% if context.mode == "edit" %}
+			<section id="about-tab" class="tabcontent">
+				<h5 class="white">Bot Info</h5>
+				<div class="info-content">	
+					<p class="white">Username: {{bot.user.username}}</p>
+					<p class="white">Avatar: <a class="long-desc-link" href="{{bot.user.avatar}}">{{bot.user.avatar}}</a></p>
+					<p class="white">Bot State: {{enums.BotState(bot.state).__doc__}} ({{bot.state}})</p>
+				</div>
+				<h5 class="white">API Token</h5>
+				<code class="white" id="api-token">Click 'Show' to see your bots token</code>
+				<br/>
+				<button id="api-button" class="btn btn-outline-light" onclick="showToken(this)">Show</button>
+				<h6 class="white section" id="regen-token-header">Regenerate</h6>
+				<p class="white info-content"><em>Accidentally</em> leaked your API token? Just be sure to change the token everywhere you use it and make sure it doesn't happen again!</p>
+				<button onclick='regenToken()' class="btn btn-outline-light">Regenerate</button>
+				<h5 class="white section">Server Stats</h5>
+				<label for="server-count">Server Count</label>
+				<br/>
+				<input type="number" placeholder="Server Count" name="server-count" id="server-count" />
+				<br/>
+				<br/>
+				<button class="section btn btn-outline-light" onclick='postStats()'>Post</button>
+			</section>
+			{% endif %}
+			<section id="basic-settings-tab" class="tabcontent">
+				<br/>
+				{% if context.mode == "add" %}
+					{{ text_input("Bot ID", "bot_id", "number", "bot_id:number", "Enter Bot ID here") }}
+				{% endif %}
+				{{ text_input("Extra Owners (comma seperated)", "extra_owners", "text", "extra_owners", "790722073248661525, 563808552288780322") }}
+				{{ text_input("Prefix", "prefix", "text", "prefix", "$, ! etc.", max=9) }}
+				{{ text_input("Library", "library", "text", "library", "discord.py etc.") }}
+				{{ save() }}
+			</section>
+			<section id="webhook-tab" class="tabcontent">
+				{{ optional() }}
+				<p class="white">Webhook Settings Here</p>
+				{{ save() }}
+			</section>
+		</div>
+	</div>
+
+	<!-- Javascript here -->
+	<script>
+		var $j = jQuery.noConflict();
+		var context = {{context|tojson}}
+		context.default_tab_button = "{% if context.mode == 'add' %}basic-settings-button{% else %}about-button{% endif %}"
+	</script>
+	<script src="/static/assets/js/tabs.rev15.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/jquery-serializejson@3.2.1/jquery.serializejson.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/select-pure@latest/dist/index.js"></script>
+	<script src="/static/assets/js/bot_add_edit_v2.rev1.min.js"></script>
+{% endblock %}
+{% block footer %}
+
+{% endblock %}

@@ -10,7 +10,8 @@ router = APIRouter(
     tags = [f"API v{API_VERSION} - Reviews"],
     dependencies=[
         Depends(id_check("bot")),
-        Depends(id_check("user"))
+        Depends(id_check("user")),
+        Depends(user_auth_check)
     ]
 )
 
