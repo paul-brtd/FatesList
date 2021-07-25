@@ -1,9 +1,13 @@
 {% extends "base/base.html" %}
-{% macro optional() %}
+{% macro tip(text) %}
 	<div class="d-inline-block white alert alert-info" role="alert">
-		Everything in this section is completely optional
+		Tip: {{text}}
 	</div>
 {% endmacro %}
+{% macro optional() %}
+	{{ tip("Everything in this section is completely optional") }}
+{% endmacro %}
+
 
 {% macro save() %}
 	<section class="save-changes">
@@ -12,19 +16,31 @@
 		<button class="btn btn-outline-light btn-save">{{context.mode}}</button>
 	</section>
 {% endmacro %}
-{% macro text_input(label, id, type, name, placeholder, min=None, max=None) %}
-	<label for="{{id}}">{{label}}</label>
+{% macro textInput(label, id, type, name, placeholder, min=None, max=None, required=False) %}
+	<label for="{{id}}">{{label}} {% if required %}<span style="color: red; font-weight: bold" aria-hidden="true">*</span>{% endif %}</label>
 	<input 
 	  class="form-control fform text-input" 
        	  placeholder="{{placeholder}}" 
 	  type="{{type}}" 
 	  name="{{name}}" 
+	  {% if required %}required{% endif %}
 	  {% if min %}minlength="{{min}}"{% endif %}
 	  {% if max %}maxlength="{{max}}"{% endif %} 
 	  {% if context.mode == "edit" and bot.get(id) %}value="{{bot[id]}}"{% endif %}>
 	</input>
 {% endmacro %}
-
+{% macro selectInput(id, name, label, help_text, choices, multiple=False) %}
+	<label for="{{id}}">{{label}}</label>
+	<select-pure class="select-pure-fl sfl" id="{{id}}" name="{{name}}" default-label="{{help_text}}" {% if multiple %}multiple{% endif %}>
+		<option-pure value="" disabled="" hidden="">{{help_text}}</option-pure>
+		{% for choice in choices %}
+			<option-pure 
+			  value="{{choice['value']}}" 
+			  {% if context.mode == "edit" and bot.get(id) == choice['value'] %}selected{% endif %}
+			>{{choice['text']}}</option-pure>
+		{% endfor %}
+	</select-pure>
+{% endmacro %}
 
 {% block head %}
 	<link rel="stylesheet" href="/static/assets/css/bots_servers.rev7.css" media="none" onload="if(media!='all')media='all'"/>
@@ -79,13 +95,18 @@
 			</section>
 			{% endif %}
 			<section id="basic-settings-tab" class="tabcontent">
+				{{ tip("This is the only section you need to fill out to add or edit your bot") }}
 				<br/>
 				{% if context.mode == "add" %}
-					{{ text_input("Bot ID", "bot_id", "number", "bot_id:number", "Enter Bot ID here") }}
+					{{ textInput("Bot ID", "bot_id", "number", "bot_id:number", "Enter Bot ID here", required=True) }}
 				{% endif %}
-				{{ text_input("Extra Owners (comma seperated)", "extra_owners", "text", "extra_owners", "790722073248661525, 563808552288780322") }}
-				{{ text_input("Prefix", "prefix", "text", "prefix", "$, ! etc.", max=9) }}
-				{{ text_input("Library", "library", "text", "library", "discord.py etc.") }}
+				{{ textInput("Extra Owners (comma seperated)", "extra_owners", "text", "extra_owners", "790722073248661525, 563808552288780322") }}
+				{{ textInput("Prefix", "prefix", "text", "prefix", "$, ! etc.", max=9, required=True) }}
+				{{ textInput("Library", "library", "text", "library", "discord.py etc.", required=True) }}
+				{{ tip("You can use P:PERM_NUMBER instead of providing a Invite URL if your Bot ID and Client ID are the same (this is almost always true except for old bots)") }}
+				{{ textInput("Invite URL (Leave blank for automatic)", "invite", "text", "invite", "https://discord.com/api/oauth2/...") }}
+				{{ textInput("Short Description", "description", "text", "description", "Fates List is a great bot that does everything you need it to do!", min=10, max=105, required=True) }}
+				{{ selectInput("long_description_type", "long_description_type:number", "Long Description Type/Format", "Choose your long description type", ({"value": enums.LongDescType.html.value, "text": "HTML"}, {"value": enums.LongDescType.markdown_pymarkdown.value, "text": "Markdown (python-markdown)"}) ) }}
 				{{ save() }}
 			</section>
 			<section id="webhook-tab" class="tabcontent">
