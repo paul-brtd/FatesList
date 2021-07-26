@@ -80,6 +80,7 @@
 					<p class="white">Username: {{bot.user.username}}</p>
 					<p class="white">Avatar: <a class="long-desc-link" href="{{bot.user.avatar}}">{{bot.user.avatar}}</a></p>
 					<p class="white">Bot State: {{enums.BotState(bot.state).__doc__}} ({{bot.state}})</p>
+					<p class="white">Extra Owners: {{bot.owners_html}}</p>
 				</div>
 				<h5 class="white">API Token</h5>
 				<code class="white" id="api-token">Click 'Show' to see your bots token</code>
