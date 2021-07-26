@@ -24,6 +24,8 @@ async def add_bot(request: Request, new: Optional[bool] = False):
 
 @router.get("/{bot_id}/settings")
 async def bot_settings(request: Request, bot_id: int, new: Optional[bool] = False):
+    worker_session = request.app.state.worker_session
+    db = worker_session.postgres
     if "user_id" not in request.session.keys():
         return abort(403)
     
@@ -45,8 +47,15 @@ async def bot_settings(request: Request, bot_id: int, new: Optional[bool] = Fals
     if not owners:
         return "This bot has no found owners.\nPlease contact Fates List support"
      
+    owners_lst = [
+        (await get_user(obj["owner"], user_only = True, worker_session = worker_session))
+        for obj in owners if obj["owner"] is not None
+    ]
+    
+    owners_html = gen_owner_html(owners_lst)   
+        
     bot["extra_owners"] = ",".join([str(o["owner"]) for o in owners if not o["main"]])
-    bot["user"] = await get_bot(bot_id)
+    bot["user"] = await get_bot(bot_id, worker_session = worker_session)
     if not bot["user"]:
         return abort(404)
 
@@ -55,7 +64,8 @@ async def bot_settings(request: Request, bot_id: int, new: Optional[bool] = Fals
     context = {
         "bot_token": await db.fetchval("SELECT api_token FROM bots WHERE bot_id = $1", bot_id),
         "mode": "edit",
-        "bot_id": str(bot_id)
+        "bot_id": str(bot_id),
+        "owners_html": owners_html
     }
     
     if new:
