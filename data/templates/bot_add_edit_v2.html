@@ -26,7 +26,7 @@
 	  {% if required %}required{% endif %}
 	  {% if min %}minlength="{{min}}"{% endif %}
 	  {% if max %}maxlength="{{max}}"{% endif %} 
-	  {% if context.mode == "edit" and bot.get(id) %}value="{{bot[id]}}"{% endif %}>
+	  value="{{ bot[id] if context.mode == "edit" and bot.get(id) else ''}}">
 	</input>
 {% endmacro %}
 {% macro selectInput(id, label, help_text, choices, multiple=False, name=None) %}

@@ -166,8 +166,8 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
     reviews = await parse_reviews(worker_session, bot_id, page = rev_page)
     
     context = {
-        "id": str(bot_id), 
-        "bot_token": bot["api_token"] if bot["api_token"] else None,
+        "id": str(bot_id),
+        "bot_token": bot["api_token"],
         "type": "bot",
         "bot_admin": bot_admin,
         "reviews": {
