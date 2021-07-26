@@ -80,7 +80,7 @@
 					<p class="white">Username: {{bot.user.username}}</p>
 					<p class="white">Avatar: <a class="long-desc-link" href="{{bot.user.avatar}}">{{bot.user.avatar}}</a></p>
 					<p class="white">Bot State: {{enums.BotState(bot.state).__doc__}} ({{bot.state}})</p>
-					<p class="white">Extra Owners: {{bot.owners_html}}</p>
+					<p class="white"><u>Owners of this bot</u><br/> {{context.owners_html|safe}}</p>
 				</div>
 				<h5 class="white">API Token</h5>
 				<code class="white" id="api-token">Click 'Show' to see your bots token</code>
@@ -92,10 +92,16 @@
 				<h5 class="white section">Server Stats</h5>
 				<label for="server-count">Server Count</label>
 				<br/>
-				<input type="number" placeholder="Server Count" name="server-count" id="server-count" />
-				<br/>
-				<br/>
+				<input class="form-control fform" type="number" placeholder="Server Count" name="server-count" id="server-count" />
 				<button class="section btn btn-outline-light" onclick='postStats()'>Post</button>
+				<h5 class="white section">Transfer Ownership</h5>
+				<p class="white info-content"><span class="red">Warning:</span> This <em>cannot</em> be undone. Only transfer ownership to people you trust. By continuing, you acknowledge that the user you are transferring ownership to will now completely control this bot on Fates List.</p>
+				<label for="new-owner">New Owner</label>
+				<input class="form-control fform" type="number" placeholder="Enter ID of new owner" name="new-owner" id="new-owner" />
+				<button class="btn btn-danger" onclick="transferBot()">Transfer Ownership</button>
+				<h5 class="white section">Delete Bot</h5>
+				<p class="white info-content"><span class="red">Warning:</span> This <em>cannot</em> be undone and you <em>will</em> lose any perks your bot may have such as certification and any votes your bot may have. Think twice before proceeding...</p>
+				<button class="btn btn-danger" onclick="deleteBot()">Delete Bot</button>
 			</section>
 			{% endif %}
 			<section id="basic-settings-tab" class="tabcontent">

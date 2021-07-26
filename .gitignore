@@ -7,8 +7,6 @@ data/logs/*
 util/utilbot/logs
 util/utilbot/logs/*
 *pyc
-*.min.js
-*min.js
 admin/fateslist_django/secrets.py
 admin/fateslist_django/__pycache__
 admin/fateslist_django/__pycache__/settings.cpython-39.pyc

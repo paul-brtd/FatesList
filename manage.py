@@ -238,79 +238,24 @@ def secrets_mktemplate(
         out_f.write("\n".join(out_lst)) 
 
 
-@staticfiles.command("relabel")
+@staticfiles.command("compile")
 def staticfiles_relabel():
-    """Relabels all labelled (rev*) static files)"""
+    """Compiles all labelled static files"""
     
     import git 
     relabels = []
-    for s_file in Path("data/static/assets").rglob("*.rev*.*"):
-        if str(s_file).endswith((".hash", ".min.js")):
-            continue
-
-        sha = Path(f"{s_file}.hash")
-        minjs = Path(str(s_file).replace(".js", ".min.js"))
-        needs_relabel = False
-        
-        if not sha.exists() or (not minjs.exists() and str(s_file).endswith(".js")):
-            needs_relabel = True
-
-        else:
-            with sha.open() as sha_f:
-                hash_req = sha_f.read()
-                hash_req = hash_req.replace(" ", "").replace("\n", "")
-            
-            with s_file.open("rb") as static_f:
-                file_contents = static_f.read()
-                hasher_file = hashlib.sha512()
-                hasher_file.update(file_contents)
-                hash_got = hasher_file.hexdigest()
-
-            if hash_req != hash_got:
-                needs_relabel = True
-        
-        typer.echo(f"{s_file} needs relabel? {needs_relabel}")
-        s_file.touch(exist_ok=True)
-
-        if needs_relabel:
-            # Get new file name
-            new_fname = str(s_file).split(".")
-            rev_id = int(new_fname[-2][3:]) + 1
-            new_fname[-2] = f"rev{rev_id}"
-            new_fname = ".".join(new_fname)
-            relabels.append(new_fname)
-
-            # Rename and make new hash file
-            s_file_new = s_file.rename(new_fname)
-            
-            if sha.exists():
-                sha.unlink()
-            
-            with s_file_new.open("rb") as static_f:
-                file_contents = static_f.read()
-                hasher_file = hashlib.sha512()
-                hasher_file.update(file_contents)
-                hash_got = hasher_file.hexdigest()
-
-            with open(f"{s_file_new}.hash", "w") as sha_f:
-                sha_f.write(hash_got)
-            
-            relabels.append(f"{s_file_new}.hash")
-
+    for s_file in Path("data/static/assets").rglob("*.js"):
+        if not str(s_file).endswith(".min.js"):
+            print(s_file)
             cmd = [
                 "google-closure-compiler", 
-                "--js", str(s_file_new), 
-                "--js_output_file", str(s_file_new).replace(".js", ".min.js")
+                "--js", str(s_file), 
+                "--js_output_file", str(s_file).replace(".js", ".min.js").replace("src/", "prod/")
             ]
             
-            if str(s_file_new).endswith(".js"):
-                with Popen(cmd, env=os.environ) as proc:
-                    proc.wait()
+            with Popen(cmd, env=os.environ) as proc:
+                proc.wait()
             
-            typer.echo(
-                f"Relabelled {s_file} to {s_file_new}!"
-            )
-
 
 @db.command("backup")
 def db_backup():
