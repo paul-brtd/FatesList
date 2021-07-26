@@ -25,6 +25,7 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.openapi.utils import get_openapi
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
+from fastapi_responses import custom_openapi
 from lynxfall.core.classes import Singleton
 from lynxfall.oauth.models import OauthConfig
 from lynxfall.oauth.providers.discord import DiscordOauth
@@ -413,9 +414,6 @@ async def init_fates_worker(app, session_id, workers):
     # Include all routers
     include_routers(app, "Discord", "modules/discord")
 
-    # Setup oenapi
-    app.openapi = fl_openapi(app)
-
     # Begin worker sync
     asyncio.create_task(status(workers, session, app))
     logger.debug("Started status task")
@@ -563,27 +561,6 @@ async def setup_db():
     redis = await aioredis.from_url('redis://localhost:1001', db=1)
     rabbit = await aio_pika.connect_robust(host="localhost", port=1002)
     return {"postgres": postgres, "redis": redis, "rabbit": rabbit}
-
-
-def fl_openapi(app):
-    """Fates List OpenAPI generator"""
-    def _openapi():
-        """Custom OpenAPI description"""
-        if app.openapi_schema:
-            return app.openapi_schema
-        openapi_schema = get_openapi(
-            title="Fates List",
-            version="1.0",
-            description="""
-            Current API: v2 beta 3
-            Default API: v2
-            API Docs: https://apidocs.fateslist.xyz
-            """,
-            routes=app.routes,
-        )
-        app.openapi_schema = openapi_schema
-        return app.openapi_schema
-    return _openapi
 
 
 def shutdown_fates_worker(app):
