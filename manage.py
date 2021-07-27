@@ -242,30 +242,50 @@ def secrets_mktemplate(
 def staticfiles_compile():
     """Compiles all labelled static files"""
     for src_file in Path("data/static/assets/src").rglob("*.js"):
-        print(src_file)
+        out_file = str(src_file).replace(".js", ".min.js").replace("src/", "prod/").replace("js/", "")
+        print(f"{src_file} -> {out_file}")
         cmd = [
             "google-closure-compiler", 
             "--js", str(src_file), 
-            "--js_output_file", str(src_file).replace(".js", ".min.js").replace("src/", "prod/")
+            "--js_output_file", out_file
         ]
             
         with Popen(cmd, env=os.environ) as proc:
             proc.wait()
-    
+        
     for src_file in Path("data/static/assets/src").rglob("*.scss"):
-        print(src_file)
+        out_file = str(src_file).replace(".scss", ".min.css").replace("src/", "prod/").replace("css/", "")
+        print(f"{src_file} -> {out_file}")
         cmd = [
             "sass",
             "--style=compressed",
             str(src_file),
-            str(src_file).replace(".scss", ".min.css").replace("src/", "prod/")
+            out_file
         ]
 
         with Popen(cmd, env=os.environ) as proc:
             proc.wait()
 
-        for img in Path("data/static/assets/src/img").rglob("*"):
-            shutil.copy(str(img), str(img).replace("src/img/", "prod/"))
+    for img in Path("data/static/assets/src/img").rglob("*"):
+        ext = str(img).split(".")[-1]
+        out = str(img).replace("src/img/", "prod/").replace(f".{ext}", ".webp")
+        print(f"{img} -> {out}")
+            
+        if ext == "webp":
+            shutil.copy2(str(img), out)
+        else:
+            cmd = [
+                "cwebp",
+                "-quiet",
+                "-q", "75",
+                str(img),
+                "-o",
+                out
+            ]
+
+            with Popen(cmd, env=os.environ) as proc:
+                proc.wait()
+
 
 @db.command("backup")
 def db_backup():

@@ -37,8 +37,8 @@
 	<img loading="lazy" src="{{user.avatar}}" style="border-radius: 50px 50px 50px 50px; margin: 0 3px auto; text-align: center; width: 100px; height: 100px; display: inline-flex; float: left">
 </div>
 <div style="margin-left: 10px;">
-<p class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;"><span class="iconify i-m3" data-icon="fa-solid:server" data-inline="false"></span><span style="margin-left: 5px;" class="bot-servers">{{bot.servers}}</span><br/>
-<p class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;"><span class="iconify i-m3" data-icon="fa-solid:thumbs-up" data-inline="false"></span><span style="margin-left: 5px;" class="bot-votes">{{bot.votes}}</span>
+<p class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;"><span class="iconify i-m3" data-icon="fa-solid:server" data-inline="false"></span><span style="margin-left: 5px;" class="bot-servers">{{human_format(bot.guild_count)}}</span><br/>
+<p class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;"><span class="iconify i-m3" data-icon="fa-solid:thumbs-up" data-inline="false"></span><span style="margin-left: 5px;" class="bot-votes">{{human_format(bot.votes)}}</span>
 </div>
 </div><br/>
 <p style="padding: 3px; font-weight: bold; color: white; opacity: 0.98; margin-top: 2px;">Fates List</p>
