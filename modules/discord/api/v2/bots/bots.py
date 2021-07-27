@@ -154,6 +154,25 @@ async def bot_exists(request: Request, bot_id: int):
     return PlainTextResponse("", status_code=200 if count else 404) 
 
 
+@router.get("/{bot_id}/widget")
+async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format: enums.WidgetFormat):
+    worker_session = request.app.state.worker_session
+    db = worker_session.postgres
+    
+    bot = await db.fetchrow("SELECT bot_id, guild_count, votes FROM bots WHERE bot_id = $1", bot_id)
+    if not bot:
+        if api:
+            return abort(404)
+        return "No Bot Found, cannot display widget"
+    bot = dict(bot)
+    bt.add_task(add_ws_event, bot_id, {"m": {"e": enums.APIEvents.bot_view}, "ctx": {"user": request.session.get('user_id'), "widget": True}})
+    data = {"bot": bot, "user": await get_bot(bot_id, worker_session = request.app.state.worker_session)}
+    if format == enums.WidgetFormat.json:
+        return data
+    elif format == enums.WidgetFormat.html:
+        return await templates.TemplateResponse("widget.html", {"request": request} | data)
+
+
 @router.get(
     "/{bot_id}/widget",
     dependencies=[
