@@ -215,7 +215,7 @@ class BotSearch(BaseSearch):
 
 class ProfilePartial(BaseUser):
     description: Optional[str] = None
-    banner: None
+    banner: Optional[str] = None
     certified: Optional[bool] = False
 
 class ProfilePartialList(BaseModel):

@@ -48,6 +48,9 @@ async def get_partners(
 
         Using multiple checks uses the f_condition value which can only be AND, AND NOT or OR
     """
+    if request.state.error:
+        return request.state.error
+
     if f_condition not in ("AND", "OR", "AND NOT"):
         return abort(400)
     condition, args, i = [], [], 1
@@ -104,8 +107,10 @@ async def _invite_resolver(code):
 
 @router.post("/partners", response_model = IDResponse)
 async def new_partner(request: Request, partner: BotListPartner):
-    guild = client.get_guild(main_server)
-    user = guild.get_member(int(partner.mod))
+    if request.state.error:
+        return request.state.error
+
+    user = request.state.user
     if user is None or not is_staff(staff_roles, user.roles, 5)[0]:
         return api_no_perm(5)
 
@@ -154,10 +159,12 @@ async def new_partner(request: Request, partner: BotListPartner):
 
 @router.patch("/partners/{pid}/ad/{ad_type}", response_model = APIResponse)
 async def set_partner_ad(request: Request, pid: uuid.UUID, ad_type: enums.PartnerAdType, partner: BotListPartnerAd):
-    guild = client.get_guild(main_server)
-    user = guild.get_member(partner.mod)
+    if request.state.error:
+        return request.state.error
+
+    user = request.state.user
     if user is None or not is_staff(staff_roles, user.roles, 5)[0]:
-        return api_no_perm()
+        return api_no_perm(5)
     
     if len(partner.ad) > 1960 and ad_type == enums.PartnerAdType.server:
         return api_error(
@@ -173,11 +180,15 @@ async def set_partner_ad(request: Request, pid: uuid.UUID, ad_type: enums.Partne
     return api_success()
 
 @router.delete("/partners/{pid}", response_model = APIResponse)
-async def delete_partnership(request: Request, pid: uuid.UUID, partner: BotListAdminRoute):
-    guild = client.get_guild(main_server)
-    user = guild.get_member(partner.mod)
+async def delete_partnership(request: Request, pid: uuid.UUID):
+    """Deletes a partnership"""
+    if request.state.error:
+        return request.state.error
+
+    user = request.state.user
     if user is None or not is_staff(staff_roles, user.roles, 5)[0]:
         return api_no_perm(5)
+
     partner_check = await db.fetchval("SELECT COUNT(1) FROM bot_list_partners WHERE id = $1", pid)
     if partner_check == 0:
         return api_error(
@@ -188,8 +199,10 @@ async def delete_partnership(request: Request, pid: uuid.UUID, partner: BotListA
 
 @router.patch("/partners/{pid}/publish_channel", response_model = APIResponse)
 async def set_partner_publish_channel(request: Request, pid: uuid.UUID, partner: BotListPartnerChannel):
-    guild = client.get_guild(main_server)
-    user = guild.get_member(partner.mod)
+    if request.state.error:
+        return request.state.error
+
+    user = request.state.user
     if user is None or not is_staff(staff_roles, user.roles, 5)[0]:
         return api_no_perm(5)
 
@@ -203,10 +216,13 @@ async def set_partner_publish_channel(request: Request, pid: uuid.UUID, partner:
 
 @router.post("/partners/{pid}/publish", response_model = APIResponse)
 async def publish_partnership(request: Request, pid: uuid.UUID, partner: BotListPartnerPublish):
-    guild = client.get_guild(main_server)
-    user = guild.get_member(partner.mod)
+    if request.state.error:
+        return request.state.error
+    
+    user = request.state.user
+    guild = user.guild
     if user is None or not is_staff(staff_roles, user.roles, 5)[0]:
-        return api_no_perm()
+        return api_no_perm(5)
     publish = await db.fetchrow("SELECT invite, publish_channel, type, target, server_ad FROM bot_list_partners WHERE id = $1", pid)
     if not publish:
         return api_error(

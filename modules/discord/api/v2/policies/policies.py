@@ -10,8 +10,10 @@ router = APIRouter(
 
 @router.get("/privacy")
 async def privacy_policy(request: Request):
+    """Returns the privacy policy for fates list as a JSON"""
     return pp
 
 @router.get("/rules")
 async def rules(request: Request):
+    """Returns the rules for fates list as a JSON"""
     return rules

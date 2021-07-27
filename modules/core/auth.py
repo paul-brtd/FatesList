@@ -35,11 +35,20 @@ async def bot_user_auth_check(bot_id: int, user_id: Optional[int] = None, Author
         if not id: # Still
             raise HTTPException(status_code=401, detail="Invalid Bot Token or User Token")
 
-async def manager_check(request: Request, Authorization: str = Header("Put Manager Key Here"), Lynx: int = Header("User ID of moderator"), Snowfall: str = Header("Put User Token of modator here")):
-    if not secure_strcmp(Authorization, manager_key):
-        raise HTTPException(status_code=401, detail="Invalid Manager Key")
-
+async def manager_check(
+    request: Request, 
+    Authorization: str = Header("Put Manager Key Here"), 
+    Lynx: int = Header("User ID of moderator"), 
+    Snowfall: str = Header("Put User Token of moderator here")
+):
     request.state.error = None
+
+    if not secure_strcmp(Authorization, manager_key):
+        request.state.error = api_error(
+            "Invalid manager key",
+            status_code=403
+        )
+        return
 
     id = await user_auth(Lynx, Snowfall)
     if id is None:

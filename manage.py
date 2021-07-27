@@ -135,7 +135,10 @@ def run_site(
     }
     
     app = _fappgen(str(session_id), workers)
-    FatesRunner(app, options).run()
+    try:
+        FatesRunner(app, options).run()
+    except BaseException as exc:
+        logger.info(f"{type(exc).__name__}: {exc}")
 
 
 @site.command("reload")

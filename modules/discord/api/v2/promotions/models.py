@@ -8,15 +8,8 @@ import modules.models.enums as enums
 from ..base_models import APIResponse, BaseUser
 
 
-class BotPromotionDelete(BaseModel):
-    """Represents a promotion delete request. Your library should internally be using this but you shouldn't need to handle this yourself """
-    id: Optional[uuid.UUID] = None
-
-class BotPromotionPartial(BaseModel):
-    """
-    Represents a partial bot promotion for creating promotions on Fates List
-    A partial promotion is similar to a regular promotion object but does not have an id
-    """
+class BotPromotion(BaseModel):
+    """Reperesents a bots promotion"""
     title: str
     info: str
     css: Optional[str] = None
@@ -27,13 +20,6 @@ class BotPromotionPartial(BaseModel):
         if len(v) <= 5:
             raise ValueError('Promotion title must be more than 5 characters')
         return v
-
-class BotPromotion(BotPromotionPartial):
-    """
-    Represents a bot promotion on Fates List
-    A partial promotion is similar to a regular promotion object but does not have an id
-    """
-    id: uuid.UUID
 
 #LIBRARY-INTERNAL
 class BotPromotionList(BaseModel):

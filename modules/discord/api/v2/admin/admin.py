@@ -26,6 +26,7 @@ async def botlist_admin_console_api(request: Request):
 
 @router.get("/err/{code}", response_model = APIResponse)
 async def debug_error_tester(request: Request, code: int):
+    """Debug endpoint to test error handling"""
     if code == 500:
         error = int("haha")
     return abort(code)
@@ -37,6 +38,7 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
         return request.state.error
 
     user = request.state.user
+    guild = user.guild
     # Get permission while also handling multi/recursive operations, which have a tuple where first element is for non multi/recusive and second is for multi/recursive
     if isinstance(data.op.__perm__, tuple):
         if data.op.__recursive__:
