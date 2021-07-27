@@ -2,8 +2,9 @@ from lxml.html.clean import Cleaner
 
 from modules.core import *
 from lynxfall.utils.string import human_format
-from fastapi.responses import PlainTextResponse
-
+from fastapi.responses import PlainTextResponse, StreamingResponse
+from PIL import Image, ImageDraw
+import io
 from ..base import API_VERSION
 from .models import APIResponse, Bot, BotRandom, BotStats, BotAppeal
 
@@ -171,20 +172,14 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
         return data
     elif format == enums.WidgetFormat.html:
         return await templates.TemplateResponse("widget.html", {"request": request} | data)
+    elif format == enums.WidgetFormat.webp:
+        widget_img = Image.new("RGBA", (300, 175), "black")
+        
+        with io.BytesIO() as output:
+            widget_img.save(output, format="WEBP")
+            return StreamingResponse(output, media_type="image/webp")
+            
 
-
-@router.get(
-    "/{bot_id}/widget",
-    dependencies=[
-        Depends(
-            Ratelimiter(
-                global_limit = Limit(times=5, minutes=2)
-            )
-        )
-    ]
-)
-async def get_bot_widget(request: Request, bot_id: int, bt: BackgroundTasks):
-    return await render_bot_widget(request, bt, bot_id, api = True)
 
 @router.get(
     "/{bot_id}/raw",
