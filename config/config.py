@@ -113,28 +113,28 @@ special_badges = (
         "id": "STAFF",
         "name": "Staff",
         "description": "This is a Fates List Staff Member",
-        "image": "/static/assets/img/staff.png",
+        "image": "/static/assets/prod/staff.png",
         "req": ("staff",) # Is this badge only for staff?
     },
     {
         "id": "CERTDEV",
         "name": "Certified Bot Developer",
         "description": "This is a certified bot developer",
-        "image": "/static/assets/img/certified.png",
+        "image": "/static/assets/prod/certified.png",
         "req": ("cert_dev",) # Certified
     },
     {
         "id": "BOTDEV",
         "name": "Bot Developer",
         "description": "This is a bot developer",
-        "image": "/static/assets/img/botdev.png",
+        "image": "/static/assets/prod/botdev.png",
         "req": ("bot_dev",)
     },
     {
         "id": "DISCORD_MEMBER",
         "name": "Discord Member",
         "description": "This user is on our support server",
-        "image": "/static/assets/img/dmember.png",
+        "image": "/static/assets/prod/dmember.png",
         "req": ("discord_member",)
     }
 )

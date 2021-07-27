@@ -1,7 +1,7 @@
 {% extends "base/base.html" %}
 
 {% block head %}
-	<link rel="stylesheet" href="/static/assets/css/prod/bot_server.min.css" media="none" onload="if(media!='all')media='all'"/>
+	<link rel="stylesheet" href="/static/assets/prod/bot_server.min.css" media="none" onload="if(media!='all')media='all'"/>
 <style>
 {% if data.banner and data.keep_banner_decor %}
 .banner-decor {
@@ -341,9 +341,9 @@
 	var context = {{ context|tojson }}
 	context.default_tab_button = "long-desc-tab-button"
 </script>
-<script src="/static/assets/js/prod/tabs.min.js?v=1"></script>
-<script src="/static/assets/js/prod/bot_server.min.js?v=1"></script>
-<script src="/static/assets/js/prod/vote.min.js?v=1"></script>
+<script src="/static/assets/prod/tabs.min.js?v=1"></script>
+<script src="/static/assets/prod/bot_server.min.js?v=1"></script>
+<script src="/static/assets/prod/vote.min.js?v=1"></script>
 </div>
 </article>
 {% endblock %} 

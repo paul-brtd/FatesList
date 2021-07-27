@@ -241,7 +241,7 @@ def secrets_mktemplate(
 @staticfiles.command("compile")
 def staticfiles_compile():
     """Compiles all labelled static files"""
-    for src_file in Path("data/static/assets/js/src").rglob("*.js"):
+    for src_file in Path("data/static/assets/src").rglob("*.js"):
         print(src_file)
         cmd = [
             "google-closure-compiler", 
@@ -252,7 +252,7 @@ def staticfiles_compile():
         with Popen(cmd, env=os.environ) as proc:
             proc.wait()
     
-    for src_file in Path("data/static/assets/css/src").rglob("*.scss"):
+    for src_file in Path("data/static/assets/src").rglob("*.scss"):
         print(src_file)
         cmd = [
             "sass",
@@ -263,6 +263,9 @@ def staticfiles_compile():
 
         with Popen(cmd, env=os.environ) as proc:
             proc.wait()
+
+        for img in Path("data/static/assets/src/img").rglob("*"):
+            shutil.copy(str(img), str(img).replace("src/img/", "prod/"))
 
 @db.command("backup")
 def db_backup():
