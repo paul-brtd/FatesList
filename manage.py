@@ -239,23 +239,30 @@ def secrets_mktemplate(
 
 
 @staticfiles.command("compile")
-def staticfiles_relabel():
+def staticfiles_compile():
     """Compiles all labelled static files"""
+    for src_file in Path("data/static/assets/js/src").rglob("*.js"):
+        print(src_file)
+        cmd = [
+            "google-closure-compiler", 
+            "--js", str(src_file), 
+            "--js_output_file", str(src_file).replace(".js", ".min.js").replace("src/", "prod/")
+        ]
+            
+        with Popen(cmd, env=os.environ) as proc:
+            proc.wait()
     
-    import git 
-    relabels = []
-    for s_file in Path("data/static/assets").rglob("*.js"):
-        if not str(s_file).endswith(".min.js"):
-            print(s_file)
-            cmd = [
-                "google-closure-compiler", 
-                "--js", str(s_file), 
-                "--js_output_file", str(s_file).replace(".js", ".min.js").replace("src/", "prod/")
-            ]
-            
-            with Popen(cmd, env=os.environ) as proc:
-                proc.wait()
-            
+    for src_file in Path("data/static/assets/css/src").rglob("*.scss"):
+        print(src_file)
+        cmd = [
+            "sass",
+            "--style=compressed",
+            str(src_file),
+            str(src_file).replace(".scss", ".min.css").replace("src/", "prod/")
+        ]
+
+        with Popen(cmd, env=os.environ) as proc:
+            proc.wait()
 
 @db.command("backup")
 def db_backup():
