@@ -200,21 +200,6 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
         data["bot_id"] = str(bot_id)
         return data
 
-async def render_bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, api: bool):
-    worker_session = request.app.state.worker_session
-    db = worker_session.postgres
-    
-    bot = await db.fetchrow("SELECT bot_id, guild_count, votes FROM bots WHERE bot_id = $1", bot_id)
-    if not bot:
-        if api:
-            return abort(404)
-        return "No Bot Found, cannot display widget"
-    bot = dict(bot)
-    bt.add_task(add_ws_event, bot_id, {"m": {"e": enums.APIEvents.bot_view}, "ctx": {"user": request.session.get('user_id'), "widget": True}})
-    data = {"bot": bot, "user": await get_bot(bot_id, worker_session = request.app.state.worker_session)}
-    if api:
-        return data
-    return await templates.TemplateResponse("widget.html", {"request": request} | data)
 
 async def render_search(request: Request, q: str, api: bool):
     worker_session = request.app.state.worker_session
