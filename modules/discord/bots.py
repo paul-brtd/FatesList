@@ -25,9 +25,6 @@ async def bot_index(request: Request, bot_id: int, bt: BackgroundTasks, rev_page
         rev_page = rev_page, 
     )
 
-@router.get("/{bot_id}/widget")
-async def bot_widget(request: Request, bot_id: int, bt: BackgroundTasks):
-    return await render_bot_widget(request, bt, bot_id, api = False)
 
 @router.get("/{bot_id}/invite")
 async def bot_invite_and_log(request: Request, bot_id: int):
