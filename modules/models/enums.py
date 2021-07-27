@@ -4,10 +4,11 @@ from typing import Dict, ForwardRef, List, Optional
 from aenum import Enum, IntEnum
 from pydantic import BaseModel
 
-class TokenTypes(IntEnum):
+class WidgetFormat(Enum):
     _init_ = "value __doc__"
-    full = 0, "Regular user token"
-    temp = 1, "Temporary user token"
+    json = "json", "JSON Widget"
+    html = "html", "HTML Widget"
+    webp = "webp", "Widget (as webp image)"
 
 class PromotionType(IntEnum):
     _init_ = 'value __doc__'
