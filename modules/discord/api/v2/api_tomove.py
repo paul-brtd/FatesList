@@ -22,7 +22,10 @@ router = APIRouter(
         Depends(bot_auth_check)
     ]
 )
-async def get_bot_events_api(request: Request, bot_id: int, exclude: Optional[list] = None, filter: Optional[list] = None):
+async def get_bot_events_api(request: Request, bot_id: int, exclude: Optional[str] = None, filter: Optional[str] = None):
+    """Get bot events, all exclude and filters must be comma seperated"""
+    exclude = exclude.split(",")
+    filter = filter.split(",")
     return await bot_get_events(bot_id = bot_id, filter = filter, exclude = exclude)
 
 @router.get(
@@ -81,16 +84,15 @@ async def vote_review_api(request: Request, bot_id: int, rid: uuid.UUID, vote: B
     return api_success()
 
 @router.delete(
-    "/bots/{bot_id}/reviews/{rid}", 
-    response_model = APIResponse
+    "/users/{user_id}/bots/{bot_id}/reviews/{rid}", 
+    response_model = APIResponse,
+    dependencies=[
+        Depends(user_auth_check)
+    ]
 )
-async def delete_review(request: Request, bot_id: int, rid: uuid.UUID, bt: BackgroundTasks, data: BotReviewAction, Authorization: str = Header("USER_TOKEN")):
-    id = await user_auth(data.user_id, Authorization)
-    if id is None:
-        return abort(401)
-    data.user_id = int(data.user_id)
+async def delete_review(request: Request, user_id: int, bot_id: int, rid: uuid.UUID):
     guild = client.get_guild(main_server)
-    user = guild.get_member(data.user_id)
+    user = guild.get_member(user_id)
     if user is None:
         staff = False 
     else:
@@ -98,21 +100,26 @@ async def delete_review(request: Request, bot_id: int, rid: uuid.UUID, bt: Backg
     if staff:
         check = await db.fetchrow("SELECT replies FROM bot_reviews WHERE id = $1", rid)
         if check is None:
-            return api_error("You are not allowed to delete this review", 1232)
+            return api_error("You are not allowed to delete this review")
     else:
-        check = await db.fetchrow("SELECT replies FROM bot_reviews WHERE id = $1 AND bot_id = $2 AND user_id = $3", rid, bot_id, data.user_id)
+        check = await db.fetchrow(
+            "SELECT replies FROM bot_reviews WHERE id = $1 AND bot_id = $2 AND user_id = $3", 
+            rid, 
+            bot_id, 
+            user_id
+        )
         if check is None:
-            return api_error("You are not allowed to delete this review", 1232)
+            return api_error("You are not allowed to delete this review")
     event_data = await db.fetchrow("SELECT reply, review_text, star_rating FROM bot_reviews WHERE id = $1", rid) # Information needed to send an event
     await db.execute("DELETE FROM bot_reviews WHERE id = $1", rid)
-    await bot_add_event(bot_id, enums.APIEvents.review_delete, {"user": str(data.user_id), "reply": event_data["reply"], "id": str(rid), "star_rating": event_data["star_rating"], "review": event_data["review_text"]})
+    await bot_add_event(bot_id, enums.APIEvents.review_delete, {"user": str(user_id), "reply": event_data["reply"], "id": str(rid), "star_rating": event_data["star_rating"], "review": event_data["review_text"]})
     return api_success()
 
 @router.get(
     "/bots/{bot_id}/commands", 
     response_model = BotCommandsGet
 )
-async def get_bot_commands_api(request:  Request, bot_id: int, filter: Optional[str] = None, lang: str = "default"):
+async def get_commands(request:  Request, bot_id: int, filter: Optional[str] = None, lang: str = "default"):
     cmd = await get_bot_commands(bot_id, lang, filter)
     if cmd == {}:
         return abort(404)
@@ -120,7 +127,7 @@ async def get_bot_commands_api(request:  Request, bot_id: int, filter: Optional[
 
 @router.post(
     "/bots/{bot_id}/commands",
-    response_model = BotCommandAddResponse, 
+    response_model = IDResponse, 
     dependencies=[
         Depends(
             Ratelimiter(
@@ -131,21 +138,20 @@ async def get_bot_commands_api(request:  Request, bot_id: int, filter: Optional[
         Depends(bot_auth_check)
     ]
 )
-async def add_bot_command_api(request: Request, bot_id: int, command: PartialBotCommand, force_add: Optional[bool] = False):
+async def add_command(request: Request, bot_id: int, command: BotCommand):
     """
-        Self explaining command. Note that if force_add is set, the API will not check if your command already exists and will forcefully add it, this may lead to duplicate commands on your bot. If ret_id is not set, you will not get the command id back in the api response
+    Adds a command to your bot
     """
-    if force_add is False:
-        check = await db.fetchval("SELECT COUNT(1) FROM bot_commands WHERE cmd_name = $1 AND bot_id = $2", command.cmd_name, bot_id)
-        if check:
-            return api_error("A command with this name already exists on your bot", 6858)
+    check = await db.fetchval("SELECT COUNT(1) FROM bot_commands WHERE cmd_name = $1 AND bot_id = $2", command.cmd_name, bot_id)
+    if check:
+        return api_error("A command with this name already exists on your bot")
     id = uuid.uuid4()
     await db.execute("INSERT INTO bot_commands (id, bot_id, cmd_groups, cmd_type, cmd_name, description, args, examples, premium_only, notes, doc_link, friendly_name) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)", id, bot_id, command.cmd_groups, command.cmd_type, command.cmd_name, command.description, command.args, command.examples, command.premium_only, command.notes, command.doc_link, command.friendly_name)
     await bot_add_event(bot_id, enums.APIEvents.command_add, {"user": None, "id": id})
     return api_success(id = id)
 
 @router.patch(
-    "/bots/{bot_id}/commands", 
+    "/bots/{bot_id}/commands/{id}", 
     response_model = APIResponse, 
     dependencies=[
         Depends(
@@ -157,8 +163,8 @@ async def add_bot_command_api(request: Request, bot_id: int, command: PartialBot
         Depends(bot_auth_check)
     ]
 )
-async def edit_bot_command_api(request: Request, bot_id: int, command: BotCommand):
-    data = await db.fetchrow(f"SELECT id, cmd_type, cmd_groups, cmd_name, friendly_name, description, args, examples, premium_only, notes, doc_link FROM bot_commands WHERE id = $1 AND bot_id = $2", command.id, bot_id)
+async def edit_bot_command_api(request: Request, bot_id: int, id: uuid.UUID, command: BotCommand):
+    data = await db.fetchrow(f"SELECT id, cmd_type, cmd_groups, cmd_name, friendly_name, description, args, examples, premium_only, notes, doc_link FROM bot_commands WHERE id = $1 AND bot_id = $2", id, bot_id)
     if data is None:
         return abort(404)
 
@@ -168,11 +174,11 @@ async def edit_bot_command_api(request: Request, bot_id: int, command: BotComman
         if command_dict[key] is None: 
             command_dict[key] = data[key]
     await db.execute("UPDATE bot_commands SET cmd_type = $2, cmd_name = $3, description = $4, args = $5, examples = $6, premium_only = $7, notes = $8, doc_link = $9, cmd_groups = $10, friendly_name = $11 WHERE id = $1", command_dict["id"], command_dict["cmd_type"], command_dict["cmd_name"], command_dict["description"], command_dict["args"], command_dict["examples"], command_dict["premium_only"], command_dict["notes"], command_dict["doc_link"], command_dict["cmd_groups"], command_dict["friendly_name"])
-    await bot_add_event(bot_id, enums.APIEvents.command_edit, {"user": None, "id": command.id})
+    await bot_add_event(bot_id, enums.APIEvents.command_edit, {"user": None, "id": id})
     return api_success()
 
 @router.delete(
-    "/bots/{bot_id}/commands", 
+    "/bots/{bot_id}/commands/{id}", 
     response_model = APIResponse, 
     dependencies=[
         Depends(
@@ -184,18 +190,12 @@ async def edit_bot_command_api(request: Request, bot_id: int, command: BotComman
         Depends(bot_auth_check)
     ]
 )
-async def delete_bot_command_api_(request: Request, bot_id: int, command: BotCommandDelete):
-    if command.id:
-        cmd = await db.fetchval("SELECT id FROM bot_commands WHERE id = $1 AND bot_id = $2", command.id, bot_id)
-    elif command.cmd_name:
-        cmd = await db.fetchval("SELECT id FROM bot_commands WHERE cmd_name = $1 AND bot_id = $2", command.cmd_name, bot_id)
+async def delete_command(request: Request, bot_id: int, id: uuid.UUID):
+    cmd = await db.fetchval("SELECT id FROM bot_commands WHERE id = $1 AND bot_id = $2", id, bot_id)
     if not cmd:
         return abort(404)
-    if command.id:
-        await db.execute("DELETE FROM bot_commands WHERE id = $1 AND bot_id = $2", command.id, bot_id)
-    elif command.cmd_name:
-        await db.execute("DELETE FROM bot_commands WHERE cmd_name = $1 AND bot_id = $2", command.cmd_name, bot_id)
-    await bot_add_event(bot_id, enums.APIEvents.command_delete, {"user": None, "id": command.id})
+    await db.execute("DELETE FROM bot_commands WHERE id = $1 AND bot_id = $2", id, bot_id)
+    await bot_add_event(bot_id, enums.APIEvents.command_delete, {"user": None, "id": id})
     return api_success()
 
 @router.get(

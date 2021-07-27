@@ -63,7 +63,7 @@ class BotStateUpdate(BaseModel):
 class BotTransfer(BotListAdminRoute):
     new_owner: str
 
-class BotAdminOpEndpoint(BotListAdminRoute):
+class BotAdminOpEndpoint(BaseModel):
     """
         - op is a operation defined in BotAdminOp
         - reason is the optional reason for the operation

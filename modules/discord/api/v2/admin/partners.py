@@ -15,7 +15,8 @@ cleaner = Cleaner()
 router = APIRouter(
     prefix = f"/api/v{API_VERSION}/admin",
     include_in_schema = True,
-    tags = [f"API v{API_VERSION} - Admin (Partnerships)"]
+    tags = [f"API v{API_VERSION} - Admin (Partnerships)"],
+    dependencies=[Depends(manager_check)]
 )
 
 class InvalidInvite(Exception):
@@ -102,9 +103,7 @@ async def _invite_resolver(code):
     return True, invite
 
 @router.post("/partners", response_model = IDResponse)
-async def new_partner(request: Request, partner: BotListPartner, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
-    if not secure_strcmp(Authorization, manager_key):
-        return abort(401)
+async def new_partner(request: Request, partner: BotListPartner):
     guild = client.get_guild(main_server)
     user = guild.get_member(int(partner.mod))
     if user is None or not is_staff(staff_roles, user.roles, 5)[0]:
@@ -154,9 +153,7 @@ async def new_partner(request: Request, partner: BotListPartner, Authorization: 
     return api_success(id = id)
 
 @router.patch("/partners/{pid}/ad/{ad_type}", response_model = APIResponse)
-async def set_partner_ad(request: Request, pid: uuid.UUID, ad_type: enums.PartnerAdType, partner: BotListPartnerAd, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
-    if not secure_strcmp(Authorization, manager_key):
-        return abort(401)
+async def set_partner_ad(request: Request, pid: uuid.UUID, ad_type: enums.PartnerAdType, partner: BotListPartnerAd):
     guild = client.get_guild(main_server)
     user = guild.get_member(partner.mod)
     if user is None or not is_staff(staff_roles, user.roles, 5)[0]:
@@ -176,9 +173,7 @@ async def set_partner_ad(request: Request, pid: uuid.UUID, ad_type: enums.Partne
     return api_success()
 
 @router.delete("/partners/{pid}", response_model = APIResponse)
-async def delete_partnership(request: Request, pid: uuid.UUID, partner: BotListAdminRoute, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
-    if not secure_strcmp(Authorization, manager_key):
-        return abort(401)
+async def delete_partnership(request: Request, pid: uuid.UUID, partner: BotListAdminRoute):
     guild = client.get_guild(main_server)
     user = guild.get_member(partner.mod)
     if user is None or not is_staff(staff_roles, user.roles, 5)[0]:
@@ -192,9 +187,7 @@ async def delete_partnership(request: Request, pid: uuid.UUID, partner: BotListA
     return api_success()
 
 @router.patch("/partners/{pid}/publish_channel", response_model = APIResponse)
-async def set_partner_publish_channel(request: Request, pid: uuid.UUID, partner: BotListPartnerChannel, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
-    if not secure_strcmp(Authorization, manager_key):
-        return abort(401)
+async def set_partner_publish_channel(request: Request, pid: uuid.UUID, partner: BotListPartnerChannel):
     guild = client.get_guild(main_server)
     user = guild.get_member(partner.mod)
     if user is None or not is_staff(staff_roles, user.roles, 5)[0]:
@@ -209,9 +202,7 @@ async def set_partner_publish_channel(request: Request, pid: uuid.UUID, partner:
     return api_success()
 
 @router.post("/partners/{pid}/publish", response_model = APIResponse)
-async def publish_partnership(request: Request, pid: uuid.UUID, partner: BotListPartnerPublish, Authorization: str = Header("BOT_TEST_MANAGER_KEY")):
-    if not secure_strcmp(Authorization, manager_key):
-        return abort(401)
+async def publish_partnership(request: Request, pid: uuid.UUID, partner: BotListPartnerPublish):
     guild = client.get_guild(main_server)
     user = guild.get_member(partner.mod)
     if user is None or not is_staff(staff_roles, user.roles, 5)[0]:

@@ -17,7 +17,7 @@ import datetime
 
 import enums  # as enums (for libraries)
 
-from .base_models import AccessToken, APIResponse, BaseUser
+from .base_models import *
 
 
 class BasePager(BaseModel):
@@ -105,7 +105,7 @@ class BotEventList(BaseModel):
 class BotEvents(BaseModel):
     events: BotEventList
 
-class PartialBotCommand(BaseModel):
+class BotCommand(BaseModel):
     cmd_type: enums.CommandType # 0 = no, 1 = guild, 2 = global
     cmd_groups: Optional[List[str]] = ["Default"]
     cmd_name: str
@@ -116,12 +116,6 @@ class PartialBotCommand(BaseModel):
     premium_only: Optional[bool] = False
     notes: Optional[list] = []
     doc_link: Optional[str] = ""
-
-class BotCommand(PartialBotCommand):
-    id: uuid.UUID
-    
-class BotCommandAddResponse(APIResponse):
-    id: uuid.UUID
 
 class BotCommandsGet(BaseModel):
     __root__: Dict[str, List[BotCommand]]

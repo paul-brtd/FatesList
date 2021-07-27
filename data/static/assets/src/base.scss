@@ -1,5 +1,8 @@
 html, body {overflow-x: hidden !important;}
 
+$card-scale: 1.025;
+$form-radius: 4px;
+
 .btn-no {border: none !important; outline: none !important;}
 .fform {
         background: #ffffff !important;
@@ -31,19 +34,19 @@ textarea {
 }
 
 .bot-card:hover {
-transform: scale(1.025, 1.025) perspective(1px) translateZ(0);
+transform: scale($card-scale, $card-scale) perspective(1px) translateZ(0);
 filter: blur;
 -webkit-filter: blur(0);
 
 }
 .profile-card:hover {
-transform: scale(1.025, 1.025) perspective(1px) translateZ(0);
+transform: scale($card-scale, $card-scale) perspective(1px) translateZ(0);
 }
 
     html, body, header, nav, footer {font-family: 'Lexend Deca', sans-serif !important;}
     p {font-family: 'Lexend Deca', sans-serif !important;}
    .btn {
-            border-radius: 4px 4px 4px 4px !important;
+            border-radius: $form-radius $form-radius $form-radius $form-radius !important;
         }
    label {font-size: 14px;}
 ::selection {
@@ -65,7 +68,7 @@ transform: scale(1.025, 1.025) perspective(1px) translateZ(0);
 	text-decoration: none !important; 
 	background: white !important; 
 	padding: 8px; 
-	border-radius: 4px 4px 4px 4px !important;
+	border-radius: $form-radius $form-radius $form-radius $form-radius !important;
 }
 
 @media screen and (max-width: 768px) {
@@ -83,12 +86,12 @@ transform: scale(1.025, 1.025) perspective(1px) translateZ(0);
   }
 
 .select_tags, input, .wtype {
-	border-radius: 4px 4px 4px 4px !important;
+	border-radius: $form-radius $form-radius $form-radius $form-radius !important;
 	padding: 10px !important;
 }
 
 textarea {
-	border-radius: 4px 4px 4px 4px !important;
+	border-radius: $form-radius $form-radius $form-radius $form-radius !important;
 	padding: 10px !important;
 	height: 500px;
 }

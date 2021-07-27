@@ -16,7 +16,7 @@ cleaner = Cleaner()
 router = APIRouter(
     prefix = f"/api/v{API_VERSION}/admin",
     include_in_schema = True,
-    tags = [f"API v{API_VERSION} - Admin"]
+    tags = [f"API v{API_VERSION} - Admin"],
 )
 
 @router.get("/console")
@@ -24,38 +24,19 @@ async def botlist_admin_console_api(request: Request):
     """API to get raw admin console info"""
     return await admin_dashboard(request) # Just directly render the admin dashboard. It knows what to do
 
-@router.get("/err", response_model = APIResponse)
-@router.post("/err", response_model = APIResponse)
-async def error_maker(request: Request, test: Optional[APIResponse] = None):
-    error = int("haha")
+@router.get("/err/{code}", response_model = APIResponse)
+async def debug_error_tester(request: Request, code: int):
+    if code == 500:
+        error = int("haha")
+    return abort(code)
 
-@router.patch("/bots/{bot_id}/ops", response_model = APIResponse)
-async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEndpoint, Authorization: str = Header("BOT_TEST_MANAGER_KEY"), Snowfall: str = Header("USER_TOKEN")):
+@router.patch("/bots/{bot_id}/ops", response_model = APIResponse, dependencies=[Depends(manager_check)])
+async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEndpoint):
     """Performs a bot admin operation. This is internal and only meant for our test server manager bot. 0 is the recursion bot for botlist-wide actions like vote resets every month. Snowfall is the user token header for staff api requests"""
-    
-    # Manager key check (only redbot can use this api) 
-    if not secure_strcmp(Authorization, manager_key):
-        return abort(401)
-    
-    # Check user token
-    id = await user_auth(data.mod, Snowfall)
-    if id is None:
-        return api_error(
-            "Snowfall auth failed. Please recheck your user token and try again!",
-            status_code = 403
-        )
+    if request.state.error:
+        return request.state.error
 
-    # Get user
-    guild = client.get_guild(main_server)
-    if not guild: # Guild is None when still connecting to discord
-        return api_error(
-            "Not yet connected to discord", 
-            status_code = 503, 
-            headers = {"Retry-After": 5}
-        )
-      
-    user = guild.get_member(data.mod)
-    
+    user = request.state.user
     # Get permission while also handling multi/recursive operations, which have a tuple where first element is for non multi/recusive and second is for multi/recursive
     if isinstance(data.op.__perm__, tuple):
         if data.op.__recursive__:
@@ -70,14 +51,14 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
     
     # Handle cooldown by first getting the bucket and checking the ttl of the needed key given bucket
     if data.op.__cooldown__:
-        coolkey = await redis_db.ttl(f"cooldown-{data.op.__cooldown__.name}-{data.mod}") # Format: cooldown-BUCKET-MOD
+        coolkey = await redis_db.ttl(f"cooldown-{data.op.__cooldown__.name}-{user.id}") # Format: cooldown-BUCKET-MOD
         if coolkey not in (-1, -2): # https://redis.io/commands/ttl, -2 means no key found and -1 means key exists but has no associated expire
             return api_error(
                 f"This operation is on cooldown for {coolkey} seconds",
                 status_code = 429, 
                 headers = {"X-OP-RL": "1", "Retry-After": str(coolkey)}
             )
-        await redis_db.set(f"cooldown-{data.op.__cooldown__.name}-{data.mod}", 0, px = int(data.op.__cooldown__.value*1000))
+        await redis_db.set(f"cooldown-{data.op.__cooldown__.name}-{user.id}", 0, px = int(data.op.__cooldown__.value*1000))
 
     # Check that reason is given where needed
     if data.op.__reason_needed__ and not data.reason:
@@ -86,7 +67,7 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
         )
     
     # Create admin_tool for use by ops
-    admin_tool = BotListAdmin(bot_id, data.mod)
+    admin_tool = BotListAdmin(bot_id, user.id)
     
     # Using Bot ID 0 on a non recursive command is not allowed
     if bot_id == 0 and not data.op.__recursive__:
@@ -240,7 +221,7 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
 
     # Staff lock
     elif data.op == enums.BotAdminOp.staff_lock:
-        await redis_db.delete(f"fl_staff_access-{data.mod}:{bot_id}")
+        await redis_db.delete(f"fl_staff_access-{user.id}:{bot_id}")
         embed = discord.Embed(
             title = "Staff Access Alert!", 
             description = (
@@ -253,7 +234,7 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
    
     # Staff unlock
     elif data.op == enums.BotAdminOp.staff_unlock:
-        await redis_db.set(f"fl_staff_access-{data.mod}:{bot_id}", 0, ex = 60*15)
+        await redis_db.set(f"fl_staff_access-{user.id}:{bot_id}", 0, ex = 60*15)
         embed = discord.Embed(
             title = "Staff Access Alert!", 
             description = (
@@ -266,7 +247,7 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
         
     # Bot lock
     elif data.op == enums.BotAdminOp.bot_lock:
-        if not is_bot_admin(bot_id, data.mod):
+        if not is_bot_admin(bot_id, user.id):
             return api_error("You cannot lock or unlock a bot you do not own. If you are staff, ensure you have staff unlocked the bot using +sunlock <bot>", 2771, status_code = 403)
         sm = staff[2]
         try:
@@ -287,7 +268,7 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
 
     # Bot unlock
     elif data.op == enums.BotAdminOp.bot_unlock:
-        if not is_bot_admin(bot_id, data.mod):
+        if not is_bot_admin(bot_id, user.id):
             return api_error("You cannot lock or unlock a bot you do not own. If you are staff, ensure you have staff unlocked the bot using +sunlock <bot>", 2771, status_code = 403)
         sm = staff[2]
         curr_lock = await db.fetchval("SELECT lock from bots WHERE bot_id = $1", bot_id)
@@ -319,6 +300,7 @@ async def botlist_get_queue_api(request: Request):
 async def check_staff_member(request: Request, user_id: int, min_perm: int):
     """Admin route to check if a user is staff or not"""
     try:
+        await client.wait_until_ready()
         staff = is_staff(staff_roles, client.get_guild(main_server).get_member(user_id).roles, min_perm)
     except:
         return {"staff": False, "perm": 1, "sm": {}}

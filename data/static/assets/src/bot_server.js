@@ -158,16 +158,19 @@ setTimeout(function(){getCommands(context.id)}, 700)
 function deleteReview(rev_id) {
 	$.ajax({
 		type: 'DELETE',
-		url: `/api/${context.type}s/${context.id}/reviews/${rev_id}`,
-		data: JSON.stringify({"user_id": context.user_id}),
+		url: `/api/users/${context.user_id}/${context.type}s/${context.id}/reviews/${rev_id}`,
 		headers: {"Authorization": context.user_token},
-		processData: false,
 		contentType: 'application/json',
 		statusCode: {
-			400: function(data) {modalShow("Error", data.error)}
+			400: function(data) {
+				modalShow("Error", data.responseJSON.reason)
+			},
+			200: function(data) {
+				modalShow("Success!", "Deleted Review Successfully")
+				window.location.refresh()
+			}
 		}	
 	});
-	modalShow("Success!", "Deleted Review Successfully")
 }
 
 

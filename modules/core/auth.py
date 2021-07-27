@@ -24,8 +24,31 @@ async def user_auth_check(user_id: int, Authorization: str = Header("Put User To
         raise HTTPException(status_code=401, detail="Invalid User Token")
 
 async def bot_user_auth_check(bot_id: int, user_id: Optional[int] = None, Authorization: str = Header("Put Bot Token or User Token here")):
-    id = await bot_auth(bot_id, Authorization)
-    if id is None and user_id:
+    id = None
+    
+    if user_id:
         id = await user_auth(user_id, Authorization)
-    if id is None and user_id: # Recheck here after checking user token
-        raise HTTPException(status_code=401, detail="Invalid Bot Token or User Token")
+    
+    if not id:
+        id = await bot_auth(bot_id, Authorization)
+    
+        if not id: # Still
+            raise HTTPException(status_code=401, detail="Invalid Bot Token or User Token")
+
+async def manager_check(request: Request, Authorization: str = Header("Put Manager Key Here"), Lynx: int = Header("User ID of moderator"), Snowfall: str = Header("Put User Token of modator here")):
+    if not secure_strcmp(Authorization, manager_key):
+        raise HTTPException(status_code=401, detail="Invalid Manager Key")
+
+    request.state.error = None
+
+    id = await user_auth(Lynx, Snowfall)
+    if id is None:
+        request.state.error = api_error(
+            "Snowfall/Lynx header mismatch. Please run +usertoken again to reset it",
+            status_code=403
+        )
+        return
+
+    await client.wait_until_ready()
+    guild = client.get_guild(main_server)
+    request.state.user = guild.get_member(Lynx)

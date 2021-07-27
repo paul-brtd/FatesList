@@ -5,6 +5,7 @@ from lynxfall.utils.string import human_format
 from fastapi.responses import PlainTextResponse, StreamingResponse
 from PIL import Image, ImageDraw
 import io
+from starlette.concurrency import run_in_threadpool
 from ..base import API_VERSION
 from .models import APIResponse, Bot, BotRandom, BotStats, BotAppeal
 
@@ -156,28 +157,49 @@ async def bot_exists(request: Request, bot_id: int):
 
 
 @router.get("/{bot_id}/widget")
-async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format: enums.WidgetFormat):
+async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format: enums.WidgetFormat, unstable: bool = False):
+    """
+    Returns a widget
+
+    Unstable signifies whether an action is unstable or not. You will get a API error if this is the case and unstable is not set or the bot is not certified (only certified bots may use unstable endpoints) and the existence of the nyi key can be used to programatically detect this
+
+    The webp format is unstable. All the others are stable
+    """
     worker_session = request.app.state.worker_session
     db = worker_session.postgres
     
-    bot = await db.fetchrow("SELECT bot_id, guild_count, votes FROM bots WHERE bot_id = $1", bot_id)
+    bot = await db.fetchrow("SELECT bot_id, guild_count, votes, state FROM bots WHERE bot_id = $1", bot_id)
     if not bot:
-        if api:
-            return abort(404)
-        return "No Bot Found, cannot display widget"
+        return abort(404)
     bot = dict(bot)
     bt.add_task(add_ws_event, bot_id, {"m": {"e": enums.APIEvents.bot_view}, "ctx": {"user": request.session.get('user_id'), "widget": True}})
     data = {"bot": bot, "user": await get_bot(bot_id, worker_session = request.app.state.worker_session)}
+    
+    if bot["state"] != enums.BotState.certified:
+        unstable = False
+
     if format == enums.WidgetFormat.json:
         return data
     elif format == enums.WidgetFormat.html:
         return await templates.TemplateResponse("widget.html", {"request": request} | data)
     elif format == enums.WidgetFormat.webp:
+        if not unstable:
+            return api_error("Unstable Endpoint. Only certified bots can use this with the unstable query param set", nyi=True)
         widget_img = Image.new("RGBA", (300, 175), "black")
-        
-        with io.BytesIO() as output:
-            widget_img.save(output, format="WEBP")
-            return StreamingResponse(output, media_type="image/webp")
+        async with aiohttp.ClientSession() as sess:
+            async with sess.get(data["user"]["avatar"] if data["user"] else "https://fateslist.xyz/static/botlisticon.webp") as res:
+                avatar_img = await res.read()
+                avatar_pil = Image.open(io.BytesIO(avatar_img)).resize((100, 100))
+                avatar_pil_bg = Image.new('RGBA', avatar_pil.size, (0,0,0))
+                widget_img.paste(Image.alpha_composite(avatar_pil, avatar_pil_bg))
+
+        def _stream():
+            with io.BytesIO() as output:
+                widget_img.save(output, format="WEBP")
+                output.seek(0)
+                yield from output
+
+        return StreamingResponse(_stream(), media_type="image/webp")
             
 
 
