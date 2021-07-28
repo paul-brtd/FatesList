@@ -133,6 +133,22 @@
 				) }}
 				{{ textInput("Short Description", "description", "Fates List is a great bot that does everything you need it to do!", min=10, max=105, required=True) }}
 				{{ selectInput(
+					"tags",
+					"Tags",
+					"Select tags for your bot",
+					context.tags,
+					multiple=True,
+					required=True
+				) }}
+				{{ selectInput(
+					"features",
+					"Features",
+					"Select any features your bot has (optional)",
+					context.features,
+					multiple=True
+				) }}
+				
+				{{ selectInput(
 					"long_description_type", 
 					"Long Description Type/Format", 
 					"Choose your long description type", 
@@ -153,22 +169,13 @@
 					name="long_description_type:number",
 					required=True
 				) }}
-				{{ selectInput(
-					"tags",
-					"Tags",
-					"Select tags for your bot",
-					context.tags,
-					multiple=True,
-					required=True
+				{{ textInput(
+					"Long Description", 
+					"long_description", 
+					"Write over 300 characters for your long description. Trying to put a placeholder to bypass this limit will get your bot denied or banned if found out!", 
+					required=True, 
+					textarea=True
 				) }}
-				{{ selectInput(
-					"features",
-					"Features",
-					"Select any features your bot has (optional)",
-					context.features,
-					multiple=True
-				) }}
-				{{ textInput("Long Description", "long_description", "Write over 300 characters for your long description. Trying to put a placeholder to bypass this limit will get your bot denied or banned if found out!", required=True, textarea=True) }}
 				{{ save() }}
 			</section>
 			<section id="webhook-tab" class="tabcontent">
