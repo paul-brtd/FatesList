@@ -222,8 +222,9 @@ async def render_search(request: Request, q: str, api: bool):
         WHERE (bots.description ilike $1 
         OR bots.long_description ilike $1 
         OR bots.username_cached ilike $1 
-        OR bot_owner.owner::text ilike $1) 
-        ORDER BY bots.votes LIMIT 6""", 
+        OR bot_owner.owner::text ilike $1),
+        ORDER BY bots.guild_count, bots.votes LIMIT 6
+        """, 
         f'%{q}%'
     )
     search_bots = await parse_index_query(

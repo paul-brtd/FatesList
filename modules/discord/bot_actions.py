@@ -32,7 +32,7 @@ async def bot_settings(request: Request, bot_id: int, new: Optional[bool] = Fals
         return abort(403)
     
     check = await is_bot_admin(bot_id, int(request.session["user_id"]))
-    if not check:
+    if not check and bot_id != 798951566634778641: # Fates list main bot is staff viewable
         return abort(403)
     
     bot = await db.fetchrow(

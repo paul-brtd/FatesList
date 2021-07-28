@@ -41,7 +41,9 @@ label {
 
 textarea {
         max-width: $form-mw;
-        min-height: 25px !important;
+        min-height: 20px !important;
+	height: 300px !important;
+	resize: none !important;
 }
 
 .bot-card:hover {

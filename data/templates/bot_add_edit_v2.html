@@ -1,7 +1,7 @@
 {% extends "base/base.html" %}
 {% macro tip(text) %}
 	<div class="d-inline-block white alert alert-info tip" role="alert">
-		<span class="iconify" data-icon="foundation:lightbulb" data-inline="false" data-height="1.5em"></span>Tip: {{text}}
+		<span class="iconify" data-icon="foundation:lightbulb" data-inline="false" data-height="1.5em"></span>{{text}}
 	</div>
 {% endmacro %}
 {% macro optional() %}
@@ -29,6 +29,7 @@
 	  {% if min %}minlength="{{min}}"{% endif %}
 	  {% if max %}maxlength="{{max}}"{% endif %} 
 	  {% if not textarea %}value="{{ val }}"{% endif %}>{% if textarea %}{{val}}{% endif %}</{{"textarea" if textarea else "input"}}>
+	 </div>
 {% endmacro %}
 {% macro selectInput(id, label, help_text, choices, multiple=False, required=False, name=None) %}
 	<label for="{{id}}">{{label}} {% if required %}<span style="color: red; font-weight: bold" aria-hidden="true">*</span>{% endif %}</label>
@@ -51,9 +52,8 @@
 		#api-token {word-wrap: break-word; background-color: black;}
 		#api-button {margin-top: 7px;}
 		.section {margin-top: 20px;}
-		.info-content {text-align: left; margin-left: 20px;}
+		.info-content {text-align: left; margin-left: 30px;}
 		.text-input {border-radius: 4px 4px 4px 4px !important;}
-		.fform {border-radius: 4px 4px 4px 4px;}
 	</style>
 {% endblock %}
 
@@ -79,7 +79,6 @@
 				<h5 class="white">Bot Info</h5>
 				<div class="info-content">	
 					<p class="white">Username: {{bot.user.username}}</p>
-					<p class="white">Avatar: <a class="long-desc-link" href="{{bot.user.avatar}}">{{bot.user.avatar}}</a></p>
 					<p class="white">Bot State: {{enums.BotState(bot.state).__doc__}} ({{bot.state}})</p>
 					<p class="white"><u>Owners of this bot</u><br/> {{context.owners_html|safe}}</p>
 				</div>
@@ -88,7 +87,7 @@
 				<br/>
 				<button id="api-button" class="btn btn-outline-light" onclick="showToken(this)">Show</button>
 				<h6 class="white section" id="regen-token-header">Regenerate</h6>
-				<p class="white info-content"><em>Accidentally</em> leaked your API token? Just be sure to change the token everywhere you use it and make sure it doesn't happen again!</p>
+				<p class="white"><em>Accidentally</em> leaked your API token? Just be sure to change the token everywhere you use it and make sure it doesn't happen again!</p>
 				<button onclick='regenToken()' class="btn btn-outline-light">Regenerate</button>
 				<h5 class="white section">Server Stats</h5>
 				<label for="server-count">Server Count</label>
@@ -96,12 +95,12 @@
 				<input class="form-control fform" type="number" placeholder="Server Count" name="server-count" id="server-count" />
 				<button class="section btn btn-outline-light" onclick='postStats()'>Post</button>
 				<h5 class="white section">Transfer Ownership</h5>
-				<p class="white info-content"><span class="red">Warning:</span> This <em>cannot</em> be undone. Only transfer ownership to people you trust. By continuing, you acknowledge that the user you are transferring ownership to will now completely control this bot on Fates List.</p>
+				<p class="white"><span class="red">Warning:</span> This <em>cannot</em> be undone. Only transfer ownership to people you trust. <br/>By continuing, you acknowledge that the user you are transferring ownership to will now completely control this bot on Fates List.</p>
 				<label for="new-owner">New Owner</label>
 				<input class="form-control fform" type="number" placeholder="Enter ID of new owner" name="new-owner" id="new-owner" />
 				<button class="btn btn-danger" onclick="transferBot()">Transfer Ownership</button>
 				<h5 class="white section">Delete Bot</h5>
-				<p class="white info-content"><span class="red">Warning:</span> This <em>cannot</em> be undone and you <em>will</em> lose any perks your bot may have such as certification and any votes your bot may have. Think twice before proceeding...</p>
+				<p class="white"><span class="red">Warning:</span> This <em>cannot</em> be undone and you <em>will</em> lose any perks your bot may have such as certification and any votes your bot may have. Think twice before proceeding...</p>
 				<button class="btn btn-danger" onclick="deleteBot()">Delete Bot</button>
 			</section>
 			{% endif %}
@@ -193,7 +192,6 @@
 		context.default_tab_button = "{% if context.mode == 'add' %}basic-settings-button{% else %}about-button{% endif %}"
 	</script>
 	<script src="/static/assets/prod/tabs.min.js"></script>
-	<script src="https://cdn.jsdelivr.net/npm/jquery-serializejson@3.2.1/jquery.serializejson.min.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/select-pure@latest/dist/index.js"></script>
 	<script src="/static/assets/prod/bot_add_edit_v2.min.js?v=1"></script>
 {% endblock %}
