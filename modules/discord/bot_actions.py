@@ -16,7 +16,9 @@ async def add_bot(request: Request, new: Optional[bool] = False):
         else:
             fn = "bot_add_edit.html"
         context = {
-            "mode": "add"
+            "mode": "add",
+            "tags": [{"text": tag["name"], "value": tag["id"]} for tag in tags_fixed],
+            "features": [{"text": feature["name"], "value": id} for id, feature in features.items()]
         }
         return await templates.TemplateResponse(fn, {"request": request, "tags_fixed": tags_fixed, "features": features, "bot": {}}, context = context)
     else:
@@ -65,7 +67,9 @@ async def bot_settings(request: Request, bot_id: int, new: Optional[bool] = Fals
         "bot_token": await db.fetchval("SELECT api_token FROM bots WHERE bot_id = $1", bot_id),
         "mode": "edit",
         "bot_id": str(bot_id),
-        "owners_html": owners_html
+        "owners_html": owners_html,
+        "tags": [{"text": tag["name"], "value": tag["id"]} for tag in tags_fixed],
+        "features": [{"text": feature["name"], "value": id} for id, feature in features.items()]
     }
     
     if new:

@@ -1,5 +1,12 @@
 {% extends "base/base.html" %} 
 {% block head %}
+<style>
+	.select-pure {
+		margin-left: 3px;
+		padding: 2px;
+	}
+
+</style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" integrity="sha512-iBBXm8fW90+nuLcSKlbmrPcLa0OT92xO1BIsZ+ywDWZCvqsWgccV3gFoRBv0z+8dLJgyAHIhR35VZc2oM/gI1w==" crossorigin="anonymous" /> <!-- Sadly needed for things to work -->
 {% endblock %} 
 {% block content %}
@@ -78,9 +85,6 @@
         required
         class="form-control fform"
         type="text"
-        style="
-          max-width: 320px;
-        "
 	maxlength=9
         name="prefix"
         placeholder="w!"
@@ -94,9 +98,6 @@
         class="form-control fform"
         type="text"
 	maxlength="32"
-        style="
-          max-width: 320px;
-        "
         name="library"
         placeholder="Discord.py"
         value="{{bot.library}}"
@@ -141,11 +142,13 @@
 	minlength="7"
 	value="{% if bot.banner_page %}{{bot.banner_page}}{%endif%}"
       />
-      <label for="keep_banner_decor">Keep Banner Decorations?</label>
-      <select-pure id="keep_banner_decor" name="keep_banner_decor:boolean" default-label="Choose yes if unsure">
+      <div class="select-pure">
+      	<label for="keep_banner_decor">Keep Banner Decorations?</label>
+	      <select-pure id="keep_banner_decor" class="select-pure" name="keep_banner_decor:boolean" default-label="Choose yes if unsure">
 	      <option-pure value="true" {% if context.mode == "add" %}selected{% endif %}>Yes (choose if unsure)</option-pure>
 	      <option-pure value="false" {% if context.mode == "edit" and not bot.keep_banner_decor %}selected{% endif %}>No</option-pure>
       </select-pure>
+      </div>
       <label for="support">Support server</label>
       <input
         class="form-control fform"
@@ -162,12 +165,14 @@
       placeholder="https://patreon.com/foo"
       minlength="5"
       value="{% if bot.donate %}{{bot.donate}}{% endif %}"/>
+      <div class="select-pure">
       <label for="webhook_type:number">Webhook Type</label>
-      <select-pure id="webhook_type" name="webhook_type:number" default-label="Select webhook type">
+      <select-pure id="webhook_type" class="select-pure" name="webhook_type:number" default-label="Select webhook type">
 	      <option-pure value="{{enums.WebhookType.vote.__int__()}}" {% if bot.webhook_type == enums.WebhookType.vote %}selected{%endif%}>Vote Webhook</option-pure>
 	      <option-pure value="{{enums.WebhookType.discord.__int__()}}" {% if bot.webhook_type == enums.WebhookType.discord %}selected{%endif%}>Discord Integration</option-pure>
 	      <option-pure value="{{enums.WebhookType.fc.__int__()}}" {% if bot.webhook_type == enums.WebhookType.fc %}selected{%endif%}>Fates Client</option-pure>
       </select-pure>
+      </div>
       <label for="webhook">Webhook (max 1024 characters)</label>
     <input
       id="webhook-url"
@@ -216,17 +221,18 @@
         class="form-control fform"
         type="text"
         name="css"
-        style="border-radius: 4px 4px 4px 4px !important;"
         placeholder="p {color: red};"
         >{{bot.css}}</textarea>
   </div>
   </div>
 	<h5 style="font-weight: bold; margin-bottom: 15px;">Bot Features</h5>
-	    <select-pure name="features" id="features" default-label="Choose any features that your bot supports" multiple>
+	<div class="select-pure">
+	    <select-pure class="select-pure" name="features" id="features" default-label="Choose any features that your bot supports" multiple>
 		{% for feature in features.keys() %}
 		<option-pure value="{{feature}}" {% if context.mode == 'edit' and feature in bot.features %}selected{% endif %}>{{features[feature].name}}</option-pure>
 		{% endfor %}
 	    </select-pure>
+	 </div>
      <h5 style="font-weight: bold; margin-bottom: 15px; margin-top: 5px">Bot Purpose</h5>
       <label
         for="description"
@@ -240,7 +246,6 @@
         placeholder="Fates list is a good bot that does everything you need"
         minlength="10"
         maxlength="105"
-        style="border-radius: 4px 4px 4px 4px !important;"
 	value="{{bot.description}}"
       />
       <label 
@@ -271,7 +276,6 @@
         placeholder="Write about your bot using html or markdown"
         minlength="300"
         id="long_description"
-	style="border-radius: 4px 4px 4px 4px !important;"
 	>{{bot.long_description}}</textarea>
       <button type="button" class="btn btn-outline-light" style="margin-bottom: 20px;" onclick="previewLongDesc()">Preview</button><br/>
       <small style="font-weight: bold; font-size: 15px; color: red;">You can only preview your long description 20 times every minute unless your bot is certified.</small>

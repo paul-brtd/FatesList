@@ -2,7 +2,7 @@ html, body {overflow-x: hidden !important;}
 
 $card-scale: 1.025;
 $form-radius: 4px;
-
+$form-mw: 94%; // Max width for form
 .btn-no {border: none !important; outline: none !important;}
 .fform {
         background: #ffffff !important;
@@ -10,7 +10,8 @@ $form-radius: 4px;
         margin-top: 7px !important;
         margin-bottom: 30px !important;
         margin: auto;
-        max-width: 1000px;
+        max-width: $form-mw;
+	border-radius: $form-radius $form-radius $form-radius $form-radius;
 }
 .search {
 	display: block;
@@ -27,10 +28,20 @@ label {
         color: white !important;
         font-weight: bold !important;
         font-size: 16px !important;
+	text-align: left !important; 
+	width: $form-mw; 
+	max-width: $form-mw; 
 }
+
+.tip {
+	width: $form-mw; 
+	max-width: $form-mw; 
+	background: #259db0 !important; 
+}
+
 textarea {
-        max-width: 1000px;
-        min-height: 50px !important;
+        max-width: $form-mw;
+        min-height: 25px !important;
 }
 
 .bot-card:hover {
