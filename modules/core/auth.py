@@ -41,22 +41,18 @@ async def manager_check(
     Lynx: int = Header("User ID of moderator"), 
     Snowfall: str = Header("Put User Token of moderator here")
 ):
-    request.state.error = None
-
     if not secure_strcmp(Authorization, manager_key):
-        request.state.error = api_error(
-            "Invalid manager key",
-            status_code=403
+        raise HTTPException(
+            status_code=401, 
+            detail="Invalid manager key",
         )
-        return
 
     id = await user_auth(Lynx, Snowfall)
     if id is None:
-        request.state.error = api_error(
+        raise HTTPException(
             "Snowfall/Lynx header mismatch. Please run +usertoken again to reset it",
             status_code=403
         )
-        return
 
     await client.wait_until_ready()
     guild = client.get_guild(main_server)

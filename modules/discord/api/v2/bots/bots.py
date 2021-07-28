@@ -104,45 +104,81 @@ async def fetch_random_bot(request: Request, bot_id: int, lang: str = "default")
         )
     ]
 )
-async def fetch_bot(request: Request, bot_id: int):
-    """Fetches bot information given a bot ID. If not found, 404 will be returned."""
+async def fetch_bot(
+    request: Request, 
+    bot_id: int, 
+    compact: Optional[bool] = True, 
+    with_tags: Optional[bool] = False,
+    with_owners: Optional[bool] = False,
+    offline: Optional[bool] = False
+):
+    """
+    Fetches bot information given a bot ID. If not found, 404 will be returned.
+    
+    Setting compact to true (default) -> description, long_description, long_description_type, keep_banner_decor and css will be null
+
+    Setting with_tags to false -> tags will be null
+
+    Setting with_owners to false -> owners will be null
+
+    Setting offline to true -> user will be null. If the bot is no longer on discord, this endpoint will still return if offline is set to true
+    """
+    if len(str(bot_id)) not in [17, 18, 19, 20]:
+        return abort(404)
+    
+    check = await db.fetchval("SELECT bot_id FROM bots WHERE bot_id = $1", bot_id)
+    if not check:
+        return abort(404)
+
     api_ret = await db.fetchrow(
-        "SELECT banner_card, banner_page, keep_banner_decor, last_stats_post, description, long_description_type, long_description, guild_count, shard_count, shards, prefix, invite, invite_amount, features, bot_library AS library, state, website, discord AS support, github, user_count, votes, css, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", 
+        "SELECT last_stats_post, banner_card, banner_page, guild_count, shard_count, shards, prefix, invite, invite_amount, features, bot_library AS library, state, website, discord AS support, github, user_count, votes, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", 
         bot_id
     )
-    if api_ret is None:
-        return abort(404)
     api_ret = dict(api_ret)
-    tags = await db.fetch("SELECT tag FROM bot_tags WHERE bot_id = $1", bot_id)
-    api_ret["tags"] = [tag["tag"] for tag in tags]
-    owners_db = await db.fetch("SELECT owner, main FROM bot_owner WHERE bot_id = $1", bot_id)
-    owners = []
-    _done = []
+    if not compact:
+        extra = await db.fetchrow(
+            "SELECT description, long_description_type, long_description, css, keep_banner_decor FROM bots WHERE bot_id = $1",
+            bot_id
+        )
+        api_ret |= dict(extra)
 
-    # Preperly sort owners
-    for owner in owners_db:
-        if owner in _done: continue
-        
-        _done.append(owner["owner"])
-        user = await get_user(owner["owner"])
-        main = owner["main"]
+    if with_tags:
+        tags = await db.fetch("SELECT tag FROM bot_tags WHERE bot_id = $1", bot_id)
+        api_ret["tags"] = [tag["tag"] for tag in tags]
+   
+    if with_owners:
+        owners_db = await db.fetch("SELECT owner, main FROM bot_owner WHERE bot_id = $1", bot_id)
+        owners = []
+        _done = []
 
-        if not user: continue
+        # Preperly sort owners
+        for owner in owners_db:
+            if owner in _done: continue
         
-        owner_obj = {
-            "user": user,
-            "main": main
-        }
-        
-        if main: owners.insert(0, owner_obj)
-        else: owners.append(owner_obj)
+            _done.append(owner["owner"])
+            user = await get_user(owner["owner"])
+            main = owner["main"]
 
-    api_ret["owners"] = owners
-    api_ret["features"] = api_ret["features"] if api_ret["features"] else []
+            if not user: continue
+        
+            owner_obj = {
+                "user": user,
+                "main": main
+            }
+        
+            if main: owners.insert(0, owner_obj)
+            else: owners.append(owner_obj)
+
+        api_ret["owners"] = owners
+    
+    api_ret["features"] = api_ret["features"]
     api_ret["invite_link"] = await invite_bot(bot_id, api = True)
-    api_ret["user"] = await get_bot(bot_id)
-    if not api_ret["user"]:
-        return abort(404)
+    
+    if not offline:
+        api_ret["user"] = await get_bot(bot_id)
+        if not api_ret["user"]:
+            return abort(404)
+    
     api_ret["vanity"] = await db.fetchval(
         "SELECT vanity_url FROM vanity WHERE redirect = $1", 
         bot_id

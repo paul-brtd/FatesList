@@ -95,12 +95,9 @@ async def create_vote(user_id: int, bot_id: int):
             headers = {"Retry-After": str(total_seconds)}
         )              
         
-@router.post("/{bot_id}/votes/test")
-async def send_test_webhook(bot_id: int, Authorization: str = Header("BOT_TOKEN")):
+@router.post("/bots/{bot_id}/testhook", dependencies = [Depends(bot_auth_check)])
+async def send_test_webhook(bot_id: int):
     """Endpoint to test webhooks"""
-    id = await bot_auth(bot_id, Authorization)
-    if id is None:
-        return abort(401)
     return await vote_bot(
         user_id = 519850436899897346, 
         bot_id = bot_id, 

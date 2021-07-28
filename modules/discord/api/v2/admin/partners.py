@@ -48,9 +48,6 @@ async def get_partners(
 
         Using multiple checks uses the f_condition value which can only be AND, AND NOT or OR
     """
-    if request.state.error:
-        return request.state.error
-
     if f_condition not in ("AND", "OR", "AND NOT"):
         return abort(400)
     condition, args, i = [], [], 1
@@ -107,9 +104,6 @@ async def _invite_resolver(code):
 
 @router.post("/partners", response_model = IDResponse)
 async def new_partner(request: Request, partner: BotListPartner):
-    if request.state.error:
-        return request.state.error
-
     user = request.state.user
     if user is None or not is_staff(staff_roles, user.roles, 5)[0]:
         return api_no_perm(5)
@@ -159,9 +153,6 @@ async def new_partner(request: Request, partner: BotListPartner):
 
 @router.patch("/partners/{pid}/ad/{ad_type}", response_model = APIResponse)
 async def set_partner_ad(request: Request, pid: uuid.UUID, ad_type: enums.PartnerAdType, partner: BotListPartnerAd):
-    if request.state.error:
-        return request.state.error
-
     user = request.state.user
     if user is None or not is_staff(staff_roles, user.roles, 5)[0]:
         return api_no_perm(5)
@@ -182,9 +173,6 @@ async def set_partner_ad(request: Request, pid: uuid.UUID, ad_type: enums.Partne
 @router.delete("/partners/{pid}", response_model = APIResponse)
 async def delete_partnership(request: Request, pid: uuid.UUID):
     """Deletes a partnership"""
-    if request.state.error:
-        return request.state.error
-
     user = request.state.user
     if user is None or not is_staff(staff_roles, user.roles, 5)[0]:
         return api_no_perm(5)
@@ -199,9 +187,6 @@ async def delete_partnership(request: Request, pid: uuid.UUID):
 
 @router.patch("/partners/{pid}/publish_channel", response_model = APIResponse)
 async def set_partner_publish_channel(request: Request, pid: uuid.UUID, partner: BotListPartnerChannel):
-    if request.state.error:
-        return request.state.error
-
     user = request.state.user
     if user is None or not is_staff(staff_roles, user.roles, 5)[0]:
         return api_no_perm(5)
@@ -216,9 +201,6 @@ async def set_partner_publish_channel(request: Request, pid: uuid.UUID, partner:
 
 @router.post("/partners/{pid}/publish", response_model = APIResponse)
 async def publish_partnership(request: Request, pid: uuid.UUID, partner: BotListPartnerPublish):
-    if request.state.error:
-        return request.state.error
-    
     user = request.state.user
     guild = user.guild
     if user is None or not is_staff(staff_roles, user.roles, 5)[0]:

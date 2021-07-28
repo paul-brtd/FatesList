@@ -39,11 +39,11 @@ class Bot(BaseModel):
     """
     Represents a bot on Fates List
     """
-    user: BaseUser
-    description: str
-    tags: list
+    user: Optional[BaseUser] = None
+    description: Optional[str] = None
+    tags: Optional[List[str]] = None
     last_stats_post: Optional[datetime.datetime] = None
-    long_description_type: enums.LongDescType
+    long_description_type: Optional[enums.LongDescType] = None
     long_description: Optional[str] = None
     guild_count: int
     shard_count: Optional[int] = 0
@@ -54,8 +54,8 @@ class Bot(BaseModel):
     invite: Optional[str] = None
     invite_link: str
     invite_amount: int
-    owners: BotOwners
-    features: list
+    owners: Optional[BotOwners] = None
+    features: List[str]
     state: enums.BotState
     website: Optional[str] = None
     support: Optional[str] = None
@@ -68,7 +68,7 @@ class Bot(BaseModel):
     nsfw: bool
     banner_card: Optional[str] = None
     banner_page: Optional[str] = None
-    keep_banner_decor: bool
+    keep_banner_decor: Optional[bool] = None
 
 
 class BotStats(BaseModel):

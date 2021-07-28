@@ -22,10 +22,8 @@ from fastapi.exceptions import (HTTPException, RequestValidationError,
                                 ValidationError)
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from fastapi.openapi.utils import get_openapi
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
-from fastapi_responses import custom_openapi
 from lynxfall.core.classes import Singleton
 from lynxfall.oauth.models import OauthConfig
 from lynxfall.oauth.providers.discord import DiscordOauth
@@ -149,7 +147,7 @@ class FatesListRequestHandler(BaseHTTPMiddleware):
             if request.method == "OPTIONS" and is_api:
                 response.status_code = 204
                 response.headers["Allow"] = self.cors_allowed
-        
+       
         return response
 
 

@@ -48,33 +48,32 @@ class WebError():
         curr_time = request.state.curr_time
 
         try:
-            # All status codes other than most 500 and 422s
+            # All status codes other than 500 and 422
             status_code = exc.status_code 
         
         except Exception: 
-            # 500 and 422 do not have status code
+            # 500 and 422 do not have status codes and need special handling
             if isinstance(exc, RequestValidationError): 
-                # 422 (Unprocessable Entity)
                 status_code = 422
             
             else: 
-                # 500 (Internal Server Error)
                 status_code = 500
         
         path = str(request.url.path)
         
         code_str = HTTPStatus(status_code).phrase
-
+        api = path.startswith("/api/")
         if status_code == 500:
             if log:
                 # Log the error
                 asyncio.create_task(WebError.log(request, exc, error_id, curr_time)) 
             
-            if str(request.url.path).startswith("/api"):
+            if api:
                 return api_error(
                     "Internal Server Error", 
-                    error_id = error_id, 
-                    status_code = status_code
+                    error_id=error_id, 
+                    status_code=500,
+                    headers={"FL-Error-ID": error_id}
                 )
             
             tb_full = "".join(traceback.format_exception(exc))
@@ -92,36 +91,32 @@ class WebError():
 
                 Time When Error Happened: {curr_time}<br/>""")
 
-            return HTMLResponse(errmsg, status_code = status_code)
+            return HTMLResponse(errmsg, status_code=status_code, headers={"FL-Error-ID": error_id})
 
-        # Special error messages (some with custom-set status code)
-        elif status_code == 404: 
-            if path.startswith("/bot"):
-                code_str = "Bot Not Found"
+        if not api:
+            # Special error messages (some with custom-set status code)
+            if status_code == 404: 
+                if path.startswith("/bot"):
+                    code_str = "Bot Not Found"
         
-            elif path.startswith("/profile"): 
-                code_str = "Profile Not Found"
+                elif path.startswith("/profile"): 
+                    code_str = "Profile Not Found"
             
-        elif status_code == 422:
-            if path.startswith("/bot"): 
-                code_str = "Bot Not Found"
-                status_code = 404
+            elif status_code == 422:
+                if path.startswith("/bot"): 
+                    code_str = "Bot Not Found"
+                    status_code = 404
             
-            elif path.startswith("/profile"): 
-                code_str = "Profile Not Found"
-                status_code = 404
-        
-        api = path.startswith("/api") 
-        
+                elif path.startswith("/profile"): 
+                    code_str = "Profile Not Found"
+                    status_code = 404
+            
+            return await templates.e(request, code_str, status_code)
+
         # API route handling
-        if api: 
-            if status_code != 422:
-                # Normal handling
-                return await http_exception_handler(request, exc) 
-        
-            else:
-                # Special 422 handling
-                return await request_validation_exception_handler(request, exc) 
-       
-        # Return error to user as jinja2 template
-        return await templates.e(request, code_str, status_code)
+        if status_code != 422:
+            # Normal handling
+            return ORJSONResponse({"done": False, "reason": exc.detail}, status_code=status_code)
+        else:
+            # Special 422 handling
+            return ORJSONResponse({"done": False, "reason": "Invalid fields present", "ctx": exc.errors()}, status_code=422)

@@ -190,7 +190,7 @@
      {% if bot.webhook_secret %}value="{{bot.webhook_secret}}"{%endif%}
     />
     {% if context.mode == "edit" %}
-    <button type="button" style="margin-bottom: 30px; margin-top: 0px !important;" class="btn btn-outline-light" onclick="testHook(document.querySelector('#webhook-url').value, document.querySelector('#webhook-type').value)">Test Webhook</button><br/>
+    <button type="button" style="margin-bottom: 30px; margin-top: 0px !important;" class="btn btn-outline-light" onclick="testHook()">Test Webhook</button><br/>
     {% else %}
     <span style="margin: 3px">Testing webhooks can only be done once your bot is created</span>
     {% endif %}
@@ -328,7 +328,7 @@
 	var $j = jQuery.noConflict();
         var context = {{context|tojson}}
 </script>
-<script src="/static/assets/prod/bot_add_edit.min.js?v=1"></script>
+<script src="/static/assets/prod/bot_add_edit.min.js?v=2"></script>
 <script src="https://cdn.jsdelivr.net/npm/select-pure@latest/dist/index.js"></script>
 {% endblock %} 
 {% block footer %} 

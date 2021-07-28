@@ -42,9 +42,16 @@ def gen_owner_html(owners_lst: tuple):
 async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bool, rev_page: int = 1):
     worker_session = request.app.state.worker_session
     db = worker_session.postgres
-    
+    if len(str(bot_id)) not in [17, 18, 19, 20]:
+        return abort(404)
+
     if bot_id >= 9223372036854775807: # Max size of bigint
         return abort(404)
+
+    check = await db.fetchval("SELECT bot_id FROM bots WHERE bot_id = $1", bot_id)
+    if not check:
+        return abort(404)
+
     bot = await db.fetchrow(
         """SELECT js_allowed, prefix, shard_count, state, description, bot_library AS library, 
         website, votes, guild_count, discord AS support, banner_page AS banner, github, features, 
@@ -53,14 +60,10 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
         bot_id
     )
     tags = await db.fetch("SELECT tag FROM bot_tags WHERE bot_id = $1", bot_id)
-    if not bot or not tags:
-        if api:
-            return abort(404) # If API, just regular 404 JSON
-        return await templates.e(
-            request, 
-            "It might still be in our RabbitMQ queue waiting to be added to our database if you recently added it. Try reloading!",
-            main = "Bot Not Found"
-        ) # Otherwise HTML error
+    if not tags:
+        return abort(404)
+
+
     bot = dict(bot) | {"tags": [tag["tag"] for tag in tags]}
     
     # Ensure bot banner_page is disable if not approved or certified
