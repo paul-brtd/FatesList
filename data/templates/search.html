@@ -1,4 +1,4 @@
-{% extends "base_index.html" %}
+{% extends "base/tocheader.html" %}
 
 {% block head %}
 
@@ -7,7 +7,7 @@
 {% block content %}
     <hr style="font-size: 20px;border-top-width: 1px;border-top-color: #eee;width: 90%;">
     <div class="d-flex" style="margin-left: 5%;"><span class="iconify white" data-icon="fa-solid:search" data-inline="false" data-height="3em"></span>
-        <h4 style="color: rgba(255,255,255,0.87);margin-left: 15px;">Search Results</h4>
+        <h4 class="white" style="margin-left: 15px;">Search Results</h4>
     </div>
     {% if search_bots == [] %}
     <div class="index-fl">
@@ -17,29 +17,15 @@
     <div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center" id="tt-1" style="width: 90%;margin: 30px 5%;">
 	{% if not profile_search %}
 	{% if search_bots == [] %}
-		<h4 class="text-nowrap text-break text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;white-space: nowrap;text-overflow: ellipsis;overflow: hidden;">No Bots Found</h4>
+		<h4 class="text-nowrap text-break text-center white" style="font-weight: bold;white-space: nowrap;text-overflow: ellipsis;overflow: hidden;">No Bots Found</h4>
 	{% endif %}
         {% for bot in search_bots %}
 		{{ flCard(bot, False, 'bot') }}
 	{% endfor %}
         {% else %}
         {% for profile in profiles %}
-	<!--
-        <div class="bot-card">
-	    <div class="lozad bot-card-banner" data-background-image="{{profile.banner}}">
-		    <a href="/profile/{{profile.id}}"><img alt="bot avatar" class="bot-card-avatar" src="{{profile.avatar}}" loading="lazy"/></a>
-	    </div>
-            <div>
-                <div class="bot-card-username">
-			<h4 class="text-nowrap text-break text-center bot-card-username-txt white-bold">{{profile.username}}</h4>
-		</div>
-            </div>
-	    <h6 class="bot-card-description"><strong style="overflow-wrap: anywhere;">{% if not profile.description %}No Description Is Available{%else%}{{profile.description}}{%endif%}</strong></h6>
-            <div style="text-align: center;"><a href="/profile/{{profile.id}}" class="btn btn-outline-light bot-card-actions-link">View</a>
-            </div>
-	   </div>-->
-       {{flCard(profile, False, 'profile')}}
-    {% endfor %}
+       		{{flCard(profile, False, 'profile')}}
+    	{% endfor %}
     {% endif %}
     </div>
     </div>
