@@ -14,3 +14,14 @@ function topFunction() {
   document.body.scrollTop = 0; // For Safari
   document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
 }
+
+function modalShow(title, body) {
+	document.querySelector("#base-modal-label").innerHTML = title;
+	document.querySelector("#base-modal-body").innerHTML = body;
+	try {
+		$("#base-modal").modal();
+	}
+	catch(err) {
+		$j("#base-modal").modal();
+	}
+}
