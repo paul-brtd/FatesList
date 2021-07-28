@@ -16,9 +16,10 @@
 		<button class="btn btn-outline-light btn-save">{{context.mode}}</button>
 	</section>
 {% endmacro %}
-{% macro textInput(label, id, placeholder, min=None, max=None, required=False, name=None, type="text") %}
+{% macro textInput(label, id, placeholder, min=None, max=None, required=False, name=None, type="text", textarea=False) %}
+	{% set val = bot[id] if context.mode == "edit" and bot.get(id) else '' %}
 	<label for="{{id}}">{{label}} {% if required %}<span style="color: red; font-weight: bold" aria-hidden="true">*</span>{% endif %}</label>
-	<input 
+	<{{"textarea" if textarea else "input"}}
 	  class="form-control fform text-input" 
        	  placeholder="{{placeholder}}" 
 	  type="{{type}}" 
@@ -26,11 +27,10 @@
 	  {% if required %}required{% endif %}
 	  {% if min %}minlength="{{min}}"{% endif %}
 	  {% if max %}maxlength="{{max}}"{% endif %} 
-	  value="{{ bot[id] if context.mode == "edit" and bot.get(id) else ''}}">
-	</input>
+	  {% if not textarea %}value="{{ val }}"{% endif %}>{% if textarea %}{{val}}{% endif %}</{{"textarea" if textarea else "input"}}>
 {% endmacro %}
-{% macro selectInput(id, label, help_text, choices, multiple=False, name=None) %}
-	<label for="{{id}}">{{label}}</label>
+{% macro selectInput(id, label, help_text, choices, multiple=False, required=False, name=None) %}
+	<label for="{{id}}">{{label}} {% if required %}<span style="color: red; font-weight: bold" aria-hidden="true">*</span>{% endif %}</label>
 	<div class="fform">
 	<select-pure class="select-pure-fl" id="{{id}}" name="{{name if name else id}}" default-label="{{help_text}}" {% if multiple %}multiple{% endif %}>
 		<option-pure value="" disabled="" hidden="">{{help_text}}</option-pure>
@@ -45,7 +45,7 @@
 {% endmacro %}
 
 {% block head %}
-	<link rel="stylesheet" href="/static/assets/css/bots_servers.rev7.css" media="none" onload="if(media!='all')media='all'"/>
+	<link rel="stylesheet" href="/static/assets/prod/bot_server.min.css" media="none" onload="if(media!='all')media='all'"/>
 	<style>
 		#api-token {word-wrap: break-word; background-color: black;}
 		#api-button {margin-top: 7px;}
@@ -124,7 +124,7 @@
 				) }}
 				{{ textInput("Prefix", "prefix", "$, ! etc.", max=9, required=True) }}
 				{{ textInput("Library", "library", "discord.py etc.", required=True) }}
-				{{ tip("You can use P:PERM_NUMBER instead of providing a Invite URL if your Bot ID and Client ID are the same (this is almost always true except for old bots)") }}
+				{{ tip("You can use P:PERM_NUMBER (or just leave this blank) if the Bot ID and Client ID are the same (almost always true except for old bots)") }}
 				{{ textInput(
 					"Invite URL (Leave blank for automatic)", 
 					"invite", 
@@ -151,6 +151,7 @@
 					),
 					name="long_description_type:number"
 				) }}
+				{{ textInput("Long Description", "long_description", "Write over 300 characters for your long description. Trying to put a placeholder to bypass this limit will get your bot denied or banned if found out!", required=True, textarea=True) }}
 				{{ save() }}
 			</section>
 			<section id="webhook-tab" class="tabcontent">
@@ -160,7 +161,7 @@
 			</section>
 		</div>
 	</div>
-
+	
 	<!-- Javascript here -->
 	<script>
 		var $j = jQuery.noConflict();
