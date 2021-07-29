@@ -24,17 +24,18 @@
 	  class="form-control fform text-input" 
        	  placeholder="{{placeholder}}" 
 	  type="{{type}}" 
-	  name="{{id}}" 
+	  name="{{id}}"
+	  id="{{id}}"
 	  {% if required %}required{% endif %}
 	  {% if min %}minlength="{{min}}"{% endif %}
 	  {% if max %}maxlength="{{max}}"{% endif %} 
 	  {% if not textarea %}value="{{ val }}"{% endif %}>{% if textarea %}{{val}}{% endif %}</{{"textarea" if textarea else "input"}}>
 	 </div>
 {% endmacro %}
-{% macro selectInput(id, label, help_text, choices, multiple=False, required=False, name=None) %}
+{% macro selectInput(id, label, help_text, choices, multiple=False, required=False) %}
 	<label for="{{id}}">{{label}} {% if required %}<span style="color: red; font-weight: bold" aria-hidden="true">*</span>{% endif %}</label>
 	<div class="fform">
-	<select-pure class="select-pure-fl" id="{{id}}" name="{{name if name else id}}" default-label="{{help_text}}" {% if multiple %}multiple{% endif %}>
+	<select-pure class="select-pure-fl" id="{{id}}" name="{{id}}" default-label="{{help_text}}" {% if multiple %}multiple{% endif %}>
 		<option-pure value="" disabled="" hidden="">{{help_text}}</option-pure>
 		{% for choice in choices %}
 			<option-pure 
@@ -95,14 +96,20 @@
 				<p class="white"><em>Accidentally</em> leaked your API token? Just be sure to change the token everywhere you use it and make sure it doesn't happen again!</p>
 				<button onclick='regenToken()' class="btn btn-outline-light">Regenerate</button>
 				<h5 class="white section">Server Stats</h5>
-				<label for="server-count">Server Count</label>
 				<br/>
-				<input class="form-control fform" type="number" placeholder="Server Count" name="server-count" id="server-count" />
+				{{ textInput(
+					"Server Count",
+					"server-count",
+					"Server count of your bot"
+				) }}
 				<button class="section btn btn-outline-light" onclick='postStats()'>Post</button>
 				<h5 class="white section">Transfer Ownership</h5>
 				<p class="white"><span class="red">Warning:</span> This <em>cannot</em> be undone. Only transfer ownership to people you trust. <br/>By continuing, you acknowledge that the user you are transferring ownership to will now completely control this bot on Fates List.</p>
-				<label for="new-owner">New Owner</label>
-				<input class="form-control fform" type="number" placeholder="Enter ID of new owner" name="new-owner" id="new-owner" />
+				{{ textInput(
+					"New Owner",
+					"new-owner",
+					"Enter the ID of the new owner. This ID must already be a extra owner first!"
+				) }}
 				<button class="btn btn-danger" onclick="transferBot()">Transfer Ownership</button>
 				<h5 class="white section">Delete Bot</h5>
 				<p class="white"><span class="red">Warning:</span> This <em>cannot</em> be undone and you <em>will</em> lose any perks your bot may have such as certification and any votes your bot may have. Think twice before proceeding...</p>
@@ -178,7 +185,6 @@
 					required=True, 
 					textarea=True
 				) }}
-				{{ save() }}
 			</section>
 			<section id="links-tab" class="tabcontent">
 				{{ optional() }}
@@ -210,12 +216,44 @@
 			</section>
 			<section id="webhook-tab" class="tabcontent">
 				{{ optional() }}
-				<p class="white">Webhook Settings Here</p>
-				{{ save() }}
+				<p class="white info-content">Webhooks provide a fast and secure way for your bot to recieve events from Fates List such as voting and much more. More information about this is available on our <a class="long-desc-link" href="https://apidocs.fateslist.xyz">API Documentation</a>. This option does require you to have a server that can recieve the webhooks and you may need to port forward or open your firewall if your server has one. Note that the IP address for Fates List keeps changing.</p>
+				{{ selectInput(
+					"webhook_type",
+					"Webhook Type",
+					"Select the webhook type",
+					(
+						{
+							"value": enums.WebhookType.vote.value,
+							"text": enums.WebhookType.vote.__doc__
+						},
+						{
+							"value": enums.WebhookType.discord.value,
+							"text": enums.WebhookType.discord.__doc__
+						},
+						{
+							"value": enums.WebhookType.fc.value,
+							"text": enums.WebhookType.fc.__doc__
+						}
+					)
+				) }}
+				{{ textInput(
+					"Webhook URL",
+					"webhook",
+					"https://vote.mysite.com/fates"
+				) }}
+				{{ tip("API Token is used as the webhook secret if you do not set a webhook secret below. It is recommended to use that unless you need a specific webhook secret to be used by Fates List or you need extra security that cannot be provided using your bots token.") }}
+				{{ textInput(
+					"Webhook Secret",
+					"webhook_secret",
+					"Make sure that this is random and secure!"
+				) }}
+				<p class="white info-content">Want to test your webhook? First make sure that <em>you have saved your changes first</em> and then click 'Test Webhook' to see if your bots webhook works!</p>
+				<button class="btn btn-outline-light" style="margin-bottom: 10px;" onclick="testHook()">Test Webhook</button>
+				{{ tip("Didn't get anything? Make sure you have saved your bot first before clicking Test Webhook. Also check your firewall and network settings as well") }}
 			</section>
 		</div>
 	</div>
-	
+	{{ save() }}	
 	<!-- Javascript here -->
 	<script>
 		var $j = jQuery.noConflict();
