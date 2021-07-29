@@ -16,7 +16,7 @@
 		<button class="btn btn-outline-light btn-save">{{context.mode}}</button>
 	</section>
 {% endmacro %}
-{% macro textInput(label, id, placeholder, min=None, max=None, required=False, name=None, type="text", textarea=False) %}
+{% macro textInput(label, id, placeholder, min=None, max=None, required=False, type="text", textarea=False) %}
 	{% set val = bot[id] if context.mode == "edit" and bot.get(id) else '' %}
 	<div>
 	<label for="{{id}}">{{label}} {% if required %}<span style="color: red; font-weight: bold" aria-hidden="true">*</span>{% endif %}</label>
@@ -24,7 +24,7 @@
 	  class="form-control fform text-input" 
        	  placeholder="{{placeholder}}" 
 	  type="{{type}}" 
-	  name="{{name if name else id}}" 
+	  name="{{id}}" 
 	  {% if required %}required{% endif %}
 	  {% if min %}minlength="{{min}}"{% endif %}
 	  {% if max %}maxlength="{{max}}"{% endif %} 
@@ -38,13 +38,17 @@
 		<option-pure value="" disabled="" hidden="">{{help_text}}</option-pure>
 		{% for choice in choices %}
 			<option-pure 
-			  value="{{choice['value']}}" 
-			  {% if (context.mode == "edit") and (bot.get(id) and (not multiple and bot[id] == choice['value']) or (multiple and choice['value'] in bot[id])) %}selected{% endif %}
-			>{{choice['text']}}</option-pure>
+			  value="{{choice.value}}" 
+			  {% if (context.mode == "edit") and (bot[id] and (not multiple and bot[id] == choice.value) or (multiple and choice.value in bot[id])) %}selected{% endif %}
+			>{{choice.text}}</option-pure>
 		{% endfor %}
 	</select-pure>
 	</div>
 {% endmacro %}
+{% macro tab(id, default=False, name=None) %}
+	<button id="{{id}}-button" class="tablinks" onclick="openf(event, '{{id}}', this, {{1 if default else 0}})">{{name if name else id.title() }}</button>
+{% endmacro %}
+
 
 {% block head %}
 	<link rel="stylesheet" href="/static/assets/prod/bot_server.min.css" media="none" onload="if(media!='all')media='all'"/>
@@ -69,10 +73,11 @@
 		<div id="switcher" style='margin-bottom: 3px;' class='blackbar'>
 			<div class="tab">
 				{% if context.mode == "edit" %}
-					<button id="about-button" class="tablinks" onclick="openf(event, 'about', this, true)">About</button>
+					{{ tab("about", default=True) }}
 				{% endif %}
-				<button id="basic-settings-button" class="tablinks" onclick="openf(event, 'basic-settings', this, {% if context.mode == 'add' %}true{% else %}false{% endif %})">Basics</button>
-				<button id="webhook-button" class="tablinks" onclick="openf(event, 'webhook', this, false)">Webhooks</button>
+				{{ tab("basic-settings", name="Basics", default=True if context.mode == "add" else False) }}
+				{{ tab("webhook", name="Webhooks") }}
+				{{ tab("links", name="Links") }}
 			</div>
 			{% if context.mode == "edit" %}
 			<section id="about-tab" class="tabcontent">
@@ -113,7 +118,6 @@
 						"bot_id", 
 						"Enter Bot ID here", 
 						required=True,
-						name="bot_id:number",
 						type="number"
 					) }}
 				{% endif %}
@@ -165,7 +169,6 @@
 							"text": "Markdown (marked)"
 						}
 					),
-					name="long_description_type:number",
 					required=True
 				) }}
 				{{ textInput(
@@ -176,6 +179,34 @@
 					textarea=True
 				) }}
 				{{ save() }}
+			</section>
+			<section id="links-tab" class="tabcontent">
+				{{ optional() }}
+				{{ textInput(
+					"Website",
+					"website",
+					"https://mysite.com"
+				) }}
+				{{ textInput(
+					"Github",
+					"github",
+					"https://github.com/..."
+				) }}
+				{{ textInput(
+					"Privacy Policy URL",
+					"privacy_policy",
+					"https://myprivacypolicy.com"
+				) }}
+				{{ textInput(
+					"Support Server",
+					"support",
+					"https://discord.gg/supportserver"
+				) }}
+				{{ textInput(
+					"Donate URL (Patreon only for now)",
+					"donate",
+					"https://patreon.com/..."
+				) }}
 			</section>
 			<section id="webhook-tab" class="tabcontent">
 				{{ optional() }}
