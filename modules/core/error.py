@@ -118,5 +118,12 @@ class WebError():
             # Normal handling
             return ORJSONResponse({"done": False, "reason": exc.detail}, status_code=status_code)
         else:
-            # Special 422 handling
-            return ORJSONResponse({"done": False, "reason": "Invalid fields present", "ctx": exc.errors()}, status_code=422)
+            errors = exc.errors()
+            errors_fixed = []
+            for error in errors:
+                if error["type"] == "type_error.enum":
+                    ev = [{"name": type(enum).__name__, "accepted": enum.value, "doc": enum.__doc__} for enum in error["ctx"]["enum_values"]]
+                    error["ctx"]["enum"] = ev
+                    del error["ctx"]["enum_values"]
+                errors_fixed.append(error)
+            return ORJSONResponse({"done": False, "reason": "Invalid fields present", "ctx": errors_fixed}, status_code=422)
