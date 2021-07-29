@@ -1,4 +1,4 @@
-function openf(evt, idp, data, defaultTab) {
+function openf(evt, idp, data, defaultTab, post) {
 	var id = `${idp}-tab`
 	// Declare all variables
 	var i, tabcontent, tablinks;
@@ -29,6 +29,10 @@ function openf(evt, idp, data, defaultTab) {
 	else {
 		window.location.hash = data.id + "-fl";
 	}
+	if(post != undefined) {
+		post(idp, evt, data)
+	}
+
 }
 
 function tabSetup(jq) {

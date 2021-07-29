@@ -194,12 +194,16 @@ function showToken(but) {
 function testHook(url, type) {
 	headers = {"Authorization": context.bot_token}
 	$j.ajax({
-		url: `/api/bots/${context.bot_id}/votes/test?user_id=${context.user_id}`,
+		url: `/api/bots/${context.bot_id}/testhook`,
 		dataType: "json",
 		headers: headers,
 		type: "POST",
 		processData: false,
 		contentType: 'application/json',
+		statusCode: {
+			200: function(data) {
+				modalShow("Sent test query", "See the below tip if you didn't get it!")
+			}
+		}
 	})
-	modalShow("Sent Test Query", "If you do not get the test webhook, make sure you have editted the bot with the webhook url first by adding the Webhook URL and THEN clicking Edit and then try again")
   }

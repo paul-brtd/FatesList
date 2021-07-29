@@ -10,7 +10,7 @@
 
 
 {% macro save() %}
-	<section class="save-changes">
+	<section id="save-changes">
 		<br/>
 		<p class="white info-content">Once you feel like your bot is as good as it can be, click the {{context.mode.title()}} button to save your changes. Make sure that you have previewed your long description beforehand if possible (marked is not yet supported by previews yet) and that you have read our <a class="long-desc-link" href="/fates/rules">rules</a> before {{context.mode}}ing.</p>
 		<button class="btn btn-outline-light btn-save">{{context.mode}}</button>
@@ -47,7 +47,7 @@
 	</div>
 {% endmacro %}
 {% macro tab(id, default=False, name=None) %}
-	<button id="{{id}}-button" class="tablinks" onclick="openf(event, '{{id}}', this, {{1 if default else 0}})">{{name if name else id.title() }}</button>
+	<button id="{{id}}-button" class="tablinks" onclick="openf(event, '{{id}}', this, {{1 if default else 0}}, hideSaveOnAboutTab)">{{name if name else id.title() }}</button>
 {% endmacro %}
 
 
@@ -259,10 +259,19 @@
 		var $j = jQuery.noConflict();
 		var context = {{context|tojson}}
 		context.default_tab_button = "{% if context.mode == 'add' %}basic-settings-button{% else %}about-button{% endif %}"
+	
+		function hideSaveOnAboutTab(id, evt, data) {
+			if(id == "about") {
+				document.querySelector("#save-changes").style.display = "none"
+			}
+			else {
+				document.querySelector("#save-changes").style.display = "initial"
+			}
+		}
 	</script>
-	<script src="/static/assets/prod/tabs.min.js"></script>
+	<script src="/static/assets/prod/tabs.min.js?v=2"></script>
 	<script src="https://cdn.jsdelivr.net/npm/select-pure@latest/dist/index.js"></script>
-	<script src="/static/assets/prod/bot_add_edit_v2.min.js?v=1"></script>
+	<script src="/static/assets/prod/bot_add_edit_v2.min.js?v=2"></script>
 {% endblock %}
 {% block footer %}
 
