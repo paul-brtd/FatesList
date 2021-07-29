@@ -281,7 +281,6 @@ def setup_discord():
         guilds = True
     )
     intent_dbg = discord.Intents(
-        guilds = True,
         dm_messages = True  # Only allow DMs to pass through
     ) 
     client = FatesBot(intents=intent_main)
