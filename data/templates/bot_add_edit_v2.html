@@ -260,9 +260,9 @@
 		var context = {{context|tojson}}
 		context.default_tab_button = "{% if context.mode == 'add' %}basic-settings-button{% else %}about-button{% endif %}"
 	</script>
-	<script src="/static/assets/prod/tabs.min.js?v=2"></script>
+	<script src="/static/assets/prod/bot_add_edit_v2.min.js?v=3"></script>
+	<script src="/static/assets/prod/tabs.min.js?v=2" defer></script>
 	<script src="https://cdn.jsdelivr.net/npm/select-pure@latest/dist/index.js"></script>
-	<script src="/static/assets/prod/bot_add_edit_v2.min.js?v=2"></script>
 {% endblock %}
 {% block footer %}
 
