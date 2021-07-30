@@ -207,3 +207,12 @@ function testHook(url, type) {
 		}
 	})
   }
+
+function hideSaveOnAboutTab(id, evt, data) {
+	if(id == "about") {
+		document.querySelector("#save-changes").style.display = "none"
+	}
+	else {
+		document.querySelector("#save-changes").style.display = "initial"
+	}
+}
