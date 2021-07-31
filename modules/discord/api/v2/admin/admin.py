@@ -39,7 +39,7 @@ async def debug_error_tester(request: Request, code: int):
 
 @router.patch("/bots/{bot_id}/ops", response_model = APIResponse, dependencies=[Depends(manager_check)])
 async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEndpoint):
-    """Performs a bot admin operation. This is internal and only meant for our test server manager bot. 0 is the recursion bot for botlist-wide actions like vote resets every month. Snowfall is the user token header for staff api requests"""
+    """Performs a bot admin operation. This is internal and only meant for our test server manager bot. 0 is the recursion bot for botlist-wide actions like vote resets every month."""
     user = request.state.user
     guild = user.guild
     # Get permission while also handling multi/recursive operations, which have a tuple where first element is for non multi/recusive and second is for multi/recursive

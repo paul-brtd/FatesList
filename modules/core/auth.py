@@ -2,9 +2,12 @@ from .imports import *
 from fastapi import Security
 from fastapi.security.api_key import APIKeyQuery, APIKeyCookie, APIKeyHeader, APIKey
 
-bot_auth_header = APIKeyHeader(name="Authorization", auto_error=False, description="Put Bot Token Here", scheme_name="Bot Authorization")
+bot_auth_header = APIKeyHeader(name="Authorization", auto_error=False, description="These endpoints require a bot token. You can get this from Bot Settings. Make sure to keep this safe and in a .gitignore", scheme_name="Bot Authorization")
 
-user_auth_header = APIKeyHeader(name="Authorization", auto_error=False, description="Put User Token Here", scheme_name="User Authorization")
+user_auth_header = APIKeyHeader(name="Authorization", auto_error=False, description="These endpoints require a user token. You can get this from your profile under the User Token section. If you are using this for voting, make sure to allow users to opt out!", scheme_name="User Authorization")
+
+
+dragon_header = APIKeyHeader(name="Dragon", description="This is for the the admin Dragon Auth system for the manager bot. Format is MANAGER_KEY:USER_ID@USER_TOKEN. Raw access is only given to and used by people developing Fates List and for some highly privileged staff members.", scheme_name="Dragon Auth")
 
 async def _bot_auth(bot_id: int, api_token: str):
     return await db.fetchval("SELECT bot_id FROM bots WHERE bot_id = $1 AND api_token = $2", bot_id, str(api_token))
@@ -18,13 +21,13 @@ async def _user_auth(user_id: int, api_token: str):
         return None
     return await db.fetchval("SELECT user_id FROM users WHERE user_id = $1 AND api_token = $2", user_id, str(api_token))
 
-async def bot_auth_check(bot_id: int, Authorization: str = Security(bot_auth_header)):
-    id = await _bot_auth(bot_id, Authorization)
+async def bot_auth_check(bot_id: int, bot_auth: str = Security(bot_auth_header)):
+    id = await _bot_auth(bot_id, bot_auth)
     if id is None:
         raise HTTPException(status_code=401, detail="Invalid Bot Token")
 
-async def user_auth_check(user_id: int, Authorization: str = Security(user_auth_header)):
-    id = await _user_auth(user_id, Authorization)
+async def user_auth_check(user_id: int, user_auth: str = Security(user_auth_header)):
+    id = await _user_auth(user_id, user_auth)
     if id is None:
         raise HTTPException(status_code=401, detail="Invalid User Token")
 
@@ -42,23 +45,30 @@ async def bot_user_auth_check(bot_id: int, user_id: Optional[int] = None, bot_au
 
 async def manager_check(
     request: Request, 
-    Authorization: str = Header("Put Manager Key Here"), 
-    Lynx: int = Header("User ID of moderator"), 
-    Snowfall: str = Header("Put User Token of moderator here")
+    Dragon: str = Security(dragon_header)
 ):
-    if not secure_strcmp(Authorization, manager_key):
+    if not secure_strcmp(Dragon.split(":")[0], manager_key):
         raise HTTPException(
             status_code=401, 
-            detail="Invalid manager key",
+            detail="Dragon auth failed due to a missing or invalid manager key",
         )
 
-    id = await user_auth(Lynx, Snowfall)
+    user_id, user_token = Dragon.split(":")[1].split("@")
+    try:
+        user_id = int(user_id)
+    except ValueError:
+        raise HTTPException(
+            detail="Dragon auth failed as user id is not an integer",
+            status_code=403
+        )
+
+    id = await _user_auth(user_id, user_token)
     if id is None:
         raise HTTPException(
-            "Snowfall/Lynx header mismatch. Please run +usertoken again to reset it",
+            detail="Dragon auth failed due to invalid user auth. Please run +usertoken again to reset the user token on redbot",
             status_code=403
         )
 
     await client.wait_until_ready()
     guild = client.get_guild(main_server)
-    request.state.user = guild.get_member(Lynx)
+    request.state.user = guild.get_member(user_id)
