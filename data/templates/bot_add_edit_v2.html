@@ -20,7 +20,7 @@
 	<section id="save-changes">
 		<br/>
 		<p class="white info-content">Once you feel like your bot is as good as it can be, click the {{context.mode.title()}} button to save your changes. Make sure that you have previewed your long description beforehand if possible (marked is not yet supported by previews yet) and that you have read our <a class="long-desc-link" href="/fates/rules">rules</a> before {{context.mode}}ing.</p>
-		<button class="btn btn-outline-light btn-save">{{context.mode}}</button>
+		<button class="btn btn-outline-light btn-save" onclick="submitBot()">{{context.mode}}</button>
 	</section>
 {% endmacro %}
 {% macro textInput(label, id, placeholder, min=None, max=None, required=False, type="text", textarea=False, in_form=True) %}
@@ -55,9 +55,14 @@
 	<select-pure class="select-pure-fl" id="{{id}}" name="{{id}}" default-label="{{help_text}}" {% if multiple %}multiple{% endif %}>
 		<option-pure value="" disabled="" hidden="">{{help_text}}</option-pure>
 		{% for choice in choices %}
+			{% if choice.value in ("true", "false") %}
+				{% set value = (choice.value == "true") %}
+			{% else %}
+				{% set value = choice.value %}
+			{% endif %}
 			<option-pure 
-			  value="{{choice.value}}" 
-			  {% if (context.mode == "edit") and (bot[id] and (not multiple and bot[id] == choice.value) or (multiple and choice.value in bot[id])) %}selected{% endif %}
+			  value="{{choice.value}}"
+			  {% if (context.mode == "add" and choice.default) or ((context.mode == "edit" and id in bot.keys()) and ((not multiple and bot[id] == value) or (multiple and value in bot[id]))) %}selected{% endif %}
 			>{{choice.text}}</option-pure>
 		{% endfor %}
 	</select-pure>
@@ -96,6 +101,7 @@
 				{{ tab("basic-settings", name="Basics", default=True if context.mode == "add" else False) }}
 				{{ tab("webhook", name="Webhooks") }}
 				{{ tab("links", name="Links") }}
+				{{ tab("banner", name="Banners") }}
 			</div>
 			{% if context.mode == "edit" %}
 			<section id="about-tab" class="tabcontent">
@@ -228,7 +234,7 @@
 					"https://discord.gg/supportserver"
 				) }}
 				{{ textInput(
-					"Donate URL (Patreon only for now)",
+					"Donate URL (Patreon/Paypal.me/Buymeacoffee)",
 					"donate",
 					"https://patreon.com/..."
 				) }}
@@ -270,12 +276,42 @@
 				<button class="btn btn-outline-light" style="margin-bottom: 10px;" onclick="testHook()">Test Webhook</button>
 				{{ tip("Didn't get anything? Make sure you have saved your bot first before clicking Test Webhook. Also check your firewall and network settings as well") }}
 			</section>
+			<section id="banner-tab" class="tabcontent">
+				{{ optional() }}
+				<p class="white info-content">Banners allow you to make your bot page look better and more higher quality. There are two banners you can set: one for your bots card and one for your bots page. The banner URL you post here must give a content type of image/**** when a HEAD or a GET request is sent to them (most image services do this). Banner pages also has a 'Keep Banner Decorations/Artifacts' option for some banners that don't work well without it however this does look a bit ugly and so should be disabled if possible</p>
+				{{ selectInput(
+					"keep_banner_decor",
+					"Keep Banner Decorations/Artifacts",
+					"Try to make your banner not need this!",
+					(
+						{
+							"value": "true",
+							"text": "Yes",
+							"default": True
+						},
+						{
+							"value": "false",
+							"text": "No"
+						}
+					)
+				) }}
+				{{ textInput(
+					"Banner URL for bot card",
+					"banner_card",
+					"Banner URL here"
+				) }}
+				{{ textInput(
+					"Banner URL for bot page",
+					"banner_page",
+					"Banner URL here"
+				) }}
+			</section>
 		</div>
 	</div>
 	{{ save() }}	
 	<!-- Javascript here -->
 	<script>
-		var $j = jQuery.noConflict();
+		$j = jQuery.noConflict()
 		var context = {{context|tojson}}
 		context.default_tab_button = "{% if context.mode == 'add' %}basic-settings-button{% else %}about-button{% endif %}"
 		context.form_values = {
@@ -284,8 +320,8 @@
 			select_multiple: {{form_values_select_multiple|tojson}}
 		}
 	</script>
-	<script src="/static/assets/prod/bot_add_edit_v2.min.js?v=3"></script>
-	<script src="/static/assets/prod/tabs.min.js?v=2" defer></script>
+	<script src="/static/assets/prod/bot_add_edit_v2.min.js?v=11"></script>
+	<script src="/static/assets/prod/tabs.min.js?v=3" defer></script>
 	<script src="https://cdn.jsdelivr.net/npm/select-pure@latest/dist/index.js"></script>
 {% endblock %}
 {% block footer %}

@@ -1,7 +1,14 @@
-function submitBot(e) {
-    modalShow("Adding Bot..", "Please wait for a few minutes...")
+function submitBot() {
+    modalShow("Saving", "Please wait for a few moments while we save your bot")
     try {
 	json = {}
+	context.form_values.text.forEach(function (key) {
+	    json[key] = document.querySelector(`#${key}`).value
+	})
+	context.form_values.select_single.forEach(function (key) {
+	    json[key] = document.querySelector(`#${key}`).value
+	})
+
     	tags = document.querySelector("#tags").values
 	toReplace = {
 	    tags: document.querySelector("#tags").values,
@@ -19,14 +26,14 @@ function submitBot(e) {
 	else {
 	    method = "PUT"
 	}
-	keys = ["long_description_type", "nsfw", "keep_banner_decor", "webhook_type"]
-	keys.forEach(function (key) {
-		json[key] = document.querySelector(`#${key}`).value
+	context.form_values.select_multiple.forEach(function (key) {
+		json[key] = document.querySelector(`#${key}`).values
 	})
 	if(json.tags.length == 0 || json.tags[0] == "") {
 	    modalShow("Error", "You need to select tags for your bot!")
 	    return
 	}
+	return
 	jQuery.ajax({
 		url: `/api/users/${context.user_id}/bots/${json.bot_id}`,
 		method: method,

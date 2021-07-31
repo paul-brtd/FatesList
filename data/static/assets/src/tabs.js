@@ -56,8 +56,4 @@ function tabSetup(jq) {
     }
 }
 
-if(window.$)
-	tabSetup($)
-else
-	tabSetup($j)
-
+tabSetup(jQuery)

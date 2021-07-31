@@ -69,8 +69,8 @@ class BotActions():
                 if ct.split("/")[0] != "image":
                     return f"A banner has an issue: {banner_name} is not an image. Please make sure it is setting the proper Content-Type. Got status code {imgres.status} and content type of {ct}."
 
-        if self.donate and not self.donate.startswith(("https://patreon.com", "https://paypal.me")):
-            return "Only Patreon and Paypal.me are allowed for donation links as of right now." 
+        if self.donate and not self.donate.startswith(("https://patreon.com", "https://paypal.me", "https://www.buymeacoffee.com")):
+            return "Only Patreon, PayPal.me and Buymeacoffee are supported for donations at this time} You can request for more on our support server!" 
         
         for eo in self.extra_owners:
             tmp = await get_user(eo)
