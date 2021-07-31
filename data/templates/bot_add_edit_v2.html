@@ -1,4 +1,11 @@
 {% extends "base/base.html" %}
+
+{# Set some global variables for the form handling in js to easily serialize it #}
+{% set form_values_text = [] %}
+{% set form_values_select_single = [] %}
+{% set form_values_select_multiple = [] %}
+
+
 {% macro tip(text) %}
 	<div class="d-inline-block white alert alert-info tip" role="alert">
 		<span class="iconify" data-icon="foundation:lightbulb" data-inline="false" data-height="1.5em"></span>{{text}}
@@ -16,8 +23,11 @@
 		<button class="btn btn-outline-light btn-save">{{context.mode}}</button>
 	</section>
 {% endmacro %}
-{% macro textInput(label, id, placeholder, min=None, max=None, required=False, type="text", textarea=False) %}
+{% macro textInput(label, id, placeholder, min=None, max=None, required=False, type="text", textarea=False, in_form=True) %}
 	{% set val = bot[id] if context.mode == "edit" and bot.get(id) else '' %}
+	{% if in_form %}
+		{% set _ = form_values_text.append(id) %}
+	{% endif %}
 	<div>
 	<label for="{{id}}">{{label}} {% if required %}<span style="color: red; font-weight: bold" aria-hidden="true">*</span>{% endif %}</label>
 	<{{"textarea" if textarea else "input"}}
@@ -32,7 +42,14 @@
 	  {% if not textarea %}value="{{ val }}"{% endif %}>{% if textarea %}{{val}}{% endif %}</{{"textarea" if textarea else "input"}}>
 	 </div>
 {% endmacro %}
-{% macro selectInput(id, label, help_text, choices, multiple=False, required=False) %}
+{% macro selectInput(id, label, help_text, choices, multiple=False, required=False, in_form=True) %}
+	{% if in_form %}
+		{% if multiple %}
+			{% set _ = form_values_select_multiple.append(id) %}
+		{% else %}
+			{% set _ = form_values_select_single.append(id) %}
+		{% endif %}
+	{% endif %}
 	<label for="{{id}}">{{label}} {% if required %}<span style="color: red; font-weight: bold" aria-hidden="true">*</span>{% endif %}</label>
 	<div class="fform">
 	<select-pure class="select-pure-fl" id="{{id}}" name="{{id}}" default-label="{{help_text}}" {% if multiple %}multiple{% endif %}>
@@ -100,7 +117,8 @@
 				{{ textInput(
 					"Server Count",
 					"server-count",
-					"Server count of your bot"
+					"Server count of your bot",
+					in_form=False
 				) }}
 				<button class="section btn btn-outline-light" onclick='postStats()'>Post</button>
 				<h5 class="white section">Transfer Ownership</h5>
@@ -108,7 +126,8 @@
 				{{ textInput(
 					"New Owner",
 					"new-owner",
-					"Enter the ID of the new owner. This ID must already be a extra owner first!"
+					"Enter the ID of the new owner. This ID must already be a extra owner first!",
+					in_form=False
 				) }}
 				<button class="btn btn-danger" onclick="transferBot()">Transfer Ownership</button>
 				<h5 class="white section">Delete Bot</h5>
@@ -259,6 +278,11 @@
 		var $j = jQuery.noConflict();
 		var context = {{context|tojson}}
 		context.default_tab_button = "{% if context.mode == 'add' %}basic-settings-button{% else %}about-button{% endif %}"
+		context.form_values = {
+			text: {{form_values_text|tojson}},
+			select_single: {{form_values_select_single|tojson}},
+			select_multiple: {{form_values_select_multiple|tojson}}
+		}
 	</script>
 	<script src="/static/assets/prod/bot_add_edit_v2.min.js?v=3"></script>
 	<script src="/static/assets/prod/tabs.min.js?v=2" defer></script>

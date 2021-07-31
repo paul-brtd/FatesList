@@ -1,7 +1,7 @@
 function submitBot(e) {
     modalShow("Adding Bot..", "Please wait for a few minutes...")
     try {
-    	json = $j('#botform').serializeJSON()
+	json = {}
     	tags = document.querySelector("#tags").values
 	toReplace = {
 	    tags: document.querySelector("#tags").values,
@@ -27,7 +27,7 @@ function submitBot(e) {
 	    modalShow("Error", "You need to select tags for your bot!")
 	    return
 	}
-	$j.ajax({
+	jQuery.ajax({
 		url: `/api/users/${context.user_id}/bots/${json.bot_id}`,
 		method: method,
 		headers: {'Authorization': context.user_token},
@@ -37,7 +37,7 @@ function submitBot(e) {
 			202: function(data) {
 				modalShow("Success", "Your bot (and its changes) has been added to the RabbitMQ queue. Your page should auto refresh to it in a few minutes")
 				setTimeout(setInterval(function(){
-				$j.ajax({
+				jQuery.ajax({
 					url: `/api/bots/${json.bot_id}`,
 					method: "HEAD",
 					statusCode: {
@@ -80,7 +80,7 @@ function deleteBot() {
 		return
 	}
 	modalShow("Deleting Bot..", "Please wait...")
-	$j.ajax({
+	jQuery.ajax({
 		url: `/api/users/${context.user_id}/bots/${context.bot_id}`,
 		method: "DELETE",
 		headers: {'Authorization': context.user_token},
@@ -89,7 +89,7 @@ function deleteBot() {
 			202: function(data) {
 				modalShow("Bot Deleted :(", "This bot has been added to our queue of bots to delete and will be deleted in just a second or two")
 				setTimeout(setInterval(function(){
-				$j.ajax({
+				jQuery.ajax({
 					url: `/api/bots/${context.bot_id}`,
 					method: "GET",
 					statusCode: {
@@ -132,7 +132,7 @@ function previewLongDesc(){
 	if(ld == "") {
 		return
 	}
-        $j.ajax({
+        jQuery.ajax({
            type: 'POST',
            dataType: 'json',
 	   headers: headers,
@@ -141,7 +141,7 @@ function previewLongDesc(){
            data: JSON.stringify({"html_long_description": html, "data": ld}),
 	   statusCode: {
            "200": function(data) {
-               $j("#ld-preview").html(data.html)
+               jQuery("#ld-preview").html(data.html)
            },
            "429": function(data) {
 		modalShow("Rate Limited", data.responseJSON.detail)
@@ -170,7 +170,7 @@ function showToken(but) {
   function postStats() {
 	server_count = document.querySelector("#server-count").value
   	payload = {"guild_count": server_count}
-	$j.ajax({
+	jQuery.ajax({
 		headers: {'Authorization': context.bot_token},
 		method: 'POST',
 		url: `/api/bots/${context.bot_id}/stats`,
@@ -180,7 +180,7 @@ function showToken(but) {
 	modalShow("Success", "Done posting stats. You may leave this page or continue editing this bot!")
   }
   function regenToken() {
-	$j.ajax({
+	jQuery.ajax({
 	   headers: {'Authorization': context.bot_token},
 	   type: 'PATCH',
 	   url: `/api/bots/${context.bot_id}/token`,
@@ -193,7 +193,7 @@ function showToken(but) {
 
 function testHook(url, type) {
 	headers = {"Authorization": context.bot_token}
-	$j.ajax({
+	jQuery.ajax({
 		url: `/api/bots/${context.bot_id}/testhook`,
 		dataType: "json",
 		headers: headers,
