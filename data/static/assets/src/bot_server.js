@@ -75,14 +75,16 @@ $( document ).ready(function() {
 	setTimeout(function() {document.querySelector("#rating-desc-avg").innerHTML = parseState(context.reviews.average_rating) + ", " + context.reviews.average_rating}, 300); 
 });
 
-function commandModal(name) {
-	cmd = document.querySelector("#cmd-" + name.replace(" ", "")).textContent
+function commandModal(id) {
+	cmd = document.querySelector(`#cmd-${id}`).textContent
 	cmd = JSON.parse(cmd)
 	args = cmd.args.toString().replace(",", " ")
-	modalShow(`More information (${cmd.friendly_name})`, `
-		Command Name: ${cmd.cmd_name}<br>
+	modalShow(`More information`, `
+		Command: ${cmd.cmd_name}<br>
 		Arguments: ${args.replace(">", "</span>").replace("<", "<span class='arg'>")}<br>
-		ID: ${cmd.id}
+		Vote Locked: ${cmd.vote_locked}<br/>
+		ID: ${cmd.id}<br/><br/>
+		(Advanced) Raw JSON: ${JSON.stringify(cmd)}
 	`) 
 }
 
@@ -112,8 +114,8 @@ function getCommands(bot_id) {
 						group = "Miscellaneous" 
 					commands += `
 					<a class="white" style="font-size: 25px" aria-expanded="true" data-toggle="collapse" href="#${group}table">${group}</a>
-					<div class="collapse show" id='${group}table'>
-					<table style="margin: 0 auto !important;">
+					<section class="collapse show" id='${group}table' style="width: 100%">
+					<table style="margin: 0 auto !important; width: 100%; table-layout: fixed;">
 					<colgroup>
 						<tr>
 							<th style="border-right: none;">Name</th>
@@ -132,20 +134,24 @@ function getCommands(bot_id) {
 								docs = "No docs available"
 							else
 								docs = `<a class='long-desc-link' href='${cmd.doc_link}'>Docs</a>`
+							if(cmd.description.replace(" ", "") == "" || cmd.description.length < 15)
+								description = "There is no description available"
+							else
+								description = cmd.description
 							commands += `
 							<colgroup>
 								<tr>
-									<span style="display: none" id="cmd-${cmd.name}">${JSON.stringify(cmd)}</span>
-									<td>${cmd.friendly_name}</td>
-									<td>${cmd.description}</td>
+									<span style="display: none" id="cmd-${cmd.id}">${JSON.stringify(cmd)}</span>
+									<td>${cmd.cmd_name}</td>
+									<td>${description}</td>
 									<td>${docs}</td>
 									<td>${cmd.premium_only.toString().replace("true", "Yes").replace("false", "No")}</td>
-									<td><a class='long-desc-link' href='javascript:void' onclick="commandModal('${cmd.name}')">View</a>
+									<td><a class='long-desc-link' href='javascript:void(0)' onclick="commandModal('${cmd.id}')">View</a>
 							</tr>
 						</colgroup>
 						`
 						});
-					commands += `</table></div>`
+					commands += `</table></section><br/>`
 				});
 				commandsTab.innerHTML = commands
 			}

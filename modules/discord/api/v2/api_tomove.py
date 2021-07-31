@@ -146,7 +146,7 @@ async def add_command(request: Request, bot_id: int, command: BotCommand):
     if check:
         return api_error("A command with this name already exists on your bot")
     id = uuid.uuid4()
-    await db.execute("INSERT INTO bot_commands (id, bot_id, cmd_groups, cmd_type, cmd_name, description, args, examples, premium_only, notes, doc_link, friendly_name) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)", id, bot_id, command.cmd_groups, command.cmd_type, command.cmd_name, command.description, command.args, command.examples, command.premium_only, command.notes, command.doc_link, command.friendly_name)
+    await db.execute("INSERT INTO bot_commands (id, bot_id, cmd_groups, cmd_type, cmd_name, description, args, examples, premium_only, notes, doc_link, vote_locked) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)", id, bot_id, command.cmd_groups, command.cmd_type, command.cmd_name, command.description, command.args, command.examples, command.premium_only, command.notes, command.doc_link, command.vote_locked)
     await bot_add_event(bot_id, enums.APIEvents.command_add, {"user": None, "id": id})
     return api_success(id = id)
 
@@ -164,7 +164,7 @@ async def add_command(request: Request, bot_id: int, command: BotCommand):
     ]
 )
 async def edit_bot_command_api(request: Request, bot_id: int, id: uuid.UUID, command: BotCommand):
-    data = await db.fetchrow(f"SELECT id, cmd_type, cmd_groups, cmd_name, friendly_name, description, args, examples, premium_only, notes, doc_link FROM bot_commands WHERE id = $1 AND bot_id = $2", id, bot_id)
+    data = await db.fetchrow(f"SELECT id, cmd_type, cmd_groups, cmd_name, vote_locked, description, args, examples, premium_only, notes, doc_link FROM bot_commands WHERE id = $1 AND bot_id = $2", id, bot_id)
     if data is None:
         return abort(404)
 
@@ -173,7 +173,7 @@ async def edit_bot_command_api(request: Request, bot_id: int, id: uuid.UUID, com
     for key in command_dict.keys():
         if command_dict[key] is None: 
             command_dict[key] = data[key]
-    await db.execute("UPDATE bot_commands SET cmd_type = $2, cmd_name = $3, description = $4, args = $5, examples = $6, premium_only = $7, notes = $8, doc_link = $9, cmd_groups = $10, friendly_name = $11 WHERE id = $1", command_dict["id"], command_dict["cmd_type"], command_dict["cmd_name"], command_dict["description"], command_dict["args"], command_dict["examples"], command_dict["premium_only"], command_dict["notes"], command_dict["doc_link"], command_dict["cmd_groups"], command_dict["friendly_name"])
+    await db.execute("UPDATE bot_commands SET cmd_type = $2, cmd_name = $3, description = $4, args = $5, examples = $6, premium_only = $7, notes = $8, doc_link = $9, cmd_groups = $10, vote_locked = $11 WHERE id = $1", command_dict["id"], command_dict["cmd_type"], command_dict["cmd_name"], command_dict["description"], command_dict["args"], command_dict["examples"], command_dict["premium_only"], command_dict["notes"], command_dict["doc_link"], command_dict["cmd_groups"], command_dict["vote_locked"])
     await bot_add_event(bot_id, enums.APIEvents.command_edit, {"user": None, "id": id})
     return api_success()
 

@@ -109,7 +109,7 @@ class BotCommand(BaseModel):
     cmd_type: enums.CommandType # 0 = no, 1 = guild, 2 = global
     cmd_groups: Optional[List[str]] = ["Default"]
     cmd_name: str
-    friendly_name: str
+    vote_locked: bool
     description: str
     args: Optional[list] = ["<user>"]
     examples: Optional[list] = []
@@ -117,8 +117,11 @@ class BotCommand(BaseModel):
     notes: Optional[list] = []
     doc_link: Optional[str] = ""
 
+class BotCommandWithId(BotCommand):
+    id: uuid.UUID
+
 class BotCommandsGet(BaseModel):
-    __root__: Dict[str, List[BotCommand]]
+    __root__: Dict[str, List[BotCommandWithId]]
 
 class BotCommandDelete(BaseModel):
     """You can use either command id or cmd_name to remove a command"""

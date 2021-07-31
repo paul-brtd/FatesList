@@ -85,7 +85,7 @@ CREATE TABLE bot_commands (
    cmd_type integer, -- 0 = no, 1 = guild, 2 = global
    cmd_groups text[] default '{Default}',
    cmd_name text not null, -- command name
-   friendly_name text not null, -- friendly name
+   vote_locked boolean default false, -- friendly name
    description text, -- command description
    args text[], -- list of arguments
    examples text[], -- examples
