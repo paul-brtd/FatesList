@@ -75,8 +75,9 @@ def _fappgen(session_id, workers):
             Current API: v2 beta 3
             Default API: v2
             API Docs: https://apidocs.fateslist.xyz
+            Enum Reference: https://apidocs.fateslist.xyz/structures/enums.autogen
         """,
-        version="0.2.0",
+        version="0.3.0",
         default_response_class=ORJSONResponse, 
         redoc_url=f"/api/v{API_VERSION}/docs/redoc",
         docs_url=f"/api/v{API_VERSION}/docs/swagger",
