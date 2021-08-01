@@ -3,7 +3,7 @@ import os
 import sys
 import io
 from typing import Optional, Union
-
+from lynxfall.rabbit.client.core import add_rmq_task_with_ret
 import discord
 from discord.ext.commands import Cog, command, is_owner
 from config import main_server

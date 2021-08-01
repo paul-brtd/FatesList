@@ -62,7 +62,7 @@ async def bot_settings(request: Request, bot_id: int, new: Optional[bool] = Fals
         return abort(404)
 
     vanity = await db.fetchval("SELECT vanity_url AS vanity FROM vanity WHERE redirect = $1", bot_id)
-
+    bot["vanity"] = vanity
     context = {
         "bot_token": await db.fetchval("SELECT api_token FROM bots WHERE bot_id = $1", bot_id),
         "mode": "edit",

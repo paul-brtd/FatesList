@@ -98,12 +98,10 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
         # Take the h1...h5 anad drop it one lower and bypass peoples stupidity 
         # and some nice patches to the site to improve accessibility
     long_desc_replace_tuple = (
-        ("<h1", "<h2 style='text-align: center'"),
-        ("</h1", "</h2"),
-        ("<h3", "<h4"),
-        ("</h3", "</h4"),
-        ("<h5", "<h6"),
-        ("</h5", "</h6"),
+        ("<h1", "<h3"),
+        ("</h1", "</h3"),
+        ("<h2", "<h4"),
+        ("</h2", "</h4"),
         ("<a", "<a class='long-desc-link ldlink'"), 
         ("<!DOCTYPE", ""), 
         ("html>", ""), 

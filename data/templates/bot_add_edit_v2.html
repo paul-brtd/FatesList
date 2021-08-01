@@ -160,6 +160,7 @@
 				) }}
 				{{ textInput("Prefix", "prefix", "$, ! etc.", max=9, required=True) }}
 				{{ textInput("Library", "library", "discord.py etc.", required=True) }}
+				{{ textInput("Vanity", "vanity", "mybot, fateslist etc. Prefix with _ to disable", required=true) }}
 				{{ tip("You can use P:PERM_NUMBER (or just leave this blank) if the Bot ID and Client ID are the same (almost always true except for old bots)") }}
 				{{ textInput(
 					"Invite URL (Leave blank for automatic)", 
@@ -209,6 +210,22 @@
 					"Write over 300 characters for your long description. Trying to put a placeholder to bypass this limit will get your bot denied or banned if found out!", 
 					required=True, 
 					textarea=True
+				) }}
+				{{ selectInput(
+					"nsfw",
+					"NSFW Bot?",
+					"Is your bot NSFW?",
+					(
+						{
+							"value": "true",
+							"text": "Yes"
+						},
+						{
+							"value": "false",
+							"text": "No",
+							"default": False
+						},
+					)
 				) }}
 			</section>
 			<section id="links-tab" class="tabcontent">

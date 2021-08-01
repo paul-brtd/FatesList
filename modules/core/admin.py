@@ -14,6 +14,9 @@ class BotActions():
         if self.bot_id == "" or self.prefix == "" or self.description == "" or self.long_description == "" or len(self.prefix) > 9: # Check base fields
             return "Please ensure you have filled out all the required fields and that your prefix is less than 9 characters."
 
+        if not self.vanity:
+            return "You must have a vanity for your bot. This can be your username. You can prefix it with _ (underscore) if you don't want the extra growth from it. For example _mewbot would disable the mewbot vanity"
+
         if self.tags == "":
             return "You must select tags for your bot" #Check tags
 
