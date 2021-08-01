@@ -154,6 +154,13 @@ class Vanity(IntEnum):
     profile = 2, "Profile"
 
 class CommandType(IntEnum):
+    """
+    0 - Regular (Prefix) Command
+
+    1 - Slash Command (Guild)
+    
+    2 - Slash Command (Global)
+    """
     _init_ = "value __doc__"
     regular = 0, "Regular Command"
     guild_slash = 1, "Slash Command (guild)"

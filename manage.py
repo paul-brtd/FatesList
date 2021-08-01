@@ -141,6 +141,37 @@ def run_site(
         logger.info(f"{type(exc).__name__}: {exc}")
 
 
+@site.command("enums2md")
+def site_enum2html():
+    """Converts the enums in modules/models/enums.py into markdown. Mainly for apidocs creation"""
+    enums = importlib.import_module("modules.models.enums")
+    aenum = importlib.import_module("aenum")
+    md = {}
+    md_path = Path("data/res/base_enum.md")
+    with md_path.open() as f:
+        base_md = f.read()
+
+    for key in enums.__dict__.keys():
+        # Ignore internal or dunder keys
+        if key.startswith("_"):
+            continue
+        
+        v = enums.__dict__[key]
+        if isinstance(v, aenum.EnumType):
+            props = list(v)
+            md[key] = {}
+            md[key]["doc"] = "\n"
+            md[key]["table"] = "| Name | Value | Description |\n| :--- | :--- | :--- |\n"
+            if v.__doc__ and v.__doc__ != "An enumeration.":
+                md[key]["doc"] = v.__doc__ + "\n\n"
+            md[key]["table"] += "\n".join([f"| {prop.name} | {prop.value} | {prop.__doc__} |" for prop in props])
+    
+    md_out = []
+    for key in md.keys():
+        md_out.append(f'## {key}\n{md[key]["doc"]}{md[key]["table"]}')
+
+    print(base_md + "\n\n".join(md_out))
+
 @site.command("reload")
 def site_reload():
     """Get the PID of the running site and reloads the site"""
