@@ -153,7 +153,7 @@ def site_enum2html():
 
     for key in enums.__dict__.keys():
         # Ignore internal or dunder keys
-        if key.startswith("_"):
+        if key.startswith("_") or key in ("IntEnum", "Enum"):
             continue
         
         v = enums.__dict__[key]
@@ -163,14 +163,16 @@ def site_enum2html():
             md[key]["doc"] = "\n"
             md[key]["table"] = "| Name | Value | Description |\n| :--- | :--- | :--- |\n"
             if v.__doc__ and v.__doc__ != "An enumeration.":
-                md[key]["doc"] = v.__doc__ + "\n\n"
+                md[key]["doc"] = "\n" + v.__doc__ + "\n\n"
             md[key]["table"] += "\n".join([f"| {prop.name} | {prop.value} | {prop.__doc__} |" for prop in props])
     
+    md = dict(sorted(md.items()))
+
     md_out = []
     for key in md.keys():
         md_out.append(f'## {key}\n{md[key]["doc"]}{md[key]["table"]}')
 
-    print(base_md + "\n\n".join(md_out))
+    print(base_md + "\n" + "\n\n".join(md_out))
 
 @site.command("reload")
 def site_reload():
