@@ -163,7 +163,7 @@ async def add_command(request: Request, bot_id: int, command: BotCommand):
         Depends(bot_auth_check)
     ]
 )
-async def edit_bot_command_api(request: Request, bot_id: int, id: uuid.UUID, command: BotCommand):
+async def edit_command(request: Request, bot_id: int, id: uuid.UUID, command: BotCommand):
     data = await db.fetchrow(f"SELECT id, cmd_type, cmd_groups, cmd_name, vote_locked, description, args, examples, premium_only, notes, doc_link FROM bot_commands WHERE id = $1 AND bot_id = $2", id, bot_id)
     if data is None:
         return abort(404)
