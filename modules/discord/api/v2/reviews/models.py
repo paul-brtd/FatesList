@@ -40,6 +40,8 @@ class BotReviewList(BaseModel):
     """
     __root__: List[BotReview]
 
+BotReviewList = ForwardRef('BotReviewList')       
+        
 class BotReviews(BaseModel):
     """Represents bot reviews and average stars of a bot on Fates List"""
     reviews: BotReviewList
