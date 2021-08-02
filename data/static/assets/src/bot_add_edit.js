@@ -237,7 +237,7 @@ function testHook(url, type) {
   }
 
 function hideSaveOnAboutTab(id, evt, data) {
-	if(id == "about") {
+	if(id == "about" || id == "actions") {
 		document.querySelector("#save-changes").style.display = "none"
 	}
 	else {
