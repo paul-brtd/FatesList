@@ -16,7 +16,7 @@ router = APIRouter(
 )
 
 @router.post("/{user_id}/bots/{bot_id}/reviews", response_model=APIResponse)
-async def new_review(request: Request, user_id: int, bot_id: int, data: BotReviewPartial):
+async def new_review(request: Request, user_id: int, bot_id: int, data: BotReview):
     minlength = 10
     if len(data.review) < minlength:
         return api_error(
@@ -69,3 +69,8 @@ async def new_review(request: Request, user_id: int, bot_id: int, data: BotRevie
         }
     )
     return api_success()
+
+
+@router.patch("/{user_id}/bots/{bot_id}/reviews/{id}", response_model=APIResponse)
+async def edit_review(request: Request, user_id: int, bot_id: int, id: uuid.UUID data: BotReview):
+    check = await db.fetchrow("SELECT epoch, reply FROM bot_reviews WHERE id = $1 AND bot_id = $2 AND user_id = $3", id, bot_id, user_id)
