@@ -2,7 +2,7 @@ from modules.core import *
 from lynxfall.utils.string import intl_text
 
 from ..base import API_VERSION
-from .models import APIResponse, BotReview, BotReviewFull
+from .models import APIResponse, BotReviewPartial, BotReviews
 
 router = APIRouter(
     prefix = f"/api/v{API_VERSION}",
@@ -17,7 +17,7 @@ router = APIRouter(
 
 @router.get(
     "/bots/{bot_id}/reviews", 
-    response_model = BotReviewFull,
+    response_model = BotReviews,
     dependencies=[
         Depends(id_check("bot"))
     ]
@@ -48,7 +48,7 @@ async def get_bot_reviews(request: Request, bot_id: int, page: Optional[int] = 1
         Depends(user_auth_check)
     ]
 )
-async def new_review(request: Request, user_id: int, bot_id: int, data: BotReview):
+async def new_review(request: Request, user_id: int, bot_id: int, data: BotReviewPartial):
     minlength = 10
     if len(data.review) < minlength:
         return api_error(
@@ -110,7 +110,7 @@ async def new_review(request: Request, user_id: int, bot_id: int, data: BotRevie
         Depends(user_auth_check)
     ]
 )
-async def edit_review(request: Request, user_id: int, bot_id: int, id: uuid.UUID, data: BotReview):
+async def edit_review(request: Request, user_id: int, bot_id: int, id: uuid.UUID, data: BotReviewPartial):
     """Deletes a review. Note that the id and the reply flag is not honored for this endpoint"""
     
     check = await db.fetchrow(
