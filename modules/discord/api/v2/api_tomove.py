@@ -41,16 +41,6 @@ async def get_bot_ws_events(request: Request, bot_id: int):
         events = {} # Nothing
     return events
 
-@router.get(
-    "/bots/{bot_id}/reviews", 
-    response_model = BotReviews
-)
-async def get_bot_reviews(request: Request, bot_id: int, page: Optional[int] = 1):
-    reviews = await parse_reviews(request.app.state.worker_session, bot_id, page = page)
-    if reviews[0] == []:
-        return abort(404)
-    return {"reviews": reviews[0], "average_stars": reviews[1], "pager": {"total_count": reviews[2], "total_pages": reviews[3], "per_page": reviews[4], "from": ((page - 1) * reviews[4]) + 1, "to": (page - 1) * reviews[4] + len(reviews[0])}}
-
 @router.patch(
     "/bots/{bot_id}/reviews/{rid}/votes", 
     response_model = APIResponse,
