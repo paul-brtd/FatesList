@@ -9,7 +9,7 @@
 
 {% macro tip(text) %}
 	<div class="d-inline-block white alert alert-info tip" role="alert">
-		<span class="iconify" data-icon="foundation:lightbulb" data-inline="false" data-height="1.5em"></span>{{text}}
+		<span class="iconify" data-icon="foundation:lightbulb" data-inline="false" data-height="1.5em"></span>{{text|safe}}
 	</div>
 {% endmacro %}
 {% macro optional() %}
@@ -83,6 +83,7 @@
 		.section {margin-top: 20px;}
 		.info-content {text-align: left; margin-left: 30px;}
 		.text-input {border-radius: 4px 4px 4px 4px !important;}
+		.btn {margin-bottom: 15px !important;}
 	</style>
 {% endblock %}
 
@@ -124,29 +125,35 @@
 			</section>
 			<section id="actions-tab" class="tabcontent">
 				<h5 class="white">Critical Actions Needed</h5>
+				{{ tip("These are actions you <em>must</em> take to continue using all features!") }}
 				{% if bot.state in (enums.BotState.denied, enums.BotState.banned) %}
 					{% set actions = True %}
 					{% set appeal_type = "denied" if bot.state == enums.BotState.denied else "banned" %}
 					<h6 class="white section text-center">Bot Appeal</h6>
 					<div class="info-content">
                         			<p class="white">
+							Your bot was {{ appeal_type }} and needs to be appealed in order to continue using Fates List. These are subject to approval and potential retesting of your bot</br/><br/>
 							Did you fix the issues you were asked to fix? <br/>
 							Do you feel like your bot was {{ appeal_type }} for a wrong reason? <br/>
-							Mention your reasoning here! <br/>
+							If so (or even if not), mention your reasoning (<em>convincing</em> argument) here! <br/>
 						</p>
-						{{ textInput(
-							"Write your appeal here",
-							"appeal",
-							"I feel like... because... and thats why my bot should not have been " + appeal_type,
-							in_form=False
-						) }}
 					</div>
+					{{ textInput(
+						"Write your appeal here",
+						"appeal",
+						"I feel like... because... and thats why my bot should not have been " + appeal_type,
+						in_form=False,
+						textarea=True
+					) }}
+					<button class="btn btn-outline-light" onclick="submitAppeal()">Appeal</button>
 				{% endif %}
 				{% if not actions %}
-					<p class="white">No actions needed for your bot</p>
+					<p class="white">All good! You have no critical actions pending (or pending approval)</p>
 				{% endif %}
+				<h5 class="white">Other Actions</h5>
+				<p class="white">Here are some other actions you can take with your bot on Fates List. Most of these can be automated using the API.</p>
+				{{ tip("You should still aim to use the API however for best growth and discoverability. Using the API is <em>mandatory</em> for certification other than some very <em>rare</em> exceptions of high quality and exceeding other requirements for certification") }}
 				<h5 class="white section">Server Stats</h5>
-				<br/>
 				{{ textInput(
 					"Server Count",
 					"server-count",
@@ -373,7 +380,7 @@
 			select_multiple: {{form_values_select_multiple|tojson}}
 		}
 	</script>
-	<script src="/static/assets/prod/bot_add_edit.min.js?v=16"></script>
+	<script src="/static/assets/prod/bot_add_edit.min.js?v=17"></script>
 	<script src="/static/assets/prod/tabs.min.js?v=3" defer></script>
 	<script src="https://cdn.jsdelivr.net/npm/select-pure@latest/dist/index.js"></script>
 {% endblock %}
