@@ -7,11 +7,12 @@ import modules.models.enums as enums
 
 from ..base_models import APIResponse, BaseUser
 
-class BotReviewPartial(BaseModel):
+class BotReview(BaseModel):
+    """Note that the reply and id fields are not honored in edit bot"""
     id: Optional[uuid.UUID] = None
     review: str
     star_rating: float
-    reply: bool
+    reply: Optional[bool] = False
 
     @validator("reply")
     def id_or_no_reply(cls, v, values, **kwargs):
