@@ -2,10 +2,10 @@ from modules.core import *
 from lynxfall.utils.string import intl_text
 
 from ..base import API_VERSION
-from .models import APIResponse, BotReviewPartial
+from .models import APIResponse, BotReview, BotReviewFull
 
 router = APIRouter(
-    prefix = f"/api/v{API_VERSION}/users",
+    prefix = f"/api/v{API_VERSION}",
     include_in_schema = True,
     tags = [f"API v{API_VERSION} - Reviews"],
     dependencies=[
@@ -15,7 +15,39 @@ router = APIRouter(
     ]
 )
 
-@router.post("/{user_id}/bots/{bot_id}/reviews", response_model=APIResponse)
+@router.get(
+    "/bots/{bot_id}/reviews", 
+    response_model = BotReviewFull,
+    dependencies=[
+        Depends(id_check("bot"))
+    ]
+)
+async def get_bot_reviews(request: Request, bot_id: int, page: Optional[int] = 1):
+    reviews = await parse_reviews(request.app.state.worker_session, bot_id, page = page)
+    if reviews[0] == []:
+        return abort(404)
+    return {
+        "reviews": reviews[0],
+        "average_stars": reviews[1],
+        "pager": {
+            "total_count": reviews[2], 
+            "total_pages": reviews[3], 
+            "per_page": reviews[4], 
+            "from": ((page - 1) * reviews[4]) + 1, 
+            "to": (page - 1) * reviews[4] + len(reviews[0])
+        }
+    }
+
+
+@router.post(
+    "/users/{user_id}/bots/{bot_id}/reviews", 
+    response_model=APIResponse,
+    dependencies=[
+        Depends(id_check("bot")),
+        Depends(id_check("user")),
+        Depends(user_auth_check)
+    ]
+)
 async def new_review(request: Request, user_id: int, bot_id: int, data: BotReview):
     minlength = 10
     if len(data.review) < minlength:
@@ -69,7 +101,15 @@ async def new_review(request: Request, user_id: int, bot_id: int, data: BotRevie
     return api_success()
 
 
-@router.patch("/{user_id}/bots/{bot_id}/reviews/{id}", response_model=APIResponse)
+@router.patch(
+    "/users/{user_id}/bots/{bot_id}/reviews/{id}", 
+    response_model=APIResponse,
+    dependencies=[
+        Depends(id_check("bot")),
+        Depends(id_check("user")),
+        Depends(user_auth_check)
+    ]
+)
 async def edit_review(request: Request, user_id: int, bot_id: int, id: uuid.UUID, data: BotReview):
     """Deletes a review. Note that the id and the reply flag is not honored for this endpoint"""
     
@@ -104,7 +144,15 @@ async def edit_review(request: Request, user_id: int, bot_id: int, id: uuid.UUID
     return api_success()
     
     
-@router.delete("/users/{user_id}/bots/{bot_id}/reviews/{id}", response_model = APIResponse)
+@router.delete(
+    "/users/{user_id}/bots/{bot_id}/reviews/{id}", 
+    response_model = APIResponse,
+    dependencies=[
+        Depends(id_check("bot")),
+        Depends(id_check("user")),
+        Depends(user_auth_check)
+    ]
+)
 async def delete_review(request: Request, user_id: int, bot_id: int, id: uuid.UUID):
     check = await db.fetchrow(
         "SELECT reply, replies FROM bot_reviews WHERE id = $1 AND bot_id = $2 AND user_id = $3", 
