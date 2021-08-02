@@ -80,19 +80,40 @@ async def edit_review(request: Request, user_id: int, bot_id: int, id: uuid.UUID
     else:
         staff = is_staff(staff_roles, user.roles, 2)[0]
     if staff:
-        check = await db.fetchrow("SELECT replies FROM bot_reviews WHERE id = $1", id)
+        check = await db.fetchrow("SELECT reply FROM bot_reviews WHERE id = $1", id)
         if check is None:
             return abort(404)
     else:
         check = await db.fetchrow(
-            "SELECT replies FROM bot_reviews WHERE id = $1 AND bot_id = $2 AND user_id = $3", 
-            id, 
+            "SELECT reply FROM bot_reviews WHERE id = $1 AND bot_id = $2 AND user_id = $3", 
+            id,
             bot_id, 
             user_id
         )
-        if check is None:
+        
+        if check is None:       
             return abort(404)
+        
+    await db.execute(
+        "UPDATE bot_reviews SET star_rating = $1, review_text = $2, epoch = epoch || $3 WHERE id = $4", 
+        data.star_rating, 
+        data.review, 
+        [time.time()],
+        id
+    )
 
+    await bot_add_event(
+        bot_id, 
+        enums.APIEvents.review_edit,
+        {
+            "user": str(user_id), 
+            "id": str(id),
+            "star_rating": data.star_rating,
+            "review": data.review
+        }
+    )
+    return api_success()
+    
     
 @router.delete("/users/{user_id}/bots/{bot_id}/reviews/{id}", response_model = APIResponse)
 async def delete_review(request: Request, user_id: int, bot_id: int, id: uuid.UUID):
@@ -103,21 +124,29 @@ async def delete_review(request: Request, user_id: int, bot_id: int, id: uuid.UU
     else:
         staff = is_staff(staff_roles, user.roles, 2)[0]
     if staff:
-        check = await db.fetchrow("SELECT replies FROM bot_reviews WHERE id = $1", id)
+        check = await db.fetchrow("SELECT reply, replies FROM bot_reviews WHERE id = $1", id)
         if check is None:
             return abort(404)
     else:
         check = await db.fetchrow(
-            "SELECT replies FROM bot_reviews WHERE id = $1 AND bot_id = $2 AND user_id = $3", 
+            "SELECT reply, replies FROM bot_reviews WHERE id = $1 AND bot_id = $2 AND user_id = $3", 
             id, 
             bot_id, 
             user_id
         )
         if check is None:
             return abort(404)
-    event_data = await db.fetchrow("SELECT replies, reply, review_text, star_rating FROM bot_reviews WHERE id = $1", id) # Information needed to send an event
     await db.execute("DELETE FROM bot_reviews WHERE id = $1", id)
     for review in event_data["replies"]:
         await db.execute("DELETE FROM bot_reviews WHERE id = $1", review)
-    await bot_add_event(bot_id, enums.APIEvents.review_delete, {"user": str(user_id), "reply": event_data["reply"], "id": str(rid), "star_rating": event_data["star_rating"], "review": event_data["review_text"]})
+        
+    await bot_add_event(
+        bot_id, 
+        enums.APIEvents.review_delete,
+        {
+            "user": str(user_id),
+            "reply": check["reply"],
+            "id": str(id)
+        }
+    )
     return api_success()    
