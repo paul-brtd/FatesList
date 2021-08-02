@@ -137,7 +137,9 @@ def run_site(
         "workers": workers,
         "bind": "0.0.0.0:9999",
         "loglevel": "debug",
-        "pidfile": "data/pids/gunicorn.pid"
+        "pidfile": "data/pids/gunicorn.pid",
+        "preload_app": True,
+        "timeout": 120
     }
     
     app = _fappgen(str(session_id), workers)

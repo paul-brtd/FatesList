@@ -97,19 +97,3 @@ async def edit_review(request: Request, bot_id: int, rid: uuid.UUID, bt: Backgro
     await db.execute("UPDATE bot_reviews SET star_rating = $1, review_text = $2, epoch = $3 WHERE id = $4", rating, review, epoch, rid)
     await bot_add_event(bot_id, enums.APIEvents.review_edit, {"user": str(request.session["user_id"]), "id": str(rid), "star_rating": rating, "review": review, "reply": check["reply"]})
     return await templates.TemplateResponse("message.html", {"request": request, "message": f"Successfully editted your/this review for this bot!<script>window.location.replace('/bot/{bot_id}')</script>"})
-
-@router.get("/{bot_id}/appeal")
-async def resubmit_bot(request: Request, bot_id: int):
-    if "user_id" in request.session.keys():
-        check = await is_bot_admin(bot_id, int(request.session.get("user_id")))
-        if not check:
-            return abort(403)
-    else:
-        return abort(403)
-    context = {
-        "id": str(bot_id),
-        "bot_token": await db.fetchval("SELECT api_token FROM bots WHERE bot_id = $1", bot_id),
-        "state": await db.fetchval("SELECT state FROM bots WHERE bot_id = $1", bot_id)
-    }
-
-    return await templates.TemplateResponse("appeal.html", {"request": request}, context=context)

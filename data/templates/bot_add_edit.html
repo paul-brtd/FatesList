@@ -129,7 +129,7 @@
 				{% if bot.state in (enums.BotState.denied, enums.BotState.banned) %}
 					{% set actions = True %}
 					{% set appeal_type = "denied" if bot.state == enums.BotState.denied else "banned" %}
-					<h6 class="white section text-center">Bot Appeal</h6>
+					<h5 class="white section text-center">Bot Appeal</h5>
 					<div class="info-content">
                         			<p class="white">
 							Your bot was {{ appeal_type }} and needs to be appealed in order to continue using Fates List. These are subject to approval and potential retesting of your bot</br/><br/>
@@ -380,7 +380,7 @@
 			select_multiple: {{form_values_select_multiple|tojson}}
 		}
 	</script>
-	<script src="/static/assets/prod/bot_add_edit.min.js?v=17"></script>
+	<script src="/static/assets/prod/bot_add_edit.min.js?v=19"></script>
 	<script src="/static/assets/prod/tabs.min.js?v=3" defer></script>
 	<script src="https://cdn.jsdelivr.net/npm/select-pure@latest/dist/index.js"></script>
 {% endblock %}

@@ -251,6 +251,7 @@ function submitAppeal() {
 	appeal = document.querySelector("#appeal").value
 	if(appeal.length < 7) {
 		modalShow("Error", "Your appeal must be at least 7 characters long")
+		return
 	}
 	headers = {"Authorization": context.bot_token}
 	json = JSON.stringify({"appeal": appeal})

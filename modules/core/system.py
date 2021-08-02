@@ -288,7 +288,7 @@ def setup_discord():
     client_dbg = FatesDebugBot(intents=intent_dbg)
     logger.info("Discord init is beginning")
     asyncio.create_task(client.start(TOKEN_MAIN))
-    asyncio.create_task(client_server.start(TOKEN_SERVER))
+    asyncio.create_task(client_server.start(TOKEN_SERVER)) 
     return {"main": client, "servers": client_server, "debug": client_dbg}
 
 # Include all the modules by looping through 
@@ -414,6 +414,13 @@ async def init_fates_worker(app, session_id, workers):
     # Begin worker sync
     asyncio.create_task(status(workers, session, app))
     logger.debug("Started status task")
+
+    # Start discord connection waiting
+    try:
+        logger.info("Waiting for discord to come online/ready")
+        await app.state.worker_session.discord.main.wait_until_ready()
+    except Exception as exc:
+        logger.warning(f"{exc}")
 
     # We are now up (probably)
     app.state.worker_session.set_up()
