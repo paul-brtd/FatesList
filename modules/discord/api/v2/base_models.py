@@ -50,3 +50,14 @@ class AccessToken(BaseModel):
     expires_in: int
     current_time: Union[float, int]
 
+        
+class BasePager(BaseModel):
+    """Information given by the API for pagination"""
+    total_count: int
+    total_pages: int
+    per_page: int
+    from_: int
+    to: int
+
+    class Config:
+        fields = {'from_': 'from'}
