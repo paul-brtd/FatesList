@@ -124,6 +124,12 @@
 								Do you feel like your bot was {{ appeal_type }} for a wrong reason? <br/>
 								Mention your reasoning here! <br/>
 							</p>
+							{{ textInput(
+								"Write your appeal here",
+								"appeal",
+								"I feel like... because... and thats why my bot should not have been " + appeal_type,
+								in_form=False
+							) }}
 						</div>
 					{% endif %}
 					{% if not actions %}
