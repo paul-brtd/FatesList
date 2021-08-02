@@ -254,7 +254,7 @@ function submitAppeal() {
 	}
 	headers = {"Authorization": context.bot_token}
 	json = JSON.stringify({"appeal": appeal})
-	$.ajax({
+	jQuery.ajax({
 		url: `/api/v2/bots/${context.bot_id}/appeal`,
 		method: "POST",
 		dataType: "json",
@@ -265,7 +265,7 @@ function submitAppeal() {
 		statusCode: {
 			200: function() {
 				modalShow("Success", "Done posting appeal. Please wait while our staff reviews it!")
-				setTimeout(function(){window.location.replace(`/bot/${context.id}`)}, 3000)
+				setTimeout(function(){window.location.replace(`/bot/${context.bot_id}`)}, 3000)
 			},
 			400: function(data) {
 				modalShow("Error", data.responseJSON.reason)
