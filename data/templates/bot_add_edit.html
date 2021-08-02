@@ -21,6 +21,7 @@
 		<br/>
 		<p class="white info-content">Once you feel like your bot is as good as it can be, click the {{context.mode.title()}} button to save your changes. Make sure that you have previewed your long description beforehand if possible (marked is not yet supported by previews yet) and that you have read our <a class="long-desc-link" href="/fates/rules">rules</a> before {{context.mode}}ing.</p>
 		<button class="btn btn-outline-light btn-save" onclick="submitBot()">{{context.mode}}</button>
+		<p style="margin-bottom: 20px"></p>
 	</section>
 {% endmacro %}
 {% macro textInput(label, id, placeholder, min=None, max=None, required=False, type="text", textarea=False, in_form=True) %}
