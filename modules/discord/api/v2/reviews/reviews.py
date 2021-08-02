@@ -37,9 +37,7 @@ async def new_review(request: Request, user_id: int, bot_id: int, data: BotRevie
     else:
         check = await db.fetchval("SELECT id FROM bot_reviews WHERE id = $1", data.id)
         if not check:
-            return api_error(
-                "You are not allowed to reply to this review as it doesn't actually exist"
-            )
+            return abort(404)
         
     id = uuid.uuid4()
     await db.execute(
@@ -72,15 +70,17 @@ async def new_review(request: Request, user_id: int, bot_id: int, data: BotRevie
 
 
 @router.patch("/{user_id}/bots/{bot_id}/reviews/{id}", response_model=APIResponse)
-async def edit_review(request: Request, user_id: int, bot_id: int, id: uuid.UUID data: BotReview):
+async def edit_review(request: Request, user_id: int, bot_id: int, id: uuid.UUID, data: BotReview):
+    """Deletes a review. Note that the id and the reply flag is not honored for this endpoint"""
+    
     check = await db.fetchrow(
-        "SELECT reply FROM bot_reviews WHERE id = $1 AND bot_id = $2 AND user_id = $3", 
+        "SELECT COUNT(1) FROM bot_reviews WHERE id = $1 AND bot_id = $2 AND user_id = $3", 
         id,
         bot_id, 
         user_id
     )
         
-    if check is None:       
+    if not check:       
         return abort(404)
         
     await db.execute(
