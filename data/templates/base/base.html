@@ -4,6 +4,11 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
+<noscript>
+	<div style="position: fixed; top: 0px; left: 0px; z-index: 30000000; height: 10%; width: 100%; background-color: #FFFFFF">
+		<p>This site needs JavaScript enabled in order to work properly. Please disable NoScript before trying to use this site</p>
+	</div>
+</noscript>
 <style>
     .dropdown-menu {
         left: auto;
@@ -20,15 +25,16 @@
 </script>
 <script src="https://code.iconify.design/1/1.0.7/iconify.min.js"></script>
 {% if not botp %}
-<!-- Primary Meta Tags -->
-<title>Fates List | Discord Bot List</title>
-<meta name="title" content="Fates List | Discord Bot List">
-<meta name="description" content="Find, invite and discover the best Discord bots, now on Fates List.">
+	<!-- Primary Meta Tags -->
+	<title>Fates List | Discord Bot List</title>
+	<meta name="title" content="Fates List | Discord Bot List">
+	<meta name="description" content="Find, invite and discover the best Discord bots, now on Fates List.">
 {% else %}
-<title>{{data.user.username}}</title>
-<meta name="title" content="{{data.user.username}}">
-<meta name="description" content="{{data.description}}">
+	<title>{{data.user.username}}</title>
+	<meta name="title" content="{{data.user.username}}">
+	<meta name="description" content="{{data.description}}">
 {% endif %}
+
 <meta name="keywords" content="discord bot list, fateslist, fates list, bot list, discord list, list of bost, discord bots, fateslist bots, fates list">
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <meta name="language" content="English">

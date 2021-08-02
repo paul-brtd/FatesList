@@ -1,7 +1,36 @@
-function submitBot(e) {
-    modalShow("Adding Bot..", "Please wait for a few minutes...")
+// replaceAll polyfill
+if (!String.prototype.replaceAll) {
+	String.prototype.replaceAll = function(str, newStr){
+		if (Object.prototype.toString.call(str).toLowerCase() === '[object regexp]') {
+			return this.replace(str, newStr);
+		}
+
+		return this.replace(new RegExp(str, 'g'), newStr);
+	};
+}
+
+
+function submitBot() {
+    context.error = null
+    modalShow("Saving", "Please wait for a few moments while we save your bot")
     try {
-    	json = $j('#botform').serializeJSON()
+	json = {}
+	context.form_values.text.forEach(function (key) {
+	    el = document.querySelector(`#${key}`)
+	    json[key] = el.value
+	    if(el.getAttribute("required") != null && !el.value){
+		modalShow("Error", `You must enter a ${key.replaceAll("_", " ")} for your bot!`)
+		context.error = key
+		return
+	    }
+	})
+	if(context.error) {
+		return
+	}
+	context.form_values.select_single.forEach(function (key) {
+	    json[key] = document.querySelector(`#${key}`).value
+	})
+
     	tags = document.querySelector("#tags").values
 	toReplace = {
 	    tags: document.querySelector("#tags").values,
@@ -19,15 +48,14 @@ function submitBot(e) {
 	else {
 	    method = "PUT"
 	}
-	keys = ["long_description_type", "nsfw", "keep_banner_decor", "webhook_type"]
-	keys.forEach(function (key) {
-		json[key] = document.querySelector(`#${key}`).value
+	context.form_values.select_multiple.forEach(function (key) {
+		json[key] = document.querySelector(`#${key}`).values
 	})
 	if(json.tags.length == 0 || json.tags[0] == "") {
 	    modalShow("Error", "You need to select tags for your bot!")
 	    return
 	}
-	$j.ajax({
+	jQuery.ajax({
 		url: `/api/users/${context.user_id}/bots/${json.bot_id}`,
 		method: method,
 		headers: {'Authorization': context.user_token},
@@ -37,7 +65,7 @@ function submitBot(e) {
 			202: function(data) {
 				modalShow("Success", "Your bot (and its changes) has been added to the RabbitMQ queue. Your page should auto refresh to it in a few minutes")
 				setTimeout(setInterval(function(){
-				$j.ajax({
+				jQuery.ajax({
 					url: `/api/bots/${json.bot_id}`,
 					method: "HEAD",
 					statusCode: {
@@ -80,7 +108,7 @@ function deleteBot() {
 		return
 	}
 	modalShow("Deleting Bot..", "Please wait...")
-	$j.ajax({
+	jQuery.ajax({
 		url: `/api/users/${context.user_id}/bots/${context.bot_id}`,
 		method: "DELETE",
 		headers: {'Authorization': context.user_token},
@@ -89,7 +117,7 @@ function deleteBot() {
 			202: function(data) {
 				modalShow("Bot Deleted :(", "This bot has been added to our queue of bots to delete and will be deleted in just a second or two")
 				setTimeout(setInterval(function(){
-				$j.ajax({
+				jQuery.ajax({
 					url: `/api/bots/${context.bot_id}`,
 					method: "GET",
 					statusCode: {
@@ -132,7 +160,7 @@ function previewLongDesc(){
 	if(ld == "") {
 		return
 	}
-        $j.ajax({
+        jQuery.ajax({
            type: 'POST',
            dataType: 'json',
 	   headers: headers,
@@ -141,7 +169,7 @@ function previewLongDesc(){
            data: JSON.stringify({"html_long_description": html, "data": ld}),
 	   statusCode: {
            "200": function(data) {
-               $j("#ld-preview").html(data.html)
+               jQuery("#ld-preview").html(data.html)
            },
            "429": function(data) {
 		modalShow("Rate Limited", data.responseJSON.detail)
@@ -155,23 +183,22 @@ function previewLongDesc(){
 }
 function showToken(but) {
 	
-	token = document.querySelector("#apitok")
-	if(token.style.display == "none") {
-		document.querySelector("#hidden_token").style.display = "none";
-		document.querySelector("#apitok").style.display = "block";
-		document.querySelector("#apitok").innerHTML = context.bot_token
-		but.innerHTML = "Hide API Token"
+	token = document.querySelector("#api-token")
+	if(!token.getAttribute("show")) {
+		token.innerHTML = context.bot_token
+		but.innerHTML = "Hide"
+		token.setAttribute("show", "true")
 	}
 	else {
-                document.querySelector("#hidden_token").style.display = "inline-block";
-                document.querySelector("#apitok").style.display = "none";
-		but.innerHTML = "Show API Token"
+                token.innerHTML = "Click 'Show' to see your bots token";
+		but.innerHTML = "Show"
+		token.removeAttribute('show')
 	}
   }
   function postStats() {
 	server_count = document.querySelector("#server-count").value
   	payload = {"guild_count": server_count}
-	$j.ajax({
+	jQuery.ajax({
 		headers: {'Authorization': context.bot_token},
 		method: 'POST',
 		url: `/api/bots/${context.bot_id}/stats`,
@@ -181,7 +208,7 @@ function showToken(but) {
 	modalShow("Success", "Done posting stats. You may leave this page or continue editing this bot!")
   }
   function regenToken() {
-	$j.ajax({
+	jQuery.ajax({
 	   headers: {'Authorization': context.bot_token},
 	   type: 'PATCH',
 	   url: `/api/bots/${context.bot_id}/token`,
@@ -192,9 +219,9 @@ function showToken(but) {
 	window.location.reload()
   }
 
-function testHook() {
+function testHook(url, type) {
 	headers = {"Authorization": context.bot_token}
-	$j.ajax({
+	jQuery.ajax({
 		url: `/api/bots/${context.bot_id}/testhook`,
 		dataType: "json",
 		headers: headers,
@@ -203,14 +230,17 @@ function testHook() {
 		contentType: 'application/json',
 		statusCode: {
 			200: function(data) {
-				modalShow("Sent Test Query", "If you do not get the test webhook, make sure you have editted the bot with the webhook url first by adding the Webhook URL and THEN clicking Edit and then try again")
-			},
-			400: function(data) {
-				modalShow("Error", data.responseJSON.reason)
-			},
-			404: function(data) {
-				modalShow("Error", data.responseJSON.reason)
+				modalShow("Sent test query", "See the below tip if you didn't get it!")
 			}
 		}
 	})
   }
+
+function hideSaveOnAboutTab(id, evt, data) {
+	if(id == "about") {
+		document.querySelector("#save-changes").style.display = "none"
+	}
+	else {
+		document.querySelector("#save-changes").style.display = "initial"
+	}
+}

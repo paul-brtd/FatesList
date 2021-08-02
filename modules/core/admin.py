@@ -11,8 +11,8 @@ class BotActions():
 
     async def base_check(self) -> Optional[str]:
         """Perform basic checks for adding/editting bots. A check returning None means success, otherwise error should be returned to client"""
-        if self.bot_id == "" or self.prefix == "" or self.description == "" or self.long_description == "" or len(self.prefix) > 9: # Check base fields
-            return "Please ensure you have filled out all the required fields and that your prefix is less than 9 characters."
+        if len(self.prefix) > 9:
+            return "Prefix must be less than 9 characters long"
 
         if not self.vanity:
             return "You must have a vanity for your bot. This can be your username. You can prefix it with _ (underscore) if you don't want the extra growth from it. For example _mewbot would disable the mewbot vanity"
@@ -32,6 +32,9 @@ class BotActions():
 
         if len(self.description) > 110:
             return "Your short description must be shorter than 110 characters" # Short Description Check
+
+        if len(self.long_description) < 300:
+            return "Your long description must be at least 300 characters long"
 
         bot_obj = await get_bot(self.bot_id) # Check if bot exists
 

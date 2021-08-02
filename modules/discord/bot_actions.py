@@ -9,12 +9,9 @@ router = APIRouter(
 allowed_file_ext = [".gif", ".png", ".jpeg", ".jpg", ".webm", ".webp"]
 
 @router.get("/admin/add")
-async def add_bot(request: Request, new: Optional[bool] = False):
+async def add_bot(request: Request):
     if "user_id" in request.session.keys():
-        if new:
-            fn = "bot_add_edit_v2.html"
-        else:
-            fn = "bot_add_edit.html"
+        fn = "bot_add_edit.html"
         context = {
             "mode": "add",
             "tags": [{"text": tag["name"], "value": tag["id"]} for tag in tags_fixed],
@@ -25,7 +22,7 @@ async def add_bot(request: Request, new: Optional[bool] = False):
         return RedirectResponse("/auth/login?redirect=/bot/admin/add&pretty=to add a bot")
 
 @router.get("/{bot_id}/settings")
-async def bot_settings(request: Request, bot_id: int, new: Optional[bool] = False):
+async def bot_settings(request: Request, bot_id: int):
     worker_session = request.app.state.worker_session
     db = worker_session.postgres
     if "user_id" not in request.session.keys():
@@ -72,10 +69,7 @@ async def bot_settings(request: Request, bot_id: int, new: Optional[bool] = Fals
         "features": [{"text": feature["name"], "value": id} for id, feature in features.items()]
     }
     
-    if new:
-        fn = "bot_add_edit_v2.html"
-    else:
-        fn = "bot_add_edit.html"
+    fn = "bot_add_edit.html"
 
     return await templates.TemplateResponse(fn, {"request": request, "tags_fixed": tags_fixed, "bot": bot, "vanity": vanity, "features": features}, context = context)
 

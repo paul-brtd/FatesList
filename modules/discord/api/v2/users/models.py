@@ -35,8 +35,8 @@ class BotMeta(BaseModel):
     webhook_type: Optional[int] = 0
     webhook: Optional[str] = None
     webhook_secret: Optional[str] = None
-    vanity: Optional[str] = None
-    features: List[str]
+    vanity: str
+    features: List[str] = []
     tags: List[str]
 
     @validator("extra_owners")

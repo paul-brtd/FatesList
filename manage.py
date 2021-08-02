@@ -78,6 +78,11 @@ def _fappgen(session_id, workers):
             Enum Reference: https://apidocs.fateslist.xyz/structures/enums.autogen
         """,
         version="0.3.0",
+        terms_of_service="https://fateslist.xyz/fates/tos",
+        license_info={
+            "name": "MIT",
+            "url": "https://github.com/Fates-List/FatesList/blob/main/LICENSE"
+        },
         default_response_class=ORJSONResponse, 
         redoc_url=f"/api/v{API_VERSION}/docs/redoc",
         docs_url=f"/api/v{API_VERSION}/docs/swagger",
