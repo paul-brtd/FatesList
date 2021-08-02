@@ -244,3 +244,35 @@ function hideSaveOnAboutTab(id, evt, data) {
 		document.querySelector("#save-changes").style.display = "initial"
 	}
 }
+
+
+function submitAppeal() {
+	modalShow("Sending appeal...", "Please wait while Fates List sends your appeal real quick!")
+	appeal = document.querySelector("#appeal").value
+	if(appeal.length < 7) {
+		modalShow("Error", "Your appeal must be at least 7 characters long")
+	}
+	headers = {"Authorization": context.bot_token}
+	json = JSON.stringify({"appeal": appeal})
+	$.ajax({
+		url: `/api/v2/bots/${context.bot_id}/appeal`,
+		method: "POST",
+		dataType: "json",
+		processData: false,
+		contentType: 'application/json',
+		data: json,
+		headers: headers,
+		statusCode: {
+			200: function() {
+				modalShow("Success", "Done posting appeal. Please wait while our staff reviews it!")
+				setTimeout(function(){window.location.replace(`/bot/${context.id}`)}, 3000)
+			},
+			400: function(data) {
+				modalShow("Error", data.responseJSON.reason)
+			},
+			404: function(data) {
+				modalShow("Error", "This bot could not be found. Has it been deleted?")
+			},
+		}
+	})
+}
