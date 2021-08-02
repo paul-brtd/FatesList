@@ -27,8 +27,6 @@ class BotMaintenance(BotMaintenancePartial):
     epoch: Optional[str] = None
     fail: Optional[bool] = False
 
-BotReviewList = ForwardRef('BotReviewList')
-
 class PrevResponse(BaseModel):
     """
     Represents a response from the Preview API
