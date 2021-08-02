@@ -4,6 +4,7 @@
 {% set form_values_text = [] %}
 {% set form_values_select_single = [] %}
 {% set form_values_select_multiple = [] %}
+{% set actions = False %}
 
 
 {% macro tip(text) %}
@@ -111,6 +112,20 @@
 					<p class="white">Username: {{bot.user.username}}</p>
 					<p class="white">Bot State: {{enums.BotState(bot.state).__doc__}} ({{bot.state}})</p>
 					<p class="white"><u>Owners of this bot</u><br/> {{context.owners_html|safe}}</p>
+				</div>
+				<h5 class="white">Actions Needed</h5>
+				<div class="info-content">
+					{% if bot.state in (enums.BotState.denied, enums.BotState.banned) %}
+						{% set actions = True %}
+						<h6 class="white section">Bot Appeal</h6>
+                        			<p class="white">
+							Did you fix the issues you were asked to fix? <br/>
+							Do you feel like your bot was denied for a wrong reason? Mention your reasoning here!
+						</p>
+					{% endif %}
+					{% if not actions %}
+						<p class="white">No actions needed for your bot</p>
+					{% endif %}
 				</div>
 				<h5 class="white">API Token</h5>
 				<code class="white" id="api-token">Click 'Show' to see your bots token</code>
