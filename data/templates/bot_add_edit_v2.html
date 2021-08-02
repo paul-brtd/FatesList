@@ -101,7 +101,7 @@
 				{{ tab("basic-settings", name="Basics", default=True if context.mode == "add" else False) }}
 				{{ tab("webhook", name="Webhooks") }}
 				{{ tab("links", name="Links") }}
-				{{ tab("banner", name="Banners") }}
+				{{ tab("extras", name="Extras") }}
 			</div>
 			{% if context.mode == "edit" %}
 			<section id="about-tab" class="tabcontent">
@@ -293,7 +293,7 @@
 				<button class="btn btn-outline-light" style="margin-bottom: 10px;" onclick="testHook()">Test Webhook</button>
 				{{ tip("Didn't get anything? Make sure you have saved your bot first before clicking Test Webhook. Also check your firewall and network settings as well") }}
 			</section>
-			<section id="banner-tab" class="tabcontent">
+			<section id="extras-tab" class="tabcontent">
 				{{ optional() }}
 				<p class="white info-content">Banners allow you to make your bot page look better and more higher quality. There are two banners you can set: one for your bots card and one for your bots page. The banner URL you post here must give a content type of image/**** when a HEAD or a GET request is sent to them (most image services do this). Banner pages also has a 'Keep Banner Decorations/Artifacts' option for some banners that don't work well without it however this does look a bit ugly and so should be disabled if possible</p>
 				{{ selectInput(
@@ -322,13 +322,19 @@
 					"banner_page",
 					"Banner URL here"
 				) }}
+				{{ tip("Custom CSS is a great way to help improve your bots growth along with banners and vote rewards using Webhooks!") }}
+				{{ textInput(
+					"Custom CSS",
+					"css",
+					"See w3schools if you need a tutorial on CSS. See our API Documentation for more informatiom about what CSS Fates List has and allows! Have fun :)",
+					textarea=True
+				) }}
 			</section>
 		</div>
 	</div>
 	{{ save() }}	
 	<!-- Javascript here -->
 	<script>
-		$j = jQuery.noConflict()
 		var context = {{context|tojson}}
 		context.default_tab_button = "{% if context.mode == 'add' %}basic-settings-button{% else %}about-button{% endif %}"
 		context.form_values = {
@@ -337,7 +343,7 @@
 			select_multiple: {{form_values_select_multiple|tojson}}
 		}
 	</script>
-	<script src="/static/assets/prod/bot_add_edit_v2.min.js?v=11"></script>
+	<script src="/static/assets/prod/bot_add_edit_v2.min.js?v=12"></script>
 	<script src="/static/assets/prod/tabs.min.js?v=3" defer></script>
 	<script src="https://cdn.jsdelivr.net/npm/select-pure@latest/dist/index.js"></script>
 {% endblock %}

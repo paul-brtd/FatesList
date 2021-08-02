@@ -33,7 +33,6 @@ function submitBot() {
 	    modalShow("Error", "You need to select tags for your bot!")
 	    return
 	}
-	return
 	jQuery.ajax({
 		url: `/api/users/${context.user_id}/bots/${json.bot_id}`,
 		method: method,
