@@ -19,18 +19,6 @@ import enums  # as enums (for libraries)
 
 from .base_models import *
 
-
-class BasePager(BaseModel):
-    """Information given by the API for pagination"""
-    total_count: int
-    total_pages: int
-    per_page: int
-    from_: int
-    to: int
-
-    class Config:
-        fields = {'from_': 'from'}
-
 class BotMaintenancePartial(BaseModel):
     type: int = 1
     reason: Optional[str] = None
@@ -40,35 +28,6 @@ class BotMaintenance(BotMaintenancePartial):
     fail: Optional[bool] = False
 
 BotReviewList = ForwardRef('BotReviewList')
-
-class BotReview(BaseModel):
-    id: uuid.UUID
-    reply: bool
-    user_id: str
-    star_rating: float
-    review: str
-    review_upvotes: list
-    review_downvotes: list
-    flagged: bool
-    epoch: list
-    time_past: str
-    user: BaseUser
-    replies: Optional[BotReviewList] = []
-
-class BotReviewList(BaseModel):
-    """
-    Represents a list of bot reviews on Fates List
-    """
-    __root__: List[BotReview]
-
-class BotReviews(BaseModel):
-    """Represents bot reviews and average stars of a bot on Fates List"""
-    reviews: BotReviewList
-    average_stars: float
-    pager: BasePager
-
-BotReview.update_forward_refs()
-BotReviews.update_forward_refs()
 
 class PrevResponse(BaseModel):
     """
