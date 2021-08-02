@@ -83,38 +83,6 @@ async def vote_review_api(request: Request, bot_id: int, rid: uuid.UUID, vote: B
     await bot_add_event(bot_id, enums.APIEvents.review_vote, {"user": str(vote.user_id), "id": str(rid), "star_rating": bot_rev["star_rating"], "reply": bot_rev["reply"], "review": bot_rev["review_text"], "upvotes": len(bot_rev["review_upvotes"]), "downvotes": len(bot_rev["review_downvotes"]), "upvote": vote.upvote})
     return api_success()
 
-@router.delete(
-    "/users/{user_id}/bots/{bot_id}/reviews/{rid}", 
-    response_model = APIResponse,
-    dependencies=[
-        Depends(user_auth_check)
-    ]
-)
-async def delete_review(request: Request, user_id: int, bot_id: int, rid: uuid.UUID):
-    guild = client.get_guild(main_server)
-    user = guild.get_member(user_id)
-    if user is None:
-        staff = False 
-    else:
-        staff = is_staff(staff_roles, user.roles, 2)[0]
-    if staff:
-        check = await db.fetchrow("SELECT replies FROM bot_reviews WHERE id = $1", rid)
-        if check is None:
-            return api_error("You are not allowed to delete this review")
-    else:
-        check = await db.fetchrow(
-            "SELECT replies FROM bot_reviews WHERE id = $1 AND bot_id = $2 AND user_id = $3", 
-            rid, 
-            bot_id, 
-            user_id
-        )
-        if check is None:
-            return api_error("You are not allowed to delete this review")
-    event_data = await db.fetchrow("SELECT reply, review_text, star_rating FROM bot_reviews WHERE id = $1", rid) # Information needed to send an event
-    await db.execute("DELETE FROM bot_reviews WHERE id = $1", rid)
-    await bot_add_event(bot_id, enums.APIEvents.review_delete, {"user": str(user_id), "reply": event_data["reply"], "id": str(rid), "star_rating": event_data["star_rating"], "review": event_data["review_text"]})
-    return api_success()
-
 @router.get(
     "/bots/{bot_id}/commands", 
     response_model = BotCommandsGet
