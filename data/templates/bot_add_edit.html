@@ -99,7 +99,7 @@
 			<div class="tab">
 				{% if context.mode == "edit" %}
 					{{ tab("about", default=True) }}
-					{{ tab("actions", default=True) }}
+					{{ tab("actions") }}
 				{% endif %}
 				{{ tab("basic-settings", name="Basics", default=True if context.mode == "add" else False) }}
 				{{ tab("webhook", name="Webhooks") }}
@@ -121,6 +121,30 @@
 				<h6 class="white section" id="regen-token-header">Regenerate</h6>
 				<p class="white"><em>Accidentally</em> leaked your API token? Just be sure to change the token everywhere you use it and make sure it doesn't happen again!</p>
 				<button onclick='regenToken()' class="btn btn-outline-light">Regenerate</button>
+			</section>
+			<section id="actions-tab" class="tabcontent">
+				<h5 class="white">Critical Actions Needed</h5>
+				{% if bot.state in (enums.BotState.denied, enums.BotState.banned) %}
+					{% set actions = True %}
+					{% set appeal_type = "denied" if bot.state == enums.BotState.denied else "banned" %}
+					<h6 class="white section text-center">Bot Appeal</h6>
+					<div class="info-content">
+                        			<p class="white">
+							Did you fix the issues you were asked to fix? <br/>
+							Do you feel like your bot was {{ appeal_type }} for a wrong reason? <br/>
+							Mention your reasoning here! <br/>
+						</p>
+						{{ textInput(
+							"Write your appeal here",
+							"appeal",
+							"I feel like... because... and thats why my bot should not have been " + appeal_type,
+							in_form=False
+						) }}
+					</div>
+				{% endif %}
+				{% if not actions %}
+					<p class="white">No actions needed for your bot</p>
+				{% endif %}
 				<h5 class="white section">Server Stats</h5>
 				<br/>
 				{{ textInput(
@@ -142,30 +166,6 @@
 				<h5 class="white section">Delete Bot</h5>
 				<p class="white"><span class="red">Warning:</span> This <em>cannot</em> be undone and you <em>will</em> lose any perks your bot may have such as certification and any votes your bot may have. Think twice before proceeding...</p>
 				<button class="btn btn-danger" onclick="deleteBot()">Delete Bot</button>
-			</section>
-			<section id="actions-tab" class="tabcontent">
-				<h5 class="white">Actions Needed</h5>
-					{% if bot.state in (enums.BotState.denied, enums.BotState.banned) %}
-						{% set actions = True %}
-						{% set appeal_type = "denied" if bot.state == enums.BotState.denied else "banned" %}
-						<h6 class="white section text-center">Bot Appeal</h6>
-						<div class="info-content">
-                        				<p class="white">
-								Did you fix the issues you were asked to fix? <br/>
-								Do you feel like your bot was {{ appeal_type }} for a wrong reason? <br/>
-								Mention your reasoning here! <br/>
-							</p>
-							{{ textInput(
-								"Write your appeal here",
-								"appeal",
-								"I feel like... because... and thats why my bot should not have been " + appeal_type,
-								in_form=False
-							) }}
-						</div>
-					{% endif %}
-					{% if not actions %}
-						<p class="white">No actions needed for your bot</p>
-					{% endif %}
 			</section>
 			{% endif %}
 			<section id="basic-settings-tab" class="tabcontent">
