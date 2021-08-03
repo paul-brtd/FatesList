@@ -1,5 +1,7 @@
 from pydantic import BaseModel
 
+from typing import List, Dict, Optional
+
 import modules.models.enums as enums
 
 from ..base_models import APIResponse
