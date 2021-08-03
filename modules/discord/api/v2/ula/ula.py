@@ -255,7 +255,7 @@ async def get_bot(request: Request, bot_id: int):
                         response = await res.text()
                     get_lists[blist["url"]] = {"got": True, "reason": None, "response": response, "status_code": rc.status, "api_url": api_url, "api_path": api_path, "success": rc.status < 400, "method": api["method"]}
         except Exception as e:
-            get_lists[blist["url"]] = {"got": False, "reason": f"Could not connect/find server: {e}", "response": None, "status_code": None, "api_url": api_url, "api_path": api_path, "success": False, "method": api["method"}
+            get_lists[blist["url"]] = {"got": False, "reason": f"Could not connect/find server: {e}", "response": None, "status_code": None, "api_url": api_url, "api_path": api_path, "success": False, "method": api["method"]}
     return get_lists
 
 @router.post("/bots/{bot_id}/votes/check")
