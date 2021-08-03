@@ -8,12 +8,9 @@ router = APIRouter(
     prefix = f"/api/v{API_VERSION}",
     include_in_schema = True,
     tags = [f"API v{API_VERSION} - Reviews"],
-    dependencies=[
-        Depends(id_check("bot")),
-        Depends(id_check("user")),
-        Depends(user_auth_check)
-    ]
 )
+
+minlength = 10
 
 @router.get(
     "/bots/{bot_id}/reviews", 
@@ -49,7 +46,6 @@ async def get_bot_reviews(request: Request, bot_id: int, page: Optional[int] = 1
     ]
 )
 async def new_review(request: Request, user_id: int, bot_id: int, data: BotReviewPartial):
-    minlength = 10
     if len(data.review) < minlength:
         return api_error(
             f"Reviews must be at least {minlength} characters long"
@@ -112,7 +108,11 @@ async def new_review(request: Request, user_id: int, bot_id: int, data: BotRevie
 )
 async def edit_review(request: Request, user_id: int, bot_id: int, id: uuid.UUID, data: BotReviewPartial):
     """Deletes a review. Note that the id and the reply flag is not honored for this endpoint"""
-    
+    if len(data.review) < minlength:
+        return api_error(
+            f"Reviews must be at least {minlength} characters long"
+        )
+
     check = await db.fetchrow(
         "SELECT COUNT(1) FROM bot_reviews WHERE id = $1 AND bot_id = $2 AND user_id = $3", 
         id,
@@ -165,7 +165,7 @@ async def delete_review(request: Request, user_id: int, bot_id: int, id: uuid.UU
         return abort(404)
     
     await db.execute("DELETE FROM bot_reviews WHERE id = $1", id)
-    for review in event_data["replies"]:
+    for review in check["replies"]:
         await db.execute("DELETE FROM bot_reviews WHERE id = $1", review)
         
     await bot_add_event(

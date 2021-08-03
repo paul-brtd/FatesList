@@ -247,3 +247,8 @@ function newReview(reply, root) {
 		}
 	})
 }
+
+function editReview(id) {
+	rating = document.querySelector(`#r-${id}-edit-slider`).value
+	text = document.querySelector(`#r-${id}-edit-text`).value
+}

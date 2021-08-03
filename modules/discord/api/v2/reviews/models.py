@@ -1,5 +1,5 @@
 import uuid
-from typing import List, Optional
+from typing import List, Optional, ForwardRef
 
 from pydantic import BaseModel, validator
 
@@ -19,6 +19,8 @@ class BotReviewPartial(BaseModel):
         if v and not id:
             raise ValueError("ID must be provided if reply is set")
         return v
+
+BotReviewList = ForwardRef('BotReviewList')
 
 class BotReview(BaseModel):
     id: uuid.UUID
@@ -40,8 +42,6 @@ class BotReviewList(BaseModel):
     """
     __root__: List[BotReview]
 
-BotReviewList = ForwardRef('BotReviewList')       
-        
 class BotReviews(BaseModel):
     """Represents bot reviews and average stars of a bot on Fates List"""
     reviews: BotReviewList
