@@ -91,7 +91,7 @@ function commandModal(id) {
 function getCommands(bot_id) {
 	commandsTab = document.querySelector("#commands-tab")
 	error = document.querySelector("#commands-error")
-	$.get({
+	jQuery.get({
 		url: `/api/bots/${context.id}/commands?lang=${context.site_lang}`,
 		statusCode: {
 			404: function(data) {
@@ -109,7 +109,7 @@ function getCommands(bot_id) {
 				}
 				data = sortjson(data_u);
 				commands = `<p style='font-size: 30px'>Commands List</p><p>Click on a category to expand/collapse it</p>`
-				$.each(data, function(group, gdata) {
+				jQuery.each(data, function(group, gdata) {
 					if(group == "default")
 						group = "Miscellaneous" 
 					commands += `
@@ -162,7 +162,7 @@ function getCommands(bot_id) {
 setTimeout(function(){getCommands(context.id)}, 700)
 
 function deleteReview(rev_id) {
-	$.ajax({
+	jQuery.ajax({
 		type: 'DELETE',
 		url: `/api/users/${context.user_id}/${context.type}s/${context.id}/reviews/${rev_id}`,
 		headers: {"Authorization": context.user_token},
@@ -189,7 +189,7 @@ function voteReview(rev_id, upvote) {
 	else {
 		vote_type = "downvote"
 	}	
-	$.ajax({
+	jQuery.ajax({
 		method: 'PATCH',
 		url: `/api/${context.type}s/${context.id}/reviews/${rev_id}/votes`,
 		data: JSON.stringify({"upvote": upvote, "user_id": context.user_id}),
@@ -226,7 +226,7 @@ function newReview(reply, root) {
 
 	review = document.querySelector(`#review${rev_id}`).value
 	star_rating = document.querySelector(`#star_rating${rev_id}`).value
-	$.ajax({
+	jQuery.ajax({
 		method: 'POST',
 		url: `/api/users/${context.user_id}/${context.type}s/${context.id}/reviews`,
 		data: JSON.stringify({"reply": reply, "id": root, "review": review, "star_rating": star_rating}),
@@ -249,6 +249,27 @@ function newReview(reply, root) {
 }
 
 function editReview(id) {
+	modalShow("Editting Review", "Please wait while Fates List edits your review...")
 	rating = document.querySelector(`#r-${id}-edit-slider`).value
 	text = document.querySelector(`#r-${id}-edit-text`).value
+	jQuery.ajax({
+		method: 'PATCH',
+		url: `/api/users/${context.user_id}/${context.type}s/${context.id}/reviews/${id}`,
+		data: JSON.stringify({"review": review, "star_rating": star_rating}),
+		headers: {"Authorization": context.user_token},
+		processData: false,
+		contentType: 'application/json',
+		statusCode: {
+			200: function(data) {
+				modalShow("Success", "Successfully editted your review!")
+				setTimeout(() => window.location.reload(), 1500)
+			},
+			400: function(data) {
+				modalShow("Error", data.responseJSON.reason);
+			},
+			401: function(data) {
+				modalShow("Unauthorized", "We could not authenticate you, make sure you are logged in")
+			}
+		}
+	})
 }
