@@ -20,3 +20,7 @@ class Endpoint(BaseModel):
     feature: enums.ULAFeature
     api_path: str
     supported_fields: dict
+
+class Supported:
+    stat_posts = ("server_count", "shard_count", "shards", "shard_id")
+    get_user_voted = ('user_id', 'res_voted') # Get User Votes       
