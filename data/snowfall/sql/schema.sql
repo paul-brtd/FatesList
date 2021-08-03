@@ -282,8 +282,3 @@ CREATE TABLE bot_list_api (
 	api_path TEXT NOT NULL,
 	CONSTRAINT url_constraint FOREIGN KEY (url) REFERENCES bot_list(url) ON DELETE CASCADE ON UPDATE CASCADE -- Autoupdate
 );
-
-CREATE TABLE ula_user (
-	user_id BIGINT NOT NULL,
-	api_token TEXT NOT NULL UNIQUE
-);
