@@ -1,18 +1,12 @@
 from modules.core import *
 from ..base import API_VERSION
-from .models import APIResponse, Lists, Stats, BList, Endpoint
+from .models import APIResponse, Lists, Stats, BList, Endpoint, Supported
 
 router = APIRouter(
     prefix = f"/api/v{API_VERSION}/ula",
     include_in_schema = True,
     tags = [f"API v{API_VERSION} - ULA"]
 )
-
-class Supported:
-    stat_posts = ("server_count", "shard_count", "shards", "shard_id")
-    get_user_voted = ('user_id', 'res_voted') # Get User Votes
-# Base Models
-
 
 @router.get("/list/{url}")
 async def get_list(request: Request, url: str):
