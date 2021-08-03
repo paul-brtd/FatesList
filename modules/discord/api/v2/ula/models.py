@@ -11,7 +11,10 @@ class Lists(BaseModel):
 
 class Stats(Lists):
     server_count: int
-    shard_count: int
+    shard_count: Optional[int] = None
+    user_count: Optional[int] = None
+    shards: Optional[List[int]] = None
+    shard_id: Optional[int] = None
 
 class BList(BaseModel):
     url: str
@@ -30,5 +33,5 @@ class Endpoint(BaseModel):
     supported_fields: dict
 
 class Supported:
-    stat_posts = ("server_count", "shard_count", "shards", "shard_id")
-    get_user_voted = ('user_id', 'res_voted') # Get User Votes       
+    post_stats = ("server_count", "shard_count", "shards", "shard_id", 'bot_id', "user_count")
+    get_user_voted = ('user_id', 'voted') # Get User Votes

@@ -11,7 +11,7 @@ router = APIRouter(
 @router.get("/list/{url}")
 async def get_list(request: Request, url: str):
     lst = await db.fetchrow(
-        "SELECT icon, url, api_url, api_docs, discord, description, supported_features, owners, queue FROM ula_bot_list WHERE url = $3",
+        "SELECT icon, url, api_url, api_docs, discord, description, supported_features, owners, state FROM bot_list WHERE url = $1",
         url
     )
 
@@ -148,12 +148,12 @@ async def post_stats(request: Request, bot_id: int, stats: Stats):
     posted_lists = {}
     for blist in stats.lists.keys():
 
-        api_url = await db.fetchrow("SELECT api_url, queue FROM bot_list WHERE url = $1", blist)
+        api_url = await db.fetchrow("SELECT api_url, state FROM bot_list WHERE url = $1", blist)
         if api_url is None:
             posted_lists[blist] = {"posted": False, "reason": "List does not exist", "response": None, "status_code": None, "api_url": None, "api_path": None, "sent_data": None, "success": False, "method": None}
             continue 
     
-        if api_url["queue"]:
+        if api_url["state"] != enums.ULAState.approved:
             posted_lists[blist] = {"posted": False, "reason": "List still in queue", "response": None, "status_code": None, "api_url": None, "api_path": None, "sent_data": None, "success": False, "method": None}
 
         api = await db.fetchrow(
@@ -165,7 +165,7 @@ async def post_stats(request: Request, bot_id: int, stats: Stats):
             posted_lists[blist] = {"posted": False, "reason": "List doesn't support requested method", "response": None, "status_code": None, "api_url": None, "api_path": None, "sent_data": None, "success": False, "method": None}
             continue # List doesn't support requested method
         
-        api_url = api_url['api_url']
+        api_url = api_url['api_url'].replace("https://", "")
         sf = api["supported_fields"]
         sf = orjson.loads(sf)
         # Get corresponding list values for server_count and shard_count
@@ -173,7 +173,10 @@ async def post_stats(request: Request, bot_id: int, stats: Stats):
         for key in Supported.post_stats:
             field = sf.get(key)
             if field:
-                send_json[field] = stats.__dict__[key]
+                if key == "bot_id":
+                    send_json[field] = bot_id
+                elif stats.__dict__.get(key) is not None:
+                    send_json[field] = stats.__dict__[key]
             else:
                 continue
         
@@ -183,13 +186,13 @@ async def post_stats(request: Request, bot_id: int, stats: Stats):
         try:
             async with aiohttp.ClientSession() as sess:
                 f = getattr(sess, f.name)
-                async with f("https://" + api_url + api_path, json = send_json, headers = {"Authorization": str(stats.lists[blist])}, timeout = 15) as res:
+                async with f(f"https://{api_url}{api_path}", json = send_json, headers = {"Authorization": str(stats.lists[blist])}, timeout = 15) as res:
                     try:
                         response = await res.json()
                     except Exception:
                         response = await res.text()
 
-                    posted_lists[blist] = {"posted": True, "reason": None, "response": response, "status_code": rc.status, "api_url": api_url, "api_path": api_path, "sent_data": send_json, "success": rc.status == 200, "method": api["method"]}
+                    posted_lists[blist] = {"posted": True, "reason": None, "response": response, "status_code": res.status, "api_url": api_url, "api_path": api_path, "sent_data": send_json, "success": res.status < 400, "method": api["method"]}
 
         except Exception as e:
             posted_lists[blist] = {"posted": False, "reason": f"Could not connect/find server: {e}", "response": None, "status_code": None, "api_url": api_url, "api_path": api_path, "sent_data": send_json, "success": False, "method": api["method"]}
@@ -214,18 +217,18 @@ async def get_bot(request: Request, bot_id: int):
             get_lists[blist["url"]] = {"got": False, "reason": "List doesn't support requested method", "response": None, "status_code": None, "api_url": None, "api_path": None, "success": False, "method": None}
             continue
         api_path = api['api_path'].replace("{bot_id}", str(bot_id)) # Get the API path
-        api_url = blist["api_url"]
+        api_url = blist["api_url"].replace("https://", "")
 
         f = enums.ULAMethod(api["method"]) 
         try:
             async with aiohttp.ClientSession() as sess:
                 f = getattr(sess, f.name)
-                async with f("https://" + api_url + api_path, timeout = 15) as res:
+                async with f(f"https://{api_url}{api_path}", timeout = 15) as res:
                     try: 
                         response = await res.json()
                     except Exception:
                         response = await res.text()
-                    get_lists[blist["url"]] = {"got": True, "reason": None, "response": response, "status_code": rc.status, "api_url": api_url, "api_path": api_path, "success": rc.status < 400, "method": api["method"]}
+                    get_lists[blist["url"]] = {"got": True, "reason": None, "response": response, "status_code": res.status, "api_url": api_url, "api_path": api_path, "success": res.status < 400, "method": api["method"]}
         except Exception as e:
             get_lists[blist["url"]] = {"got": False, "reason": f"Could not connect/find server: {e}", "response": None, "status_code": None, "api_url": api_url, "api_path": api_path, "success": False, "method": api["method"]}
     return get_lists
@@ -250,18 +253,12 @@ async def get_user_voted(request: Request, bot_id: int, user_id: int, lists: Lis
         sf = api["supported_fields"]
         sf = orjson.loads(sf)
         # Get corresponding list values for guv
-        qkey = ""
-        jsonkey = ""
         for key in Supported.get_user_voted:
             field = sf.get(key)
-            if field and key == "res_voted":
+            if field and key == "voted":
                 jsonkey = field
-            elif field and key == "user_id":
-                qkey = field
-            else:
-                continue
-        
-        if jsonkey == "":
+                break
+        else:
             guv_lists[blist] = {"voted": False, "reason": "Required key jsonkey not defined on list", "response": None}
             continue
 
@@ -270,8 +267,6 @@ async def get_user_voted(request: Request, bot_id: int, user_id: int, lists: Lis
         f = enums.ULAMethod(api["method"])
         try:
             url = f"https://{api_url}{api_path}"
-            if qkey:
-                url += f"?{qkey}={user_id}"
             async with aiohttp.ClientSession() as sess:
                 f = getattr(sess, f.name)
                 async with f(url, headers = {"Authorization": str(lists.lists[blist])}, timeout = 15) as res:
