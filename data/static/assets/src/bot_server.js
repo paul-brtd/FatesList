@@ -250,8 +250,8 @@ function newReview(reply, root) {
 
 function editReview(id) {
 	modalShow("Editting Review", "Please wait while Fates List edits your review...")
-	rating = document.querySelector(`#r-${id}-edit-slider`).value
-	text = document.querySelector(`#r-${id}-edit-text`).value
+	star_rating = document.querySelector(`#r-${id}-edit-slider`).value
+	review = document.querySelector(`#r-${id}-edit-text`).value
 	jQuery.ajax({
 		method: 'PATCH',
 		url: `/api/users/${context.user_id}/${context.type}s/${context.id}/reviews/${id}`,
@@ -269,6 +269,9 @@ function editReview(id) {
 			},
 			401: function(data) {
 				modalShow("Unauthorized", "We could not authenticate you, make sure you are logged in")
+			},
+			422: function(data) {
+				modalShow("Internal Error", JSON.stringify(data.responseJSON))
 			}
 		}
 	})
