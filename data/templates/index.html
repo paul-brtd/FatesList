@@ -52,7 +52,10 @@
 		{{ flCard(bot, False, 'bot') }}
 		{% endfor %}
 	</div>
-	<script src="/static/assets/prod/index.min.js">
+	<script>
+		var context = {{context|tojson}}
+	</script> 
+	<script src="/static/assets/prod/index.min.js?v=2">
 	</script>
 	{% endblock %}
 	{% block footer %}

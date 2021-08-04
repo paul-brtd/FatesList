@@ -184,7 +184,7 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
 
         success_msg = f"Bot Approved Successfully! Invite it to the main server with https://discord.com/oauth2/authorize?client_id={bot_id}&scope=bot&guild_id={guild.id}&disable_guild_select=true&permissions=0"
         tool = admin_tool.approve_bot(data.reason)
-        await db.execute("UPDATE bots SET guild_count = $1", approx_guild_count)
+        await db.execute("UPDATE bots SET guild_count = $1 WHERE bot_id = $2", approx_guild_count, bot_id)
 
     # Deny
     elif data.op == enums.BotAdminOp.deny:

@@ -1,6 +1,6 @@
 		function randomBotRoll() {
-			$.ajax({
-				url: "/api/bots/0/random?lang={{context.site_lang}}",
+			jQuery.ajax({
+				url: `/api/bots/0/random?lang=${context.site_lang}`,
 				method: "GET",
 				statusCode: {
 					429: function(data) {
