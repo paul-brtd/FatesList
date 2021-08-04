@@ -4,7 +4,7 @@ import bleach
 from lxml.html.clean import Cleaner
 
 from modules.core import *
-from modules.discord.admin import admin_dashboard
+from modules.discord.index import stats_page
 
 from ..base import API_VERSION
 from .models import (APIResponse, BotAdminOpEndpoint, BotQueueGet, IDResponse,
@@ -28,7 +28,7 @@ def ping():
 @router.get("/console")
 async def botlist_admin_console_api(request: Request):
     """API to get raw admin console info"""
-    return await admin_dashboard(request) # Just directly render the admin dashboard. It knows what to do
+    return await stats_page(request) 
 
 @router.get("/err/{code}", response_model = APIResponse)
 async def debug_error_tester(request: Request, code: int):

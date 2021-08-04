@@ -157,16 +157,14 @@ async def login_confirm(request: Request, code: str, state: str, site_redirect: 
                         return await templates.e(request, json["reason"])
                     return await templates.e(request, reason = f"Please note that {json['ban']['desc']}", main=f'You have been {json["ban"]["type"]} banned on Fates List')
                 
-                session = {}
-                
                 user = json["user"]
-                session["scopes"] = orjson.dumps(json["scopes"]).decode("utf-8")
-                session["access_token"] = orjson.dumps(json["access_token"]).decode("utf-8")
-                session["user_id"] = int(user["id"])
-                session["username"], session["avatar"] = user["username"], user["avatar"]
-                session["user_token"], session["user_css"], session["js_allowed"] = json["token"], json["css"], json["js_allowed"]
-                session["site_lang"] = json["site_lang"]
-                request.session |= session
+                request.session["scopes"] = orjson.dumps(json["scopes"]).decode("utf-8")
+                request.session["access_token"] = orjson.dumps(json["access_token"]).decode("utf-8")
+                request.session["user_id"] = int(user["id"])
+                request.session["username"], request.session["avatar"] = user["username"], user["avatar"]
+                request.session["user_token"], request.session["user_css"] = json["token"], json["css"] 
+                request.session["js_allowed"] = json["js_allowed"]
+                request.session["site_lang"] = json["site_lang"]
                 return HTMLResponse(f"<script>window.location.replace('{site_redirect}')</script>")
   
 

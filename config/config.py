@@ -61,7 +61,7 @@ md_extensions = [
 ]
 
 auth_namespaces = {
-    "site": "https://fateslist.xyz/auth/login/confirm"
+    "site": "https://fateslist.xyz/fates/login-confirm"
 }
 
 staff_roles = {
