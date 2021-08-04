@@ -156,20 +156,21 @@ async def login_confirm(request: Request, code: str, state: str, site_redirect: 
                     if not json["banned"]:
                         return await templates.e(request, json["reason"])
                     return await templates.e(request, reason = f"Please note that {json['ban']['desc']}", main=f'You have been {json["ban"]["type"]} banned on Fates List')
-     
-                request.session["scopes"] = orjson.dumps(json["scopes"]).decode("utf-8")
-                request.session["access_token"] = orjson.dumps(json["access_token"]).decode("utf-8")
-                request.session["user_id"] = int(json["user"]["id"])
-                request.session["username"] = json["user"]["username"]
-                request.session["avatar"] = json["user"]["avatar"]
-                request.session["user_token"] = json["token"]
-                request.session["user_css"] = json["css"]
-                request.session["js_allowed"] = json["js_allowed"]
-                request.session["site_lang"] = json["site_lang"]
+                
+                session = {}
+                
+                user = json["user"]
+                session["scopes"] = orjson.dumps(json["scopes"]).decode("utf-8")
+                session["access_token"] = orjson.dumps(json["access_token"]).decode("utf-8")
+                session["user_id"] = int(user["id"])
+                session["username"], session["avatar"] = user["username"], user["avatar"]
+                session["user_token"], session["user_css"], session["js_allowed"] = json["token"], json["css"], json["js_allowed"]
+                session["site_lang"] = json["site_lang"]
+                request.session |= session
                 return HTMLResponse(f"<script>window.location.replace('{site_redirect}')</script>")
   
 
-@router.get("/logout")
+@router.get("/fates/logout")
 async def logout(request: Request):
     request.session.clear()
     return RedirectResponse("/")
