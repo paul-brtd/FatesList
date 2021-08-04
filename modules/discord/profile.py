@@ -9,7 +9,7 @@ router = APIRouter(
 @router.get("/me")
 async def redirect_me(request: Request, preview: bool = False, worker_session = Depends(worker_session)):
     if "user_id" not in request.session.keys():
-        return RedirectResponse("/")
+        return abort(404)
     return await get_user_profile(
         request, 
         int(request.session.get("user_id")), 
