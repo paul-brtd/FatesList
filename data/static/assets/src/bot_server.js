@@ -71,7 +71,7 @@ function replyReview(el, id) {
 	}
 }
 
-$( document ).ready(function() {
+document.addEventListener("DOMContentLoaded", function() {
 	setTimeout(function() {document.querySelector("#rating-desc-avg").innerHTML = parseState(context.reviews.average_rating) + ", " + context.reviews.average_rating}, 300); 
 });
 

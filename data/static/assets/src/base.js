@@ -20,3 +20,4 @@ function modalShow(title, body) {
 	document.querySelector("#base-modal-body").innerHTML = body;
 	jQuery("#base-modal").modal();
 }
+

@@ -35,25 +35,18 @@ function openf(evt, idp, data, defaultTab, post) {
 
 }
 
-function tabSetup(jq) {
-    try {
-	jq(document).ready(function(){	
-		if(window.location.hash == "") {
-			document.querySelector(`#${context.default_tab_button}`).click()
+function tabLoad(){	
+	if(window.location.hash == "") {
+		document.querySelector(`#${context.default_tab_button}`).click()
+	}
+	else {
+		try {
+			document.querySelector(window.location.hash.replace("-fl", "")).click()
 		}
-		else {
-			try {
-				document.querySelector(window.location.hash.replace("-fl", "")).click()
-			}
-			catch {
-				document.querySelector(context.default_tab_button).click()
-			}
+		catch {
+			document.querySelector(context.default_tab_button).click()
 		}
-	});
-    }
-    catch (err) {
-    	alert(err)
-    }
-}
+	}
+};
 
-tabSetup(jQuery)
+document.addEventListener("DOMContentLoaded", tabLoad)

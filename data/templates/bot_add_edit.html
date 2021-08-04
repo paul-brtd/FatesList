@@ -162,16 +162,9 @@
 				) }}
 				<button class="section btn btn-outline-light" onclick='postStats()'>Post</button>
 				<h5 class="white section">Transfer Ownership</h5>
-				<p class="white"><span class="red">Warning:</span> This <em>cannot</em> be undone. Only transfer ownership to people you trust. <br/>By continuing, you acknowledge that the user you are transferring ownership to will now completely control this bot on Fates List.</p>
-				{{ textInput(
-					"New Owner",
-					"new-owner",
-					"Enter the ID of the new owner. This ID must already be a extra owner first!",
-					in_form=False
-				) }}
-				<button class="btn btn-danger" onclick="transferBot()">Transfer Ownership</button>
+				<p class="white info-content">In order to protect against abuse and potentially malicious users/bots, you must create a support ticket on Fates List to transfer or claim ownership of bots as of right now. This includes reclaiming ownership of bots when you don't have access to your account!</p>
 				<h5 class="white section">Delete Bot</h5>
-				<p class="white"><span class="red">Warning:</span> This <em>cannot</em> be undone and you <em>will</em> lose any perks your bot may have such as certification and any votes your bot may have. Think twice before proceeding...</p>
+				<p class="white info-content"><span class="red">Warning:</span> This <em>cannot</em> be undone and you <em>will</em> lose any perks your bot may have such as certification and any votes your bot may have. Think twice before proceeding as not even staff can revert bot deletions, even if accidental...</p>
 				<button class="btn btn-danger" onclick="deleteBot()">Delete Bot</button>
 			</section>
 			{% endif %}
@@ -381,7 +374,7 @@
 		}
 	</script>
 	<script src="/static/assets/prod/bot_add_edit.min.js?v=19"></script>
-	<script src="/static/assets/prod/tabs.min.js?v=3" defer></script>
+	<script src="/static/assets/prod/tabs.min.js?v=4" defer></script>
 	<script src="https://cdn.jsdelivr.net/npm/select-pure@latest/dist/index.js"></script>
 {% endblock %}
 {% block footer %}

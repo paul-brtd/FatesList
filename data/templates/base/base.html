@@ -9,12 +9,6 @@
 		<p>This site needs JavaScript enabled in order to work properly. Please disable NoScript before trying to use this site</p>
 	</div>
 </noscript>
-<style>
-    .dropdown-menu {
-        left: auto;
-	right: 0;
-    }
-</style>
 <script>
 ;(function () {
     var src = '//cdn.jsdelivr.net/npm/eruda';
@@ -89,22 +83,25 @@
 </head>
 <body style="background-color: #1D1E23;">
 
-	<!-- Basic Modal -->
-	<div class="modal fade" id="base-modal" tabindex="-1"  aria-labelledby="base-modal-label" aria-hidden="true">
-		<div class="modal-dialog">
-			<div class="modal-content">
-				<div class="modal-header">
-					<h5 class="modal-title" id="base-modal-label">Modal title</h5>
-				</div>
-				<div id="base-modal-body" class="modal-body">
-				</div>
-				<div class="modal-footer">
-					<button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
-				</div>
+<!-- Basic Modal -->
+<div class="modal fade" id="base-modal" tabindex="-1"  aria-labelledby="base-modal-label">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="base-modal-label"></h5>
+				<button class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+			<div id="base-modal-body" class="modal-body">
+			</div>
+			<div class="modal-footer">
+				<button class="btn btn-primary" data-dismiss="modal" aria-label="Close">Close</button>
 			</div>
 		</div>
 	</div>
-<header role="navigation" style="background: black; color: white;" class="navbar fixed-top navbar-full navbar-dark navigation-clean-button" aria-label="Site Navigation Menu">
+</div>
+<nav style="background: black; color: white;" class="navbar fixed-top navbar-full navbar-dark" aria-label="Site Navigation Menu">
    <div class="navbar-brand">
 	   <a href={% if not server %}"/"{% else %}"/server"{%endif%} class="navbar-brand"><img alt="" style="margin-right: 5px;" width="30px" src="/static/botlisticon.webp"><span class="sr-only">Toggle navigation</span>Fates List</a>
    </div>
@@ -137,21 +134,18 @@
          </div>
       </li>
   </ul>
-</header>
-<body>
+</nav>
     <!-- jQuery, Bootstrap Bundle (includes Popper) and Material -->
+    <div style="padding: 2px;">
+	    <div class="text-center" id="site-content" style="margin-right: auto;margin-left: auto;margin-top: 60px;">
+		    <main>{% block icontent %}{%endblock%}{% block content %}{% endblock %}</main>
+	    </div>
+    </div>
+    <button onclick="topFunction()" id="up-btn" title="Go to top">▲</button>
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js" crossorigin></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js" crossorigin></script>
-    <script src="https://cdn.jsdelivr.net/gh/djibe/material@4.6.0-rc.2/js/material.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/djibe/material@4.6.0-rc.2/js/material.min.js" crossorigin></script>
     <script src="/static/assets/prod/base.min.js?v=2"></script>
-    <div style="padding: 2px;">
-    	<div class="text-center" id="site-content" style="margin-right: auto;margin-left: auto;margin-top: 60px;">
-    		<main>{% block icontent %}{%endblock%}{% block content %}{% endblock %}</main>
-	</div>
-    </div>    
-    <button onclick="topFunction()" id="up-btn" title="Go to top">▲</button>
-    <footer>
-    </footer>
 </div>
 </body>
 <script>
