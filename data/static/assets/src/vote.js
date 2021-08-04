@@ -1,6 +1,6 @@
 function voteBot() {
 	if(!context.logged_in) {
-		window.location.href = `/auth/login?redirect=/${context.type}/${context.id}/vote&pretty=to vote for this bot`
+		window.location.href = `/fates/login?redirect=/${context.type}/${context.id}/vote&pretty=to vote for this bot`
 		return
 	}
 	modalShow("Voting...", "Please wait...")
