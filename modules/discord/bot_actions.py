@@ -19,7 +19,7 @@ async def add_bot(request: Request):
         }
         return await templates.TemplateResponse(fn, {"request": request, "tags_fixed": tags_fixed, "features": features, "bot": {}}, context = context)
     else:
-        return RedirectResponse("/auth/login?redirect=/bot/admin/add&pretty=to add a bot")
+        return RedirectResponse("/fates/login?redirect=/bot/admin/add&pretty=to add a bot")
 
 @router.get("/{bot_id}/settings")
 async def bot_settings(request: Request, bot_id: int):
@@ -72,28 +72,3 @@ async def bot_settings(request: Request, bot_id: int):
     fn = "bot_add_edit.html"
 
     return await templates.TemplateResponse(fn, {"request": request, "tags_fixed": tags_fixed, "bot": bot, "vanity": vanity, "features": features}, context = context)
-
-
-@router.post("/{bot_id}/reviews/{rid}/edit")
-async def edit_review(request: Request, bot_id: int, rid: uuid.UUID, bt: BackgroundTasks, rating: float = FForm(5.1), review: str = FForm(...)):
-    if "user_id" not in request.session.keys():
-        return RedirectResponse(f"/auth/login?redirect=/bot/{bot_id}&pretty=to edit reviews", status_code = 303)
-    guild = client.get_guild(main_server)
-    user = guild.get_member(int(request.session["user_id"]))
-    s = is_staff(staff_roles, user.roles, 2)
-    if s[0]:
-        check = await db.fetchrow("SELECT epoch, reply FROM bot_reviews WHERE id = $1", rid)
-        if check is None:
-            return await templates.TemplateResponse("message.html", {"request": request, "message": "You are not allowed to edit this review (doesn't actually exist)"})
-    else:
-        check = await db.fetchrow("SELECT epoch, reply FROM bot_reviews WHERE id = $1 AND bot_id = $2 AND user_id = $3", rid, bot_id, int(request.session["user_id"]))
-        if check is None:
-            return await templates.TemplateResponse("message.html", {"request": request, "message": "You are not allowed to edit this review"})
-    if check["epoch"] is not None:
-        check["epoch"].append(time.time())
-        epoch = check["epoch"]
-    else:
-        epoch = [time.time()]
-    await db.execute("UPDATE bot_reviews SET star_rating = $1, review_text = $2, epoch = $3 WHERE id = $4", rating, review, epoch, rid)
-    await bot_add_event(bot_id, enums.APIEvents.review_edit, {"user": str(request.session["user_id"]), "id": str(rid), "star_rating": rating, "review": review, "reply": check["reply"]})
-    return await templates.TemplateResponse("message.html", {"request": request, "message": f"Successfully editted your/this review for this bot!<script>window.location.replace('/bot/{bot_id}')</script>"})
