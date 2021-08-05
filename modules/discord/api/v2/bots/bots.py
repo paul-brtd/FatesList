@@ -228,6 +228,7 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
                 fates_img = await res.read()
         fates_pil = Image.open(io.BytesIO(fates_img)).resize((10, 10))
         votes_pil = Image.open(os.path.join('votes.png')).resize((15, 15))
+        server_pil = Image.open(os.path.join('server.png')).resize((15, 15))
         avatar_pil = Image.open(io.BytesIO(avatar_img)).resize((100, 100))
         avatar_pil_bg = Image.new('RGBA', avatar_pil.size, (0,0,0))
             
@@ -330,7 +331,7 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
         #server count
         d.text(
             (140,96), 
-            str(f'Server Count: {bot["guild_count"]}'), 
+            str(f'{bot["guild_count"]}'), 
             fill='white',
             font=get_font(str(bot["guild_count"]),d)
         )
