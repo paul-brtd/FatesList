@@ -282,7 +282,7 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
 
     # Bot delete
     elif data.op == enums.BotState.bot_delete:
-        tool = admin_tool.delete_bot()
+        tool = admin_tool.delete_bot(data.reason)
 
     # Bot unlock
     elif data.op == enums.BotAdminOp.bot_unlock:
