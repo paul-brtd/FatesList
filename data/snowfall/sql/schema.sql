@@ -260,6 +260,7 @@ CREATE TABLE bot_list (
 	api_docs TEXT,
 	discord TEXT,
 	description TEXT,
+	no_post boolean default false,
 	supported_features INTEGER[],
 	state INTEGER DEFAULT 0,
 	owners BIGINT[] DEFAULT '{}'

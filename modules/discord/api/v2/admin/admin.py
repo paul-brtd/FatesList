@@ -63,7 +63,6 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
                 status_code = 429, 
                 headers = {"X-OP-RL": "1", "Retry-After": str(coolkey)}
             )
-        await redis_db.set(f"cooldown-{data.op.__cooldown__.name}-{user.id}", 0, px = int(data.op.__cooldown__.value*1000))
 
     # Check that reason is given where needed
     if data.op.__reason_needed__ and not data.reason:
@@ -280,17 +279,16 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
                 return api_error(f"This bot has been locked by staff and has a code of {curr_lock} ({enums.BotLock(curr_lock).__doc__}). Please ask a staff to unlock it", 2770, status_code = 403)
         tool = admin_tool.lock_bot(lock)
 
+    # Bot delete
+    elif data.op == enums.BotAdminOp.bot_delete:
+        tool = admin_tool.delete_bot(data.reason)
+
     # Bot unlock
     elif data.op == enums.BotAdminOp.bot_unlock:
-        if not is_bot_admin(bot_id, user.id):
-            return api_error("You cannot lock or unlock a bot you do not own. If you are staff, ensure you have staff unlocked the bot using +sunlock <bot>", 2771, status_code = 403)
-        sm = staff[2]
         curr_lock = await db.fetchval("SELECT lock from bots WHERE bot_id = $1", bot_id)
         if curr_lock != enums.BotLock.locked:
             if curr_lock == enums.BotLock.unlocked:
                 return api_error("This bot is already locked", 2769)
-            elif sm.perm < 4:
-                return api_error(f"This bot has been locked by staff and has a code of {curr_lock} ({enums.BotLock(curr_lock).__doc__}). Please ask a staff to unlock it", 2770, status_code = 403)
         tool = admin_tool.unlock_bot()
 
     # Run the tool and return any errors it is capable of giving at this moment 
@@ -301,15 +299,16 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
                 return api_error(rc, 2760)
         else:
             asyncio.create_task(tool)
-            
+    
+    await redis_db.set(f"cooldown-{data.op.__cooldown__.name}-{user.id}", 0, px = int(data.op.__cooldown__.value*1000))
     return api_success(success_msg, status_code = success_code)
 
 @router.get("/queue/bots", response_model = BotQueueGet)
-async def botlist_get_queue_api(request: Request, under_review: bool = False, verifier: int = None):
+async def botlist_get_queue_api(request: Request, state: enums.BotState = enums.BotState.pending, verifier: int = None):
     """Admin API to get the bot queue"""
     if verifier:
-        bots = await db.fetch("SELECT bot_id, prefix, description FROM bots WHERE state = $1 AND verifier = $2 ORDER BY created_at ASC", enums.BotState.pending if not under_review else enums.BotState.under_review, verifier)
-    bots = await db.fetch("SELECT bot_id, prefix, description FROM bots WHERE state = $1 ORDER BY created_at ASC", enums.BotState.pending if not under_review else enums.BotState.under_review)
+        bots = await db.fetch("SELECT bot_id, prefix, description FROM bots WHERE state = $1 AND verifier = $2 ORDER BY created_at ASC", state, verifier)
+    bots = await db.fetch("SELECT bot_id, prefix, description FROM bots WHERE state = $1 ORDER BY created_at ASC", state)
     return {"bots": [{"user": await get_bot(bot["bot_id"]), "prefix": bot["prefix"], "invite": await invite_bot(bot["bot_id"], api = True), "description": bot["description"]} for bot in bots]}
 
 @router.get("/is_staff")

@@ -146,9 +146,10 @@ async def post_stats(request: Request, bot_id: int, stats: Stats):
         Post stats to all lists, takes a LIST_URL: LIST_API_TOKEN in the lists object in request body.
     """
     posted_lists = {}
+    no_post = {}
     for blist in stats.lists.keys():
 
-        api_url = await db.fetchrow("SELECT api_url, state FROM bot_list WHERE url = $1", blist)
+        api_url = await db.fetchrow("SELECT api_url, state, no_post FROM bot_list WHERE url = $1", blist)
         if api_url is None:
             posted_lists[blist] = {"posted": False, "reason": "List does not exist", "response": None, "status_code": None, "api_url": None, "api_path": None, "sent_data": None, "success": False, "method": None}
             continue 
@@ -170,6 +171,7 @@ async def post_stats(request: Request, bot_id: int, stats: Stats):
         sf = orjson.loads(sf)
         # Get corresponding list values for server_count and shard_count
         send_json = {}
+        
         for key in Supported.post_stats:
             field = sf.get(key)
             if field:
@@ -181,12 +183,16 @@ async def post_stats(request: Request, bot_id: int, stats: Stats):
                 continue
         
         api_path = api['api_path'].replace("{id}", str(bot_id)).replace("{bot_id}", str(bot_id)) # Get the API path
-
+        auth = {"Authorization": str(stats.lists[blist])}
         f = enums.ULAMethod(api["method"])
+        if api_url["no_post"]:
+            no_post[blist] = {"json": send_json, "url": f"https://{api_url}{api_path}", "headers": auth}
+            continue
+
         try:
             async with aiohttp.ClientSession() as sess:
                 f = getattr(sess, f.name)
-                async with f(f"https://{api_url}{api_path}", json = send_json, headers = {"Authorization": str(stats.lists[blist])}, timeout = 15) as res:
+                async with f(f"https://{api_url}{api_path}", json = send_json, headers = auth, timeout = 15) as res:
                     try:
                         response = await res.json()
                     except Exception:
@@ -197,6 +203,7 @@ async def post_stats(request: Request, bot_id: int, stats: Stats):
         except Exception as e:
             posted_lists[blist] = {"posted": False, "reason": f"Could not connect/find server: {e}", "response": None, "status_code": None, "api_url": api_url, "api_path": api_path, "sent_data": send_json, "success": False, "method": api["method"]}
         
+    posted_lists["_nopost"] = no_post
     return posted_lists
 
 # TODO: Do List Processing

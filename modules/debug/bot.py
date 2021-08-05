@@ -85,3 +85,10 @@ class Manager(Cog):
         for r in retl:
             await ctx.send(f"```{r}```")
 
+
+    @is_owner()
+    @command(pass_context = True)
+    async def guildcount(self, ctx, bot_id: int, count: int):
+        worker_session = self.app.state.worker_session
+        await worker_session.postgres.execute("UPDATE bots SET guild_count = $2 WHERE bot_id = $1", bot_id, count)
+        await ctx.send("Done")
