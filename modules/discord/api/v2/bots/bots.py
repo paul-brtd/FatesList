@@ -198,8 +198,6 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
     Returns a widget
 
     Unstable signifies whether an action is unstable or not. You will get a API error if this is the case and unstable is not set or the bot is not certified (only certified bots may use unstable endpoints) and the existence of the nyi key can be used to programatically detect this
-
-    The webp format is unstable. All the others are stable
     """
     worker_session = request.app.state.worker_session
     db = worker_session.postgres
@@ -211,9 +209,9 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
     
     bt.add_task(add_ws_event, bot_id, {"m": {"e": enums.APIEvents.bot_view}, "ctx": {"user": request.session.get('user_id'), "widget": True}})
     data = {"bot": bot, "user": await get_bot(bot_id, worker_session = request.app.state.worker_session)}
-    bot_obj = await get_bot(bot_id)
+    bot_obj = data["user"]
     
-    if not bot_obj or not data["user"]:
+    if not bot_obj:
         return abort(404)
 
     if format == enums.WidgetFormat.json:
@@ -225,16 +223,11 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
         async with aiohttp.ClientSession() as sess:
             async with sess.get(data["user"]["avatar"]) as res:
                 avatar_img = await res.read()
-            
-        async with aiofiles.open("data/static/botlisticon.webp") as res:
-            fates_img = await res.read()
 
-        async with aiofiles.open("data/static/votes.png") as res:
-            votes_img = await res.read()
-
-        fates_pil = Image.open(io.BytesIO(fates_img)).resize((10, 10))
-        votes_pil = Image.open(os.path.join('votes.png')).resize((15, 15))
-        server_pil = Image.open(os.path.join('server.png')).resize((15, 15))
+        static = request.app.state.static
+        fates_pil = static["fates_pil"]
+        votes_pil = static["votes_pil"]
+        server_pil = static["server_pil"]
         avatar_pil = Image.open(io.BytesIO(avatar_img)).resize((100, 100))
         avatar_pil_bg = Image.new('RGBA', avatar_pil.size, (0,0,0))
             
@@ -247,13 +240,13 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
         #pasting the fateslist logo
         try:
             widget_img.paste(Image.alpha_composite(avatar_pil_bg, fates_pil),(10,152))
-        except:
+        except Exception:
             widget_img.paste(fates_pil,(10,152))
         
         #pasting votes logo
         try:
             widget_img.paste(Image.alpha_composite(avatar_pil_bg, votes_pil),(120,115))
-        except:
+        except Exception:
             widget_img.paste(votes_pil,(120,115))
         
         #pasting servers logo
@@ -261,11 +254,10 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
             widget_img.paste(Image.alpha_composite(avatar_pil_bg, server_pil),(120,95))
         except:
             widget_img.paste(server_pil,(120,95))
-        
-        font = os.path.join('LexendDeca-Regular.ttf')
-        
+
+        font = os.path.join("data/static/LexendDeca-Regular.ttf")
+
         def get_font(string: str, d):
-            font = os.path.join('LexendDeca-Regular.ttf')
             return ImageFont.truetype(
                 font,
                 get_font_size(d.textsize(string)[0]),
@@ -322,9 +314,6 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
                 )
             )
         
-        #description
-        if not bot.get('description'):
-            return abort(404)
         wrapper = textwrap.TextWrapper(width=30)
         word_list = wrapper.wrap(text=bot['description'])
         d.text(
@@ -336,16 +325,16 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
         
         #server count
         d.text(
-            (140,96), 
-            str(f'{bot["guild_count"]}'), 
+            (140,94), 
+            str(bot["guild_count"]), 
             fill='white',
             font=get_font(str(bot["guild_count"]),d)
         )
         
         #votes
         d.text(
-            (140,116),
-            str(f'{bot["votes"]}'), 
+            (140,114),
+            str(bot["votes"]), 
             fill='white',
             font=get_font(str(bot['votes']),d)
         )
