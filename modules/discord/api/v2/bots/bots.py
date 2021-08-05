@@ -249,6 +249,12 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
         except:
             widget_img.paste(votes_pil,(120,115))
         
+        #pasting servers logo
+        try:
+            widget_img.paste(Image.alpha_composite(avatar_pil_bg, server_pil),(120,95))
+        except:
+            widget_img.paste(server_pil,(120,95))
+        
         font = os.path.join('LexendDeca-Regular.ttf')
         
         def get_font(string: str, d):
@@ -323,7 +329,7 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
         
         #server count
         d.text(
-            (120,100), 
+            (140,96), 
             str(f'Server Count: {bot["guild_count"]}'), 
             fill='white',
             font=get_font(str(bot["guild_count"]),d)
