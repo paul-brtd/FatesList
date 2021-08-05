@@ -325,7 +325,7 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
         
         #server count
         d.text(
-            (140,96), 
+            (140,94), 
             str(bot["guild_count"]), 
             fill='white',
             font=get_font(str(bot["guild_count"]),d)
@@ -333,7 +333,7 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
         
         #votes
         d.text(
-            (140,116),
+            (140,114),
             str(bot["votes"]), 
             fill='white',
             font=get_font(str(bot['votes']),d)
