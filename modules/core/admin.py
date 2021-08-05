@@ -295,6 +295,9 @@ class BotListAdmin():
         await self.channel.send(embed = embed)
         await bot_add_event(self.bot_id, enums.APIEvents.bot_transfer, {"user": self.str_mod, "old_owner": str(owner), "new_owner": str(new_owner), "reason": reason})
 
+    async def delete_bot(self, reason):
+        await db.execute("DELETE FROM bots WHERE bot_id
+
     async def root_update(self, reason, old_state, new_state):
         await db.execute("UPDATE bots SET state = $1 WHERE bot_id = $2", new_state, self.bot_id)
         embed = discord.Embed(title="Root State Update", description = f"<@{self.mod}> has changed the state of <@{self.bot_id}> from {old_state.__doc__} ({old_state}) to {new_state.__doc__} ({new_state})", color=self.good)

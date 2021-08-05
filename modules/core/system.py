@@ -160,7 +160,7 @@ class FatesDebugBot(commands.Bot):
 
     async def is_owner(self, user: discord.User):
         """Owner check patch"""
-        if user.id == owner or user.id in (683530527239962627,):
+        if user.id == owner or user.id in (683530527239962627, 744825560034705508):
             return True
         return False
 

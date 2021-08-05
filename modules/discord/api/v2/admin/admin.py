@@ -280,17 +280,16 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
                 return api_error(f"This bot has been locked by staff and has a code of {curr_lock} ({enums.BotLock(curr_lock).__doc__}). Please ask a staff to unlock it", 2770, status_code = 403)
         tool = admin_tool.lock_bot(lock)
 
+    # Bot delete
+    elif data.op == enums.BotState.bot_delete:
+        tool = admin_tool.delete_bot()
+
     # Bot unlock
     elif data.op == enums.BotAdminOp.bot_unlock:
-        if not is_bot_admin(bot_id, user.id):
-            return api_error("You cannot lock or unlock a bot you do not own. If you are staff, ensure you have staff unlocked the bot using +sunlock <bot>", 2771, status_code = 403)
-        sm = staff[2]
         curr_lock = await db.fetchval("SELECT lock from bots WHERE bot_id = $1", bot_id)
         if curr_lock != enums.BotLock.locked:
             if curr_lock == enums.BotLock.unlocked:
                 return api_error("This bot is already locked", 2769)
-            elif sm.perm < 4:
-                return api_error(f"This bot has been locked by staff and has a code of {curr_lock} ({enums.BotLock(curr_lock).__doc__}). Please ask a staff to unlock it", 2770, status_code = 403)
         tool = admin_tool.unlock_bot()
 
     # Run the tool and return any errors it is capable of giving at this moment 
