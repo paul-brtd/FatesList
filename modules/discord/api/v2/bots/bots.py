@@ -4,7 +4,7 @@ from modules.core import *
 from lynxfall.utils.string import human_format
 from fastapi.responses import PlainTextResponse, StreamingResponse
 from PIL import Image, ImageDraw, ImageFont
-import io, os, textwrap, aiohttp
+import io, textwrap, aiofiles
 from starlette.concurrency import run_in_threadpool
 from ..base import API_VERSION
 from .models import APIResponse, Bot, BotRandom, BotStats, BotAppeal
@@ -204,15 +204,16 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
     worker_session = request.app.state.worker_session
     db = worker_session.postgres
     
-    bot = bot = await db.fetchrow("SELECT bot_id, guild_count, votes, state, description FROM bots WHERE bot_id = $1", bot_id)
+    bot = await db.fetchrow("SELECT bot_id, guild_count, votes, state, description FROM bots WHERE bot_id = $1", bot_id)
     if not bot:
         return abort(404)
     bot = dict(bot)
+    
     bt.add_task(add_ws_event, bot_id, {"m": {"e": enums.APIEvents.bot_view}, "ctx": {"user": request.session.get('user_id'), "widget": True}})
     data = {"bot": bot, "user": await get_bot(bot_id, worker_session = request.app.state.worker_session)}
     bot_obj = await get_bot(bot_id)
     
-    if not bot_obj:
+    if not bot_obj or not data["user"]:
         return abort(404)
 
     if format == enums.WidgetFormat.json:
@@ -222,12 +223,17 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
     elif format == enums.WidgetFormat.webp:
         widget_img = Image.new("RGBA", (300, 175), "black")
         async with aiohttp.ClientSession() as sess:
-            async with sess.get(data["user"]["avatar"] if data["user"] else "https://fateslist.xyz/static/botlisticon.webp") as res:
+            async with sess.get(data["user"]["avatar"]) as res:
                 avatar_img = await res.read()
-            async with sess.get("https://fateslist.xyz/static/botlisticon.webp") as res:
-                fates_img = await res.read()
+            
+        async with aiofiles.open("data/static/botlisticon.webp") as res:
+            fates_img = await res.read()
+
+        async with aiofiles.open("data/static/votes.png") as res:
+            votes_img = await res.read()
+
         fates_pil = Image.open(io.BytesIO(fates_img)).resize((10, 10))
-        votes_pil = Image.open(os.path.join('votes.png')).resize((15, 15))
+        votes_pil = Image.open(io.BytesIO(votes_img)).resize((15, 15))
         avatar_pil = Image.open(io.BytesIO(avatar_img)).resize((100, 100))
         avatar_pil_bg = Image.new('RGBA', avatar_pil.size, (0,0,0))
             
