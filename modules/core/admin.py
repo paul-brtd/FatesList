@@ -296,7 +296,16 @@ class BotListAdmin():
         await bot_add_event(self.bot_id, enums.APIEvents.bot_transfer, {"user": self.str_mod, "old_owner": str(owner), "new_owner": str(new_owner), "reason": reason})
 
     async def delete_bot(self, reason):
-        await db.execute("DELETE FROM bots WHERE bot_id
+        lock = await db.fetchval("SELECT lock FROM bots WHERE bot_id = $1", self.bot_id)
+        lock = enums.BotLock(lock)
+        if lock != enums.BotLock.unlocked:
+            return api_error(
+                f"This bot cannot be deleted as it has been locked with a code of {int(lock)}: ({lock.__doc__}). If this bot is not staff locked, join the support server and run +unlock <BOT> to unlock"
+            )
+        await add_rmq_task("bot_delete_queue", {"user_id": self.mod, "bot_id": self.bot_id})
+        embed = discord.Embed(title="Staff Delete", description = f"<@{self.mod}> has has deleted <@{self.bot_id}>", color=self.bad)
+        embed.add_field(name="Reason", value = reason)
+        await self.channel.send(embed = embed)
 
     async def root_update(self, reason, old_state, new_state):
         await db.execute("UPDATE bots SET state = $1 WHERE bot_id = $2", new_state, self.bot_id)
