@@ -305,11 +305,11 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
     return api_success(success_msg, status_code = success_code)
 
 @router.get("/queue/bots", response_model = BotQueueGet)
-async def botlist_get_queue_api(request: Request, under_review: bool = False, verifier: int = None):
+async def botlist_get_queue_api(request: Request, state: enums.BotState = enums.BotState.pending, verifier: int = None):
     """Admin API to get the bot queue"""
     if verifier:
-        bots = await db.fetch("SELECT bot_id, prefix, description FROM bots WHERE state = $1 AND verifier = $2 ORDER BY created_at ASC", enums.BotState.pending if not under_review else enums.BotState.under_review, verifier)
-    bots = await db.fetch("SELECT bot_id, prefix, description FROM bots WHERE state = $1 ORDER BY created_at ASC", enums.BotState.pending if not under_review else enums.BotState.under_review)
+        bots = await db.fetch("SELECT bot_id, prefix, description FROM bots WHERE state = $1 AND verifier = $2 ORDER BY created_at ASC", state, verifier)
+    bots = await db.fetch("SELECT bot_id, prefix, description FROM bots WHERE state = $1 ORDER BY created_at ASC", state)
     return {"bots": [{"user": await get_bot(bot["bot_id"]), "prefix": bot["prefix"], "invite": await invite_bot(bot["bot_id"], api = True), "description": bot["description"]} for bot in bots]}
 
 @router.get("/is_staff")
