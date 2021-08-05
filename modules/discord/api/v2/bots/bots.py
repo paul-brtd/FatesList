@@ -337,17 +337,17 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
         #server count
         d.text(
             (140,94), 
-            str(bot["guild_count"]), 
+            human_format(bot["guild_count"]), 
             fill='white',
-            font=get_font(str(bot["guild_count"]),d)
+            font=get_font(human_format(bot["guild_count"]),d)
         )
         
         #votes
         d.text(
             (140,114),
-            str(bot["votes"]), 
+            human_format(bot["votes"]), 
             fill='white',
-            font=get_font(str(bot['votes']),d)
+            font=get_font(human_format(bot['votes']),d)
         )
             
         output = io.BytesIO()
