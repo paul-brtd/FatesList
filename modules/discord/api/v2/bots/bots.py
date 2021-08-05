@@ -226,10 +226,10 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
             async with sess.get(data["user"]["avatar"]) as res:
                 avatar_img = await res.read()
             
-        async with aiofiles.open("data/static/botlisticon.webp") as res:
+        async with aiofiles.open("data/static/botlisticon.webp", mode='rb') as res:
             fates_img = await res.read()
 
-        async with aiofiles.open("data/static/votes.png") as res:
+        async with aiofiles.open("data/static/votes.png", mode='rb') as res:
             votes_img = await res.read()
 
         fates_pil = Image.open(io.BytesIO(fates_img)).resize((10, 10))
