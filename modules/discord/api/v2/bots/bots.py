@@ -202,7 +202,7 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
     worker_session = request.app.state.worker_session
     db = worker_session.postgres
     
-    bot = await db.fetchrow("SELECT bot_id, guild_count, votes, state, description FROM bots WHERE bot_id = $1", bot_id)
+    bot = await db.fetchrow("SELECT bot_id, guild_count, votes, description FROM bots WHERE bot_id = $1", bot_id)
     if not bot:
         return abort(404)
     bot = dict(bot)
@@ -216,9 +216,20 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
 
     if format == enums.WidgetFormat.json:
         return data
+    
     elif format == enums.WidgetFormat.html:
         return await templates.TemplateResponse("widget.html", {"request": request} | data)
+    
     elif format == enums.WidgetFormat.webp:
+        # Check if in cache
+        cache = await redis_db.get(f"widget-{bot_id}")
+        if cache:
+            def _stream():
+                with io.BytesIO(cache) as output:
+                    yield from output
+
+            return StreamingResponse(_stream(), media_type="image/webp")
+
         widget_img = Image.new("RGBA", (300, 175), "black")
         async with aiohttp.ClientSession() as sess:
             async with sess.get(data["user"]["avatar"]) as res:
@@ -339,12 +350,15 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
             font=get_font(str(bot['votes']),d)
         )
             
+        output = io.BytesIO()
+        widget_img.save(output, format="WEBP")
+        output.seek(0)
+        await redis_db.set(f"widget-{bot_id}", output.read())
+        output.seek(0)
 
-        def _stream():
-            with io.BytesIO() as output:
-                widget_img.save(output, format="WEBP")
-                output.seek(0)
-                yield from output
+        def _stream():    
+            yield from output
+            output.close()
 
         return StreamingResponse(_stream(), media_type="image/webp")
             
