@@ -3,8 +3,8 @@ from lxml.html.clean import Cleaner
 from modules.core import *
 from lynxfall.utils.string import human_format
 from fastapi.responses import PlainTextResponse, StreamingResponse
-from PIL import Image, ImageDraw
-import io
+from PIL import Image, ImageDraw, ImageFont
+import io, os, textwrap, aiohttp
 from starlette.concurrency import run_in_threadpool
 from ..base import API_VERSION
 from .models import APIResponse, Bot, BotRandom, BotStats, BotAppeal
@@ -193,7 +193,7 @@ async def bot_exists(request: Request, bot_id: int):
 
 
 @router.get("/{bot_id}/widget")
-async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format: enums.WidgetFormat, unstable: bool = False):
+async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format: enums.WidgetFormat):
     """
     Returns a widget
 
@@ -204,30 +204,139 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
     worker_session = request.app.state.worker_session
     db = worker_session.postgres
     
-    bot = await db.fetchrow("SELECT bot_id, guild_count, votes, state FROM bots WHERE bot_id = $1", bot_id)
+    bot = bot = await db.fetchrow("SELECT bot_id, guild_count, votes, state, description FROM bots WHERE bot_id = $1", bot_id)
     if not bot:
         return abort(404)
     bot = dict(bot)
     bt.add_task(add_ws_event, bot_id, {"m": {"e": enums.APIEvents.bot_view}, "ctx": {"user": request.session.get('user_id'), "widget": True}})
     data = {"bot": bot, "user": await get_bot(bot_id, worker_session = request.app.state.worker_session)}
+    bot_obj = await get_bot(bot_id)
     
-    if bot["state"] != enums.BotState.certified:
-        unstable = False
+    if not bot_obj:
+        return abort(404)
 
     if format == enums.WidgetFormat.json:
         return data
     elif format == enums.WidgetFormat.html:
         return await templates.TemplateResponse("widget.html", {"request": request} | data)
     elif format == enums.WidgetFormat.webp:
-        if not unstable:
-            return api_error("Unstable Endpoint. Only certified bots can use this with the unstable query param set", nyi=True)
         widget_img = Image.new("RGBA", (300, 175), "black")
         async with aiohttp.ClientSession() as sess:
             async with sess.get(data["user"]["avatar"] if data["user"] else "https://fateslist.xyz/static/botlisticon.webp") as res:
                 avatar_img = await res.read()
-                avatar_pil = Image.open(io.BytesIO(avatar_img)).resize((100, 100))
-                avatar_pil_bg = Image.new('RGBA', avatar_pil.size, (0,0,0))
-                widget_img.paste(Image.alpha_composite(avatar_pil, avatar_pil_bg))
+            async with sess.get("https://fateslist.xyz/static/botlisticon.webp") as res:
+                fates_img = await res.read()
+        fates_pil = Image.open(io.BytesIO(fates_img)).resize((10, 10))
+        votes_pil = Image.open(os.path.join('votes.png')).resize((15, 15))
+        avatar_pil = Image.open(io.BytesIO(avatar_img)).resize((100, 100))
+        avatar_pil_bg = Image.new('RGBA', avatar_pil.size, (0,0,0))
+            
+        #pasting the bot image
+        try:
+            widget_img.paste(Image.alpha_composite(avatar_pil_bg, avatar_pil),(10,widget_img.size[-1]//8))
+        except:
+            widget_img.paste(avatar_pil,(10,widget_img.size[-1]//6))
+            
+        #pasting the fateslist logo
+        try:
+            widget_img.paste(Image.alpha_composite(avatar_pil_bg, fates_pil),(10,152))
+        except:
+            widget_img.paste(fates_pil,(10,152))
+        
+        #pasting votes logo
+        try:
+            widget_img.paste(Image.alpha_composite(avatar_pil_bg, votes_pil),(120,115))
+        except:
+            widget_img.paste(votes_pil,(120,115))
+        
+        font = os.path.join('LexendDeca-Regular.ttf')
+        
+        def get_font(string: str, d):
+            font = os.path.join('LexendDeca-Regular.ttf')
+            return ImageFont.truetype(
+                font,
+                get_font_size(d.textsize(string)[0]),
+                layout_engine=ImageFont.LAYOUT_RAQM
+            )
+        
+        def get_font_size(width: int):
+            if width <= 90:
+                return 18  
+            elif width >= 192:
+                return 10
+            elif width == 168:
+                return 12
+            else:
+                return 168-width-90
+        
+        def the_area(str_width: int, image_width: int):
+            if str_width < 191:
+                new_width=abs(int(str_width-image_width))
+                return (new_width//2.5)
+            else:
+                new_width=abs(int(str_width-image_width))
+                return (new_width//4.5)
+                
+        
+        #lists name
+        d = ImageDraw.Draw(widget_img)
+        d.text(
+            (25,150), 
+            str('Fates List'), 
+            fill='white',
+            font=ImageFont.truetype(
+                font,
+                10,
+                layout_engine=ImageFont.LAYOUT_RAQM
+            )
+        )
+        
+        #Bot name
+        d.text(
+            (
+                the_area(
+                    d.textsize(str(bot_obj['username']))[0],
+                    widget_img.size[0]
+                ),
+                5
+            ), 
+            str(bot_obj['username']), 
+            fill='white',
+            font=ImageFont.truetype(
+                font,
+                16,
+                layout_engine=ImageFont.LAYOUT_RAQM
+                )
+            )
+        
+        #description
+        if not bot.get('description'):
+            return abort(404)
+        wrapper = textwrap.TextWrapper(width=30)
+        word_list = wrapper.wrap(text=bot['description'])
+        d.text(
+            (120,30), 
+            str('\n'.join(word_list)), 
+            fill='white',
+            font=get_font(str(bot['description']),d)
+        )
+        
+        #server count
+        d.text(
+            (120,100), 
+            str(f'Server Count: {bot["guild_count"]}'), 
+            fill='white',
+            font=get_font(str(bot["guild_count"]),d)
+        )
+        
+        #votes
+        d.text(
+            (140,116),
+            str(f'{bot["votes"]}'), 
+            fill='white',
+            font=get_font(str(bot['votes']),d)
+        )
+            
 
         def _stream():
             with io.BytesIO() as output:
