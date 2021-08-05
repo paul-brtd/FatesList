@@ -232,9 +232,12 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
         async with aiofiles.open("data/static/votes.png", mode='rb') as res:
             votes_img = await res.read()
 
+        async with aiofiles.open("data/static/server.png", mode='rb') as res:
+            server_img = await res.read()
+
         fates_pil = Image.open(io.BytesIO(fates_img)).resize((10, 10))
-        votes_pil = Image.open(os.path.join('votes.png')).resize((15, 15))
-        server_pil = Image.open(os.path.join('server.png')).resize((15, 15))
+        votes_pil = Image.open(io.BytesIO(votes_img)).resize((15, 15))
+        server_pil = Image.open(io.BytesIO(server_img)).resize((15, 15))
         avatar_pil = Image.open(io.BytesIO(avatar_img)).resize((100, 100))
         avatar_pil_bg = Image.new('RGBA', avatar_pil.size, (0,0,0))
             
@@ -262,10 +265,10 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
         except:
             widget_img.paste(server_pil,(120,95))
         
-        font = os.path.join('LexendDeca-Regular.ttf')
+        font = os.path.join('data/static/LexendDeca-Regular.ttf')
         
         def get_font(string: str, d):
-            font = os.path.join('LexendDeca-Regular.ttf')
+            font = os.path.join('data/static/LexendDeca-Regular.ttf')
             return ImageFont.truetype(
                 font,
                 get_font_size(d.textsize(string)[0]),
