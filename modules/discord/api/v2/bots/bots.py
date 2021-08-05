@@ -245,19 +245,19 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
         #pasting the bot image
         try:
             widget_img.paste(Image.alpha_composite(avatar_pil_bg, avatar_pil),(10,widget_img.size[-1]//8))
-        except Exception:
+        except:
             widget_img.paste(avatar_pil,(10,widget_img.size[-1]//6))
             
         #pasting the fateslist logo
         try:
             widget_img.paste(Image.alpha_composite(avatar_pil_bg, fates_pil),(10,152))
-        except Exception:
+        except:
             widget_img.paste(fates_pil,(10,152))
         
         #pasting votes logo
         try:
             widget_img.paste(Image.alpha_composite(avatar_pil_bg, votes_pil),(120,115))
-        except Exception:
+        except:
             widget_img.paste(votes_pil,(120,115))
         
         #pasting servers logo
