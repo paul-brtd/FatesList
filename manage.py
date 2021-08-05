@@ -4,6 +4,7 @@ sys.pycache_prefix = "data/pycache"
 
 from subprocess import Popen, DEVNULL
 import os
+import io
 os.environ["LOGURU_LEVEL"] = "DEBUG"
 
 import uuid
@@ -63,7 +64,7 @@ def error(msg: str, code: int = 1):
     typer.secho(msg, fg=typer.colors.RED, err=True)
     return typer.Exit(code=code)
 
-def _fappgen(session_id, workers):
+def _fappgen(session_id, workers, static_assets):
     """Make the FastAPI app for gunicorn"""
     from fastapi import FastAPI
     from fastapi.responses import ORJSONResponse
@@ -89,6 +90,8 @@ def _fappgen(session_id, workers):
         openapi_url=f"/api/v{API_VERSION}/docs/openapi"
     )
 
+    _app.state.static = static_assets
+
     @_app.on_event("startup")
     async def startup():
         await init_fates_worker(_app, session_id, workers)
@@ -105,9 +108,25 @@ def run_site(
 ):
     """Runs the Fates List site"""
     from gunicorn.app.base import BaseApplication
+    from PIL import Image
 
     session_id = uuid.uuid4()
-    
+   
+    # Load in static assets for bot widgets
+    static_assets = {}
+    with open("data/static/botlisticon.webp", mode='rb') as res:
+        static_assets["fates_img"] = io.BytesIO(res.read())
+
+    with open("data/static/votes.png", mode='rb') as res:
+        static_assets["votes_img"] = io.BytesIO(res.read())
+
+    with open("data/static/server.png", mode='rb') as res:
+        static_assets["server_img"] = io.BytesIO(res.read())
+
+    static_assets["fates_pil"] = Image.open(static_assets["fates_img"]).resize((10, 10))
+    static_assets["votes_pil"] = Image.open(static_assets["votes_img"]).resize((15, 15))
+    static_assets["server_pil"] = Image.open(static_assets["server_img"]).resize((15, 15))
+
     # Create the pids folder if it hasnt been created
     Path("data/pids").mkdir(exist_ok = True)
    
@@ -142,7 +161,7 @@ def run_site(
         "timeout": 120
     }
     
-    app = _fappgen(str(session_id), workers)
+    app = _fappgen(str(session_id), workers, static_assets)
     try:
         FatesRunner(app, options).run()
     except BaseException as exc:
