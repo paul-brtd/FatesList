@@ -240,9 +240,9 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
             
         #pasting the bot image
         try:
-            widget_img.paste(Image.alpha_composite(avatar_pil_bg, avatar_pil),(10,widget_img.size[-1]//8))
+            widget_img.paste(Image.alpha_composite(avatar_pil_bg, avatar_pil),(10,widget_img.size[-1]//5))
         except:
-            widget_img.paste(avatar_pil,(10,widget_img.size[-1]//6))
+            widget_img.paste(avatar_pil,(10,widget_img.size[-1]//5))
             
         #pasting the fateslist logo
         try:
