@@ -353,7 +353,7 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
         output = io.BytesIO()
         widget_img.save(output, format="WEBP")
         output.seek(0)
-        await redis_db.set(f"widget-{bot_id}", output.read())
+        await redis_db.set(f"widget-{bot_id}", output.read(), ex=60*3)
         output.seek(0)
 
         def _stream():    
