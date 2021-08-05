@@ -244,15 +244,24 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
             
         #pasting the bot image
         try:
-            widget_img.paste(Image.alpha_composite(avatar_pil_bg, avatar_pil),(10,widget_img.size[-1]//8))
+            widget_img.paste(Image.alpha_composite(avatar_pil_bg, avatar_pil),(10,widget_img.size[-1]//5))
         except:
-            widget_img.paste(avatar_pil,(10,widget_img.size[-1]//6))
+            widget_img.paste(avatar_pil,(10,widget_img.size[-1]//5))
             
-        #pasting the fateslist logo
-        try:
-            widget_img.paste(Image.alpha_composite(avatar_pil_bg, fates_pil),(10,152))
-        except:
-            widget_img.paste(fates_pil,(10,152))
+        def remove_transparency(im):
+            if im.mode in ('RGBA', 'LA') or (im.mode == 'P' and 'transparency' in im.info):
+                # Need to convert to RGBA if LA format due to a bug in PIL (http://stackoverflow.com/a/1963146)
+                alpha = im.convert('RGBA').split()[-1]
+                
+                # Create a new background image of our matt color.
+                # Must be RGBA because paste requires both images have the same format
+                # (http://stackoverflow.com/a/8720632  and  http://stackoverflow.com/a/9459208)
+                bg = Image.new("RGBA", im.size, 'black')
+                bg.paste(im, mask=alpha)
+                return bg
+            else:
+                return im
+        widget_img.paste(remove_transparency(fates_pil),(10,152))
         
         #pasting votes logo
         try:
