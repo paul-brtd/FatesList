@@ -314,12 +314,14 @@ async def botlist_get_queue_api(request: Request, state: enums.BotState = enums.
     return {"bots": [{"user": await get_bot(bot["bot_id"]), "prefix": bot["prefix"], "invite": await invite_bot(bot["bot_id"], api = True), "description": bot["description"]} for bot in bots]}
 
 @router.get("/is_staff")
-async def check_staff_member(request: Request, user_id: int, min_perm: int):
+def check_staff_member(request: Request, user_id: int, min_perm: int):
     """Admin route to check if a user is staff or not"""
     try:
-        await client.wait_until_ready()
         staff = is_staff(staff_roles, client.get_guild(main_server).get_member(user_id).roles, min_perm)
     except:
         return {"staff": False, "perm": 1, "sm": {}}
     return {"staff": staff[0], "perm": staff[1], "sm": staff[2].dict()}
 
+@router.get("/staff_roles")
+def get_staff_roles(request: Request):
+    return staff_roles

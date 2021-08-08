@@ -109,7 +109,6 @@ async def fetch_bot(
     bot_id: int, 
     compact: Optional[bool] = True, 
     with_tags: Optional[bool] = False,
-    with_owners: Optional[bool] = False,
     offline: Optional[bool] = False
 ):
     """
@@ -119,9 +118,7 @@ async def fetch_bot(
 
     Setting with_tags to false -> tags will be null
 
-    Setting with_owners to false -> owners will be null
-
-    Setting offline to true -> user will be null. If the bot is no longer on discord, this endpoint will still return if offline is set to true
+    Setting offline to true -> user will be null and no ownership info will be given. If the bot is no longer on discord, this endpoint will still return if offline is set to true
     """
     if len(str(bot_id)) not in [17, 18, 19, 20]:
         return abort(404)
@@ -146,7 +143,7 @@ async def fetch_bot(
         tags = await db.fetch("SELECT tag FROM bot_tags WHERE bot_id = $1", bot_id)
         api_ret["tags"] = [tag["tag"] for tag in tags]
    
-    if with_owners:
+    if not offline:
         owners_db = await db.fetch("SELECT owner, main FROM bot_owner WHERE bot_id = $1", bot_id)
         owners = []
         _done = []
@@ -202,10 +199,9 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
     worker_session = request.app.state.worker_session
     db = worker_session.postgres
     
-    bot = await db.fetchrow("SELECT bot_id, guild_count, votes, description FROM bots WHERE bot_id = $1", bot_id)
+    bot = await db.fetchrow("SELECT guild_count, votes, description FROM bots WHERE bot_id = $1", bot_id)
     if not bot:
         return abort(404)
-    bot = dict(bot)
     
     bt.add_task(add_ws_event, bot_id, {"m": {"e": enums.APIEvents.bot_view}, "ctx": {"user": request.session.get('user_id'), "widget": True}})
     data = {"bot": bot, "user": await get_bot(bot_id, worker_session = request.app.state.worker_session)}
@@ -220,15 +216,15 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
     elif format == enums.WidgetFormat.html:
         return await templates.TemplateResponse("widget.html", {"request": request} | data)
     
-    elif format == enums.WidgetFormat.webp:
+    elif format in (enums.WidgetFormat.png, enums.WidgetFormat.webp):
         # Check if in cache
-        cache = await redis_db.get(f"widget-{bot_id}")
+        cache = await redis_db.get(f"widget-{bot_id}-{format.name}")
         if cache:
             def _stream():
                 with io.BytesIO(cache) as output:
                     yield from output
 
-            return StreamingResponse(_stream(), media_type="image/webp")
+            return StreamingResponse(_stream(), media_type=f"image/{format.name}")
 
         widget_img = Image.new("RGBA", (300, 175), "black")
         async with aiohttp.ClientSession() as sess:
@@ -360,16 +356,16 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
         )
             
         output = io.BytesIO()
-        widget_img.save(output, format="WEBP")
+        widget_img.save(output, format=format.name.upper())
         output.seek(0)
-        await redis_db.set(f"widget-{bot_id}", output.read(), ex=60*3)
+        await redis_db.set(f"widget-{bot_id}-{format.name}", output.read(), ex=60*3)
         output.seek(0)
 
         def _stream():    
             yield from output
             output.close()
 
-        return StreamingResponse(_stream(), media_type="image/webp")
+        return StreamingResponse(_stream(), media_type=f"image/{format.name}")
             
 
 
