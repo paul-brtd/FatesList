@@ -299,8 +299,10 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
                 return api_error(rc, 2760)
         else:
             asyncio.create_task(tool)
+   
+    if data.op.__cooldown__:
+        await redis_db.set(f"cooldown-{data.op.__cooldown__.name}-{user.id}", 0, px = int(data.op.__cooldown__.value*1000))
     
-    await redis_db.set(f"cooldown-{data.op.__cooldown__.name}-{user.id}", 0, px = int(data.op.__cooldown__.value*1000))
     return api_success(success_msg, status_code = success_code)
 
 @router.get("/queue/bots", response_model = BotQueueGet)
@@ -312,12 +314,14 @@ async def botlist_get_queue_api(request: Request, state: enums.BotState = enums.
     return {"bots": [{"user": await get_bot(bot["bot_id"]), "prefix": bot["prefix"], "invite": await invite_bot(bot["bot_id"], api = True), "description": bot["description"]} for bot in bots]}
 
 @router.get("/is_staff")
-async def check_staff_member(request: Request, user_id: int, min_perm: int):
+def check_staff_member(request: Request, user_id: int, min_perm: int):
     """Admin route to check if a user is staff or not"""
     try:
-        await client.wait_until_ready()
         staff = is_staff(staff_roles, client.get_guild(main_server).get_member(user_id).roles, min_perm)
     except:
         return {"staff": False, "perm": 1, "sm": {}}
     return {"staff": staff[0], "perm": staff[1], "sm": staff[2].dict()}
 
+@router.get("/staff_roles")
+def get_staff_roles(request: Request):
+    return staff_roles

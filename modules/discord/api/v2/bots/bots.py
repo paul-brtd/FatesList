@@ -3,8 +3,8 @@ from lxml.html.clean import Cleaner
 from modules.core import *
 from lynxfall.utils.string import human_format
 from fastapi.responses import PlainTextResponse, StreamingResponse
-from PIL import Image, ImageDraw
-import io
+from PIL import Image, ImageDraw, ImageFont
+import io, textwrap, aiofiles
 from starlette.concurrency import run_in_threadpool
 from ..base import API_VERSION
 from .models import APIResponse, Bot, BotRandom, BotStats, BotAppeal
@@ -109,7 +109,6 @@ async def fetch_bot(
     bot_id: int, 
     compact: Optional[bool] = True, 
     with_tags: Optional[bool] = False,
-    with_owners: Optional[bool] = False,
     offline: Optional[bool] = False
 ):
     """
@@ -119,9 +118,7 @@ async def fetch_bot(
 
     Setting with_tags to false -> tags will be null
 
-    Setting with_owners to false -> owners will be null
-
-    Setting offline to true -> user will be null. If the bot is no longer on discord, this endpoint will still return if offline is set to true
+    Setting offline to true -> user will be null and no ownership info will be given. If the bot is no longer on discord, this endpoint will still return if offline is set to true
     """
     if len(str(bot_id)) not in [17, 18, 19, 20]:
         return abort(404)
@@ -146,7 +143,7 @@ async def fetch_bot(
         tags = await db.fetch("SELECT tag FROM bot_tags WHERE bot_id = $1", bot_id)
         api_ret["tags"] = [tag["tag"] for tag in tags]
    
-    if with_owners:
+    if not offline:
         owners_db = await db.fetch("SELECT owner, main FROM bot_owner WHERE bot_id = $1", bot_id)
         owners = []
         _done = []
@@ -193,49 +190,182 @@ async def bot_exists(request: Request, bot_id: int):
 
 
 @router.get("/{bot_id}/widget")
-async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format: enums.WidgetFormat, unstable: bool = False):
+async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format: enums.WidgetFormat):
     """
     Returns a widget
 
     Unstable signifies whether an action is unstable or not. You will get a API error if this is the case and unstable is not set or the bot is not certified (only certified bots may use unstable endpoints) and the existence of the nyi key can be used to programatically detect this
-
-    The webp format is unstable. All the others are stable
     """
     worker_session = request.app.state.worker_session
     db = worker_session.postgres
     
-    bot = await db.fetchrow("SELECT bot_id, guild_count, votes, state FROM bots WHERE bot_id = $1", bot_id)
+    bot = await db.fetchrow("SELECT guild_count, votes, description FROM bots WHERE bot_id = $1", bot_id)
     if not bot:
         return abort(404)
-    bot = dict(bot)
+    
     bt.add_task(add_ws_event, bot_id, {"m": {"e": enums.APIEvents.bot_view}, "ctx": {"user": request.session.get('user_id'), "widget": True}})
     data = {"bot": bot, "user": await get_bot(bot_id, worker_session = request.app.state.worker_session)}
+    bot_obj = data["user"]
     
-    if bot["state"] != enums.BotState.certified:
-        unstable = False
+    if not bot_obj:
+        return abort(404)
 
     if format == enums.WidgetFormat.json:
         return data
+    
     elif format == enums.WidgetFormat.html:
         return await templates.TemplateResponse("widget.html", {"request": request} | data)
-    elif format == enums.WidgetFormat.webp:
-        if not unstable:
-            return api_error("Unstable Endpoint. Only certified bots can use this with the unstable query param set", nyi=True)
+    
+    elif format in (enums.WidgetFormat.png, enums.WidgetFormat.webp):
+        # Check if in cache
+        cache = await redis_db.get(f"widget-{bot_id}-{format.name}")
+        if cache:
+            def _stream():
+                with io.BytesIO(cache) as output:
+                    yield from output
+
+            return StreamingResponse(_stream(), media_type=f"image/{format.name}")
+
         widget_img = Image.new("RGBA", (300, 175), "black")
         async with aiohttp.ClientSession() as sess:
-            async with sess.get(data["user"]["avatar"] if data["user"] else "https://fateslist.xyz/static/botlisticon.webp") as res:
+            async with sess.get(data["user"]["avatar"]) as res:
                 avatar_img = await res.read()
-                avatar_pil = Image.open(io.BytesIO(avatar_img)).resize((100, 100))
-                avatar_pil_bg = Image.new('RGBA', avatar_pil.size, (0,0,0))
-                widget_img.paste(Image.alpha_composite(avatar_pil, avatar_pil_bg))
 
-        def _stream():
-            with io.BytesIO() as output:
-                widget_img.save(output, format="WEBP")
-                output.seek(0)
-                yield from output
+        static = request.app.state.static
+        fates_pil = static["fates_pil"]
+        votes_pil = static["votes_pil"]
+        server_pil = static["server_pil"]
+        avatar_pil = Image.open(io.BytesIO(avatar_img)).resize((100, 100))
+        avatar_pil_bg = Image.new('RGBA', avatar_pil.size, (0,0,0))
+            
+        #pasting the bot image
+        try:
+            widget_img.paste(Image.alpha_composite(avatar_pil_bg, avatar_pil),(10,widget_img.size[-1]//5))
+        except:
+            widget_img.paste(avatar_pil,(10,widget_img.size[-1]//5))
+            
+        def remove_transparency(im):
+            if im.mode in ('RGBA', 'LA') or (im.mode == 'P' and 'transparency' in im.info):
+                # Need to convert to RGBA if LA format due to a bug in PIL (http://stackoverflow.com/a/1963146)
+                alpha = im.convert('RGBA').split()[-1]
+                
+                # Create a new background image of our matt color.
+                # Must be RGBA because paste requires both images have the same format
+                # (http://stackoverflow.com/a/8720632  and  http://stackoverflow.com/a/9459208)
+                bg = Image.new("RGBA", im.size, 'black')
+                bg.paste(im, mask=alpha)
+                return bg
+            else:
+                return im
+        widget_img.paste(remove_transparency(fates_pil),(10,152))
+        
+        #pasting votes logo
+        try:
+            widget_img.paste(Image.alpha_composite(avatar_pil_bg, votes_pil),(120,115))
+        except:
+            widget_img.paste(votes_pil,(120,115))
+        
+        #pasting servers logo
+        try:
+            widget_img.paste(Image.alpha_composite(avatar_pil_bg, server_pil),(120,95))
+        except:
+            widget_img.paste(server_pil,(120,95))
 
-        return StreamingResponse(_stream(), media_type="image/webp")
+        font = os.path.join("data/static/LexendDeca-Regular.ttf")
+
+        def get_font(string: str, d):
+            return ImageFont.truetype(
+                font,
+                get_font_size(d.textsize(string)[0]),
+                layout_engine=ImageFont.LAYOUT_RAQM
+            )
+        
+        def get_font_size(width: int):
+            if width <= 90:
+                return 18  
+            elif width >= 192:
+                return 10
+            elif width == 168:
+                return 12
+            else:
+                return 168-width-90
+        
+        def the_area(str_width: int, image_width: int):
+            if str_width < 191:
+                new_width=abs(int(str_width-image_width))
+                return (new_width//2.5)
+            else:
+                new_width=abs(int(str_width-image_width))
+                return (new_width//4.5)
+                
+        
+        #lists name
+        d = ImageDraw.Draw(widget_img)
+        d.text(
+            (25,150), 
+            str('Fates List'), 
+            fill='white',
+            font=ImageFont.truetype(
+                font,
+                10,
+                layout_engine=ImageFont.LAYOUT_RAQM
+            )
+        )
+        
+        #Bot name
+        d.text(
+            (
+                the_area(
+                    d.textsize(str(bot_obj['username']))[0],
+                    widget_img.size[0]
+                ),
+                5
+            ), 
+            str(bot_obj['username']), 
+            fill='white',
+            font=ImageFont.truetype(
+                font,
+                16,
+                layout_engine=ImageFont.LAYOUT_RAQM
+                )
+            )
+        
+        wrapper = textwrap.TextWrapper(width=30)
+        word_list = wrapper.wrap(text=bot['description'])
+        d.text(
+            (120,30), 
+            str('\n'.join(word_list)), 
+            fill='white',
+            font=get_font(str(bot['description']),d)
+        )
+        
+        #server count
+        d.text(
+            (140,94), 
+            human_format(bot["guild_count"]), 
+            fill='white',
+            font=get_font(human_format(bot["guild_count"]),d)
+        )
+        
+        #votes
+        d.text(
+            (140,114),
+            human_format(bot["votes"]), 
+            fill='white',
+            font=get_font(human_format(bot['votes']),d)
+        )
+            
+        output = io.BytesIO()
+        widget_img.save(output, format=format.name.upper())
+        output.seek(0)
+        await redis_db.set(f"widget-{bot_id}-{format.name}", output.read(), ex=60*3)
+        output.seek(0)
+
+        def _stream():    
+            yield from output
+            output.close()
+
+        return StreamingResponse(_stream(), media_type=f"image/{format.name}")
             
 
 

@@ -28,6 +28,7 @@ class WidgetFormat(Enum):
     _init_ = "value __doc__"
     json = "json", "JSON Widget"
     html = "html", "HTML Widget"
+    png = "png", "Widget (as png image)"
     webp = "webp", "Widget (as webp image)"
 
 class PromotionType(IntEnum):
