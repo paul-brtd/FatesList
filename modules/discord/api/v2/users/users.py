@@ -3,7 +3,7 @@ from lxml.html.clean import Cleaner
 from modules.core import *
 
 from ..base import API_VERSION
-from .models import APIResponse, BotMeta, enums
+from .models import APIResponse, BotMeta, enums, BaseUser
 
 cleaner = Cleaner(remove_unknown_tags=False)
 
@@ -12,6 +12,16 @@ router = APIRouter(
     include_in_schema = True,
     tags = [f"API v{API_VERSION} - Users"]
 )
+
+@router.get(
+    "/{user_id}/obj",
+    response_model = BaseUser
+)
+async def get_cache_user(request: Request, user_id: int):
+    user = await get_any(user_id)
+    if not user:
+        return abort(404)
+    return user
 
 @router.put(
     "/{user_id}/bots/{bot_id}", 
