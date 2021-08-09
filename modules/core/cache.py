@@ -23,7 +23,7 @@ async def _user_fetch(
     
     # Check if a suitable version is in the cache first before querying Discord
 
-    CACHE_VER = 10 # Current cache ver
+    CACHE_VER = 13 # Current cache ver
 
     if len(user_id) not in [17, 18, 19, 20]: # Snowflake can be 17 - 20
         logger.debug(f"Ignoring blatantly wrong User ID: {user_id}")
@@ -69,6 +69,7 @@ async def _user_fetch(
     try:
         logger.debug(f"Making API call to get user {user_id}")
         bot_obj = await client.getch_user(int(user_id)) # Use new getch_user function which tries cache itself else fetches
+        logger.debug(str(bot_obj))
         valid_user = True # It worked and didn't error, set valid_user
         bot = bot_obj.bot # Set bot flag accordingly
     except Exception as ex:
@@ -78,7 +79,11 @@ async def _user_fetch(
     try:
         # Get the status by getting guild, getting member and then setting status.
         # May fail if not in guild or still connecting to Discord so catch that using try except
-        status = str(client.get_guild(main_server).get_member(int(user_id)).status)
+        if valid_user and bot_obj.mutual_guilds:
+            status = str(client.get_guild(main_server).get_member(int(user_id)).status)
+        else:
+            status = "unknown"
+
         if status == "online":
             status = 1 # Online
         elif status == "offline":
