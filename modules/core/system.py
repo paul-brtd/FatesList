@@ -181,7 +181,11 @@ class FatesBot(discord.Client):
     async def on_ready(self):
         """on_ready patch"""
         self.ready = True
-        logger.success(f"{self.user} now up!")        
+        logger.success(f"{self.user} now up!")
+        
+    async def getch_user(self, id):
+        """Get a user using either get or fetch (just do it)
+        return self.get_user(id) or await self.fetch_user(id)
 
         
 class FatesWorkerOauth(Singleton):  # pylint: disable=too-few-public-methods
