@@ -199,7 +199,7 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
 
     Unstable signifies whether an action is unstable or not. You will get a API error if this is the case and unstable is not set or the bot is not certified (only certified bots may use unstable endpoints) and the existence of the nyi key can be used to programatically detect this
     """
-    if not is_color_like(str(bgcolor)) and is_color_like(str(texcolor)):
+    if not is_color_like(str(bgcolor)) or not is_color_like(str(texcolor)):
         return abort(404)
     if isinstance(bgcolor, str):
         bgcolor=bgcolor.split('.')[0]
@@ -230,7 +230,7 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
     
     elif format in (enums.WidgetFormat.png, enums.WidgetFormat.webp):
         # Check if in cache
-        cache = await redis_db.get(f"widget-{bot_id}-{format.name}")
+        cache = await redis_db.get(f"widget-{bot_id}-{format.name}-{texcolor}")
         if cache:
             def _stream():
                 with io.BytesIO(cache) as output:
@@ -310,7 +310,7 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
                 new_width=abs(int(str_width-image_width))
                 return (new_width//4.5)
                 
-        
+         
         #lists name
         d = ImageDraw.Draw(widget_img)
         d.text(
@@ -323,7 +323,7 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
                 layout_engine=ImageFont.LAYOUT_RAQM
             )
         )
-        
+
         #Bot name
         d.text(
             (
@@ -371,7 +371,7 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
         output = io.BytesIO()
         widget_img.save(output, format=format.name.upper())
         output.seek(0)
-        await redis_db.set(f"widget-{bot_id}-{format.name}", output.read(), ex=60*3)
+        await redis_db.set(f"widget-{bot_id}-{format.name}-{texcolor}", output.read(), ex=60*3)
         output.seek(0)
 
         def _stream():    
