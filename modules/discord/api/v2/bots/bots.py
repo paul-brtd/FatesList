@@ -6,6 +6,9 @@ from fastapi.responses import PlainTextResponse, StreamingResponse
 from PIL import Image, ImageDraw, ImageFont
 import io, textwrap, aiofiles
 from starlette.concurrency import run_in_threadpool
+from matplotlib.colors import is_color_like
+from math import floor
+
 from ..base import API_VERSION
 from .models import APIResponse, Bot, BotRandom, BotStats, BotAppeal
 
@@ -190,12 +193,21 @@ async def bot_exists(request: Request, bot_id: int):
 
 
 @router.get("/{bot_id}/widget")
-async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format: enums.WidgetFormat):
+async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format: enums.WidgetFormat, bgcolor: int | str ='black', texcolor: int | str ='white'):
     """
     Returns a widget
 
     Unstable signifies whether an action is unstable or not. You will get a API error if this is the case and unstable is not set or the bot is not certified (only certified bots may use unstable endpoints) and the existence of the nyi key can be used to programatically detect this
     """
+    if not is_color_like(str(bgcolor)) and is_color_like(str(texcolor)):
+        return abort(404)
+    if isinstance(bgcolor, str):
+        bgcolor=bgcolor.split('.')[0]
+        bgcolor = floor(int(bgcolor)) if bgcolor.isdigit() or bgcolor.isdecimal() else bgcolor
+    if isinstance(texcolor, str):
+        texcolor=texcolor.split('.')[0]
+        texcolor = floor(int(texcolor)) if texcolor.isdigit() or texcolor.isdecimal() else texcolor
+        
     worker_session = request.app.state.worker_session
     db = worker_session.postgres
     
@@ -226,7 +238,7 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
 
             return StreamingResponse(_stream(), media_type=f"image/{format.name}")
 
-        widget_img = Image.new("RGBA", (300, 175), "black")
+        widget_img = Image.new("RGBA", (300, 175), bgcolor)
         async with aiohttp.ClientSession() as sess:
             async with sess.get(data["user"]["avatar"]) as res:
                 avatar_img = await res.read()
@@ -244,7 +256,7 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
         except:
             widget_img.paste(avatar_pil,(10,widget_img.size[-1]//5))
             
-        def remove_transparency(im):
+        def remove_transparency(im, bgcolor):
             if im.mode in ('RGBA', 'LA') or (im.mode == 'P' and 'transparency' in im.info):
                 # Need to convert to RGBA if LA format due to a bug in PIL (http://stackoverflow.com/a/1963146)
                 alpha = im.convert('RGBA').split()[-1]
@@ -252,12 +264,12 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
                 # Create a new background image of our matt color.
                 # Must be RGBA because paste requires both images have the same format
                 # (http://stackoverflow.com/a/8720632  and  http://stackoverflow.com/a/9459208)
-                bg = Image.new("RGBA", im.size, 'black')
+                bg = Image.new("RGBA", im.size, bgcolor)
                 bg.paste(im, mask=alpha)
                 return bg
             else:
                 return im
-        widget_img.paste(remove_transparency(fates_pil),(10,152))
+        widget_img.paste(remove_transparency(fates_pil, bgcolor),(10,152))
         
         #pasting votes logo
         try:
@@ -304,7 +316,7 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
         d.text(
             (25,150), 
             str('Fates List'), 
-            fill='white',
+            fill=texcolor,
             font=ImageFont.truetype(
                 font,
                 10,
@@ -322,7 +334,7 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
                 5
             ), 
             str(bot_obj['username']), 
-            fill='white',
+            fill=texcolor,
             font=ImageFont.truetype(
                 font,
                 16,
@@ -330,12 +342,13 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
                 )
             )
         
+        #description
         wrapper = textwrap.TextWrapper(width=30)
         word_list = wrapper.wrap(text=bot['description'])
         d.text(
             (120,30), 
             str('\n'.join(word_list)), 
-            fill='white',
+            fill=texcolor,
             font=get_font(str(bot['description']),d)
         )
         
@@ -343,7 +356,7 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
         d.text(
             (140,94), 
             human_format(bot["guild_count"]), 
-            fill='white',
+            fill=texcolor,
             font=get_font(human_format(bot["guild_count"]),d)
         )
         
@@ -351,7 +364,7 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
         d.text(
             (140,114),
             human_format(bot["votes"]), 
-            fill='white',
+            fill=texcolor,
             font=get_font(human_format(bot['votes']),d)
         )
             
