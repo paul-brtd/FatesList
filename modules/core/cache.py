@@ -68,7 +68,7 @@ async def _user_fetch(
 
     try:
         logger.debug(f"Making API call to get user {user_id}")
-        bot_obj = await client.fetch_user(int(user_id)) # Use fetch user to actually use HTTP api and not cache to allow bots not in guild
+        bot_obj = await client.getch_user(int(user_id)) # Use new getch_user function which tries cache itself else fetches
         valid_user = True # It worked and didn't error, set valid_user
         bot = bot_obj.bot # Set bot flag accordingly
     except Exception as ex:
