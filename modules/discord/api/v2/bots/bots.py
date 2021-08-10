@@ -193,20 +193,20 @@ async def bot_exists(request: Request, bot_id: int):
 
 
 @router.get("/{bot_id}/widget")
-async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format: enums.WidgetFormat, bgcolor: int | str ='black', texcolor: int | str ='white'):
+async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format: enums.WidgetFormat, bgcolor: int | str ='black', textcolor: int | str ='white'):
     """
     Returns a widget
 
     Unstable signifies whether an action is unstable or not. You will get a API error if this is the case and unstable is not set or the bot is not certified (only certified bots may use unstable endpoints) and the existence of the nyi key can be used to programatically detect this
     """
-    if not is_color_like(str(bgcolor)) or not is_color_like(str(texcolor)):
+    if not is_color_like(str(bgcolor)) or not is_color_like(str(textcolor)):
         return abort(404)
     if isinstance(bgcolor, str):
         bgcolor=bgcolor.split('.')[0]
         bgcolor = floor(int(bgcolor)) if bgcolor.isdigit() or bgcolor.isdecimal() else bgcolor
-    if isinstance(texcolor, str):
-        texcolor=texcolor.split('.')[0]
-        texcolor = floor(int(texcolor)) if texcolor.isdigit() or texcolor.isdecimal() else texcolor
+    if isinstance(textcolor, str):
+        textcolor=textcolor.split('.')[0]
+        textcolor = floor(int(textcolor)) if textcolor.isdigit() or textcolor.isdecimal() else textcolor
         
     worker_session = request.app.state.worker_session
     db = worker_session.postgres
@@ -230,7 +230,7 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
     
     elif format in (enums.WidgetFormat.png, enums.WidgetFormat.webp):
         # Check if in cache
-        cache = await redis_db.get(f"widget-{bot_id}-{format.name}-{texcolor}")
+        cache = await redis_db.get(f"widget-{bot_id}-{format.name}-{textcolor}")
         if cache:
             def _stream():
                 with io.BytesIO(cache) as output:
@@ -316,7 +316,7 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
         d.text(
             (25,150), 
             str('Fates List'), 
-            fill=texcolor,
+            fill=textcolor,
             font=ImageFont.truetype(
                 font,
                 10,
@@ -334,7 +334,7 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
                 5
             ), 
             str(bot_obj['username']), 
-            fill=texcolor,
+            fill=textcolor,
             font=ImageFont.truetype(
                 font,
                 16,
@@ -348,7 +348,7 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
         d.text(
             (120,30), 
             str('\n'.join(word_list)), 
-            fill=texcolor,
+            fill=textcolor,
             font=get_font(str(bot['description']),d)
         )
         
@@ -356,7 +356,7 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
         d.text(
             (140,94), 
             human_format(bot["guild_count"]), 
-            fill=texcolor,
+            fill=textcolor,
             font=get_font(human_format(bot["guild_count"]),d)
         )
         
@@ -364,14 +364,14 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
         d.text(
             (140,114),
             human_format(bot["votes"]), 
-            fill=texcolor,
+            fill=textcolor,
             font=get_font(human_format(bot['votes']),d)
         )
             
         output = io.BytesIO()
         widget_img.save(output, format=format.name.upper())
         output.seek(0)
-        await redis_db.set(f"widget-{bot_id}-{format.name}-{texcolor}", output.read(), ex=60*3)
+        await redis_db.set(f"widget-{bot_id}-{format.name}-{textcolor}", output.read(), ex=60*3)
         output.seek(0)
 
         def _stream():    
