@@ -24,7 +24,7 @@ CREATE TABLE bots (
     css text default '',
     prefix text,
     features TEXT[] DEFAULT '{}',
-    api_token text unique,
+    api_token text unique not null,
     website text,
     discord text,
     state integer DEFAULT 1,

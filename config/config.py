@@ -337,7 +337,7 @@ rules = {
             ),
             (
                 "Commands must have a purpose (no filler commands). Filler commands are ignored and will "
-                "make your bot low-quality. An example of filler commands/commands with no purpose is a bot "
+                "make your bot low quality. An example of filler commands/commands with no purpose is a bot "
                 "with 20 purge commands or commands which are repeated in different ways or serve the same "
                 "purpose"
             ),
@@ -398,6 +398,85 @@ rules = {
                 "You can always appeal a ban or resubmit your bot. To do so, just login, click your username "
                 "> My Profile > *your bot* > View and then click the link underneath the ban message to "
                 "start the ban appeal or resubmission process"
+            )
+        ]
+    },
+    "certification": {
+        "basics": [
+            (
+                "Your bot must have a banner (either bot card and/or bot page)"
+            ),
+            (
+                "Your bot should have a high quality bot page including a good long/short description and "
+                "good banner choices"
+            ),
+            (
+                "Your bot must be verified and in at least 100 servers at minimum. A recommendation that may "
+                "result in a denial is the requirement of 500 servers but this is decided on a per-case basis. "
+                "Hundred servers is minimum however"
+            ),
+            (
+                "Your bot will be held up to higher standards than normal and also represents Fates List as a whole"
+            ),
+            (
+                "Your bot must post stats to Fates List at least once per month or it will be uncertified. Vote "
+                "webhooks for Fates List is recommended and this does affect certification however it is not "
+                "a hard requirement"
+            ),
+            (
+                "Your bot must have a consistent uptime and communicate with its users on maintenances and other "
+                "downtime consistently"
+            ),
+            (
+                "Your bot must have unique features or be the first to have said features. It must implement "
+                "these features in a good high-quality way that conforms to users expectations"
+            ),
+            (
+                "Your bot must meet our bot requirements as well as the certification requirements"
+            ),
+            (
+                "Your bot may be exempted from requirements it does not meet on a case by case basis that "
+                "staff (Admins/Mods+) will decide and/or vote on. We will let you know more information "
+                "during the process"
+            ),
+            (
+                "You may apply for certification on our support server by creating a support ticket with "
+                "Certification as the selected option. Your bot will undergo some basic automated checks "
+                "and will then be sent to us. We will DM you when we are retesting your bot and for any "
+                "updates or other info we have. Having a closed DM/friend requests will result in denial!"
+            )
+        ],
+        "commands": [
+            (
+                "At least 98% to 100% of all commands should work unless the bot does not *have* commands "
+                "(chat bots etc)"
+            ),
+            (
+                "All commands must implement error handling. Using embeds is recommended in commands"
+            ),
+            (
+                "The majority of all commands should gave clear documentation on how to use it, preferably "
+                "with examples"
+            )
+        ],
+        "perks": [
+            (
+                "Certified Bots appear higher on the main page and will be above all bots other than the random bot"
+            ),
+            (
+                "Special channel to show off certified bots and potential access to #general or a channel for "
+                "just your bot!"
+            ),
+            (
+                "Access to in-development 'unstable' API endpoints and potentially some "
+                "certified bot only features"
+            ),
+            (
+                "Little to no API ratelimits as you are trusted to use the API responsibly. This *will* get revoked "
+                "and your bot *may* be banned if you abuse this (decided on a case by case basis)!"
+            ),
+            (
+                "More coming soon ❤️"
             )
         ]
     }
