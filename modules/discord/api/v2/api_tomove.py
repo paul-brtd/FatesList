@@ -98,42 +98,15 @@ async def get_commands(request:  Request, bot_id: int, filter: Optional[str] = N
 )
 async def add_command(request: Request, bot_id: int, command: BotCommand):
     """
-    Adds a command to your bot
+    Adds a command to your bot. If it already exists, this will delete and readd the command so it can be used to edit already existing commands
     """
     check = await db.fetchval("SELECT COUNT(1) FROM bot_commands WHERE cmd_name = $1 AND bot_id = $2", command.cmd_name, bot_id)
     if check:
-        return api_error("A command with this name already exists on your bot")
+        await db.execute("DELETE FROM bot_commands WHERE cmd_name = $1 AND bot_id = $2", command.cmd_name, bot_id)
     id = uuid.uuid4()
     await db.execute("INSERT INTO bot_commands (id, bot_id, cmd_groups, cmd_type, cmd_name, description, args, examples, premium_only, notes, doc_link, vote_locked) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)", id, bot_id, command.cmd_groups, command.cmd_type, command.cmd_name, command.description, command.args, command.examples, command.premium_only, command.notes, command.doc_link, command.vote_locked)
     await bot_add_event(bot_id, enums.APIEvents.command_add, {"user": None, "id": id})
     return api_success(id = id)
-
-@router.patch(
-    "/bots/{bot_id}/commands/{id}", 
-    response_model = APIResponse, 
-    dependencies=[
-        Depends(
-            Ratelimiter(
-                global_limit = Limit(times=20, minutes=1),
-                sub_limits = [Limit(times=5, seconds=15)]
-            )
-        ), 
-        Depends(bot_auth_check)
-    ]
-)
-async def edit_command(request: Request, bot_id: int, id: uuid.UUID, command: BotCommand):
-    data = await db.fetchrow(f"SELECT id, cmd_type, cmd_groups, cmd_name, vote_locked, description, args, examples, premium_only, notes, doc_link FROM bot_commands WHERE id = $1 AND bot_id = $2", id, bot_id)
-    if data is None:
-        return abort(404)
-
-    # Check values to be editted
-    command_dict = command.dict()
-    for key in command_dict.keys():
-        if command_dict[key] is None: 
-            command_dict[key] = data[key]
-    await db.execute("UPDATE bot_commands SET cmd_type = $2, cmd_name = $3, description = $4, args = $5, examples = $6, premium_only = $7, notes = $8, doc_link = $9, cmd_groups = $10, vote_locked = $11 WHERE id = $1", command_dict["id"], command_dict["cmd_type"], command_dict["cmd_name"], command_dict["description"], command_dict["args"], command_dict["examples"], command_dict["premium_only"], command_dict["notes"], command_dict["doc_link"], command_dict["cmd_groups"], command_dict["vote_locked"])
-    await bot_add_event(bot_id, enums.APIEvents.command_edit, {"user": None, "id": id})
-    return api_success()
 
 @router.delete(
     "/bots/{bot_id}/commands/{id}", 
@@ -154,35 +127,6 @@ async def delete_command(request: Request, bot_id: int, id: uuid.UUID):
         return abort(404)
     await db.execute("DELETE FROM bot_commands WHERE id = $1 AND bot_id = $2", id, bot_id)
     await bot_add_event(bot_id, enums.APIEvents.command_delete, {"user": None, "id": id})
-    return api_success()
-
-@router.get(
-    "/bots/{bot_id}/maintenance", 
-    response_model = BotMaintenance
-)
-async def get_maintenance_mode(request: Request, bot_id: int):
-    ret = await get_maint(bot_id = bot_id)
-    return ret
-
-@router.patch(
-    "/bots/{bot_id}/maintenance", 
-    response_model = APIResponse,
-    dependencies = [
-        Depends(bot_auth_check)
-    ]
-)
-async def set_maintenance_mode(request: Request, bot_id: int, api: BotMaintenancePartial):
-    """This is just an endpoint for enabling or disabling maintenance mode.
-
-    **API Token**: You can get this by clicking your bot and clicking edit and scrolling down to API Token
-
-    **Mode**: Whether you want to enter or exit maintenance mode. Setting this to 1 will enable maintenance, setting this to 2 will enable long-lasting maintenance mode and setting this to 0 will disable maintenance mode. More flying in soon :)
-    """
-    
-    if api.mode not in [0, 1]:
-        return api_error("The mode you are using is invalid", 36281)
-
-    await add_maint(bot_id, api.mode, api.reason)
     return api_success()
 
 @router.get(
@@ -269,7 +213,7 @@ async def preview_api(request: Request, data: PrevRequest, lang: str = "default"
     html = html.replace("<h1", "<h2 style='text-align: center'").replace("<h2", "<h3").replace("<h4", "<h5").replace("<h6", "<p").replace("<a", "<a class='long-desc-link'").replace("ajax", "").replace("http://", "https://").replace(".alert", "")
     return {"html": html}
 
-# TODO: Properly document the actual API
+
 @router.get(
     "/users/{user_id}"
 )
@@ -279,93 +223,7 @@ async def get_user_api(request: Request, user_id: int, worker_session = Depends(
         return abort(404)
     return user
 
-@router.patch(
-    "/users/{user_id}/bots/{bot_id}/reminders",
-    dependencies = [
-        Depends(user_auth_check)
-    ]
-)
-async def set_vote_reminder(request: Request, user_id: int, bot_id: int, data: VoteReminderPatch):
-    if data.remind:
-        check = await db.fetchval("SELECT DISTINCT bot_id FROM user_reminders WHERE user_id = $1 AND bot_id = $2", user_id, bot_id)
-        if check == 0:
-            await db.execute("INSERT INTO user_reminders (user_id, bot_id) VALUES ($1, $2)", user_id, bot_id)
-            return api_success()
-        else:
-            return api_error("User already signed up for vote reminders", 37373)
-    else:
-        await db.execute("DELETE FROM user_reminders WHERE user_id = $1 AND bot_id = $2", user_id, bot_id)
-        return api_success()
-
-@router.post(
-    "/users/{user_id}/servers/prepare",
-    response_model = ServerListAuthed,
-    dependencies=[
-        Depends(
-            Ratelimiter(
-                global_limit = Limit(times=3, seconds=35)
-            )
-        ),
-        Depends(user_auth_check)
-    ]
-)
-async def prepare_servers_api(request: Request, user_id: int, data: ServerCheck):
-    """
-    Prepares a user to add servers and returns available servers for said user. Scopes must have guild permission
-
-    This request may change the access token and this should be set on the client and will be returned in the json response as well
-    """
-    return abort(503)
-    valid = {}
-    access_token = await discord_o.access_token_check(data.scopes, data.access_token.dict())
-    request.session["access_token"] = access_token
-    access_token["current_time"] = str(access_token["current_time"])
-    guilds = await discord_o.get_guilds(access_token["access_token"], permissions = [0x8, 0x20]) # Check for all guilds with 0x8 and 0x20
-    for guild in guilds:
-        if (isinstance(guild, str) and guild.isdigit()) or isinstance(guild, int):
-            guild_obj = client_servers.get_guild(int(server))
-            if guild_obj is None:
-                continue
-        else:
-            continue
-       
-        member = guild.get_member(user_id)
-        if member is None:
-            continue
-            
-        if member.guild_permissions.administrator or member.guild_permissions.manage_guild:
-            logger.debug(f"Adding {guild.id} to prepared server list")
-            guild_json = {
-                "icon": str(guild.icon_url),
-                "name": guild.name, 
-                "member_count": guild.member_count,
-                "created_at": str(guild.created_at.timestamp()), 
-                "code": get_token(37)
-            }
-            await redis_db.hset(str(guild.id), key = "cache", value = orjson.dumps(guild_json))
-            valid = valid | {str(guild.id): guild_json}
-    logger.debug(f"Valid servers are {valid}")
-    return {"servers": valid, "access_token": access_token}
-
-@router.post(
-    "/servers/{guild_id}",
-    dependencies=[
-        Depends(user_auth_check)
-    ]
-)
-async def add_guild_api(request: Request, guild_id: int, user_id: int, data: ServersAdd):
-    guild_data = await redis_db.hget(str(guild_id), key = "cache")
-    if guild_data is None:
-        logger.trace(f"Guild data is {guild_data}")
-        return abort(404)
-    guild_data = orjson.loads(guild_data)
-    if guild_data["code"] != data.code:
-        return api_error("Bad code provided")
-    server_actions = ServerActions(data.dict() | {"data": guild_data, "guild_id": guild_id, "user_id": user_id})
-    rc = await server_actions.add_server()
-    if rc is None:
-        return api_success()
-    return api_error(rc[0], rc[1])
+# guilds = await discord_o.get_guilds(access_token["access_token"], permissions = [0x8, 0x20]) # Check for admin/manage server in future
 
 @router.patch(
     "/users/{user_id}/description", 

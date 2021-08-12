@@ -21,26 +21,6 @@ router = APIRouter(
     dependencies=[Depends(id_check("bot"))]
 )
 
-@router.get(
-    "/{bot_id}/token",
-    dependencies=[
-        Depends(
-            Ratelimiter(
-                global_limit = Limit(times=5, minutes=1)
-            )    
-        ), 
-        Depends(user_auth_check)
-    ]
-)
-async def get_bot_token(request: Request, bot_id: int, user_id: int):
-    """
-    Gets a bot token given a user token. 401 = Invalid API Token, 403 = Forbidden (not owner of bot or staff)
-    """
-    bot_admin = await is_bot_admin(bot_id, user_id)
-    if not bot_admin:
-        return abort(403)
-    return await db.fetchrow("SELECT api_token FROM bots WHERE bot_id = $1", bot_id)
-
 @router.patch(
     "/{bot_id}/token", 
     response_model = APIResponse, 
@@ -51,7 +31,8 @@ async def get_bot_token(request: Request, bot_id: int, user_id: int):
             )
         ), 
         Depends(bot_auth_check)
-    ]
+    ],
+    operation_id="regenerate_bot_token"
 )
 async def regenerate_bot_token(request: Request, bot_id: int):
     """
@@ -70,7 +51,8 @@ async def regenerate_bot_token(request: Request, bot_id: int):
                 global_limit = Limit(times=7, seconds=5)
             )
         )
-    ]
+    ],
+    operation_id="fetch_random_bot"
 )
 async def fetch_random_bot(request: Request, bot_id: int, lang: str = "default"):
     """Fetch a random bot. Bot ID should be the recursive/root bot 0"""
@@ -105,21 +87,19 @@ async def fetch_random_bot(request: Request, bot_id: int, lang: str = "default")
                 global_limit = Limit(times=5, minutes=2)
             )
         )
-    ]
+    ],
+    operation_id="fetch_bot"
 )
 async def fetch_bot(
     request: Request, 
     bot_id: int, 
     compact: Optional[bool] = True, 
-    with_tags: Optional[bool] = False,
-    offline: Optional[bool] = False
+    offline: Optional[bool] = False,
 ):
     """
     Fetches bot information given a bot ID. If not found, 404 will be returned.
     
     Setting compact to true (default) -> description, long_description, long_description_type, keep_banner_decor and css will be null
-
-    Setting with_tags to false -> tags will be null
 
     Setting offline to true -> user will be null and no ownership info will be given. If the bot is no longer on discord, this endpoint will still return if offline is set to true
     """
@@ -142,9 +122,8 @@ async def fetch_bot(
         )
         api_ret |= dict(extra)
 
-    if with_tags:
-        tags = await db.fetch("SELECT tag FROM bot_tags WHERE bot_id = $1", bot_id)
-        api_ret["tags"] = [tag["tag"] for tag in tags]
+    tags = await db.fetch("SELECT tag FROM bot_tags WHERE bot_id = $1", bot_id)
+    api_ret["tags"] = [tag["tag"] for tag in tags]
    
     if not offline:
         owners_db = await db.fetch("SELECT owner, main FROM bot_owner WHERE bot_id = $1", bot_id)
@@ -186,13 +165,13 @@ async def fetch_bot(
     return api_ret
 
 
-@router.head("/{bot_id}")
+@router.head("/{bot_id}", operation_id="bot_exists")
 async def bot_exists(request: Request, bot_id: int):
     count = await db.fetchval("SELECT bot_id FROM bots WHERE bot_id = $1", bot_id)
     return PlainTextResponse("", status_code=200 if count else 404) 
 
 
-@router.get("/{bot_id}/widget")
+@router.get("/{bot_id}/widget", operation_id="get_bot_widget")
 async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format: enums.WidgetFormat, bgcolor: int | str ='black', textcolor: int | str ='white'):
     """
     Returns a widget
@@ -381,25 +360,6 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
         return StreamingResponse(_stream(), media_type=f"image/{format.name}")
             
 
-
-@router.get(
-    "/{bot_id}/raw",
-    dependencies=[
-        Depends(
-            Ratelimiter(
-                global_limit = Limit(times=5, minutes=4)
-            )
-        )
-    ]
-)
-async def get_raw_bot(request: Request, bot_id: int, bt: BackgroundTasks):
-    """
-    Gets the raw given to the template with a few differences (bot_id being string and not int and passing auth manually to the function (coming soon) as the API aims to be as stateless as possible)
-    Note that you likely want the Get Bot API and not this in most cases
-    This API is prone to change as render_bot will keep changing
-    """
-    return await render_bot(request, bt, bot_id, api = True)
-
 @router.post(
     "/{bot_id}/stats", 
     response_model = APIResponse, 
@@ -410,7 +370,8 @@ async def get_raw_bot(request: Request, bot_id: int, bt: BackgroundTasks):
             ) 
         ),
         Depends(bot_auth_check)
-    ]
+    ],
+    operation_id="set_bot_stats"
 )
 async def set_bot_stats(request: Request, bot_id: int, api: BotStats):
     """This endpoint allows you to set the guild + shard counts for your bot"""
@@ -438,7 +399,8 @@ async def set_bot_stats(request: Request, bot_id: int, api: BotStats):
             )
         ),
         Depends(bot_auth_check)
-    ]
+    ],
+    operation_id="appeal_bot"
 )
 async def appeal_bot(request: Request, bot_id: int, data: BotAppeal):
     if len(data.appeal) < 7:
@@ -460,7 +422,6 @@ async def appeal_bot(request: Request, bot_id: int, data: BotAppeal):
         return api_error(
             "You cannot send an appeal for a bot that is not banned or denied!"
         )
-    await client.wait_until_ready()
     reschannel = client.get_channel(appeals_channel)
     resubmit_embed = discord.Embed(title=title, color=0x00ff00)
     bot = await get_bot(bot_id)

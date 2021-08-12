@@ -19,25 +19,12 @@ router = APIRouter(
     tags = [f"API v{API_VERSION} - Admin"],
 )
 
-@router.get("/")
-def ping():
-    return api_success(
-        "Welcome to the Fates List Admin API!"
-    )
-
-@router.get("/console")
-async def botlist_admin_console_api(request: Request):
-    """API to get raw admin console info"""
-    return await stats_page(request) 
-
-@router.get("/err/{code}", response_model = APIResponse)
-async def debug_error_tester(request: Request, code: int):
-    """Debug endpoint to test error handling"""
-    if code == 500:
-        error = int("haha")
-    return abort(code)
-
-@router.patch("/bots/{bot_id}/ops", response_model = APIResponse, dependencies=[Depends(manager_check)])
+@router.patch(
+    "/bots/{bot_id}/ops", 
+    response_model=APIResponse, 
+    dependencies=[Depends(manager_check)],
+    operation_id="bot_admin_op"
+)
 async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEndpoint):
     """Performs a bot admin operation. This is internal and only meant for our test server manager bot. 0 is the recursion bot for botlist-wide actions like vote resets every month."""
     user = request.state.user
@@ -305,15 +292,22 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
     
     return api_success(success_msg, status_code = success_code)
 
-@router.get("/queue/bots", response_model = BotQueueGet)
-async def botlist_get_queue_api(request: Request, state: enums.BotState = enums.BotState.pending, verifier: int = None):
+@router.get(
+    "/queue/bots", 
+    response_model=BotQueueGet,
+    operation_id="get_bot_queue"
+)
+async def get_bot_queue(request: Request, state: enums.BotState = enums.BotState.pending, verifier: int = None):
     """Admin API to get the bot queue"""
     if verifier:
         bots = await db.fetch("SELECT bot_id, prefix, description FROM bots WHERE state = $1 AND verifier = $2 ORDER BY created_at ASC", state, verifier)
     bots = await db.fetch("SELECT bot_id, prefix, description FROM bots WHERE state = $1 ORDER BY created_at ASC", state)
     return {"bots": [{"user": await get_bot(bot["bot_id"]), "prefix": bot["prefix"], "invite": await invite_bot(bot["bot_id"], api = True), "description": bot["description"]} for bot in bots]}
 
-@router.get("/is_staff")
+@router.get(
+    "/is_staff",
+    operation_id="check_staff_member"
+)
 def check_staff_member(request: Request, user_id: int, min_perm: int):
     """Admin route to check if a user is staff or not"""
     try:
@@ -322,6 +316,10 @@ def check_staff_member(request: Request, user_id: int, min_perm: int):
         return {"staff": False, "perm": 1, "sm": {}}
     return {"staff": staff[0], "perm": staff[1], "sm": staff[2].dict()}
 
-@router.get("/staff_roles")
+@router.get(
+    "/staff_roles",
+    operation_id="get_staff_roles"
+)
 def get_staff_roles(request: Request):
+    """Return all the staff roles so they can be used by our manager bot"""
     return staff_roles

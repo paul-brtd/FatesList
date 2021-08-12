@@ -87,7 +87,8 @@ def _fappgen(session_id, workers, static_assets):
         default_response_class=ORJSONResponse, 
         redoc_url=f"/api/v{API_VERSION}/docs/redoc",
         docs_url=f"/api/v{API_VERSION}/docs/swagger",
-        openapi_url=f"/api/v{API_VERSION}/docs/openapi"
+        openapi_url=f"/api/v{API_VERSION}/docs/openapi",
+        servers=[{"url": "https://fateslist.xyz", "description": "Fates List Main Server"}]
     )
 
     _app.state.static = static_assets

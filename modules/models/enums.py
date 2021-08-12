@@ -4,6 +4,7 @@ from typing import Dict, ForwardRef, List, Optional
 from aenum import Enum, IntEnum
 from pydantic import BaseModel
 
+
 class ULAState(IntEnum):
     _init_ = "value __doc__"
     pending = 0, "Pending Verification"

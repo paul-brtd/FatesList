@@ -19,14 +19,6 @@ import enums  # as enums (for libraries)
 
 from .base_models import *
 
-class BotMaintenancePartial(BaseModel):
-    type: int = 1
-    reason: Optional[str] = None
-
-class BotMaintenance(BotMaintenancePartial):
-    epoch: Optional[str] = None
-    fail: Optional[bool] = False
-
 class PrevResponse(BaseModel):
     """
     Represents a response from the Preview API

@@ -41,14 +41,6 @@ def id_check(check_t: str):
 def worker_session(request: Request):
     return request.app.state.worker_session
 
-async def get_maint(bot_id: str) -> Union[bool, Optional[dict]]:
-    api_data = await db.fetchrow("SELECT type, reason, epoch FROM bot_maint WHERE bot_id = $1", bot_id)
-    if api_data is None:
-        return {"type": 0, "reason": None, "epoch": None, "fail": True}
-    api_data = dict(api_data)
-    api_data["epoch"] = str(time.time())
-    return api_data
-
 async def get_promotions(bot_id: int) -> list:
     api_data = await db.fetch("SELECT id, title, info, css, type FROM bot_promotions WHERE bot_id = $1", bot_id)
     return api_data

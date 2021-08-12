@@ -41,7 +41,7 @@ class Bot(BaseModel):
     """
     user: Optional[BaseUser] = None
     description: Optional[str] = None
-    tags: Optional[List[str]] = None
+    tags: List[str]
     last_stats_post: Optional[datetime.datetime] = None
     long_description_type: Optional[enums.LongDescType] = None
     long_description: Optional[str] = None
@@ -69,7 +69,6 @@ class Bot(BaseModel):
     banner_card: Optional[str] = None
     banner_page: Optional[str] = None
     keep_banner_decor: Optional[bool] = None
-
 
 class BotStats(BaseModel):
     guild_count: int
