@@ -44,16 +44,6 @@ class BotPartial(BaseUser):
 class BotPartialList(BaseModel):
     __root__: List[BotPartial]
 
-class BotEvent(BaseModel):
-    m: dict
-    ctx: dict
-
-class BotEventList(BaseModel):
-    __root__: List[BotEvent]
-
-class BotEvents(BaseModel):
-    events: BotEventList
-
 class BotCommand(BaseModel):
     cmd_type: enums.CommandType # 0 = no, 1 = guild, 2 = global
     cmd_groups: Optional[List[str]] = ["Default"]
