@@ -3,7 +3,6 @@ Fates List Templating System
 """
 
 from .imports import *
-from .permissions import *
         
 # Template class renderer
 class templates():
