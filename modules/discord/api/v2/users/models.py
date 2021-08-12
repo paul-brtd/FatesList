@@ -7,6 +7,9 @@ import modules.models.enums as enums
 
 from ..base_models import APIResponse, BaseUser
 
+class UserJSPatch(BaseModel):
+    js_allowed: bool
+
 
 class BotMeta(BaseModel):
     """
