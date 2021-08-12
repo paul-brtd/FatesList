@@ -358,7 +358,35 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
             output.close()
 
         return StreamingResponse(_stream(), media_type=f"image/{format.name}")
-            
+
+@router.get(
+    "/{bot_id}/events", 
+    response_model = BotEvents,
+    dependencies = [
+        Depends(bot_auth_check)
+    ],
+    operation_id="get_bot_events"
+)
+async def get_bot_events(request: Request, bot_id: int, exclude: Optional[str] = None, filter: Optional[str] = None):
+    """Get bot events, all exclude and filters must be comma seperated"""
+    exclude = exclude.split(",")
+    filter = filter.split(",")
+    return await bot_get_events(bot_id = bot_id, filter = filter, exclude = exclude)
+
+@router.get(
+    "/{bot_id}/ws_events",
+    dependencies = [
+        Depends(bot_auth_check)
+    ],
+    operation_id="get_bot_ws_events"
+)
+async def get_bot_ws_events(request: Request, bot_id: int):
+    ini_events = {}
+    events = await redis_db.hget(f"{type}-{bot_id}", key = "ws")
+    if events is None:
+        events = {} # Nothing
+    return events 
+    
 
 @router.post(
     "/{bot_id}/stats", 
