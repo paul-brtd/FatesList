@@ -10,7 +10,7 @@ from matplotlib.colors import is_color_like
 from math import floor
 
 from ..base import API_VERSION
-from .models import APIResponse, Bot, BotRandom, BotStats, BotAppeal
+from .models import APIResponse, Bot, BotRandom, BotStats, BotAppeal, BotEvents
 
 cleaner = Cleaner(remove_unknown_tags=False)
 
