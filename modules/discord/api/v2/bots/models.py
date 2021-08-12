@@ -78,3 +78,14 @@ class BotStats(BaseModel):
 
 class BotAppeal(BaseModel):
     appeal: str
+
+        
+class BotEvent(BaseModel):
+    m: dict
+    ctx: dict
+
+class BotEventList(BaseModel):
+    __root__: List[BotEvent]
+
+class BotEvents(BaseModel):
+    events: BotEventList
