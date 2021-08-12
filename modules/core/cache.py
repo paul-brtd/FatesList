@@ -1,6 +1,7 @@
 from .imports import *
 from aioredis import Connection
 from config._logger import logger
+from .system import redis_ipc
 
 async def _user_fetch(
     user_id: str,
