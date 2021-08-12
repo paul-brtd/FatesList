@@ -37,7 +37,7 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
         perm = data.op.__perm__
     
     # Check if they are staff or not
-    staff = await is_staff(staff_roles, user_id, perm)
+    staff = await is_staff(staff_roles, user.id, perm)
     if user is None or not staff[0]:
         return api_no_perm(perm)
     
@@ -310,7 +310,8 @@ async def get_bot_queue(request: Request, state: enums.BotState = enums.BotState
 )
 async def check_staff_member(request: Request, user_id: int, min_perm: int):
     """Admin route to check if a user is staff or not"""
-    return await is_staff(staff_roles, user_id, min_perm, json = True)
+    staff = await is_staff(staff_roles, user_id, min_perm, json = True)
+    return {"staff": staff[0], "perm": staff[1], "sm": staff[2]}
 
 @router.get(
     "/staff_roles",

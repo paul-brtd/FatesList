@@ -53,7 +53,7 @@ class User(DiscordUser):
                          
         else:    
             user_dpy = guild.get_member(self.id)            
-            user["badges"] = Badge.from_user(user_dpy, user["badges"], user["bot_developer"], user["certified_developer"])
+            user["badges"] = await Badge.from_user(user_dpy, user["badges"], user["bot_developer"], user["certified_developer"])
                          
         return {
             "bots": bots, 

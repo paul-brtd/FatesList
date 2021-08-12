@@ -91,10 +91,6 @@ async def vanity_invite(request: Request, vanity: str):
     eurl = "/".join([site_url, vurl[1], str(vurl[0]), "invite"])
     return RedirectResponse(eurl)
 
-@router.get("/v/{a:path}")
-async def v_legacy(request: Request, a: str):
-    return RedirectResponse(str(request.url).replace("/v/", "/"))
-
 @router.get("/feature/{name}")
 async def features_view(request: Request, name: str):
     if name not in features.keys():
@@ -147,11 +143,14 @@ async def login_confirm(request: Request, code: str, state: str, site_redirect: 
         return RedirectResponse("/")
     else:
         async with aiohttp.ClientSession() as sess:
-            async with sess.post(f"{site_url}/api/users", json = {
+            async with sess.post(f"http://127.0.0.1:9999/api/v2/users", json = {
                 "code": code, 
                 "state": state,
             }) as res:
-                json = await res.json()
+                try:
+                    json = await res.json()
+                except:
+                    return await res.text()
                 if res.status == 400:
                     if not json["banned"]:
                         return await templates.e(request, json["reason"])

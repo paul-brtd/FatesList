@@ -33,7 +33,7 @@ async def get_user_profile(request, user_id: int, preview: bool, worker_session)
     client = discord.main
     
     viewer = int(request.session.get("user_id", -1))
-    admin = await is_staff(staff_roles, viewer, 4)[0] if viewer else False
+    admin = (await is_staff(staff_roles, viewer, 4))[0] if viewer else False
     
     personal = user_id == int(request.session.get("user_id", -1))
 

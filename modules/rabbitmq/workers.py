@@ -90,7 +90,7 @@ async def catworker(state, pidrec):
            
             case (cmd_id, "GETCH", uid) if uid.isdigit():
                 """Getch a member returning 0 if not found, -1 if fail or a user otherwise"""
-                async def _getch():
+                async def _getch(uid):
                     uid = int(uid)
                     try:
                         user = client.get_user(uid) or await client.fetch_user(uid)
@@ -124,11 +124,11 @@ async def catworker(state, pidrec):
                     await state.redis.set(f"cmd-{cmd_id}", orjson.dumps(json), nx=True, ex=30)
                     return
 
-                asyncio.create_task(_getch())
+                asyncio.create_task(_getch(uid))
 
             case (cmd_id, "ROLES", uid) if uid.isdigit():
                 """Get roles returing 0 if member not found or the list of roles"""
-                async def _roles():
+                async def _roles(uid):
                     # Since the main bot will only be in one server, we can just use client.guilds[0]                    
                     user = client.guilds[0].get_member(int(uid))
                     if not user:
@@ -138,7 +138,7 @@ async def catworker(state, pidrec):
                     await state.redis.set(f"cmd-{cmd_id}", roles, nx=True, ex=30)
                     return
 
-                asyncio.create_task(_roles())
+                asyncio.create_task(_roles(uid))
 
             case _:
                 logger.warning(f"Unhandled message {msg}")
