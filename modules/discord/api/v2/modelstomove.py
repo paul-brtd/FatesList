@@ -90,29 +90,6 @@ class User(BaseUser):
     description: Optional[str] = None
     css: str
 
-class PartialServer(BaseModel):
-    icon: str
-    name: str
-    member_count: int
-    created_at: str
-    code: Optional[str] = None # Only in valid_servers
-
-class PartialServerDict(BaseModel):
-    __root__: Dict[str, PartialServer]
-
-class ServerList(BaseModel):
-    servers: PartialServerDict
-
-class ServerListAuthed(ServerList):
-    access_token: AccessToken
-
-class ServerCheck(BaseModel):
-    scopes: str
-    access_token: AccessToken
-
-class UserDescEdit(BaseModel):
-    description: str
-
 class BotReviewAction(BaseModel):
     user_id: str
 
