@@ -51,11 +51,6 @@
 			<strong>This bot is primarily NSFW (Not Safe For Work), as such lots of functionality will need a NSFW channel. If the bot allows NSFW commands in non-NSFW channels, please report it on our support server</strong>
 		</div>
 	{% endif %}
-	{% if maint[0] %}
-		<div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
-			<strong>{{maint[1]["reason"]}}</strong>
-		</div>
-	{% endif %}
 	<p class="banner-decor white" style="font-weight: bold; font-size: 18px;" id="{{type}}-description">{{data.description}}</p>
 	</div>
 	<div class="d-flex justify-content-center align-items-center flex-wrap" style="width: 80%;margin: 0 auto;max-width: 1000px; margin-bottom: 3px !important;" id="{{type}}-buttons">

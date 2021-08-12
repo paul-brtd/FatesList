@@ -30,7 +30,7 @@ async def _user_fetch(
         return None # This is impossible to actually exist on the discord API or on our cache
 
     # Query redis cache for some important info
-    cache = await redis_db.hget(user_id, key = "cache") # This is bot in cache
+    cache = await redis.hget(user_id, key = "cache") # This is bot in cache
     if cache: # We got a match
         cache = orjson.loads(cache)
         cache_time = time.time() - cache['epoch']
@@ -61,70 +61,38 @@ async def _user_fetch(
                 }
             return None # We got a bot, but not fitting in constraints
 
-    # Add ourselves to cache
-    valid_user = False # Flag for valid user
-    bot = False # Flag for bot
-    username, avatar, disc = None, None, None # All are none at first
+    logger.debug(f"Making API call to get user {user_id}")
+    cmd_id = uuid.uuid4()
+    await redis.publish("_worker", f"{cmd_id} GETCH {user_id}")
+    start_time = time.time()
+    while start_time - time.time() < 30:
+        data = await redis.get(f"cmd-{cmd_id}")
+        if data is None:
+            continue
+        logger.info(str(data))
+        if data == b'-1':
+            return None
 
-    try:
-        logger.debug(f"Making API call to get user {user_id}")
-        bot_obj = await client.getch_user(int(user_id)) # Use new getch_user function which tries cache itself else fetches
-        logger.debug(str(bot_obj))
-        valid_user = True # It worked and didn't error, set valid_user
-        bot = bot_obj.bot # Set bot flag accordingly
-    except Exception as ex:
-        logger.warning(f"{ex}")
-        valid_user, bot = False, False # Not a proper got, cache to avoid repitition
-
-    try:
-        # Get the status by getting guild, getting member and then setting status.
-        # May fail if not in guild or still connecting to Discord so catch that using try except
-        if valid_user and bot_obj.mutual_guilds:
-            status = str(client.get_guild(main_server).get_member(int(user_id)).status)
-        else:
-            status = "unknown"
-
-        if status == "online":
-            status = 1 # Online
-        elif status == "offline":
-            status = 2 # Offline
-        elif status == "idle":
-            status = 3 # Idle
-        elif status == "dnd":
-            status = 4 # Do Not Disturb
-        else:
-            status = 0 # Fallback status
-    except Exception as ex:
-        logger.warning(f"{ex}")
-        status = 0 # Fallback status
-
-    if valid_user: # Get username, avatar and disc
-        username = bot_obj.name
-        avatar = bot_obj.avatar.url
-        disc = bot_obj.discriminator
+        elif data == b'0':
+            valid = False
+            break
+        data = orjson.loads(data)
+        valid = True
+        break
     else:
-        username = ""
-        avatar = ""
-        disc = ""
+        return None
 
-    if bot and valid_user: # Update cached username in postgres if valid username in asyncio background task
-        logger.debug("Setting db username to " + username + " for " + str(user_id))
-        try:
-            await db.execute("UPDATE bots SET username_cached = $2 WHERE bot_id = $1", int(user_id), username)
-        except Exception:
-            pass # Sometimes this cannot be done
+    cache = {"fl_cache_ver": CACHE_VER, "epoch": time.time(), "valid_user": valid}
 
-    # Create cache and add to redis hash
-    cache = {
-        "fl_cache_ver": CACHE_VER,
-        "epoch": time.time(),
-        "bot": bot,
-        "username": username,
-        "avatar": avatar,
-        "disc": disc,
-        "valid_user": valid_user,
-        "status": status
-    }
+    if valid:
+        if data["bot"]: # Update cached username in postgres if valid username in asyncio background task
+            try:
+                await db.execute("UPDATE bots SET username_cached = $2 WHERE bot_id = $1", int(user_id), data["username"])
+            except Exception:
+                pass # Sometimes this cannot be done
+
+        # Create cache and add to redis hash
+        cache |= data
        
     # Add/Update redis
     await redis_db.hset(
@@ -132,23 +100,20 @@ async def _user_fetch(
         key = "cache",
         value = orjson.dumps(cache)
     ) 
+    if not valid:
+        return None
 
     fetch = False
-    if valid_user and ((user_type == 2 and bot) or user_type == 3): # Same as when cached, see that for this
+    if (user_type == 2 and data["bot"]) or user_type == 3: # Same as when cached, see that for this
         fetch = True
-    elif user_type == 1 and valid_user and not bot:
+    elif user_type == 1 and not data["bot"]:
         fetch = True
     if fetch:
         if user_only:
-            return user_id, username
-        return {
-            "id": user_id, 
-            "username": username,
-            "avatar": avatar,
-            "disc": disc,
-            "status": status,
-            "bot": bot
-        }
+            return user_id, data["username"]
+        return data | {
+            "id": user_id
+        } 
     return None
 
 async def get_user(user_id: int, user_only = False, *, worker_session = None) -> Optional[dict]:

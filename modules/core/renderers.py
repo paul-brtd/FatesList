@@ -134,7 +134,6 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
     bot_info = await get_bot(bot_id, worker_session = worker_session)
     
     promos = await get_promotions(bot_id)
-    maint = await get_maint(bot_id)
 
     owners_lst = [
         (await get_user(obj["owner"], user_only = True, worker_session = worker_session)) 
@@ -183,7 +182,6 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
         "id": bot_id, 
         "tags_fixed": _tags_fixed_bot, 
         "promos": promos, 
-        "maint": maint, 
         "admin": bot_admin, 
         "guild": main_server, 
         "bot_reviews": reviews[0], 

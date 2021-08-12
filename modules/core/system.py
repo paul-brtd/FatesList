@@ -183,11 +183,6 @@ class FatesBot(discord.Client):
         self.ready = True
         logger.success(f"{self.user} now up!")
         
-    async def getch_user(self, id):
-        """Get a user using either get or fetch (just do it)"""
-        return self.get_user(id) or await self.fetch_user(id)
-
-        
 class FatesWorkerOauth(Singleton):  # pylint: disable=too-few-public-methods
     """Stores all oauths (currently only discord)"""
     
@@ -237,7 +232,7 @@ class FatesWorkerSession(Singleton):  # pylint: disable=too-many-instance-attrib
         self.rabbit = rabbit
         self.discord = worker_discord
         self.oauth = oauth
-        
+
         # Record basic stats and initially set workers to None
         self.start_time = time.time()
         self.up = False
@@ -416,8 +411,8 @@ async def init_fates_worker(app, session_id, workers):
     include_routers(app, "Discord", "modules/discord")
 
     # Begin worker sync
-    asyncio.create_task(status(workers, session, app))
-    logger.debug("Started status task")
+    asyncio.create_task(catclient(workers, session, app))
+    logger.debug("Started catclient task")
 
     # Start discord connection waiting
     try:
@@ -451,15 +446,15 @@ async def start_dbg(session, app):
         asyncio.create_task(session.discord.debug.start(TOKEN_DBG))
 
 
-async def status(workers, session, app):
-    """The Fates List Status protocol"""
+async def catclient(workers, session, app):
+    """The Fates List Worker Protocol"""
     await session.redis.publish(
         "_worker", 
         f"{session.id} UP WORKER {os.getpid()} 0 {workers}"
     )
 
     pubsub = session.redis.pubsub()
-
+    
     await pubsub.subscribe("_worker")
     async for msg in pubsub.listen():
         if not msg or not isinstance(msg.get("data"), bytes):

@@ -3,8 +3,10 @@ import builtins
 import time
 
 import orjson
+import discord
 
 from modules.core import *
+from config import staff_roles
 from lynxfall.rabbit.core import *
 
 
@@ -37,13 +39,20 @@ class PIDRecorder():
 
 async def catworker(state, pidrec):
     pubsub = state.redis.pubsub()
+    tasks = []
     await pubsub.subscribe(f"_worker")
     flag = True
+    client = state.client
+    status_dict = {
+        "online": 1,
+        "offline": 2,
+        "idle": 3,
+        "dnd": 4
+    }
     async for msg in pubsub.listen():
         if flag:
             await state.redis.publish(f"_worker", "NOSESSION UP RMQ 0") # Announce that we are up
             flag = False
-        print(msg)
         if msg is None or type(msg.get("data")) != bytes:
             continue
         msg = tuple(msg.get("data").decode("utf-8").split(" "))
@@ -74,14 +83,48 @@ async def catworker(state, pidrec):
                     logger.success("All workers are now up")
                     await asyncio.sleep(1)
                     worker_pids = " ".join([str(pid) for pid in pidrec.list()])
-                    await state.redis.publish(f"_worker", f"{pidrec.session_id} FUP {worker_pids}")
+                    await state.redis.publish("_worker", f"{pidrec.session_id} FUP {worker_pids}")
 
             case ("DOWN", ("RMQ" | "WORKER") as tgt, pid) if pid.isdigit():
                 logger.info(f"{tgt} {pid} is now down")
                 pidrec.remove(int(pid)) if tgt == "RMQ" else None
            
-            case ("PING", pid) if pid.isdigit():
-                await state.redis.publish("_worker", f"PONG {pid}")
+            case (cmd_id, "GETCH", uid) if uid.isdigit():
+                async def _getch(uid):
+                    uid = int(uid)
+                    try:
+                        user = client.get_user(uid) or await client.fetch_user(uid)
+                    except discord.NotFound:
+                        await state.redis.set(f"cmd-{cmd_id}", 0, nx=True, ex=30)
+                        return
+                    except Exception as exc:
+                        await state.redis.set(f"cmd-{cmd_id}", -1, nx=True, ex=30)
+                        logger.exception("A error has occurred")
+                        return exc
+
+                    if user.mutual_guilds:
+                        in_main_server = True
+                        try:
+                            user = user.mutual_guilds[0].get_member(uid)
+                            status = status_dict.get(str(user.status), 0)
+                        except Exception:
+                            status = 0
+                    else:
+                        status = 0
+                        in_main_server = False
+                   
+                    json = {
+                        "username": user.name,
+                        "avatar": user.avatar.url,
+                        "disc": user.discriminator,
+                        "bot": user.bot,
+                        "status": status,
+                        "main_server": in_main_server
+                    }
+                    await state.redis.set(f"cmd-{cmd_id}", orjson.dumps(json), nx=True, ex=30)
+                    return
+
+                tasks.append(asyncio.create_task(_getch(uid)))
 
             case _:
                 logger.warning(f"Unhandled message {msg}")

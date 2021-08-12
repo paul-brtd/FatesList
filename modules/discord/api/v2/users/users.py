@@ -15,9 +15,10 @@ router = APIRouter(
 )
 
 @router.get(
-    "/{user_id}"
+    "/{user_id}",
+    operation_id="fetch_user"
 )
-async def get_user_api(request: Request, user_id: int, worker_session = Depends(worker_session)):
+async def fetch_user(request: Request, user_id: int, worker_session = Depends(worker_session)):
     user = await _User(id = user_id, db = worker_session.postgres, client = worker_session.discord.main).profile()
     if not user:
         return abort(404)
@@ -28,9 +29,10 @@ async def get_user_api(request: Request, user_id: int, worker_session = Depends(
     response_model = APIResponse,
     dependencies = [
         Depends(user_auth_check)
-    ]
+    ],
+    operation_id="set_user_description"
 )
-async def set_user_description_api(request: Request, user_id: int, desc: UserDescEdit):
+async def set_user_description(request: Request, user_id: int, desc: UserDescEdit):
     await db.execute("UPDATE users SET description = $1 WHERE user_id = $2", desc.description, user_id)
     return api_success()
 
