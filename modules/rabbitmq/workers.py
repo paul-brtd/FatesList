@@ -35,7 +35,7 @@ class PIDRecorder():
     def list(self):
         return self.pids
 
-async def status(state, pidrec):
+async def catworker(state, pidrec):
     pubsub = state.redis.pubsub()
     await pubsub.subscribe(f"_worker")
     flag = True
@@ -79,14 +79,17 @@ async def status(state, pidrec):
             case ("DOWN", ("RMQ" | "WORKER") as tgt, pid) if pid.isdigit():
                 logger.info(f"{tgt} {pid} is now down")
                 pidrec.remove(int(pid)) if tgt == "RMQ" else None
-            
+           
+            case ("PING", pid) if pid.isdigit():
+                await state.redis.publish("_worker", f"PONG {pid}")
+
             case _:
                 logger.warning(f"Unhandled message {msg}")
 
                 
 async def prehook(config, *, state):
     builtins.pidrec = PIDRecorder()
-    asyncio.create_task(status(state, pidrec))
+    asyncio.create_task(catworker(state, pidrec))
 
 
 async def backend(state, json, *args, **kwargs):

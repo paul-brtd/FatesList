@@ -292,7 +292,7 @@ def setup_discord():
     client_dbg = FatesDebugBot(intents=intent_dbg)
     logger.info("Discord init is beginning")
     asyncio.create_task(client.start(TOKEN_MAIN))
-    asyncio.create_task(client_server.start(TOKEN_SERVER)) 
+    #asyncio.create_task(client_server.start(TOKEN_SERVER)) 
     return {"main": client, "servers": client_server, "debug": client_dbg}
 
 # Include all the modules by looping through 
