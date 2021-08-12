@@ -268,6 +268,17 @@ class FatesWorkerSession(Singleton):  # pylint: disable=too-many-instance-attrib
         """
         return self.workers.index(os.getpid())
 
+      
+async def redis_ipc(redis, cmd):
+    cmd_id = uuid.uuid4()
+    await redis.publish("_worker", f"{cmd_id} {cmd}")
+    start_time = time.time()
+    while start_time - time.time() < 30:
+        data = await redis.get(f"cmd-{cmd_id}")
+        if data is None:
+            continue
+        return data
+    return None      
 
 def setup_discord():
     """Sets up discord clients"""
