@@ -23,18 +23,6 @@ ldesc_replace_tuple = (("window.location", ""), ("document.ge", ""))
 
 cleaner = Cleaner(remove_unknown_tags=False)
 
-
-async def redis_ipc(redis, cmd):
-    cmd_id = uuid.uuid4()
-    await redis.publish("_worker", f"{cmd_id} {cmd}")
-    start_time = time.time()
-    while start_time - time.time() < 30:
-        data = await redis.get(f"cmd-{cmd_id}")
-        if data is None:
-            continue
-        return data
-    return None
-
 def id_check(check_t: str):
     def check(id: int, fn: str):
         if id > INT64_MAX:
