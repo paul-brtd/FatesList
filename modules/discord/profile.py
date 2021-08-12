@@ -31,10 +31,9 @@ async def get_user_profile(request, user_id: int, preview: bool, worker_session)
     db = worker_session.postgres
 
     client = discord.main
-    guild = client.get_guild(main_server)
     
-    viewer = guild.get_member(int(request.session.get("user_id", -1)))
-    admin = is_staff(staff_roles, viewer.roles, 4)[0] if viewer else False
+    viewer = int(request.session.get("user_id", -1))
+    admin = await is_staff(staff_roles, viewer, 4)[0] if viewer else False
     
     personal = user_id == int(request.session.get("user_id", -1))
 

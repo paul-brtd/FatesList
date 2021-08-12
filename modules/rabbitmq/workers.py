@@ -39,7 +39,6 @@ class PIDRecorder():
 
 async def catworker(state, pidrec):
     pubsub = state.redis.pubsub()
-    tasks = []
     await pubsub.subscribe(f"_worker")
     flag = True
     client = state.client
@@ -90,7 +89,8 @@ async def catworker(state, pidrec):
                 pidrec.remove(int(pid)) if tgt == "RMQ" else None
            
             case (cmd_id, "GETCH", uid) if uid.isdigit():
-                async def _getch(uid):
+                """Getch a member returning 0 if not found, -1 if fail or a user otherwise"""
+                async def _getch():
                     uid = int(uid)
                     try:
                         user = client.get_user(uid) or await client.fetch_user(uid)
@@ -124,7 +124,21 @@ async def catworker(state, pidrec):
                     await state.redis.set(f"cmd-{cmd_id}", orjson.dumps(json), nx=True, ex=30)
                     return
 
-                tasks.append(asyncio.create_task(_getch(uid)))
+                asyncio.create_task(_getch())
+
+            case (cmd_id, "ROLES", uid) if uid.isdigit():
+                """Get roles returing 0 if member not found or the list of roles"""
+                async def _roles():
+                    # Since the main bot will only be in one server, we can just use client.guilds[0]                    
+                    user = client.guilds[0].get_member(int(uid))
+                    if not user:
+                        await state.redis.set(f"cmd-{cmd_id}", 0, nx=True, ex=30)
+                        return
+                    roles = orjson.dumps([role.id for role in user.roles])
+                    await state.redis.set(f"cmd-{cmd_id}", roles, nx=True, ex=30)
+                    return
+
+                asyncio.create_task(_roles())
 
             case _:
                 logger.warning(f"Unhandled message {msg}")

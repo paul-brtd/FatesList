@@ -25,11 +25,6 @@ class templates():
             if (state == enums.UserState.global_ban) and not_error:
                 ban_type = enums.UserState(state).__doc__
                 return await templates.e(request, f"You have been {ban_type} banned from Fates List<br/>", status_code = 403)
-            if user is not None:
-                staff = is_staff(staff_roles, user.roles, 2)
-                request.session["staff"] = staff[0], staff[1], staff[2].dict()
-            else:
-                pass
             arg_dict["staff"] = request.session.get("staff")
             arg_dict["avatar"] = request.session.get("avatar")
             arg_dict["username"] = request.session.get("username")

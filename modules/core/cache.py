@@ -23,7 +23,7 @@ async def _user_fetch(
     
     # Check if a suitable version is in the cache first before querying Discord
 
-    CACHE_VER = 13 # Current cache ver
+    CACHE_VER = 15 # Current cache ver
 
     if len(user_id) not in [17, 18, 19, 20]: # Snowflake can be 17 - 20
         logger.debug(f"Ignoring blatantly wrong User ID: {user_id}")
@@ -34,8 +34,8 @@ async def _user_fetch(
     if cache: # We got a match
         cache = orjson.loads(cache)
         cache_time = time.time() - cache['epoch']
-        if cache["fl_cache_ver"] != CACHE_VER or (not cache["valid_user"] and time.time() - cache_time > 60*10) or cache_time > 60*60*8: # Check for cache expiry of 8 hours for proper user, 10 minutes for invalid, proper cache version and that its a valid user
-            # The cache is invalid, pass and make discord api call
+        if cache["fl_cache_ver"] != CACHE_VER or (not cache["valid_user"] and time.time() - cache_time > 60*20) or cache_time > 60*60*11:
+            # Check for cache expiry
             logger.debug(f"Not using cache for id {user_id}")
         else:
             logger.debug(f"Using cache for id {user_id}") # Use cache
@@ -51,36 +51,23 @@ async def _user_fetch(
             if fetch: # We got a match
                 if user_only:
                     return user_id, cache["username"]
-                return {
+                return cache | {
                     "id": user_id, 
-                    "username": cache['username'], 
-                    "avatar": cache['avatar'], 
-                    "disc": cache["disc"], 
-                    "status": cache["status"], 
-                    "bot": cache["bot"]
                 }
             return None # We got a bot, but not fitting in constraints
 
     logger.debug(f"Making API call to get user {user_id}")
     cmd_id = uuid.uuid4()
-    await redis.publish("_worker", f"{cmd_id} GETCH {user_id}")
-    start_time = time.time()
-    while start_time - time.time() < 30:
-        data = await redis.get(f"cmd-{cmd_id}")
-        if data is None:
-            continue
-        logger.info(str(data))
-        if data == b'-1':
-            return None
+    data = await redis_ipc(redis, f"GETCH {user_id}")
+    if data is None or data == b'-1':
+        return None
 
-        elif data == b'0':
-            valid = False
-            break
+    elif data == b'0':
+        valid = False
+    
+    else:
         data = orjson.loads(data)
         valid = True
-        break
-    else:
-        return None
 
     cache = {"fl_cache_ver": CACHE_VER, "epoch": time.time(), "valid_user": valid}
 

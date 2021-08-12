@@ -72,5 +72,5 @@ async def manager_check(
             status_code=403
         )
 
-    guild = client.get_guild(main_server)
+    guild = client.guilds[0]
     request.state.user = guild.get_member(user_id)

@@ -460,7 +460,7 @@ async def catclient(workers, session, app):
         if not msg or not isinstance(msg.get("data"), bytes):
             continue
         msg = tuple(msg.get("data").decode("utf-8").split(" "))
-        logger.debug(f"Got {msg}")
+        logger.trace(f"Got {msg}")
         match msg:
             # RabbitMQ going up has no session id yet
             case("NOSESSION", "UP", "RMQ", _):

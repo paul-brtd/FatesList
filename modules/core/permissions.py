@@ -3,7 +3,7 @@ Permission Related Code
 """
 
 from .imports import *
-
+from .helpers import *
 
 class StaffMember(BaseModel):
     """Represents a staff member in Fates List""" 
@@ -20,12 +20,7 @@ async def is_bot_admin(bot_id: int, user_id: int):
         user_id = int(user_id)
     except ValueError:
         return False
-    guild = client.get_guild(main_server)
-    try:
-        user = guild.get_member(user_id)
-    except:
-        user = None
-    if user is not None and is_staff(staff_roles, user.roles, 4)[0] and (await is_staff_unlocked(bot_id, user_id)):
+    if (await is_staff(staff_roles, user_id, 4))[0] and (await is_staff_unlocked(bot_id, user_id)):
         return True
     check = await db.fetchval("SELECT COUNT(1) FROM bot_owner WHERE bot_id = $1 AND owner = $2", bot_id, user_id)
     if check == 0:
@@ -39,19 +34,25 @@ def _get_staff_member(staff_json: dict, role: int) -> StaffMember:
             return StaffMember(name = key, id = str(staff_json[key]["id"]), staff_id = str(staff_json[key]["staff_id"]), perm = staff_json[key]["perm"]) # Return the staff json role data
     return StaffMember(name = "user", id = str(staff_json["user"]["id"]), staff_id = str(staff_json["user"]["staff_id"]), perm = 1) # Fallback to perm 1 user member
 
-def is_staff(staff_json: dict, roles: Union[list, int], base_perm: int) -> Union[bool, int, StaffMember]:
-    if type(roles) != list and type(roles) != tuple:
-        roles = [roles]
+async def is_staff(staff_json: dict, user_id: int, base_perm: int, json: bool = False) -> Union[bool, int, StaffMember]:
     max_perm = 0 # This is a cache of the max perm a user has
     sm = StaffMember(name = "user", id = str(staff_json["user"]["id"]), staff_id = str(staff_json["user"]["staff_id"]), perm = 1) # Initially
     bak_sm = sm # Backup staff member
+    roles = await redis_ipc(redis_db, f"ROLES {user_id}")
+    if roles == b"0":
+        if json:
+            return False, 1, sm.dict()
+        return False, 1, sm
+    roles = orjson.loads(roles)
     for role in roles: # Loop through all roles
-        if type(role) == discord.Role:
-            role = role.id
         sm = _get_staff_member(staff_json, role)
         if sm.perm > max_perm:
             max_perm = sm.perm
             bak_sm = sm # Back it up so it doesnt get overwritten
     if max_perm >= base_perm:
+        if json:
+            return True, max_perm, bak_sm.dict()
         return True, max_perm, bak_sm # Use backup and not overwritten one
+    if json:
+        return False, max_perm, sm.dict()
     return False, max_perm, sm # Use normal one

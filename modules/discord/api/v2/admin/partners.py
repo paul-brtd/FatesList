@@ -105,7 +105,7 @@ async def _invite_resolver(code):
 @router.post("/partners", response_model = IDResponse)
 async def new_partner(request: Request, partner: BotListPartner):
     user = request.state.user
-    if user is None or not is_staff(staff_roles, user.roles, 5)[0]:
+    if user is None or not (await is_staff(staff_roles, user_id, 5))[0]:
         return api_no_perm(5)
 
     prev_partner = await db.fetchval("SELECT COUNT(1) FROM bot_list_partners WHERE partner = $1", int(partner.partner))
@@ -154,7 +154,7 @@ async def new_partner(request: Request, partner: BotListPartner):
 @router.patch("/partners/{pid}/ad/{ad_type}", response_model = APIResponse)
 async def set_partner_ad(request: Request, pid: uuid.UUID, ad_type: enums.PartnerAdType, partner: BotListPartnerAd):
     user = request.state.user
-    if user is None or not is_staff(staff_roles, user.roles, 5)[0]:
+    if user is None or not (await is_staff(staff_roles, user_id, 5))[0]:
         return api_no_perm(5)
     
     if len(partner.ad) > 1960 and ad_type == enums.PartnerAdType.server:
@@ -174,6 +174,7 @@ async def set_partner_ad(request: Request, pid: uuid.UUID, ad_type: enums.Partne
 async def delete_partnership(request: Request, pid: uuid.UUID):
     """Deletes a partnership"""
     user = request.state.user
+    return
     if user is None or not is_staff(staff_roles, user.roles, 5)[0]:
         return api_no_perm(5)
 
@@ -188,6 +189,7 @@ async def delete_partnership(request: Request, pid: uuid.UUID):
 @router.patch("/partners/{pid}/publish_channel", response_model = APIResponse)
 async def set_partner_publish_channel(request: Request, pid: uuid.UUID, partner: BotListPartnerChannel):
     user = request.state.user
+    return
     if user is None or not is_staff(staff_roles, user.roles, 5)[0]:
         return api_no_perm(5)
 
@@ -203,6 +205,7 @@ async def set_partner_publish_channel(request: Request, pid: uuid.UUID, partner:
 async def publish_partnership(request: Request, pid: uuid.UUID, partner: BotListPartnerPublish):
     user = request.state.user
     guild = user.guild
+    return
     if user is None or not is_staff(staff_roles, user.roles, 5)[0]:
         return api_no_perm(5)
     publish = await db.fetchrow("SELECT invite, publish_channel, type, target, server_ad FROM bot_list_partners WHERE id = $1", pid)
