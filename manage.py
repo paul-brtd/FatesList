@@ -461,17 +461,14 @@ def db_wipeuser(user_id):
     
 
 @db.command("setup")
-def db_setup(
-    primary_user: str = typer.Argument("meow", envvar="HOME_DIR")
-):
+@click.option('--home', type=click.Path(exists=True), required=False, help_text="Home directory for setup", type=Path, default=Path.home())
+def db_setup(home):
     """Setup Snowfall (the Fates List database system)"""
     typer.confirm(
         "Setting up Snowfall databases is a potentially destructive operation. Continue?",
         abort=True
     )
     logger.info("Preparing to setup snowtuft")
-    
-    home = Path("/home") / primary_user
 
     if not home.exists():
         return error("Invalid user specified for primary_user")
@@ -667,11 +664,10 @@ def db_setup(
     
  
 @venv.command("setup")
-def venv_setup(
-    python: str = typer.Argument("python3.10", envvar="PYTHON")
-):
+@click.option('--python', type=click.types.STRING, required=False, help_text="Python interpreter path", default="python3.10")
+@click.option('--home', type=click.Path(exists=True), required=False, help_text="Home directory for setup", type=Path, default=Path.home())
+def venv_setup(python, home):
     logger.info("Backing up old venv")
-    home = Path.home()
     Path(home / "flvenv").rename(home / "flvenv.old")
     
     cmd = [
