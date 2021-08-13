@@ -140,6 +140,42 @@ async def catworker(state, pidrec):
 
                 asyncio.create_task(_roles(uid))
 
+            case (cmd_id, "SENDMSG", channel_id, msg_id) if channel_id.isdigit():
+                """
+                Sends a message to channel with channel_id. Message should first be put in redis at cmdmsg-{msg_id} as a json of {'content': content, 'embed': embed}. 
+
+                Returns 0 if message not found in redis or not json serializable or channel not found or message failed to send, 1 is successful
+                """
+                async def _sendmsg(cmd_id, channel_id, msg_id):
+                    msg = await state.redis.get(f"cmdmsg-{msg_id}")
+                    if not msg:
+                        await state.redis.set(f"cmd-{cmd_id}", 0, nx=True, ex=30)
+                        return
+                    try:
+                        msg = orjson.loads(msg)
+                    except Exception:
+                        await state.redis.set(f"cmd-{cmd_id}", 0, nx=True, ex=30)
+                        return
+
+                    channel = client.get_channel(channel_id) 
+                    if not channel:
+                        await state.redis.set(f"cmd-{cmd_id}", 0, nx=True, ex=30)
+                        return
+                    
+                    try:
+                        if msg.get("embed"):
+                            embed = discord.Embed.from_dict(msg.get("embed"))
+                        else:
+                            embed = None
+                        await channel.send(msg.get("content"), embed=embed)
+                    except Exception:
+                        await state.redis.set(f"cmd-{cmd_id}", 0, nx=True, ex=30)
+                        return
+                    
+                    await state.redis.set(f"cmd-{cmd_id}", 1, nx=True, ex=30)
+                    return
+
+                asyncio.create_task(_sendmsg(cmd_id, channel_id, msg_id))
             case _:
                 logger.warning(f"Unhandled message {msg}")
 
