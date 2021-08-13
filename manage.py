@@ -23,41 +23,36 @@ import multiprocessing
 from typing import Any, Callable, Dict
 
 from config._logger import logger
-import typer
+import click
 from config import worker_key, API_VERSION, TOKEN_MAIN, TOKEN_SERVER
 
+@click.group()
+def cli():
+    """Fates List Management"""
+    pass
 
-app = typer.Typer()
+@click.group()
+def site():
+    """Fates List site management"""
+    pass
 
-site = typer.Typer(
-    help="Fates List site management"
-)
-app.add_typer(site, name="site")
+@click.group()
+def rabbit():
+    """Fates List site management"""
+    pass
 
-rabbit = typer.Typer(
-    help="Fates List Rabbit Worker management"
-)
-app.add_typer(rabbit, name="rabbit")
+@click.group()
+def secrets():
+    """Utilities to manage secrets"""
+    pass
 
-secrets = typer.Typer(
-    help="Utilities to manage secrets"
-)
-app.add_typer(secrets, name="secrets")
+@click.group()
+def staticfiles():
+    """Utilities to manage static files"""
 
-staticfiles = typer.Typer(
-    help="Utilities to manage static files"
-)
-app.add_typer(staticfiles, name="staticfiles")
-
-db = typer.Typer(
-    help="Utilities to manage databases such as backup etc."
-)
-app.add_typer(db, name="db")
-
-venv = typer.Typer(
-    help="Utilities to manage the Fates List VENV"
-)
-app.add_typer(venv, name="venv")
+@click.group()
+def db():
+    """Utilities to manage databases such as backup etc."""
 
 
 def error(msg: str, code: int = 1):
@@ -105,7 +100,7 @@ default_workers_num = lambda: (multiprocessing.cpu_count() * 2) + 1
 
 @site.command("run")
 def run_site(
-    workers: int = typer.Argument(default_workers_num, envvar="SITE_WORKERS"),
+    workers: int = click.Argument(default_workers_num, envvar="SITE_WORKERS"),
 ):
     """Runs the Fates List site"""
     from gunicorn.app.base import BaseApplication
@@ -691,7 +686,13 @@ def venv_setup(
         proc.wait()
     
     new_python = home / "flvenv/bin/python"
-    
+ 
+
+app.add_command(site)
+app.add_command(rabbit)
+app.add_command(secrets)
+app.add_command(staticfiles)
+app.add_command(db)
     
 if __name__ == "__main__":
     app()
