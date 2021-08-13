@@ -220,6 +220,26 @@ def site_reload(ctx):
             "No PID file found. Is the site running?"
         )
 
+@site.command("venv")
+@click.option('--python', type=click.types.STRING, required=False, help="Python interpreter path", default="python3.10")
+@click.option('--home', type=click.Path(exists=True, path_type=Path), required=False, help="Home directory for setup", default=Path.home())
+def venv_setup(python, home):
+    """Sets up a new venv deleting the old one"""
+    logger.info("Backing up old venv")
+    Path(home / "flvenv").rename(home / "flvenv.old")
+    
+    cmd = [
+        python,
+        "-m", 
+        "venv", 
+        str(home / "flvenv")
+    ]
+    
+    with Popen(cmd, env=os.environ) as proc:
+        proc.wait()
+    
+    new_python = home / "flvenv/bin/python"
+    
 @rabbit.command("run")
 def rabbit_run():
     """Runs the Rabbit Worker"""
@@ -660,26 +680,6 @@ def db_setup(home):
     logger.info(f"Postgres password is {pg_pwd}")
     logger.info(f"Erlang shared cookie is {erlang_shared_cookie}")
     logger.success("Done setting up databases")
-    
- 
-@venv.command("setup")
-@click.option('--python', type=click.types.STRING, required=False, help="Python interpreter path", default="python3.10")
-@click.option('--home', type=click.Path(exists=True, path_type=Path), required=False, help="Home directory for setup", default=Path.home())
-def venv_setup(python, home):
-    logger.info("Backing up old venv")
-    Path(home / "flvenv").rename(home / "flvenv.old")
-    
-    cmd = [
-        python,
-        "-m", 
-        "venv", 
-        str(home / "flvenv")
-    ]
-    
-    with Popen(cmd, env=os.environ) as proc:
-        proc.wait()
-    
-    new_python = home / "flvenv/bin/python"
  
 
 app.add_command(site)
