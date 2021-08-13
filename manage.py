@@ -416,7 +416,7 @@ def db_apply(module):
 
 
 @db.command("wipeuser")
-@click.argument('user_id', type=click.types.INTEGER, required=True, help="Input user id to wipe")
+@click.argument('user_id', type=click.types.INT, required=True, help="Input user id to wipe")
 def db_wipeuser(user_id):
     """Wipes a user account (e.g. Data Deletion Request)"""
     import uvloop
