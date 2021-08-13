@@ -272,8 +272,7 @@ def secrets_random():
 @secrets.command("mktemplate")
 @click.option('-i', 'inp', type=click.Path(exists=True), required=True, help_text="Input config_secrets.py to template")
 @click.option('-o', 'out', type=click.Path(exists=False), required=True, help_text="Output config_secrets_templates.py to template")
-def secrets_mktemplate(inp, out)
-):
+def secrets_mktemplate(inp, out):
     """Converts config_secrets.py to config_secrets_template.py"""
     with open(inp) as inp_f:
         lines = inp_f.read()
