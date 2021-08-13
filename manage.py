@@ -21,10 +21,7 @@ import shutil
 import time
 import multiprocessing
 from typing import Any, Callable, Dict
-
-from config._logger import logger
 import click
-from config import API_VERSION, worker_key
 
 @click.group()
 def app():
@@ -64,6 +61,7 @@ def _fappgen(session_id, workers, static_assets):
     from fastapi import FastAPI
     from fastapi.responses import ORJSONResponse
     from modules.core.system import init_fates_worker
+    from config import API_VERSION
      
     _app = FastAPI(
         title="Fates List",
@@ -105,7 +103,8 @@ def run_site(ctx, workers):
     """Runs the Fates List site"""
     from gunicorn.app.base import BaseApplication
     from PIL import Image
-
+    from config._logger import logger
+    
     session_id = uuid.uuid4()
    
     # Load in static assets for bot widgets
@@ -225,6 +224,7 @@ def site_reload(ctx):
 @click.option('--home', type=click.Path(exists=True, path_type=Path), required=False, help="Home directory for setup", default=Path.home())
 def venv_setup(python, home):
     """Sets up a new venv deleting the old one"""
+    from config._logger import logger
     logger.info("Backing up old venv")
     Path(home / "flvenv").rename(home / "flvenv.old")
     
@@ -245,6 +245,8 @@ def rabbit_run():
     """Runs the Rabbit Worker"""
     from lynxfall.rabbit.launcher import run
     from modules.core.system import setup_db, setup_discord
+    from config._logger import logger
+    from config import worker_key
     
     async def on_startup(state, logger):
         """Function that will be executed on startup"""
@@ -318,7 +320,7 @@ def staticfiles_compile():
     """Compiles all labelled static files"""
     for src_file in Path("data/static/assets/src").rglob("*.js"):
         out_file = str(src_file).replace(".js", ".min.js").replace("src/", "prod/").replace("js/", "")
-        print(f"{src_file} -> {out_file}")
+        click.echo(f"{src_file} -> {out_file}")
         cmd = [
             "google-closure-compiler", 
             "--js", str(src_file), 
@@ -330,7 +332,7 @@ def staticfiles_compile():
         
     for src_file in Path("data/static/assets/src").rglob("*.scss"):
         out_file = str(src_file).replace(".scss", ".min.css").replace("src/", "prod/").replace("css/", "")
-        print(f"{src_file} -> {out_file}")
+        click.echo(f"{src_file} -> {out_file}")
         cmd = [
             "sass",
             "--style=compressed",
@@ -365,6 +367,7 @@ def staticfiles_compile():
 @db.command("backup")
 def db_backup():
     """Backs up the Fates List database"""
+    from config._logger import logger
     logger.info("Starting backups")
 
     bak_id = datetime.datetime.now().strftime('%Y-%m-%d~%H:%M:%S')
@@ -409,6 +412,7 @@ def db_shell():
 @click.option('-m', "module", type=click.types.STRING, required=True, help="Input migration to apply")
 def db_apply(module):
     """Apply Fates List database migration"""
+    from config._logger import logger
     import uvloop
     uvloop.install()
     
@@ -439,6 +443,7 @@ def db_apply(module):
 @click.option('--user', "user_id", type=click.types.INT, required=True, help="Input user id to wipe")
 def db_wipeuser(user_id):
     """Wipes a user account (e.g. Data Deletion Request)"""
+    from config._logger import logger
     import uvloop
     uvloop.install()
     
@@ -483,7 +488,8 @@ def db_wipeuser(user_id):
 @click.option('--home', type=click.Path(exists=True, path_type=Path), required=False, help="Home directory for setup", default=Path.home())
 def db_setup(home):
     """Setup Snowfall (the Fates List database system)"""
-    typer.confirm(
+    from config._logger import logger
+    click.confirm(
         "Setting up Snowfall databases is a potentially destructive operation. Continue?",
         abort=True
     )
