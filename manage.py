@@ -386,7 +386,7 @@ def db_shell():
 
 
 @db.command("apply")
-@click.argument('module', type=click.types.STRING, required=True, help="Input migration to apply")
+@click.option('-m', "module", type=click.types.STRING, required=True, help="Input migration to apply")
 def db_apply(module):
     """Apply Fates List database migration"""
     import uvloop
