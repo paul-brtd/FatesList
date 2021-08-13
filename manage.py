@@ -27,7 +27,7 @@ import click
 from config import API_VERSION, worker_key
 
 @click.group()
-def cli():
+def app():
     """Fates List Management"""
     pass
 
