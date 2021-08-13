@@ -24,7 +24,7 @@ from typing import Any, Callable, Dict
 
 from config._logger import logger
 import click
-from config import worker_key, API_VERSION, TOKEN_MAIN, TOKEN_SERVER
+from config import API_VERSION, worker_key
 
 @click.group()
 def cli():
@@ -99,7 +99,7 @@ default_workers_num = (multiprocessing.cpu_count() * 2) + 1
 
 
 @site.command("run")
-@click.option("--workers", type=click.types.INT, default=default_workers_num, help_text="Amount of workers")
+@click.option("--workers", type=click.types.INT, default=default_workers_num, help="Amount of workers")
 @click.pass_context
 def run_site(ctx, workers):
     """Runs the Fates List site"""
@@ -270,8 +270,8 @@ def secrets_random():
 
 
 @secrets.command("mktemplate")
-@click.option('-i', 'inp', type=click.Path(exists=True), required=True, help_text="Input config_secrets.py to template")
-@click.option('-o', 'out', type=click.Path(exists=False), required=True, help_text="Output config_secrets_templates.py to template")
+@click.option('-i', 'inp', type=click.Path(exists=True), required=True, help="Input config_secrets.py to template")
+@click.option('-o', 'out', type=click.Path(exists=False), required=True, help="Output config_secrets_templates.py to template")
 def secrets_mktemplate(inp, out):
     """Converts config_secrets.py to config_secrets_template.py"""
     with open(inp) as inp_f:
@@ -386,7 +386,7 @@ def db_shell():
 
 
 @db.command("apply")
-@click.argument('module', type=click.types.STRING, required=True, help_text="Input migration to apply")
+@click.argument('module', type=click.types.STRING, required=True, help="Input migration to apply")
 def db_apply(module):
     """Apply Fates List database migration"""
     import uvloop
@@ -416,7 +416,7 @@ def db_apply(module):
 
 
 @db.command("wipeuser")
-@click.argument('user_id', type=click.types.INTEGER, required=True, help_text="Input user id to wipe")
+@click.argument('user_id', type=click.types.INTEGER, required=True, help="Input user id to wipe")
 def db_wipeuser(user_id):
     """Wipes a user account (e.g. Data Deletion Request)"""
     import uvloop
@@ -460,7 +460,7 @@ def db_wipeuser(user_id):
     
 
 @db.command("setup")
-@click.option('--home', type=click.Path(exists=True, path_type=Path), required=False, help_text="Home directory for setup", default=Path.home())
+@click.option('--home', type=click.Path(exists=True, path_type=Path), required=False, help="Home directory for setup", default=Path.home())
 def db_setup(home):
     """Setup Snowfall (the Fates List database system)"""
     typer.confirm(
@@ -663,8 +663,8 @@ def db_setup(home):
     
  
 @venv.command("setup")
-@click.option('--python', type=click.types.STRING, required=False, help_text="Python interpreter path", default="python3.10")
-@click.option('--home', type=click.Path(exists=True, path_type=Path), required=False, help_text="Home directory for setup", default=Path.home())
+@click.option('--python', type=click.types.STRING, required=False, help="Python interpreter path", default="python3.10")
+@click.option('--home', type=click.Path(exists=True, path_type=Path), required=False, help="Home directory for setup", default=Path.home())
 def venv_setup(python, home):
     logger.info("Backing up old venv")
     Path(home / "flvenv").rename(home / "flvenv.old")
