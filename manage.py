@@ -460,7 +460,7 @@ def db_wipeuser(user_id):
     
 
 @db.command("setup")
-@click.option('--home', type=click.Path(exists=True), required=False, help_text="Home directory for setup", type=Path, default=Path.home())
+@click.option('--home', type=click.Path(exists=True, path_type=Path), required=False, help_text="Home directory for setup", default=Path.home())
 def db_setup(home):
     """Setup Snowfall (the Fates List database system)"""
     typer.confirm(
@@ -664,7 +664,7 @@ def db_setup(home):
  
 @venv.command("setup")
 @click.option('--python', type=click.types.STRING, required=False, help_text="Python interpreter path", default="python3.10")
-@click.option('--home', type=click.Path(exists=True), required=False, help_text="Home directory for setup", type=Path, default=Path.home())
+@click.option('--home', type=click.Path(exists=True, path_type=Path), required=False, help_text="Home directory for setup", default=Path.home())
 def venv_setup(python, home):
     logger.info("Backing up old venv")
     Path(home / "flvenv").rename(home / "flvenv.old")
