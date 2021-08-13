@@ -55,9 +55,9 @@ def db():
     """Utilities to manage databases such as backup etc."""
 
 
-def error(msg: str, code: int = 1):
-    typer.secho(msg, fg=typer.colors.RED, err=True)
-    return typer.Exit(code=code)
+def error(ctx, msg: str, code: int = 1):
+    click.secho(msg, fg="err", err=True)
+    return ctx.exit(code=code)
 
 def _fappgen(session_id, workers, static_assets):
     """Make the FastAPI app for gunicorn"""
@@ -95,13 +95,13 @@ def _fappgen(session_id, workers, static_assets):
     return _app
 
 
-default_workers_num = lambda: (multiprocessing.cpu_count() * 2) + 1
+default_workers_num = (multiprocessing.cpu_count() * 2) + 1
 
 
 @site.command("run")
-def run_site(
-    workers: int = click.Argument(default_workers_num, envvar="SITE_WORKERS"),
-):
+@click.option("--workers", type=click.types.INT, default=default_workers_num, help_text="Amount of workers")
+@click.pass_context
+def run_site(ctx, workers):
     """Runs the Fates List site"""
     from gunicorn.app.base import BaseApplication
     from PIL import Image
@@ -195,10 +195,11 @@ def site_enum2html():
     for key in md.keys():
         md_out.append(f'## {key}\n{md[key]["doc"]}{md[key]["table"]}')
 
-    print(base_md + "\n" + "\n\n".join(md_out))
+    click.echo(base_md + "\n" + "\n\n".join(md_out))
 
 @site.command("reload")
-def site_reload():
+@click.pass_context
+def site_reload(ctx):
     """Get the PID of the running site and reloads the site"""
     try:
         with open("data/pids/gunicorn.pid") as guni_pid:
@@ -206,6 +207,7 @@ def site_reload():
            
             if not pid.isdigit():
                 return error(
+                    ctx,
                     "Invalid/corrupt PID file found (site/gunicorn.pid)"
                 )
            
@@ -214,6 +216,7 @@ def site_reload():
     
     except FileNotFoundError:
         return error(
+            ctx,
             "No PID file found. Is the site running?"
         )
 
@@ -263,19 +266,13 @@ def rabbit_run():
 @secrets.command("random")
 def secrets_random():
     """Generates a random secret"""
-    typer.echo(secrets_lib.token_urlsafe())
+    click.echo(secrets_lib.token_urlsafe())
 
 
 @secrets.command("mktemplate")
-def secrets_mktemplate(
-    inp: str = typer.Argument(
-        "config/config_secrets.py", 
-        envvar="CFG_IN"
-    ),
-    out: str = typer.Argument(
-        "config/config_secrets_template.py", 
-        envvar="CFG_OUT"
-    )
+@click.option('-i', 'inp', type=click.Path(exists=True), required=True, help_text="Input config_secrets.py to template")
+@click.option('-o', 'out', type=click.Path(exists=False), required=True, help_text="Output config_secrets_templates.py to template")
+def secrets_mktemplate(inp, out)
 ):
     """Converts config_secrets.py to config_secrets_template.py"""
     with open(inp) as inp_f:
@@ -390,7 +387,8 @@ def db_shell():
 
 
 @db.command("apply")
-def db_apply(module: str):
+@click.argument('module', type=click.types.STRING, required=True, help_text="Input migration to apply")
+def db_apply(module):
     """Apply Fates List database migration"""
     import uvloop
     uvloop.install()
@@ -419,7 +417,8 @@ def db_apply(module: str):
 
 
 @db.command("wipeuser")
-def db_wipeuser(user_id: int):
+@click.argument('user_id', type=click.types.INTEGER, required=True, help_text="Input user id to wipe")
+def db_wipeuser(user_id):
     """Wipes a user account (e.g. Data Deletion Request)"""
     import uvloop
     uvloop.install()
