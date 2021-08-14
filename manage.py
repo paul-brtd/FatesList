@@ -160,7 +160,8 @@ def run_site(ctx, workers):
     try:
         FatesRunner(app, options).run()
     except BaseException as exc:
-        logger.info(f"{type(exc).__name__}: {exc}")
+        logger.info(f"Site killed due to {type(exc).__name__}: {exc}")
+        sys.exit(0)
 
 
 @site.command("enums2md")

@@ -7,7 +7,6 @@ import discord
 
 from modules.core import *
 from config import staff_roles
-from lynxfall.rabbit.core import *
 
 
 class PIDRecorder():
@@ -37,11 +36,10 @@ class PIDRecorder():
     def list(self):
         return self.pids
 
-async def catworker(state, pidrec):
-    pubsub = state.redis.pubsub()
+async def catworker(redis, client, pidrec):
+    pubsub = redis.pubsub()
     await pubsub.subscribe(f"_worker")
     flag = True
-    client = state.client
     status_dict = {
         "online": 1,
         "offline": 2,
@@ -180,17 +178,6 @@ async def catworker(state, pidrec):
                 logger.warning(f"Unhandled message {msg}")
 
                 
-async def prehook(config, *, state):
-    builtins.pidrec = PIDRecorder()
-    asyncio.create_task(catworker(state, pidrec))
-
-
-async def backend(state, json, *args, **kwargs):
-    return pidrec.list()
-
-
-class Config:   
-    queue = "_worker"
-    name = "Worker Handler" 
-    descriprion = "Handle Workers (PIDs right now but may be increased in future)"
-    pre = prehook
+async def startipc(redis, client):
+    pidrec = PIDRecorder()
+    asyncio.create_task(catworker(redis, client, pidrec))

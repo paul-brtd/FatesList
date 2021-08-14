@@ -428,7 +428,10 @@ async def init_fates_worker(app, session_id, workers):
     # Start discord connection waiting
     try:
         logger.info("Waiting for discord to come online/ready")
-        await app.state.worker_session.discord.main.wait_until_ready()
+        try:
+            await app.state.worker_session.discord.main.wait_until_ready()
+        except BaseException:
+            return # Exit crash fix
     except Exception as exc:
         logger.warning(f"{exc}")
 
@@ -592,6 +595,13 @@ def shutdown_fates_worker(app):
         await redis.publish("_worker", f"DOWN WORKER {os.getpid()}")
         await redis.close()
         await asyncio.sleep(0)
+        try:
+            await worker_session.discord.main.close()
+            await asyncio.sleel(0)
+            await worker_session.discord.debug.close()
+        except BaseException:
+            pass
+        await asyncio.sleep(0)
         logger.info("All connections closed")
 
     def _signal_handler_entry():
@@ -611,6 +621,6 @@ def shutdown_fates_worker(app):
 
     def _gohome(_):
         logger.info("Fates List is now down. Going back to the IceWings!")
-        sys.exit(0)
+        os._exit(0)
 
     return _signal_handler_entry
