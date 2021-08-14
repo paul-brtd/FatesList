@@ -44,6 +44,8 @@ async def is_staff(staff_json: dict, user_id: int, base_perm: int, json: bool = 
         if json:
             return False, 1, sm.dict()
         return False, 1, sm
+    if not roles:
+        return False, 1, sm.dict()
     roles = orjson.loads(roles)
     for role in roles: # Loop through all roles
         sm = _get_staff_member(staff_json, role)

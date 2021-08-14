@@ -1,4 +1,6 @@
 import discord
+from modules.core import *
+
 class BotListAdmin():
     """Class to control and handle bots"""
 
@@ -6,7 +8,7 @@ class BotListAdmin():
     good = 0x00ff00 # "Good" color for positive things
     bad = discord.Color.red()
 
-    def __init__(self, db, client, bot_id, mod, force = False):
+    def __init__(self, bot_id, mod, db, client, force = False):
         self.bot_id = bot_id # The bot id to handle
         self.mod = int(mod) # Mod is the moderator who performed the request
         self.str_mod = str(mod) # Rhe moderator in string form for quicker and easier access

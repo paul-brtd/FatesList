@@ -19,7 +19,7 @@ router = APIRouter(
     operation_id="fetch_user"
 )
 async def fetch_user(request: Request, user_id: int, worker_session = Depends(worker_session)):
-    user = await _User(id = user_id, db = worker_session.postgres, client = worker_session.discord.main).profile()
+    user = await _User(id = user_id, db = worker_session.postgres).profile()
     if not user:
         return abort(404)
     return user

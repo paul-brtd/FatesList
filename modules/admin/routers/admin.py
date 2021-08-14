@@ -59,7 +59,7 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
         )
     
     # Create admin_tool for use by ops
-    admin_tool = BotListAdmin(bot_id, user.id, request.app.state.db, request.app.state.redis)
+    admin_tool = BotListAdmin(bot_id, user.id, request.app.state.postgres, request.app.state.discord)
     
     # Using Bot ID 0 on a non recursive command is not allowed
     if bot_id == 0 and not data.op.__recursive__:
