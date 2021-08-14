@@ -44,6 +44,7 @@ from config import (API_VERSION, TOKEN_DBG, TOKEN_MAIN, TOKEN_SERVER,
 from config._logger import logger
 from modules.core.error import WebError
 from modules.models import enums
+from modules.core.ipc import redis_ipc
 
 from .ratelimits import rl_key_func
 
@@ -245,20 +246,6 @@ class FatesWorkerSession(Singleton):  # pylint: disable=too-many-instance-attrib
         after workers are published
         """
         return self.workers.index(os.getpid())
-
-      
-async def redis_ipc(redis, cmd, msg = None):
-    cmd_id = uuid.uuid4()
-    if msg:
-        await redis.set(f"msg-{cmd_id}", orjson.dumps(msg), nx=True, ex=30)
-    await redis.publish("_worker", f"{cmd_id} {cmd}")
-    start_time = time.time()
-    while start_time - time.time() < 30:
-        data = await redis.get(f"cmd-{cmd_id}")
-        if data is None:
-            continue
-        return data
-    return None      
 
 def setup_discord():
     """Sets up discord clients"""
