@@ -34,11 +34,12 @@ def _get_staff_member(staff_json: dict, role: int) -> StaffMember:
             return StaffMember(name = key, id = str(staff_json[key]["id"]), staff_id = str(staff_json[key]["staff_id"]), perm = staff_json[key]["perm"]) # Return the staff json role data
     return StaffMember(name = "user", id = str(staff_json["user"]["id"]), staff_id = str(staff_json["user"]["staff_id"]), perm = 1) # Fallback to perm 1 user member
 
-async def is_staff(staff_json: dict, user_id: int, base_perm: int, json: bool = False) -> Union[bool, int, StaffMember]:
+async def is_staff(staff_json: dict, user_id: int, base_perm: int, json: bool = False, *, redis=None) -> Union[bool, int, StaffMember]:
+    redis = redis if redis else redis_db
     max_perm = 0 # This is a cache of the max perm a user has
     sm = StaffMember(name = "user", id = str(staff_json["user"]["id"]), staff_id = str(staff_json["user"]["staff_id"]), perm = 1) # Initially
     bak_sm = sm # Backup staff member
-    roles = await redis_ipc(redis_db, f"ROLES {user_id}")
+    roles = await redis_ipc(redis, f"ROLES {user_id}")
     if roles == b"0":
         if json:
             return False, 1, sm.dict()

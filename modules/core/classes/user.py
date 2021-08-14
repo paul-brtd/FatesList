@@ -2,8 +2,10 @@ from .base import DiscordUser
 from .bot import Bot
 from .badge import Badge
 from modules.core.cache import get_user
+from modules.core.helpers import redis_ipc
 import modules.models.enums as enums    
 from config import main_server
+import orjson
 
 class User(DiscordUser):
     """A user on Fates List"""
@@ -38,7 +40,7 @@ class User(DiscordUser):
         
         bots = []
         for bot in _bots:
-            bot_obj = Bot(id = bot["bot_id"], db = self.db, client = self.client)
+            bot_obj = Bot(id = bot["bot_id"], db = self.db)
             bots.append(dict(bot) | {"invite": await bot_obj.invite_url(), "user": await bot_obj.fetch()})
         
         approved_bots = [obj for obj in bots if obj["state"] in (enums.BotState.approved, enums.BotState.certified)]
@@ -47,19 +49,16 @@ class User(DiscordUser):
         user["bot_developer"] = approved_bots != []
         user["certified_developer"] = certified_bots != []                      
                          
-        guild = self.client.get_guild(main_server)
-        if guild is None:
-            user["badges"] = []
-                         
-        else:    
-            user_dpy = guild.get_member(self.id)            
-            user["badges"] = await Badge.from_user(user_dpy, user["badges"], user["bot_developer"], user["certified_developer"])
+        on_server = await redis_ipc(redis_db, f"ROLES {self.id}")
+        if on_server == b"0":
+            on_server = "[]"
+        user["badges"] = await Badge.from_user(self.id, orjson.loads(on_server), user["badges"], user["bot_developer"], user["certified_developer"])
                          
         return {
             "bots": bots, 
             "approved_bots": approved_bots, 
             "certified_bots": certified_bots, 
             "profile": user,
-            "dup": self.client.ready,
+            "dup": True,
             "user": user_obj
         }

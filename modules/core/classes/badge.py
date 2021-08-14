@@ -20,7 +20,7 @@ class Badge(BaseModel):
     everyone: Optional[bool] = False
     
     @staticmethod
-    async def from_user(member: Member, badges: Optional[List[str]] = [], bot_dev: Optional[bool] = False, cert_dev: Optional[bool] = False):
+    async def from_user(id, roles, badges: Optional[List[str]] = [], bot_dev: Optional[bool] = False, cert_dev: Optional[bool] = False):
         """Make badges from a user given the member, badges and bots"""
         user_flags = {}
         
@@ -31,8 +31,8 @@ class Badge(BaseModel):
         badges = badges if badges else []
 
         # A discord.Member is part of the support server
-        if isinstance(member, Member):
-            user_flags["staff"] = (await is_staff(staff_roles, member.id, 2))[0]
+        user_flags["staff"] = (await is_staff(staff_roles, id, 2))[0]
+        if roles:
             user_flags["discord_member"] = True
         
         all_badges = []

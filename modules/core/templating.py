@@ -8,18 +8,12 @@ from .imports import *
 class templates():
     @staticmethod
     async def TemplateResponse(f, arg_dict: dict, *, context: dict = {}, not_error: bool = True):
-        guild = client.get_guild(main_server)
         request = arg_dict["request"]
         worker_session = request.app.state.worker_session
         db = worker_session.postgres
         status = arg_dict.get("status_code")
         if "user_id" in request.session.keys():
             arg_dict["css"] = request.session.get("user_css")
-            if guild:
-                user = guild.get_member(int(request.session.get("user_id", 0)))
-            else:
-                user = None
-
             state = await db.fetchval("SELECT state FROM users WHERE user_id = $1", int(request.session["user_id"]))
             if (state == enums.UserState.global_ban) and not_error:
                 ban_type = enums.UserState(state).__doc__

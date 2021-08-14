@@ -48,7 +48,7 @@ async def catworker(redis, client, pidrec):
     }
     async for msg in pubsub.listen():
         if flag:
-            await state.redis.publish(f"_worker", "NOSESSION UP RMQ 0") # Announce that we are up
+            await redis.publish(f"_worker", "NOSESSION UP RMQ 0") # Announce that we are up
             flag = False
         if msg is None or type(msg.get("data")) != bytes:
             continue
@@ -74,13 +74,13 @@ async def catworker(redis, client, pidrec):
                     logger.warning(f"Invalid worker {worker_amt} with pid {pid} added. Restting config and publishing REGET")
                     pidrec.reset()
                     await asyncio.sleep(1)
-                    await state.redis.publish(f"_worker", f"{pidrec.session_id} REGET WORKER INVALID_STATE")
+                    await redis.publish(f"_worker", f"{pidrec.session_id} REGET WORKER INVALID_STATE")
 
                 if pidrec.worker_amt() == int(worker_amt) and tgt == "WORKER":
                     logger.success("All workers are now up")
                     await asyncio.sleep(1)
                     worker_pids = " ".join([str(pid) for pid in pidrec.list()])
-                    await state.redis.publish("_worker", f"{pidrec.session_id} FUP {worker_pids}")
+                    await redis.publish("_worker", f"{pidrec.session_id} FUP {worker_pids}")
 
             case ("DOWN", ("RMQ" | "WORKER") as tgt, pid) if pid.isdigit():
                 logger.info(f"{tgt} {pid} is now down")
@@ -93,10 +93,10 @@ async def catworker(redis, client, pidrec):
                     try:
                         user = client.get_user(uid) or await client.fetch_user(uid)
                     except discord.NotFound:
-                        await state.redis.set(f"cmd-{cmd_id}", 0, nx=True, ex=30)
+                        await redis.set(f"cmd-{cmd_id}", 0, nx=True, ex=30)
                         return
                     except Exception as exc:
-                        await state.redis.set(f"cmd-{cmd_id}", -1, nx=True, ex=30)
+                        await redis.set(f"cmd-{cmd_id}", -1, nx=True, ex=30)
                         logger.exception("A error has occurred")
                         return exc
 
@@ -119,7 +119,7 @@ async def catworker(redis, client, pidrec):
                         "status": status,
                         "main_server": in_main_server
                     }
-                    await state.redis.set(f"cmd-{cmd_id}", orjson.dumps(json), nx=True, ex=30)
+                    await redis.set(f"cmd-{cmd_id}", orjson.dumps(json), nx=True, ex=30)
                     return
 
                 asyncio.create_task(_getch(uid))
@@ -130,34 +130,34 @@ async def catworker(redis, client, pidrec):
                     # Since the main bot will only be in one server, we can just use client.guilds[0]                    
                     user = client.guilds[0].get_member(int(uid))
                     if not user:
-                        await state.redis.set(f"cmd-{cmd_id}", 0, nx=True, ex=30)
+                        await redis.set(f"cmd-{cmd_id}", 0, nx=True, ex=30)
                         return
                     roles = orjson.dumps([role.id for role in user.roles])
-                    await state.redis.set(f"cmd-{cmd_id}", roles, nx=True, ex=30)
+                    await redis.set(f"cmd-{cmd_id}", roles, nx=True, ex=30)
                     return
 
                 asyncio.create_task(_roles(uid))
 
-            case (cmd_id, "SENDMSG", channel_id, msg_id) if channel_id.isdigit():
+            case (cmd_id, "SENDMSG", channel_id) if channel_id.isdigit():
                 """
-                Sends a message to channel with channel_id. Message should first be put in redis at cmdmsg-{msg_id} as a json of {'content': content, 'embed': embed}. 
+                Sends a message to channel with channel_id. 
 
                 Returns 0 if message not found in redis or not json serializable or channel not found or message failed to send, 1 is successful
                 """
-                async def _sendmsg(cmd_id, channel_id, msg_id):
-                    msg = await state.redis.get(f"cmdmsg-{msg_id}")
+                async def _sendmsg(cmd_id, channel_id):
+                    msg = await redis.get(f"msg-{cmd_id}")
                     if not msg:
-                        await state.redis.set(f"cmd-{cmd_id}", 0, nx=True, ex=30)
+                        await redis.set(f"cmd-{cmd_id}", 0, nx=True, ex=30)
                         return
                     try:
                         msg = orjson.loads(msg)
                     except Exception:
-                        await state.redis.set(f"cmd-{cmd_id}", 0, nx=True, ex=30)
+                        await redis.set(f"cmd-{cmd_id}", 0, nx=True, ex=30)
                         return
 
                     channel = client.get_channel(channel_id) 
                     if not channel:
-                        await state.redis.set(f"cmd-{cmd_id}", 0, nx=True, ex=30)
+                        await redis.set(f"cmd-{cmd_id}", 0, nx=True, ex=30)
                         return
                     
                     try:
@@ -165,19 +165,27 @@ async def catworker(redis, client, pidrec):
                             embed = discord.Embed.from_dict(msg.get("embed"))
                         else:
                             embed = None
-                        await channel.send(msg.get("content"), embed=embed)
+
+                        f = msg.get("file")
+                        if f:
+                            f_id = f["name"]
+                            f_data = f["data"]
+                            fl_file = discord.File(io.BytesIO(bytes(f_data, 'utf-8')), f'{f_id}.txt')
+                        else:
+                            fl_file = None
+                        await channel.send(msg.get("content"), embed=embed, file=fl_file)
                     except Exception:
-                        await state.redis.set(f"cmd-{cmd_id}", 0, nx=True, ex=30)
+                        await redis.set(f"cmd-{cmd_id}", 0, nx=True, ex=30)
                         return
                     
-                    await state.redis.set(f"cmd-{cmd_id}", 1, nx=True, ex=30)
+                    await redis.set(f"cmd-{cmd_id}", 1, nx=True, ex=30)
                     return
 
-                asyncio.create_task(_sendmsg(cmd_id, channel_id, msg_id))
+                asyncio.create_task(_sendmsg(cmd_id, channel_id))
             case _:
                 logger.warning(f"Unhandled message {msg}")
 
                 
-async def startipc(redis, client):
+async def runipc(redis, client):
     pidrec = PIDRecorder()
     asyncio.create_task(catworker(redis, client, pidrec))

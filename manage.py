@@ -164,6 +164,11 @@ def run_site(ctx, workers):
         sys.exit(0)
 
 
+@site.command("admin_run")
+def admin_run():
+    import uvicorn
+    uvicorn.run("modules.admin.system:app", port=1843)
+
 @site.command("enums2md")
 def site_enum2html():
     """Converts the enums in modules/models/enums.py into markdown. Mainly for apidocs creation"""

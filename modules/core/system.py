@@ -193,26 +193,6 @@ class FatesWorkerOauth(Singleton):  # pylint: disable=too-few-public-methods
     ):
         self.discord = discord_oauth
 
-        
-class FatesWorkerDiscord(Singleton):
-    """Stores discord clients for a worker session"""
-
-    def __init__(
-        self, 
-        *, 
-        main: FatesBot, 
-        servers: FatesBot, 
-        debug: FatesDebugBot
-    ):
-        self.debug = debug
-        self.main = main
-        self.servers = servers
-
-    def up(self):
-        """Returns whether the main client is up"""
-        return self.main.user is not None
-
-
 class FatesWorkerSession(Singleton):  # pylint: disable=too-many-instance-attributes
     """Stores a worker session"""
 
@@ -223,14 +203,12 @@ class FatesWorkerSession(Singleton):  # pylint: disable=too-many-instance-attrib
         postgres: asyncpg.Pool,
         redis: aioredis.Connection,
         rabbit: aio_pika.RobustConnection,
-        worker_discord: FatesWorkerDiscord, 
         oauth: FatesWorkerOauth
     ):
         self.id = session_id
         self.postgres = postgres
         self.redis = redis
         self.rabbit = rabbit
-        self.discord = worker_discord
         self.oauth = oauth
 
         # Record basic stats and initially set workers to None
@@ -269,8 +247,10 @@ class FatesWorkerSession(Singleton):  # pylint: disable=too-many-instance-attrib
         return self.workers.index(os.getpid())
 
       
-async def redis_ipc(redis, cmd):
+async def redis_ipc(redis, cmd, msg = None):
     cmd_id = uuid.uuid4()
+    if msg:
+        await redis.set(f"msg-{cmd_id}", orjson.dumps(msg), nx=True, ex=30)
     await redis.publish("_worker", f"{cmd_id} {cmd}")
     start_time = time.time()
     while start_time - time.time() < 30:
@@ -323,12 +303,9 @@ async def init_fates_worker(app, session_id, workers):
         pass
 
     dbs = await setup_db()
-    _discord = setup_discord()
     builtins.db = dbs["postgres"]
     builtins.redis_db = dbs["redis"]
     builtins.rabbitmq_db = dbs["rabbit"]
-    builtins.client = builtins.dclient = _discord["main"]
-    builtins.client_server = _discord["servers"]
     RabbitClient.setup(worker_key, dbs["redis"], dbs["rabbit"])
     logger.success("Connected to postgres, rabbitmq and redis")
 
@@ -337,11 +314,6 @@ async def init_fates_worker(app, session_id, workers):
         postgres=dbs["postgres"],
         redis=dbs["redis"],
         rabbit=dbs["rabbit"],
-        worker_discord=FatesWorkerDiscord(
-            main=_discord["main"],
-            servers=_discord["servers"],
-            debug=_discord["debug"]
-        ),
         oauth=FatesWorkerOauth(
             discord_oauth=DiscordOauth(
                 oc=OauthConfig(
@@ -424,16 +396,6 @@ async def init_fates_worker(app, session_id, workers):
     # Begin worker sync
     asyncio.create_task(catclient(workers, session, app))
     logger.debug("Started catclient task")
-
-    # Start discord connection waiting
-    try:
-        logger.info("Waiting for discord to come online/ready")
-        try:
-            await app.state.worker_session.discord.main.wait_until_ready()
-        except BaseException:
-            return # Exit crash fix
-    except Exception as exc:
-        logger.warning(f"{exc}")
 
     # We are now up (probably)
     app.state.worker_session.set_up()
@@ -520,7 +482,7 @@ async def catclient(workers, session, app):
                 except Exception:
                     pass
 
-                await start_dbg(session, app)
+                #await start_dbg(session, app)
                 asyncio.create_task(vote_reminder(session))
 
             case _:
@@ -594,13 +556,6 @@ def shutdown_fates_worker(app):
         await rabbit.close()
         await redis.publish("_worker", f"DOWN WORKER {os.getpid()}")
         await redis.close()
-        await asyncio.sleep(0)
-        try:
-            await worker_session.discord.main.close()
-            await asyncio.sleel(0)
-            await worker_session.discord.debug.close()
-        except BaseException:
-            pass
         await asyncio.sleep(0)
         logger.info("All connections closed")
 

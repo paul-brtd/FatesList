@@ -24,7 +24,7 @@ async def botlist_stats_api(
         uptime - The current uptime for the given worker
         pid - The pid of the worker you are connected to
         up - Whether the databases are up on this worker
-        dup - Whether we have connected to discord on this worker
+        dup - Always true now, but used to be: Whether we have connected to discord on this worker
         bot_count_total - The bot count of the list
         bot_count - The approved and certified bots on the list
 
@@ -42,7 +42,7 @@ async def botlist_stats_api(
         "uptime": time.time() - worker_session.start_time, 
         "pid": os.getpid(), 
         "up": up, 
-        "dup": worker_session.discord.up(),
+        "dup": True,
         "bot_count": bot_count, 
         "bot_count_total": bot_count_total,
         "workers": worker_session.workers

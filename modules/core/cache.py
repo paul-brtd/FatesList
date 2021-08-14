@@ -15,12 +15,10 @@ async def _user_fetch(
         logger.debug("Using builtins is deprecated. Use worker session instead")
         redis = redis_db
         rabbit = rabbitmq_db
-        client = dclient
     else:
         db = worker_session.postgres
         redis = worker_session.redis
         rabbit = worker_session.rabbit
-        client = worker_session.discord.main
     
     # Check if a suitable version is in the cache first before querying Discord
 

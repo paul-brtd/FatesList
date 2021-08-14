@@ -15,7 +15,7 @@ cleaner = Cleaner()
 
 router = APIRouter(
     include_in_schema = True,
-    tags = [f"Admin"],
+    tags = ["Admin"],
 )
 
 @router.patch(
@@ -35,14 +35,16 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
     else:
         perm = data.op.__perm__
     
+    redis = request.app.state.redis
+    db = request.app.state.postgres
     # Check if they are staff or not
-    staff = await is_staff(staff_roles, user.id, perm)
+    staff = await is_staff(staff_roles, user.id, perm, redis=redis)
     if user is None or not staff[0]:
         return api_no_perm(perm)
     
     # Handle cooldown by first getting the bucket and checking the ttl of the needed key given bucket
     if data.op.__cooldown__:
-        coolkey = await redis_db.ttl(f"cooldown-{data.op.__cooldown__.name}-{user.id}") # Format: cooldown-BUCKET-MOD
+        coolkey = await redis.ttl(f"cooldown-{data.op.__cooldown__.name}-{user.id}") # Format: cooldown-BUCKET-MOD
         if coolkey not in (-1, -2): # https://redis.io/commands/ttl, -2 means no key found and -1 means key exists but has no associated expire
             return api_error(
                 f"This operation is on cooldown for {coolkey} seconds",
@@ -57,7 +59,7 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
         )
     
     # Create admin_tool for use by ops
-    admin_tool = BotListAdmin(bot_id, user.id)
+    admin_tool = BotListAdmin(bot_id, user.id, request.app.state.db, request.app.state.redis)
     
     # Using Bot ID 0 on a non recursive command is not allowed
     if bot_id == 0 and not data.op.__recursive__:
@@ -220,7 +222,7 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
 
     # Staff lock
     elif data.op == enums.BotAdminOp.staff_lock:
-        await redis_db.delete(f"fl_staff_access-{user.id}:{bot_id}")
+        await redis.delete(f"fl_staff_access-{user.id}:{bot_id}")
         embed = discord.Embed(
             title = "Staff Access Alert!", 
             description = (
@@ -233,7 +235,7 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
    
     # Staff unlock
     elif data.op == enums.BotAdminOp.staff_unlock:
-        await redis_db.set(f"fl_staff_access-{user.id}:{bot_id}", 0, ex = 60*15)
+        await redis.set(f"fl_staff_access-{user.id}:{bot_id}", 0, ex = 60*15)
         embed = discord.Embed(
             title = "Staff Access Alert!", 
             description = (
@@ -287,7 +289,7 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
             asyncio.create_task(tool)
    
     if data.op.__cooldown__:
-        await redis_db.set(f"cooldown-{data.op.__cooldown__.name}-{user.id}", 0, px = int(data.op.__cooldown__.value*1000))
+        await redis.set(f"cooldown-{data.op.__cooldown__.name}-{user.id}", 0, px = int(data.op.__cooldown__.value*1000))
     
     return api_success(success_msg, status_code = success_code)
 

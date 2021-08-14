@@ -5,7 +5,7 @@ from pydantic import BaseModel, validator
 
 import modules.models.enums as enums
 
-from ..base_models import APIResponse, BaseUser, IDResponse
+from modules.discord.api.v2.base_models import APIResponse, BaseUser, IDResponse
 
 
 class BotListAdminRoute(BaseModel):

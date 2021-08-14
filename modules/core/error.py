@@ -3,6 +3,7 @@ from .imports import *
 from .templating import *
 import io
 import traceback
+from .ipc import redis_ipc
 
 def etrace(ex):
      return "".join(traceback.format_exception(ex)) # COMPAT: Python 3.10 only
@@ -10,14 +11,12 @@ def etrace(ex):
 class WebError():
     @staticmethod
     async def log(request, exc, error_id, curr_time):
-        site_errors = client.get_channel(site_errors_channel) # Get site errors channel
-
         try:
             fl_info = f"Error ID: {error_id}\n\n" # Initial header
             fl_info += etrace(exc)
         
         except Exception:
-            pass
+            fl_info = "No exception could be logged"
         
         url = str(request.url).replace('https://', '')
         msg = inspect.cleandoc(f"""500 (Internal Server Error) at {url}
@@ -27,20 +26,8 @@ class WebError():
         **Error ID**: {error_id}
 
         **Time When Error Happened**: {curr_time}""") 
-        
-        try:
-            await site_errors.send(msg)
-        
-        except Exception:
-            raise exc # Reraise the error
-        
-        fl_file = discord.File(io.BytesIO(bytes(fl_info, 'utf-8')), f'{error_id}.txt') # Create a file on discord
-
-        if fl_file is not None:
-            await site_errors.send(file=fl_file) # Send it
-        
-        else:
-            await site_errors.send("No extra information could be logged and/or sent right now") # Could not send it
+         
+        await redis_ipc(redis_db, f"SENDMSG {site_errors_channel}", msg = {"content": msg, "file": {"name": f"{error_id}.txt", "data": fl_info}})
 
     @staticmethod
     async def error_handler(request, exc, log: bool = True):

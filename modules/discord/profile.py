@@ -27,11 +27,8 @@ async def profile_of_user_generic(
     return await get_user_profile(request, user_id, preview = preview, worker_session = worker_session)
 
 async def get_user_profile(request, user_id: int, preview: bool, worker_session):
-    discord = worker_session.discord
     db = worker_session.postgres
 
-    client = discord.main
-    
     viewer = int(request.session.get("user_id", -1))
     admin = (await is_staff(staff_roles, viewer, 4))[0] if viewer else False
     
@@ -40,7 +37,6 @@ async def get_user_profile(request, user_id: int, preview: bool, worker_session)
     user = await core.User(
         id = user_id, 
         db = db, 
-        client = client
     ).profile()
 
     if not user:
