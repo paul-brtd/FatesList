@@ -290,6 +290,20 @@ async def init_fates_worker(app, session_id, workers):
         pass
 
     dbs = await setup_db()
+
+    # Wait for redis ipc to come up
+    logger.info("Connecting to IPC...")
+    flag = True
+    while flag:
+        resp = await redis_ipc(dbs["redis"], "PING", timeout=3)
+        if resp != b"PONG V1":
+            logger.info(f"Invalid IPC. Got invalid PONG {resp}")
+            await dbs["postgres"].close()
+            await dbs["rabbit"].close()
+            os._exit(-1)
+            return
+        flag = False
+
     builtins.db = dbs["postgres"]
     builtins.redis_db = dbs["redis"]
     builtins.rabbitmq_db = dbs["rabbit"]
@@ -425,6 +439,11 @@ async def catclient(workers, session, app):
         msg = tuple(msg.get("data").decode("utf-8").split(" "))
         logger.trace(f"Got {msg}")
         match msg:
+            case ("RESTART", ("IPC" | "REMOTE") as t):
+                logger.info("Dying due to sent DIE call")
+                signal.raise_signal(signal.SIGINT)
+                sys.exit(0)
+
             # RabbitMQ going up has no session id yet
             case("NOSESSION", "UP", "RMQ", _):
                 # Announce that we are up and sending to repeat a message

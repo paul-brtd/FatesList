@@ -14,3 +14,7 @@ async def startup():
     app.state.db, app.state.redis = db["postgres"], db["redis"]
     include_routers(app, "admin", "modules/admin/routers")
     asyncio.create_task(runipc(app.state.redis, app.state.discord))
+
+@app.on_event("shutdown")
+async def shutdown():
+    await app.state.redis.publish("_worker", "RESTART IPC")

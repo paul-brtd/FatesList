@@ -137,6 +137,12 @@ async def catworker(redis, client, pidrec):
                     return
 
                 asyncio.create_task(_roles(uid))
+            
+            case (cmd_id, "PING"):
+                """Returns "PONG Vx" where x is the ipc protocol version."""
+                async def _ping():
+                    await redis.set(f"cmd-{cmd_id}", "PONG V1", nx=True, ex=30)
+                asyncio.create_task(_ping())
 
             case (cmd_id, "SENDMSG", channel_id) if channel_id.isdigit():
                 """
@@ -145,36 +151,37 @@ async def catworker(redis, client, pidrec):
                 Returns 0 if message not found in redis or not json serializable or channel not found or message failed to send, 1 is successful
                 """
                 async def _sendmsg(cmd_id, channel_id):
-                    msg = await redis.get(f"msg-{cmd_id}")
-                    if not msg:
+                    dat = await redis.get(f"msg-{cmd_id}")
+                    if not dat:
                         await redis.set(f"cmd-{cmd_id}", 0, nx=True, ex=30)
                         return
                     try:
-                        msg = orjson.loads(msg)
+                        dat = orjson.loads(dat)
                     except Exception:
                         await redis.set(f"cmd-{cmd_id}", 0, nx=True, ex=30)
                         return
 
-                    channel = client.get_channel(channel_id) 
+                    channel = client.get_channel(int(channel_id))
                     if not channel:
                         await redis.set(f"cmd-{cmd_id}", 0, nx=True, ex=30)
                         return
                     
                     try:
-                        if msg.get("embed"):
-                            embed = discord.Embed.from_dict(msg.get("embed"))
+                        if dat.get("embed"):
+                            embed = discord.Embed.from_dict(dat.get("embed"))
                         else:
                             embed = None
 
-                        f = msg.get("file")
+                        f = dat.get("file")
                         if f:
                             f_id = f["name"]
                             f_data = f["data"]
-                            fl_file = discord.File(io.BytesIO(bytes(f_data, 'utf-8')), f'{f_id}.txt')
+                            fl_file = discord.File(io.BytesIO(bytes(f_data, 'utf-8')), f_id)
                         else:
                             fl_file = None
-                        await channel.send(msg.get("content"), embed=embed, file=fl_file)
-                    except Exception:
+                        await channel.send(content=dat.get("content"), embed=embed, file=fl_file)
+                    except Exception as exc:
+                        logger.exception("IPC error")
                         await redis.set(f"cmd-{cmd_id}", 0, nx=True, ex=30)
                         return
                     
@@ -183,8 +190,7 @@ async def catworker(redis, client, pidrec):
 
                 asyncio.create_task(_sendmsg(cmd_id, channel_id))
             case _:
-                logger.warning(f"Unhandled message {msg}")
-
+                logger.debug(f"Got msg {msg}")
                 
 async def runipc(redis, client):
     pidrec = PIDRecorder()
