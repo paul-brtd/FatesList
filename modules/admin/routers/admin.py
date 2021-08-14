@@ -6,17 +6,16 @@ from lxml.html.clean import Cleaner
 from modules.core import *
 from modules.discord.index import stats_page
 
-from ..base import API_VERSION
 from .models import (APIResponse, BotAdminOpEndpoint, BotQueueGet, IDResponse,
                      enums)
+from ..classes import BotListAdmin
 from config import bot_logs
 
 cleaner = Cleaner()
 
 router = APIRouter(
-    prefix = f"/api/v{API_VERSION}/admin",
     include_in_schema = True,
-    tags = [f"API v{API_VERSION} - Admin"],
+    tags = [f"Admin"],
 )
 
 @router.patch(
