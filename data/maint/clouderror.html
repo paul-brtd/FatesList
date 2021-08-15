@@ -55,10 +55,14 @@
 	</body>
 	<script>
 		function checkSiteStatus() {
-			fetch("https://fateslist.xyz")
+			fetch("/")
 			.then(
 				function(response) {
 					if (response.status === 200) {
+						if(window.location.pathname == "/maint/page") {
+							window.location.replace("/")
+							return
+						}
 						window.location.reload()
 					}
 				}

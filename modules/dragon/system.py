@@ -2,10 +2,11 @@ import builtins
 import asyncio
 from modules.core.system import setup_db, setup_discord
 from fastapi import FastAPI
-from config import worker_key
+from config import worker_key, TOKEN_DBG
 from lynxfall.utils.fastapi import include_routers
 from lynxfall.rabbit.core.process import run_worker, disconnect_worker
 from .ipc import runipc
+from .dbgbot import Manager
 
 app = FastAPI(title="Management API", root_path="/api/admin")
 
@@ -14,6 +15,10 @@ async def startup():
     discord = setup_discord()
     db = await setup_db()
     app.state.discord = discord["main"]
+    app.state.dbgbot = discord["debug"]
+    app.state.dbgbot.load_extension("jishaku")
+    app.state.dbgbot.add_cog(Manager(app.state.dbgbot, app))
+    asyncio.create_task(app.state.dbgbot.start(TOKEN_DBG))
     app.state.postgres, app.state.redis = db["postgres"], db["redis"]
     include_routers(app, "admin", "modules/dragon/routers")
     asyncio.create_task(runipc(app.state.redis, app.state.discord))
@@ -52,4 +57,5 @@ async def startup():
 
 @app.on_event("shutdown")
 async def shutdown():
+    await app.state.redis.publish("_worker", "IPC DOWN")
     await app.state.redis.publish("_worker", "RESTART IPC")

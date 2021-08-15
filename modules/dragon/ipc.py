@@ -139,9 +139,12 @@ async def catworker(redis, client, pidrec):
                 asyncio.create_task(_roles(uid))
             
             case (cmd_id, "PING"):
-                """Returns "PONG Vx" where x is the ipc protocol version."""
+                """Returns "PONG Vx Y" where x is the ipc protocol version and Y is the degraded state value (1=degraded)."""
                 async def _ping():
-                    await redis.set(f"cmd-{cmd_id}", "PONG V1", nx=True, ex=30)
+                    v = "V2"
+                    degraded = await redis.get("degrade-state")
+                    degraded = 1 if degraded else 0
+                    await redis.set(f"cmd-{cmd_id}", f"PONG {v} {degraded}", nx=True, ex=30)
                 asyncio.create_task(_ping())
 
             case (cmd_id, "SENDMSG", channel_id) if channel_id.isdigit():
@@ -175,7 +178,7 @@ async def catworker(redis, client, pidrec):
                         f = dat.get("file")
                         if f:
                             f_id = f["name"]
-                            f_data = f["data"]
+                            f_data = f.get("content", "No file content sent")
                             fl_file = discord.File(io.BytesIO(bytes(f_data, 'utf-8')), f_id)
                         else:
                             fl_file = None

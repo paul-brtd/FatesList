@@ -27,7 +27,7 @@ class WebError():
 
         **Time When Error Happened**: {curr_time}""") 
          
-        await redis_ipc(redis_db, f"SENDMSG {site_errors_channel}", msg = {"content": msg, "file": {"name": f"{error_id}.txt", "data": fl_info}})
+        await redis_ipc(redis_db, f"SENDMSG {site_errors_channel}", msg = {"content": msg, "file": {"name": f"{error_id}.txt", "content": fl_info}})
 
     @staticmethod
     async def error_handler(request, exc, log: bool = True):

@@ -22,7 +22,7 @@ from fastapi.exceptions import (HTTPException, RequestValidationError,
                                 ValidationError)
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from lynxfall.core.classes import Singleton
 from lynxfall.oauth.models import OauthConfig
@@ -292,18 +292,56 @@ async def init_fates_worker(app, session_id, workers):
     dbs = await setup_db()
 
     # Wait for redis ipc to come up
-    logger.info("Connecting to IPC...")
-    flag = True
-    while flag:
-        resp = await redis_ipc(dbs["redis"], "PING", timeout=3)
-        if resp != b"PONG V1":
-            logger.info(f"Invalid IPC. Got invalid PONG {resp}")
-            await dbs["postgres"].close()
-            await dbs["rabbit"].close()
-            os._exit(-1)
-            return
-        flag = False
+    app.state.ipc_up = False
+    app.state.first_run = True
 
+    @app.middleware("http")
+    async def _maint(request, call_next):
+        if request.app.state.ipc_up:
+            return await call_next(request)
+        return RedirectResponse("/maint/page")
+
+    async def wait_for_ipc(app, session_id, workers, dbs):
+        while True:
+            if not app.state.ipc_up:
+                logger.info("Waiting for IPC")
+            else:
+                logger.info("Doing periodic IPC health check")
+            resp = await redis_ipc(dbs["redis"], "PING", timeout=5)
+            if not resp:
+                invalid = True
+                reason = "IPC not up"
+            else:
+                resp = resp.decode("utf-8")
+                invalid, reason = False, "All good!"
+                respl = resp.split(" ")
+                if len(respl) != 3:
+                    invalid, reason = True, "Invalid PONG payload"
+                if respl[0] != "PONG":
+                    invalid, reason = True, "IPC corrupt"
+                if respl[1] != "V2":
+                    invalid, reason = True, "Invalid IPC version"
+                
+                if not invalid:
+                    app.state.site_degraded = (respl[2] == "1")
+        
+            if invalid:
+                app.state.ipc_up = False
+                await asyncio.sleep(3)
+                logger.info(f"Invalid IPC. Got invalid PONG: {resp} (reason: {reason})")
+                app.state.ipc_up = False
+                continue
+            elif app.state.first_run:
+                app.state.first_run = False
+                await finish_init(app, session_id, workers, dbs)
+            else:
+                app.state.ipc_up = True
+                await asyncio.sleep(30)
+            await asyncio.sleep(30)
+    
+    asyncio.create_task(wait_for_ipc(app, session_id, workers, dbs))
+
+async def finish_init(app, session_id, workers, dbs):
     builtins.db = dbs["postgres"]
     builtins.redis_db = dbs["redis"]
     builtins.rabbitmq_db = dbs["rabbit"]
@@ -405,26 +443,13 @@ async def init_fates_worker(app, session_id, workers):
     logger.success(
         f"Fates List worker (pid: {os.getpid()}) bootstrapped successfully!"
     )
-   
+ 
+    # We are ready to handle requests
+    app.state.ipc_up = True
 
-async def start_dbg(session, app):
-    """Start the debug bot on primary worker"""
-    if session.primary_worker():
-        session.discord.debug.bots_role = bots_role
-        session.discord.debug.bot_dev_role = bot_dev_role
         
-        try:
-            session.discord.debug.load_extension("jishaku")
-        except Exception:  # pylint: disable=broad-except
-            pass
-        
-        manager = importlib.import_module("modules.debug.bot")
-        session.discord.debug.add_cog(manager.Manager(session.discord.debug, app))
-        asyncio.create_task(session.discord.debug.start(TOKEN_DBG))
-
-
 async def catclient(workers, session, app):
-    """The Fates List Worker Protocol"""
+    """The Fates List Dragon IPC protocol"""
     await session.redis.publish(
         "_worker", 
         f"{session.id} UP WORKER {os.getpid()} 0 {workers}"
@@ -439,8 +464,12 @@ async def catclient(workers, session, app):
         msg = tuple(msg.get("data").decode("utf-8").split(" "))
         logger.trace(f"Got {msg}")
         match msg:
+            case ("IPC", "DOWN"):
+                logger.info("IPC is now down")
+                app.state.ipc_up = False
+
             case ("RESTART", ("IPC" | "REMOTE") as t):
-                logger.info("Dying due to sent DIE call")
+                logger.info(f"Dying due to sent RESTART call with requestor being {t}")
                 signal.raise_signal(signal.SIGINT)
                 os._exit(0)
 
