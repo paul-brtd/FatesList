@@ -32,6 +32,7 @@ class PIDRecorder():
 
     def reset(self):
         self.pids = []
+        self.session_id = None
 
     def list(self):
         return self.pids
@@ -55,6 +56,9 @@ async def catworker(redis, client, pidrec):
         msg = tuple(msg.get("data").decode("utf-8").split(" "))
         
         match msg:
+            case ("RESTART", "IPC"):
+                pidrec.reset()
+
             case (session_id, "UP", ("RMQ" | "WORKER") as tgt, pid, reload, worker_amt) if pid.isdigit() and reload.isdigit() and worker_amt.isdigit():
             
                 logger.info(f"{tgt} {pid} is now up with reload mode {reload}. Amount of workers is {worker_amt}")

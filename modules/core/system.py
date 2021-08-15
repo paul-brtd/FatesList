@@ -85,6 +85,10 @@ class FatesListRequestHandler(BaseHTTPMiddleware):
         request.state.error_id = str(uuid.uuid4())
         request.state.curr_time = str(datetime.datetime.now())
         path = request.scope["path"]
+        
+        if not request.app.state.ipc_up:
+            # This middleware does not apply
+            return await call_next(request)
 
         try:
             res = await self._dispatcher(path, request, call_next)
@@ -337,7 +341,7 @@ async def init_fates_worker(app, session_id, workers):
             else:
                 app.state.ipc_up = True
                 await asyncio.sleep(30)
-            await asyncio.sleep(30)
+            await asyncio.sleep(60)
     
     asyncio.create_task(wait_for_ipc(app, session_id, workers, dbs))
 

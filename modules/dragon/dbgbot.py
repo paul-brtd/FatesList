@@ -3,7 +3,7 @@ import os
 import sys
 import io
 from typing import Optional, Union
-from lynxfall.rabbit.client.core import add_rmq_task_with_ret
+from lynxfall.rabbit.client.core import add_rmq_task
 import discord
 from discord.ext.commands import Cog, command, is_owner
 from config import main_server
@@ -24,7 +24,7 @@ class Manager(Cog):
     @is_owner()
     @command(pass_context = True)
     async def reload(self, ctx):
-        os.system("bin/reload")
+        await self.app.state.redis.publish("_worker", "RESTART IPC")
         return await ctx.send("Fates List Reload Triggered")
 
     @is_owner()
@@ -63,28 +63,6 @@ class Manager(Cog):
         
         iob = io.BytesIO("\n".join(bots).encode("utf-8"))
         await ctx.send(file = discord.File(filename = f"bis-{m}.txt", fp = iob))
-
-    @is_owner()
-    @command(pass_context = True)
-    async def rmq(self, ctx, *, cmd: str):
-        cmd = cmd.replace("```", "").lstrip()
-        _ret = await add_rmq_task_with_ret("_admin", {}, op = cmd)
-        return await self.rmq_handler(ctx, _ret)
-
-    @is_owner()
-    @command(pass_context = True)
-    async def rmqret(self, ctx, id):
-        _ret = await rmq_get_ret(id)
-        return await self.rmq_handler(ctx, _ret)
-
-    async def rmq_handler(self, ctx, _ret):
-        if not _ret[1]:
-            await ctx.send(f"Failed to get message from worker (likely busy). Return UUID is {_ret[0]} and return prefix is rabbit-")
-        ret = f"Error: {_ret[0]['err']}\n\nReturn\n\n{_ret[0]['ret']}"
-        retl = splitc(ret)
-        for r in retl:
-            await ctx.send(f"```{r}```")
-
 
     @is_owner()
     @command(pass_context = True)
