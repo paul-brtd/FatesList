@@ -442,7 +442,7 @@ async def catclient(workers, session, app):
             case ("RESTART", ("IPC" | "REMOTE") as t):
                 logger.info("Dying due to sent DIE call")
                 signal.raise_signal(signal.SIGINT)
-                sys.exit(0)
+                os._exit(0)
 
             # RabbitMQ going up has no session id yet
             case("NOSESSION", "UP", "RMQ", _):

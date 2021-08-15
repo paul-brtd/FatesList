@@ -435,7 +435,6 @@ async def appeal_bot(request: Request, bot_id: int, data: BotAppeal):
         return api_error(
             "Appeal must be at least 7 characters long"
         )
-    client = request.app.state.worker_session.discord.main
     db = request.app.state.worker_session.postgres
 
     state = await db.fetchval("SELECT state FROM bots WHERE bot_id = $1", bot_id)
@@ -450,12 +449,12 @@ async def appeal_bot(request: Request, bot_id: int, data: BotAppeal):
         return api_error(
             "You cannot send an appeal for a bot that is not banned or denied!"
         )
-    reschannel = client.get_channel(appeals_channel)
     resubmit_embed = discord.Embed(title=title, color=0x00ff00)
     bot = await get_bot(bot_id)
     resubmit_embed.add_field(name="Username", value = bot['username'])
     resubmit_embed.add_field(name="Bot ID", value = str(bot_id))
     resubmit_embed.add_field(name="Resubmission", value = str(state == enums.BotState.denied))
     resubmit_embed.add_field(name=appeal_title, value = data.appeal)
-    await reschannel.send(embed = resubmit_embed)
+    msg = {"content": f"<@&{staff_ping_add_role}>", "embed": resubmit_embed.to_dict()}
+    res = await redis_ipc(request.app.state.worker_session.redis, f"SENDMSG {appeals_channel}", msg=msg)
     return api_success()

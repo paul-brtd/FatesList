@@ -34,18 +34,9 @@ def site():
     pass
 
 @click.group()
-def rabbit():
-    """Fates List site management"""
-    pass
-
-@click.group()
 def secrets():
     """Utilities to manage secrets"""
     pass
-
-@click.group()
-def staticfiles():
-    """Utilities to manage static files"""
 
 @click.group()
 def db():
@@ -164,10 +155,11 @@ def run_site(ctx, workers):
         sys.exit(0)
 
 
-@site.command("admin_run")
+@site.command("dragon")
 def admin_run():
+    """Start the Fates List adminlayer including IPC (AKA Dragon Layer)"""
     import uvicorn
-    uvicorn.run("modules.admin.system:app", port=1843)
+    uvicorn.run("modules.dragon.system:app", port=1843)
 
 @site.command("enums2md")
 def site_enum2html():
@@ -246,50 +238,6 @@ def venv_setup(python, home):
     
     new_python = home / "flvenv/bin/python"
     
-@rabbit.command("run")
-def rabbit_run():
-    """Runs the Rabbit Worker"""
-    from lynxfall.rabbit.launcher import run
-    from modules.core.system import setup_db, setup_discord
-    from config._logger import logger
-    from config import worker_key
-    
-    async def on_startup(state, logger):
-        """Function that will be executed on startup"""
-        state.__dict__.update(( await setup_db() ))  # noqa: E201,E202
-        state.discord = setup_discord()
-        state.client = state.discord["main"]  # noqa: E201,E202
-        
-        # For unfortunate backward compatibility 
-        # with functions that havent ported yet
-        builtins.db = state.postgres
-        builtins.redis_db = state.redis
-        builtins.rabbitmq_db = state.rabbit
-        builtins.client = builtins.dclient = state.client
-        logger.debug("Finished startup")
-
-    async def on_prepare(state, logger):
-        """Function that will prepare our worker"""
-        logger.debug("Waiting for discord")
-        return await state.client.wait_until_ready()
-
-    async def on_stop(state, logger):
-        """Function that will run on stop"""
-        logger.info("Going home!")
-
-    async def on_error(*_, **__):  # pylint: disable=unused-argument
-        """Runs on error"""
-        ...
-
-    run(
-        worker_key=worker_key, 
-        backend_folder="modules/rabbitmq", 
-        on_startup=on_startup, 
-        on_prepare=on_prepare,
-        on_stop=on_stop, 
-        on_error=on_error
-    )  
- 
 
 @secrets.command("random")
 def secrets_random():
@@ -321,7 +269,7 @@ def secrets_mktemplate(inp, out):
         out_f.write("\n".join(out_lst)) 
 
 
-@staticfiles.command("compile")
+@site.command("compilestatic")
 def staticfiles_compile():
     """Compiles all labelled static files"""
     for src_file in Path("data/static/assets/src").rglob("*.js"):
@@ -695,9 +643,7 @@ def db_setup(home):
  
 
 app.add_command(site)
-app.add_command(rabbit)
 app.add_command(secrets)
-app.add_command(staticfiles)
 app.add_command(db)
     
 if __name__ == "__main__":

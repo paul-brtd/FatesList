@@ -15,7 +15,7 @@ async def startup():
     db = await setup_db()
     app.state.discord = discord["main"]
     app.state.postgres, app.state.redis = db["postgres"], db["redis"]
-    include_routers(app, "admin", "modules/admin/routers")
+    include_routers(app, "admin", "modules/dragon/routers")
     asyncio.create_task(runipc(app.state.redis, app.state.discord))
     async def _start(state, logger):
         state.redis = db["redis"]
@@ -42,7 +42,7 @@ async def startup():
     asyncio.create_task(
         run_worker(
             worker_key=worker_key, 
-            backend_folder="modules/admin/rabbit", 
+            backend_folder="modules/dragon/rabbit", 
             on_startup = _start, 
             on_prepare = _prepare,
             on_stop = _stop,
