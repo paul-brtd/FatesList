@@ -2,6 +2,7 @@ import asyncio
 import os
 import sys
 import io
+import builtins
 from typing import Optional, Union
 from lynxfall.rabbit.client.core import add_rmq_task
 import discord
@@ -20,6 +21,10 @@ class Manager(Cog):
     def __init__(self, client, app):
         self.client = client
         self.app = app
+        builtins.app = app
+        builtins.discord = client
+        builtins.get_bot = get_bot
+
 
     @is_owner()
     @command(pass_context = True)

@@ -4,6 +4,8 @@ from .templating import *
 import io
 import traceback
 from .ipc import redis_ipc
+import uuid
+import time
 
 def etrace(ex):
      return "".join(traceback.format_exception(ex)) # COMPAT: Python 3.10 only
@@ -31,8 +33,8 @@ class WebError():
 
     @staticmethod
     async def error_handler(request, exc, log: bool = True):
-        error_id = request.state.error_id 
-        curr_time = request.state.curr_time
+        error_id = uuid.uuid4()
+        curr_time = time.time()
 
         try:
             # All status codes other than 500 and 422

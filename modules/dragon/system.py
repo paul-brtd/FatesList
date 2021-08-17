@@ -7,11 +7,27 @@ from lynxfall.utils.fastapi import include_routers
 from lynxfall.rabbit.core.process import run_worker, disconnect_worker
 from .ipc import runipc
 from .dbgbot import Manager
+from fastapi.exceptions import (HTTPException, RequestValidationError,
+                                        ValidationError)
+from starlette.exceptions import HTTPException as StarletteHTTPException
+from modules.core.error import WebError
 
 app = FastAPI(title="Management API", root_path="/api/admin")
 
 @app.on_event("startup")
 async def startup():
+    # Setup exception handling
+    @app.exception_handler(403)
+    @app.exception_handler(404)
+    @app.exception_handler(RequestValidationError)
+    @app.exception_handler(ValidationError)
+    @app.exception_handler(500)
+    @app.exception_handler(HTTPException)
+    @app.exception_handler(Exception)
+    @app.exception_handler(StarletteHTTPException)
+    async def _fl_error_handler(request, exc):
+        return await WebError.error_handler(request, exc, log=True)
+
     discord = setup_discord()
     db = await setup_db()
     app.state.discord = discord["main"]
