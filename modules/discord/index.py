@@ -101,21 +101,25 @@ async def features_view(request: Request, name: str):
 
 
 @router.get("/fates/stats")
-async def stats_page(request: Request):
+async def stats_page(request: Request, full: bool = False):
     worker_session = request.app.state.worker_session
     certified = await do_index_query(state = [enums.BotState.certified], limit = None, worker_session = worker_session) 
     bot_amount = await db.fetchval("SELECT COUNT(1) FROM bots WHERE state = 0 OR state = 6")
     queue = await do_index_query(state = [enums.BotState.pending], limit = None, add_query = "ORDER BY created_at ASC", worker_session = worker_session)
     under_review = await do_index_query(state = [enums.BotState.under_review], limit = None, add_query = "ORDER BY created_at ASC", worker_session = worker_session)
-    denied = await do_index_query(state = [enums.BotState.denied], limit = None, add_query = "ORDER BY created_at ASC", worker_session = worker_session)
-    banned = await do_index_query(state = [enums.BotState.banned], limit = None, add_query = "ORDER BY created_at ASC", worker_session = worker_session)
+    if full:
+        denied = await do_index_query(state = [enums.BotState.denied], limit = None, add_query = "ORDER BY created_at ASC", worker_session = worker_session)
+        banned = await do_index_query(state = [enums.BotState.banned], limit = None, add_query = "ORDER BY created_at ASC", worker_session = worker_session)
     data = {
         "certified": certified,
         "bot_amount": bot_amount,
         "queue": queue,
-        "denied": denied,
-        "banned": banned,
+        "denied": denied if full else [],
+        "denied_amt": await db.fetchval("SELECT COUNT(1) FROM bots WHERE state = $1", enums.BotState.denied),
+        "banned": banned if full else [],
+        "banned_amt": await db.fetchval("SELECT COUNT(1) FROM bots WHERE state = $1", enums.BotState.banned),
         "under_review": under_review,
+        "full": full
     }
     if str(request.url.path).startswith("/api"): # Check for API
         return data # Return JSON if so

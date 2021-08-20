@@ -54,14 +54,19 @@
 			   {{ statcard("Bots In Queue", len(queue), "robot") }}
 			   {{ statcard("Bots on the list", bot_amount, "list-alt" ) }}
 			   {{ statcard("Certified Bots", len(certified), "certificate") }}
-			   {{ statcard("Banned Bots", len(banned), "hammer") }}
-			   {{ statcard("Denied Bots", len(denied), "times") }}
+			   {{ statcard("Banned Bots", banned_amt, "hammer") }}
+			   {{ statcard("Denied Bots", denied_amt, "times") }}
 			   {{ statcard("Bots Under Review", len(under_review), "cloud") }}
 		    </div>
 		    {{ blist("Bots In Queue", queue) }}
 		    {{ blist("Bots Under Review", under_review) }}
-		    {{ blist("Denied Bots", denied) }}
-		    {{ blist("Banned Bots", banned) }}
+		    {% if full %}
+		    	{{ blist("Denied Bots", denied) }}
+		    	{{ blist("Banned Bots", banned) }}
+		    {% else %}
+		    	<p style="font-size: 18px" class="white">To see all denied and banned bots, click <a href="/fates/stats?full=true" class="long-desc-link">here</a></p>
+			<br/>
+		    {% endif %}
 		    {{ blist("Certified Bots", certified) }}
                 </div>
             </div>

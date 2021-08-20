@@ -257,7 +257,7 @@ async def render_profile_search(request: Request, q: str, api: bool):
     for profile in profiles:
         profile_info = await get_user(profile["user_id"], worker_session = worker_session)
         if profile_info:
-            profile_obj.append({"banner": None, "description": profile["description"]}| profile_info)
+            profile_obj.append({"banner": None, "description": profile["description"], "user": profile_info})
     if not api:
         return await templates.TemplateResponse("search.html", {"request": request, "tags_fixed": tags_fixed, "profile_search": True, "query": q, "profiles": profile_obj})
     else:
