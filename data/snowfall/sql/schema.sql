@@ -283,3 +283,5 @@ CREATE TABLE bot_list_api (
 	api_path TEXT NOT NULL,
 	CONSTRAINT url_constraint FOREIGN KEY (url) REFERENCES bot_list(url) ON DELETE CASCADE ON UPDATE CASCADE -- Autoupdate
 );
+
+CREATE TABLE manager_staff (user_id BIGINT, user_token TEXT NOT NULL UNIQUE);
