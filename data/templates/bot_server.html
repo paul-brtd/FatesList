@@ -61,19 +61,19 @@
 			</button>
 			<a target=”_blank” href="/{{type}}/{{id}}/invite"><button class="btn btn-outline-light buttons-all" id="buttons-invite">Invite</button></a>
 			{% if data.support and data.support.replace(" ", "") %}
-				<a target=”_blank” href="{{data.support}}"><button class="btn btn-outline-light buttons-all" id="buttons-support">Support</button></a>
+				<a rel="noopener" target="_blank" href="{{data.support}}"><button class="btn btn-outline-light buttons-all" id="buttons-support">Support</button></a>
 			{% endif %}
 			{% if data.donate and data.donate.replace(" ", "") %}
-				<a target=”_blank” href="{{data.donate}}"><button class="btn btn-outline-light buttons-all" id="buttons-donate">Donate</button></a>
+				<a rel="noopener" target="_blank" href="{{data.donate}}"><button class="btn btn-outline-light buttons-all" id="buttons-donate">Donate</button></a>
 			{% endif %}
 			{% if data.github and data.github.replace(" ", "") %}
-				<a target=”_blank” href="{{data.github}}"><button class="btn btn-outline-light buttons-all" id="buttons-github">Github</button></a>
+				<a rel="noopener" target="_blank" href="{{data.github}}"><button class="btn btn-outline-light buttons-all" id="buttons-github">Github</button></a>
 			{% endif %}
 			{% if data.privacy_policy %}
-				<a target="_blank" href="{{data.privacy_policy}}"><button class="btn btn-outline-light buttons-all" id="buttons-privacy">Privacy Policy</button></a>
+				<a rel="noopener" target="_blank" href="{{data.privacy_policy}}"><button class="btn btn-outline-light buttons-all" id="buttons-privacy">Privacy Policy</button></a>
 			{% endif %}
 			{% if data.website %}
-				<a target=”_blank” href="{{data.website}}"><button class="btn btn-outline-light buttons-all" id="buttons-website">Website</button></a>
+				<a rel="noopener" target="_blank" href="{{data.website}}"><button class="btn btn-outline-light buttons-all" id="buttons-website">Website</button></a>
 			{% endif %}
 		{% endif %}
 		{% if admin %}
