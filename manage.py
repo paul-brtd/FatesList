@@ -260,8 +260,11 @@ def update_repos():
     }
     for dep in deps.keys():
         logger.info(f"Updating {dep} in path {deps[dep][1]}")
-        Path(deps[dep][1]).unlink(missing_ok=True)
-        cmd = ["git", "clone", deps[dep][0], deps[dep][1]]
+        if not Path(deps[dep][1]).exists():
+            cmd = ["git", "clone", deps[dep][0], deps[dep][1]]
+        else:
+            cmd = ["git", "-C", deps[dep][1], "pull", "-f"]
+            
         with Popen(cmd, env=os.environ) as proc:
             proc.wait()
                                   
