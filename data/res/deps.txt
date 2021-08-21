@@ -1,0 +1,38 @@
+cython 
+lxml 
+fastapi==0.68.0
+typer
+bleach 
+aenum 
+aio-pika  
+gunicorn 
+uvicorn[standard]==0.14.0
+orjson  
+lxml 
+sentry_sdk
+isort
+itsdangerous
+jinja2
+loguru
+jishaku
+pgcli
+
+# Needed for static file serving in future
+aiofiles
+
+# Needed for file uploads in future
+python-multipart
+
+# Not strictly needed by Fates List but recommended by FastAPI for optimal performance
+async_exit_stack>=1.0.1,<2.0.0
+async_generator>=1.10,<2.0.0
+
+# These links may change in the future, are needed
+git+https://github.com/Rapptz/discord.py
+git+https://github.com/Fates-List/lynxfall
+git+https://github.com/aio-libs/aioredis-py
+git+https://github.com/Python-Markdown/markdown.git
+git+https://github.com/aaugustin/websockets
+git+https://github.com/EQUENOS/dislash.py
+git+https://github.com/MagicStack/asyncpg
+git+https://github.com/MagicStack/uvloop
