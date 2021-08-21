@@ -253,6 +253,7 @@ def venv_setup(python, home):
 
 @site.command("update")
 def update_repos():
+    from config._logger import logger
     """Update all of the extra internal services made by Fates List"""
     deps = {
         "manager": ("https://github.com/Fates-List/ManagerBot", "modules/internal/manager")
