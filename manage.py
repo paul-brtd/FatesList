@@ -238,7 +238,34 @@ def venv_setup(python, home):
     
     new_python = home / "flvenv/bin/python"
     
+    cmd = [
+        new_python,
+        "-m",
+        "pip",
+        "install",
+        "-r",
+        "data/res/deps.txt"
+    ]
+    
+    with Popen(cmd, env=os.environ) as proc:
+        proc.wait()
+    
 
+@site.command("update")
+def update_repos():
+    """Update all of the extra internal services made by Fates List"""
+    deps = {
+        "manager": ("https://github.com/Fates-List/ManagerBot", "modules/internal/manager")
+    }
+    for dep in deps.keys():
+        logger.info(f"Updating {dep} in path {deps[dep][1]}")
+        Path(deps[dep][1]).unlink(missing_ok=True)
+        cmd = ["git", "clone", deps[dep][0], deps[dep][1]]
+        with Popen(cmd, env=os.environ) as proc:
+            proc.wait()
+                                  
+                                 
+    
 @secrets.command("random")
 def secrets_random():
     """Generates a random secret"""
