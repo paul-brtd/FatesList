@@ -29,13 +29,8 @@ def reroute_support():
     return RedirectResponse("/fates/support/invite")
 
 # We want to handle any request method to index page
-@router.get("/")
-@router.post("/")
-@router.patch("/")
-@router.delete("/")
-@router.put("/")
-@router.head("/")
-async def index_fend(request: Request, response: Response):
+@router.route("/", methods=["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"])
+async def index_fend(request: Request):
     return await render_index(request = request, api = False)
 
 @router.get("/etest/{code}")

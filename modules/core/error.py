@@ -33,7 +33,7 @@ class WebError():
 
     @staticmethod
     async def error_handler(request, exc, log: bool = True):
-        error_id = uuid.uuid4()
+        error_id = str(uuid.uuid4())
         curr_time = time.time()
 
         try:

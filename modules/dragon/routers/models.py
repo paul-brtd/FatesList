@@ -83,5 +83,5 @@ class BotQueueList(BaseModel):
     __root__: List[PartialBotQueue]
 
 class BotQueueGet(BaseModel):
-    bots: BotQueueList
+    bots: Optional[BotQueueList] = None
 

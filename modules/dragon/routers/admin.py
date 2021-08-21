@@ -18,6 +18,10 @@ router = APIRouter(
     tags = ["Admin"],
 )
 
+@router.route("/", methods=["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"])
+def api_ping():
+    return api_success("Welcome to the Fates List Admin API", curr_time=time.time())
+
 @router.patch(
     "/bots/{bot_id}/ops", 
     response_model=APIResponse, 
