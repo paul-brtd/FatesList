@@ -53,15 +53,15 @@ class WebError():
         code_str = HTTPStatus(status_code).phrase
         api = path.startswith("/api/")
         if status_code == 500:
-            if log:
-                # Log the error
-                asyncio.create_task(WebError.log(request, exc, error_id, curr_time)) 
+            # Log the error
+            asyncio.create_task(WebError.log(request, exc, error_id, curr_time)) 
             
             if api:
                 return api_error(
                     "Internal Server Error", 
                     error_id=error_id, 
                     status_code=500,
+                    traceback=etrace(exc),
                     headers={"FL-Error-ID": error_id}
                 )
             

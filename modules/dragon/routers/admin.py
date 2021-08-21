@@ -226,7 +226,13 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
 
     # Staff lock
     elif data.op == enums.BotAdminOp.staff_lock:
-        await redis.delete(f"fl_staff_access-{user.id}:{bot_id}")
+        check = await redis.exists(f"fl_staff_access-{user.id}:{bot_id}")
+        if not check:
+            return api_error("This bot has not been unlocked by you!")
+        tr = redis.pipeline()
+        await tr.decr(f"fl_staff_access-{user.id}:count")
+        await tr.delete(f"fl_staff_access-{user.id}:{bot_id}")
+        await tr.execute()
         embed = discord.Embed(
             title = "Staff Access Alert!", 
             description = (
@@ -239,7 +245,19 @@ async def bot_admin_operation(request: Request, bot_id: int, data: BotAdminOpEnd
    
     # Staff unlock
     elif data.op == enums.BotAdminOp.staff_unlock:
-        await redis.set(f"fl_staff_access-{user.id}:{bot_id}", 0, ex = 60*15)
+        check = await redis.get(f"fl_staff_access-{user.id}:count")
+        if check and int(check) > 0:
+            return api_error("You may only have one bot unlocked at any given time!")
+        
+        check = await redis.exists(f"fl_staff_access-{user.id}:{bot_id}")
+        if check:
+            return api_error("This bot has already been unlocked by you!")
+
+        tr = redis.pipeline()
+        await tr.incr(f"fl_staff_access-{user.id}:count")
+        await tr.expire(f"fl_staff_access-{user.id}:count", 60*60)
+        await tr.set(f"fl_staff_access-{user.id}:{bot_id}", 0, ex = 60*60)
+        await tr.execute()
         embed = discord.Embed(
             title = "Staff Access Alert!", 
             description = (
