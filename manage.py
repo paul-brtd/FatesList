@@ -159,7 +159,7 @@ def run_site(ctx, workers):
 def admin_run():
     """Start the Fates List adminlayer including IPC (AKA Dragon Layer)"""
     import uvicorn
-    uvicorn.run("modules.dragon.system:app", port=1843)
+    uvicorn.run("modules.infra.dragon.system:app", port=1843)
 
 @site.command("enums2md")
 def site_enum2html():
@@ -255,7 +255,7 @@ def venv_setup(python, home):
 def update_repos():
     from config._logger import logger
     """Update all of the extra internal services made by Fates List"""
-    cmd = ["git", "submodule", "foreach", "--recursive", "git", "pull", "origin", "master"]
+    cmd = ["git", "submodule", "foreach", "--recursive", "git", "pull", "origin", "main"]
     with Popen(cmd, env=os.environ) as proc:
         proc.wait()
     
