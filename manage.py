@@ -161,6 +161,12 @@ def admin_run():
     import uvicorn
     uvicorn.run("modules.infra.dragon.system:app", port=1843)
 
+@site.command("manager")
+def manager_run():
+    """Start the manager bot"""
+    os.chdir("modules/infra/manager")
+    os.execv(sys.executable, ['python'] + ["main.py"])
+    
 @site.command("enums2md")
 def site_enum2html():
     """Converts the enums in modules/models/enums.py into markdown. Mainly for apidocs creation"""
