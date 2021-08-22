@@ -255,20 +255,9 @@ def venv_setup(python, home):
 def update_repos():
     from config._logger import logger
     """Update all of the extra internal services made by Fates List"""
-    deps = {
-        "manager": ("https://github.com/Fates-List/ManagerBot", "modules/internal/manager")
-    }
-    for dep in deps.keys():
-        logger.info(f"Updating {dep} in path {deps[dep][1]}")
-        if not Path(deps[dep][1]).exists():
-            cmd = ["git", "clone", deps[dep][0], deps[dep][1]]
-        else:
-            cmd = ["git", "-C", deps[dep][1], "pull", "-f"]
-            
-        with Popen(cmd, env=os.environ) as proc:
-            proc.wait()
-                                  
-                                 
+    cmd = ["git", "submodule", "foreach", "--recursive", "git", "pull", "origin", "master"]
+    with Popen(cmd, env=os.environ) as proc:
+        proc.wait()
     
 @secrets.command("random")
 def secrets_random():
