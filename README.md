@@ -12,6 +12,8 @@ Run ```python manage.py site venv``` to setup a venv for Fates List
 
 Then run ``python manage.py db setup`` after activating the created venv to setup the databases
 
-To start the rabbitmq worker (must be started before the main site): ``python manage.py rabbit run``
+To start the dragon (must be started before the main site): ``python manage.py site dragon``
 
-To start the main site (must be started after rabbit): ``python manage.py site run``
+To start the main site (must be started after dragon): ``python manage.py site run``
+
+To start the manager bot (must be started after dragon): ``python manage.py site manager``
