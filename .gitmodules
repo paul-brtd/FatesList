@@ -1,0 +1,3 @@
+[submodule "modules/infra/manager"]
+	path = modules/infra/manager
+	url = https://github.com/Fates-List/ManagerBot
