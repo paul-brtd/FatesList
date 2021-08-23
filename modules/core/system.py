@@ -501,9 +501,9 @@ async def catclient(workers, session, app):
 
             # FUP = finally up
             case(session_id, "FUP", *worker_lst):
-                logger.success("All workers are up!")
                 if session_id != session.id:  # noqa: F821
                     continue
+                logger.success("All workers are up!")
 
                 # Finally up!
                 try:

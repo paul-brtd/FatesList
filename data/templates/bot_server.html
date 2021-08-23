@@ -164,9 +164,9 @@
 				<div class="review-user" style="margin-left: 3%; border: solid;">
 		   			<div class="review-left" style="margin-bottom: 23px">
 						<div class="review-header" style="margin-bottom: 7px; font-weight: bold;">
-							<a href='/profile/{{rev.user_id}}' class="white">
-								<img style="border-radius: 50%; width: 24px;" data-src="{{rev.user.avatar.replace('.gif', '.webp')}}" class="lozad review-avatar" alt="{{rev.user.username}}'s avatar">
-								<span class="white">{{rev.user.username}}</span>
+							<a href='/profile/{{rev.user.id}}' class="white">
+								<img style="border-radius: 50%; width: 24px;" data-src="{{rev.user.avatar.replace('.gif', '.webp') if rev.user.avatar else "https://fateslist.xyz/static/botlisticon.webp"}}" class="lozad review-avatar" alt="{{rev.user.username if rev.user.username else "Unknown User"}}'s avatar">
+								<span class="white">{{rev.user.username if rev.user.username else "Unknown User"}}</span>
 							</a>
 							<span style="margin-right: 6px"></span>
 							<span class='iconify white' style="margin-right: 3px;" data-icon='fa-solid:angle-up' onclick="voteReview('{{rev.id}}', true)" data-inline='false'></span>

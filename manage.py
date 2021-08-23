@@ -5,7 +5,7 @@ sys.pycache_prefix = "data/pycache"
 from subprocess import Popen, DEVNULL
 import os
 import io
-os.environ["LOGURU_LEVEL"] = "DEBUG"
+os.environ["LOGURU_LEVEL"] = "INFO" # Make this debug for debug info
 
 import uuid
 import signal
@@ -144,7 +144,8 @@ def run_site(ctx, workers):
         "loglevel": "debug",
         "pidfile": "data/pids/gunicorn.pid",
         "preload_app": True,
-        "timeout": 120
+        "timeout": 120,
+        "max_requests": 1000
     }
     
     app = _fappgen(str(session_id), workers, static_assets)
@@ -164,8 +165,7 @@ def admin_run():
 @site.command("manager")
 def manager_run():
     """Start the manager bot"""
-    os.chdir("modules/infra/manager")
-    os.execv(sys.executable, ['python'] + ["main.py"])
+    os.execv(sys.executable, ['python'] + ["modules/infra/manager/main.py"])
     
 @site.command("enums2md")
 def site_enum2html():

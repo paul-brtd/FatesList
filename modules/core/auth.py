@@ -7,7 +7,7 @@ bot_auth_header = APIKeyHeader(name="Authorization", description="These endpoint
 user_auth_header = APIKeyHeader(name="Authorization", description="These endpoints require a user token. You can get this from your profile under the User Token section. If you are using this for voting, make sure to allow users to opt out!\n\nA prefix of `User` before the user token such as `User abcdef` is supported and can be used to avoid ambiguity but is not required outside of endpoints that have both a user and a bot authentication option such as Get Votes. In such endpoints, the default will always be a bot auth unless you prefix the token with `User`", scheme_name="User")
 
 
-dragon_header = APIKeyHeader(name="Dragon", description="Dragon Auth (yes, the name is weird) is for the the our internal admin API. Format is MANAGER_KEY:USER_ID@USER_TOKEN. Raw access to Dragon Auth is only given to and used by our manager bot, the people developing Fates List and some highly privileged staff members.", scheme_name="Dragon")
+dragon_header = APIKeyHeader(name="Dragon", description="Dragon Auth (yes, the name is weird) is for the the our internal admin API. Format is MANAGER_KEY:USER_ID@USER_TOKEN. Raw access to Dragon Auth is only given to and used by our manager bot, the people developing Fates List and some highly privileged staff members. This can only be used from allowed IPs", scheme_name="Dragon")
 
 async def _bot_auth(bot_id: int, api_token: str):
     return await db.fetchval("SELECT bot_id FROM bots WHERE bot_id = $1 AND api_token = $2", bot_id, str(api_token))
@@ -50,6 +50,12 @@ async def manager_check(
     request: Request, 
     Dragon: str = Security(dragon_header)
 ):
+    if request.client.host != "127.0.0.1":
+        raise HTTPException(
+            status_code=400,
+            detail="You may not use the admin api outside of allowed ips!"
+        )
+
     if not secure_strcmp(Dragon.split(":")[0], manager_key):
         raise HTTPException(
             status_code=401, 

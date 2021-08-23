@@ -20,7 +20,7 @@ class WebError():
         except Exception:
             fl_info = "No exception could be logged"
         
-        url = str(request.url).replace('https://', '')
+        url = str(request.url).replace('https://', '').replace("http://localhost:1843", "fateslist.xyz")
         msg = inspect.cleandoc(f"""500 (Internal Server Error) at {url}
 
         **Error**: {exc}

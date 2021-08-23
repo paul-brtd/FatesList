@@ -10,12 +10,12 @@ class BaseUser(BaseModel):
     """
     Represents a base user class on Fates List.
     """
-    id: str
-    username: str
-    avatar: str
-    disc: str
-    status: enums.Status
-    bot: bool
+    id: Optional[str] = "0"
+    username: Optional[str] = "Unknown User"
+    avatar: Optional[str] = "https://fateslist.xyz/static/botlisticon.webp"
+    disc: Optional[str] = "0000"
+    status: Optional[enums.Status] = enums.Status.unknown
+    bot: Optional[bool] = True
 
     def __str__(self):
         """
