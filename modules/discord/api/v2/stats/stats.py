@@ -14,8 +14,9 @@ router = APIRouter(
 @router.get(
     "/", 
     response_model = BotListStats,
+    operation_id="blstats"
 )
-async def botlist_stats_api(
+async def get_botlist_stats(
     request: Request,
     worker_session = Depends(worker_session)
 ):
