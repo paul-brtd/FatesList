@@ -49,6 +49,7 @@ class CooldownBucket(Enum):
     reset = 60*1
     lock = 60*2
     delete = 60*3.5
+    vote=60*60*8
 
 class BotAdminOp(IntEnum):
     """Handles bot admin operations"""
@@ -66,13 +67,14 @@ class BotAdminOp(IntEnum):
     transfer = 10, "Transfer Bot Ownership", 4, True, False, CooldownBucket.transfer
     root_update = 11, "Root State Update", 5, True, False, CooldownBucket.transfer
     reset_votes = 12, "Reset All Votes", (5, 7), True, True, CooldownBucket.reset
-    dummy_recursive = 13, "Dummy Resursive", 2, False, True, None
-    dummy_nrecursive = 14, "Dummy Nonrecursive", 2, False, False, None
+    dummy_recursive = 13, "Dummy Resursive", 1, False, True, None
+    dummy_nrecursive = 14, "Dummy Nonrecursive", 1, False, False, None
     staff_lock = 15, "Staff Lock Bot", 4, True, False, None
     staff_unlock = 16, "Staff Unlock Bot", 4, True, False, CooldownBucket.lock
     bot_lock = 17, "Bot Lock", 0, False, False, None
     bot_unlock = 18, "Bot Unlock", 4, False, False, CooldownBucket.lock
     bot_delete = 19, "Bot Delete", 4, True, False, CooldownBucket.delete
+    bot_vote = 20, "Vote Bot", 1, False, False, CooldownBucket.vote
 
 class BotLock(IntEnum):
     _init_ = 'value __doc__'

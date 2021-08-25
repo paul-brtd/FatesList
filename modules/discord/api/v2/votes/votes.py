@@ -30,32 +30,18 @@ async def get_user_votes(request: Request, bot_id: int, user_id: int):
         bot_id, 
         user_id
     )
+    
+    vote_epoch = await redis_db.ttl(f"vote_lock:{user_id}")
 
     voter_count = len(voter_ts) if voter_ts else 0
-    ret = await vote_bot(
-        user_id = user_id,
-        bot_id = bot_id, 
-        autovote = False, 
-        test = False, 
-        pretend = True
-    )
-    
-    if ret is None:
-        return {
-            "votes": voter_count, 
-            "voted": voter_count != 0, 
-            "type": "VNFVote", 
-            "reason": "Voter not found!", 
-            "partial": True
-        }
     
     return {
         "votes": voter_count, 
         "voted": voter_count != 0, 
-        "vote_epoch": ret[0].timestamp() if isinstance(ret, tuple) else 0, 
+        "vote_epoch": vote_epoch, 
         "vts": voter_ts, 
-        "time_to_vote": ret[1].total_seconds() if isinstance(ret, tuple) else 0, 
-        "vote_right_now": ret == True, 
+        "time_to_vote": 60*60*8 - vote_epoch if vote_epoch else 0, 
+        "vote_right_now": vote_epoch == -2, 
         "type": "Vote", 
         "reason": None, 
         "partial": False
@@ -75,13 +61,13 @@ async def get_user_votes(request: Request, bot_id: int, user_id: int):
 )
 async def create_vote(user_id: int, bot_id: int):
     """Endpoint to create a vote for a bot"""
-    ret = await vote_bot(user_id = user_id, bot_id = bot_id, autovote = False, test = False, pretend = False)
+    ret = await vote_bot(redis = redis_db, user_id = user_id, bot_id = bot_id, test = False)
     if ret is True: 
         return api_success()
     elif ret is None: 
         return abort(404)
     else:
-        total_seconds = ceil(ret[1].total_seconds())
+        total_seconds = ret
         wait_time = {}
         
         # Get wait time
@@ -99,9 +85,8 @@ async def create_vote(user_id: int, bot_id: int):
 async def send_test_webhook(bot_id: int):
     """Endpoint to test webhooks"""
     return await vote_bot(
+        redis = redis_db,
         user_id = 519850436899897346, 
         bot_id = bot_id, 
-        autovote = False, 
         test = True, 
-        pretend = False
     )
