@@ -1,3 +1,12 @@
+import uuid
+from typing import List, Optional, Dict
+
+from pydantic import BaseModel, validator
+
+import modules.models.enums as enums
+
+from ..base_models import APIResponse, BaseUser
+
 class BotCommand(BaseModel):
     cmd_type: enums.CommandType # 0 = no, 1 = guild, 2 = global
     cmd_groups: Optional[List[str]] = ["Default"]
