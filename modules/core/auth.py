@@ -74,7 +74,7 @@ async def manager_check(
     id = await _user_auth(user_id, user_token)
     if id is None:
         raise HTTPException(
-            detail="Dragon auth failed due to invalid user auth. Please run +usertoken again to reset the user token on redbot",
+            detail="Dragon auth failed due to invalid user auth. Please run /usertoken on the staff server to set your user token",
             status_code=403
         )
 

@@ -31,7 +31,6 @@ from lynxfall.rabbit.client import RabbitClient
 from lynxfall.ratelimits import LynxfallLimiter
 from lynxfall.utils.fastapi import api_versioner, include_routers
 from prometheus_client import start_http_server
-from prometheus_fastapi_instrumentator import Instrumentator
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -287,12 +286,6 @@ async def init_fates_worker(app, session_id, workers):
     # ========================================================
     # Move all code to use worker session. All new code should 
     # always use worker session instead of builtins
-    try:
-        metric_p = Instrumentator()
-        metric_p.instrument(app)
-    except Exception:
-        pass
-
     dbs = await setup_db()
 
     # Wait for redis ipc to come up
@@ -516,13 +509,8 @@ async def catclient(workers, session, app):
                         f"Got invalid workers from rabbitmq ({workers})"
                     )
                
-                try:
-                    start_http_server(3000 + session.get_worker_index())
-                except Exception:
-                    pass
-
                 #await start_dbg(session, app)
-                asyncio.create_task(vote_reminder(session))
+                #asyncio.create_task(vote_reminder(session))
 
             case _:
                 pass  # Ignore the rest for now

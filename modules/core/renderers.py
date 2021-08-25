@@ -3,6 +3,7 @@ Handles rendering of bots, index, search and profile search etc.
 """
 
 import bleach
+import markdown
 from lxml.html.clean import Cleaner
 
 from .events import *

@@ -3,7 +3,8 @@ Fates List Templating System
 """
 
 from .imports import *
-        
+import markdown
+
 # Template class renderer
 class templates():
     @staticmethod

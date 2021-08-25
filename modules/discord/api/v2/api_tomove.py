@@ -5,6 +5,7 @@ from uuid import UUID
 from fastapi.responses import HTMLResponse
 
 from modules.core import *
+import markdown
 from modules.discord.api.v2.modelstomove import *  # TODO
 
 API_VERSION = 2 # This is the API version

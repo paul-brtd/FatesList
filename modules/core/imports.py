@@ -11,7 +11,6 @@ from typing import List, Optional, Union
 
 import aiohttp
 import lxml
-import markdown
 import orjson
 import discord
 from aioredis.exceptions import ConnectionError as ServerConnectionClosedError
