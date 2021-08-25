@@ -3,6 +3,10 @@ html, body {overflow-x: hidden !important;}
 $card-scale: 1.025;
 $form-radius: 4px;
 $form-mw: 94%; // Max width for form
+$link-size: 20px; // Link size
+$link-opacity: 0.63; 
+
+
 .btn-no {border: none !important; outline: none !important;}
 .fform {
         background: #ffffff !important;
@@ -69,8 +73,9 @@ transform: scale($card-scale, $card-scale) perspective(1px) translateZ(0);
   background: #ffb7b7 !important; /* Gecko Browsers */
 }
 
-.long-desc-link {color: white !important; opacity: 0.63 !important;}
-
+.long-desc-link {color: white !important; opacity: $link-opacity !important; font-size: $link-size;}
+.green-link:link {color: #2a9132 !important; font-size: $link-size; opacity: $link-opacity !important}
+.green-link:visited {color: white !important;}
 
 @media screen and (min-width: 768px) {
 .index-fl {justify-content: center; text-align: center;}

@@ -14,6 +14,8 @@ test_botsrole = 845940351339987004 # Bots role on test server
 test_staffrole = 846028433985503232 # Staff role on test server
 test_server = 845928429357367316 # Test Server
 owner = 563808552288780322
+bronze_user_role = 880019238453116929
+
 
 # Current API Version
 API_VERSION = 2
