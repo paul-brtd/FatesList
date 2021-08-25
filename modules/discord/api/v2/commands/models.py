@@ -5,7 +5,7 @@ from pydantic import BaseModel, validator
 
 import modules.models.enums as enums
 
-from ..base_models import APIResponse, BaseUser
+from ..base_models import APIResponse, BaseUser, IDResponse
 
 class BotCommand(BaseModel):
     cmd_type: enums.CommandType # 0 = no, 1 = guild, 2 = global
