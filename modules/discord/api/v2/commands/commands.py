@@ -1,5 +1,17 @@
+from modules.core import *
+from modules.models import enums
+
+from ..base import API_VERSION
+from .models import APIResponse, BotCommandsGet, BotCommand
+
+router = APIRouter(
+    prefix = f"/api/v{API_VERSION}/bots",
+    include_in_schema = True,
+    tags = [f"API v{API_VERSION} - Commands"],
+)
+
 @router.get(
-    "/bots/{bot_id}/commands", 
+    "/{bot_id}/commands", 
     response_model = BotCommandsGet
 )
 async def get_commands(request:  Request, bot_id: int, filter: Optional[str] = None, lang: str = "default"):
@@ -9,7 +21,7 @@ async def get_commands(request:  Request, bot_id: int, filter: Optional[str] = N
     return cmd
 
 @router.post(
-    "/bots/{bot_id}/commands",
+    "/{bot_id}/commands",
     response_model = IDResponse, 
     dependencies=[
         Depends(
@@ -34,7 +46,7 @@ async def add_command(request: Request, bot_id: int, command: BotCommand):
     return api_success(id = id)
 
 @router.delete(
-    "/bots/{bot_id}/commands/{id}", 
+    "/{bot_id}/commands/{id}", 
     response_model = APIResponse, 
     dependencies=[
         Depends(
