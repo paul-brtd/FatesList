@@ -1,8 +1,7 @@
 from modules.core import *
-from modules.models import enums
 
 from ..base import API_VERSION
-from .models import APIResponse, BotCommandsGet, BotCommand
+from .models import APIResponse, BotCommandsGet, BotCommand, enums
 
 router = APIRouter(
     prefix = f"/api/v{API_VERSION}/bots",
