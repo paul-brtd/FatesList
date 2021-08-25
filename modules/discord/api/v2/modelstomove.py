@@ -44,35 +44,6 @@ class BotPartial(BaseUser):
 class BotPartialList(BaseModel):
     __root__: List[BotPartial]
 
-class BotCommand(BaseModel):
-    cmd_type: enums.CommandType # 0 = no, 1 = guild, 2 = global
-    cmd_groups: Optional[List[str]] = ["Default"]
-    cmd_name: str
-    vote_locked: bool
-    description: str
-    args: Optional[list] = ["<user>"]
-    examples: Optional[list] = []
-    premium_only: Optional[bool] = False
-    notes: Optional[list] = []
-    doc_link: Optional[str] = ""
-
-class BotCommandWithId(BotCommand):
-    id: uuid.UUID
-
-class BotCommandsGet(BaseModel):
-    __root__: Dict[str, List[BotCommandWithId]]
-
-class BotCommandDelete(BaseModel):
-    """You can use either command id or cmd_name to remove a command"""
-    id: Optional[uuid.UUID] = None
-    cmd_name: Optional[str] = None
-    
-    @validator("cmd_name")
-    def cmd_name_or_id_exists(cls, v, values, **kwargs):
-        if not values["id"] or not v:
-            raise ValueError("Either Command ID or UUID must be provided")
-        return v
-
 class BotVoteCheck(BaseModel):
     votes: int
     voted: bool
