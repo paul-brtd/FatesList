@@ -161,7 +161,7 @@ features = {
 
 site = "fateslist.xyz" 
 
-server_bot_invite = "https://discord.com/api/oauth2/authorize?client_id=811073947382579200&permissions=67649&scope=bot" # Ensure that it uses 67649 for perms
+server_bot_invite = "https://discord.com/api/oauth2/authorize?client_id=811073947382579200&permissions=67649&scope=bot%20applications.commands" # Ensure that it uses 67649 for perms
 
 # This value below dont need to be changed
 site_url = "https://" + site

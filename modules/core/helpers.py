@@ -110,10 +110,10 @@ async def vote_bot(redis, user_id: int, bot_id: int, test: bool = False) -> Opti
     if test:
         return True
 
-    asyncio.create_task(_extra_vote_task(user_id, bot_id))
+    asyncio.create_task(_extra_vote_task(user_id, bot_id, votes))
     return True
 
-async def _extra_vote_task(user_id, bot_id):
+async def _extra_vote_task(user_id, bot_id, votes):
     ts = await db.fetchval("SELECT timestamps FROM bot_voters WHERE bot_id = $1 AND user_id = $2", bot_id, user_id)
 
     if ts is None:

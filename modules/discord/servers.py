@@ -14,7 +14,9 @@ router = APIRouter(
 @router.get("/{guild_id}")
 async def server_index(request: Request, guild_id: int, bt: BackgroundTasks, rev_page: int = 1):
     db = request.app.state.worker_session.postgres
-    check = await db.fetchval("SELECT COUNT(1) FROM servers WHERE guild_id = $1")
+    check = await db.fetchval("SELECT COUNT(1) FROM servers WHERE guild_id = $1", guild_id)
+    if not check:
+        return RedirectResponse(server_bot_invite)
 
 #@router.get("/{bot_id}/widget")
 #async def bot_widget(request: Request, bot_id: int, bt: BackgroundTasks):
