@@ -29,30 +29,6 @@ async def get_login_link(request: Request, data: LoginInfo, worker_session = Dep
     )
     return api_success(url = url.url)
 
-@router.get("/auth/callback")
-async def auth_callback_handler(request: Request, code: str, state: str, worker_session = Depends(worker_session)):
-    oauth = worker_session.oauth
-
-    id = oauth.discord.get_state_id(state)
-    
-    if not id:
-        return api_error(
-            "Invalid state provided. Please try logging in again using https://fateslist.xyz/auth/login"
-        )
-    
-    oauth = await oauth.discord.get_state(id)
-    if not oauth:
-        return api_error(
-            "Invalid state. Your state has expired. Please try logging in again using https://fateslist.xyz/auth/login"        
-        )
-     
-    callback = auth_namespaces[oauth["namespace"]]
-    site_redirect = oauth['site_redirect']
-        
-    url = f"{callback}?code={code}&state={state}&site_redirect={site_redirect}"
-    
-    return RedirectResponse(url)
-    
 @router.post("/users", response_model = LoginResponse)
 async def login_user(request: Request, data: Login, worker_session = Depends(worker_session)):
     oauth = worker_session.oauth
@@ -126,6 +102,13 @@ async def login_user(request: Request, data: Login, worker_session = Depends(wor
 
     if "guilds.join" in state_data["scopes"]:
         await oauth.discord.add_user_to_guild(access_token, userjson["id"], main_server, TOKEN_MAIN)
+
+    request.session["scopes"] = orjson.dumps(state_data["scopes"]).decode("utf-8")
+    request.session["access_token"] = orjson.dumps(access_token.dict()).decode("utf-8")
+    request.session["user_id"] = int(userjson["id"])
+    request.session["username"], request.session["avatar"] = userjson["username"], avatar
+    request.session["user_token"], request.session["user_css"] = token, css
+    request.session["js_allowed"], request.session["site_lang"] = js_allowed, site_lang
 
     return api_success(
         user = BaseUser(

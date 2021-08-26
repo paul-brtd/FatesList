@@ -45,6 +45,7 @@
 </div>
 <script>
 	context = {{context|tojson}}
+	localStorage.setItem("login-redirect", context.redirect)
 </script>
 <script src="/static/assets/prod/login.min.js?v=1"></script>
 {% endblock %}

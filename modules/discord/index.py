@@ -136,36 +136,6 @@ async def login_get(request: Request, redirect: Optional[str] = None, pretty: Op
             }
     )
 
-@router.get("/fates/login-confirm")
-async def login_confirm(request: Request, code: str, state: str, site_redirect: str):
-    if "user_id" in request.session.keys():
-        return RedirectResponse("/")
-    else:
-        async with aiohttp.ClientSession() as sess:
-            async with sess.post(f"http://127.0.0.1:9999/api/v2/users", json = {
-                "code": code, 
-                "state": state,
-            }) as res:
-                try:
-                    json = await res.json()
-                except:
-                    return await res.text()
-                if res.status == 400:
-                    if not json["banned"]:
-                        return await templates.e(request, json["reason"])
-                    return await templates.e(request, reason = f"Please note that {json['ban']['desc']}", main=f'You have been {json["ban"]["type"]} banned on Fates List')
-                
-                user = json["user"]
-                request.session["scopes"] = orjson.dumps(json["scopes"]).decode("utf-8")
-                request.session["access_token"] = orjson.dumps(json["access_token"]).decode("utf-8")
-                request.session["user_id"] = int(user["id"])
-                request.session["username"], request.session["avatar"] = user["username"], user["avatar"]
-                request.session["user_token"], request.session["user_css"] = json["token"], json["css"] 
-                request.session["js_allowed"] = json["js_allowed"]
-                request.session["site_lang"] = json["site_lang"]
-                return HTMLResponse(f"<script>window.location.replace('{site_redirect}')</script>")
-  
-
 @router.get("/fates/logout")
 async def logout(request: Request):
     request.session.clear()
