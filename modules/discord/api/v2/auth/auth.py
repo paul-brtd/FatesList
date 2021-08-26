@@ -82,7 +82,8 @@ async def login_user(request: Request, data: Login, worker_session = Depends(wor
                     type = ban_data["type"],
                     desc = ban_data["desc"],
                 ),
-                state = state
+                state = state,
+                status_code = 403
             )
         if userjson["username"] != user_info["username"]:
             await db.execute(

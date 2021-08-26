@@ -2,14 +2,9 @@
 <html lang="en" data-theme="light">
 	<head>
 		<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js" crossorigin></script>
-		<script src="//cdn.jsdelivr.net/npm/eruda"></script>
-		<script>eruda.init();</script>
 		<!-- Primary Meta Tags -->
 		<title>Fates List | Logging you in...</title>
 		<meta name="title" content="Fates List | Discord Bot List">
-		<meta name="description" content="Find, invite and discover the best Discord bots, now on Fates List.">
-		<meta property="twitter:image" content="https://fateslist.xyz/static/assets/img/banner.webp">
-		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 		<!-- Add Material font (Roboto) and Material icon as needed -->
 		<link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin>
@@ -19,17 +14,24 @@
 		<link rel="shortcut icon" href="/static/favicon.ico"/>
 		<!-- Material CSS -->
 		<link href="https://cdn.jsdelivr.net/gh/djibe/material@4.6.0-rc.2/css/material.min.css" rel="stylesheet" defer />
-		<!-- Base Styles -->
-		<link href="https://cdn.jsdelivr.net/gh/Fates-List/FatesList@main/static/assets/css/base.min.css" rel="stylesheet">
 	</head>
 	<body>
 		<h3 class="text-center" id="msg">Logging you in...</h3>
 	</body>
 	<script>
+		function makeSmaller() {
+			$('#msg').contents().unwrap().wrap("<h5 id='msg' class='text-center' style='color: red'></h5>");
+		}
 		function loginUser() {
+			retry = "<br/><br/><a href='https://fateslist.xyz/fates/login'>Try Again?</a>"
 			searchParams = new URLSearchParams(window.location.search)
 			code = searchParams.get("code")
 			state = searchParams.get("state")
+			if(!code || !state) {
+				makeSmaller()
+				$("#msg").html("Invalid code/state" + retry)
+				return
+			}
 			$.ajax({
 				url: "/api/users",
 				method: "POST",
@@ -40,23 +42,42 @@
 						window.location.href = localStorage.getItem("login-redirect")
 					},
 					400: function(data) {
-						$("#msg").html(data.responseJSON.reason)
+						makeSmaller()
+						$("#msg").html(data.responseJSON.reason + retry)
+					},
+					403: function(data) {
+						makeSmaller()
+						banInfo = `
+	      					<br/><br/>
+						<p style="text-align: left !important; margin-left: 10em">
+						You have been ${data.responseJSON.ban.type} banned.<br/>
+						As a result, ${data.responseJSON.ban.desc}
+	       					<br/><br/>
+						<strong>Please contact a Fates List Staff Member to appeal this ban</strong>
+						</p>
+						`
+						$("#msg").html(data.responseJSON.reason + banInfo)
 					},
 					422: function(data) {
-						$("#msg").html("Invalid request")
+						makeSmaller()
+						$("#msg").html("Invalid request" + retry)
+					},
+					429: function(data) {
+						makeSmaller()
+						$("#msg").html(data.responseJSON.reason + retry)
 					},
 					500: function(data) {
-						$("msg").html("Internal Server Error")
+						makeSmaller()
+						$("msg").html("Internal Server Error" + retry)
 					}
 				}
 			})
 		}
 	$(document).ready(
 		function() {
-			setInterval(function() {loginUser()}, 3000)
+			loginUser()
 		}
 	)
 
 	</script>
-	<script src="/static/assets/prod/base.min.js?v=2"></script>
 </html>
