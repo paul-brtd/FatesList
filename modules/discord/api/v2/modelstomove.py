@@ -34,12 +34,13 @@ class VoteReminderPatch(BaseModel):
 
 class BotPartial(BaseUser):
     description: str
-    servers: str
-    banner: str
+    guild_count: str
+    banner: Optional[str] = None
     state: enums.BotState
     bot_id: str
     invite: Optional[str] = None
     nsfw: bool
+    votes: int
 
 class BotPartialList(BaseModel):
     __root__: List[BotPartial]

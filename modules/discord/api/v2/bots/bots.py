@@ -65,7 +65,7 @@ async def fetch_random_bot(request: Request, bot_id: int, lang: str = "default")
         "SELECT description, banner_card, state, votes, guild_count, bot_id, invite FROM bots WHERE state = 0 OR state = 6 ORDER BY RANDOM() LIMIT 1"
     ) # Unprocessed, use the random function to get a random bot
     bot_obj = await get_bot(random_unp["bot_id"], worker_session = request.app.state.worker_session)
-    if bot_obj is None:
+    if bot_obj is None or bot_obj["disc"] == "0000":
         return await fetch_random_bot(request, lang) # Get a new bot
     bot = bot_obj | dict(random_unp) # Get bot from cache and add that in
     bot["bot_id"] = str(bot["bot_id"]) # Make sure bot id is a string to prevent corruption issues in javascript

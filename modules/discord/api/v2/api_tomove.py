@@ -80,8 +80,8 @@ async def get_vanity_api(request: Request, vanity: str):
     return {"type": vb[1], "redirect": str(vb[0])}
 
 @router.get(
-    "/index/bots", 
-    response_model = BotIndex
+    "/index/bots",
+    response_model=BotIndex
 )
 async def bots_index_page(request: Request):
     """For any potential Android/iOS app, crawlers etc."""
