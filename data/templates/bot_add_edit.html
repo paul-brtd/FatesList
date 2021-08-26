@@ -53,7 +53,7 @@
 		{% endif %}
 	{% endif %}
 	<label for="{{id}}">{{label}} {% if required %}<span style="color: red; font-weight: bold" aria-hidden="true">*</span>{% endif %}</label>
-	<div class="fform">
+	<div class="fform fform-select">
 		<select-pure class="select-pure-fl" id="{{id}}" name="{{id}}" default-label="{{help_text}}" {% if multiple %}multiple{% endif %} {% if required %} required {% endif %}>
 		<option-pure value="" disabled="" hidden="">{{help_text}}</option-pure>
 		{% for choice in choices %}

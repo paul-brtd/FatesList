@@ -8,15 +8,55 @@ $link-opacity: 0.63;
 
 
 .btn-no {border: none !important; outline: none !important;}
+
+.fform-white::placeholder {
+	color: grey !important;
+}
+
+.fform::placeholder {
+	color: white;
+}
+
 .fform {
-        background: #ffffff !important;
-        border: grey !important;
+	transition: transform .2s;
+        background: black !important;
+	color: white !important;
+        border: white !important;
+	border-style: solid !important;
         margin-top: 7px !important;
         margin-bottom: 30px !important;
         margin: auto;
         max-width: $form-mw;
 	border-radius: $form-radius $form-radius $form-radius $form-radius;
 }
+
+.fform-white {
+	color: black !important;
+}
+
+.fform-select, .select-pure-fl {
+	transition: transform .2s;
+	--background-color: black !important;
+	--color: white !important;
+	--hover-background-color: rgba(100, 100, 100, 0.63) !important;
+	--hover-color: white !important;
+	--selected-background-color: grey !important;
+	--selected-color: white !important;
+}
+
+.select-pure-fl:hover {
+	--color: white !important;
+}
+
+.fform-white {
+	background: white !important;
+}
+
+.fform:hover:not(.fform-select), .fform:focus:not(.fform-select) {
+	border-color: grey !important;
+	transform: scale($card-scale);
+}
+
 .search {
 	display: block;
 	width: 37%;
@@ -134,7 +174,7 @@ background-color: blue;
 .bot-card-avatar {border-radius: 50%;width: 30%;margin: 5% auto;margin-top: 17%;margin-right: 35%;margin-left: 35%}
 .bot-card-username {margin-right: auto;margin-left: auto;margin-top: 30px;}
 .bot-card-username-txt {white-space: nowrap;text-overflow: ellipsis;overflow: hidden; font-size: 21px; margin-top: 35px}
-.bot-card-description {font-size: 16px;font-weight: bold;color: white;opacity: 0.63;width: 90%;margin: 0 5%;height:105px}
+.bot-card-description {font-size: 16px;font-weight: bold;color: white;opacity: $link-opacity;width: 90%;margin: 0 5%;height:105px}
 .bot-card-cert {color:#7289DA; position: absoulute; margin-top: -15px; margin-left: 90%}
 .bot-card-footer {width: 80%;margin: 0 10%;height: 10%;margin-top: 20px;margin-bottom: 20px;}
 .bot-card-footer-stats {height: 30px !important; width: 55% !important;}
