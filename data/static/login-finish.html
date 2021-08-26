@@ -42,6 +42,9 @@
 					400: function(data) {
 						$("#msg").html(data.responseJSON.reason)
 					},
+					422: function(data) {
+						$("#msg").html("Invalid request")
+					},
 					500: function(data) {
 						$("msg").html("Internal Server Error")
 					}
@@ -50,7 +53,7 @@
 		}
 	$(document).ready(
 		function() {
-			loginUser()
+			setInterval(function() {loginUser()}, 3000)
 		}
 	)
 
