@@ -213,7 +213,6 @@ CREATE TABLE servers (
     certified boolean DEFAULT false,
     created_at timestamptz,
     invite_amount integer DEFAULT 0,
-    user_provided_invite boolean,
     invite_code text,
     state int default 0
 )
