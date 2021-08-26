@@ -13,7 +13,8 @@ router = APIRouter(
 
 @router.get("/{guild_id}")
 async def server_index(request: Request, guild_id: int, bt: BackgroundTasks, rev_page: int = 1):
-    return await render_server(request, guild_id = guild_id, bt = bt, api = False, rev_page = rev_page)
+    db = request.app.state.worker_session.postgres
+    check = await db.fetchval("SELECT COUNT(1) FROM servers WHERE guild_id = $1")
 
 #@router.get("/{bot_id}/widget")
 #async def bot_widget(request: Request, bot_id: int, bt: BackgroundTasks):

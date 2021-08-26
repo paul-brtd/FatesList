@@ -12,7 +12,7 @@ function voteBot() {
 		statusCode: {
 			200: function(data) {
 				modalShow("Voted!", "You have successfully voted for this bot")
-				setTimeout(() => window.location.reload(), 1500)
+				setTimeout(() => (window.location.href = `/${context.type}/${context.id}`), 1500)
 			},
 			400: function(data) {
 				modalShow(data.responseJSON.reason, `Please wait ${data.responseJSON.wait_time.hours} hours, ${data.responseJSON.wait_time.minutes} minutes and ${data.responseJSON.wait_time.seconds} seconds before trying to vote for this bot`)
