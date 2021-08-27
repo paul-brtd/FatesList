@@ -28,12 +28,15 @@ async def bot_auth_check(bot_id: int, bot_auth: str = Security(bot_auth_header))
     if id is None:
         raise HTTPException(status_code=401, detail="Invalid Bot Token")
 
-async def user_auth_check(user_id: int, user_auth: str = Security(user_auth_header)):
+async def user_auth_check(request: Request, user_id: int, user_auth: str = Security(user_auth_header)):
     if user_auth.startswith("User "):
         user_auth = user_auth.replace("User ", "", 1)
     id = await _user_auth(user_id, user_auth)
     if id is None:
-        raise HTTPException(status_code=401, detail="Invalid User Token")
+        if request.client.host == "127.0.0.1" and "votes" in request.url.path and "bots" in request.url.path:
+            pass
+        else:
+            raise HTTPException(status_code=401, detail=f"Invalid User Token for route {request.url.path} and IP {request.client.host}")
 
 async def bot_user_auth_check(bot_id: int, user_id: Optional[int] = None, bot_auth: str = Security(bot_auth_header), user_auth: str = Security(user_auth_header)):
     if user_auth.startswith("User "):

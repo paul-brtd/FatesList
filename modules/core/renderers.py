@@ -15,11 +15,12 @@ from .templating import *
 
 cleaner = Cleaner()
 
-async def render_index(request: Request, api: bool):
+async def render_index(request: Request, api: bool, cert: bool):
     worker_session = request.app.state.worker_session
     top_voted = await do_index_query(worker_session, add_query = "ORDER BY votes DESC", state = [0])
     new_bots = await do_index_query(worker_session, add_query = "ORDER BY created_at DESC", state = [0])
-    certified_bots = await do_index_query(worker_session, add_query = "ORDER BY votes DESC", state = [6])
+    certified_bots = await do_index_query(worker_session, add_query = "ORDER BY votes DESC", state = [6]) if cert else []
+
     base_json = {
         "tags_fixed": tags_fixed, 
         "top_voted": top_voted, 

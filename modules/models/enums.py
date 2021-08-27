@@ -49,7 +49,6 @@ class CooldownBucket(Enum):
     reset = 60*1
     lock = 60*2
     delete = 60*3.5
-    vote=60*60*8
 
 class BotAdminOp(IntEnum):
     """Handles bot admin operations"""
@@ -74,7 +73,6 @@ class BotAdminOp(IntEnum):
     bot_lock = 17, "Bot Lock", 0, False, False, None
     bot_unlock = 18, "Bot Unlock", 4, False, False, CooldownBucket.lock
     bot_delete = 19, "Bot Delete", 4, True, False, CooldownBucket.delete
-    bot_vote = 20, "Vote Bot", 1, False, False, CooldownBucket.vote
 
 class BotLock(IntEnum):
     _init_ = 'value __doc__'

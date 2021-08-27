@@ -25,7 +25,7 @@ async def fetch_user(request: Request, user_id: int, worker_session = Depends(wo
     return user
 
 @router.patch(
-    "/users/{user_id}/description", 
+    "/{user_id}/description", 
     response_model = APIResponse,
     dependencies = [
         Depends(user_auth_check)
@@ -37,7 +37,7 @@ async def set_user_description(request: Request, user_id: int, desc: UserDescEdi
     return api_success()
 
 @router.patch(
-    "/users/{user_id}/token", 
+    "/{user_id}/token", 
     response_model = APIResponse,
     dependencies = [
         Depends(user_auth_check)
@@ -51,7 +51,7 @@ async def regenerate_user_token(request: Request, user_id: int):
     return api_success()
 
 @router.patch(
-    "/users/{user_id}/js_allowed",
+    "/{user_id}/js_allowed",
     dependencies = [
         Depends(user_auth_check)
     ]

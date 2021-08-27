@@ -5,7 +5,7 @@ from modules.core import *
 from ..base import API_VERSION
 from .models import (APIResponse, BaseUser, Login, LoginBan,
                      LoginInfo, LoginResponse, OAuthInfo)
-
+import aiohttp
 from config import auth_namespaces
 
 router = APIRouter(
@@ -25,9 +25,8 @@ async def get_login_link(request: Request, data: LoginInfo, worker_session = Dep
     redirect = data.redirect if data.redirect else "/"
     url = await oauth.discord.get_auth_url(
         data.scopes,
-        {"namespace": data.namespace, "site_redirect": redirect}
     )
-    return api_success(url = url.url)
+    return api_success(url = url.url, state=url.state)
 
 @router.post("/users", response_model = LoginResponse)
 async def login_user(request: Request, data: Login, worker_session = Depends(worker_session)):
@@ -35,18 +34,14 @@ async def login_user(request: Request, data: Login, worker_session = Depends(wor
     db = worker_session.postgres
 
     try:
-        state_id = oauth.discord.get_state_id(data.state)
-        state_data = await oauth.discord.get_state(state_id)
-        if not state_data:
-            raise ValueError("No state found")
-        access_token = await oauth.discord.get_access_token(data.code, data.state, "https://fateslist.xyz/auth/login")
+        access_token = await oauth.discord.get_access_token(data.code, data.scopes)
         userjson = await oauth.discord.get_user_json(access_token)
         if not userjson or not userjson.get("id"):
-            raise ValueError("Invalid user json")
+            raise ValueError("Invalid user json. Please contact Fates List Staff")
             
     except Exception as exc:
         return api_error(
-            f"We have encountered an issue while logging you in ({exc})...",
+            str(exc),
             banned = False
         )
     
@@ -101,10 +96,10 @@ async def login_user(request: Request, data: Login, worker_session = Depends(wor
     
     user = await get_user(int(userjson["id"]))
 
-    if "guilds.join" in state_data["scopes"]:
+    if "guilds.join" in data.scopes:
         await oauth.discord.add_user_to_guild(access_token, userjson["id"], main_server, TOKEN_MAIN)
 
-    request.session["scopes"] = orjson.dumps(state_data["scopes"]).decode("utf-8")
+    request.session["scopes"] = orjson.dumps(data.scopes).decode("utf-8")
     request.session["access_token"] = orjson.dumps(access_token.dict()).decode("utf-8")
     request.session["user_id"] = int(userjson["id"])
     request.session["username"], request.session["avatar"] = userjson["username"], avatar
@@ -126,7 +121,7 @@ async def login_user(request: Request, data: Login, worker_session = Depends(wor
         js_allowed = js_allowed,
         access_token = access_token,
         banned = False,
-        scopes = state_data["scopes"],
+        scopes = data.scopes,
         site_lang = site_lang
     )
 

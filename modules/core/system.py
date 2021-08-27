@@ -358,7 +358,6 @@ async def finish_init(app, session_id, workers, dbs):
                     redirect_uri=discord_redirect_uri,
                     lynxfall_key=lynxfall_key
                 ),
-                redis=dbs["redis"]
             )
         )
     )

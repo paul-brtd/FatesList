@@ -91,7 +91,7 @@ async def add_promotion(bot_id: int, title: str, info: str, css: str, type: int)
     info = info.replace("</style", "").replace("<script", "")
     return await db.execute("INSERT INTO bot_promotions (bot_id, title, info, css, type) VALUES ($1, $2, $3, $4, $5)", bot_id, title, info, css, type)
 
-async def vote_bot(redis, user_id: int, bot_id: int, test: bool = False) -> Optional[tuple]:
+async def vote_bot(redis, db, user_id: int, bot_id: int, test: bool = False) -> Optional[tuple]:
     check = await redis.ttl(f"vote_lock:{user_id}")
     if not test and check != -2:
         return check 
@@ -110,10 +110,10 @@ async def vote_bot(redis, user_id: int, bot_id: int, test: bool = False) -> Opti
     if test:
         return True
 
-    asyncio.create_task(_extra_vote_task(user_id, bot_id, votes))
+    asyncio.create_task(_extra_vote_task(db, user_id, bot_id, votes))
     return True
 
-async def _extra_vote_task(user_id, bot_id, votes):
+async def _extra_vote_task(db, user_id, bot_id, votes):
     ts = await db.fetchval("SELECT timestamps FROM bot_voters WHERE bot_id = $1 AND user_id = $2", bot_id, user_id)
 
     if ts is None:

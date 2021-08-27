@@ -61,7 +61,7 @@ async def get_user_votes(request: Request, bot_id: int, user_id: int):
 )
 async def create_vote(user_id: int, bot_id: int):
     """Endpoint to create a vote for a bot"""
-    ret = await vote_bot(redis = redis_db, user_id = user_id, bot_id = bot_id, test = False)
+    ret = await vote_bot(redis = redis_db, db=db, user_id = user_id, bot_id = bot_id, test = False)
     if ret is True: 
         return api_success()
     elif ret is None: 
@@ -86,6 +86,7 @@ async def send_test_webhook(bot_id: int):
     """Endpoint to test webhooks"""
     return await vote_bot(
         redis = redis_db,
+        db=db,
         user_id = 519850436899897346, 
         bot_id = bot_id, 
         test = True, 

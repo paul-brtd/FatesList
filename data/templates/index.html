@@ -23,11 +23,11 @@
 			onclick="randomBotRoll()">Roll</button>
 	</div>
 	<hr class="hr-is">
-	<div class="d-flex" style="margin-left: 5%;">
+	<div class="d-flex" style="margin-left: 5%;" onclick="hideSect('cert')">
 		<span class="iconify white" data-icon="fa-solid:certificate" data-inline="false" data-height="3em"></span>
 		<p class="title-is">Certified Bots</p>
 	</div>
-	<div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center div-is" id="tt-2">
+	<div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center div-is" id="certif">
 		{% for bot in certified_bots %}
 		{{ flCard(bot, False, 'bot') }}
 		{% endfor %}
@@ -54,6 +54,12 @@
 	</div>
 	<script>
 		var context = {{context|tojson}}
+		function hideSect(q) {
+			searchParams = new URLSearchParams(window.location.search)
+			if(searchParams.get(q) == "false") searchParams.set(q, "true")
+			else searchParams.set(q, "false")
+			window.location.href = "/?" + searchParams.toString()
+		}
 	</script> 
 	<script src="/static/assets/prod/index.min.js?v=2">
 	</script>

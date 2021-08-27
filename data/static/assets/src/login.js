@@ -11,8 +11,8 @@ function getLoginLink() {
 			scopes.push(v)
 		}
 	})
+	localStorage.setItem("login-scopes", JSON.stringify(scopes))
 	data = {
-		"namespace": "site",
 		"redirect": context.redirect,
 		"scopes": scopes
 	}

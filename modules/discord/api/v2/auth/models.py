@@ -10,22 +10,15 @@ from config import auth_namespaces
 
 class Login(BaseModel):
     code: str
-    state: str
+    scopes: List[str]
         
 class LoginInfo(BaseModel):
     scopes: List[str]
     redirect: Optional[str] = "/"
-    namespace: str
-
-    @validator('namespace')
-    def namespace_check(cls, v, values, **kwargs):
-        if v not in auth_namespaces.keys():
-            raise ValueError("Invalid namespace")
-        return v
-
  
 class OAuthInfo(APIResponse):
     url: Optional[str] = "/"
+    state: str
 
 class LoginBan(BaseModel):
     type: str

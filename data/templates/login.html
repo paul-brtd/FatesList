@@ -46,8 +46,10 @@
 <script>
 	context = {{context|tojson}}
 	localStorage.setItem("login-redirect", context.redirect)
+	searchParams = new URLSearchParams(window.location.search)
+	if(searchParams.get("dev")) localStorage.setItem("login-dev", "true")
 </script>
-<script src="/static/assets/prod/login.min.js?v=1"></script>
+<script src="/static/assets/prod/login.min.js?v=3"></script>
 {% endblock %}
 {% block footer %}
 
