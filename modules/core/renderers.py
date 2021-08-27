@@ -135,8 +135,6 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
 
     bot_info = await get_bot(bot_id, worker_session = worker_session)
     
-    promos = await get_promotions(bot_id)
-
     owners_lst = [
         (await get_user(obj["owner"], user_only = True, worker_session = worker_session)) 
         for obj in owners if obj["owner"] is not None
@@ -183,8 +181,8 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
         "type": "bot", 
         "id": bot_id, 
         "tags_fixed": _tags_fixed_bot, 
-        "promos": promos, 
-        "admin": bot_admin, 
+        "admin": bot_admin,
+        "promos": await get_promotions(bot_id),
         "guild": main_server, 
         "bot_reviews": reviews[0], 
         "average_rating": reviews[1], 
@@ -232,7 +230,7 @@ async def render_search(request: Request, q: str, api: bool):
     if not api:
         return await templates.TemplateResponse("search.html", {"request": request, "search_bots": search_bots, "tags_fixed": tags_fixed, "query": q, "profile_search": False})
     else:
-        return {"search_bots": search_bots, "tags_fixed": tags_fixed, "query": q, "profile_search": False}
+        return {"search_res": search_bots, "tags_fixed": tags_fixed, "query": q, "profile_search": False}
 
 async def render_profile_search(request: Request, q: str, api: bool):
     worker_session = request.app.state.worker_session
@@ -263,7 +261,7 @@ async def render_profile_search(request: Request, q: str, api: bool):
     if not api:
         return await templates.TemplateResponse("search.html", {"request": request, "tags_fixed": tags_fixed, "profile_search": True, "query": q, "profiles": profile_obj})
     else:
-        return {"profiles": profile_obj, "tags_fixed": tags_fixed, "query": q, "profile_search": True}
+        return {"search_res": profile_obj, "tags_fixed": tags_fixed, "query": q, "profile_search": True}
 
 async def render_server(request: Request, guild_id: int, bt: BackgroundTasks, **kwargs):
     guild = client_servers.get_guild(guild_id)

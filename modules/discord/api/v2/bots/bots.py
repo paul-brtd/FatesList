@@ -21,6 +21,14 @@ router = APIRouter(
     dependencies=[Depends(id_check("bot"))]
 )
 
+@router.get("/{bot_id}/vpm")
+async def get_votes_per_month(request: Request, bot_id: int):
+    return await db.fetch("SELECT votes, epoch FROM bot_stats_votes_pm WHERE bot_id = $1", bot_id)
+
+@router.get("/{bot_id}/tv")
+async def get_total_votes(request: Request, bot_id: int):
+    return await db.fetchrow("SELECT total_votes AS votes FROM bot_stats_votes WHERE bot_id = $1", bot_id)
+
 @router.patch(
     "/{bot_id}/token", 
     response_model = APIResponse, 
@@ -36,8 +44,22 @@ router = APIRouter(
 )
 async def regenerate_bot_token(request: Request, bot_id: int):
     """
-    Regenerates the Bot token
-    **Bot Token**: You can get this by clicking your bot and clicking edit and clicking Show (under API Token section)
+    Regenerates a bot token. Use this if it is compromised
+    
+
+    Example:
+
+    ```py
+    import requests
+
+    def regen_token(bot_id, token):
+        res = requests.patch(f"https://fateslist.xyz/api/v2/bots/{bot_id}/token", headers={"Authorization": f"Bot {token}"})
+        json = res.json()
+        if not json["done"]:
+            # Handle failures
+            ...
+        return res, json
+    ```
     """
     await db.execute("UPDATE bots SET api_token = $1 WHERE bot_id = $2", get_token(132), bot_id)
     return api_success()
@@ -55,7 +77,23 @@ async def regenerate_bot_token(request: Request, bot_id: int):
     operation_id="fetch_random_bot"
 )
 async def fetch_random_bot(request: Request, bot_id: int, lang: str = "default"):
-    """Fetch a random bot. Bot ID should be the recursive/root bot 0"""
+    """
+    Fetch a random bot. Bot ID should be the recursive/root bot 0
+
+
+    Example:
+    ```py
+    import requests
+
+    def random_bot():
+        res = requests.get("https://fateslist.xyz/api/bots/0/random")
+        json = res.json()
+        if not json.get("done", True):
+            # Handle an error in the api
+            ...
+        return res, json
+    ```
+    """
     if bot_id != 0:
         return api_error(
             "This bot cannot use the fetch random bot API"
@@ -365,10 +403,11 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
     dependencies = [
         Depends(bot_auth_check)
     ],
-    operation_id="get_bot_events"
+    operation_id="get_bot_events",
+    deprecated=True
 )
 async def get_bot_events(request: Request, bot_id: int, exclude: Optional[str] = None, filter: Optional[str] = None):
-    """Get bot events, all exclude and filters must be comma seperated"""
+    """Get bot events, all exclude and filters must be comma seperated. This has been replaced by Get WS Events for most use cases"""
     exclude = exclude.split(",")
     filter = filter.split(",")
     return await bot_get_events(bot_id = bot_id, filter = filter, exclude = exclude)
@@ -402,7 +441,37 @@ async def get_bot_ws_events(request: Request, bot_id: int):
     operation_id="set_bot_stats"
 )
 async def set_bot_stats(request: Request, bot_id: int, api: BotStats):
-    """This endpoint allows you to set the guild + shard counts for your bot"""
+    """
+    This endpoint allows you to set the guild + shard counts for your bot
+
+
+    Example:
+    ```py
+    # This will use aiohttp and not requests as this is likely to used by discord.py bots
+    import aiohttp
+
+
+    # On dpy, guild_count is usually the below
+    guild_count = len(client.guilds)
+
+    # If you are using sharding
+    shard_count = len(client.shards)
+    shards = client.shards.keys()
+
+    # Optional: User count (this is not accurate for larger bots)
+    user_count = len(client.users) 
+
+    async def set_stats(bot_id, token, guild_count, shard_count = None, shards = None, user_count = None):
+        json = {"guild_count": guild_count, "shard_count": shard_count, "shards": shards, "user_count": user_count}
+
+        async with aiohttp.ClientSession() as sess:
+            async with sess.post(f"https://fateslist.xyz/api/bots/{bot_id}/stats", headers={"Authorization": f"Bot {token}"}, json=json) as res:
+                json = await res.json()
+                if not json["done"]:
+                    # Handle or log this error
+                    ...
+    ```
+    """
     stats_old = await db.fetchrow(
         "SELECT guild_count, shard_count, shards, user_count FROM bots WHERE bot_id = $1",
         bot_id

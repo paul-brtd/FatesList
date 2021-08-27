@@ -21,9 +21,11 @@ router = APIRouter(
     response_model = APIResponse,
     dependencies = [
         Depends(user_auth_check)
-    ]
+    ],
+    deprecated=True
 )
 async def vote_review_api(request: Request, bot_id: int, rid: uuid.UUID, vote: BotReviewVote):
+    """This endpoint is being rewritten and should not be relied on outside official clients"""
     vote.user_id = int(vote.user_id)
     bot_rev = await db.fetchrow("SELECT review_upvotes, review_downvotes, star_rating, reply, review_text FROM bot_reviews WHERE id = $1", rid)
     if bot_rev is None:
@@ -49,30 +51,10 @@ async def vote_review_api(request: Request, bot_id: int, rid: uuid.UUID, vote: B
     return api_success()
 
 @router.get(
-    "/features/{name}", 
-    response_model = FLFeature
-)
-async def get_feature_api(request: Request, name: str):
-    """Gets a feature given its internal name (custom_prefix, open_source etc)"""
-    if name not in features.keys():
-        return abort(404)
-    return features[name]
-
-@router.get(
-    "/tags/{name}", 
-    response_model = FLTag
-)
-async def get_tags_api(request: Request, name: str):
-    """Gets a tag given its internal name (custom_prefix, open_source etc)"""
-    if name not in TAGS.keys():
-        return abort(404)
-    return {"name": name.replace("_", " ").title(), "iconify_data": TAGS[name], "id": name}
-
-@router.get(
     "/code/{vanity}", 
     response_model = BotVanity
 )
-async def get_vanity_api(request: Request, vanity: str):
+async def get_vanity(request: Request, vanity: str):
     vb = await vanity_bot(vanity)
     logger.trace(f"Vanity is {vanity} and vb is {vb}")
     if vb is None:
@@ -80,25 +62,19 @@ async def get_vanity_api(request: Request, vanity: str):
     return {"type": vb[1], "redirect": str(vb[0])}
 
 @router.get(
-    "/index/bots",
+    "/index",
     response_model=BotIndex
 )
-async def bots_index_page(request: Request):
+async def get_index(request: Request, t: Optional[str] = "bots", cert: Optional[bool] = True):
     """For any potential Android/iOS app, crawlers etc."""
-    return await render_index(request = request, api = True)
+    if t == "bots":
+        return await render_index(request = request, api = True, cert = cert)
+    return abort(404)
 
 @router.get(
-    "/search/bots", 
-    response_model = BotSearch
-)
-async def bots_search_page(request: Request, q: str):
-    """For any potential Android/iOS app, crawlers etc. Q is the query to search for"""
-    return await render_search(request = request, q = q, api = True)
-
-@router.get(
-    "/search/profiles", 
-    response_model = ProfileSearch,
-    dependencies=[
+    "/search", 
+    response_model = BotSearch,
+    dependencies = [
         Depends(
             Ratelimiter(
                 global_limit = Limit(times=20, minutes=1),
@@ -107,29 +83,10 @@ async def bots_search_page(request: Request, q: str):
         )
     ]
 )
-async def profiles_search_page(request: Request, q: str):
-    """For any potential Android/iOS app, crawlers etc. Q is the query to search for"""
-    return await render_profile_search(request = request, q = q, api = True)
-
-@router.post(
-    "/preview", 
-    response_model = PrevResponse, 
-    dependencies=[
-        Depends(
-            Ratelimiter(
-                global_limit = Limit(times=20, minutes=1),
-                sub_limits = [Limit(times=5, seconds=15)]
-            )
-        )
-    ]
-)
-async def preview_api(request: Request, data: PrevRequest, lang: str = "default"):
-    if not data.html_long_description:
-        html = emd(markdown.markdown(intl_text(data.data, lang), extensions=["extra", "abbr", "attr_list", "def_list", "fenced_code", "footnotes", "tables", "admonition", "codehilite", "meta", "nl2br", "sane_lists", "toc", "wikilinks", "smarty", "md_in_html"]))
-    else:
-        html = intl_text(data.data, lang)
-    # Take the h1...h5 anad drop it one lower
-    html = html.replace("<h1", "<h2 style='text-align: center'").replace("<h2", "<h3").replace("<h4", "<h5").replace("<h6", "<p").replace("<a", "<a class='long-desc-link'").replace("ajax", "").replace("http://", "https://").replace(".alert", "")
-    return {"html": html}
-
-# guilds = await discord_o.get_guilds(access_token["access_token"], permissions = [0x8, 0x20]) # Check for admin/manage server in future
+async def search_list(request: Request, q: str, t: Optional[str] = "bots"):
+    """For any potential Android/iOS app, crawlers etc. Q is the query to search for. T is either bots or profiles"""
+    if t == "bots":
+        return await render_search(request = request, q = q, api = True)
+    elif t == "profiles":
+        return await render_profile_search(request = request, q = q, api = True)
+    return abort(404)

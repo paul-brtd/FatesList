@@ -101,8 +101,8 @@ class BaseSearch(BaseModel):
     query: str
 
 class BotSearch(BaseSearch):
-    search_bots: BotPartialList
-    profile_search: bool = False
+    search_res: list
+    profile_search: bool 
 
 class ProfilePartial(BaseUser):
     description: Optional[str] = None

@@ -6,13 +6,13 @@ from ..base import API_VERSION
 from .models import BotListStats
 
 router = APIRouter(
-    prefix = f"/api/v{API_VERSION}/blstats",
+    prefix = f"/api/v{API_VERSION}",
     include_in_schema = True,
-    tags = [f"API v{API_VERSION} - Stats"]
+    tags = [f"API v{API_VERSION} - System"]
 )
 
 @router.get(
-    "/", 
+    "/blstats", 
     response_model = BotListStats,
     operation_id="blstats"
 )
@@ -28,8 +28,7 @@ async def get_botlist_stats(
         dup - Always true now, but used to be: Whether we have connected to discord on this worker
         bot_count_total - The bot count of the list
         bot_count - The approved and certified bots on the list
-
-        An additional workers list will be populated from RabbitMQ if possible
+        workers - The worker pids
     """
     up = worker_session.up
     db = worker_session.postgres
@@ -48,3 +47,13 @@ async def get_botlist_stats(
         "bot_count_total": bot_count_total,
         "workers": worker_session.workers
     }
+
+@router.get("/features")
+def get_features(request: Request):
+    """Returns all of the features the list supports and information about them. Keys indicate the feature id and value is feature information. The value should but may not always have a name, type and a description keys in the json"""
+    return features
+
+@router.get("/tags")
+def get_tags(request: Request):
+    """These are the tags the list supports. The key is the tag name and the value is the iconify class we use"""
+    return TAGS
