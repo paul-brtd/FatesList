@@ -277,3 +277,36 @@ function submitAppeal() {
 		}
 	})
 }
+
+function autofillBot() {
+	function qs(q) {
+		return document.querySelector(q)
+	}
+	bot_id = qs("#bot_id").value
+	if(!bot_id) {
+		return
+	}
+	jQuery.ajax({
+		method: "GET",
+		url: `https://discord.com/api/v9/applications/${bot_id}/rpc`,
+		statusCode: {
+			200: function(data) {
+				if(!data.bot_public) {
+					modalShow("Cannot autofill", "This bot is not a public bot")
+					return
+				}
+				if(data.description) qs("#description").value = data.description
+				if(data.summary) qs("#long_description").textContent = data.summary
+				if(data.privacy_policy_url) qs("#privacy_policy").value = data.privacy_policy_url
+				if(data.slug) qs("#vanity").value = data.slug.toLowerCase()
+				else qs("#vanity").value = data.name.replaceAll(" ", "").toLowerCase()
+				modalShow("Autofill Done", "We've autofilled as much of what we could find on your bots application!")
+			},
+			404: function(data) {
+				modalShow("This bot does not exist!", "Please check the bot id you inputted")
+			}
+
+		}
+	})
+
+}

@@ -179,6 +179,7 @@
 						required=True,
 						type="number"
 					) }}
+					<button onclick="autofillBot()" class="btn btn-outline-light">Autofill</button>
 				{% endif %}
 				{{ textInput(
 					"Extra Owners (comma seperated)", 
@@ -373,7 +374,7 @@
 			select_multiple: {{form_values_select_multiple|tojson}}
 		}
 	</script>
-	<script src="/static/assets/prod/bot_add_edit.min.js?v=19"></script>
+	<script src="/static/assets/prod/bot_add_edit.min.js?v=27"></script>
 	<script src="/static/assets/prod/tabs.min.js?v=4" defer></script>
 	<script src="https://cdn.jsdelivr.net/npm/select-pure@latest/dist/index.js"></script>
 {% endblock %}
