@@ -1,7 +1,7 @@
 from .imports import *
 from aioredis import Connection
 from config._logger import logger
-from .system import redis_ipc
+from .system import redis_ipc_new
 
 async def _user_fetch(
     user_id: str,
@@ -22,7 +22,7 @@ async def _user_fetch(
     
     # Check if a suitable version is in the cache first before querying Discord
 
-    CACHE_VER = 15 # Current cache ver
+    CACHE_VER = 17 # Current cache ver
 
     if len(user_id) not in [17, 18, 19, 20]: # Snowflake can be 17 - 20
         logger.debug(f"Ignoring blatantly wrong User ID: {user_id}")
@@ -57,11 +57,11 @@ async def _user_fetch(
 
     logger.debug(f"Making API call to get user {user_id}")
     cmd_id = uuid.uuid4()
-    data = await redis_ipc(redis, f"GETCH {user_id}")
-    if data is None or data == b'-1':
+    data = await redis_ipc_new(redis, "GETCH", args=[str(user_id)])
+    if data is None or data == b'-2':
         return None
 
-    elif data == b'0':
+    elif data == b'-1':
         valid = False
     
     else:

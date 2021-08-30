@@ -43,7 +43,7 @@ from config import (API_VERSION, TOKEN_DBG, TOKEN_MAIN, TOKEN_SERVER,
 from config._logger import logger
 from modules.core.error import WebError
 from modules.models import enums
-from modules.core.ipc import redis_ipc
+from modules.core.ipc import redis_ipc, redis_ipc_new
 
 from .ratelimits import rl_key_func
 

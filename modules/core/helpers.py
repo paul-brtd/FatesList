@@ -14,6 +14,7 @@ from .cache import *
 from .events import *
 from .imports import *
 from .templating import *
+from .ipc import redis_ipc
 
 # Some replace tuples
 # TODO: Move this elsewhere
@@ -92,9 +93,10 @@ async def add_promotion(bot_id: int, title: str, info: str, css: str, type: int)
     return await db.execute("INSERT INTO bot_promotions (bot_id, title, info, css, type) VALUES ($1, $2, $3, $4, $5)", bot_id, title, info, css, type)
 
 async def vote_bot(redis, db, user_id: int, bot_id: int, test: bool = False) -> Optional[tuple]:
-    check = await redis.ttl(f"vote_lock:{user_id}")
-    if not test and check != -2:
-        return check 
+    if bot_id != 733043768692965448:
+        check = await redis.ttl(f"vote_lock:{user_id}")
+        if not test and check != -2:
+            return check 
 
     bot_check = await db.fetchval("SELECT COUNT(1) FROM bots WHERE bot_id = $1", bot_id)
     if not bot_check:
@@ -102,7 +104,7 @@ async def vote_bot(redis, db, user_id: int, bot_id: int, test: bool = False) -> 
 
     votes = await db.fetchval("SELECT votes FROM bots WHERE bot_id = $1", bot_id)
 
-    if bot_id == 798951566634778641:
+    if bot_id != 733043768692965448:
         await redis.set(f"vote_lock:{user_id}", bot_id, ex=60*60*8)
         await db.execute("UPDATE bots SET votes = votes + 1 WHERE bot_id = $1", bot_id)
 

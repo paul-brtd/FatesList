@@ -4,6 +4,26 @@ import time
 import asyncio
 from loguru import logger
 
+async def redis_ipc_new(redis, cmd, msg = None, timeout=30, args: list = []):
+    cmd_id = str(uuid.uuid4())
+    args = " ".join(args)
+    if args:
+        await redis.publish("_worker_dev", f"{cmd} {cmd_id} {args}")
+    else:
+        await redis.publish("_worker_dev", f"{cmd} {cmd_id}")
+    
+    async def wait(id):
+        start_time = time.time()
+        while time.time() - start_time < timeout:
+            await asyncio.sleep(0)
+            data = await redis.get(id)
+            if data is None:
+                continue
+            return data
+
+    data = await wait(cmd_id)
+    return data if data else None
+
 async def redis_ipc(redis, cmd, msg = None, timeout=30, both = False, args: list = []):
     cmd_id = str(uuid.uuid4())
     print(cmd_id)
