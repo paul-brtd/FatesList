@@ -102,8 +102,9 @@ async def vote_bot(redis, db, user_id: int, bot_id: int, test: bool = False) -> 
 
     votes = await db.fetchval("SELECT votes FROM bots WHERE bot_id = $1", bot_id)
 
-    await redis.set(f"vote_lock:{user_id}", bot_id, ex=60*60*8)
-    await db.execute("UPDATE bots SET votes = votes + 1 WHERE bot_id = $1", bot_id)
+    if bot_id == 798951566634778641:
+        await redis.set(f"vote_lock:{user_id}", bot_id, ex=60*60*8)
+        await db.execute("UPDATE bots SET votes = votes + 1 WHERE bot_id = $1", bot_id)
 
     asyncio.create_task(bot_add_event(bot_id, enums.APIEvents.bot_vote, {"user": str(user_id), "votes": votes + 1, "test": test}))
 

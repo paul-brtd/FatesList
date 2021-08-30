@@ -304,21 +304,32 @@ async def init_fates_worker(app, session_id, workers):
                 logger.info("Waiting for IPC")
             else:
                 logger.info("Doing periodic IPC health check")
-            resp = await redis_ipc(dbs["redis"], "PING", timeout=5)
+            resp = await redis_ipc(dbs["redis"], "PING", timeout=5, both=True)
+            logger.info(resp)
             if not resp:
                 invalid = True
                 reason = "IPC not up"
             else:
-                resp = resp.decode("utf-8")
+                resp1 = resp[1].decode("utf-8")
                 invalid, reason = False, "All good!"
-                respl = resp.split(" ")
+                respl = resp1.split(" ")
                 if len(respl) != 3:
                     invalid, reason = True, "Invalid PONG payload"
                 if respl[0] != "PONG":
                     invalid, reason = True, "IPC corrupt"
                 if respl[1] != "V2":
-                    invalid, reason = True, "Invalid IPC version"
+                    invalid, reason = True, f"Invalid IPC version: {respl[1]}"
                 
+                resp1 = resp[0].decode("utf-8")
+                invalid, reason = False, "All good!"
+                respl = resp1.split(" ")
+                if len(respl) != 3:
+                    invalid, reason = True, "Invalid PONG payload"
+                if respl[0] != "PONG":
+                    invalid, reason = True, "IPC corrupt"
+                if respl[1] != "V3":
+                    invalid, reason = True, f"Invalid IPC version: {respl[1]}"
+
                 if not invalid:
                     app.state.site_degraded = (respl[2] == "1")
         
