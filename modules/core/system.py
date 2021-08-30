@@ -458,52 +458,36 @@ async def finish_init(app, session_id, workers, dbs):
 async def catclient(workers, session, app):
     """The Fates List Dragon IPC protocol"""
     await session.redis.publish(
-        "_worker", 
-        f"{session.id} UP WORKER {os.getpid()} 0 {workers}"
+        "_worker_fates", 
+        f"UP {session.id} {os.getpid()} {workers}"
     )
 
     pubsub = session.redis.pubsub()
     
-    await pubsub.subscribe("_worker")
+    await pubsub.subscribe("_worker_fates")
     async for msg in pubsub.listen():
         if not msg or not isinstance(msg.get("data"), bytes):
             continue
         msg = tuple(msg.get("data").decode("utf-8").split(" "))
         logger.trace(f"Got {msg}")
         match msg:
-            case ("IPC", "DOWN"):
-                logger.info("IPC is now down")
-                app.state.ipc_up = False
+            case ("RESTART", tgt):
+                if tgt == "*" or (tgt.isdigit() and int(tgt) == os.getpid()):
+                    logger.info(f"Dying due to sent RESTART call with requestor being {tgt}")
+                    signal.raise_signal(signal.SIGINT)
+                    os._exit(0)
 
-            case ("RESTART", ("IPC" | "REMOTE") as t):
-                logger.info(f"Dying due to sent RESTART call with requestor being {t}")
-                signal.raise_signal(signal.SIGINT)
-                os._exit(0)
-
-            # RabbitMQ going up has no session id yet
-            case("NOSESSION", "UP", "RMQ", _):
+            # IPC going up has no session id yet
+            case("REGET", reason):
                 # Announce that we are up and sending to repeat a message
-                logger.info("Sending RMQ info due to new worker")
+                logger.info("Sending IPC info due to reget")
                 await session.redis.publish(
-                    "_worker", 
-                    f"{session.id} UP WORKER {os.getpid()} 1 {workers}"
-                )
-
-            case(session_id, "REGET", "WORKER", reason):
-                if session_id != session.id:  # noqa: F821
-                    continue
-
-                logger.warning(
-                    f"RabbitMQ REGET: {reason}"  # noqa: F821
-                ) 
-                # Announce that we are up and sending to repeat a message
-                await session.redis.publish(
-                    "_worker", 
-                    f"{session.id} UP WORKER {os.getpid()} 1 {workers}"
+                    "_worker_fates", 
+                    f"UP {session.id} {os.getpid()} {workers}"
                 )
 
             # FUP = finally up
-            case(session_id, "FUP", *worker_lst):
+            case("FUP", session_id, *worker_lst):
                 if session_id != session.id:  # noqa: F821
                     continue
                 logger.success("All workers are up!")

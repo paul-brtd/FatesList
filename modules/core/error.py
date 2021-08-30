@@ -3,7 +3,7 @@ from .imports import *
 from .templating import *
 import io
 import traceback
-from .ipc import redis_ipc
+from .ipc import redis_ipc_new, redis_ipc
 import uuid
 import time
 
@@ -29,7 +29,7 @@ class WebError():
 
         **Time When Error Happened**: {curr_time}""") 
          
-        await redis_ipc(redis_db, f"SENDMSG {site_errors_channel}", msg = {"content": msg, "file": {"name": f"{error_id}.txt", "content": fl_info}})
+        await redis_ipc_new(redis_db, "SENDMSG", msg = {"content": msg, "file_name": f"{error_id}.txt", "file_content": fl_info, "channel_id": str(site_errors_channel)})
 
     @staticmethod
     async def error_handler(request, exc, log: bool = True):

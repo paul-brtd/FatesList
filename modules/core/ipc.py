@@ -4,13 +4,18 @@ import time
 import asyncio
 from loguru import logger
 
-async def redis_ipc_new(redis, cmd, msg = None, timeout=30, args: list = []):
+async def redis_ipc_new(redis, cmd, msg = None, timeout=30, args: list = None):
+    args = [] if not args else args
     cmd_id = str(uuid.uuid4())
+    if msg:
+        msg_id = str(uuid.uuid4())
+        await redis.set(msg_id, orjson.dumps(msg), nx=True, ex=30)
+        args.append(msg_id)
     args = " ".join(args)
     if args:
-        await redis.publish("_worker_dev", f"{cmd} {cmd_id} {args}")
+        await redis.publish("_worker_fates", f"{cmd} {cmd_id} {args}")
     else:
-        await redis.publish("_worker_dev", f"{cmd} {cmd_id}")
+        await redis.publish("_worker_fates", f"{cmd} {cmd_id}")
     
     async def wait(id):
         start_time = time.time()
@@ -33,9 +38,9 @@ async def redis_ipc(redis, cmd, msg = None, timeout=30, both = False, args: list
     if both:
         args = " ".join(args)
         if args:
-            await redis.publish("_worker_dev", f"{cmd} {cmd_id} {args}")
+            await redis.publish("_worker_fates", f"{cmd} {cmd_id} {args}")
         else:
-            await redis.publish("_worker_dev", f"{cmd} {cmd_id}")
+            await redis.publish("_worker_fates", f"{cmd} {cmd_id}")
 
     async def wait(id):
         start_time = time.time()
