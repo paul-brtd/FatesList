@@ -576,14 +576,12 @@ def shutdown_fates_worker(app):
     redis = worker_session.redis
 
     async def _close():
-        logger.info("Closing connections")
         await asyncio.sleep(0)
         await db.close()
         await rabbit.close()
         await redis.publish("_worker", f"DOWN WORKER {os.getpid()}")
         await redis.close()
         await asyncio.sleep(0)
-        logger.info("All connections closed")
 
     def _signal_handler_entry():
         """Entrypoint for signal handler"""

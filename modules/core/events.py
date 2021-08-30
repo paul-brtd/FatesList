@@ -66,4 +66,9 @@ async def bot_add_event(bot_id: int, event: int, context: dict, t: Optional[int]
             "eid": id
         })
         asyncio.create_task(add_ws_event(bot_id, {"ctx": context, "m": {"t": t, "ts": event_time, "e": event}}, id = id))
+
+        tid = str(uuid.uuid4())
+        await redis_db.set(f"bt_task-{tid}", orjson.dumps({"op": 0, "data": orjson.dumps({"id": str(bot_id), "event": event, "eid": id, "bot": True, "ts": float(event_time), "vote_count": context.get("votes", -1)}).decode("utf-8")}), ex=30) # TODO: Make this no expriry when this is stable
+        await redis_db.set(f"bt_task:ctx-{tid}", orjson.dumps(context))
+        await redis_db.publish("_worker_dev", f"BTADD {tid}")
     return id
