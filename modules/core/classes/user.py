@@ -2,10 +2,9 @@ from .base import DiscordUser
 from .bot import Bot
 from .badge import Badge
 from modules.core.cache import get_user
-from modules.core.helpers import redis_ipc
+from modules.core.helpers import redis_ipc_new
 import modules.models.enums as enums    
 from config import main_server
-import orjson
 
 class User(DiscordUser):
     """A user on Fates List"""
@@ -49,10 +48,10 @@ class User(DiscordUser):
         user["bot_developer"] = approved_bots != []
         user["certified_developer"] = certified_bots != []                      
                          
-        on_server = await redis_ipc(redis_db, f"ROLES {self.id}")
-        if on_server == b"0":
-            on_server = "[]"
-        user["badges"] = await Badge.from_user(self.id, orjson.loads(on_server), user["badges"], user["bot_developer"], user["certified_developer"])
+        on_server = await redis_ipc_new(redis_db, "ROLES", args=[str(self.id)])
+        if on_server == b"-1":
+            on_server = []
+        user["badges"] = await Badge.from_user(self.id, on_server.decode("utf-8").split(" "), user["badges"], user["bot_developer"], user["certified_developer"])
                          
         return {
             "bots": bots, 

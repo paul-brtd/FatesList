@@ -54,21 +54,9 @@ async def bot_add_event(bot_id: int, event: int, context: dict, t: Optional[int]
     if api_token is None:
         return
     event_time = time.time()
-    asyncio.create_task(db.execute("INSERT INTO bot_api_event (bot_id, event, type, context, id) VALUES ($1, $2, $3, $4, $5)", bot_id, event, t, orjson.dumps(context).decode("utf-8"), id))
-    if send_event:
-        await add_rmq_task("events_webhook_queue", {
-            "id": bot_id, 
-            "target": "bot", 
-            "event": event, 
-            "ctx": context,
-            "t": t,
-            "ts": event_time,
-            "eid": id
-        })
-        asyncio.create_task(add_ws_event(bot_id, {"ctx": context, "m": {"t": t, "ts": event_time, "e": event}}, id = id))
-
-        tid = str(uuid.uuid4())
-        await redis_db.set(f"bt_task-{tid}", orjson.dumps({"op": 0, "data": orjson.dumps({"id": str(bot_id), "event": event, "eid": id, "bot": True, "ts": float(event_time), "vote_count": context.get("votes", -1), "user": context.get("user", -1)}).decode("utf-8")}), ex=30) # TODO: Make this no expriry when this is stable
-        await redis_db.set(f"bt_task:ctx-{tid}", orjson.dumps(context))
-        await redis_db.publish("_worker_dev", f"BTADD {tid}")
+    asyncio.create_task(add_ws_event(bot_id, {"ctx": context, "m": {"t": t, "ts": event_time, "e": event}}, id = id))
+    tid = str(uuid.uuid4())
+    await redis_db.set(f"bt_task-{tid}", orjson.dumps({"op": 0, "data": orjson.dumps({"id": str(bot_id), "event": event, "eid": id, "bot": True, "ts": float(event_time), "vote_count": context.get("votes", -1), "user": context.get("user", -1)}).decode("utf-8")}), ex=120) # TODO: Make this no expriry when this is stable
+    await redis_db.set(f"bt_task:ctx-{tid}", orjson.dumps(context))
+    await redis_db.publish("_worker_fates", f"BTADD {tid}")
     return id

@@ -39,14 +39,14 @@ async def is_staff(staff_json: dict, user_id: int, base_perm: int, json: bool = 
     max_perm = 0 # This is a cache of the max perm a user has
     sm = StaffMember(name = "user", id = str(staff_json["user"]["id"]), staff_id = str(staff_json["user"]["staff_id"]), perm = 1) # Initially
     bak_sm = sm # Backup staff member
-    roles = await redis_ipc(redis, f"ROLES {user_id}")
-    if roles == b"0":
+    roles = await redis_ipc_new(redis, "ROLES", args=[str(user_id)])
+    if roles == b"-1":
         if json:
             return False, 1, sm.dict()
         return False, 1, sm
     if not roles:
         return False, 1, sm.dict()
-    roles = orjson.loads(roles)
+    roles = roles.decode("utf-8").split(" ")
     for role in roles: # Loop through all roles
         sm = _get_staff_member(staff_json, role)
         if sm.perm > max_perm:
