@@ -4,6 +4,7 @@ Handle API Events, webhooks and websockets
 
 from .cache import get_bot, get_user
 from .imports import *
+from .ipc import redis_ipc_new
 
 async def add_ws_event(target: int, ws_event: dict, *, id: Optional[uuid.UUID] = None, type: str = "bot") -> None:
     """A WS Event must have the following format:
@@ -55,8 +56,5 @@ async def bot_add_event(bot_id: int, event: int, context: dict, t: Optional[int]
         return
     event_time = time.time()
     asyncio.create_task(add_ws_event(bot_id, {"ctx": context, "m": {"t": t, "ts": event_time, "e": event}}, id = id))
-    tid = str(uuid.uuid4())
-    await redis_db.set(f"bt_task-{tid}", orjson.dumps({"op": 0, "data": orjson.dumps({"id": str(bot_id), "event": event, "eid": id, "bot": True, "ts": float(event_time), "vote_count": context.get("votes", -1), "user": context.get("user", -1)}).decode("utf-8")}), ex=120) # TODO: Make this no expriry when this is stable
-    await redis_db.set(f"bt_task:ctx-{tid}", orjson.dumps(context))
-    await redis_db.publish("_worker_fates", f"BTADD {tid}")
+    await redis_ipc_new(redis_db, "BTADD", msg={"op": 0, "ctx": context, "data": orjson.dumps({"id": str(bot_id), "event": event, "eid": id, "bot": True, "ts": float(event_time), "vote_count": context.get("votes", -1), "user": context.get("user", -1)}).decode("utf-8")})
     return id

@@ -525,5 +525,5 @@ async def appeal_bot(request: Request, bot_id: int, data: BotAppeal):
     resubmit_embed.add_field(name="Resubmission", value = str(state == enums.BotState.denied))
     resubmit_embed.add_field(name=appeal_title, value = data.appeal)
     msg = {"content": f"<@&{staff_ping_add_role}>", "embed": resubmit_embed.to_dict(), "channel_id": str(appeals_channel), "mention_roles": [str(staff_ping_add_role)]}
-    asyncio.create_task(redis_ipc_new(request.app.state.worker_session.redis, "SENDMSG", msg=msg))
+    await redis_ipc_new(request.app.state.worker_session.redis, "SENDMSG", msg=msg, timeout=None)
     return api_success()

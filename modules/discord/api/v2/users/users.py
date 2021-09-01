@@ -93,7 +93,7 @@ async def add_bot(request: Request, user_id: int, bot_id: int, bot: BotMeta):
     bot_dict = bot.dict()
     bot_dict["bot_id"] = bot_id
     bot_dict["user_id"] = user_id
-    bot_adder = BotActions(bot_dict)
+    bot_adder = BotActions(db, bot_dict)
     rc = await bot_adder.add_bot()
     if rc is None:
         return api_success(f"{site_url}/bot/{bot_id}", status_code = 202)
@@ -119,7 +119,7 @@ async def edit_bot(request: Request, user_id: int, bot_id: int, bot: BotMeta):
     bot_dict = bot.dict()
     bot_dict["bot_id"] = bot_id
     bot_dict["user_id"] = user_id
-    bot_editor = BotActions(bot_dict)
+    bot_editor = BotActions(db, bot_dict)
     rc = await bot_editor.edit_bot()
     if rc is None:
         return api_success(status_code = 202)

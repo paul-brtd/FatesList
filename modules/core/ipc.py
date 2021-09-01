@@ -9,7 +9,7 @@ async def redis_ipc_new(redis, cmd, msg = None, timeout=30, args: list = None):
     cmd_id = str(uuid.uuid4())
     if msg:
         msg_id = str(uuid.uuid4())
-        await redis.set(msg_id, orjson.dumps(msg), nx=True, ex=30)
+        await redis.set(msg_id, orjson.dumps(msg), ex=30)
         args.append(msg_id)
     args = " ".join(args)
     if args:
@@ -26,7 +26,10 @@ async def redis_ipc_new(redis, cmd, msg = None, timeout=30, args: list = None):
                 continue
             return data
 
-    data = await wait(cmd_id)
+    if timeout:
+        data = await wait(cmd_id)
+    else:
+        return None
     return data if data else None
 
 async def redis_ipc(redis, cmd, msg = None, timeout=30, both = False, args: list = []):
