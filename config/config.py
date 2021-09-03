@@ -70,7 +70,7 @@ auth_namespaces = {
 
 with open("config/ban_data.json") as fp:
     bans_data = json.load(fp)
-    
+
 with open("config/staff_roles.json") as fp:
     staff_roles = json.load(fp)
 
@@ -133,21 +133,6 @@ site_url = "https://" + site
 support_url = "https://discord.gg/cMAnfu8AJB"
 
 pg_user = "postgres" # Postgres Database Username
-
-bans_data = {
-    "1": {
-        "type": "global",
-        "desc": "you cannot/will not be able to login or access the support server"
-    },
-    "2": {
-        "type": "profile edit",
-        "desc": "you will not be able to edit your profile"
-    },
-    "3": {
-        "type": "data deletion request",
-        "desc": "you can contact modmail to be unbanned"
-    }
-}
 
 langs = {
     "default": "Default",
