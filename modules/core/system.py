@@ -27,7 +27,6 @@ from fastapi.templating import Jinja2Templates
 from lynxfall.core.classes import Singleton
 from lynxfall.oauth.models import OauthConfig
 from lynxfall.oauth.providers.discord import DiscordOauth
-from lynxfall.rabbit.client import RabbitClient
 from lynxfall.ratelimits import LynxfallLimiter
 from lynxfall.utils.fastapi import api_versioner, include_routers
 from prometheus_client import start_http_server
@@ -206,13 +205,11 @@ class FatesWorkerSession(Singleton):  # pylint: disable=too-many-instance-attrib
         session_id: str,
         postgres: asyncpg.Pool,
         redis: aioredis.Connection,
-        rabbit: aio_pika.RobustConnection,
         oauth: FatesWorkerOauth
     ):
         self.id = session_id
         self.postgres = postgres
         self.redis = redis
-        self.rabbit = rabbit
         self.oauth = oauth
 
         # Record basic stats and initially set workers to None
@@ -278,8 +275,8 @@ def setup_discord():
 async def init_fates_worker(app, session_id, workers):
     """
     On startup:
-        - Initialize Postgres, Redis, RabbitMQ and discord
-        - Setup the ratelimiter and RabbitMQ worker protocols
+        - Initialize Postgres andRedis
+        - Setup the ratelimiter and IPC worker protocols
         - Start repeated task for vote reminder posting
     """
     # This is still builtins for backward compatibility. 
@@ -342,15 +339,12 @@ async def init_fates_worker(app, session_id, workers):
 async def finish_init(app, session_id, workers, dbs):
     builtins.db = dbs["postgres"]
     builtins.redis_db = dbs["redis"]
-    builtins.rabbitmq_db = dbs["rabbit"]
-    RabbitClient.setup(worker_key, dbs["redis"], dbs["rabbit"])
-    logger.success("Connected to postgres, rabbitmq and redis")
+    logger.success("Connected to postgres and redis")
 
     app.state.worker_session = FatesWorkerSession(
         session_id=session_id,
         postgres=dbs["postgres"],
         redis=dbs["redis"],
-        rabbit=dbs["rabbit"],
         oauth=FatesWorkerOauth(
             discord_oauth=DiscordOauth(
                 oc=OauthConfig(
@@ -490,7 +484,7 @@ async def catclient(workers, session, app):
 
                 except ValueError:
                     logger.warning(
-                        f"Got invalid workers from rabbitmq ({workers})"
+                        f"Got invalid workers from ipc ({workers})"
                     )
                
                 #await start_dbg(session, app)
@@ -549,21 +543,18 @@ async def setup_db():
     """Function to setup the asyncpg connection pool"""
     postgres = await asyncpg.create_pool()
     redis = await aioredis.from_url('redis://localhost:1001', db=1)
-    rabbit = await aio_pika.connect_robust(host="localhost", port=1002)
-    return {"postgres": postgres, "redis": redis, "rabbit": rabbit}
+    return {"postgres": postgres, "redis": redis}
 
 
 def shutdown_fates_worker(app):
     """Shutdown the list properly"""
     worker_session = app.state.worker_session
     db = worker_session.postgres
-    rabbit = worker_session.rabbit
     redis = worker_session.redis
 
     async def _close():
         await asyncio.sleep(0)
         await db.close()
-        await rabbit.close()
         await redis.publish("_worker", f"DOWN WORKER {os.getpid()}")
         await redis.close()
         await asyncio.sleep(0)

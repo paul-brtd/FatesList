@@ -1,3 +1,5 @@
+import json
+
 INT64_MAX = 9223372036854775807
 bot_logs = 836326348326043648 # #bot-logs in support server
 server_logs = 837048691965034496 # Server logs in support server
@@ -66,48 +68,11 @@ auth_namespaces = {
     "site": "https://fateslist.xyz/fates/login-confirm"
 }
 
-staff_roles = {
-    "user": {
-        "id": "00000000000000000",
-        "staff_id": "0000000000000000",
-        "perm": 0
-    },
-    "community_staff": {
-        "id": "836326306408693820",
-        "staff_id": "0000000000000000",
-        "perm": 1
-    }, 
-    "bot_reviewer": {
-        "id": "836326311147864104",
-        "staff_id": "845931373520748545",
-        "perm": 2
-    },
-    "mod": {
-        "id": "836326309528600627",
-        "staff_id": 845931545076432931,
-        "perm": 3
-    },
-    "admin": {
-        "id": "836326305666039848",
-        "staff_id": "845930903883874336",
-        "perm": 4,
-    },
-    "developer": {
-        "id": "836326304860078160",
-        "staff_id": "848745475494641694",
-        "perm": 4.5
-    }, # Add a perm 5 for head developer if needed
-    "head_admin": {
-        "id": "836349482340843572",
-        "staff_id": "845930541018513428",
-        "perm": 6
-    },
-    "owner": {
-        "id": "836326299223195738",
-        "staff_id": "830540676952227863",
-        "perm": 7,
-    }
-} 
+with open("config/ban_data.json") as fp:
+    bans_data = json.load(fp)
+    
+with open("config/staff_roles.json") as fp:
+    staff_roles = json.load(fp)
 
 # TODO: Add Timed Badges
 special_badges = (

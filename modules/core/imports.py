@@ -38,4 +38,3 @@ from config import *
 from lynxfall.mdextend import *
 from lynxfall.utils import *
 from lynxfall.ratelimits.depends import Ratelimiter, Limit
-from lynxfall.rabbit.client.core import *

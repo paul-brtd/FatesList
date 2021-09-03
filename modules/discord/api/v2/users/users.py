@@ -149,5 +149,20 @@ async def delete_bot(request: Request, user_id: int, bot_id: int):
         return api_error(
             f"This bot cannot be deleted as it has been locked with a code of {int(lock)}: ({lock.__doc__}). If this bot is not staff locked, join the support server and run +unlock <BOT> to unlock it."
         )
-    await add_rmq_task("bot_delete_queue", {"user_id": user_id, "bot_id": bot_id})
+    await db.execute(f"DELETE FROM bots WHERE bot_id = $1", bot_id)
+    await db.execute("DELETE FROM vanity WHERE redirect = $1", bot_id)
+
+    # Check all packs
+    packs = await db.fetch("SELECT bots FROM bot_packs")
+    pack_bot_delete = [] # Packs to delete the bot from
+    for pack in packs:
+        if bot_id in pack["bots"]:
+            pack_bot_delete.append((pack["id"], [id for id in pack["bots"] if id in pack["bots"]])) # Get all bots not in pack, then delete them all uaing executemany
+    await db.executemany("UPDATE bot_packs SET bots = $2 WHERE id = $1", pack_bot_delete)
+
+    delete_embed = discord.Embed(title="Bot Deleted :(", description=f"<@{user_id}> has deleted the bot <@{bot_id}>!", color=discord.Color.red())
+    msg = {"content": "", "embed": delete_embed.to_dict(), "channel_id": str(bot_logs), "mention_roles": []}
+    await redis_ipc_new(redis_db, "SENDMSG", msg=msg, timeout=None)
+
+    await bot_add_event(bot_id, "delete_bot", {"user": user_id})    
     return api_success(status_code = 202)

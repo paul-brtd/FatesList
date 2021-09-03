@@ -158,7 +158,7 @@ def run_site(ctx, workers):
 
 @site.command("dragon")
 def admin_run():
-    """Start the Fates List adminlayer including IPC (AKA Dragon Layer)"""
+    """Start the Fates List adminlayer"""
     import uvicorn
     uvicorn.run("modules.infra.dragon.system:app", port=1843)
 
@@ -166,7 +166,16 @@ def admin_run():
 def manager_run():
     """Start the manager bot"""
     os.execv(sys.executable, ['python'] + ["modules/infra/manager/main.py"])
-    
+
+@site.command("goipc")
+def goipc():
+    """Starts up goipc"""
+    from config import TOKEN_MAIN, main_server, bot_logs
+    os.environ["TOKEN"] = TOKEN_MAIN
+    os.environ["MAIN_SERVER"] = str(main_server)
+    os.environ["SITE_LOGS"] = str(bot_logs)
+    os.execv("modules/infra/dragon/rewrite/dragon", ["dragon"])
+
 @site.command("enums2md")
 def site_enum2html():
     """Converts the enums in modules/models/enums.py into markdown. Mainly for apidocs creation"""

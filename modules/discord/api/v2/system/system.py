@@ -57,3 +57,12 @@ def get_features(request: Request):
 def get_tags(request: Request):
     """These are the tags the list supports. The key is the tag name and the value is the iconify class we use"""
     return TAGS
+
+@router.get(
+    "/is_staff",
+    operation_id="check_staff_member"
+)
+async def check_staff_member(request: Request, user_id: int, min_perm: int):
+    """Admin route to check if a user is staff or not"""
+    staff = await is_staff(staff_roles, user_id, min_perm, json = True)
+    return {"staff": staff[0], "perm": staff[1], "sm": staff[2]}
