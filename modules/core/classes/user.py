@@ -49,7 +49,7 @@ class User(DiscordUser):
         user["certified_developer"] = certified_bots != []                      
                          
         on_server = await redis_ipc_new(redis_db, "ROLES", args=[str(self.id)])
-        if on_server == b"-1":
+        if on_server == b"-1" or not on_server:
             on_server = b""
         user["badges"] = await Badge.from_user(self.id, on_server.decode("utf-8").split(" "), user["badges"], user["bot_developer"], user["certified_developer"])
                          

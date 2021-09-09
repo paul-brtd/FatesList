@@ -50,11 +50,10 @@ async def bot_add_event(bot_id: int, event: int, context: dict, t: Optional[int]
     else:
         raise TypeError("Event must be a dict")
 
-    id = uuid.uuid4()
     api_token = await db.fetchval("SELECT api_token FROM bots WHERE bot_id = $1", bot_id)
     if api_token is None:
         return
     event_time = time.time()
     asyncio.create_task(add_ws_event(bot_id, {"ctx": context, "m": {"t": t, "ts": event_time, "e": event}}, id = id))
-    await redis_ipc_new(redis_db, "BTADD", msg={"op": 0, "ctx": context, "data": orjson.dumps({"id": str(bot_id), "event": event, "eid": id, "bot": True, "ts": float(event_time), "vote_count": context.get("votes", -1), "user": context.get("user", -1)}).decode("utf-8")})
+    await redis_ipc_new(redis_db, "BTADD", msg={"op": 0, "ctx": context, "data": orjson.dumps({"id": str(bot_id), "event": event, "bot": True, "ts": float(event_time), "vote_count": context.get("votes", -1), "user": context.get("user", -1)}).decode("utf-8")})
     return id
