@@ -402,9 +402,11 @@ def db_shell():
 def db_apply(module):
     """Apply Fates List database migration"""
     from config._logger import logger
-    import uvloop
-    uvloop.install()
-    
+    try:
+        import uvloop
+        uvloop.install()
+    except ImportError:
+        pass
     import asyncpg
     import aioredis
     
@@ -433,8 +435,11 @@ def db_apply(module):
 def db_wipeuser(user_id):
     """Wipes a user account (e.g. Data Deletion Request)"""
     from config._logger import logger
-    import uvloop
-    uvloop.install()
+    try:
+        import uvloop
+        uvloop.install()
+    except ImportError:
+        pass
     
     import asyncpg
     import aioredis
