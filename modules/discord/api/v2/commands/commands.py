@@ -20,7 +20,7 @@ async def get_commands(request:  Request, bot_id: int, filter: Optional[str] = N
     return cmd
 
 @router.post(
-    "/{bot_id}/commands",
+    "/{bot_id}/command",
     response_model = IDResponse, 
     dependencies=[
         Depends(
