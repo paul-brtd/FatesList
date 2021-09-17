@@ -1,0 +1,9 @@
+# These links may change in the future, are needed
+git+https://github.com/Rapptz/discord.py
+# git+https://github.com/Fates-List/lynxfall   #removed for windows users
+git+https://github.com/aio-libs/aioredis-py
+git+https://github.com/Python-Markdown/markdown.git
+git+https://github.com/aaugustin/websockets
+git+https://github.com/EQUENOS/dislash.py
+git+https://github.com/MagicStack/asyncpg
+# git+https://github.com/MagicStack/uvloop #removed for windows users

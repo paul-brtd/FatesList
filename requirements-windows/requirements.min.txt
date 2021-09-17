@@ -1,0 +1,32 @@
+#Initial requirements (this is made only for windows users, for the rest please refer to data/res/deps.txt) 
+click
+
+## From here it is now copied from the data/res/deps.txt
+cython 
+lxml 
+fastapi==0.68.0
+typer
+bleach 
+aenum 
+aio-pika  
+gunicorn 
+uvicorn[standard]==0.14.0
+orjson  
+lxml 
+sentry_sdk
+isort
+itsdangerous
+jinja2
+loguru
+jishaku
+pgcli
+
+# Needed for static file serving in future
+aiofiles
+
+# Needed for file uploads in future
+python-multipart
+
+# Not strictly needed by Fates List but recommended by FastAPI for optimal performance
+async_exit_stack>=1.0.1,<2.0.0
+async_generator>=1.10,<2.0.0
