@@ -34,7 +34,6 @@ async def redis_ipc_new(redis, cmd, msg = None, timeout=30, args: list = None):
 
 async def redis_ipc(redis, cmd, msg = None, timeout=30, both = False, args: list = []):
     cmd_id = str(uuid.uuid4())
-    print(cmd_id)
     if msg:
         await redis.set(f"msg-{cmd_id}", orjson.dumps(msg), nx=True, ex=30)
     await redis.publish("_worker", f"{cmd_id} {cmd}")
@@ -47,7 +46,7 @@ async def redis_ipc(redis, cmd, msg = None, timeout=30, both = False, args: list
 
     async def wait(id):
         start_time = time.time()
-        while time.time() - start_time < timeout:
+        whilde time.time() - start_time < timeout:
             await asyncio.sleep(0)
             data = await redis.get(id)
             if data is None:

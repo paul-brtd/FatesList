@@ -27,35 +27,18 @@ async def is_bot_admin(bot_id: int, user_id: int):
         return False
     return True
 
-# Internal backend entry to check if one role is in staff and return a dict of that entry if so
-def _get_staff_member(staff_json: dict, role: int) -> StaffMember:
-    for key in staff_json.keys(): # Loop through all keys in staff json
-        if int(role) == int(staff_json[key]["id"]): # Check if role matches
-            return StaffMember(name = key, id = str(staff_json[key]["id"]), staff_id = str(staff_json[key]["staff_id"]), perm = staff_json[key]["perm"]) # Return the staff json role data
-    return StaffMember(name = "user", id = str(staff_json["user"]["id"]), staff_id = str(staff_json["user"]["staff_id"]), perm = 1) # Fallback to perm 1 user member
-
 async def is_staff(staff_json: dict, user_id: int, base_perm: int, json: bool = False, *, redis=None) -> Union[bool, int, StaffMember]:
     redis = redis if redis else redis_db
-    max_perm = 0 # This is a cache of the max perm a user has
-    sm = StaffMember(name = "user", id = str(staff_json["user"]["id"]), staff_id = str(staff_json["user"]["staff_id"]), perm = 1) # Initially
-    bak_sm = sm # Backup staff member
-    roles = await redis_ipc_new(redis, "ROLES", args=[str(user_id)])
-    if roles == b"-1":
-        if json:
-            return False, 1, sm.dict()
-        return False, 1, sm
-    if not roles:
-        return False, 1, sm.dict()
-    roles = roles.decode("utf-8").split(" ")
-    for role in roles: # Loop through all roles
-        sm = _get_staff_member(staff_json, role)
-        if sm.perm > max_perm:
-            max_perm = sm.perm
-            bak_sm = sm # Back it up so it doesnt get overwritten
-    if max_perm >= base_perm:
-        if json:
-            return True, max_perm, bak_sm.dict()
-        return True, max_perm, bak_sm # Use backup and not overwritten one
+    if user_id < 0: 
+        staff_perm = None
+    else:
+        staff_perm = await redis_ipc_new(redis, "GETPERM", args=[str(user_id)])
+    if not staff_perm:
+        staff_perm = {"fname": "Unknown", "id": "0", "staff_id": "0", "perm": 0}
+    else:
+        staff_perm = orjson.loads(staff_perm)
+    sm = StaffMember(name = staff_perm["fname"], id = staff_perm["id"], staff_id = staff_perm["staff_id"], perm = staff_perm["perm"]) # Initially
+    rc = True if sm.perm >= base_perm else False
     if json:
-        return False, max_perm, sm.dict()
-    return False, max_perm, sm # Use normal one
+        return rc, sm.perm, sm.dict()
+    return rc, sm.perm, sm

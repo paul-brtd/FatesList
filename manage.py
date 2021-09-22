@@ -141,7 +141,7 @@ def run_site(ctx, workers):
         "worker_class": "config._uvicorn.FatesWorker",
         "workers": workers,
         "bind": "127.0.0.1:9999",
-        "loglevel": "debug",
+        "loglevel": "info",
         "pidfile": "data/pids/gunicorn.pid",
         "preload_app": True,
         "timeout": 120,

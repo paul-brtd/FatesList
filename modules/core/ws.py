@@ -1,3 +1,4 @@
+from modules.models.enums import WSCloseCode
 from .imports import *
 
 Websocket = WebSocket
@@ -9,6 +10,7 @@ class ConnectionManager:
 
     async def connect(self, websocket: WebSocket, api: bool = True):
         await websocket.accept()
+        websocket.closed = False
         websocket.bots = []
         websocket.tasks = {}
         websocket.pubsub = None
@@ -19,6 +21,7 @@ class ConnectionManager:
 
     async def disconnect(self, websocket: WebSocket, code: int = 4005):
         websocket.authorized = False
+        websocket.closed = True
         
         # Unsubscribe from pubsub
         try:
@@ -56,7 +59,7 @@ class ConnectionManager:
         websocket.event_filter = None
         websocket.identified = False
 
-    async def identify(self, websocket):
+    def identify(self, websocket):
         """Helper function to finish auth, call this always after auth"""
         websocket.authorized = True
         websocket.identified = True
@@ -87,7 +90,8 @@ class ConnectionManager:
             await connection.send_json(message)
 
 async def ws_close(websocket: WebSocket, code: int):
-    await manager.disconnect(websocket, code = code)
+    if not websocket.closed:
+        await manager.disconnect(websocket, code = code)
 
 def ws_identity_payload():
     return {
@@ -116,7 +120,7 @@ async def ws_kill(manager: ConnectionManager, websocket: Websocket, type, code, 
     return await ws_close(websocket, code = code)
 
 async def ws_kill_invalid(manager: ConnectionManager, websocket: Websocket, ratelimited = []):
-    return await ws_kill(manager, websocket, enums.APIEventTypes.ws_invalid, 4000, ratelimited = ratelimited)
+    return await ws_kill(manager, websocket, enums.APIEventTypes.ws_invalid, WSCloseCode.InvalidConn, ratelimited = ratelimited)
 
-async def ws_kill_no_auth(manager: ConnectionManager, websocket: Websocket, ratelimited = []):
-    return await ws_kill(manager, websocket, enums.APIEventTypes.ws_no_auth, 4004, ratelimited = ratelimited)
+async def ws_kill_no_auth(manager: ConnectionManager, websocket: Websocket, ratelimited = [], code = None):
+    return await ws_kill(manager, websocket, enums.APIEventTypes.ws_no_auth, code = code if code else WSCloseCode.InvalidAuth, ratelimited = ratelimited)

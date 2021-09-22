@@ -152,28 +152,6 @@ class FatesListRequestHandler(BaseHTTPMiddleware):
                 response.headers["Allow"] = self.cors_allowed
        
         return response
-
-
-class FatesDebugBot(commands.Bot):
-    """Fates List Debug Bot"""
-    def __init__(self, *, intents):
-        self.ready = False
-        super().__init__(
-            command_prefix=commands.when_mentioned_or('fl!'), intents=intents)
-
-    async def is_owner(self, user: discord.User):
-        """Owner check patch"""
-        if user.id == owner or user.id in (683530527239962627, 744825560034705508):
-            return True
-        return False
-
-    async def on_ready(self):
-        """on_ready patch"""
-        self.ready = True
-        logger.success(
-            f"{self.user} (DEBUG BOT) should now be up on first worker"
-        )
-
         
 class FatesBot(discord.Client):
     """Fates List Regular Bot"""
@@ -262,11 +240,10 @@ def setup_discord():
     ) 
     client = FatesBot(intents=intent_main)
     client_server = FatesBot(intents=intent_servers)
-    client_dbg = FatesDebugBot(intents=intent_dbg)
     logger.info("Discord init is beginning")
     asyncio.create_task(client.start(TOKEN_MAIN))
     asyncio.create_task(client_server.start(TOKEN_SERVER)) 
-    return {"main": client, "servers": client_server, "debug": client_dbg}
+    return {"main": client, "servers": client_server, "debug": None}
 
 # Include all the modules by looping through 
 # and using importlib to import them and then including them in fastapi

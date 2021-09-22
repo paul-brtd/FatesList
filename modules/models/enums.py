@@ -176,6 +176,18 @@ class Vanity(IntEnum):
     bot = 1, "Bot"
     profile = 2, "Profile"
 
+
+class WSCloseCode(IntEnum):
+    """
+    Websocket close codes used by Fates List
+    """
+    _init_ = "value __doc__"
+    InvalidConn = 4000, "Invalid identity or connection"
+    InvalidAuth = 4004, "Invalid authentication"
+    Ratelimited = 4012, "Ratelimited"
+    InternalError = 4500, "Internal client or server error"
+
+
 class CommandType(IntEnum):
     """
     0 - Regular (Prefix) Command

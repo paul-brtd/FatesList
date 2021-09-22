@@ -54,6 +54,6 @@ async def bot_add_event(bot_id: int, event: int, context: dict, t: Optional[int]
     if api_token is None:
         return
     event_time = time.time()
-    asyncio.create_task(add_ws_event(bot_id, {"ctx": context, "m": {"t": t, "ts": event_time, "e": event}}, id = id))
+    asyncio.create_task(add_ws_event(bot_id, {"ctx": context, "m": {"t": t, "ts": event_time, "e": event}}))
     await redis_ipc_new(redis_db, "BTADD", msg={"op": 0, "ctx": context, "data": orjson.dumps({"id": str(bot_id), "event": event, "bot": True, "ts": float(event_time), "vote_count": context.get("votes", -1), "user": context.get("user", -1)}).decode("utf-8")})
     return id

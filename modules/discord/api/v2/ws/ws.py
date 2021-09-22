@@ -9,38 +9,9 @@ router = APIRouter(
 
 builtins.manager = ConnectionManager()
 
-async def dispatch_events_old(websocket, bot):
-    """Dispatch old events to the requester"""
-    if not websocket.authorized:
-        return # Stop sending if not authorized 
 
-async def ws_command_handler(websocket):
-    """Websocket Command Handling"""
-    while True:
-        data = await websocket.receive_json()
-        if not websocket.authorized:
-            return # Stop command handling
-        await asyncio.sleep(0) # Ensure other tasks don't mess up
-        try:
-            # Dispatch old events
-            if data["cmd"] == enums.WebSocketCommand.dispatch_old:
-                bot = data["id"]
-                flag = False
-                for auth_bot in websocket.bots:
-                    if bot == auth_bot["id"]:
-                        # We have a match
-                        flag = True
-                        websocket.tasks[str(uuid.uuid4())] = asyncio.create_task(dispatch_events_old(websocket, bot)) # Store task in dict
-                if not flag:
-                    return await ws_kill_no_auth(manager, websocket)
-                
-            else:
-                return await ws_kill_invalid(manager, websocket)
-        except Exception:
-            return await ws_kill_invalid(manager, websocket)
-        
 @router.websocket("/api/v2/ws/rtstats")
-async def websocket_bot_rtstats_v1(websocket: WebSocket):
+async def websocket_realtime_stats(websocket: WebSocket):
     logger.debug("Got websocket connection request. Connecting...")
     await manager.connect(websocket)
     if not websocket.identified:
@@ -94,7 +65,7 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
                         await redis_db.set(f"identity-{id}", orjson.dumps(rl), **exp)
                         websocket.bots.append(bot)
                 if websocket.bots == []:
-                    return await ws_kill_no_auth(manager, websocket, ratelimited = rl_lst)
+                    return await ws_kill_no_auth(manager, websocket, ratelimited = rl_lst, code=WSCloseCode.Ratelimited)
                 logger.debug("Authenticated successfully to websocket")
                 await manager.send_personal_message({
                     "m": {
@@ -106,7 +77,7 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
                         "bots": [{"id": bot['id'], "ws_api": f"/api/bots/{bot['id']}/ws_events"} for bot in websocket.bots]
                     }
                 }, websocket)
-                await manager.identify(websocket)
+                manager.identify(websocket)
         
     try:
         if isinstance(event_filter, int):
@@ -117,25 +88,25 @@ async def websocket_bot_rtstats_v1(websocket: WebSocket):
         websocket.pubsub = redis_db.pubsub()
         for bot in websocket.bots:
             await websocket.pubsub.subscribe(f"bot-{bot['id']}")
-        websocket.tasks[str(uuid.uuid4())] = asyncio.create_task(ws_command_handler(websocket)) # Begin command handling and add it to tasks list
         
     except Exception:
-        return await ws_close(websocket, 4009)
-    websocket.tasks[str(uuid.uuid4())] = asyncio.create_task(dispatch_events_new(websocket))
+        return await ws_close(websocket, WSCloseCode.InternalError)
+
+    websocket.tasks[str(uuid.uuid4())] = asyncio.create_task(dispatch_events(websocket))
     try:
         while True:
             if not websocket.authorized:
                 return
             await asyncio.sleep(0)
     except Exception:
-        return await ws_close(websocket, 4008)
+        return await ws_close(websocket, WSCloseCode.InternalError)
 
-async def dispatch_events_new(websocket):
+async def dispatch_events(websocket):
     logger.debug("Running")
     async for msg in websocket.pubsub.listen():
         if not websocket.authorized:
-            raise Exception("No longer authorized")
             return
+
         logger.debug(f"Got message {msg}")
         if msg is None or not isinstance(msg.get("data"), bytes):
             continue
@@ -158,4 +129,8 @@ async def dispatch_events_new(websocket):
 
         if flag:
             logger.debug("Sending event now...")
-            rc = await manager.send_personal_message(event, websocket) 
+            try:
+                rc = await manager.send_personal_message(event, websocket)
+            except:
+                return await ws_close(websocket, WSCloseCode.InternalError)
+
