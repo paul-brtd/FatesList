@@ -3,6 +3,8 @@ import uuid
 import time
 import asyncio
 from loguru import logger
+import warnings
+
 
 async def redis_ipc_new(redis, cmd, msg = None, timeout=30, args: list = None):
     args = [] if not args else args
@@ -32,33 +34,7 @@ async def redis_ipc_new(redis, cmd, msg = None, timeout=30, args: list = None):
         return None
     return data if data else None
 
+# Deprecated
 async def redis_ipc(redis, cmd, msg = None, timeout=30, both = False, args: list = []):
-    cmd_id = str(uuid.uuid4())
-    if msg:
-        await redis.set(f"msg-{cmd_id}", orjson.dumps(msg), nx=True, ex=30)
-    await redis.publish("_worker", f"{cmd_id} {cmd}")
-    if both:
-        args = " ".join(args)
-        if args:
-            await redis.publish("_worker_fates", f"{cmd} {cmd_id} {args}")
-        else:
-            await redis.publish("_worker_fates", f"{cmd} {cmd_id}")
-
-    async def wait(id):
-        start_time = time.time()
-        whilde time.time() - start_time < timeout:
-            await asyncio.sleep(0)
-            data = await redis.get(id)
-            if data is None:
-                continue
-            return data
-
-    if both:
-        data2 = await wait(f"cmd-{cmd_id}")
-        data = await wait(cmd_id)
-        if not data2 or not data:
-            return None
-        return data, data2
-    else:
-        data = await wait(f"cmd-{cmd_id}")
-    return data if data else None     
+    warnings.warn("This function is deprecated. Use redis_ipc_new instead!")
+    return await redis_ipc_new(redis, cmd, msg = msg, timeout=timeout, args = args)
