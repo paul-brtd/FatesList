@@ -37,8 +37,8 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from config import (API_VERSION, TOKEN_DBG, TOKEN_MAIN, TOKEN_SERVER,
                     bot_dev_role, bots_role, discord_client_id,
-                    discord_client_secret, discord_redirect_uri, lynxfall_key,
-                    owner, sentry_dsn, session_key, site, worker_key)
+                    discord_client_secret, discord_redirect_uri,
+                    owner, sentry_dsn, session_key, site)
 from config._logger import logger
 from modules.core.error import WebError
 from modules.models import enums
@@ -327,8 +327,7 @@ async def finish_init(app, session_id, workers, dbs):
                 oc=OauthConfig(
                     client_id=discord_client_id,
                     client_secret=discord_client_secret,
-                    redirect_uri=discord_redirect_uri,
-                    lynxfall_key=lynxfall_key
+                    redirect_uri=discord_redirect_uri
                 ),
             )
         )

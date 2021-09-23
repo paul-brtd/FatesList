@@ -9,10 +9,8 @@ os.environ["LOGURU_LEVEL"] = "INFO" # Make this debug for debug info
 
 import uuid
 import signal
-import builtins
 from pathlib import Path
 import secrets as secrets_lib
-import hashlib
 import datetime
 from getpass import getpass
 import importlib
@@ -26,22 +24,22 @@ import click
 @click.group()
 def app():
     """Fates List Management"""
-    pass
+    ...
 
 @click.group()
 def site():
     """Fates List site management"""
-    pass
+    ...
 
 @click.group()
 def secrets():
     """Utilities to manage secrets"""
-    pass
+    ...
 
 @click.group()
 def db():
     """Utilities to manage databases such as backup etc."""
-
+    ...
 
 def error(ctx, msg: str, code: int = 1):
     click.secho(msg, fg="err", err=True)
@@ -120,7 +118,7 @@ def run_site(ctx, workers):
         signal.signal(sig, lambda *args, **kwargs: ...)
     
     class FatesRunner(BaseApplication):
-        def __init__(self, application: Callable, options: Dict[str, Any] = {}):
+        def __init__(self, application: Callable, options: Dict[str, Any]):
             self.options = options
             self.application = application
             super().__init__()
@@ -148,9 +146,9 @@ def run_site(ctx, workers):
         "max_requests": 1000
     }
     
-    app = _fappgen(str(session_id), workers, static_assets)
+    _app = _fappgen(str(session_id), workers, static_assets)
     try:
-        FatesRunner(app, options).run()
+        FatesRunner(_app, options).run()
     except BaseException as exc:
         logger.info(f"Site killed due to {type(exc).__name__}: {exc}")
         sys.exit(0)
@@ -504,7 +502,7 @@ def db_setup(home):
             db_backup()
         except Exception as exc:
             logger.error(f"Backup failed. Error is {exc}")
-            typer.confirm("Continue? ", abort=True)
+            click.confirm("Continue? ", abort=True)
 
         with Popen(["systemctl", "stop", "snowfall-dbs"], env=os.environ) as proc:
             proc.wait()

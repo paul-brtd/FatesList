@@ -1,0 +1,25 @@
+{
+    "servers": {
+        "main": "789934742128558080",
+        "testing": "845928429357367316",
+        "staff": "816130947274899487"
+    },
+    "roles": {
+        "staff_ping_add_role": "836326316188893275",
+        "bot_dev_role": "836326314344185876",
+        "bots_role": "836326315946672158",
+        "certified_bots_role": "836326315203887195",
+        "certified_dev_role": "836326313283026995",
+        "bronze_user_role": "880019238453116929",
+        "test_server_bots_role": "845940351339987004",
+        "test_server_staff_role": "846028433985503232",
+        "staff_server_access_granted_role": "845931695387181066"
+    },
+    "channels": {
+        "bot_logs": "836326348326043648",
+        "server_logs": "837048691965034496",
+        "appeals_channel": "836326351387623454",
+        "site_errors_channel": "836326323281592330"
+    },
+    "owner": "563808552288780322"
+}
