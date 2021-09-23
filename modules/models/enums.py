@@ -52,27 +52,27 @@ class CooldownBucket(Enum):
 
 class BotAdminOp(IntEnum):
     """Handles bot admin operations"""
-    _init_ = 'value __doc__ __perm__ __reason_needed__ __recursive__ __cooldown__'
-    requeue = 0, "Requeue Bot", 3, True, False, CooldownBucket.requeue
-    claim = 1, "Claim Bot", 2, False, False, None
-    unclaim = 2, "Unclaim Bot", 2, False, False, None
-    ban = 3, "Ban Bot", 3, True, False, CooldownBucket.ban
-    unban = 4, "Unban Bot", 3, True , False, CooldownBucket.ban
-    certify = 5, "Certify Bot", 5, False, False, None
-    uncertify = 6, "Uncertify Bot", 5, True, False, None
-    approve = 7, "Approve Bot", 2, True, False, None
-    deny = 8, "Deny Bot", 2, True, False, None
-    unverify = 9, "Unverify Bot", 3, True, False, CooldownBucket.ban
-    transfer = 10, "Transfer Bot Ownership", 4, True, False, CooldownBucket.transfer
-    root_update = 11, "Root State Update", 5, True, False, CooldownBucket.transfer
-    reset_votes = 12, "Reset All Votes", (5, 7), True, True, CooldownBucket.reset
-    dummy_recursive = 13, "Dummy Resursive", 1, False, True, None
-    dummy_nrecursive = 14, "Dummy Nonrecursive", 1, False, False, None
-    staff_lock = 15, "Staff Lock Bot", 4, True, False, None
-    staff_unlock = 16, "Staff Unlock Bot", 4, True, False, CooldownBucket.lock
-    bot_lock = 17, "Bot Lock", 0, False, False, None
-    bot_unlock = 18, "Bot Unlock", 4, False, False, CooldownBucket.lock
-    bot_delete = 19, "Bot Delete", 4, True, False, CooldownBucket.delete
+    _init_ = 'value __doc__ __perm__ __reason_needed__ __recursive__ __cooldown__ __new_ipc__'
+    requeue = 0, "Requeue Bot", 3, True, False, CooldownBucket.requeue, "REQUEUE"
+    claim = 1, "Claim Bot", 2, False, False, None, "CLAIM"
+    unclaim = 2, "Unclaim Bot", 2, False, False, None, "UNCLAIM"
+    ban = 3, "Ban Bot", 3, True, False, CooldownBucket.ban, "BAN"
+    unban = 4, "Unban Bot", 3, True , False, CooldownBucket.ban, "UNBAN"
+    certify = 5, "Certify Bot", 5, False, False, None, "CERTIFY"
+    uncertify = 6, "Uncertify Bot", 5, True, False, None, "UNCERTIFY"
+    approve = 7, "Approve Bot", 2, True, False, None, "APPROVE"
+    deny = 8, "Deny Bot", 2, True, False, None, "DENY"
+    unverify = 9, "Unverify Bot", 3, True, False, CooldownBucket.ban, "UNVERIFY"
+    transfer = 10, "Transfer Bot Ownership", 4, True, False, CooldownBucket.transfer, "TRANSFER"
+    root_update = 11, "Root State Update", 5, True, False, CooldownBucket.transfer, "ROOTUPDATE"
+    reset_votes = 12, "Reset All Votes", (5, 7), True, True, CooldownBucket.reset, "RESETVOTES"
+    dummy_recursive = 13, "Dummy Resursive", 1, False, True, None, "DUMMYR"
+    dummy_nrecursive = 14, "Dummy Nonrecursive", 1, False, False, None, "DUMMYNR"
+    staff_lock = 15, "Staff Lock Bot", 4, True, False, None, "SLOCK"
+    staff_unlock = 16, "Staff Unlock Bot", 4, True, False, CooldownBucket.lock, "SUNLOCK"
+    bot_lock = 17, "Bot Lock", 0, False, False, None, "BLOCK"
+    bot_unlock = 18, "Bot Unlock", 4, False, False, CooldownBucket.lock, "BUNLOCK"
+    bot_delete = 19, "Bot Delete", 4, True, False, CooldownBucket.delete, "DELETE"
 
 class BotLock(IntEnum):
     _init_ = 'value __doc__'
