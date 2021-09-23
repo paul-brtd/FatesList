@@ -168,11 +168,12 @@ def manager_run():
 @site.command("goipc")
 def goipc():
     """Starts up goipc"""
-    from config import TOKEN_MAIN, main_server, bot_logs, certified_bots_role
+    from config import TOKEN_MAIN, main_server, bot_logs, certified_bots_role, certified_dev_role
     os.environ["TOKEN"] = TOKEN_MAIN
     os.environ["MAIN_SERVER"] = str(main_server)
     os.environ["SITE_LOGS"] = str(bot_logs)
     os.environ["CERTIFIED_BOT_ROLE"] = str(certified_bots_role)
+    os.environ["CERTIFIED_DEV_ROLE"] = str(certified_dev_role)
     os.execv("modules/infra/dragon/rewrite/dragon", ["dragon"])
 
 @site.command("enums2md")
