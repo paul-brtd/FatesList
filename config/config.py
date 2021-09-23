@@ -8,6 +8,7 @@ site_errors_channel = 836326323281592330 # Where to log site errors
 bots_role = 836326315946672158 # BOTS role in support server
 staff_ping_add_role=836326316188893275
 bot_dev_role = 836326314344185876 # BOT Developer in support server
+certified_bots_role = 836326315203887195
 certified_dev_role = 836326313283026995 # Certified Developer in support server
 main_server = 789934742128558080 # Main server
 staff_server = 816130947274899487 # The staff server
