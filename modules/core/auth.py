@@ -56,7 +56,7 @@ async def manager_check(
     if request.client.host != "127.0.0.1":
         raise HTTPException(
             status_code=400,
-            detail="You may not use the admin api outside of allowed ips!"
+            detail="You may not use the admin api outside of localhost. This API is deprecated"
         )
 
     if not secure_strcmp(Dragon.split(":")[0], manager_key):

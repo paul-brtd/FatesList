@@ -24,3 +24,6 @@ class BotCommandWithId(BotCommand):
 
 class BotCommandsGet(BaseModel):
     __root__: Dict[str, List[BotCommandWithId]]
+
+class BotCommands(BaseModel):
+    commands: List[BotCommand]
