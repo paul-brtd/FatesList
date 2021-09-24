@@ -1,7 +1,7 @@
 from modules.core import *
 
 from ..base import API_VERSION
-from .models import APIResponse, BotCommandsGet, BotCommand, IDResponse, enums,BotCommands
+from .models import APIResponse, BotCommandsGet, BotCommand, IDResponse, enums, BotCommands, BotCommandDelete
 
 router = APIRouter(
     prefix = f"/api/v{API_VERSION}/bots",
@@ -48,8 +48,8 @@ async def add_commands(request: Request, bot_id: int, commands: BotCommands):
     await bot_add_event(bot_id, enums.APIEvents.command_add, {"user": None, "id": ids})
     return api_success(id = ids)
 
-@router.delete(
-    "/{bot_id}/commands/{id}", 
+@router.patch(
+    "/{bot_id}/commands", 
     response_model = APIResponse, 
     dependencies=[
         Depends(
@@ -60,12 +60,21 @@ async def add_commands(request: Request, bot_id: int, commands: BotCommands):
         ), 
         Depends(bot_auth_check)
     ],
-    operation_id="delete_command"
+    operation_id="delete_commands"
 )
-async def delete_command(request: Request, bot_id: int, id: uuid.UUID):
-    cmd = await db.fetchval("SELECT id FROM bot_commands WHERE id = $1 AND bot_id = $2", id, bot_id)
-    if not cmd:
-        return abort(404)
-    await db.execute("DELETE FROM bot_commands WHERE id = $1 AND bot_id = $2", id, bot_id)
-    await bot_add_event(bot_id, enums.APIEvents.command_delete, {"user": None, "id": id})
+async def delete_commands(request: Request, bot_id: int, commands: BotCommandDelete):
+    """
+    If ids/names is provided, all commands with said ids/names will be deleted (this can be used together). 
+    If nuke is provided, then all commands will deleted. Ids/names and nuke cannot be used at the same time
+    """
+    if commands.nuke:
+        await db.execute("DELETE FROM bot_commands WHERE bot_id = $1", bot_id)
+        await bot_add_event(bot_id, enums.APIEvents.command_delete, {"user": None, "ids": [], "names": [], "nuke": True})
+        return api_success()
+
+    for id in commands.ids:
+        await db.execute("DELETE FROM bot_commands WHERE id = $1 AND bot_id = $2", id, bot_id)
+    for name in commands.names:
+        await db.execute("DELETE FROM bot_commands WHERE cmd_name = $1 AND bot_id = $2", name, bot_id)
+    await bot_add_event(bot_id, enums.APIEvents.command_delete, {"user": None, "ids": commands.ids, "names": commands.names, "nuke": False})
     return api_success()
