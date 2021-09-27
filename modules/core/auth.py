@@ -6,9 +6,6 @@ bot_auth_header = APIKeyHeader(name="Authorization", description="These endpoint
 
 user_auth_header = APIKeyHeader(name="Authorization", description="These endpoints require a user token. You can get this from your profile under the User Token section. If you are using this for voting, make sure to allow users to opt out!\n\nA prefix of `User` before the user token such as `User abcdef` is supported and can be used to avoid ambiguity but is not required outside of endpoints that have both a user and a bot authentication option such as Get Votes. In such endpoints, the default will always be a bot auth unless you prefix the token with `User`", scheme_name="User")
 
-
-dragon_header = APIKeyHeader(name="Dragon", description="Dragon Auth (yes, the name is weird) is for the the our internal admin API. Format is MANAGER_KEY:USER_ID@USER_TOKEN. Raw access to Dragon Auth is only given to and used by our manager bot, the people developing Fates List and some highly privileged staff members. This can only be used from allowed IPs", scheme_name="Dragon")
-
 async def _bot_auth(bot_id: int, api_token: str):
     return await db.fetchval("SELECT bot_id FROM bots WHERE bot_id = $1 AND api_token = $2", bot_id, str(api_token))
 
@@ -33,10 +30,7 @@ async def user_auth_check(request: Request, user_id: int, user_auth: str = Secur
         user_auth = user_auth.replace("User ", "", 1)
     id = await _user_auth(user_id, user_auth)
     if id is None:
-        if request.client.host == "127.0.0.1" and "votes" in request.url.path and "bots" in request.url.path:
-            pass
-        else:
-            raise HTTPException(status_code=401, detail=f"Invalid User Token for route {request.url.path} and IP {request.client.host}")
+        raise HTTPException(status_code=401, detail=f"Invalid User Token for route {request.url.path} and IP {request.client.host}")
 
 async def bot_user_auth_check(bot_id: int, user_id: Optional[int] = None, bot_auth: str = Security(bot_auth_header), user_auth: str = Security(user_auth_header)):
     if user_auth.startswith("User "):
@@ -48,38 +42,3 @@ async def bot_user_auth_check(bot_id: int, user_id: Optional[int] = None, bot_au
     
     if not id:
         raise HTTPException(status_code=401, detail=f"Invalid {scheme} Token")
-
-async def manager_check(
-    request: Request, 
-    Dragon: str = Security(dragon_header)
-):
-    if request.client.host != "127.0.0.1":
-        raise HTTPException(
-            status_code=400,
-            detail="You may not use the admin api outside of localhost. This API is deprecated"
-        )
-
-    if not secure_strcmp(Dragon.split(":")[0], manager_key):
-        raise HTTPException(
-            status_code=401, 
-            detail="Dragon auth failed due to a missing or invalid manager key",
-        )
-
-    user_id, user_token = Dragon.split(":")[1].split("@")
-    try:
-        user_id = int(user_id)
-    except ValueError:
-        raise HTTPException(
-            detail="Dragon auth failed as user id is not an integer",
-            status_code=403
-        )
-
-    id = await _user_auth(user_id, user_token)
-    if id is None:
-        raise HTTPException(
-            detail="Dragon auth failed due to invalid user auth. Please run /usertoken on the staff server to set your user token",
-            status_code=403
-        )
-
-    guild = client.guilds[0]
-    request.state.user = guild.get_member(user_id)
