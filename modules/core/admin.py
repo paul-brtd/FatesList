@@ -189,8 +189,12 @@ class BotActions():
         owner = int(self.user_id)            
         bot_name = (await get_bot(self.bot_id))["username"]
 
-        add_embed = discord.Embed(title="New Bot!", description=f"<@{owner}> added the bot <@{self.bot_id}>({bot_name}) to queue!", color=0x00ff00)
-        add_embed.add_field(name="Link", value=f"https://fateslist.xyz/bot/{self.bot_id}")
+        add_embed = discord.Embed(
+            title="New Bot!", 
+            description=f"<@{owner}> added the bot <@{self.bot_id}>({bot_name}) to queue!", 
+            color=0x00ff00,
+            url=f"https://fateslist.xyz/bot/{self.bot_id}"
+        )
         msg = {"content": f"<@&{staff_ping_add_role}>", "embed": add_embed.to_dict(), "channel_id": str(bot_logs), "mention_roles": [str(staff_ping_add_role)]}
         await redis_ipc_new(redis_db, "SENDMSG", msg=msg, timeout=None)
 
@@ -233,8 +237,12 @@ class BotActions():
                 else:
                     await connection.execute("UPDATE vanity SET vanity_url = $1 WHERE redirect = $2", self.vanity, self.bot_id) # Update the vanity since bot already use it
         await bot_add_event(self.bot_id, enums.APIEvents.bot_edit, {"user": str(self.user_id)}) # Send event
-        edit_embed = discord.Embed(title="Bot Edit!", description=f"<@{self.user_id}> has edited the bot <@{self.bot_id}>!", color=0x00ff00)
-        edit_embed.add_field(name="Link", value=f"https://fateslist.xyz/bot/{self.bot_id}")
+        edit_embed = discord.Embed(
+            title="Bot Edit!", 
+            description=f"<@{self.user_id}> has edited the bot <@{self.bot_id}>!", 
+            color=0x00ff00,
+            url=f"https://fateslist.xyz/bot/{self.bot_id}"
+        )
         msg = {"content": "", "embed": edit_embed.to_dict(), "channel_id": str(bot_logs), "mention_roles": []}
         await redis_ipc_new(redis_db, "SENDMSG", msg=msg, timeout=None)
 

@@ -84,16 +84,14 @@ async def get_cache_user(request: Request, user_id: int):
         Depends(user_auth_check)
     ]
 )
-async def add_bot(request: Request, user_id: int, bot_id: int, bot: BotMeta):
+async def add_bot(request: Request, user_id: int, bot_id: int, bot: BotMeta, worker_session = Depends(worker_session)):
     """
-    Adds a bot to fates list. 
-    
-    Due to how Fates List adds and edits bots using RabbitMQ, this will return a 202 and not a 200 on success
+    Adds a bot to fates list
     """
     bot_dict = bot.dict()
     bot_dict["bot_id"] = bot_id
     bot_dict["user_id"] = user_id
-    bot_adder = BotActions(db, bot_dict)
+    bot_adder = BotActions(worker_session.postgres, bot_dict)
     rc = await bot_adder.add_bot()
     if rc is None:
         return api_success(f"{site_url}/bot/{bot_id}", status_code = 202)

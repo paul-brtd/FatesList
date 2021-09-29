@@ -167,6 +167,7 @@ def goipc():
     os.environ["SITE_LOGS"] = str(bot_logs)
     os.environ["CERTIFIED_BOT_ROLE"] = str(certified_bots_role)
     os.environ["CERTIFIED_DEV_ROLE"] = str(certified_dev_role)
+    os.system("cd modules/infra/dragon && go build -v . && cd ../../..")
     os.execv("modules/infra/dragon/dragon", ["dragon"])
 
 @site.command("enums2md")
