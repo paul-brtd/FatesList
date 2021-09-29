@@ -11,5 +11,4 @@ from .renderers import *  # Import the renderers for bot, index etc.
 from .reviews import *  # Import review parser
 from .system import *  # System module
 from .templating import *  # Import the HTML templating system
-from .ws import *  # Import websocket management
 import modules.core.classes as core
