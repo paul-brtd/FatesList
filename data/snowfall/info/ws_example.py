@@ -46,8 +46,6 @@ async def run():
                 payload = {"id": str(bot_id), "token": api_token, "bot": True, "send_all": True, "send_none": True}
                 await websocket.send(json.dumps(payload))
                 print(f"Sending {json.dumps(payload)}")
-            res = await websocket.recv()
-            print(f"DEBUG: Got response {res}")
 loop = asyncio.new_event_loop()
 asyncio.set_event_loop(loop)
 loop.run_until_complete(run())
