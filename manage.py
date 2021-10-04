@@ -417,7 +417,8 @@ def db_shell():
 
 @db.command("apply")
 @click.option('-m', "module", type=click.types.STRING, required=True, help="Input migration to apply")
-def db_apply(module):
+@click.pass_context
+def db_apply(ctx, module):
     """Apply Fates List database migration"""
     from config._logger import logger
     import uvloop
@@ -431,6 +432,7 @@ def db_apply(module):
         _ = migration.apply # Check for apply function
     except Exception as exc:
         return error(
+            ctx,
             f"Could not import migration file: {exc}"
         )
 
@@ -493,7 +495,8 @@ def db_wipeuser(user_id):
 
 @db.command("setup")
 @click.option('--home', type=click.Path(exists=True, path_type=Path), required=False, help="Home directory for setup", default=Path.home())
-def db_setup(home):
+@click.pass_context
+def db_setup(ctx, home):
     """Setup Snowfall (the Fates List database system)"""
     from config._logger import logger
     click.confirm(
@@ -503,7 +506,7 @@ def db_setup(home):
     logger.info("Preparing to setup snowtuft")
 
     if not home.exists():
-        return error("Invalid user specified for primary_user")
+        return error(ctx, "Invalid user specified for primary_user")
 
     with open("/etc/sysctl.conf", "w") as sysctl_file:
         lines = [
@@ -544,7 +547,6 @@ def db_setup(home):
     
     Path("/snowfall/docker/db/postgres").mkdir(parents=True)
     Path("/snowfall/docker/db/redis").mkdir(parents=True)
-    Path("/snowfall/docker/db/rabbit").mkdir(parents=True)
     
     pg_pwd = secrets_lib.token_urlsafe()
     
@@ -557,14 +559,7 @@ def db_setup(home):
         env_pg.write("\n".join(lines))
     
     erlang_shared_cookie = secrets_lib.token_urlsafe()
-    
-    with open("/snowfall/docker/env.rabbit", "w") as env_rabbit:
-        lines = [
-            "NODENAME=fateslist_rabbit",
-            f"RABBITMQ_ERLANG_COOKIE={erlang_shared_cookie}"
-        ]
-        env_rabbit.write("\n".join(lines))
-    
+        
     shutil.copytree("data/snowfall/docker/scripts", "/snowfall/docker/scripts", dirs_exist_ok=True)
     shutil.copy2("data/snowfall/docker/config/docker-compose.yml", "/snowfall/docker")
     
@@ -601,7 +596,6 @@ def db_setup(home):
                 "#!/bin/bash",
                 f"/usr/bin/docker {op} snowfall.postgres",
                 f"/usr/bin/docker {op} snowfall.redis",
-                f"/usr/bin/docker {op} snowfall.rabbit"
             ]
             action_script.write("\n".join(lines))
             
