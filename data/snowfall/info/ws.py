@@ -15,7 +15,7 @@ from modules.models import enums
 URL = "wss://fateslist.xyz/api/ws/"
 
 class Bot():
-    def __init__(self, bot_id, token, send_all, send_none):
+    def __init__(self, bot_id: int, token: str, send_all: bool = True, send_none: bool = True):
         self.bot_id = bot_id
         self.token = token
         self.send_all = send_all

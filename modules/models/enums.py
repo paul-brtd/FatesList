@@ -4,25 +4,7 @@ from typing import Dict, ForwardRef, List, Optional
 from aenum import Enum, IntEnum
 from pydantic import BaseModel
 
-
-class ULAState(IntEnum):
-    _init_ = "value __doc__"
-    pending = 0, "Pending Verification"
-    approved = 1, "Approved"
-
-class ULAMethod(IntEnum):
-    _init_ = "value __doc__"
-    get = 0, "GET method"
-    post = 1, "POST method"
-    put = 2, "PUT method"
-    patch = 3, "PATCH method"
-    delete = 4, "DELETE method"
-
-class ULAFeature(IntEnum):
-    _init_ = "value __doc__"
-    get_bot = 1, "Get Bot"
-    post_stats = 2, "Post Stats"
-    get_user_voted = 3, "Get User Voted"
+from modules.models.ula import *
 
 
 class WidgetFormat(Enum):
@@ -37,11 +19,7 @@ class PromotionType(IntEnum):
     announcement = 0, "Announcement"
     promotion = 1, "Promotion"
     generic = 2, "Generic"
-    
-class WebSocketCommand(IntEnum):
-    _init_ = 'value __doc__'
-    dispatch_old = 0, "Dispatch Old Events"
-    
+        
 class CooldownBucket(Enum):
     requeue = 60*0.2
     ban = 60*0.3
@@ -50,49 +28,33 @@ class CooldownBucket(Enum):
     lock = 60*2
     delete = 60*3.5
 
-class BotAdminOp(IntEnum):
+class BotAdminOp(Enum):
     """Handles bot admin operations"""
-    _init_ = 'value __doc__ __perm__ __reason_needed__ __recursive__ __cooldown__ __new_ipc__'
-    requeue = 0, "Requeue Bot", 3, True, False, CooldownBucket.requeue, "REQUEUE"
-    claim = 1, "Claim Bot", 2, False, False, None, "CLAIM"
-    unclaim = 2, "Unclaim Bot", 2, False, False, None, "UNCLAIM"
-    ban = 3, "Ban Bot", 3, True, False, CooldownBucket.ban, "BAN"
-    unban = 4, "Unban Bot", 3, True , False, CooldownBucket.ban, "UNBAN"
-    certify = 5, "Certify Bot", 5, False, False, None, "CERTIFY"
-    uncertify = 6, "Uncertify Bot", 5, True, False, None, "UNCERTIFY"
-    approve = 7, "Approve Bot", 2, True, False, None, "APPROVE"
-    deny = 8, "Deny Bot", 2, True, False, None, "DENY"
-    unverify = 9, "Unverify Bot", 3, True, False, CooldownBucket.ban, "UNVERIFY"
-    transfer = 10, "Transfer Bot Ownership", 4, True, False, CooldownBucket.transfer, "TRANSFER"
-    root_update = 11, "Root State Update", 5, True, False, CooldownBucket.transfer, "ROOTUPDATE"
-    reset_votes = 12, "Reset All Votes", (5, 7), True, True, CooldownBucket.reset, "RESETVOTES"
-    dummy_recursive = 13, "Dummy Resursive", 1, False, True, None, "DUMMYR"
-    dummy_nrecursive = 14, "Dummy Nonrecursive", 1, False, False, None, "DUMMYNR"
-    staff_lock = 15, "Staff Lock Bot", 4, True, False, None, "SLOCK"
-    staff_unlock = 16, "Staff Unlock Bot", 4, True, False, CooldownBucket.lock, "SUNLOCK"
-    bot_lock = 17, "Bot Lock", 0, False, False, None, "BLOCK"
-    bot_unlock = 18, "Bot Unlock", 4, False, False, CooldownBucket.lock, "BUNLOCK"
-    bot_delete = 19, "Bot Delete", 4, True, False, CooldownBucket.delete, "DELETE"
+    _init_ = 'value __doc__ __perm__ __reason_needed__ __recursive__ __cooldown__'
+    requeue = "REQUEUE", "Requeue Bot", 3, True, False, CooldownBucket.requeue
+    claim = "CLAIM", "Claim Bot", 2, False, False, None
+    unclaim = "UNCLAIM", "Unclaim Bot", 2, False, False, None
+    ban = "BAN", "Ban Bot", 3, True, False, CooldownBucket.ban
+    unban = "UNBAN", "Unban Bot", 3, True , False, CooldownBucket.ban
+    certify = "CERTIFY", "Certify Bot", 5, False, False, None
+    uncertify = "UNCERTTIFY", "Uncertify Bot", 5, True, False, None
+    approve = "APPROVE", "Approve Bot", 2, True, False, None
+    deny = "DENY", "Deny Bot", 2, True, False, None
+    unverify = "UNVERIFY", "Unverify Bot", 3, True, False, CooldownBucket.ban
+    transfer = "TRANSFER", "Transfer Bot Ownership", 4, True, False, CooldownBucket.transfer
+    root_update = "ROOTUPDATE", "Root State Update", 5, True, False, CooldownBucket.transfer
+    reset_votes = "RESETVOTES", "Reset All Votes", (5, 7), True, True, CooldownBucket.reset
+    staff_lock = "SLOCK", "Staff Lock Bot", 4, True, False, None
+    staff_unlock = "SUNLOCK", "Staff Unlock Bot", 4, True, False, CooldownBucket.lock
+    bot_lock = "BLOCK", "Bot Lock", 0, False, False, None
+    bot_unlock = "BUNLOCK", "Bot Unlock", 4, False, False, CooldownBucket.lock
+    bot_delete = "DELETE", "Bot Delete", 4, True, False, CooldownBucket.delete
 
 class BotLock(IntEnum):
     _init_ = 'value __doc__'
     unlocked = 0, "Bot unlocked for editing"
     locked = 1, "Bot locked for editing"
     locked_staff = 2, "Bot locked by staff"
-    locked_staff_spam = 3, "Bot locked by staff due to spamming edits"
-
-class PartnerAdType(Enum):
-    _init_ = 'value __doc__'
-    server = "server", "Server Ad"
-    site = "site", "Site Ad"
-
-    def get_col(self):
-        return f"{self.value}_ad" 
-
-class PartnerType(IntEnum):
-    _init_ = 'value __doc__'
-    bot = 0, "Bot"
-    guild = 1, "Guild"
 
 class UserState(IntEnum):
     _init_ = 'value __doc__ __sitelock__'
@@ -101,23 +63,11 @@ class UserState(IntEnum):
     pedit_ban = 2, "Profile Edit Ban", False
     ddr_ban = 3, "Data Deletion Request Ban", True
 
-class BotRequeue(IntEnum):
-    _init_ = 'value __doc__'
-    claim = 0, "Claim Bot"
-    requeue = 1, "Requeue Bot"
-    unclaim = 2, "Unclaim Bot"
-
 class WebhookType(IntEnum):
     _init_ = 'value __doc__'
     vote = 0, "Vote Webhook"
     discord = 1, "Discord Integration"
     fc = 2, "Fates Client"
-
-class WebhookResolver(IntEnum):
-    _init_ = 'value __doc__'
-    not_ack = 0, "Not Acknowledged"
-    error = 1, "Post Error"
-    posted = 2, "Posted"
 
 class Status(IntEnum):
     """Status object (See https://docs.fateslist.xyz/basics/basic-structures#status for more information)"""
@@ -138,20 +88,6 @@ class BaseUser(BaseModel):
     disc: str
     status: Status
     bot: bool
-
-    def __str__(self):
-        """
-        :return: Returns the username
-        :rtype: str
-        """
-        return self.username
-
-    def get_status(self):
-        """
-        :return: Returns a status object for the bot
-        :rtype: Status
-        """
-        return Status(status = self.status)    
     
 class BotState(IntEnum):
     _init_ = 'value __doc__'
@@ -175,18 +111,6 @@ class Vanity(IntEnum):
     server = 0, "Server"
     bot = 1, "Bot"
     profile = 2, "Profile"
-
-
-class WSCloseCode(IntEnum):
-    """
-    Websocket close codes used by Fates List
-    """
-    _init_ = "value __doc__"
-    InvalidConn = 4000, "Invalid identity or connection"
-    InvalidAuth = 4004, "Invalid authentication"
-    Ratelimited = 4012, "Ratelimited"
-    InternalError = 4500, "Internal client or server error"
-
 
 class CommandType(IntEnum):
     """
@@ -243,20 +167,4 @@ class APIEvents(IntEnum):
     server_ban = 74, "Server Ban Event"
     server_hide = 75, "Server Hide Event" # Whenever someone hides their server
     server_archive = 76, "Server Archive Event" # When someone archives their server
-    ws_identity = 90, "Websocket Identity Event"
-    ws_identity_res = 91, "Websocket Identity Response Event"
-    ws_kill = 92, "Websocket Kill Event"
-    ws_status = 93, "Websocket Status Event"
-    ws_event = 94, "Websocket Event"
     vote_reminder = 110, "Vote Reminder"
-
-class APIEventTypes(IntEnum):
-    _init_ = "value __doc__"
-    ws_invalid = 0, "Websocket Invalid Response"
-    ws_no_auth = 1, "Websocket No Authentication"
-    ws_ready = 3, "Websocket Ready"
-    ws_event_single = 4, "Single Websocket Event"
-    ws_event_multi = 5, "Mutliple Websocket Events"
-    auth_token = 20, "Token Auth"
-    auth_manager_key = 21, "Manager Auth"
-    vote_webhook = 40, "Vote Webhook Event"
