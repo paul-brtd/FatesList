@@ -188,12 +188,36 @@ def site_enum2html():
         v = enums.__dict__[key]
         if isinstance(v, aenum.EnumType):
             props = list(v)
+            try:
+                fields = v._init_
+            except AttributeError:
+                fields = []
             md[key] = {}
             md[key]["doc"] = "\n"
-            md[key]["table"] = "| Name | Value | Description |\n| :--- | :--- | :--- |\n"
+            md[key]["table"] = "| Name | Value | Description |"
+            nl = "\n| :--- | :--- | :--- |"
+            keys = []
+            for ext in fields:
+                if ext == "value" or ext == "__doc__":
+                    continue
+                md[key]["table"] += f" {ext.replace('_', ' ').title()} |"
+                nl += " :--- |"
+                keys.append(ext)
+            md[key]["table"] += f"{nl}\n"
+
             if v.__doc__ and v.__doc__ != "An enumeration.":
                 md[key]["doc"] = "\n" + v.__doc__ + "\n\n"
-            md[key]["table"] += "\n".join([f"| {prop.name} | {prop.value} | {prop.__doc__} |" for prop in props])
+            
+            for prop in props:
+                md[key]["table"] += f"| {prop.name} | {prop.value} | {prop.__doc__} |"
+                for prop_key in keys:
+                    tmp = getattr(prop, prop_key)
+                    try:
+                        tmp = str(tmp) + f" ({tmp.value})"
+                    except AttributeError:
+                        tmp = str(tmp) 
+                    md[key]["table"] += f" {tmp} |"
+                md[key]["table"] += "\n"
     
     md = dict(sorted(md.items()))
 
