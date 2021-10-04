@@ -372,6 +372,9 @@ def staticfiles_compile():
 
 
 @db.command("backup")
+def db_backup_cmd():
+    return db_backup()
+
 def db_backup():
     """Backs up the Fates List database"""
     from config._logger import logger
@@ -495,8 +498,9 @@ def db_wipeuser(user_id):
 
 @db.command("setup")
 @click.option('--home', type=click.Path(exists=True, path_type=Path), required=False, help="Home directory for setup", default=Path.home())
+@click.option('--backup/--no-backup', default=False)
 @click.pass_context
-def db_setup(ctx, home):
+def db_setup(ctx, home, backup):
     """Setup Snowfall (the Fates List database system)"""
     from config._logger import logger
     click.confirm(
@@ -521,7 +525,8 @@ def db_setup(ctx, home):
     if Path("/snowfall/docker/env_done").exists():
         logger.info("Existing docker setup found. Backing it up...")
         try:
-            db_backup()
+            if backup:
+                db_backup()
         except Exception as exc:
             logger.error(f"Backup failed. Error is {exc}")
             click.confirm("Continue? ", abort=True)
