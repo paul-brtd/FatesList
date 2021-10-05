@@ -210,6 +210,10 @@ async def transfer_bot_ownership(request: Request, user_id: int, bot_id: int, tr
             "Specified user is not an actual user"
         )
 
+    lock = await db.fetchval("SELECT lock FROM bots WHERE bot_id = $1", int(bot_id))
+    lock = enums.BotLock(lock)
+    if lock != enums.BotLock.unlocked:
+        return f"This bot cannot be edited as it has been locked with a code of {int(lock)}: ({lock.__doc__}). If this bot is not staff staff locked, join the support server and run +unlock <BOT> to unlock it."
 
     async with db.acquire() as conn:
         async with conn.transaction() as tr:
