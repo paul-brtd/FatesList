@@ -48,10 +48,15 @@ async def bot_settings(request: Request, bot_id: int):
      
     owners_lst = [
         (await get_user(obj["owner"], user_only = True, worker_session = worker_session))
-        for obj in owners if obj["owner"] is not None
+        for obj in owners if obj["owner"] is not None and obj["main"]
+    ]
+
+    owners_lst_extra = [
+        (await get_user(obj["owner"], user_only = True, worker_session = worker_session))
+        for obj in owners if obj["owner"] is not None and not obj["main"]
     ]
     
-    owners_html = gen_owner_html(owners_lst)   
+    owners_html = gen_owner_html(owners_lst + owners_lst_extra)   
         
     bot["extra_owners"] = ",".join([str(o["owner"]) for o in owners if not o["main"]])
     bot["user"] = await get_bot(bot_id, worker_session = worker_session)

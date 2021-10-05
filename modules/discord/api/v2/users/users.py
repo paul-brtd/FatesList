@@ -4,7 +4,7 @@ from modules.core import *
 from modules.core.classes import User as _User
 
 from ..base import API_VERSION
-from .models import APIResponse, BotMeta, enums, BaseUser, UserDescEdit, UserJSPatch
+from .models import APIResponse, BotMeta, enums, BaseUser, UserDescEdit, UserJSPatch, OwnershipTransfer
 
 cleaner = Cleaner(remove_unknown_tags=False)
 
@@ -87,6 +87,7 @@ async def get_cache_user(request: Request, user_id: int):
 async def add_bot(request: Request, user_id: int, bot_id: int, bot: BotMeta, worker_session = Depends(worker_session)):
     """
     Adds a bot to fates list
+    Due to backward compatibility, this will return a 202 and not a 200 on success
     """
     bot_dict = bot.dict()
     bot_dict["bot_id"] = bot_id
@@ -111,8 +112,8 @@ async def add_bot(request: Request, user_id: int, bot_id: int, bot: BotMeta, wor
 )
 async def edit_bot(request: Request, user_id: int, bot_id: int, bot: BotMeta):
     """
-    Edits a bot, the owner here should be the owner editing the bot.
-    Due to how Fates List edits bota using RabbitMQ, this will return a 202 and not a 200 on success
+    Edits a bot, the owner here must be the owner editing the bot.
+    Due to backward compatibility, this will return a 202 and not a 200 on success
     """
     bot_dict = bot.dict()
     bot_dict["bot_id"] = bot_id
@@ -135,12 +136,15 @@ async def edit_bot(request: Request, user_id: int, bot_id: int, bot: BotMeta):
     ]
 )
 async def delete_bot(request: Request, user_id: int, bot_id: int):
-    """Deletes a bot you are the main owner of. Authorized staff should be using bot admin ops instead"""
+    """Deletes a bot."""
     check = await db.fetchval("SELECT main FROM bot_owner WHERE bot_id = $1 AND owner = $2", bot_id, user_id)
     if not check:
-        return api_error(
-            "You aren't the owner of this bot. Only bot owners may delete bots"
-        )
+        certified = await db.fetchval("SELECT bot_id FROM bots WHERE bot_id = $1 AND state = $2", bot_id, enums.BotState.certified)
+        if certified or check is None:
+            return api_error(
+                "You aren't the owner of this bot. Only main bot owners may delete certified bots and only owners can delete normal bots"
+            )
+        
     lock = await db.fetchval("SELECT lock FROM bots WHERE bot_id = $1", bot_id)
     lock = enums.BotLock(lock)
     if lock != enums.BotLock.unlocked:
@@ -162,5 +166,58 @@ async def delete_bot(request: Request, user_id: int, bot_id: int):
     msg = {"content": "", "embed": delete_embed.to_dict(), "channel_id": str(bot_logs), "mention_roles": []}
     await redis_ipc_new(redis_db, "SENDMSG", msg=msg, timeout=None)
 
-    await bot_add_event(bot_id, "delete_bot", {"user": user_id})    
+    await bot_add_event(bot_id, enums.APIEvents.bot_delete, {"user": user_id})    
     return api_success(status_code = 202)
+
+@router.patch(
+    "/{user_id}/bots/{bot_id}/ownership",
+    dependencies=[
+        #Depends(
+        #    Ratelimiter(
+        #        global_limit = Limit(times=1, minutes=5)
+        #    )
+        #),
+        Depends(user_auth_check)
+    ]
+)
+
+async def transfer_bot_ownership(request: Request, user_id: int, bot_id: int, transfer: OwnershipTransfer):
+    transfer.new_owner = int(transfer.new_owner)
+    head_admin, _, _ = await is_staff(staff_roles, user_id, 6)
+    main_owner = await db.fetchval("SELECT main FROM bot_owner WHERE bot_id = $1 AND owner = $2", bot_id, user_id)
+    if not head_admin:
+        if not main_owner:
+            return api_error(
+                "You aren't the owner of this bot. Only main bot owners and head admins may transfer bot ownership"
+            )
+    
+        count = await db.fetchval("SELECT bot_id FROM bot_owner WHERE bot_id = $1 AND owner = $2", bot_id, transfer.new_owner)
+        if not count:
+            return api_error(
+                "This owner first must be listed in extra owners in order to transfer ownership to them"
+            )
+            
+    elif not main_owner:
+        check = await is_staff_unlocked(bot_id, user_id)
+        if not check:
+            return api_error(
+                "You must staff unlock this bot to transfer ownership"
+            )
+    
+    check = await get_user(transfer.new_owner)
+    if not check:
+        return api_error(
+            "Specified user is not an actual user"
+        )
+
+
+    async with db.acquire() as conn:
+        async with conn.transaction() as tr:
+            await conn.execute("UPDATE bot_owner SET main = false WHERE main = true AND bot_id = $1", bot_id)
+            await conn.execute("INSERT INTO bot_owner (bot_id, owner, main) VALUES ($1, $2, $3)", bot_id, transfer.new_owner, True)
+    
+    embed = discord.Embed(title="Bot Ownership Transfer", description=f"<@{user_id}> has transferred ownership of bot <@{bot_id}> to <@{transfer.new_owner}>!", color=discord.Color.green())
+    msg = {"content": "", "embed": embed.to_dict(), "channel_id": str(bot_logs), "mention_roles": []}
+    await redis_ipc_new(redis_db, "SENDMSG", msg=msg, timeout=None)
+    await bot_add_event(bot_id, enums.APIEvents.bot_transfer, {"user": user_id, "new_owner": transfer.new_owner})    
+    return api_success()

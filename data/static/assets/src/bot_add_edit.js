@@ -84,7 +84,7 @@ function submitBot() {
 				modalShow("An error occurred during initial proccessing. Try again later", json)
 			},
 			429: function(data) {
-				modalShow("Ratelimited", data.responseJSON.detail)
+				modalShow("Ratelimited", data.responseJSON.reason)
 			},
 			404: function(data) {
 				modalShow("API is down", "Unfortunately, the Fates List API is down right now. Please try again later")
@@ -148,39 +148,6 @@ function deleteBot() {
 	})
 }
 
-function previewLongDesc(){
-	html = document.querySelector("#long_description_type").value;
-	ld = document.querySelector("#long_description").value;
-	if(context.mode == "edit") {
-		headers = {"Authorization": context.bot_token}
-	}
-	else {
-		headers = {}
-	}
-	if(ld == "") {
-		return
-	}
-        jQuery.ajax({
-           type: 'POST',
-           dataType: 'json',
-	   headers: headers,
-	   contentType: "application/json",
-	   url: `/api/preview?lang=${context.site_lang}`,
-           data: JSON.stringify({"html_long_description": html, "data": ld}),
-	   statusCode: {
-           "200": function(data) {
-               jQuery("#ld-preview").html(data.html)
-           },
-           "429": function(data) {
-		modalShow("Rate Limited", data.responseJSON.detail)
-           },
-	   "422": function(data) {
-	   	modalShow("Error", JSON.stringify(data))
-	   }
-	}
-    });
-
-}
 function showToken(but) {
 	
 	token = document.querySelector("#api-token")
@@ -306,6 +273,45 @@ function autofillBot() {
 				modalShow("This bot does not exist!", "Please check the bot id you inputted")
 			}
 
+		}
+	})
+
+}
+
+
+function transferOwnership() {
+	new_owner = document.querySelector("#new-owner").value
+	if(!new_owner) {
+		modalShow("Error", "No new owner was specified")
+		return
+	}
+
+	bot_id_prompt = prompt("In order to confirm your request, please enter the Bot ID for your bot", "")
+	if(!bot_id_prompt || bot_id_prompt != context.bot_id) {
+        // User did not type proper bot id
+		modalShow("Failed to transfer bot ownership", "This bot couldn't be transferred as you did not confirm that you wanted to do this!")
+		return
+	}
+	modalShow("Transferring bot ownership..", "Please wait...")
+	jQuery.ajax({
+		url: `/api/users/${context.user_id}/bots/${context.bot_id}/ownership`,
+		method: "PATCH",
+		dataType: "json",
+		processData: false,
+		contentType: 'application/json',
+		data: JSON.stringify({"new_owner": new_owner}),
+		headers: {"Authorization": context.user_token},
+		statusCode: {
+			200: function() {
+				modalShow("Success", "Transferred bot ownership successfully")
+				setTimeout(function(){window.location.replace(`/bot/${context.bot_id}`)}, 3000)
+			},
+			400: function(data) {
+				modalShow("Error", data.responseJSON.reason)
+			},
+			404: function(data) {
+				modalShow("Error", "This bot could not be found. Has it been deleted?")
+			},
 		}
 	})
 

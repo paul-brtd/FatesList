@@ -49,3 +49,15 @@ class BotMeta(BaseModel):
         eos = []
         [eos.append(int(eo)) for eo in v if eo.isdigit() and eo not in eos]
         return eos
+
+class OwnershipTransfer(BaseModel):
+    new_owner: str
+
+    @validator("new_owner")
+    def new_owner_validator(cls, v, values, **kwargs):
+        try:
+            new_owner = str(v)
+        except:
+            raise ValueError("Invalid new owner")
+        return new_owner
+

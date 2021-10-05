@@ -171,6 +171,30 @@ def goipc():
     os.system("cd modules/infra/dragon && go build -v . && cd ../../..")
     os.execv("modules/infra/dragon/dragon", ["dragon"])
 
+@site.command("buildenums")
+def build_enums():
+    """Build enums from go"""
+    import aioredis
+    from modules.core.ipc import redis_ipc_new
+    from config._logger import logger
+    import orjson
+    import pprint
+    async def _run():
+        redis = aioredis.from_url('redis://localhost:1001', db=1)
+        data = await redis_ipc_new(redis, "GETADMINOPS")
+        try:
+            data = orjson.loads(data)
+        except Exception:
+            data = None
+        if not data:
+            logger.error("Error getting data")
+            return
+        logger.info(data)
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(_run())
+
+
 @site.command("enums2md")
 def site_enum2html():
     """Converts the enums in modules/models/enums.py into markdown. Mainly for apidocs creation"""

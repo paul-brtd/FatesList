@@ -41,14 +41,13 @@ class BotAdminOp(Enum):
     approve = "APPROVE", "Approve Bot", 2, True, False, None
     deny = "DENY", "Deny Bot", 2, True, False, None
     unverify = "UNVERIFY", "Unverify Bot", 3, True, False, CooldownBucket.ban
-    transfer = "TRANSFER", "Transfer Bot Ownership", 4, True, False, CooldownBucket.transfer
-    root_update = "ROOTUPDATE", "Root State Update", 5, True, False, CooldownBucket.transfer
+
+    # To be implemented in go
     reset_votes = "RESETVOTES", "Reset All Votes", (5, 7), True, True, CooldownBucket.reset
     staff_lock = "SLOCK", "Staff Lock Bot", 4, True, False, None
     staff_unlock = "SUNLOCK", "Staff Unlock Bot", 4, True, False, CooldownBucket.lock
     bot_lock = "BLOCK", "Bot Lock", 0, False, False, None
     bot_unlock = "BUNLOCK", "Bot Unlock", 4, False, False, CooldownBucket.lock
-    bot_delete = "DELETE", "Bot Delete", 4, True, False, CooldownBucket.delete
 
 class BotLock(IntEnum):
     _init_ = 'value __doc__'

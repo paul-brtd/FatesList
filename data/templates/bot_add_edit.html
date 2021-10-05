@@ -162,7 +162,13 @@
 				) }}
 				<button class="section btn btn-outline-light" onclick='postStats()'>Post</button>
 				<h5 class="white section">Transfer Ownership</h5>
-				<p class="white info-content">In order to protect against abuse and potentially malicious users/bots, you must create a support ticket on Fates List to transfer or claim ownership of bots as of right now. This includes reclaiming ownership of bots when you don't have access to your account!</p>
+				{{ textInput(
+					"New Owner",
+					"new-owner",
+					"New owner of your bot",
+					in_form=False
+				) }}
+				<button class="section btn btn-outline-light" onclick='transferOwnership()'>Transfer</button>
 				<h5 class="white section">Delete Bot</h5>
 				<p class="white info-content"><span class="red">Warning:</span> This <em>cannot</em> be undone and you <em>will</em> lose any perks your bot may have such as certification and any votes your bot may have. Think twice before proceeding as not even staff can revert bot deletions, even if accidental...</p>
 				<button class="btn btn-danger" onclick="deleteBot()">Delete Bot</button>
@@ -374,7 +380,7 @@
 			select_multiple: {{form_values_select_multiple|tojson}}
 		}
 	</script>
-	<script src="/static/assets/prod/bot_add_edit.min.js?v=27"></script>
+	<script src="/static/assets/prod/bot_add_edit.min.js?v=30"></script>
 	<script src="/static/assets/prod/tabs.min.js?v=4" defer></script>
 	<script src="https://cdn.jsdelivr.net/npm/select-pure@latest/dist/index.js"></script>
 {% endblock %}
