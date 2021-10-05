@@ -139,10 +139,10 @@ async def delete_bot(request: Request, user_id: int, bot_id: int):
     """Deletes a bot."""
     check = await db.fetchval("SELECT main FROM bot_owner WHERE bot_id = $1 AND owner = $2", bot_id, user_id)
     if not check:
-        certified = await db.fetchval("SELECT bot_id FROM bots WHERE bot_id = $1 AND state = $2", bot_id, enums.BotState.certified)
-        if certified or check is None:
+        state = await db.fetchval("SELECT state FROM bots WHERE bot_id = $1", bot_id)
+        if state in (enums.BotState.approved, enums.BotState.certified):
             return api_error(
-                "You aren't the owner of this bot. Only main bot owners may delete certified bots and only owners can delete normal bots"
+                "You aren't the owner of this bot. Only main bot owners may delete bots and staff may only delete bots once they have been unverified/denied/banned"
             )
         
     lock = await db.fetchval("SELECT lock FROM bots WHERE bot_id = $1", bot_id)
@@ -213,7 +213,7 @@ async def transfer_bot_ownership(request: Request, user_id: int, bot_id: int, tr
     lock = await db.fetchval("SELECT lock FROM bots WHERE bot_id = $1", int(bot_id))
     lock = enums.BotLock(lock)
     if lock != enums.BotLock.unlocked:
-        return f"This bot cannot be edited as it has been locked with a code of {int(lock)}: ({lock.__doc__}). If this bot is not staff staff locked, join the support server and run +unlock <BOT> to unlock it."
+        return api_error(f"This bot cannot be edited as it has been locked with a code of {int(lock)}: ({lock.__doc__}). If this bot is not staff staff locked, join the support server and run +unlock <BOT> to unlock it.")
 
     async with db.acquire() as conn:
         async with conn.transaction() as tr:
