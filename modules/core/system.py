@@ -373,7 +373,7 @@ async def finish_init(app, session_id, workers, dbs):
     LynxfallLimiter.init(session.redis, identifier=rl_key_func)
 
     # Setup trusted host middleware
-    app.add_middleware(TrustedHostMiddleware, allowed_hosts=[site, "127.0.0.1", "0.0.0.0"])
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=[site, "127.0.0.1", "0.0.0.0", f"www.{site}"])
 
     # Add GZip handling
     app.add_middleware(GZipMiddleware, minimum_size=500)
