@@ -33,7 +33,6 @@ class Badge(BaseModel):
         # A discord.Member is part of the support server
         user_flags["staff"] = (await is_staff(staff_roles, id, 2))[0]
         if [role for role in roles if role]:
-            print(roles)
             user_flags["discord_member"] = True
         
         all_badges = []

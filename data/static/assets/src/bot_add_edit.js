@@ -136,7 +136,7 @@ function deleteBot() {
 				modalShow("An error occurred during initial proccessing. Try again later", json)
 			},
 			429: function(data) {
-				modalShow("Ratelimited", data.responseJSON.detail)
+				modalShow("Ratelimited", data.responseJSON.reason)
 			},
 			404: function(data) {
 				modalShow("API is down", "Unfortunately, the Fates List API is down right now. Please try again later")

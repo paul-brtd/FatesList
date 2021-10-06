@@ -129,11 +129,13 @@ async def edit_bot(request: Request, user_id: int, bot_id: int, bot: BotMeta):
     dependencies=[
         Depends(
             Ratelimiter(
-                global_limit = Limit(times=1, minutes=5)
+                global_limit = Limit(times=1, minutes=5),
+                operation_bucket = "delete_bot"
             )
         ),
         Depends(user_auth_check)
-    ]
+    ],
+    operation_id="delete_bot"
 )
 async def delete_bot(request: Request, user_id: int, bot_id: int):
     """Deletes a bot."""
