@@ -6,6 +6,7 @@ and/or setting bot stats and voting for a bot. Also has replace tuples to be han
 import re
 
 import bleach
+from fastapi import datastructures
 from lxml.html.clean import Cleaner
 import asyncpg
 
@@ -150,10 +151,19 @@ async def vanity_bot(vanity: str) -> Optional[str]:
     if vanity in reserved_vanity: # Check if vanity is reserved and if so, return None
         return None
 
+    cache = await redis_db.get(vanity)
+    if cache:
+        data = cache.decode("utf-8").split(" ")
+        type = enums.Vanity(int(data[0])).name
+        return int(data[1]), type
+
+
     t = await db.fetchrow("SELECT type, redirect FROM vanity WHERE lower(vanity_url) = $1", vanity.lower()) # Check vanity against database
     if t is None:
         return None # No vanity found
     
+    await redis_db.set(vanity, f"{t['type']} {t['redirect']}", ex = 60*4)
+
     type = enums.Vanity(t["type"]).name # Get type using Vanity enum
     return int(t["redirect"]), type
 

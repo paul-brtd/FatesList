@@ -45,7 +45,7 @@ async def bot_settings(request: Request, bot_id: int):
     owners = await db.fetch("SELECT owner, main FROM bot_owner WHERE bot_id = $1", bot_id)
     if not owners:
         return "This bot has no found owners.\nPlease contact Fates List support"
-     
+    
     owners_lst = [
         (await get_user(obj["owner"], user_only = True, worker_session = worker_session))
         for obj in owners if obj["owner"] is not None and obj["main"]
