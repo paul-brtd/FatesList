@@ -16,21 +16,14 @@ function getLoginLink() {
 		"redirect": context.redirect,
 		"scopes": scopes
 	}
-	$.ajax({
+	request({
 		method: "POST",
 		url: "/api/v2/oauth",
-		dataType: "json",
-		processData: false,
-		contentType: 'application/json',
-		data: JSON.stringify(data),
+		json: data,
 		statusCode: {
 			206: function(data) {
 				window.location.href = data.url	
 			},
-			400: function(data) {
-				modalShow("Error", data.responseJSON.reason)
-			}
 		}
-
 	})
 }

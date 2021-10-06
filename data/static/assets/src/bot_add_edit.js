@@ -55,42 +55,25 @@ function submitBot() {
 	    modalShow("Error", "You need to select tags for your bot!")
 	    return
 	}
-	jQuery.ajax({
+	request({
 		url: `/api/users/${context.user_id}/bots/${json.bot_id}`,
 		method: method,
-		headers: {'Authorization': context.user_token},
-		contentType: "application/json",
-		data: JSON.stringify(json),
+		userAuth: true,
+		json: json,
 		statusCode: {
-			202: function(data) {
+			202: function() {
 				modalShow("Success", "Your bot (and its changes) has been added to the RabbitMQ queue. Your page should auto refresh to it in a few minutes")
 				setTimeout(setInterval(function(){
-				jQuery.ajax({
+				request({
 					url: `/api/bots/${json.bot_id}`,
 					method: "HEAD",
 					statusCode: {
-						200: function(data){
+						200: function(){
 							window.location.replace(`/bot/${json.bot_id}`)
 						}
 					}
 				})
 				}, 2000), 1000);
-			},
-			400: function(data) {
-				modalShow("Error", data.responseJSON.reason)
-			},
-			422: function(data) {
-				json = JSON.stringify(data.responseJSON)
-				modalShow("An error occurred during initial proccessing. Try again later", json)
-			},
-			429: function(data) {
-				modalShow("Ratelimited", data.responseJSON.reason)
-			},
-			404: function(data) {
-				modalShow("API is down", "Unfortunately, the Fates List API is down right now. Please try again later")
-			},
-			500: function(data) {
-				modalShow("Internal Server Error", "We had an error internally on our side when proccessing your request. Please try again later.")
 			}
 		}
 	})
@@ -108,16 +91,15 @@ function deleteBot() {
 		return
 	}
 	modalShow("Deleting Bot..", "Please wait...")
-	jQuery.ajax({
+	request({
 		url: `/api/users/${context.user_id}/bots/${context.bot_id}`,
 		method: "DELETE",
-		headers: {'Authorization': context.user_token},
-		contentType: "application/json",
+		userAuth: true,
 		statusCode: {
 			202: function(data) {
 				modalShow("Bot Deleted :(", "This bot has been added to our queue of bots to delete and will be deleted in just a second or two")
 				setTimeout(setInterval(function(){
-				jQuery.ajax({
+				request({
 					url: `/api/bots/${context.bot_id}`,
 					method: "GET",
 					statusCode: {
@@ -128,28 +110,11 @@ function deleteBot() {
 				})
 				}, 2000), 1000);
 			},
-			400: function(data) {
-				modalShow("Error", data.responseJSON.reason)
-			},
-			422: function(data) {
-				json = JSON.stringify(data.responseJSON)
-				modalShow("An error occurred during initial proccessing. Try again later", json)
-			},
-			429: function(data) {
-				modalShow("Ratelimited", data.responseJSON.reason)
-			},
-			404: function(data) {
-				modalShow("API is down", "Unfortunately, the Fates List API is down right now. Please try again later")
-			},
-			500: function(data) {
-				modalShow("Internal Server Error", "We had an error internally on our side when proccessing your request. Please try again later.")
-			}
 		}
 	})
 }
 
 function showToken(but) {
-	
 	token = document.querySelector("#api-token")
 	if(!token.getAttribute("show")) {
 		token.innerHTML = context.bot_token
@@ -165,36 +130,29 @@ function showToken(but) {
   function postStats() {
 	server_count = document.querySelector("#server-count").value
   	payload = {"guild_count": server_count}
-	jQuery.ajax({
-		headers: {'Authorization': context.bot_token},
+	request({
+		botAuth: true,
 		method: 'POST',
 		url: `/api/bots/${context.bot_id}/stats`,
-		contentType: 'application/json',
-		data: JSON.stringify(payload),
+		json: payload
 	});
 	modalShow("Success", "Done posting stats. You may leave this page or continue editing this bot!")
   }
   function regenToken() {
-	jQuery.ajax({
-	   headers: {'Authorization': context.bot_token},
-	   type: 'PATCH',
-	   url: `/api/bots/${context.bot_id}/token`,
-	   processData: false,
-	   contentType: 'application/json',
+	request({
+	   botAuth: true,
+	   method: 'PATCH',
+	   url: `/api/bots/${context.bot_id}/token`
 	});
 	alert("Regenerated Token Successfully")
 	window.location.reload()
   }
 
 function testHook(url, type) {
-	headers = {"Authorization": context.bot_token}
-	jQuery.ajax({
+	request({
+		botAuth: true,
 		url: `/api/bots/${context.bot_id}/testhook`,
-		dataType: "json",
-		headers: headers,
-		type: "POST",
-		processData: false,
-		contentType: 'application/json',
+		method: "POST",
 		statusCode: {
 			200: function(data) {
 				modalShow("Sent test query", "See the below tip if you didn't get it!")
@@ -220,26 +178,15 @@ function submitAppeal() {
 		modalShow("Error", "Your appeal must be at least 7 characters long")
 		return
 	}
-	headers = {"Authorization": context.bot_token}
-	json = JSON.stringify({"appeal": appeal})
-	jQuery.ajax({
-		url: `/api/v2/bots/${context.bot_id}/appeal`,
+	request({
+		url: `/api/users/${context.user_id}/bots/${context.bot_id}/appeal`,
 		method: "POST",
-		dataType: "json",
-		processData: false,
-		contentType: 'application/json',
-		data: json,
-		headers: headers,
+		userAuth: true,
+		json: {"appeal": appeal},
 		statusCode: {
 			200: function() {
 				modalShow("Success", "Done posting appeal. Please wait while our staff reviews it!")
 				setTimeout(function(){window.location.replace(`/bot/${context.bot_id}`)}, 3000)
-			},
-			400: function(data) {
-				modalShow("Error", data.responseJSON.reason)
-			},
-			404: function(data) {
-				modalShow("Error", "This bot could not be found. Has it been deleted?")
 			},
 		}
 	})
@@ -293,26 +240,19 @@ function transferOwnership() {
 		return
 	}
 	modalShow("Transferring bot ownership..", "Please wait...")
-	jQuery.ajax({
+	request({
 		url: `/api/users/${context.user_id}/bots/${context.bot_id}/ownership`,
 		method: "PATCH",
-		dataType: "json",
-		processData: false,
-		contentType: 'application/json',
-		data: JSON.stringify({"new_owner": new_owner}),
-		headers: {"Authorization": context.user_token},
+		json: {"new_owner": new_owner},
+		userAuth: true,
 		statusCode: {
 			200: function() {
 				modalShow("Success", "Transferred bot ownership successfully")
 				setTimeout(function(){window.location.replace(`/bot/${context.bot_id}`)}, 3000)
-			},
-			400: function(data) {
-				modalShow("Error", data.responseJSON.reason)
 			},
 			404: function(data) {
 				modalShow("Error", "This bot could not be found. Has it been deleted?")
 			},
 		}
 	})
-
 }

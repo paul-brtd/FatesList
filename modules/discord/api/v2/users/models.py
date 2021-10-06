@@ -61,3 +61,6 @@ class OwnershipTransfer(BaseModel):
             raise ValueError("Invalid new owner")
         return new_owner
 
+class BotAppeal(BaseModel):
+    appeal: str
+

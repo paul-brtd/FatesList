@@ -308,8 +308,8 @@ async def init_fates_worker(app, session_id, workers):
                 await finish_init(app, session_id, workers, dbs)
             else:
                 app.state.ipc_up = True
-                await asyncio.sleep(30)
-            await asyncio.sleep(60)
+                await asyncio.sleep(1)
+            await asyncio.sleep(360)
     
     asyncio.create_task(wait_for_ipc(app, session_id, workers, dbs))
 

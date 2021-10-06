@@ -75,10 +75,6 @@ class BotStats(BaseModel):
     shard_count: Optional[int] = None
     shards: Optional[List[int]] = None
     user_count: Optional[int] = None
-
-class BotAppeal(BaseModel):
-    appeal: str
-
         
 class BotEvent(BaseModel):
     m: dict

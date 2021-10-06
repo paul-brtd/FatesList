@@ -4,7 +4,7 @@ from modules.core import *
 from modules.core.classes import User as _User
 
 from ..base import API_VERSION
-from .models import APIResponse, BotMeta, enums, BaseUser, UserDescEdit, UserJSPatch, OwnershipTransfer
+from .models import APIResponse, BotMeta, enums, BaseUser, UserDescEdit, UserJSPatch, OwnershipTransfer, BotAppeal
 
 cleaner = Cleaner(remove_unknown_tags=False)
 
@@ -226,4 +226,46 @@ async def transfer_bot_ownership(request: Request, user_id: int, bot_id: int, tr
     msg = {"content": "", "embed": embed.to_dict(), "channel_id": str(bot_logs), "mention_roles": []}
     await redis_ipc_new(redis_db, "SENDMSG", msg=msg, timeout=None)
     await bot_add_event(bot_id, enums.APIEvents.bot_transfer, {"user": user_id, "new_owner": transfer.new_owner})    
+    return api_success()
+
+@router.post(
+    "/{user_id}/bots/{bot_id}/appeal",
+    response_model=APIResponse,
+    dependencies=[
+        Depends(
+            Ratelimiter(
+                global_limit = Limit(times=5, minutes=1)
+            )
+        ),
+        Depends(user_auth_check)
+    ],
+    operation_id="appeal_bot"
+)
+async def appeal_bot(request: Request, bot_id: int, data: BotAppeal):
+    if len(data.appeal) < 7:
+        return api_error(
+            "Appeal must be at least 7 characters long"
+        )
+    db = request.app.state.worker_session.postgres
+
+    state = await db.fetchval("SELECT state FROM bots WHERE bot_id = $1", bot_id)
+
+    if state == enums.BotState.denied:
+        title = "Bot Resubmission"
+        appeal_title = "Context"
+    elif state == enums.BotState.banned:
+        title = "Ban Appeal"
+        appeal_title = "Appeal"
+    else:
+        return api_error(
+            "You cannot send an appeal for a bot that is not banned or denied!"
+        )
+    resubmit_embed = discord.Embed(title=title, color=0x00ff00)
+    bot = await get_bot(bot_id)
+    resubmit_embed.add_field(name="Username", value = bot['username'])
+    resubmit_embed.add_field(name="Bot ID", value = str(bot_id))
+    resubmit_embed.add_field(name="Resubmission", value = str(state == enums.BotState.denied))
+    resubmit_embed.add_field(name=appeal_title, value = data.appeal)
+    msg = {"content": f"<@&{staff_ping_add_role}>", "embed": resubmit_embed.to_dict(), "channel_id": str(appeals_channel), "mention_roles": [str(staff_ping_add_role)]}
+    await redis_ipc_new(request.app.state.worker_session.redis, "SENDMSG", msg=msg, timeout=None)
     return api_success()
