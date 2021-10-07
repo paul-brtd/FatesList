@@ -94,6 +94,14 @@ async def new_review(request: Request, user_id: int, bot_id: int, data: BotRevie
             "root": data.id
         }
     )
+
+    # Recache reviews
+    await parse_reviews(
+        request.app.state.worker_session, 
+        bot_id, 
+        recache = True
+    )
+
     return api_success()
 
 
@@ -141,6 +149,14 @@ async def edit_review(request: Request, user_id: int, bot_id: int, id: uuid.UUID
             "review": data.review
         }
     )
+
+    # Recache reviews
+    await parse_reviews(
+        request.app.state.worker_session, 
+        bot_id, 
+        recache = True
+    )
+
     return api_success()
     
     
@@ -177,4 +193,12 @@ async def delete_review(request: Request, user_id: int, bot_id: int, id: uuid.UU
             "id": str(id)
         }
     )
+
+    # Recache reviews
+    await parse_reviews(
+        request.app.state.worker_session, 
+        bot_id, 
+        recache = True
+    )
+
     return api_success()    

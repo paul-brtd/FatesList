@@ -3,13 +3,27 @@ from .events import *
 from .imports import *
 
 
-async def parse_reviews(worker_session, bot_id: int, rev_id: uuid.uuid4 = None, page: int = None) -> List[dict]:
-    reviews = await worker_session.redis.get(f"botreview-{bot_id}-{page}")
+async def parse_reviews(worker_session, bot_id: int, rev_id: uuid.uuid4 = None, page: int = None, recache: bool = False, in_recache: bool = False) -> List[dict]:
+    if recache:
+        async def recache():
+            reviews = await _parse_reviews(worker_session, bot_id)
+            page_count = reviews[2]
+            for page in range(0, page_count):
+                await parse_reviews(worker_session, bot_id, page = page if page else None, in_recache = True)
+        asyncio.create_task(recache())
+        return
+
+    if not in_recache:
+        reviews = await worker_session.redis.get(f"botreview-{bot_id}-{page}")
+    else:
+        reviews = None
+
     if reviews:
         return orjson.loads(reviews)
     reviews = await _parse_reviews(worker_session, bot_id, rev_id = rev_id, page = page)
-    await worker_session.redis.set(f"botreview-{bot_id}-{page}", orjson.dumps(reviews), ex=60*4)
+    await worker_session.redis.set(f"botreview-{bot_id}-{page}", orjson.dumps(reviews), ex=60*60*4)
     return reviews
+
 
 async def _parse_reviews(worker_session, bot_id: int, rev_id: uuid.uuid4 = None, page: int = None) -> List[dict]:
     db = worker_session.postgres
