@@ -213,3 +213,19 @@ async def vanity_check(id, vanity):
     if vanity_check is not None or vanity.replace("", "").lower() in reserved_vanity or "/" in vanity.replace("", "").lower():
         return True
     return False
+
+async def vanity_redirector(request: Request, vanity: str, ext, extra_args = None):
+    if vanity.isdigit():
+        return RedirectResponse(f"/bot/{vanity}")
+    vurl = await vanity_bot(vanity)
+    if vurl is None:
+        return await templates.e(request, "Invalid Vanity")
+    if vurl[1] == "profile":
+        return abort(404)
+    elif vurl[1] != "bot":
+        return await templates.e(request, f"This is a {vurl[1]}. This is a work in progress :)", status_code = 400)
+    if isinstance(ext, str):
+        eurl = "/".join([site_url, vurl[1], str(vurl[0]), ext])
+        return RedirectResponse(eurl)
+    extra_args = extra_args if extra_args else {}
+    return await ext(request = request, bot_id = vurl[0], **extra_args)

@@ -46,46 +46,20 @@ async def nonerouter():
     return RedirectResponse("/static/assets/img/banner.webp", status_code = 301)
 
 @router.get("/{vanity}")
-async def vanity_bot_uri(request: Request, bt: BackgroundTasks, vanity: str):
-    vurl = await vanity_bot(vanity)
-    logger.trace("Vanity for this object: ", vurl)
-    if vurl is None:
-        return await templates.e(request, "Invalid Vanity")
-    if vurl[1] == "bot":
-        return await render_bot(bt = bt, bot_id = vurl[0], request = request, api = False)
-    else:
-        return await templates.e(request, f"This is a {vurl[1]}. This is a work in progress :)", status_code = 400)
+async def vanity_bot_uri(request: Request, bt: BackgroundTasks, vanity: str, redirect: bool = False):
+    return await vanity_redirector(request, vanity, render_bot, {"bt": bt, "api": False})
 
 @router.get("/{vanity}/edit")
 async def vanity_edit(request: Request, vanity: str, bt: BackgroundTasks):
-    vurl = await vanity_bot(vanity)
-    if vurl is None:
-        return await templates.e(request, "Invalid Vanity")
-    if vurl[1] == "profile":
-        return abort(404)
-    eurl = "/".join([site_url, vurl[1], str(vurl[0]), "edit"])
-    return RedirectResponse(eurl)
+    return await vanity_redirector(request, vanity, "edit")
 
 @router.get("/{vanity}/vote")
 async def vanity_vote(request: Request, vanity: str):
-    vurl = await vanity_bot(vanity)
-    if vurl is None:
-        return await templates.e(request, "Invalid Vanity")
-    if vurl[1] == "profile":
-        return abort(404)
-    if vurl[1] == "bot":
-        return await vote_bot_get(request, bot_id = vurl[0])
-
+    return await vanity_redirector(request, vanity, vote_bot_get)
 
 @router.get("/{vanity}/invite")
 async def vanity_invite(request: Request, vanity: str):
-    vurl = await vanity_bot(vanity)
-    if vurl is None:
-        return await templates.e(request, "Invalid Vanity")
-    if vurl[1] == "profile":
-        return abort(404)
-    eurl = "/".join([site_url, vurl[1], str(vurl[0]), "invite"])
-    return RedirectResponse(eurl)
+    return await vanity_redirector(request, vanity, "invite")
 
 @router.get("/feature/{name}")
 async def features_view(request: Request, name: str):

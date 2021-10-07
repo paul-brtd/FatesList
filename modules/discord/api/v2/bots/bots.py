@@ -70,7 +70,8 @@ async def regenerate_bot_token(request: Request, bot_id: int):
     dependencies=[
         Depends(
             Ratelimiter(
-                global_limit = Limit(times=7, seconds=5)
+                global_limit = Limit(times=7, seconds=5),
+                operation_bucket="random_bot"
             )
         )
     ],
@@ -122,7 +123,8 @@ async def fetch_random_bot(request: Request, bot_id: int, lang: str = "default")
     dependencies=[
         Depends(
             Ratelimiter(
-                global_limit = Limit(times=5, minutes=2)
+                global_limit = Limit(times=5, minutes=2),
+                operation_bucket="fetch_bot"
             )
         )
     ],
@@ -433,7 +435,8 @@ async def get_bot_ws_events(request: Request, bot_id: int):
     dependencies=[
         Depends(
             Ratelimiter(
-                global_limit = Limit(times=5, minutes=1)
+                global_limit = Limit(times=5, minutes=1),
+                operation_bucket="set_bot_stats"
             ) 
         ),
         Depends(bot_auth_check)

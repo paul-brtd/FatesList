@@ -26,7 +26,7 @@ async def bot_settings(request: Request, bot_id: int):
     worker_session = request.app.state.worker_session
     db = worker_session.postgres
     if "user_id" not in request.session.keys():
-        return abort(403)
+        return RedirectResponse(f"/fates/login?redirect=/bot/{bot_id}/settings&pretty=to edit this bot")
     
     check = await is_bot_admin(bot_id, int(request.session["user_id"]))
     if not check and bot_id != 798951566634778641: # Fates list main bot is staff viewable

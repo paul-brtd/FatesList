@@ -119,15 +119,6 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
     )
     ldesc = ireplacem(long_desc_replace_tuple, ldesc)
 
-    if "user_id" in request.session.keys():
-        bot_admin = await is_bot_admin(int(bot_id), int(request.session.get("user_id"))) 
-    else:
-        bot_admin = False
-    if not bot_admin:
-        bot["api_token"] = None
-    else:
-        bot["api_token"] = await db.fetchval("SELECT api_token FROM bots WHERE bot_id = $1", bot_id)
-
     if bot["banner"]:
         banner = bot["banner"].replace(" ", "%20").replace("\n", "")
     else:
@@ -167,9 +158,8 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
     
     context = {
         "id": str(bot_id),
-        "bot_token": bot["api_token"],
+        "bot_token": "",
         "type": "bot",
-        "bot_admin": bot_admin,
         "reviews": {
             "average_rating": float(reviews[1])
         },
@@ -181,7 +171,6 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
         "type": "bot", 
         "id": bot_id, 
         "tags_fixed": _tags_fixed_bot, 
-        "admin": bot_admin,
         "promos": await get_promotions(bot_id),
         "guild": main_server, 
         "bot_reviews": reviews[0], 
