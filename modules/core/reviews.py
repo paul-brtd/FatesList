@@ -4,6 +4,14 @@ from .imports import *
 
 
 async def parse_reviews(worker_session, bot_id: int, rev_id: uuid.uuid4 = None, page: int = None) -> List[dict]:
+    reviews = await worker_session.redis.get(f"botreview-{bot_id}-{page}")
+    if reviews:
+        return orjson.loads(reviews)
+    reviews = await _parse_reviews(worker_session, bot_id, rev_id = rev_id, page = page)
+    await worker_session.redis.set(f"botreview-{bot_id}-{page}", orjson.dumps(reviews), ex=60*4)
+    return reviews
+
+async def _parse_reviews(worker_session, bot_id: int, rev_id: uuid.uuid4 = None, page: int = None) -> List[dict]:
     db = worker_session.postgres
 
     per_page = 9
@@ -34,14 +42,14 @@ async def parse_reviews(worker_session, bot_id: int, rev_id: uuid.uuid4 = None, 
         reviews[i]["id"] = str(reviews[i]["id"])
         reviews[i]["user"] = await get_user(reviews[i]["user_id"], worker_session = worker_session)
         reviews[i]["user_id"] = str(reviews[i]["user_id"])
-        reviews[i]["star_rating"] = round(reviews[i]["star_rating"], 2)
+        reviews[i]["star_rating"] = float(round(reviews[i]["star_rating"], 2))
         reviews[i]["replies"] = []
         reviews[i]["review_upvotes"] = [str(ru) for ru in reviews[i]["review_upvotes"]]
         reviews[i]["review_downvotes"] = [str(rd) for rd in reviews[i]["review_downvotes"]]
         if not rev_id:
             stars += reviews[i]["star_rating"]
         for review_id in reviews[i]["_replies"]:
-            _parsed_reply = await parse_reviews(worker_session, bot_id, review_id)
+            _parsed_reply = await _parse_reviews(worker_session, bot_id, review_id)
             try:
                 reviews[i]["replies"].append(_parsed_reply[0][0])
             except:
@@ -53,5 +61,5 @@ async def parse_reviews(worker_session, bot_id: int, rev_id: uuid.uuid4 = None, 
     if i == 0:
         return reviews, 10.0, 0, 0, per_page
     logger.trace(f"Total reviews per page is {total_rev['count']/per_page}")
-    return reviews, total_rev["avg"], total_rev["count"], int(math.ceil(total_rev["count"]/per_page)), per_page
+    return reviews, float(total_rev["avg"]), float(total_rev["count"]), int(math.ceil(total_rev["count"]/per_page)), per_page
 
