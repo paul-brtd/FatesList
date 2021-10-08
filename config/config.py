@@ -8,7 +8,12 @@ with open("config/data/discord.json") as f:
     _server_data = _discord_data["servers"]
     _role_data = _discord_data["roles"]
     _channel_data = _discord_data["channels"]
+    _oauth_data = _discord_data["oauth"]
+    discord_redirect_uri: str = _oauth_data["redirect_uri"] # Redirect URI
+    discord_client_id: int = int(_oauth_data["client_id"])
     owner: int = int(_discord_data["owner"]) # Owner of fates list
+    server_bot_invite: str = _discord_data["server_bot_invite"] # Ensure that it uses 67649 for perms
+    support_url: str = _discord_data["support_server"] # Support server URL
     bot_logs: int = int(_channel_data["bot_logs"]) # Bot logs
     server_logs: int = int(_channel_data["server_logs"]) # Server logs
     appeals_channel: int = int(_channel_data["appeals_channel"]) # Appeal/resubmission channel
@@ -36,10 +41,9 @@ with open("config/data/extra_data.json") as f:
     special_badges: List[Dict[str, str]] = _config_data["special_badges"] # Badge info.
     features: Dict[str, Dict[str, str]] = _config_data["features"] # Supported features
     langs: Dict[str, str] = _config_data["langs"] # Supported langs
-    server_bot_invite: str = _config_data["server_bot_invite"] # Ensure that it uses 67649 for perms
     pg_user: str = _config_data["pg_user"] # Unused (I think) but there for compatibility
-    support_url: str = _config_data["support_server"] # Support server URL
     site: str = _config_data["site"] # Site URL
+    sentry_dsn: str = _config_data["sentry_dsn"]
 
 with open("config/data/ban_data.json") as fp:
     bans_data = json.load(fp)
@@ -52,9 +56,21 @@ with open("config/data/policy.json") as fp:
     rules: Dict[str, List[str]] = _policy_data["rules"]
     privacy_policy: Dict[str, Union[List[str], Dict[str, str]]] = _policy_data["privacy_policy"]
 
+with open("config/data/secrets.json") as fp:
+    _secret_data = json.load(fp)
+    TOKEN_MAIN: str = _secret_data["token_main"]
+    TOKEN_SERVER: str = _secret_data["token_server"]
+    TOKEN_MANAGER: str = _secret_data["token_manager"]
+    session_key: str = _secret_data["session_key"]
+    rl_key: str = _secret_data["rl_key"]
+    discord_client_secret: str = _secret_data["client_secret"]
+
+
+
 # Value below should not be changed
 site_url = "https://" + site
-
+manager_key = "" # Backward compatibility
+TOKEN_DBG = "" # Backward compatibility
 
 # Notes
 #

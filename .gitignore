@@ -21,3 +21,4 @@ pids/*
 data/pids/*
 data/pycache/*
 data/pycache
+config/data/secrets.json

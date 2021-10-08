@@ -21,5 +21,11 @@
         "appeals_channel": "836326351387623454",
         "site_errors_channel": "836326323281592330"
     },
-    "owner": "563808552288780322"
+    "oauth": {
+        "client_id": "798951566634778641",
+        "redirect_uri": "https://fateslist.xyz/static/login-finish.html"
+    },
+    "owner": "563808552288780322",
+    "server_bot_invite": "https://discord.com/api/oauth2/authorize?client_id=811073947382579200&permissions=67649&scope=bot%20applications.commands",
+    "support_server": "https://discord.gg/cMAnfu8AJB"
 }

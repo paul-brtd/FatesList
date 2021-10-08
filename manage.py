@@ -322,31 +322,6 @@ def secrets_random():
     """Generates a random secret"""
     click.echo(secrets_lib.token_urlsafe())
 
-
-@secrets.command("mktemplate")
-@click.option('-i', 'inp', type=click.Path(exists=True), required=True, help="Input config_secrets.py to template")
-@click.option('-o', 'out', type=click.Path(exists=False), required=True, help="Output config_secrets_templates.py to template")
-def secrets_mktemplate(inp, out):
-    """Converts config_secrets.py to config_secrets_template.py"""
-    with open(inp) as inp_f:
-        lines = inp_f.read()
-
-    out_lst = []
-    
-    for line in lines.split("\n"):
-        if line.replace(" ", ""):
-            if line.startswith(("if:", "else:")):
-                out_lst.append(line)
-                continue
-        
-            # Remove middle part/secret
-            begin, _, end = line.split('"')
-            out_lst.append("".join((begin, '""', end)))
-        
-    with open(out, "w") as out_f:
-        out_f.write("\n".join(out_lst)) 
-
-
 @site.command("compilestatic")
 def staticfiles_compile():
     """Compiles all labelled static files"""
