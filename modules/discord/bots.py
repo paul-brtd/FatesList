@@ -2,6 +2,7 @@ import io
 
 import markdown
 from starlette.responses import StreamingResponse
+from fastapi import Response
 
 from ..core import *
 
@@ -24,6 +25,36 @@ async def bot_index(request: Request, bot_id: int, bt: BackgroundTasks, rev_page
         api = False, 
         rev_page = rev_page, 
     )
+
+@router.get("/{bot_id}/reviews_html")
+async def bot_review_page(request: Request, bot_id: int, page: int = 1):
+    page = page if page else 1
+    reviews = await parse_reviews(request.app.state.worker_session, bot_id, page=page)
+    context = {
+        "id": str(bot_id),
+        "type": "bot",
+        "reviews": {
+            "average_rating": float(reviews[1])
+        },
+    }
+    data = {
+        "bot_reviews": reviews[0], 
+        "average_rating": reviews[1], 
+        "total_reviews": reviews[2], 
+        "review_page": page, 
+        "total_review_pages": reviews[3], 
+        "per_page": reviews[4],
+    }
+
+    bot_info = await get_bot(bot_id, worker_session = request.app.state.worker_session)
+    if bot_info:
+        user = dict(bot_info)
+        user["name"] = user["username"]
+    
+    else:
+        return await templates.e(request, "Bot Not Found")
+
+    return await templates.TemplateResponse("ext/reviews.html", {"request": request, "data": {"user": user}} | data, context = context)
 
 
 @router.get("/{bot_id}/invite")

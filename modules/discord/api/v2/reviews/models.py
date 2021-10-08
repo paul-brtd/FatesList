@@ -50,3 +50,6 @@ class BotReviews(BaseModel):
 
 BotReview.update_forward_refs()
 BotReviews.update_forward_refs()   
+
+class BotReviewVote(BaseModel):
+    upvote: bool

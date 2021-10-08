@@ -65,9 +65,6 @@ class User(BaseUser):
 class BotReviewAction(BaseModel):
     user_id: str
 
-class BotReviewVote(BotReviewAction):
-    upvote: bool
-
 class Timestamp(BaseModel):
     __root__: int
 

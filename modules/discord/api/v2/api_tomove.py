@@ -16,40 +16,6 @@ router = APIRouter(
     tags = [f"API v{API_VERSION} - To Move"]
 )
 
-@router.patch(
-    "/bots/{bot_id}/reviews/{rid}/votes", 
-    response_model = APIResponse,
-    dependencies = [
-        Depends(user_auth_check)
-    ],
-    deprecated=True
-)
-async def vote_review_api(request: Request, bot_id: int, rid: uuid.UUID, vote: BotReviewVote):
-    """This endpoint is being rewritten and should not be relied on outside official clients"""
-    vote.user_id = int(vote.user_id)
-    bot_rev = await db.fetchrow("SELECT review_upvotes, review_downvotes, star_rating, reply, review_text FROM bot_reviews WHERE id = $1", rid)
-    if bot_rev is None:
-        return api_error("You are not allowed to up/downvote this review (doesn't actually exist)", 3836)
-    bot_rev = dict(bot_rev)
-    if vote.upvote:
-        main_key = "review_upvotes"
-        remove_key = "review_downvotes"
-    else:
-        main_key = "review_downvotes"
-        remove_key = "review_upvotes"
-    if vote.user_id in bot_rev[main_key]:
-        return api_error("The user has already voted for this review", 5858)
-    if vote.user_id in bot_rev[remove_key]:
-        while True:
-            try:
-                bot_rev[remove_key].remove(vote.user_id)
-            except:
-                break
-    bot_rev[main_key].append(vote.user_id)
-    await db.execute("UPDATE bot_reviews SET review_upvotes = $1, review_downvotes = $2 WHERE id = $3", bot_rev["review_upvotes"], bot_rev["review_downvotes"], rid)
-    await bot_add_event(bot_id, enums.APIEvents.review_vote, {"user": str(vote.user_id), "id": str(rid), "star_rating": bot_rev["star_rating"], "reply": bot_rev["reply"], "review": bot_rev["review_text"], "upvotes": len(bot_rev["review_upvotes"]), "downvotes": len(bot_rev["review_downvotes"]), "upvote": vote.upvote})
-    return api_success()
-
 @router.get(
     "/code/{vanity}", 
     response_model = BotVanity

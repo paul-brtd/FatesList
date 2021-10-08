@@ -2,7 +2,7 @@ from modules.core import *
 from lynxfall.utils.string import intl_text
 
 from ..base import API_VERSION
-from .models import APIResponse, BotReviewPartial, BotReviews
+from .models import APIResponse, BotReviewPartial, BotReviews, BotReviewVote
 
 router = APIRouter(
     prefix = f"/api/v{API_VERSION}",
@@ -202,3 +202,37 @@ async def delete_review(request: Request, user_id: int, bot_id: int, id: uuid.UU
     )
 
     return api_success()    
+
+@router.patch(
+    "/users/{user_id}/bots/{bot_id}/reviews/{id}/votes", 
+    response_model = APIResponse,
+    dependencies = [
+        Depends(id_check("bot")),
+        Depends(id_check("user")),
+        Depends(user_auth_check)
+    ],
+)
+async def vote_review_api(request: Request, user_id: int, bot_id: int, rid: uuid.UUID, vote: BotReviewVote):
+    """Creates a vote for a review"""
+    bot_rev = await db.fetchrow("SELECT review_upvotes, review_downvotes, star_rating, reply, review_text FROM bot_reviews WHERE id = $1", rid)
+    if bot_rev is None:
+        return api_error("You are not allowed to up/downvote this review (doesn't actually exist)")
+    bot_rev = dict(bot_rev)
+    if vote.upvote:
+        main_key = "review_upvotes"
+        remove_key = "review_downvotes"
+    else:
+        main_key = "review_downvotes"
+        remove_key = "review_upvotes"
+    if user_id in bot_rev[main_key]:
+        return api_error("The user has already voted for this review")
+    if user_id in bot_rev[remove_key]:
+        while True:
+            try:
+                bot_rev[remove_key].remove(user_id)
+            except:
+                break
+    bot_rev[main_key].append(user_id)
+    await db.execute("UPDATE bot_reviews SET review_upvotes = $1, review_downvotes = $2 WHERE id = $3", bot_rev["review_upvotes"], bot_rev["review_downvotes"], rid)
+    await bot_add_event(bot_id, enums.APIEvents.review_vote, {"user": str(user_id), "id": str(rid), "star_rating": bot_rev["star_rating"], "reply": bot_rev["reply"], "review": bot_rev["review_text"], "upvotes": len(bot_rev["review_upvotes"]), "downvotes": len(bot_rev["review_downvotes"]), "upvote": vote.upvote})
+    return api_success()

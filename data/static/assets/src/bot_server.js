@@ -71,10 +71,6 @@ function replyReview(el, id) {
 	}
 }
 
-document.addEventListener("DOMContentLoaded", function() {
-	setTimeout(function() {document.querySelector("#rating-desc-avg").innerHTML = parseState(context.reviews.average_rating) + ", " + context.reviews.average_rating}, 300); 
-});
-
 function commandModal(id) {
 	cmd = document.querySelector(`#cmd-${id}`).textContent
 	cmd = JSON.parse(cmd)
@@ -275,4 +271,24 @@ function editReview(id) {
 			}
 		}
 	})
+}
+
+function getReviewPage(page) {
+	if(!page) {
+		page = 1
+	}
+	document.querySelector("#review-write").innerHTML = "<h3 class='white'>Loading reviews...</h3>"
+	request({
+		url: `/${context.type}/${context.id}/reviews_html?page=${page}`,
+		method: "GET",
+		statusCode: {
+			200: function(data) {
+				document.querySelector("#review-write").innerHTML = data.responseText
+				setTimeout(function() {document.querySelector("#rating-desc-avg").innerHTML = parseState(context.reviews.average_rating) + ", " + context.reviews.average_rating}, 5); 
+			}
+		}
+	})
+	context.rev_page = page
+	jQuery(".page-item").removeClass("active")
+	jQuery(`#page-${page}`).addClass("active")
 }

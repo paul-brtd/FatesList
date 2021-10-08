@@ -10,7 +10,6 @@ from .events import *
 from .helpers import *
 from .imports import *
 from .permissions import *
-from .reviews import *
 from .templating import *
 
 cleaner = Cleaner()
@@ -154,15 +153,11 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
     
     _tags_fixed_bot = [tag for tag in tags_fixed if tag["id"] in bot["tags"]]
     bt.add_task(add_ws_event, bot_id, {"m": {"e": enums.APIEvents.bot_view}, "ctx": {"user": request.session.get('user_id'), "widget": False}})
-    reviews = await parse_reviews(worker_session, bot_id, page = rev_page)
     
     context = {
         "id": str(bot_id),
         "bot_token": "",
         "type": "bot",
-        "reviews": {
-            "average_rating": float(reviews[1])
-        },
         "replace_list": long_desc_replace_tuple
     }
     
@@ -173,12 +168,6 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
         "tags_fixed": _tags_fixed_bot, 
         "promos": await get_promotions(bot_id),
         "guild": main_server, 
-        "bot_reviews": reviews[0], 
-        "average_rating": reviews[1], 
-        "total_reviews": reviews[2], 
-        "review_page": rev_page, 
-        "total_review_pages": reviews[3], 
-        "per_page": reviews[4],
         "botp": True,
     }
 
