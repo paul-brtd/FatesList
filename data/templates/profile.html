@@ -91,86 +91,12 @@
     </div>
 
     {% if personal %}
-    <aside class="white" style="margin-left: 10px; opacity: 0.8; margin-bottom: 11px;">Note that the above list of bots includes your bots in the queue, denied bots (resubmit your bot once its fixed!) and banned bots (make a support ticket to learn why and how to fix it). These bots are hidden to only you and staff until it is approved or unbanned or requeued and approved</aside>
+        <aside class="white" style="margin-left: 10px; opacity: 0.8; margin-bottom: 11px;">Note that the above list of bots includes your bots in the queue, denied bots (resubmit your bot once its fixed!) and banned bots (make a support ticket to learn why and how to fix it). These bots are hidden to only you and staff until it is approved or unbanned or requeued and approved</aside>
     {% endif %}
     <script>
-	var context = {{context|tojson}}
-	    
-	function showToken() {
-		but = document.querySelector("#sat")
-		usertok = $("#user_tok")
-		if(!usertok.html()) {	
-			usertok.html(context.user_token)
-			but.innerHTML = "Hide"
-		}
-		else {
-			usertok.html("")
-			but.innerHTML = "Show"
-		}
-	}		
-        function pbioEditPane(el, id) {
-                bio = document.querySelector('#bio-' + id)
-                if(bio.style.display == "none") {
-                        bio.style.display = 'block';
-                        document.querySelector("#bio_text-" + id).style.display = "none";
-                        el.innerHTML = 'Close Edit Menu';
-                }
-                else {
-                        bio.style.display = 'none';
-                        document.querySelector("#bio_text-" + id).style.display = "inline-block";
-                        el.innerHTML = 'Edit';
-                }
-        }
-  function toggleJS() {
-  	json = JSON.stringify({"js_allowed": !context.js_allowed})
-	headers = {"Authorization": context.user_token}
-        $.ajax({
-		url: `/api/users/${context.user_id}/js_allowed`,
-		dataType: "json",
-		headers: headers,
-		method: "PATCH",
-		processData: false,
-		contentType: 'application/json',
-		data: json,
-		statusCode: {
-			200: function(data) {
-				window.location.reload()
-			}
-		}
-
-	})
-  }
-  function regenUserToken() {
-	headers = {"Authorization": context.user_token}
-        $.ajax({
-		url: `/api/users/${context.user_id}/token`,
-		headers: headers,
-		method: "PATCH",
-		statusCode: {
-			200: function() {
-				modalShow("Success!", "Regenerated User Token Successfully!")
-			}
-		}
-	})
-	setTimeout(function(){window.location.reload()}, 2000)
-  }
-  function updateBio() {
-        json = JSON.stringify({"description": document.querySelector("#bio-form-0").value})
-        headers = {"Authorization": context.user_token}
-        $.ajax({
-		url: `/api/users/${context.user_id}/description`,
-                dataType: "json",
-                headers: headers,
-                method: "PATCH",
-                processData: false,
-                contentType: 'application/json',
-                data: json
-        })
-        modalShow("Success!", "Changed your bio successfully")
-        window.location.reload()
-
-  }
-</script>
+	    var context = {{context|tojson}}
+	</script>
+    <script src="/static/assets/prod/profile.min.js?v=1"></script>
 {% endblock %}
 {% block footer %}
     

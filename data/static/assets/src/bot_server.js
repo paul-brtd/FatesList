@@ -185,17 +185,12 @@ function voteReview(rev_id, upvote) {
 	else {
 		vote_type = "downvote"
 	}	
-	jQuery.ajax({
+	request({
 		method: 'PATCH',
-		url: `/api/${context.type}s/${context.id}/reviews/${rev_id}/votes`,
-		data: JSON.stringify({"upvote": upvote, "user_id": context.user_id}),
-		headers: {"Authorization": context.user_token},
-		processData: false,
-		contentType: 'application/json',
+		url: `/api/users/${context.user_id}/${context.type}s/${context.id}/reviews/${rev_id}/votes`,
+		data: {"upvote": upvote},
+		userAuth: true,
 		statusCode: {
-			400: function(data) {
-				modalShow("Error", data.responseJSON.reason);
-			},
 			200: function(data) {
 				modalShow("Success!", `Successfully ${vote_type} this review`)
 				setTimeout(() => window.location.reload(), 1500)

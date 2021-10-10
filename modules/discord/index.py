@@ -107,7 +107,8 @@ async def login_get(request: Request, redirect: Optional[str] = None, pretty: Op
             context = {
                 "perm_needed": redirect is not None, 
                 "perm_pretty": pretty, 
-                "redirect": redirect if redirect else '/'
+                "redirect": redirect if redirect else None,
+                "login_page": True
             }
     )
 

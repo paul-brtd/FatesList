@@ -86,3 +86,8 @@ function request(data) {
     statusCode: data.statusCode
   })
 }
+
+// Set current page
+if(!context.login_page) {
+  localStorage.setItem("current-page", window.location.href)
+}

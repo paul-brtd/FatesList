@@ -11,6 +11,15 @@ function getLoginLink() {
 			scopes.push(v)
 		}
 	})
+
+	if(!context.redirect) {
+		context.redirect = localStorage.getItem("current-page")
+		if(!context.redirect) {
+			context.redirect = "/"
+		}
+	}
+
+	localStorage.setItem("login-redirect", context.redirect)
 	localStorage.setItem("login-scopes", JSON.stringify(scopes))
 	data = {
 		"redirect": context.redirect,
