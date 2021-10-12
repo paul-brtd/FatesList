@@ -1,15 +1,3 @@
-// replaceAll polyfill
-if (!String.prototype.replaceAll) {
-	String.prototype.replaceAll = function(str, newStr){
-		if (Object.prototype.toString.call(str).toLowerCase() === '[object regexp]') {
-			return this.replace(str, newStr);
-		}
-
-		return this.replace(new RegExp(str, 'g'), newStr);
-	};
-}
-
-
 function submitBot() {
     context.error = null
     modalShow("Saving", "Please wait for a few moments while we save your bot")

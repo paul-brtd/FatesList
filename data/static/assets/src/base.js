@@ -91,3 +91,25 @@ function request(data) {
 if(!context.login_page) {
   localStorage.setItem("current-page", window.location.href)
 }
+
+String.prototype.replaceAll = function(strReplace, strWith) {
+  // See http://stackoverflow.com/a/3561711/556609
+  var esc = strReplace.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+  var reg = new RegExp(esc, 'ig');
+  return this.replace(reg, strWith);
+}
+
+String.prototype.replacem = function(replaceList) {
+  var new_str = this
+  for(var i = 0; i < replaceList.length; i++) {
+    new_str = new_str.replaceAll(replaceList[i][0], replaceList[i][1])
+  }
+  return new_str;
+}
+
+String.prototype.replaceAllBackup = function(str, newStr){
+		if (Object.prototype.toString.call(str).toLowerCase() === '[object regexp]') {
+			return this.replace(str, newStr);
+		}
+		return this.replace(new RegExp(str, 'g'), newStr);
+};

@@ -41,11 +41,11 @@ class BotAdminOp(Enum):
     approve = "APPROVE", "Approve Bot", 2, True, False, None
     deny = "DENY", "Deny Bot", 2, True, False, None
     unverify = "UNVERIFY", "Unverify Bot", 3, True, False, CooldownBucket.ban
-
-    # To be implemented in go
     reset_votes = "RESETVOTES", "Reset All Votes", (5, 7), True, True, CooldownBucket.reset
-    staff_lock = "SLOCK", "Staff Lock Bot", 4, True, False, None
-    staff_unlock = "SUNLOCK", "Staff Unlock Bot", 4, True, False, CooldownBucket.lock
+    staff_lock = "STAFFLOCK", "Staff Lock Bot", 4, True, False, None
+    staff_unlock = "STALLUNLOCK", "Staff Unlock Bot", 4, True, False, CooldownBucket.lock
+
+    # TODO: To be implemented in go (or as an api, api seems better)
     bot_lock = "BLOCK", "Bot Lock", 0, False, False, None
     bot_unlock = "BUNLOCK", "Bot Unlock", 4, False, False, CooldownBucket.lock
 
@@ -166,4 +166,5 @@ class APIEvents(IntEnum):
     server_ban = 74, "Server Ban Event"
     server_hide = 75, "Server Hide Event" # Whenever someone hides their server
     server_archive = 76, "Server Archive Event" # When someone archives their server
-    vote_reminder = 110, "Vote Reminder"
+    staff_lock = 80, "Staff Lock"
+    staff_unlock = 81, "Staff Unlock"

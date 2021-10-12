@@ -1,7 +1,7 @@
 {% extends "base/base.html" %}
 
 {% block head %}
-	<link rel="stylesheet" href="/static/assets/prod/bot_server.min.css" media="none" onload="if(media!='all')media='all'"/>
+	<link rel="stylesheet" href="/static/assets/prod/bot_server.min.css?v=4" media="none" onload="if(media!='all')media='all'"/>
 <style>
 {% if data.banner and data.keep_banner_decor %}
 .banner-decor {
@@ -40,9 +40,9 @@
 				</div>
 			{% endif %}
 			{% if data.state == enums.BotState.under_review %}
-					<div class="alert alert-info" style="text-align: center; justify-content: center; color: white !important;" role="alert">
-						<strong>This bot is currently under review now right now and will be approved (or denied) soon! Certain features will be disabled until it has been approved</strong>
-					</div>
+				<div class="alert alert-info" style="text-align: center; justify-content: center; color: white !important;" role="alert">
+					<strong>This bot is currently under review now right now and will be approved (or denied) soon! Certain features will be disabled until it has been approved</strong>
+				</div>
 			{% endif %}
 	{% if data.nsfw %}
 		<div class="alert alert-info" style="text-align: center; justify-content: center; color: white !important;" role="alert">
@@ -105,33 +105,20 @@
 			  {% endif %}
 			  <button id="about-tab-button" class="tablinks" onclick="openf(event, 'about', this, false)">About</button>
 		</div>
-		<section id="long-description-tab" class='tabcontent'>
-			<div id="long-description" style="color: white; text-align: left; margin-left: 5%; margin-right: 5%; margin-top: 13px;"> {% if data.long_description_type in (enums.LongDescType.html, enums.LongDescType.markdown_pymarkdown) %}{{data.long_description|safe}}{% endif %}</div> <!-- To avoid users seeing broken pages, don't add to site is markdown is used -->
+		<section id="long-description-tab" class='tabcontent tabdesign'>
+			<div id="long-description"> {% if data.long_description_type in (enums.LongDescType.html, enums.LongDescType.markdown_pymarkdown) %}{{data.long_description|safe}}{% endif %}</div> <!-- To avoid users seeing broken pages, don't add to site is markdown is used -->
 			{% if data.long_description_type == enums.LongDescType.markdown_marked %}
        				<!-- Handle markdown -->
 				<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 				<pre style="display: none" id="marked-ld">{{data.long_description|safe}}</pre>
 				<script>
 					replace_list = {{context.replace_list|tojson}}
-					String.prototype.replaceAll = function(strReplace, strWith) {
-						// See http://stackoverflow.com/a/3561711/556609
-						var esc = strReplace.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-						var reg = new RegExp(esc, 'ig');
-						return this.replace(reg, strWith);
-					}
-					String.prototype.replacem = function(replaceList) {
-						var new_str = this
-						for(var i = 0; i < replaceList.length; i++) {
-							new_str = new_str.replaceAll(replaceList[i][0], replaceList[i][1])
-						}
-						return new_str;
-					}
 					var md = marked(document.querySelector("#marked-ld").innerHTML).replacem(replace_list)
 					document.querySelector("#long-description").innerHTML = md;
 				</script>
 			{% endif %}
 		</section>
-		<section id="reviews-tab" class='tabcontent'>
+		<section id="reviews-tab" class='tabcontent tabdesign'>
 			<h6 style="font-size: 18px;" class="white">Bot Reviews</h6>
 			{% if username %}
 					<label for="rating">On a scale of 1 to 10, how much did you like this {{type}}?</label><br/>
@@ -144,23 +131,22 @@
        				<p class="white">You need to be logged in to make reviews</p>
 			{% endif %}
 			<hr class="hr-is">
-			<section id="review-write">
-			</section>
+			<article id="review-write">
+			</article>
 		    <script defer>
-			function asyncReviewLoader() {
-				getReviewPage(context.rev_page)
-			}
-			jQuery(document).ready(function(){
-				setTimeout(asyncReviewLoader, 300);
-			});
+				function asyncReviewLoader() {
+					getReviewPage(context.rev_page)
+				}
+				jQuery(document).ready(function(){
+					setTimeout(asyncReviewLoader, 300)
+				});
 		    </script>
-		</div>
-	</section>
+		</section>
 	{% if type == "bot" %}
-	<section id="commands-tab" class="tabcontent white">
-		<p style="font-size: 30px;" id="commands-error">Getting Commands...</p>
+		<section id="commands-tab" class="tabcontent tabdesign">
+			<p style="font-size: 30px;" id="commands-error">Getting Commands...</p>
+		</section>
 	{% endif %}
-	</section>
 	<section id="about-tab" class='tabcontent white'>
 		<table style="margin: 0 auto !important;">
 			<tr>
@@ -205,7 +191,7 @@
 	context.default_tab_button = "long-desc-tab-button"
 </script>
 <script src="/static/assets/prod/tabs.min.js?v=2" defer></script>
-<script src="/static/assets/prod/bot_server.min.js?v=29"></script>
+<script src="/static/assets/prod/bot_server.min.js?v=31"></script>
 <script src="/static/assets/prod/vote.min.js?v=4"></script>
 </div>
 </article>

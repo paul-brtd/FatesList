@@ -74,10 +74,10 @@ function replyReview(el, id) {
 function commandModal(id) {
 	cmd = document.querySelector(`#cmd-${id}`).textContent
 	cmd = JSON.parse(cmd)
-	args = cmd.args.toString().replace(",", " ")
+	args = cmd.args.toString().replaceAll(",", " ")
 	modalShow(`More information`, `
 		Command: ${cmd.cmd_name}<br>
-		Arguments: ${args.replace(">", "</span>").replace("<", "<span class='arg'>")}<br>
+		Arguments: ${args.replaceAll(">", "</span>").replaceAll("<", "<span class='arg'>")}<br>
 		Vote Locked: ${cmd.vote_locked}<br/>
 		ID: ${cmd.id}<br/><br/>
 		(Advanced) Raw JSON: ${JSON.stringify(cmd)}
@@ -126,11 +126,11 @@ function getCommands(bot_id) {
 					gdata.forEach(function(cmd, i, a) {
 							if(cmd.args.length == 0)
 								cmd.args = ["No arguments"]
-							if(cmd.doc_link.replace(" ", "") == "")
+							if(cmd.doc_link.replaceAll(" ", "") == "")
 								docs = "No docs available"
 							else
 								docs = `<a class='long-desc-link' href='${cmd.doc_link}'>Docs</a>`
-							if(cmd.description.replace(" ", "") == "" || cmd.description.length < 15)
+							if(cmd.description.replaceAll(" ", "") == "" || cmd.description.length < 15)
 								description = "There is no description available"
 							else
 								description = cmd.description
