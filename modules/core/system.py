@@ -52,6 +52,7 @@ class FatesListRequestHandler(BaseHTTPMiddleware):
     def __init__(self, app, *, exc_handler):
         super().__init__(app)
         self.exc_handler = exc_handler
+        app.add_exception_handler(Exception, exc_handler)
         
         # Methods that should be allowed by CORS
         self.cors_allowed = "GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS"
@@ -90,11 +91,14 @@ class FatesListRequestHandler(BaseHTTPMiddleware):
 
         try:
             res = await self._dispatcher(path, request, call_next)
-        except Exception as exc:  # pylint: disable=broad-except
+        except BaseException as exc:  # pylint: disable=broad-except
             logger.exception("Site Error Occurred") 
             res = await self.exc_handler(request, exc, log=True)
         
-        self._log_req(path, request, res)
+        try:
+            self._log_req(path, request, res)
+        except:
+            pass
         return res if res else self.default_res
     
     async def _dispatcher(self, path, request, call_next):
@@ -120,7 +124,7 @@ class FatesListRequestHandler(BaseHTTPMiddleware):
         # Process request with retry
         try:
             response = await call_next(request)
-        except Exception as exc:  # pylint: disable=broad-except
+        except BaseException as exc:  # pylint: disable=broad-except
             logger.exception("Site Error Occurred")
             response = await self.exc_handler(request, exc)
 
@@ -235,9 +239,6 @@ def setup_discord():
     intent_servers = discord.Intents(
         guilds = True
     )
-    intent_dbg = discord.Intents(
-        dm_messages = True  # Only allow DMs to pass through
-    ) 
     client = FatesBot(intents=intent_main)
     client_server = FatesBot(intents=intent_servers)
     logger.info("Discord init is beginning")
@@ -256,6 +257,12 @@ async def init_fates_worker(app, session_id, workers):
         - Setup the ratelimiter and IPC worker protocols
         - Start repeated task for vote reminder posting
     """
+    # Add request handler
+    app.add_middleware(
+        FatesListRequestHandler, 
+        exc_handler=WebError.error_handler,
+    )
+
     # This is still builtins for backward compatibility. 
     # ========================================================
     # Move all code to use worker session. All new code should 
@@ -389,13 +396,7 @@ async def finish_init(app, session_id, workers, dbs):
     @app.exception_handler(StarletteHTTPException)
     async def _fl_error_handler(request, exc):
         return await WebError.error_handler(request, exc, log=True)
-    
-    # Add request handler
-    app.add_middleware(
-        FatesListRequestHandler, 
-        exc_handler=WebError.error_handler
-    )
-    
+        
     # Include all routers
     include_routers(app, "Discord", "modules/discord")
 

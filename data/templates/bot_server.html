@@ -64,9 +64,6 @@
 			{% if data.donate and data.donate.replace(" ", "") %}
 				<a rel="noopener" target="_blank" href="{{data.donate}}"><button class="btn btn-outline-light buttons-all" id="buttons-donate">Donate</button></a>
 			{% endif %}
-			{% if data.github and data.github.replace(" ", "") %}
-				<a rel="noopener" target="_blank" href="{{data.github}}"><button class="btn btn-outline-light buttons-all" id="buttons-github">Github</button></a>
-			{% endif %}
 			{% if data.privacy_policy %}
 				<a rel="noopener" target="_blank" href="{{data.privacy_policy}}"><button class="btn btn-outline-light buttons-all" id="buttons-privacy">Privacy Policy</button></a>
 			{% endif %}
@@ -101,7 +98,8 @@
 			  <button id="long-desc-tab-button" class="tablinks" onclick="openf(event, 'long-description', this, true)">Description</button>
 			  <button id="review-tab-button" class="tablinks" onclick="openf(event, 'reviews', this, false)">Reviews</button>
 			  {% if type == "bot" %}
-			  <button id="commands-tab-button" class="tablinks coming-soon" onclick="openf(event, 'commands', this, false)">Commands</button>
+			  <button id="commands-tab-button" class="tablinks" onclick="openf(event, 'commands', this, false)">Commands</button>
+			  <button id="resources-tab-button" class="tablinks" onclick="openf(event, 'resources', this, false)">Resources</button>
 			  {% endif %}
 			  <button id="about-tab-button" class="tablinks" onclick="openf(event, 'about', this, false)">About</button>
 		</div>
@@ -147,6 +145,21 @@
 			<p style="font-size: 30px;" id="commands-error">Getting Commands...</p>
 		</section>
 	{% endif %}
+	<section id="resources-tab" class="tabcontent tabdesign">
+		{% if data.donate and data.donate.replace(" ", "") %}
+			<a rel="noopener" target="_blank" class="long-desc-link" href="{{data.donate}}">Donate to {{ data.user.username }} for new exclusive benefits</a><br/>
+		{% endif %}
+		{% if data.github and data.github.replace(" ", "") %}
+			<a rel="noopener" target="_blank" class="long-desc-link" href="{{data.github}}">Github</a><br/>
+		{% endif %}
+		{% if data.privacy_policy and data.privacy_policy.replace(" ", "") %}
+			<a rel="noopener" target="_blank" class="long-desc-link" href="{{data.privacy_policy}}">Privacy Policy</a><br/>
+		{% endif %}
+		{% if data.website and data.website.replace(" ", "") %}
+			<a rel="noopener" target="_blank" class="long-desc-link" href="{{data.website}}">Website</a>
+		{% endif %}
+		<p>Community resources are coming soon!</p>
+	</section>
 	<section id="about-tab" class='tabcontent white'>
 		<table style="margin: 0 auto !important;">
 			<tr>
