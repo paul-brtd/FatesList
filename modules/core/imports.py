@@ -12,7 +12,7 @@ from typing import List, Optional, Union
 import aiohttp
 import lxml
 import orjson
-import discord
+import disnake as discord
 from aioredis.exceptions import ConnectionError as ServerConnectionClosedError
 from fastapi import APIRouter, BackgroundTasks, Depends, File
 from fastapi import Form as FForm
@@ -31,7 +31,6 @@ from starlette.requests import ClientDisconnect
 from starlette.routing import Mount
 from starlette.websockets import WebSocket, WebSocketDisconnect
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
-from websockets.exceptions import ConnectionClosedError, ConnectionClosedOK
 
 import modules.models.enums as enums
 from config import *

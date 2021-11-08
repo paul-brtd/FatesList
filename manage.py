@@ -2,6 +2,10 @@
 import sys
 sys.pycache_prefix = "data/pycache"
 
+if sys.version_info < (3, 11):
+    raise RuntimeError(f"Fates List has only been tested to run on python 3.11. You are running {sys.version_info}")
+
+
 from subprocess import Popen, DEVNULL
 import os
 import io

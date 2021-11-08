@@ -43,7 +43,7 @@ class BotAdminOp(Enum):
     unverify = "UNVERIFY", "Unverify Bot", 3, True, False, CooldownBucket.ban
     reset_votes = "RESETVOTES", "Reset All Votes", (5, 7), True, True, CooldownBucket.reset
     staff_lock = "STAFFLOCK", "Staff Lock Bot", 4, True, False, None
-    staff_unlock = "STALLUNLOCK", "Staff Unlock Bot", 4, True, False, CooldownBucket.lock
+    staff_unlock = "STAFFUNLOCK", "Staff Unlock Bot", 4, True, False, CooldownBucket.lock
 
     # TODO: To be implemented in go (or as an api, api seems better)
     bot_lock = "BLOCK", "Bot Lock", 0, False, False, None

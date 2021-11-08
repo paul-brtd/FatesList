@@ -15,9 +15,9 @@ from http import HTTPStatus
 import aio_pika
 import aioredis
 import asyncpg
-import discord
+import disnake as discord
 import sentry_sdk
-from discord.ext import commands
+from disnake.ext import commands
 from fastapi.exceptions import (HTTPException, RequestValidationError,
                                 ValidationError)
 from fastapi.middleware.gzip import GZipMiddleware
@@ -29,7 +29,6 @@ from lynxfall.oauth.models import OauthConfig
 from lynxfall.oauth.providers.discord import DiscordOauth
 from lynxfall.ratelimits import LynxfallLimiter
 from lynxfall.utils.fastapi import api_versioner, include_routers
-from prometheus_client import start_http_server
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.base import BaseHTTPMiddleware

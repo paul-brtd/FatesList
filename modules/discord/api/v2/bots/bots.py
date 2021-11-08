@@ -6,7 +6,6 @@ from fastapi.responses import PlainTextResponse, StreamingResponse
 from PIL import Image, ImageDraw, ImageFont
 import io, textwrap, aiofiles
 from starlette.concurrency import run_in_threadpool
-from matplotlib.colors import is_color_like
 from math import floor
 
 from ..base import API_VERSION
@@ -20,6 +19,20 @@ router = APIRouter(
     tags = [f"API v{API_VERSION} - Bots"],
     dependencies=[Depends(id_check("bot"))]
 )
+
+
+from colour import Color
+
+def is_color_like(c):
+    try:
+        # Converting 'deep sky blue' to 'deepskyblue'
+        color = c.replace(" ", "")
+        Color(color)
+        # if everything goes fine then return True
+        return True
+    except ValueError: # The color code was not found
+        return False
+
 
 @router.get("/{bot_id}/vpm")
 async def get_votes_per_month(request: Request, bot_id: int):
@@ -212,7 +225,7 @@ async def bot_exists(request: Request, bot_id: int):
 
 
 @router.get("/{bot_id}/widget", operation_id="get_bot_widget")
-async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format: enums.WidgetFormat, bgcolor: int | str ='black', textcolor: int | str ='white'):
+async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format: enums.WidgetFormat, bgcolor: Union[int, str] ='black', textcolor: Union[int, str] ='white'):
     """
     Returns a widget
 

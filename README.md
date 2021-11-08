@@ -19,3 +19,5 @@ To start the main site (must be started after dragon): ``python manage.py site r
 To start the manager bot (must be started after dragon): ``python manage.py site manager``
 
 **Make sure /home/meow exists and you are logged in as meow while running Fates List. fates.sock is the main site socket and fatesws.sock is websocket socket**
+
+FOR PYTHON 3.11: Compile yarl, frozendict and aiohttp from github manually. Compile asyncpg/uvloop from github manually after patching setup.py to remove the cython version check
