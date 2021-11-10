@@ -61,11 +61,10 @@
 			{% if data.support and data.support.replace(" ", "") %}
 				<a rel="noopener" target="_blank" href="{{data.support}}"><button class="btn btn-outline-light buttons-all" id="buttons-support">Support</button></a>
 			{% endif %}
-			{% if data.donate and data.donate.replace(" ", "") %}
-				<a rel="noopener" target="_blank" href="{{data.donate}}"><button class="btn btn-outline-light buttons-all" id="buttons-donate">Donate</button></a>
-			{% endif %}
 			{% if data.privacy_policy %}
+			<div class="content-nomobile">
 				<a rel="noopener" target="_blank" href="{{data.privacy_policy}}"><button class="btn btn-outline-light buttons-all" id="buttons-privacy">Privacy Policy</button></a>
+			</div>
 			{% endif %}
 			{% if data.website %}
 				<a rel="noopener" target="_blank" href="{{data.website}}"><button class="btn btn-outline-light buttons-all" id="buttons-website">Website</button></a>
@@ -98,8 +97,8 @@
 			  <button id="long-desc-tab-button" class="tablinks" onclick="openf(event, 'long-description', this, true)">Description</button>
 			  <button id="review-tab-button" class="tablinks" onclick="openf(event, 'reviews', this, false)">Reviews</button>
 			  {% if type == "bot" %}
-			  <button id="commands-tab-button" class="tablinks" onclick="openf(event, 'commands', this, false)">Commands</button>
 			  <button id="resources-tab-button" class="tablinks" onclick="openf(event, 'resources', this, false)">Resources</button>
+			  <button id="commands-tab-button" class="tablinks" onclick="openf(event, 'commands', this, false)">Commands</button>
 			  {% endif %}
 			  <button id="about-tab-button" class="tablinks" onclick="openf(event, 'about', this, false)">About</button>
 		</div>
@@ -147,7 +146,7 @@
 	{% endif %}
 	<section id="resources-tab" class="tabcontent tabdesign">
 		{% if data.donate and data.donate.replace(" ", "") %}
-			<a rel="noopener" target="_blank" class="long-desc-link" href="{{data.donate}}">Donate to {{ data.user.username }} for new exclusive benefits</a><br/>
+			<a rel="noopener" target="_blank" class="long-desc-link" href="{{data.donate}}">Donate to {{ data.user.username }} for special exclusive benefits tailored to you!</a><br/>
 		{% endif %}
 		{% if data.github and data.github.replace(" ", "") %}
 			<a rel="noopener" target="_blank" class="long-desc-link" href="{{data.github}}">Github</a><br/>
@@ -158,7 +157,7 @@
 		{% if data.website and data.website.replace(" ", "") %}
 			<a rel="noopener" target="_blank" class="long-desc-link" href="{{data.website}}">Website</a>
 		{% endif %}
-		<p>Community resources are coming soon!</p>
+		<p>Custom community resources are coming soon!</p>
 	</section>
 	<section id="about-tab" class='tabcontent white'>
 		<table style="margin: 0 auto !important;">

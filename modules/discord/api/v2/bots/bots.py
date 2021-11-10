@@ -148,6 +148,7 @@ async def fetch_bot(
     bot_id: int, 
     compact: Optional[bool] = True, 
     offline: Optional[bool] = False,
+    no_cache: Optional[bool] = False
 ):
     """
     Fetches bot information given a bot ID. If not found, 404 will be returned.
@@ -155,19 +156,28 @@ async def fetch_bot(
     Setting compact to true (default) -> description, long_description, long_description_type, keep_banner_decor and css will be null
 
     Setting offline to true -> user will be null and no ownership info will be given. If the bot is no longer on discord, this endpoint will still return if offline is set to true
+
+    No cache means cached responses will not be served (may be temp disabled in the case of a DDOS or temp disabled for specific bots as required)
     """
     if len(str(bot_id)) not in [17, 18, 19, 20]:
         return abort(404)
+
+    if not no_cache:
+        cache = await redis_db.get(f"botcache-{bot_id}")
+        if cache:
+            return orjson.loads(cache)
     
-    check = await db.fetchval("SELECT bot_id FROM bots WHERE bot_id = $1", bot_id)
-    if not check:
-        return abort(404)
 
     api_ret = await db.fetchrow(
-        "SELECT last_stats_post, banner_card, banner_page, guild_count, shard_count, shards, prefix, invite, invite_amount, features, bot_library AS library, state, website, discord AS support, github, user_count, votes, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", 
+        "SELECT last_stats_post, banner_card, banner_page, guild_count, shard_count, shards, prefix, invite, invite_amount, features, bot_library AS library, state, website, discord AS support, github, user_count, votes, donate, privacy_policy, nsfw, custom_resources FROM bots WHERE bot_id = $1", 
         bot_id
     )
+    if api_ret is None:
+        return abort(404)
+
     api_ret = dict(api_ret)
+    api_ret["custom_resources"] = orjson.loads(api_ret["custom_resources"])
+
     if not compact:
         extra = await db.fetchrow(
             "SELECT description, long_description_type, long_description, css, keep_banner_decor FROM bots WHERE bot_id = $1",
@@ -215,6 +225,9 @@ async def fetch_bot(
         "SELECT vanity_url FROM vanity WHERE redirect = $1", 
         bot_id
     )
+
+    await redis_db.set(f"botcache-{bot_id}", orjson.dumps(api_ret), ex=60*60*8)
+
     return api_ret
 
 

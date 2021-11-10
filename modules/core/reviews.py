@@ -75,5 +75,5 @@ async def _parse_reviews(worker_session, bot_id: int, rev_id: uuid.uuid4 = None,
     if i == 0:
         return reviews, 10.0, 0, 0, per_page
     logger.trace(f"Total reviews per page is {total_rev['count']/per_page}")
-    return reviews, float(total_rev["avg"]), float(total_rev["count"]), int(math.ceil(total_rev["count"]/per_page)), per_page
+    return reviews, float(total_rev["avg"]), int(total_rev["count"]), int(math.ceil(total_rev["count"]/per_page)), per_page
 
