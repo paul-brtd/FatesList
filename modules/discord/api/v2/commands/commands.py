@@ -48,7 +48,7 @@ async def add_commands(request: Request, bot_id: int, commands: BotCommands):
     await bot_add_event(bot_id, enums.APIEvents.command_add, {"user": None, "id": ids})
     return api_success(id = ids)
 
-@router.patch(
+@router.delete(
     "/{bot_id}/commands", 
     response_model = APIResponse, 
     dependencies=[

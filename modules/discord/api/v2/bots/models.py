@@ -69,7 +69,6 @@ class Bot(BaseModel):
     banner_card: Optional[str] = None
     banner_page: Optional[str] = None
     keep_banner_decor: Optional[bool] = None
-    custom_resources: Optional[List[dict]] = {}
 
 class BotStats(BaseModel):
     guild_count: int

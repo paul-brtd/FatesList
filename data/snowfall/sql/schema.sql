@@ -39,9 +39,17 @@ CREATE TABLE bots (
     privacy_policy text,
     nsfw boolean DEFAULT false,
     verifier bigint,
-    js_allowed BOOLEAN DEFAULT TRUE,
-    custom_resources JSONB NOT NULL DEFAULT '{}'::jsonb -- For the future that is custom resources
+    js_allowed BOOLEAN DEFAULT TRUE
 );
+
+CREATE TABLE bot_resources (
+    id uuid primary key DEFAULT uuid_generate_v4(),
+    bot_id BIGINT NOT NULL,
+    resource_title TEXT NOT NULL,
+    resource_link TEXT NOT NULL,
+    resource_description TEXT NOT NULL
+);
+
 
 CREATE TABLE bot_tags (
     id SERIAL,

@@ -169,14 +169,13 @@ async def fetch_bot(
     
 
     api_ret = await db.fetchrow(
-        "SELECT last_stats_post, banner_card, banner_page, guild_count, shard_count, shards, prefix, invite, invite_amount, features, bot_library AS library, state, website, discord AS support, github, user_count, votes, donate, privacy_policy, nsfw, custom_resources FROM bots WHERE bot_id = $1", 
+        "SELECT last_stats_post, banner_card, banner_page, guild_count, shard_count, shards, prefix, invite, invite_amount, features, bot_library AS library, state, website, discord AS support, github, user_count, votes, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", 
         bot_id
     )
     if api_ret is None:
         return abort(404)
 
     api_ret = dict(api_ret)
-    api_ret["custom_resources"] = orjson.loads(api_ret["custom_resources"])
 
     if not compact:
         extra = await db.fetchrow(
