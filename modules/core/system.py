@@ -156,17 +156,6 @@ class FatesListRequestHandler(BaseHTTPMiddleware):
        
         return response
         
-class FatesBot(discord.Client):
-    """Fates List Regular Bot"""
-    def __init__(self, *, intents):
-        self.ready = False
-        super().__init__(intents=intents)
-
-    async def on_ready(self):
-        """on_ready patch"""
-        self.ready = True
-        logger.success(f"{self.user} now up!")
-        
 class FatesWorkerOauth(Singleton):  # pylint: disable=too-few-public-methods
     """Stores all oauths (currently only discord)"""
     
@@ -227,23 +216,6 @@ class FatesWorkerSession(Singleton):  # pylint: disable=too-many-instance-attrib
         after workers are published
         """
         return self.workers.index(os.getpid())
-
-def setup_discord():
-    """Sets up discord clients"""
-    intent_main = discord.Intents(
-        guilds=True,
-        members=True,
-        presences=True
-    )
-    intent_servers = discord.Intents(
-        guilds = True
-    )
-    client = FatesBot(intents=intent_main)
-    client_server = FatesBot(intents=intent_servers)
-    logger.info("Discord init is beginning")
-    asyncio.create_task(client.start(TOKEN_MAIN))
-    asyncio.create_task(client_server.start(TOKEN_SERVER)) 
-    return {"main": client, "servers": client_server, "debug": None}
 
 # Include all the modules by looping through 
 # and using importlib to import them and then including them in fastapi
@@ -385,16 +357,8 @@ async def finish_init(app, session_id, workers, dbs):
     app.add_middleware(GZipMiddleware, minimum_size=500)
     
     # Setup exception handling
-    @app.exception_handler(403)
-    @app.exception_handler(404)
-    @app.exception_handler(RequestValidationError)
-    @app.exception_handler(ValidationError)
-    @app.exception_handler(500)
-    @app.exception_handler(HTTPException)
-    @app.exception_handler(Exception)
-    @app.exception_handler(StarletteHTTPException)
-    async def _fl_error_handler(request, exc):
-        return await WebError.error_handler(request, exc, log=True)
+    for code in (403, 404, RequestValidationError, ValidationError, 500, HTTPException, Exception, StarletteHTTPException):
+        app.add_exception_handler(code, WebError.error_handler)
         
     # Include all routers
     include_routers(app, "Discord", "modules/discord")
