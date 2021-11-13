@@ -61,8 +61,6 @@ with open("config/data/secrets.json") as fp:
     TOKEN_MAIN: str = _secret_data["token_main"]
     TOKEN_SERVER: str = _secret_data["token_server"]
     TOKEN_MANAGER: str = _secret_data["token_manager"]
-    session_key: str = _secret_data["session_key"]
-    rl_key: str = _secret_data["rl_key"]
     discord_client_secret: str = _secret_data["client_secret"]
 
 

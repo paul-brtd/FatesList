@@ -29,6 +29,7 @@ from lynxfall.oauth.models import OauthConfig
 from lynxfall.oauth.providers.discord import DiscordOauth
 from lynxfall.ratelimits import LynxfallLimiter
 from lynxfall.utils.fastapi import api_versioner, include_routers
+from lynxfall.utils.string import get_token
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -37,7 +38,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from config import (API_VERSION, TOKEN_DBG, TOKEN_MAIN, TOKEN_SERVER,
                     bot_dev_role, bots_role, discord_client_id,
                     discord_client_secret, discord_redirect_uri,
-                    owner, sentry_dsn, session_key, site)
+                    owner, sentry_dsn, site)
 from config._logger import logger
 from modules.core.error import WebError
 from modules.models import enums
@@ -319,7 +320,22 @@ async def finish_init(app, session_id, workers, dbs):
 
     # Set the session for use in startup
     session = app.state.worker_session
-    
+   
+    # Get or create session key
+    async def gen_common_secret(key: str):
+        dat = await session.redis.get(key)
+        if not dat:
+            dat = get_token(196)
+            await session.redis.set(key, dat, ex=60*60*3, nx=True)
+            signal.raise_signal(signal.SIGINT)
+            os._exit(0)
+
+        dat = dat.decode("utf-8")
+        return dat
+
+    session_key = await gen_common_secret("fl:sessionkey")
+    app.state.rl_key = await gen_common_secret("fl:rlkey")
+
     # Set bot tags
     def _tags(tag_db):
         tags = {}
