@@ -11,6 +11,10 @@ def ip_check(request: Request) -> str:
 async def rl_key_func(request: Request) -> str:
     if secure_strcmp(str(request.headers.get("FatesList-RateLimitBypass")), request.app.state.rl_key): # Check ratelimit key
         return None
+    
+    if ip_check(request) == "127.0.0.1":
+        return None
+
     if ("Authorization" in request.headers or "authorization" in request.headers) and str(request.url.path).startswith("/api/"):
         try: # Check for auth header
             r = request.headers["Authorization"]
