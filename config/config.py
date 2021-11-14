@@ -2,6 +2,8 @@
 
 import json
 from typing import List, Dict, Union
+import os
+
 
 with open("config/data/discord.json") as f:
     _discord_data = json.load(f)
@@ -58,11 +60,8 @@ with open("config/data/policy.json") as fp:
 
 with open("config/data/secrets.json") as fp:
     _secret_data = json.load(fp)
-    TOKEN_MAIN: str = _secret_data["token_main"]
     TOKEN_SERVER: str = _secret_data["token_server"]
     TOKEN_MANAGER: str = _secret_data["token_manager"]
-    discord_client_secret: str = _secret_data["client_secret"]
-
 
 
 # Value below should not be changed
@@ -73,3 +72,6 @@ TOKEN_DBG = "" # Backward compatibility
 # Notes
 #
 # Think about timed badges
+
+TOKEN_MAIN = os.environ["MAIN_TOKEN"]
+discord_client_secret = os.environ["CLIENT_SECRET"] 

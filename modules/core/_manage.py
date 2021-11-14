@@ -6,16 +6,19 @@ sys.path.append(".")
 if sys.version_info < (3, 11):
     raise RuntimeError(f"Fates List has only been tested to run on python 3.11. You are running {sys.version_info}")
 
+import os
+
+if not os.environ.get("MAIN_TOKEN"):
+    raise RuntimeError("MAIN_TOKEN must be set\nHINT: Use dragon --cmd CMD")
 
 from subprocess import Popen, DEVNULL
-import os
 import io
 os.environ["LOGURU_LEVEL"] = "INFO" # Make this debug for debug info
 
 import uuid
 import signal
 from pathlib import Path
-import secrets as secrets_lib
+import secrets
 import datetime
 from getpass import getpass
 import importlib
@@ -34,11 +37,6 @@ def app():
 @click.group()
 def site():
     """Fates List site management"""
-    ...
-
-@click.group()
-def secrets():
-    """Utilities to manage secrets"""
     ...
 
 @click.group()
@@ -98,7 +96,7 @@ def run_site(ctx, workers):
     from gunicorn.app.base import BaseApplication
     from PIL import Image
     from config._logger import logger
-    
+
     session_id = uuid.uuid4()
    
     # Load in static assets for bot widgets
@@ -162,21 +160,6 @@ def run_site(ctx, workers):
 def manager_run():
     """Start the manager bot"""
     os.execv(sys.executable, ['python'] + ["modules/infra/manager/main.py"])
-
-@site.command("goipc")
-def goipc():
-    """Starts up goipc"""
-    from config import TOKEN_MAIN, main_server, staff_server, test_server, bot_logs, certified_bots_role, certified_dev_role, bot_dev_role
-    os.environ["TOKEN"] = TOKEN_MAIN
-    os.environ["MAIN_SERVER"] = str(main_server)
-    os.environ["TEST_SERVER"] = str(test_server)
-    os.environ["STAFF_SERVER"] = str(staff_server)
-    os.environ["SITE_LOGS"] = str(bot_logs)
-    os.environ["CERTIFIED_BOT_ROLE"] = str(certified_bots_role)
-    os.environ["CERTIFIED_DEV_ROLE"] = str(certified_dev_role)
-    os.environ["BOT_DEV_ROLE"] = str(bot_dev_role)
-    os.system("cd modules/infra/dragon && go build -v . && cd ../../..")
-    os.execv("modules/infra/dragon/dragon", ["dragon"])
 
 @site.command("buildenums")
 def build_enums():
@@ -324,10 +307,10 @@ def update_repos():
     with Popen(cmd, env=os.environ) as proc:
         proc.wait()
     
-@secrets.command("random")
+@site.command("gensecret")
 def secrets_random():
     """Generates a random secret"""
-    click.echo(secrets_lib.token_urlsafe())
+    click.echo(secrets.token_urlsafe())
 
 @site.command("compilestatic")
 def staticfiles_compile():
@@ -560,7 +543,7 @@ def db_setup(ctx, home, backup):
     Path("/snowfall/docker/db/postgres").mkdir(parents=True)
     Path("/snowfall/docker/db/redis").mkdir(parents=True)
     
-    pg_pwd = secrets_lib.token_urlsafe()
+    pg_pwd = secrets.token_urlsafe()
     
     with open("/snowfall/docker/env.pg", "w") as env_pg:
         lines = [
@@ -570,8 +553,6 @@ def db_setup(ctx, home, backup):
         ]
         env_pg.write("\n".join(lines))
     
-    erlang_shared_cookie = secrets_lib.token_urlsafe()
-        
     shutil.copytree("data/snowfall/docker/scripts", "/snowfall/docker/scripts", dirs_exist_ok=True)
     shutil.copy2("data/snowfall/docker/config/docker-compose.yml", "/snowfall/docker")
     
@@ -697,12 +678,10 @@ def db_setup(ctx, home, backup):
             
     Path("/snowfall/docker/env_done").touch()
     logger.info(f"Postgres password is {pg_pwd}")
-    logger.info(f"Erlang shared cookie is {erlang_shared_cookie}")
     logger.success("Done setting up databases")
  
 
 app.add_command(site)
-app.add_command(secrets)
 app.add_command(db)
     
 if __name__ == "__main__":
