@@ -17,9 +17,9 @@ except ValueError:
     bot_id = 811073947382579200
 
 if bot_id == 811073947382579200:
-    api_token = "55gCmZ7zr12upTnQcvnrXcJv1IfN15ddk9WLlxG0h54uCGKFi2TBPlOFh8RYhbCMaSDQPCju2k0g2pykEmsD3AmEvUNPoc4Rxqjk6fpNqncjk8PVeh2ImolpaXE1cNEdCVEh"
+    api_token = "AzbnMlEABvKnIe3zt6zHMCOGrnoan5tS0hXCfzpBa3UiHdl045p1h5vxivMBtH5UFETZJdQ9TkpoDsy954uia74Hak5KWECqCufjvRZfV66enoB1rHf1HQtk6g04GajKqr98"
 else:
     api_token = input("Enter API Token: ")
 
-bot = ws.Bot(bot_id, api_token, True, True)
+bot = ws.Bot(bot_id, api_token)
 bot.start()
