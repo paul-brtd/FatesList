@@ -13,7 +13,6 @@ if not os.environ.get("MAIN_TOKEN"):
 
 from subprocess import Popen, DEVNULL
 import io
-os.environ["LOGURU_LEVEL"] = "INFO" # Make this debug for debug info
 
 import uuid
 import signal
@@ -49,7 +48,6 @@ def _fappgen(session_id, workers, static_assets):
     from fastapi.responses import ORJSONResponse
     from modules.core.system import init_fates_worker
     from config import API_VERSION
-     
     _app = FastAPI(
         title="Fates List",
         description="""
