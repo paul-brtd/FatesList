@@ -27,26 +27,21 @@ import shutil
 import time
 import multiprocessing
 from typing import Any, Callable, Dict
-import click
 
-@click.group()
-def app():
-    """Fates List Management"""
-    ...
+def error(msg: str, code: int = 1):
+    print(msg)
+    return sys.exit(code)
 
-@click.group()
-def site():
-    """Fates List site management"""
-    ...
+def confirm(msg, abort: bool = True):
+    while True:
+        check = input(msg + "(Y/N): ")
+        if check.lower() in ("y", "yes"):
+            return True
+        elif check.lower() in ("n", "no"):
+            if abort:
+                sys.exit(1)
+            return False
 
-@click.group()
-def db():
-    """Utilities to manage databases such as backup etc."""
-    ...
-
-def error(ctx, msg: str, code: int = 1):
-    click.secho(msg, fg="err", err=True)
-    return ctx.exit(code=code)
 
 def _fappgen(session_id, workers, static_assets):
     """Make the FastAPI app for gunicorn"""
@@ -87,12 +82,11 @@ def _fappgen(session_id, workers, static_assets):
 
 default_workers_num = (multiprocessing.cpu_count() * 2) + 1
 
-
-@site.command("run")
-@click.option("--workers", type=click.types.INT, default=default_workers_num, help="Amount of workers")
-@click.pass_context
-def run_site(ctx, workers):
+def site_run():
     """Runs the Fates List site"""
+    workers = os.environ.get("WORKERS") or default_workers_num
+    workers = int(workers)
+
     from gunicorn.app.base import BaseApplication
     from PIL import Image
     from config._logger import logger
@@ -156,13 +150,11 @@ def run_site(ctx, workers):
         logger.info(f"Site killed due to {type(exc).__name__}: {exc}")
         sys.exit(0)
 
-@site.command("manager")
-def manager_run():
+def site_manager():
     """Start the manager bot"""
     os.execv(sys.executable, ['python'] + ["modules/infra/manager/main.py"])
 
-@site.command("buildenums")
-def build_enums():
+def site_buildenums():
     """Build enums from go"""
     import aioredis
     from modules.core.ipc import redis_ipc_new
@@ -185,7 +177,6 @@ def build_enums():
     loop.run_until_complete(_run())
 
 
-@site.command("enums2md")
 def site_enum2html():
     """Converts the enums in modules/models/enums.py into markdown. Mainly for apidocs creation"""
     enums = importlib.import_module("modules.models.enums")
@@ -240,11 +231,9 @@ def site_enum2html():
     for key in md.keys():
         md_out.append(f'## {key}\n{md[key]["doc"]}{md[key]["table"]}')
 
-    click.echo(base_md + "\n" + "\n\n".join(md_out))
+    print(base_md + "\n" + "\n\n".join(md_out))
 
-@site.command("reload")
-@click.pass_context
-def site_reload(ctx):
+def site_reload():
     """Get the PID of the running site and reloads the site"""
     try:
         with open("data/pids/gunicorn.pid") as guni_pid:
@@ -252,7 +241,6 @@ def site_reload(ctx):
            
             if not pid.isdigit():
                 return error(
-                    ctx,
                     "Invalid/corrupt PID file found (site/gunicorn.pid)"
                 )
            
@@ -261,16 +249,16 @@ def site_reload(ctx):
     
     except FileNotFoundError:
         return error(
-            ctx,
             "No PID file found. Is the site running?"
         )
 
-@site.command("venv")
-@click.option('--python', type=click.types.STRING, required=False, help="Python interpreter path", default="python3.10")
-@click.option('--home', type=click.Path(exists=True, path_type=Path), required=False, help="Home directory for setup", default=Path.home())
-def venv_setup(python, home):
+def site_venv():
     """Sets up a new venv deleting the old one"""
     from config._logger import logger
+    python = os.environ.get("PYTHON") or "python3.11"
+    home = os.environ.get("HOMEDIR") or Path.home()
+    home = Path(str(home))
+
     logger.info("Backing up old venv")
     Path(home / "flvenv").rename(home / "flvenv.old")
     
@@ -299,25 +287,22 @@ def venv_setup(python, home):
         proc.wait()
     
 
-@site.command("update")
-def update_repos():
+def site_updaterepos():
     from config._logger import logger
     """Update all of the extra internal services made by Fates List"""
     cmd = ["git", "submodule", "foreach", "--recursive", "git", "pull", "origin", "main"]
     with Popen(cmd, env=os.environ) as proc:
         proc.wait()
     
-@site.command("gensecret")
-def secrets_random():
+def site_gensecret():
     """Generates a random secret"""
-    click.echo(secrets.token_urlsafe())
+    print(secrets.token_urlsafe())
 
-@site.command("compilestatic")
-def staticfiles_compile():
+def site_compilestatic():
     """Compiles all labelled static files"""
     for src_file in Path("data/static/assets/src").rglob("*.js"):
         out_file = str(src_file).replace(".js", ".min.js").replace("src/", "prod/").replace("js/", "")
-        click.echo(f"{src_file} -> {out_file}")
+        print(f"{src_file} -> {out_file}")
         cmd = [
             "google-closure-compiler", 
             "--js", str(src_file), 
@@ -329,7 +314,7 @@ def staticfiles_compile():
         
     for src_file in Path("data/static/assets/src").rglob("*.scss"):
         out_file = str(src_file).replace(".scss", ".min.css").replace("src/", "prod/").replace("css/", "")
-        click.echo(f"{src_file} -> {out_file}")
+        print(f"{src_file} -> {out_file}")
         cmd = [
             "sass",
             "--style=compressed",
@@ -360,10 +345,6 @@ def staticfiles_compile():
             with Popen(cmd, env=os.environ) as proc:
                 proc.wait()
 
-
-@db.command("backup")
-def db_backup_cmd():
-    return db_backup()
 
 def db_backup():
     """Backs up the Fates List database"""
@@ -401,17 +382,13 @@ def db_backup():
     
     logger.success("Backups done!")
 
-@db.command("shell")
 def db_shell():
     """Run a postgres shell"""
     with Popen(["pgcli"], env=os.environ) as proc:
         proc.wait()
 
 
-@db.command("apply")
-@click.option('-m', "module", type=click.types.STRING, required=True, help="Input migration to apply")
-@click.pass_context
-def db_apply(ctx, module):
+def db_apply():
     """Apply Fates List database migration"""
     from config._logger import logger
     import uvloop
@@ -419,13 +396,17 @@ def db_apply(ctx, module):
     
     import asyncpg
     import aioredis
-    
+
+    module = os.environ.get("MIGRATION") 
+
+    if not module:
+        raise RuntimeError("No migration found. Set MIGRATION envvar to migration file path")
+
     try:
         migration = importlib.import_module(module)
         _ = migration.apply # Check for apply function
     except Exception as exc:
         return error(
-            ctx,
             f"Could not import migration file: {exc}"
         )
 
@@ -441,9 +422,7 @@ def db_apply(ctx, module):
     loop.run_until_complete(_migrator())
 
 
-@db.command("wipeuser")
-@click.option('--user', "user_id", type=click.types.INT, required=True, help="Input user id to wipe")
-def db_wipeuser(user_id):
+def db_wipeuser():
     """Wipes a user account (e.g. Data Deletion Request)"""
     from config._logger import logger
     import uvloop
@@ -451,7 +430,15 @@ def db_wipeuser(user_id):
     
     import asyncpg
     import aioredis
-    
+   
+    try:
+        user_id = int(os.environ.get("USER"))
+    except:
+        user_id = None
+
+    if not user_id:
+        raise RuntimeError("Set USER envvar to user id to wipe")
+
     async def _wipeuser():
         logger.info("Wiping user info in db")
         db = await asyncpg.create_pool()
@@ -486,21 +473,25 @@ def db_wipeuser(user_id):
     loop.run_until_complete(_wipeuser())
     
 
-@db.command("setup")
-@click.option('--home', type=click.Path(exists=True, path_type=Path), required=False, help="Home directory for setup", default=Path.home())
-@click.option('--backup/--no-backup', default=False)
-@click.pass_context
-def db_setup(ctx, home, backup):
+def db_setup():
     """Setup Snowfall (the Fates List database system)"""
     from config._logger import logger
-    click.confirm(
+
+    home = os.environ.get("HOMEDIR") or Path.home()
+    home = Path(str(home))
+
+    backup = os.environ.get("backup", False)
+    if backup:
+        backup = True
+
+    confirm(
         "Setting up Snowfall databases is a potentially destructive operation. Continue?",
         abort=True
     )
     logger.info("Preparing to setup snowtuft")
 
     if not home.exists():
-        return error(ctx, "Invalid user specified for primary_user")
+        return error("Invalid user specified for primary_user")
 
     with open("/etc/sysctl.conf", "w") as sysctl_file:
         lines = [
@@ -519,7 +510,7 @@ def db_setup(ctx, home, backup):
                 db_backup()
         except Exception as exc:
             logger.error(f"Backup failed. Error is {exc}")
-            click.confirm("Continue? ", abort=True)
+            confirm("Continue? ", abort=True)
 
         with Popen(["systemctl", "stop", "snowfall-dbs"], env=os.environ) as proc:
             proc.wait()
@@ -679,10 +670,3 @@ def db_setup(ctx, home, backup):
     Path("/snowfall/docker/env_done").touch()
     logger.info(f"Postgres password is {pg_pwd}")
     logger.success("Done setting up databases")
- 
-
-app.add_command(site)
-app.add_command(db)
-    
-if __name__ == "__main__":
-    app()
