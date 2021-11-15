@@ -1,9 +1,6 @@
 [submodule "modules/infra/manager"]
 	path = modules/infra/manager
 	url = https://github.com/Fates-List/ManagerBot
-[submodule "modules/infra/dragon"]
-	path = modules/infra/dragon
-	url = https://github.com/Fates-List/Dragon
 [submodule "modules/infra/admin-piccolo"]
 	path = modules/infra/admin-piccolo
 	url = https://github.com/Fates-List/admin
