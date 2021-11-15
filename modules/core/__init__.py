@@ -1,4 +1,4 @@
-import modules.core.classes as core
+import modules.core.classes as core_classes
 
 from .admin import *  # Import admin functions
 from .auth import *  # Import auth related functions

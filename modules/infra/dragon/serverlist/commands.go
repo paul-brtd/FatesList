@@ -2,6 +2,8 @@ package serverlist
 
 import (
 	"dragon/types"
+	"net/http"
+	"strings"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/davecgh/go-spew/spew"
@@ -34,6 +36,22 @@ func cmdInit() {
 						Name:  "Description",
 						Value: "description",
 					},
+					{
+						Name:  "Long Description",
+						Value: "long_description",
+					},
+					{
+						Name:  "Long Description Type",
+						Value: "long_description_type",
+					},
+					{
+						Name:  "Invite",
+						Value: "invite_url",
+					},
+					{
+						Name:  "Website",
+						Value: "website",
+					},
 				},
 				Required: true,
 			},
@@ -55,6 +73,36 @@ func cmdInit() {
 			if !ok {
 				return "Value must be provided"
 			}
+
+			value = strings.Replace(value, "http://", "https://", -1)
+
+			if field == "invite_url" {
+				if !strings.HasPrefix(value, "https://") {
+					value = "https://discord.gg/" + value
+				}
+				resp, err := http.Get(value)
+				if err != nil {
+					return "Could not resolve invite, possibly invalid?"
+				}
+				value = resp.Request.URL.String()
+				codeLst := strings.Split(value, "/")
+				value = codeLst[len(codeLst)-1]
+				if value == "" {
+					return "Invalid invite provided"
+				}
+				invite, err := context.Discord.Invite(value)
+				if err != nil {
+					return "Could not resolve invite due to error: " + err.Error() + "\nCode: " + value
+				}
+				if invite.MaxUses != 0 {
+					return "This is a limited-use invite"
+				} else if invite.Revoked {
+					return "This invite has been revoked?"
+				} else {
+					return invite.Guild.Name
+				}
+			}
+
 			return "Successfully set " + field + " to " + value + "!"
 		},
 	}

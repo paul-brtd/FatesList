@@ -10,8 +10,9 @@ import (
 
 func RenderPossibleLink(link string) (res string) {
 	// Donverts links (right now only pastebin) to text
+	var origData = link
 	if !strings.HasPrefix(link, "https://") && !strings.HasPrefix(link, "http://") && !strings.HasPrefix(link, "www.") {
-		return link
+		return origData
 	}
 	link = strings.Replace(link, "https://", "", 1)
 	link = strings.Replace(link, "http://", "", 1)
@@ -24,14 +25,14 @@ func RenderPossibleLink(link string) (res string) {
 		resp, err := http.Get(rawPasteUrl)
 		if err != nil {
 			log.Error(err)
-			return link
+			return origData
 		}
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
 			log.Error(err)
-			return link
+			return origData
 		}
 		return string(body)
 	}
-	return link
+	return origData
 }

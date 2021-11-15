@@ -34,7 +34,7 @@ async def get_user_profile(request, user_id: int, preview: bool, worker_session)
     
     personal = user_id == int(request.session.get("user_id", -1))
 
-    user = await core.User(
+    user = await core_classes.User(
         id = user_id, 
         db = db, 
     ).profile()
