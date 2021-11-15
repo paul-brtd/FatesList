@@ -110,7 +110,7 @@ func cmdInit() {
 				} else if invite.MaxAge != 0 || invite.Temporary {
 					return "This invite is only temporary. For optimal user experience, all invites must be unlimited time and use"
 				} else {
-					value = invite.Code // Not needed per say, but useful for readability
+					value = "https://discord.gg/" + invite.Code // Not needed per say, but useful for readability
 				}
 			}
 
