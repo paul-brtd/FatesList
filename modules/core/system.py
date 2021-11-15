@@ -1,23 +1,19 @@
+#pylint: disable=E1101,W0212
 """Fates List System Bootstrapper"""
-import sys
-sys.pycache_prefix = "data/pycache"
-
 import asyncio
 import builtins
 import datetime
 import importlib
 import os
 import signal
+import sys
 import time
 import uuid
 from http import HTTPStatus
 
-import aio_pika
 import aioredis
 import asyncpg
-import disnake as discord
 import sentry_sdk
-from disnake.ext import commands
 from fastapi.exceptions import (HTTPException, RequestValidationError,
                                 ValidationError)
 from fastapi.middleware.gzip import GZipMiddleware
@@ -35,19 +31,17 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
-from config import (API_VERSION, TOKEN_DBG, TOKEN_MAIN, TOKEN_SERVER,
-                    bot_dev_role, bots_role, discord_client_id,
-                    discord_client_secret, discord_redirect_uri,
-                    owner, sentry_dsn, site)
+from config import (API_VERSION, discord_client_id, discord_client_secret,
+                    discord_redirect_uri, sentry_dsn, site)
 from config._logger import logger
 from modules.core.error import WebError
+from modules.core.ipc import redis_ipc_new
+from modules.core.ratelimits import rl_key_func
 from modules.models import enums
-from modules.core.ipc import redis_ipc, redis_ipc_new
 
-from .ratelimits import rl_key_func
+sys.pycache_prefix = "data/pycache"
 
-
-class FatesListRequestHandler(BaseHTTPMiddleware):
+class FatesListRequestHandler(BaseHTTPMiddleware):  # pylint: disable=too-few-public-methods
     """Request Handler for Fates List"""
     def __init__(self, app, *, exc_handler):
         super().__init__(app)
@@ -97,7 +91,7 @@ class FatesListRequestHandler(BaseHTTPMiddleware):
         
         try:
             self._log_req(path, request, res)
-        except:
+        except:  # pylint: disable=bare-except
             pass
         return res if res else self.default_res
     
@@ -276,7 +270,7 @@ async def init_fates_worker(app, session_id, workers):
                 if not invalid:
                     app.state.site_degraded = (respl[2] == "1")
         
-            if invalid:
+            if invalid:  # pylint: disable=no-else-continue
                 app.state.ipc_up = False
                 await asyncio.sleep(3)
                 logger.info(f"Invalid IPC. Got invalid PONG: {resp} (reason: {reason})")
@@ -293,6 +287,7 @@ async def init_fates_worker(app, session_id, workers):
     asyncio.create_task(wait_for_ipc(app, session_id, workers, dbs))
 
 async def finish_init(app, session_id, workers, dbs):
+    """Finish site init"""
     builtins.db = dbs["postgres"]
     builtins.redis_db = dbs["redis"]
     logger.success("Connected to postgres and redis")
@@ -367,20 +362,34 @@ async def finish_init(app, session_id, workers, dbs):
     LynxfallLimiter.init(session.redis, identifier=rl_key_func)
 
     # Setup trusted host middleware
-    app.add_middleware(TrustedHostMiddleware, allowed_hosts=[site, "127.0.0.1", "0.0.0.0", f"www.{site}"])
+    app.add_middleware(
+        TrustedHostMiddleware, 
+        allowed_hosts=[site, "127.0.0.1", "0.0.0.0", f"www.{site}"]
+    )
 
     # Add GZip handling
     app.add_middleware(GZipMiddleware, minimum_size=500)
     
     # Setup exception handling
-    for code in (403, 404, RequestValidationError, ValidationError, 500, HTTPException, Exception, StarletteHTTPException):
+    codes = (
+        403, 
+        404, 
+        RequestValidationError, 
+        ValidationError, 
+        500, 
+        HTTPException, 
+        Exception, 
+        StarletteHTTPException
+    )
+
+    for code in codes:
         app.add_exception_handler(code, WebError.error_handler)
         
     # Include all routers
     include_routers(app, "Discord", "modules/discord")
 
     # Begin worker sync
-    asyncio.create_task(catclient(workers, session, app))
+    asyncio.create_task(catclient(workers, session))
     logger.debug("Started catclient task")
 
     # We are now up (probably)
@@ -395,7 +404,7 @@ async def finish_init(app, session_id, workers, dbs):
     app.state.ipc_up = True
 
         
-async def catclient(workers, session, app):
+async def catclient(workers, session):
     """The Fates List Dragon IPC protocol"""
     await session.redis.publish(
         "_worker_fates", 
@@ -420,7 +429,7 @@ async def catclient(workers, session, app):
             # IPC going up has no session id yet
             case("REGET", reason):
                 # Announce that we are up and sending to repeat a message
-                logger.info("Sending IPC info due to reget")
+                logger.info(f"Sending IPC info due to reget (reason: {reason})")
                 await session.redis.publish(
                     "_worker_fates", 
                     f"UP {session.id} {os.getpid()} {workers}"
@@ -443,8 +452,7 @@ async def catclient(workers, session, app):
                         f"Got invalid workers from ipc ({workers})"
                     )
                
-                #await start_dbg(session, app)
-                #asyncio.create_task(vote_reminder(session))
+                asyncio.create_task(vote_reminder(session))
 
             case _:
                 pass  # Ignore the rest for now

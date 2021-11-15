@@ -1,31 +1,26 @@
-"""Fates List Management"""
+# pylint: disable=E1101
+"""_manage comtains functions to manage the site using dragon"""
+import asyncio
+import datetime
+import importlib
+import io
+import multiprocessing
+import os
+import secrets
+import shutil
+import signal
 import sys
-sys.pycache_prefix = "data/pycache"
-sys.path.append(".")
+import time
+import uuid
+from getpass import getpass
+from pathlib import Path
+from subprocess import DEVNULL, Popen
+from typing import Any, Callable, Dict
 
+sys.pycache_prefix = "data/pycache"
 if sys.version_info < (3, 11):
     raise RuntimeError(f"Fates List has only been tested to run on python 3.11. You are running {sys.version_info}")
 
-import os
-
-if not os.environ.get("MAIN_TOKEN"):
-    raise RuntimeError("MAIN_TOKEN must be set\nHINT: Use dragon --cmd CMD")
-
-from subprocess import Popen, DEVNULL
-import io
-
-import uuid
-import signal
-from pathlib import Path
-import secrets
-import datetime
-from getpass import getpass
-import importlib
-import asyncio
-import shutil
-import time
-import multiprocessing
-from typing import Any, Callable, Dict
 
 def error(msg: str, code: int = 1):
     print(msg)
@@ -46,13 +41,14 @@ def _fappgen(session_id, workers, static_assets):
     """Make the FastAPI app for gunicorn"""
     from fastapi import FastAPI
     from fastapi.responses import ORJSONResponse
-    from modules.core.system import init_fates_worker
+
     from config import API_VERSION
+    from modules.core.system import init_fates_worker
     _app = FastAPI(
         title="Fates List",
         description="""
             Current API: v2 beta 3
-            Default API: v2
+            Default API: v{API_VERSION}
             API Docs: https://apidocs.fateslist.xyz
             Enum Reference: https://apidocs.fateslist.xyz/structures/enums.autogen
         """,
@@ -87,6 +83,7 @@ def site_run():
 
     from gunicorn.app.base import BaseApplication
     from PIL import Image
+
     from config._logger import logger
 
     session_id = uuid.uuid4()
@@ -155,10 +152,10 @@ def site_manager():
 def site_buildenums():
     """Build enums from go"""
     import aioredis
-    from modules.core.ipc import redis_ipc_new
-    from config._logger import logger
     import orjson
-    import pprint
+
+    from config._logger import logger
+    from modules.core.ipc import redis_ipc_new
     async def _run():
         redis = aioredis.from_url('redis://localhost:1001', db=1)
         data = await redis_ipc_new(redis, "GETADMINOPS")
@@ -204,7 +201,7 @@ def site_enum2html():
             for ext in fields:
                 if ext == "value" or ext == "__doc__":
                     continue
-                md[key]["table"] += f" {ext.replace('_', ' ').title()} |"
+                md[key]["table"] += f" {ext.strip('_').replace('_', ' ').title()} |"
                 nl += " :--- |"
                 keys.append(ext)
             md[key]["table"] += f"{nl}\n"
@@ -286,7 +283,6 @@ def site_venv():
     
 
 def site_updaterepos():
-    from config._logger import logger
     """Update all of the extra internal services made by Fates List"""
     cmd = ["git", "submodule", "foreach", "--recursive", "git", "pull", "origin", "main"]
     with Popen(cmd, env=os.environ) as proc:
@@ -388,12 +384,13 @@ def db_shell():
 
 def db_apply():
     """Apply Fates List database migration"""
-    from config._logger import logger
     import uvloop
+
+    from config._logger import logger
     uvloop.install()
     
-    import asyncpg
     import aioredis
+    import asyncpg
 
     module = os.environ.get("MIGRATION") 
 
@@ -422,12 +419,13 @@ def db_apply():
 
 def db_wipeuser():
     """Wipes a user account (e.g. Data Deletion Request)"""
-    from config._logger import logger
     import uvloop
+
+    from config._logger import logger
     uvloop.install()
     
-    import asyncpg
     import aioredis
+    import asyncpg
    
     try:
         user_id = int(os.environ.get("USER"))
@@ -524,10 +522,10 @@ def db_setup():
     _rm_force("/etc/systemd/system/snowfall-dbs.service")
     
     if Path("/snowfall").exists():
-        id = str(uuid.uuid4())
-        logger.info(f"Moving /snowfall to /snowfall.old/{id}")
+        uid = str(uuid.uuid4())
+        logger.info(f"Moving /snowfall to /snowfall.old/{uid}")
         Path("/snowfall.old").mkdir(exist_ok=True)
-        Path("/snowfall").rename(f"/snowfall.old/{id}")
+        Path("/snowfall").rename(f"/snowfall.old/{uid}")
     
     Path("/snowfall/docker/db/postgres").mkdir(parents=True)
     Path("/snowfall/docker/db/redis").mkdir(parents=True)
@@ -631,22 +629,17 @@ def db_setup():
         
         sf_userenv.write("\n".join(lines))
     
+    lines = [
+        "source /snowfall/userenv",
+    ]
+    
     with Path(home / ".bashrc").open("a") as bashrc_f:
-        lines = [
-            "source /snowfall/userenv",
-        ]
-        
         bashrc_f.write("\n".join(lines))
     
     with open("/root/.bashrc", "w") as bashrc_f:
-        lines = [
-            "source /snowfall/userenv"
-        ]
-    
         bashrc_f.write("\n".join(lines))
     
     if Path("/backups/latest.bak").exists():
-        
         logger.info("Restoring backup...")
         
         with open("/tmp/s2.bash", "w") as sf_s2_f:

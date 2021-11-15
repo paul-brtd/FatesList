@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional, List
-import modules.models.enums as enums
+from modules.models import enums
 from .badge import Badge
 
 class ProfileBot(BaseModel):

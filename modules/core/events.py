@@ -6,6 +6,7 @@ from .cache import get_bot, get_user
 from .imports import *
 from .ipc import redis_ipc_new
 
+
 async def add_ws_event(target: int, ws_event: dict, *, id: Optional[uuid.UUID] = None, type: str = "bot") -> None:
     """A WS Event must have the following format:
         - {e: Event Name, t: Event Type (Optional), ctx: Context, m: Event Metadata}

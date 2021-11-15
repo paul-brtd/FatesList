@@ -5,17 +5,17 @@ and/or setting bot stats and voting for a bot. Also has replace tuples to be han
 
 import re
 
+import asyncpg
 import bleach
 from fastapi import datastructures
 from lxml.html.clean import Cleaner
-import asyncpg
 
 from .auth import *
 from .cache import *
 from .events import *
 from .imports import *
-from .templating import *
 from .ipc import redis_ipc
+from .templating import *
 
 # Some replace tuples
 # TODO: Move this elsewhere

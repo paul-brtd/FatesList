@@ -1,6 +1,6 @@
 from typing import List, Optional
 from modules.core.permissions import is_staff
-import modules.models.enums as enums
+from modules.models import enums
 from discord import Member
 import orjson
 from config import staff_roles, special_badges

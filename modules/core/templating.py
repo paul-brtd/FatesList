@@ -2,8 +2,10 @@
 Fates List Templating System
 """
 
-from .imports import *
 import markdown
+
+from .imports import *
+
 
 # Template class renderer
 class templates():

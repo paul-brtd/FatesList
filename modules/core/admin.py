@@ -1,11 +1,13 @@
+import discord
+from lynxfall.utils.string import get_token
+
 from .cache import *
 from .events import *
 from .helpers import *
 from .imports import *
-from .permissions import *
 from .ipc import redis_ipc_new
-import discord
-from lynxfall.utils.string import get_token
+from .permissions import *
+
 
 class BotActions():
     def __init__(self, db, bot):
@@ -210,8 +212,8 @@ class BotActions():
         async with self.db.acquire() as connection: # Acquire a connection
             async with connection.transaction() as tr: # Make a transaction to avoid data loss
                 await connection.execute(
-                    "UPDATE bots SET bot_library=$2, webhook=$3, description=$4, long_description=$5, prefix=$6, website=$7, discord=$8, banner_card=$9, invite=$10, github = $11, features = $12, long_description_type = $13, webhook_type = $14, css = $15, donate = $16, privacy_policy = $17, nsfw = $18, webhook_secret = $19, banner_page = $20, keep_banner_decor = $21 WHERE bot_id = $1", 
-                    self.bot_id, self.library, self.webhook, self.description, self.long_description, self.prefix, self.website, self.support, self.banner_card, self.invite, self.github, self.features, self.long_description_type, self.webhook_type, self.css, self.donate, self.privacy_policy, self.nsfw, self.webhook_secret, self.banner_page, self.keep_banner_decor
+                    "UPDATE bots SET bot_library=$2, webhook=$3, description=$4, long_description=$5, prefix=$6, website=$7, discord=$8, banner_card=$9, invite=$10, github = $11, features = $12, long_description_type = $13, webhook_type = $14, css = $15, donate = $16, privacy_policy = $17, nsfw = $18, webhook_secret = $19, banner_page = $20, keep_banner_decor = $21 WHERE bot_id = $1",  # pylint: disable=line-too-long 
+                    self.bot_id, self.library, self.webhook, self.description, self.long_description, self.prefix, self.website, self.support, self.banner_card, self.invite, self.github, self.features, self.long_description_type, self.webhook_type, self.css, self.donate, self.privacy_policy, self.nsfw, self.webhook_secret, self.banner_page, self.keep_banner_decor  # pyline: disable=line-too-long
                 ) # Update bot with new info
 
                 await connection.execute("DELETE FROM bot_owner WHERE bot_id = $1 AND main = false", self.bot_id) # Delete all extra owners
@@ -233,7 +235,7 @@ class BotActions():
                 check = await connection.fetchrow("SELECT vanity FROM vanity WHERE redirect = $1", self.bot_id) # Check vanity existance
                 if check is None:
                     if self.vanity.replace(" ", "") != '': # If not there for this bot, insert new one
-                       await connection.execute("INSERT INTO vanity (type, vanity_url, redirect) VALUES ($1, $2, $3)", 1, self.vanity, self.bot_id)
+                        await connection.execute("INSERT INTO vanity (type, vanity_url, redirect) VALUES ($1, $2, $3)", 1, self.vanity, self.bot_id)
                 else:
                     await connection.execute("UPDATE vanity SET vanity_url = $1 WHERE redirect = $2", self.vanity, self.bot_id) # Update the vanity since bot already use it
         await bot_add_event(self.bot_id, enums.APIEvents.bot_edit, {"user": str(self.user_id)}) # Send event

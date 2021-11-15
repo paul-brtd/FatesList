@@ -74,7 +74,7 @@ confidence=
 # --enable=similarities". If you want to run only the classes checker, but have
 # no Warning level messages displayed, use "--disable=all --enable=classes
 #
-disable=trailing-whitespace,no-name-in-module,invalid-name
+disable=trailing-whitespace,no-name-in-module,invalid-name,unused-wildcard-import,wildcard-import,no-member
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
@@ -136,7 +136,7 @@ indent-after-paren=4
 indent-string='    '
 
 # Maximum number of characters on a single line.
-max-line-length=100
+max-line-length=240
 
 # Maximum number of lines in a module.
 max-module-lines=1000
