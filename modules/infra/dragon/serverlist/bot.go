@@ -12,7 +12,10 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-var debug bool = true
+var (
+	debug        bool                   = true
+	iResponseMap map[string]*time.Timer = make(map[string]*time.Timer, 0) // Interaction response map to check if interaction has been responded to
+)
 
 func SetupSlash(discord *discordgo.Session) {
 	cmdInit()
@@ -61,7 +64,7 @@ func SlashHandler(
 	}
 
 	if i.Interaction.Member == nil {
-		sendIResponse(discord, i.Interaction, "This bot may only be used in a server!")
+		sendIResponse(discord, i.Interaction, "This bot may only be used in a server!", true)
 		return
 	}
 
@@ -72,7 +75,7 @@ func SlashHandler(
 		key := "cooldown-" + cmd.Cooldown.InternalName + "-" + i.Interaction.Member.User.ID
 		cooldown, err := rdb.TTL(ctx, key).Result() // Format: cooldown-BUCKET-MOD
 		if err == nil && cooldown.Seconds() > 0 {
-			sendIResponse(discord, i.Interaction, "Please wait "+cooldown.String()+" before retrying this command!")
+			sendIResponse(discord, i.Interaction, "Please wait "+cooldown.String()+" before retrying this command!", true)
 			return
 		}
 		rdb.Set(ctx, key, "0", time.Duration(cmd.Cooldown.Time)*time.Second)
@@ -95,7 +98,7 @@ func SlashHandler(
 		permStr = "Administrator"
 	}
 	if i.Interaction.Member.Permissions&perm == 0 {
-		sendIResponse(discord, i.Interaction, "You need "+permStr+" in order to use this command")
+		sendIResponse(discord, i.Interaction, "You need "+permStr+" in order to use this command", true)
 		return
 	}
 
@@ -110,25 +113,60 @@ func SlashHandler(
 	res := cmd.Handler(slashContext)
 
 	if res == "" {
-		sendIResponse(discord, i.Interaction, "This operation has completed successfully!")
+		sendIResponse(discord, i.Interaction, "This operation has completed successfully!", true)
 		return
 	}
 
-	sendIResponse(discord, i.Interaction, res)
+	sendIResponse(discord, i.Interaction, res, true)
+	delete(iResponseMap, i.Interaction.Token)
 }
 
-func sendIResponse(discord *discordgo.Session, i *discordgo.Interaction, content string) {
-	discord.InteractionRespond(i, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
+func sendIResponse(discord *discordgo.Session, i *discordgo.Interaction, content string, clean bool) {
+	// Sends a response to a interaction using iResponseMap as followup if needed. If clean is set, iResponseMap is cleaned out
+	t, ok := iResponseMap[i.Token]
+	if ok {
+		_, err := discord.FollowupMessageCreate(discord.State.User.ID, i, true, &discordgo.WebhookParams{
 			Content: content,
-		},
-	})
+		})
+		if err != nil {
+			log.Error(err.Error())
+		}
+	} else {
+		err := discord.InteractionRespond(i, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: content,
+			},
+		})
+		if err != nil {
+			log.Error("An error has occurred in initial response: " + err.Error())
+			discord.InteractionRespond(i, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
+			})
+			sendIResponse(discord, i, "Something happened!\nError: "+err.Error(), false)
+			return
+		}
+	}
+
+	if clean {
+		if ok && t != nil {
+			t.Stop()
+		}
+		delete(iResponseMap, i.Token)
+	} else {
+		if !ok {
+			iResponseMap[i.Token] = time.AfterFunc(15*time.Minute, func() {
+				delete(iResponseMap, i.Token)
+			})
+		}
+	}
 }
 
 func recovery() {
 	err := recover()
-	log.Error(err)
+	if err != nil {
+		log.Error(err)
+	}
 }
 
 func getArg(discord *discordgo.Session, i *discordgo.Interaction, name string, possibleLink bool) interface{} {

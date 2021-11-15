@@ -59,7 +59,7 @@ func DragonServer() {
 		if bot == 0 {
 			admin.SlashHandler(
 				ctx,
-				discord,
+				s,
 				rdb,
 				db,
 				i,
@@ -67,7 +67,7 @@ func DragonServer() {
 		} else if bot == 1 {
 			serverlist.SlashHandler(
 				ctx,
-				discord,
+				s,
 				rdb,
 				db,
 				i,

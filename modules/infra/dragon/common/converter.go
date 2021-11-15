@@ -5,8 +5,21 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/bwmarrin/discordgo"
 	log "github.com/sirupsen/logrus"
 )
+
+func InviteFilter(invites []*discordgo.Invite, code string) (invite *discordgo.Invite) {
+	for _, invite := range invites {
+		if invite == nil {
+			continue
+		}
+		if code == invite.Code {
+			return invite
+		}
+	}
+	return nil
+}
 
 func RenderPossibleLink(link string) (res string) {
 	// Donverts links (right now only pastebin) to text

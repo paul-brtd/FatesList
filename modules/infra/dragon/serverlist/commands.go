@@ -1,12 +1,14 @@
 package serverlist
 
 import (
+	"dragon/common"
 	"dragon/types"
 	"net/http"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/davecgh/go-spew/spew"
+	"github.com/jackc/pgtype"
 )
 
 const good = 0x00ff00
@@ -76,6 +78,7 @@ func cmdInit() {
 
 			value = strings.Replace(value, "http://", "https://", -1)
 
+			// Handle invite url
 			if field == "invite_url" {
 				if !strings.HasPrefix(value, "https://") {
 					value = "https://discord.gg/" + value
@@ -90,19 +93,43 @@ func cmdInit() {
 				if value == "" {
 					return "Invalid invite provided"
 				}
-				invite, err := context.Discord.Invite(value)
+				invites, err := context.Discord.GuildInvites(context.Interaction.GuildID)
 				if err != nil {
-					return "Could not resolve invite due to error: " + err.Error() + "\nCode: " + value
+					return "Something went wrong!\nError: " + err.Error()
+				}
+
+				invite := common.InviteFilter(invites, value)
+
+				if invite == nil {
+					return "This invite does not exist on this server. Are you sure the specified invite is for this server?\nFound code: " + value
 				}
 				if invite.MaxUses != 0 {
 					return "This is a limited-use invite"
 				} else if invite.Revoked {
 					return "This invite has been revoked?"
+				} else if invite.MaxAge != 0 || invite.Temporary {
+					return "This invite is only temporary. For optimal user experience, all invites must be unlimited time and use"
 				} else {
-					return invite.Guild.Name
+					value = invite.Code // Not needed per say, but useful for readability
 				}
 			}
 
+			var check pgtype.Int8
+
+			context.Postgres.QueryRow(context.Context, "SELECT guild_id FROM servers WHERE guild_id = $1", context.Interaction.GuildID).Scan(&check)
+
+			if check.Status != pgtype.Present {
+				guild, err := context.Discord.State.Guild(context.Interaction.GuildID)
+				if err != nil {
+					return "Could not add guild because: " + err.Error()
+				}
+				apiToken := common.RandString(198)
+				_, err = context.Postgres.Exec(context.Context, "INSERT INTO servers (guild_id, api_token, name_cached) VALUES ($1, $2, $3)", context.Interaction.GuildID, apiToken, guild.Name)
+				if err != nil {
+					return "An error occurred while we were updating our database: " + err.Error()
+				}
+			}
+			context.Postgres.Exec(context.Context, "UPDATE servers SET "+field+" = $1 WHERE guild_id = $2", value, context.Interaction.GuildID)
 			return "Successfully set " + field + " to " + value + "!"
 		},
 	}
