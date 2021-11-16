@@ -210,7 +210,8 @@ CREATE TABLE vanity (
 
 CREATE TABLE servers (
     guild_id bigint not null unique,
-    name_cached text default 'Unlisted'
+    name_cached text default 'Unlisted',
+    avatar_cached text default 'Unlisted',
     votes bigint default 0,    
     webhook_type text DEFAULT 'VOTE',
     webhook text,
@@ -223,7 +224,7 @@ CREATE TABLE servers (
     certified boolean DEFAULT false,
     created_at timestamptz default now(),
     invite_amount integer DEFAULT 0,
-    invite_code text,
+    invite_url text,
     state int default 0
 )
 

@@ -4,6 +4,8 @@ import (
 	"context"
 	"dragon/common"
 	"dragon/types"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
@@ -81,24 +83,8 @@ func SlashHandler(
 		rdb.Set(ctx, key, "0", time.Duration(cmd.Cooldown.Time)*time.Second)
 	}
 
-	var perm int64
-	var permStr string
-	switch cmd.Perm {
-	case 1:
-		perm = discordgo.PermissionSendMessages
-		permStr = "Send Messages"
-	case 2:
-		perm = discordgo.PermissionManageServer
-		permStr = "Manage Server or Administrator"
-	case 3:
-		perm = discordgo.PermissionAdministrator
-		permStr = "Administrator"
-	default:
-		perm = discordgo.PermissionAdministrator
-		permStr = "Administrator"
-	}
-	if i.Interaction.Member.Permissions&perm == 0 {
-		sendIResponse(discord, i.Interaction, "You need "+permStr+" in order to use this command", true)
+	check := checkPerms(discord, i.Interaction, cmd.Perm)
+	if !check {
 		return
 	}
 
@@ -113,7 +99,6 @@ func SlashHandler(
 	res := cmd.Handler(slashContext)
 
 	if res == "" {
-		sendIResponse(discord, i.Interaction, "This operation has completed successfully!", true)
 		return
 	}
 
@@ -121,12 +106,55 @@ func SlashHandler(
 	delete(iResponseMap, i.Interaction.Token)
 }
 
-func sendIResponse(discord *discordgo.Session, i *discordgo.Interaction, content string, clean bool) {
+func checkPerms(discord *discordgo.Session, i *discordgo.Interaction, permNum int) bool {
+	var perm int64
+	var permStr string
+	switch permNum {
+	case 1:
+		perm = discordgo.PermissionSendMessages
+		permStr = "Send Messages"
+	case 2:
+		perm = discordgo.PermissionManageServer
+		permStr = "Manage Server or Administrator"
+	case 3:
+		perm = discordgo.PermissionAdministrator
+		permStr = "Administrator"
+	default:
+		perm = discordgo.PermissionAdministrator
+		permStr = "Administrator"
+	}
+	if i.Member.Permissions&perm == 0 {
+		sendIResponse(discord, i, "You need "+permStr+" in order to use this command", true)
+		return false
+	}
+	return true
+}
+
+func sendIResponse(discord *discordgo.Session, i *discordgo.Interaction, content string, clean bool, largeContent ...string) {
+	sendIResponseComplex(discord, i, content, clean, 0, largeContent)
+}
+
+func sendIResponseEphemeral(discord *discordgo.Session, i *discordgo.Interaction, content string, clean bool, largeContent ...string) {
+	sendIResponseComplex(discord, i, content, clean, 1<<6, largeContent)
+}
+
+func sendIResponseComplex(discord *discordgo.Session, i *discordgo.Interaction, content string, clean bool, flags uint64, largeContent []string) {
 	// Sends a response to a interaction using iResponseMap as followup if needed. If clean is set, iResponseMap is cleaned out
+	var files []*discordgo.File
+	for i, data := range largeContent {
+		files = append(files, &discordgo.File{
+			Name:        "output" + strconv.Itoa(i) + ".txt",
+			ContentType: "application/octet-stream",
+			Reader:      strings.NewReader(data),
+		})
+	}
+
 	t, ok := iResponseMap[i.Token]
 	if ok {
 		_, err := discord.FollowupMessageCreate(discord.State.User.ID, i, true, &discordgo.WebhookParams{
 			Content: content,
+			Flags:   flags,
+			Files:   files,
 		})
 		if err != nil {
 			log.Error(err.Error())
@@ -136,6 +164,8 @@ func sendIResponse(discord *discordgo.Session, i *discordgo.Interaction, content
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
 				Content: content,
+				Flags:   flags,
+				Files:   files,
 			},
 		})
 		if err != nil {
@@ -176,10 +206,11 @@ func getArg(discord *discordgo.Session, i *discordgo.Interaction, name string, p
 	for _, v := range appCmdData.Options {
 		if v.Name == name {
 			if v.Type == discordgo.ApplicationCommandOptionString {
+				sVal := strings.TrimSpace(v.StringValue())
 				if possibleLink {
-					return common.RenderPossibleLink(v.StringValue())
+					return common.RenderPossibleLink(sVal)
 				}
-				return v.StringValue()
+				return sVal
 			} else if v.Type == discordgo.ApplicationCommandOptionInteger {
 				return v.IntValue()
 			} else if v.Type == discordgo.ApplicationCommandOptionBoolean {

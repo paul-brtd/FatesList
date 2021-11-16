@@ -11,6 +11,7 @@ from .helpers import *
 from .imports import *
 from .permissions import *
 from .templating import *
+from modules.models import constants
 
 cleaner = Cleaner()
 
@@ -96,27 +97,9 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
         except Exception:
             ldesc = bleach.clean(ldesc)
 
-        # Take the h1...h5 anad drop it one lower and bypass peoples stupidity 
-        # and some nice patches to the site to improve accessibility
-    long_desc_replace_tuple = (
-        ("<h1", "<h3"),
-        ("</h1", "</h3"),
-        ("<h2", "<h4"),
-        ("</h2", "</h4"),
-        ("<a", "<a class='long-desc-link ldlink'"), 
-        ("<!DOCTYPE", ""), 
-        ("html>", ""), 
-        ("<body", ""), 
-        ("<div", "<article"),
-        ("</div", "</article"),
-        (".click", ""),
-        ("bootstrap.min.css", ""),
-        ("bootstrap.css", ""), 
-        ("jquery.min.js", ""), 
-        ("jquery.js", ""), 
-        ("fetch(", "")
-    )
-    ldesc = ireplacem(long_desc_replace_tuple, ldesc)
+    # Take the h1...h5 anad drop it one lower and bypass peoples stupidity 
+    # and some nice patches to the site to improve accessibility
+    ldesc = ireplacem(constants.long_desc_replace_tuple, ldesc)
 
     if bot["banner"]:
         banner = bot["banner"].replace(" ", "%20").replace("\n", "")
@@ -158,7 +141,7 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
         "id": str(bot_id),
         "bot_token": "",
         "type": "bot",
-        "replace_list": long_desc_replace_tuple
+        "replace_list": constants.long_desc_replace_tuple
     }
     
     data = {
