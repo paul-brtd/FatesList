@@ -3,26 +3,43 @@ from .events import *
 from .imports import *
 
 
-async def parse_reviews(worker_session, bot_id: int, rev_id: uuid.uuid4 = None, page: int = None, recache: bool = False, in_recache: bool = False) -> List[dict]:
+async def parse_reviews(worker_session, bot_id: int, rev_id: uuid.uuid4 = None, page: int = None, recache: bool = False, in_recache: bool = False, target_type: enums.ReviewType = enums.ReviewType.bot, recache_from_rev_id: bool = False) -> List[dict]:
     if recache:
         async def recache():
-            bot_id = await worker_session.postgres.fetchval("SELECT target_id FROM reviews WHERE id = $1", bot_id) or bot_id
-            reviews = await _parse_reviews(worker_session, bot_id)
+            if recache_from_rev_id:
+                tgt_data = await worker_session.postgres.fetchrow("SELECT target_id, target_type FROM reviews WHERE id = $1", bot_id)
+                if tgt_data:
+                    tgt_id, target_type = tgt_data["target_id"], tgt_data["target_type"]
+                else:
+                    return
+            else:
+                tgt_id = bot_id
+                target_type = await db.fetchval("SELECT bot_id FROM bots WHERE bot_id = $1", bot_id)
+                if not target_type:
+                    target_type = enums.ReviewType.server
+                else:
+                    target_type = enums.ReviewType.bot
+
+            logger.warning(str(tgt_id) + str(target_type))
+
+            reviews = await _parse_reviews(worker_session, tgt_id, t=target_type)
             page_count = reviews[2]
             for page in range(0, page_count):
-                await parse_reviews(worker_session, bot_id, page = page if page else None, in_recache = True)
+                await parse_reviews(worker_session, tgt_id, page = page if page else None, in_recache = True, target_type=target_type)
+            # Edge case: ensure page 1 is always up to date
+            await parse_reviews(worker_session, tgt_id, page = 1, in_recache = True, target_type=target_type)
         asyncio.create_task(recache())
         return
 
     if not in_recache:
-        reviews = await worker_session.redis.get(f"botreview-{bot_id}-{page}")
+        reviews = await worker_session.redis.get(f"review-{bot_id}-{page}-{target_type.value}")
     else:
         reviews = None
 
     if reviews:
         return orjson.loads(reviews)
-    reviews = await _parse_reviews(worker_session, bot_id, rev_id = rev_id, page = page)
-    await worker_session.redis.set(f"botreview-{bot_id}-{page}", orjson.dumps(reviews), ex=60*60*4)
+    reviews = await _parse_reviews(worker_session, bot_id, rev_id = rev_id, page = page, t=target_type)
+    await worker_session.redis.set(f"review-{bot_id}-{page}-{target_type.value}", orjson.dumps(reviews), ex=60*60*4)
     return reviews
 
 
@@ -43,7 +60,7 @@ async def _parse_reviews(worker_session, bot_id: int, rev_id: uuid.uuid4 = None,
         end = ""
     else:
         end = f"OFFSET {per_page*(page-1)} LIMIT {per_page}"
-    reviews = await db.fetch(f"SELECT id, reply, user_id, star_rating, review_text AS review, review_upvotes, review_downvotes, flagged, epoch, replies AS _replies FROM reviews WHERE target_id = $1 AND target_type = $2 AND reply = $3 {rev_check} ORDER BY epoch, star_rating ASC {end}", bot_id, t, reply, *rev_args)
+    reviews = await db.fetch(f"SELECT id, reply, user_id, star_rating, review_text AS review, review_upvotes, review_downvotes, flagged, epoch, replies AS _replies FROM reviews WHERE target_id = $1 AND target_type = $2 AND reply = $3 {rev_check} ORDER BY epoch, star_rating ASC {end}", bot_id, t.value, reply, *rev_args)
     i = 0
     stars = 0
     while i < len(reviews):
@@ -64,7 +81,7 @@ async def _parse_reviews(worker_session, bot_id: int, rev_id: uuid.uuid4 = None,
         if not rev_id:
             stars += reviews[i]["star_rating"]
         for review_id in reviews[i]["_replies"]:
-            _parsed_reply = await _parse_reviews(worker_session, bot_id, review_id)
+            _parsed_reply = await _parse_reviews(worker_session, bot_id, review_id, t=t)
             try:
                 reviews[i]["replies"].append(_parsed_reply[0][0])
             except:

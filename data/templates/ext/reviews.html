@@ -28,7 +28,7 @@
                   <span class="white" style="margin-left: 3px;">Reply</span>
             </a>
             {% endif %}
-            {% if user_id == rev.user_id or staff[0] %}
+            {% if context.user_id == rev.user_id %}
                 <a href='javascript:void(0)' style='font-weight: bold; margin-left: 3px;' class="long-desc-link" onclick="botReviewEditPane(this, '{{rev.id}}')">Edit</a>
             {% endif %}
             </div>
@@ -43,7 +43,7 @@
                 <button onclick="newReview(true, '{{rev.id}}')" class="btn btn-outline-light">Reply</button>
             </section>
             {% endif %}
-            {% if user_id == rev.user_id or staff[0] %}
+            {% if context.user_id == rev.user_id %}
                 <div id="reviewopt-{{rev.id}}" style="display: none;">
                        <section id="reviewedit-{{rev.id}}" style="width: 100%;" class="white">
                     <label for="rating">On a scale of 1 to 10, how much did you like this bot?</label><br/>

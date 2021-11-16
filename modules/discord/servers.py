@@ -34,12 +34,11 @@ async def guild_page(request: Request, guild_id: int, bt: BackgroundTasks, rev_p
 
 @router.get("/{guild_id}/reviews_html")
 async def guild_review_page(request: Request, guild_id: int, page: int = 1):
-    return ""
     page = page if page else 1
-    reviews = await parse_reviews(request.app.state.worker_session, bot_id, page=page)
+    reviews = await parse_reviews(request.app.state.worker_session, guild_id, page=page, target_type=enums.ReviewType.server)
     context = {
-        "id": str(bot_id),
-        "type": "bot",
+        "id": str(guild_id),
+        "type": "server",
         "reviews": {
             "average_rating": float(reviews[1])
         },
@@ -53,14 +52,8 @@ async def guild_review_page(request: Request, guild_id: int, page: int = 1):
         "per_page": reviews[4],
     }
 
-    bot_info = await get_bot(bot_id, worker_session = request.app.state.worker_session)
-    if bot_info:
-        user = dict(bot_info)
-        user["name"] = user["username"]
+    user = {}
     
-    else:
-        return await templates.e(request, "Bot Not Found")
-
     return await templates.TemplateResponse("ext/reviews.html", {"request": request, "data": {"user": user}} | data, context = context)
 
 

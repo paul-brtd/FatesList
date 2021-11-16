@@ -2,7 +2,7 @@ from modules.core import *
 from lynxfall.utils.string import intl_text
 
 from ..base import API_VERSION
-from .models import APIResponse, BotReviewPartial, BotReviews, BotReviewVote
+from .models import APIResponse, BotReviewPartial, BotReviewPartialExt, BotReviews, BotReviewVote
 
 router = APIRouter(
     prefix = f"/api/v{API_VERSION}",
@@ -13,14 +13,17 @@ router = APIRouter(
 minlength = 10
 
 @router.get(
-    "/bots/{bot_id}/reviews", 
+    "/reviews/{target_id}/all", 
     response_model = BotReviews,
     dependencies=[
-        Depends(id_check("bot"))
+        Depends(
+            Ratelimiter(global_limit=Limit(times=3, seconds=7))
+        )
     ]
 )
-async def get_bot_reviews(request: Request, bot_id: int, page: Optional[int] = 1):
-    reviews = await parse_reviews(request.app.state.worker_session, bot_id, page = page)
+async def get_all_reviews(request: Request, target_id: int, target_type: enums.ReviewType, page: Optional[int] = 1, recache: bool = False):
+    """Gets all reviews for a target bot or server/guild"""
+    reviews = await parse_reviews(request.app.state.worker_session, target_id, page = page, target_type=target_type, in_recache=recache)
     if reviews[0] == []:
         return abort(404)
     return {
@@ -44,22 +47,31 @@ async def get_bot_reviews(request: Request, bot_id: int, page: Optional[int] = 1
             Depends(user_auth_check)
             ]
         )
-async def new_review(request: Request, user_id: int, target_id: int, target_type: enums.ReviewType, data: BotReviewPartial):
+async def new_review(request: Request, user_id: int, data: BotReviewPartialExt):
     """target_id is who the review is targetted to, target_type is whether its a guild or bot, 0 means bot, 1 means server"""
+    db = request.app.state.worker_session.postgres
+    if data.target_type == enums.ReviewType.server:
+        check = await db.fetchval("SELECT guild_id FROM servers WHERE guild_id = $1", data.target_id)
+        if not check:
+            return api_error("That server does not exist!")
+    elif data.target_type == enums.ReviewType.bot:
+        check = await db.fetchval("SELECT bot_id FROM bots WHERE bot_id = $1", data.target_id)
+        if not check:
+            return api_error("That bot does not exist!")
+
     if len(data.review) < minlength:
         return api_error(
             f"Reviews must be at least {minlength} characters long"
         )
 
-    db = request.app.state.worker_session.postgres
     if not data.reply:
         check = await db.fetchval(
-            "SELECT id FROM reviews WHERE target_id = $1 AND target_type = $2 AND user_id = $3 AND reply = false", target_id, target_type, user_id
+            "SELECT id FROM reviews WHERE target_id = $1 AND target_type = $2 AND user_id = $3 AND reply = false", data.target_id, data.target_type, user_id
         )
     
         if check:
             return api_error(
-                "You have already made a review for this bot, please edit that one instead of making a new one!",
+                "You have already made a review for this bot/server, please edit that one instead of making a new one!",
                 id=str(check)
             )
     else:
@@ -69,10 +81,10 @@ async def new_review(request: Request, user_id: int, target_id: int, target_type
         
     id = uuid.uuid4()
     await db.execute(
-        "INSERT INTO reviews (id, target_type, target_id, user_id, star_rating, review_text, epoch, reply) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+        "INSERT INTO reviews (id, target_type, target_id, user_id, star_rating, review_text, epoch, reply) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
         id,
-        target_type,
-        target_id, 
+        data.target_type,
+        data.target_id, 
         user_id,
         data.star_rating, 
         data.review, 
@@ -83,24 +95,25 @@ async def new_review(request: Request, user_id: int, target_id: int, target_type
     if data.reply:
         await db.execute("UPDATE reviews SET replies = replies || $1 WHERE id = $2", [id], data.id)
         
-    #await bot_add_event(
-    #    target_id, 
-    #    enums.APIEvents.review_add,
-    #    {
-    #        "user": str(user_id), 
-    #        "reply": data.reply,
-    #        "id": str(id),
-    #        "star_rating": data.star_rating,
-    #        "review": data.review,
-    #        "root": data.id
-    #    }
-    #)
+    if data.target_type == enums.ReviewType.bot:
+        await bot_add_event(
+            target_id, 
+            enums.APIEvents.review_add,
+            {
+                "user": str(user_id), 
+                "reply": data.reply,
+                "id": str(id),
+                "star_rating": data.star_rating,
+                "review": data.review,
+                "root": data.id
+            }
+        )
 
     # Recache reviews
     await parse_reviews(
         request.app.state.worker_session, 
-        target_id, 
-        recache = True
+        data.target_id,
+        recache = True,
     )
 
     return api_success()
@@ -139,11 +152,12 @@ async def edit_review(request: Request, user_id: int, id: uuid.UUID, data: BotRe
     )
 
     # Recache reviews
-    #await parse_reviews(
-    #    request.app.state.worker_session, 
-    #    bot_id, 
-    #    recache = True
-    #)
+    await parse_reviews(
+        request.app.state.worker_session, 
+        id, 
+        recache = True,
+        recache_from_rev_id=True
+    )
 
     return api_success()
     
@@ -174,13 +188,14 @@ async def delete_review(request: Request, user_id: int, id: uuid.UUID):
     await parse_reviews(
         request.app.state.worker_session, 
         str(id), 
-        recache = True
+        recache = True,
+        recache_from_rev_id=True
     )
 
     return api_success()    
 
 @router.patch(
-    "/users/{user_id}/reviews/{id}/votes", 
+    "/users/{user_id}/reviews/{rid}/votes", 
     response_model = APIResponse,
     dependencies = [
         Depends(id_check("user")),
@@ -211,4 +226,13 @@ async def vote_review_api(request: Request, user_id: int, rid: uuid.UUID, vote: 
     await db.execute("UPDATE reviews SET review_upvotes = $1, review_downvotes = $2 WHERE id = $3", bot_rev["review_upvotes"], bot_rev["review_downvotes"], rid)
     # TODO: fix this if needed
     #await bot_add_event(bot_id, enums.APIEvents.review_vote, {"user": str(user_id), "id": str(rid), "star_rating": bot_rev["star_rating"], "reply": bot_rev["reply"], "review": bot_rev["review_text"], "upvotes": len(bot_rev["review_upvotes"]), "downvotes": len(bot_rev["review_downvotes"]), "upvote": vote.upvote})
+    
+    # Recache reviews
+    await parse_reviews(
+        request.app.state.worker_session,
+        str(rid),
+        recache = True,
+        recache_from_rev_id=True
+    )
+    
     return api_success()

@@ -20,6 +20,11 @@ class BotReviewPartial(BaseModel):
             raise ValueError("ID must be provided if reply is set")
         return v
 
+class BotReviewPartialExt(BotReviewPartial):
+    """Partial bot review with extended fields specific for adding reviews such as target_type and target_id"""
+    target_type: enums.ReviewType
+    target_id: int
+
 BotReviewList = ForwardRef('BotReviewList')
 
 class BotReview(BaseModel):

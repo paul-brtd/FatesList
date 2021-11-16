@@ -153,8 +153,9 @@ async def delete_bot(request: Request, user_id: int, bot_id: int):
         return api_error(
             f"This bot cannot be deleted as it has been locked with a code of {int(lock)}: ({lock.__doc__}). If this bot is not staff locked, join the support server and run +unlock <BOT> to unlock it."
         )
-    await db.execute(f"DELETE FROM bots WHERE bot_id = $1", bot_id)
+    await db.execute("DELETE FROM bots WHERE bot_id = $1", bot_id)
     await db.execute("DELETE FROM vanity WHERE redirect = $1", bot_id)
+    await db.execute("DELETE FROM reviews WHERE target_id = $1 AND target_type = $2", bot_id, enums.ReviewType.bot)
 
     # Check all packs
     packs = await db.fetch("SELECT bots FROM bot_packs")

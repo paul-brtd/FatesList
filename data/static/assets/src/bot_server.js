@@ -187,8 +187,8 @@ function voteReview(rev_id, upvote) {
 	}	
 	request({
 		method: 'PATCH',
-		url: `/api/users/${context.user_id}/${context.type}s/${context.id}/reviews/${rev_id}/votes`,
-		data: {"upvote": upvote},
+		url: `/api/users/${context.user_id}/reviews/${rev_id}/votes`,
+		json: {"upvote": upvote},
 		userAuth: true,
 		statusCode: {
 			200: function(data) {
@@ -222,20 +222,15 @@ function newReview(reply, root) {
 
 	review = document.querySelector(`#review${rev_id}`).value
 	star_rating = document.querySelector(`#star_rating${rev_id}`).value
-	jQuery.ajax({
+	request({
 		method: 'POST',
-		url: `/api/users/${context.user_id}/reviews?target_type=${target_type}`,
-		data: JSON.stringify({"reply": reply, "id": root, "review": review, "star_rating": star_rating}),
-		headers: {"Authorization": context.user_token},
-		processData: false,
-		contentType: 'application/json',
+		url: `/api/users/${context.user_id}/reviews`,
+		json: {"reply": reply, "id": root, "review": review, "star_rating": star_rating, "target_id": context.id, "target_type": target_type},
+		userAuth: true,
 		statusCode: {
 			200: function(data) {
 				modalShow("Success", "Successfully created your review!")
 				setTimeout(() => window.location.reload(), 1500)
-			},
-			400: function(data) {
-				modalShow("Error", data.responseJSON.reason);
 			},
 			401: function(data) {
 				modalShow("Unauthorized", "We could not authenticate you, make sure you are logged in")
