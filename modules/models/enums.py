@@ -168,3 +168,8 @@ class APIEvents(IntEnum):
     server_archive = 76, "Server Archive Event" # When someone archives their server
     staff_lock = 80, "Staff Lock"
     staff_unlock = 81, "Staff Unlock"
+
+class ReviewType(IntEnum):
+    _init_ = "value __doc__"
+    bot = 0, "Bot"
+    server = 1, "Server"

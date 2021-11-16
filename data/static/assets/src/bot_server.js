@@ -160,7 +160,7 @@ setTimeout(function(){getCommands(context.id)}, 700)
 function deleteReview(rev_id) {
 	jQuery.ajax({
 		type: 'DELETE',
-		url: `/api/users/${context.user_id}/${context.type}s/${context.id}/reviews/${rev_id}`,
+		url: `/api/users/${context.user_id}/reviews/${rev_id}`,
 		headers: {"Authorization": context.user_token},
 		contentType: 'application/json',
 		statusCode: {
@@ -215,11 +215,16 @@ function newReview(reply, root) {
            rev_id = `-${root}`
         }
 
+	target_type = 0
+	if(context.type == "server"){
+		target_type = 1
+	}
+
 	review = document.querySelector(`#review${rev_id}`).value
 	star_rating = document.querySelector(`#star_rating${rev_id}`).value
 	jQuery.ajax({
 		method: 'POST',
-		url: `/api/users/${context.user_id}/${context.type}s/${context.id}/reviews`,
+		url: `/api/users/${context.user_id}/reviews?target_type=${target_type}`,
 		data: JSON.stringify({"reply": reply, "id": root, "review": review, "star_rating": star_rating}),
 		headers: {"Authorization": context.user_token},
 		processData: false,
@@ -245,7 +250,7 @@ function editReview(id) {
 	review = document.querySelector(`#r-${id}-edit-text`).value
 	jQuery.ajax({
 		method: 'PATCH',
-		url: `/api/users/${context.user_id}/${context.type}s/${context.id}/reviews/${id}`,
+		url: `/api/users/${context.user_id}/reviews/${id}`,
 		data: JSON.stringify({"review": review, "star_rating": star_rating}),
 		headers: {"Authorization": context.user_token},
 		processData: false,

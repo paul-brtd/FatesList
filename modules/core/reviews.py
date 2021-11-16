@@ -6,6 +6,7 @@ from .imports import *
 async def parse_reviews(worker_session, bot_id: int, rev_id: uuid.uuid4 = None, page: int = None, recache: bool = False, in_recache: bool = False) -> List[dict]:
     if recache:
         async def recache():
+            bot_id = await worker_session.postgres.fetchval("SELECT target_id FROM reviews WHERE id = $1", bot_id) or bot_id
             reviews = await _parse_reviews(worker_session, bot_id)
             page_count = reviews[2]
             for page in range(0, page_count):
@@ -25,7 +26,7 @@ async def parse_reviews(worker_session, bot_id: int, rev_id: uuid.uuid4 = None, 
     return reviews
 
 
-async def _parse_reviews(worker_session, bot_id: int, rev_id: uuid.uuid4 = None, page: int = None) -> List[dict]:
+async def _parse_reviews(worker_session, bot_id: int, rev_id: uuid.uuid4 = None, page: int = None, t: str = enums.ReviewType.bot) -> List[dict]:
     db = worker_session.postgres
 
     per_page = 9
@@ -35,14 +36,14 @@ async def _parse_reviews(worker_session, bot_id: int, rev_id: uuid.uuid4 = None,
         rev_args = () # Any extra arguments?
     else:
         reply = True
-        rev_check = "AND id = $3" # Extra string to check for review id
+        rev_check = "AND id = $4" # Extra string to check for review id
         rev_args = (rev_id,) # Extra argument of review id
 
     if page is None:
         end = ""
     else:
         end = f"OFFSET {per_page*(page-1)} LIMIT {per_page}"
-    reviews = await db.fetch(f"SELECT id, reply, user_id, star_rating, review_text AS review, review_upvotes, review_downvotes, flagged, epoch, replies AS _replies FROM bot_reviews WHERE bot_id = $1 AND reply = $2 {rev_check} ORDER BY epoch, star_rating ASC {end}", bot_id, reply, *rev_args)
+    reviews = await db.fetch(f"SELECT id, reply, user_id, star_rating, review_text AS review, review_upvotes, review_downvotes, flagged, epoch, replies AS _replies FROM reviews WHERE target_id = $1 AND target_type = $2 AND reply = $3 {rev_check} ORDER BY epoch, star_rating ASC {end}", bot_id, t, reply, *rev_args)
     i = 0
     stars = 0
     while i < len(reviews):
@@ -70,7 +71,7 @@ async def _parse_reviews(worker_session, bot_id: int, rev_id: uuid.uuid4 = None,
                 pass
         del reviews[i]["_replies"]
         i+=1
-    total_rev = await db.fetchrow("SELECT COUNT(1) AS count, AVG(star_rating)::numeric(10, 2) AS avg FROM bot_reviews WHERE bot_id = $1 AND reply = false", bot_id)
+    total_rev = await db.fetchrow("SELECT COUNT(1) AS count, AVG(star_rating)::numeric(10, 2) AS avg FROM reviews WHERE target_id = $1 AND reply = false AND target_type = $2", bot_id, t)
 
     if i == 0:
         return reviews, 10.0, 0, 0, per_page

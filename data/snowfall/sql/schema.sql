@@ -116,9 +116,10 @@ CREATE TABLE bot_stats_votes_pm (
    votes bigint
 );
 
-CREATE TABLE bot_reviews (
+CREATE TABLE reviews (
    id uuid primary key DEFAULT uuid_generate_v4(),
-   bot_id bigint not null,
+   target_id bigint not null,
+   target_type integer default 0,
    user_id bigint not null,
    star_rating float4 default 0.0,
    review_text text,

@@ -127,6 +127,18 @@ func checkPerms(discord *discordgo.Session, i *discordgo.Interaction, permNum in
 		sendIResponse(discord, i, "You need "+permStr+" in order to use this command", true)
 		return false
 	}
+
+	if permNum >= 4 {
+		ok, is_staff, perm := common.GetPerms(discord, context.Background(), i.Member.User.ID, float32(permNum+1))
+		if ok != "" {
+			sendIResponse(discord, i, "Something went wrong while verifying your identity!", true)
+			return false
+		}
+		if !is_staff {
+			sendIResponse(discord, i, "This operation requires perm: "+strconv.Itoa(int(permNum+1))+" but you only have perm number "+strconv.Itoa(int(perm))+".", true)
+			return false
+		}
+	}
 	return true
 }
 

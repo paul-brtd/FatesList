@@ -27,8 +27,9 @@ async def guild_page(request: Request, guild_id: int, bt: BackgroundTasks, rev_p
         "username": data["name_cached"],
         "avatar": data["avatar_cached"]
     }
-    context = {"type": "server", "replace_list": constants.long_desc_replace_tuple, "id": guild_id}
+    context = {"type": "server", "replace_list": constants.long_desc_replace_tuple, "id": str(guild_id)}
     data["type"] = "server"
+    data["id"] = str(guild_id)
     return await templates.TemplateResponse("bot_server.html", {"request": request, "replace_last": replace_last, "data": data} | data, context = context)
 
 @router.get("/{guild_id}/reviews_html")
