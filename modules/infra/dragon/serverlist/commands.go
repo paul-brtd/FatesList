@@ -76,6 +76,10 @@ func cmdInit() {
 						Name:  "Recache Server",
 						Value: "recache",
 					},
+					{
+						Name:  "State",
+						Value: "state",
+					},
 				},
 				Required: true,
 			},
@@ -103,6 +107,30 @@ func cmdInit() {
 
 			value = strings.Replace(value, "http://", "https://", -1)
 			value = strings.Replace(value, "www.", "https://www.", -1)
+			// Handle state
+			if field == "state" {
+				if value == "private_viewable" || value == "8" {
+					value = "8"
+				} else if value == "public" || value == "0" {
+
+				} else {
+					return "State must be one of (private_viewable, public)"
+				}
+
+				var currState pgtype.Int4
+				err := context.Postgres.QueryRow(context.Context, "SELECT state FROM servers WHERE guild_id = $1", context.Interaction.GuildID).Scan(&currState)
+				if err != nil {
+					return err.Error()
+				}
+				if currState.Status != pgtype.Present {
+					return "An error has occurred fetching your current status"
+				}
+				state := types.GetBotState(int(currState.Int))
+				if state != types.BotStateApproved && state != types.BotStatePrivateViewable {
+					return "You may not change the state of this server. Please contact Fates List Staff for more information"
+				}
+			}
+
 			// Hand,e invite channel
 			if field == "invite_channel" && value != "" {
 				value = numericRegex.ReplaceAllString(value, "")

@@ -304,16 +304,24 @@ func setupCommands() {
 			guildId := cmd[2]
 			userId := cmd[3]
 			log.Info("Creating invite for user ", userId)
+			var state pgtype.Int4
 			var inviteUrl pgtype.Text
 			var inviteChannel pgtype.Text
 			var finalInv string
-			context.Postgres.QueryRow(ctx, "SELECT invite_url, invite_channel FROM servers WHERE guild_id = $1", guildId).Scan(&inviteUrl, &inviteChannel)
+			err := context.Postgres.QueryRow(ctx, "SELECT state, invite_url, invite_channel FROM servers WHERE guild_id = $1", guildId).Scan(&state, &inviteUrl, &inviteChannel)
+			if err != nil {
+				log.Error(err)
+				return "Something went wrong: " + err.Error()
+			}
+			if types.GetBotState(int(state.Int)) == types.BotStatePrivateViewable {
+				return "This server is private and not accepting invites at this time!"
+			}
 			if inviteUrl.Status != pgtype.Present || inviteUrl.String == "" {
 				// Create invite using serverlist bot
 				guild, err := context.ServerList.State.Guild(guildId)
 				if err != nil {
 					log.Error(err)
-					return "-1"
+					return "Something went wrong: " + err.Error()
 				}
 
 				var channelId string
@@ -331,7 +339,7 @@ func setupCommands() {
 				})
 				if err != nil {
 					log.Error(err)
-					return "-1"
+					return "Something went wrong: " + err.Error()
 				}
 				finalInv = "https://discord.gg/" + invite.Code
 			} else {

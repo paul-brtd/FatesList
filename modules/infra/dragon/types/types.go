@@ -248,6 +248,11 @@ var BotStateArchived = BotState{
 	Description: "Archived",
 }
 
+var BotStatePrivateViewable = BotState{
+	Value:       8,
+	Description: "Private but viewable with link (server only)",
+}
+
 var BotStateUnknown = BotState{
 	Value:       -1,
 	Description: "Unknown State",
@@ -272,6 +277,8 @@ func GetBotState(state int) BotState {
 		return BotStateCertified
 	case 7:
 		return BotStateArchived
+	case 8:
+		return BotStatePrivateViewable
 	default:
 		return BotStateUnknown
 	}

@@ -66,9 +66,10 @@ async def guild_invite(request: Request, guild_id: int):
     invite = await redis_ipc_new(redis_db, "GUILDINVITE", args=[str(guild_id), str(user_id)])
     if invite is None:
         return abort(404)
-    if invite == b"-1":
-        return await templates.e(request, "Something happened while fetching the invite...")
-    return RedirectResponse(invite.decode("utf-8"))
+    invite = invite.decode("utf-8")
+    if invite.startswith("https://"):
+        return RedirectResponse(invite)
+    return await templates.e(request, invite)
 
 #@router.get("/{bot_id}/banner")
 async def banner(request: Request, bot_id: int):
