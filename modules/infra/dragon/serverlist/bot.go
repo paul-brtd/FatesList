@@ -100,6 +100,7 @@ func SlashHandler(
 	timeout := time.AfterFunc(time.Second*2, func() {
 		sendIResponse(discord, i.Interaction, "defer", false)
 	})
+	defer timeout.Stop()
 
 	res := cmd.Handler(slashContext)
 
@@ -109,7 +110,6 @@ func SlashHandler(
 
 	sendIResponse(discord, i.Interaction, res, true)
 	delete(iResponseMap, i.Interaction.Token)
-	timeout.Stop()
 }
 
 func checkPerms(discord *discordgo.Session, i *discordgo.Interaction, permNum int) bool {

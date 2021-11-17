@@ -13,10 +13,6 @@ router = APIRouter(
     include_in_schema = False
 )
 
-@router.get("/")
-async def guild_rdir(request: Request):
-    return "WIP"
-
 @router.get("/{guild_id}")
 async def guild_page(request: Request, guild_id: int, bt: BackgroundTasks, rev_page: int = 1):
     data = await db.fetchrow("SELECT guild_id, invite_amount, avatar_cached, name_cached, votes, css, description, long_description, long_description_type FROM servers WHERE guild_id = $1", guild_id)
@@ -42,6 +38,7 @@ async def guild_review_page(request: Request, guild_id: int, page: int = 1):
         "reviews": {
             "average_rating": float(reviews[1])
         },
+        "index": "/servers"
     }
     data = {
         "bot_reviews": reviews[0], 

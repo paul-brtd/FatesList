@@ -57,9 +57,10 @@ async def get_user_votes(request: Request, bot_id: int, user_id: int):
             )
         ),
         Depends(user_auth_check)
-    ]
+    ],
+    operation_id="create_bot_vote"
 )
-async def create_vote(user_id: int, bot_id: int):
+async def create_bot_vote(user_id: int, bot_id: int):
     """Endpoint to create a vote for a bot"""
     ret = await vote_bot(redis = redis_db, db=db, user_id = user_id, bot_id = bot_id, test = False)
     if ret is True: 

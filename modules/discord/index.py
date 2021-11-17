@@ -28,11 +28,21 @@ async def exp1(request: Request):
 def reroute_support():
     return RedirectResponse("/fates/support/invite")
 
-# We want to handle any request method to index page
+# We want to handle any request method to index page.
+# cert = certified bots
 @router.get("/")
 @router.head("/")
 async def index_fend(request: Request, cert: Optional[bool] = True):
     return await render_index(request = request, api = False, cert = cert)
+
+@router.get("/servers")
+@router.head("/servers")
+@router.get("/server")
+@router.head("/server")
+@router.get("/guilds")
+@router.head("/guilds")
+async def server_index(request: Request):
+    return "WIP"
 
 @router.get("/etest/{code}")
 async def test_error(code: int):

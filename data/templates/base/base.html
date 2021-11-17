@@ -103,7 +103,7 @@
 </div>
 <nav style="background: black; color: white;" class="navbar fixed-top navbar-full navbar-dark" aria-label="Site Navigation Menu">
    <div class="navbar-brand">
-	   <a href={% if not server %}"/"{% else %}"/server"{%endif%} class="navbar-brand"><img alt="" style="margin-right: 5px;" width="30px" src="/static/botlisticon.webp"><span class="sr-only">Toggle navigation</span>Fates List</a>
+	   <a href="{{context.index}}" class="navbar-brand"><img alt="" style="margin-right: 5px;" width="30px" src="/static/botlisticon.webp"><span class="sr-only">Toggle navigation</span>Fates List</a>
    </div>
    <div class="content-nomobile navbar-nav" style="margin-top: 1px;">
 	<li class="nav-item">
