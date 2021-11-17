@@ -4,6 +4,7 @@ import (
 	"context"
 	"dragon/common"
 	"dragon/types"
+	"errors"
 	"strconv"
 	"strings"
 	"time"
@@ -96,6 +97,10 @@ func SlashHandler(
 		Interaction: i.Interaction,
 	}
 
+	timeout := time.AfterFunc(time.Second*2, func() {
+		sendIResponse(discord, i.Interaction, "defer", false)
+	})
+
 	res := cmd.Handler(slashContext)
 
 	if res == "" {
@@ -104,6 +109,7 @@ func SlashHandler(
 
 	sendIResponse(discord, i.Interaction, res, true)
 	delete(iResponseMap, i.Interaction.Token)
+	timeout.Stop()
 }
 
 func checkPerms(discord *discordgo.Session, i *discordgo.Interaction, permNum int) bool {
@@ -172,14 +178,19 @@ func sendIResponseComplex(discord *discordgo.Session, i *discordgo.Interaction, 
 			log.Error(err.Error())
 		}
 	} else {
-		err := discord.InteractionRespond(i, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Content: content,
-				Flags:   flags,
-				Files:   files,
-			},
-		})
+		var err error
+		if content != "defer" {
+			err = discord.InteractionRespond(i, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: content,
+					Flags:   flags,
+					Files:   files,
+				},
+			})
+		} else {
+			err = errors.New("deferring response due to timeout...")
+		}
 		if err != nil {
 			log.Error("An error has occurred in initial response: " + err.Error())
 			discord.InteractionRespond(i, &discordgo.InteractionResponse{

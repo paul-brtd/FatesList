@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 	log "github.com/sirupsen/logrus"
@@ -35,7 +36,8 @@ func RenderPossibleLink(link string) (res string) {
 	if strings.HasPrefix(link, "pastebin.com") {
 		pasteId := strings.Replace(strings.Replace(link, "pastebin.com", "", 1), "/", "", -1)
 		rawPasteUrl := "https://pastebin.com/raw/" + pasteId
-		resp, err := http.Get(rawPasteUrl)
+		client := http.Client{Timeout: 15 * time.Second}
+		resp, err := client.Get(rawPasteUrl)
 		if err != nil {
 			log.Error(err)
 			return origData

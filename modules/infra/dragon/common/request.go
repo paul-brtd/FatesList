@@ -5,6 +5,7 @@ import (
 	"dragon/types"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -53,7 +54,7 @@ func WebhookReq(ctx context.Context, db *pgxpool.Pool, eventId string, webhookUR
 		return false
 	}
 	body := strings.NewReader(data)
-	client := &http.Client{}
+	client := &http.Client{Timeout: 30 * time.Second}
 	req, err := http.NewRequest("POST", webhookURL, body)
 	if err != nil {
 		return WebhookReq(ctx, db, eventId, webhookURL, secret, data, tries+1)
