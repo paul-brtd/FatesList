@@ -42,9 +42,10 @@ CREATE TABLE bots (
     js_allowed BOOLEAN DEFAULT TRUE
 );
 
-CREATE TABLE bot_resources (
+CREATE TABLE resources (
     id uuid primary key DEFAULT uuid_generate_v4(),
-    bot_id BIGINT NOT NULL,
+    target_id BIGINT NOT NULL,
+    target_type integer default 0,
     resource_title TEXT NOT NULL,
     resource_link TEXT NOT NULL,
     resource_description TEXT NOT NULL
@@ -131,6 +132,8 @@ CREATE TABLE reviews (
    reply boolean default false,
    CONSTRAINT users_fk FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
+
+create index review_index on reviews (id, target_id, target_type, star_rating);
 
 CREATE TABLE bot_voters (
     bot_id bigint,

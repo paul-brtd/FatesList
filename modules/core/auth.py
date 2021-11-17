@@ -8,8 +8,30 @@ bot_auth_header = APIKeyHeader(name="Authorization", description="These endpoint
 
 user_auth_header = APIKeyHeader(name="Authorization", description="These endpoints require a user token. You can get this from your profile under the User Token section. If you are using this for voting, make sure to allow users to opt out!\n\nA prefix of `User` before the user token such as `User abcdef` is supported and can be used to avoid ambiguity but is not required outside of endpoints that have both a user and a bot authentication option such as Get Votes. In such endpoints, the default will always be a bot auth unless you prefix the token with `User`", scheme_name="User")
 
+
+server_auth_header = APIKeyHeader(name="Authorization", description="These endpoints require a server token which you can get using /get API Token in your server. Same warnings and information from the other authentication types apply here. A prefix of ``Server`` before the server token is supported and can be used to avoid ambiguity but is not required.", scheme_name="Server")
+
 async def _bot_auth(bot_id: int, api_token: str):
+    if isinstance(bot_id, int):
+        pass
+    elif bot_id.isdigit():
+        bot_id = int(bot_id)
+    else:
+        return None
+    if api_token.startswith("Bot "):
+        api_token = api_token.replace("Bot ", "", 1)
     return await db.fetchval("SELECT bot_id FROM bots WHERE bot_id = $1 AND api_token = $2", bot_id, str(api_token))
+
+async def _server_auth(server_id: int, api_token: str):
+    if isinstance(server_id, int):
+        pass
+    elif server_id.isdigit():
+        server_id = int(server_id)
+    else:
+        return None
+    if api_token.startswith("Server "):
+        api_token = api_token.replace("Server ", "", 1)
+    return await db.fetchval("SELECT guild_id FROM servers WHERE guild_id = $1 AND api_token = $2", guild_id, str(api_token))
 
 async def _user_auth(user_id: int, api_token: str):
     if isinstance(user_id, int):
@@ -18,6 +40,8 @@ async def _user_auth(user_id: int, api_token: str):
         user_id = int(user_id)
     else:
         return None
+    if api_token.startswith("User "):
+        api_token = api_token.replace("User ", "", 1)
     return await db.fetchval("SELECT user_id FROM users WHERE user_id = $1 AND api_token = $2", user_id, str(api_token))
 
 async def bot_auth_check(bot_id: int, bot_auth: str = Security(bot_auth_header)):
@@ -42,5 +66,21 @@ async def bot_user_auth_check(bot_id: int, user_id: Optional[int] = None, bot_au
         scheme = "Bot"
         id = await _bot_auth(bot_id, bot_auth)
     
+    if not id:
+        raise HTTPException(status_code=401, detail=f"Invalid {scheme} Token")
+
+# All bot_server auth endpoints must use target_id and probably uses target_type
+async def bot_server_auth_check(target_id: int, target_type: enums.ReviewType, bot_auth: str = Security(bot_auth_header), user_auth: str = Security(server_auth_header)):
+    if target_type == enums.ReviewType.server:
+        if server_auth.startswith("Bot "):
+            raise HTTPException(status_code=401, detail="Invalid token type. Did you use the correct target_type")
+        scheme = "Server"
+        id = await _server_auth(target_id, server_auth)
+    else:
+        if bot_auth.startswith("Server "):
+            raise HTTPException(status_code=401, detail="Invalid token type. Did you use the correct target_type")
+        scheme = "Bot"
+        id = await _bot_auth(target_id, bot_auth)
+
     if not id:
         raise HTTPException(status_code=401, detail=f"Invalid {scheme} Token")

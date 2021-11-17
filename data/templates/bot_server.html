@@ -70,7 +70,9 @@
 				<a rel="noopener" target="_blank" href="{{data.website}}"><button class="btn btn-outline-light buttons-all" id="buttons-website">Website</button></a>
 			{% endif %}
 		{% endif %}
-		<a href="/{{type}}/{{id}}/settings"><button class="btn btn-outline-light buttons-all" id="buttons-settings">Settings</button></a>
+		{% if type == "bot" %}
+			<a href="/{{type}}/{{id}}/settings"><button class="btn btn-outline-light buttons-all" id="buttons-settings">Settings</button></a>
+		{% endif %}
 	</div>
 	<div style="display: inline-block; width: fit-content; height: fit-content; margin: 7px; padding: 7px;" class="key-container">
 		<section id="tags">
@@ -96,8 +98,8 @@
 		<div class="tab">
 			  <button id="long-desc-tab-button" class="tablinks" onclick="openf(event, 'long-description', this, true)">Description</button>
 			  <button id="review-tab-button" class="tablinks" onclick="openf(event, 'reviews', this, false)">Reviews</button>
-			  {% if type == "bot" %}
 			  <button id="resources-tab-button" class="tablinks" onclick="openf(event, 'resources', this, false)">Resources</button>
+			  {% if type == "bot" %}
 			  <button id="commands-tab-button" class="tablinks" onclick="openf(event, 'commands', this, false)">Commands</button>
 			  {% endif %}
 			  <button id="about-tab-button" class="tablinks" onclick="openf(event, 'about', this, false)">About</button>
@@ -145,6 +147,7 @@
 		</section>
 	{% endif %}
 	<section id="resources-tab" class="tabcontent tabdesign">
+		{% if type == "bot" %}
 		{% if data.donate and data.donate.replace(" ", "") %}
 			<a rel="noopener" target="_blank" class="long-desc-link" href="{{data.donate}}">Donate to {{ data.user.username }} for special exclusive benefits tailored to you!</a><br/>
 		{% endif %}
@@ -156,6 +159,7 @@
 		{% endif %}
 		{% if data.website and data.website.replace(" ", "") %}
 			<a rel="noopener" target="_blank" class="long-desc-link" href="{{data.website}}">Website</a>
+		{% endif %}
 		{% endif %}
 		<p>Custom community resources are coming soon!</p>
 	</section>
