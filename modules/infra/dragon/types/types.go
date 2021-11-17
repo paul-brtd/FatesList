@@ -3,7 +3,7 @@ package types
 import (
 	"context"
 
-	"github.com/bwmarrin/discordgo"
+	"github.com/Fates-List/discordgo"
 	"github.com/go-redis/redis/v8"
 	"github.com/jackc/pgx/v4/pgxpool"
 )

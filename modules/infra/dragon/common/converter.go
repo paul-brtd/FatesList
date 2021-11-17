@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bwmarrin/discordgo"
+	"github.com/Fates-List/discordgo"
 	log "github.com/sirupsen/logrus"
 )
 

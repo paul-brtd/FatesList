@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/bwmarrin/discordgo"
+	"github.com/Fates-List/discordgo"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/jackc/pgtype"
 )
@@ -194,14 +194,20 @@ func cmdInit() {
 				return "Could not add guild because: " + err.Error()
 			}
 
+			var nsfw bool
+
+			if guild.NSFWLevel == discordgo.GuildNSFWLevelExplicit || guild.NSFWLevel == discordgo.GuildNSFWLevelAgeRestricted {
+				nsfw = true
+			}
+
 			if check.Status != pgtype.Present {
 				apiToken := common.RandString(198)
-				_, err = context.Postgres.Exec(context.Context, "INSERT INTO servers (guild_id, api_token, name_cached, avatar_cached) VALUES ($1, $2, $3, $4)", context.Interaction.GuildID, apiToken, guild.Name, guild.IconURL())
+				_, err = context.Postgres.Exec(context.Context, "INSERT INTO servers (guild_id, api_token, name_cached, avatar_cached, nsfw) VALUES ($1, $2, $3, $4, $5)", context.Interaction.GuildID, apiToken, guild.Name, guild.IconURL(), nsfw)
 				if err != nil {
 					return "An error occurred while we were updating our database: " + err.Error()
 				}
 			} else {
-				_, err = context.Postgres.Exec(context.Context, "UPDATE servers SET name_cached = $1, avatar_cached = $2 WHERE guild_id = $3", guild.Name, guild.IconURL(), guild.ID)
+				_, err = context.Postgres.Exec(context.Context, "UPDATE servers SET name_cached = $1, avatar_cached = $2, nsfw = $3 WHERE guild_id = $4", guild.Name, guild.IconURL(), nsfw, guild.ID)
 				if err != nil {
 					return "An error occurred while we were updating our database: " + err.Error()
 				}

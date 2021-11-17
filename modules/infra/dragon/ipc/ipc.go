@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bwmarrin/discordgo"
+	"github.com/Fates-List/discordgo"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/go-redis/redis/v8"
 	"github.com/jackc/pgtype"
@@ -328,10 +328,19 @@ func setupCommands() {
 				if inviteChannel.Status == pgtype.Present {
 					channelId = inviteChannel.String
 				} else {
-					channelId = guild.Channels[0].ID
+					channelId = guild.RulesChannelID
+					if channelId == "" {
+						channelId = guild.SystemChannelID
+					}
+					if channelId == "" {
+						channelId = guild.Channels[0].ID
+					}
+					if channelId == "" {
+						return "Could not find channel to invite you to... Please ask the owner of this server to set an invite or set the invite channel for this server"
+					}
 				}
 
-				invite, err := context.ServerList.ChannelInviteCreate(channelId, discordgo.Invite{
+				invite, err := context.ServerList.ChannelInviteCreateWithReason(channelId, "Created invite for user: "+userId, discordgo.Invite{
 					MaxAge:    60 * 15,
 					MaxUses:   1,
 					Temporary: false,

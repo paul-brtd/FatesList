@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 
-	"github.com/bwmarrin/discordgo"
+	"github.com/Fates-List/discordgo"
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 )

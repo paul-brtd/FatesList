@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/bwmarrin/discordgo"
+	"github.com/Fates-List/discordgo"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/jackc/pgtype"
 	log "github.com/sirupsen/logrus"
