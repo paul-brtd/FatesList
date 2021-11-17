@@ -46,7 +46,8 @@ class templates():
             "user_token": arg_dict.get("user_token"),
             "site_lang": arg_dict.get("site_lang"),
             "logged_in": True if "user_id" in arg_dict.keys() else False,
-            "index": "/"
+            "index": "/",
+            "type": "bot"
         }
         
         arg_dict["context"] = base_context | context

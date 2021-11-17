@@ -9,12 +9,12 @@
 	<hr class="hr-is">
 	<div class="d-flex" style="margin-left: 5%;">
 		<span class="iconify white" data-icon="fa-solid:search" data-inline="false" data-height="3em"></span>
-		<p class="title-is">Random Bot</p>
+		<p class="title-is">Random {{type.title()}}</p>
 	</div>
 	<div id="random-section"
 		class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center div-is">
 		<div id="random-bots">
-			{{ flCard(None, True, 'bot') }}
+			{{ flCard(None, True, type) }}
 		</div>
 	</div>
 	<div id="random-section-bt" class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center div-is">
@@ -25,11 +25,11 @@
 	<hr class="hr-is">
 	<div class="d-flex" style="margin-left: 5%;" onclick="hideSect('cert')">
 		<span class="iconify white" data-icon="fa-solid:certificate" data-inline="false" data-height="3em"></span>
-		<p class="title-is">Certified Bots</p>
+		<p class="title-is">Certified {{type.title()}}s</p>
 	</div>
 	<div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center div-is" id="certif">
 		{% for bot in certified_bots %}
-		{{ flCard(bot, False, 'bot') }}
+		{{ flCard(bot, False, type) }}
 		{% endfor %}
 	</div>
 	<hr class="hr-is">
@@ -39,17 +39,17 @@
 	</div>
 	<div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center div-is" id="tt-1">
 		{% for bot in top_voted %}
-		{{ flCard(bot, False, 'bot') }}
+		{{ flCard(bot, False, type) }}
 		{% endfor %}
 	</div>
 	<hr class="hr-is">
 	<div class="d-flex" style="margin-left: 5%;">
 		<span class="iconify white" data-icon="fa-solid:plus" data-inline="false" data-height="3em"></span>
-		<p class="title-is">New Bots</p>
+		<p class="title-is">New {{type.title()}}s</p>
 	</div>
 	<div class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center" id="tt" style="width: 90%;margin: 30px 5%;">
 		{% for bot in new_bots %}
-		{{ flCard(bot, False, 'bot') }}
+		{{ flCard(bot, False, type) }}
 		{% endfor %}
 	</div>
 	<script>
@@ -58,7 +58,7 @@
 			searchParams = new URLSearchParams(window.location.search)
 			if(searchParams.get(q) == "false") searchParams.set(q, "true")
 			else searchParams.set(q, "false")
-			window.location.href = "/?" + searchParams.toString()
+			window.location.href = window.location.href.replace("?cert=true", "").replace("?cert=false", "") + "/?" + searchParams.toString()
 		}
 	</script> 
 	<script src="/static/assets/prod/index.min.js?v=3">

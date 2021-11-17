@@ -167,43 +167,59 @@ async def vanity_bot(vanity: str) -> Optional[str]:
     type = enums.Vanity(t["type"]).name # Get type using Vanity enum
     return int(t["redirect"]), type
 
-async def parse_index_query(worker_session, fetch: List[asyncpg.Record]) -> list:
+async def parse_index_query(worker_session, fetch: List[asyncpg.Record], type: enums.ReviewType = enums.ReviewType.bot) -> list:
     """
     Parses a index query to a list of partial bots
     """
     lst = []
     for bot in fetch:
         banner_replace_tup = (("\"", ""), ("'", ""), ("http://", "https://"), ("file://", ""))
-        _user = await get_bot(bot["bot_id"], worker_session = worker_session)
-        if _user:
+        if type == enums.ReviewType.server:
             bot_obj = dict(bot) | {
-                "user": _user,
-                "bot_id": str(bot["bot_id"]),
+                "user": await db.fetchrow("SELECT name_cached AS username, avatar_cached AS avatar FROM servers WHERE guild_id = $1", bot["guild_id"]),
+                "bot_id": str(bot["guild_id"]),
                 "banner": ireplacem(banner_replace_tup, bot["banner"]) if bot["banner"] else None,
             }
             lst.append(bot_obj)
+        else:
+            _user = await get_bot(bot["bot_id"], worker_session = worker_session)
+            if _user:
+                bot_obj = dict(bot) | {
+                    "user": _user,
+                    "bot_id": str(bot["bot_id"]),
+                    "banner": ireplacem(banner_replace_tup, bot["banner"]) if bot["banner"] else None,
+                }
+                lst.append(bot_obj)
     return lst
 
 async def do_index_query(
     worker_session,
     add_query: str = "",
     state: list = [0, 6],
-    limit: Optional[int] = 12
+    limit: Optional[int] = 12,
+    type: enums.ReviewType = enums.ReviewType.bot
 ) -> List[asyncpg.Record]:
     """
     Performs a 'index' query which can also be used by other things as well
     """
     db = worker_session.postgres
-    
+   
+    if type == enums.ReviewType.bot:
+        table = "bots"
+        main_key = "bot_id"
+    else:
+        table = "servers"
+        main_key = "guild_id"
+
     states = "WHERE " + " OR ".join([f"state = {s}" for s in state])
-    base_query = f"SELECT description, banner_card AS banner, state, votes, guild_count, bot_id, invite, nsfw FROM bots {states}"
+    base_query = f"SELECT description, banner_card AS banner, state, votes, guild_count, {main_key}, nsfw FROM {table} {states}"
     if limit:
         end_query = f"LIMIT {limit}"
     else:
         end_query = ""
     logger.debug(base_query, add_query, end_query)
     fetch = await db.fetch(" ".join((base_query, add_query, end_query)))
-    return await parse_index_query(worker_session, fetch)
+    return await parse_index_query(worker_session, fetch, type=type)
 
 async def vanity_check(id, vanity):
     """Check if a vanity exists or not given a id and a vanity"""

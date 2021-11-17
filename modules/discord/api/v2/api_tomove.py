@@ -31,11 +31,9 @@ async def get_vanity(request: Request, vanity: str):
     "/index",
     response_model=BotIndex
 )
-async def get_index(request: Request, t: Optional[str] = "bots", cert: Optional[bool] = True):
+async def get_index(request: Request, cert: Optional[bool] = True, type: enums.ReviewType = enums.ReviewType.bot):
     """For any potential Android/iOS app, crawlers etc."""
-    if t == "bots":
-        return await render_index(request = request, api = True, cert = cert)
-    return abort(404)
+    return await render_index(request = request, api = True, cert = cert, type=type)
 
 @router.get(
     "/search", 
@@ -49,10 +47,6 @@ async def get_index(request: Request, t: Optional[str] = "bots", cert: Optional[
         )
     ]
 )
-async def search_list(request: Request, q: str, t: Optional[str] = "bots"):
-    """For any potential Android/iOS app, crawlers etc. Q is the query to search for. T is either bots or profiles"""
-    if t == "bots":
-        return await render_search(request = request, q = q, api = True)
-    elif t == "profiles":
-        return await render_profile_search(request = request, q = q, api = True)
-    return abort(404)
+async def search_list(request: Request, q: str, target_type: enums.SearchType):
+    """For any potential Android/iOS app, crawlers etc. Q is the query to search for. Target type is the type to search for"""
+    return await render_search(request = request, q = q, api = True, target_type=target_type)

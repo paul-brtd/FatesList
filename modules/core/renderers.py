@@ -15,21 +15,26 @@ from modules.models import constants
 
 cleaner = Cleaner()
 
-async def render_index(request: Request, api: bool, cert: bool):
+async def render_index(request: Request, api: bool, cert: bool, type: enums.ReviewType = enums.ReviewType.bot):
     worker_session = request.app.state.worker_session
-    top_voted = await do_index_query(worker_session, add_query = "ORDER BY votes DESC", state = [0])
-    new_bots = await do_index_query(worker_session, add_query = "ORDER BY created_at DESC", state = [0])
-    certified_bots = await do_index_query(worker_session, add_query = "ORDER BY votes DESC", state = [6]) if cert else []
+    top_voted = await do_index_query(worker_session, add_query = "ORDER BY votes DESC", state = [0], type=type)
+    new_bots = await do_index_query(worker_session, add_query = "ORDER BY created_at DESC", state = [0], type=type)
+    certified_bots = await do_index_query(worker_session, add_query = "ORDER BY votes DESC", state = [6], type=type) if cert else []
 
     base_json = {
         "tags_fixed": tags_fixed, 
         "top_voted": top_voted, 
         "new_bots": new_bots, 
         "certified_bots": certified_bots, 
-        "roll_api": "/api/bots/random"
     }
+
+    if type == enums.ReviewType.server:
+        context = {"type": "server"}
+    else:
+        context = {"type": "bot"}
+
     if not api:
-        return await templates.TemplateResponse("index.html", {"request": request, "random": random} | base_json)
+        return await templates.TemplateResponse("index.html", {"request": request, "random": random} | context | base_json, context = context)
     else:
         return base_json
 
@@ -161,7 +166,7 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
         return data
 
 
-async def render_search(request: Request, q: str, api: bool):
+async def render_search(request: Request, q: str, api: bool, target_type: enums.SearchType = enums.SearchType.bot):
     worker_session = request.app.state.worker_session
     db = worker_session.postgres
     
@@ -170,28 +175,44 @@ async def render_search(request: Request, q: str, api: bool):
             return abort(404)
         else:
             return RedirectResponse("/")
-    bots = await db.fetch(
-        """SELECT DISTINCT bots.bot_id,
-        bots.description, bots.banner_card AS banner, bots.state, 
-        bots.votes, bots.guild_count, bots.invite, bots.nsfw
-        FROM bots 
-        INNER JOIN bot_owner ON bots.bot_id = bot_owner.bot_id 
-        WHERE (bots.description ilike $1 
-        OR bots.long_description ilike $1 
-        OR bots.username_cached ilike $1 
-        OR bot_owner.owner::text ilike $1)
-        ORDER BY bots.votes DESC, bots.guild_count DESC LIMIT 6
-        """, 
-        f'%{q}%'
-    )
+
+    if target_type == enums.SearchType.bot:
+        data = await db.fetch(
+            """SELECT DISTINCT bots.bot_id,
+            bots.description, bots.banner_card AS banner, bots.state, 
+            bots.votes, bots.guild_count, bots.nsfw FROM bots 
+            INNER JOIN bot_owner ON bots.bot_id = bot_owner.bot_id 
+            WHERE (bots.description ilike $1 
+            OR bots.long_description ilike $1 
+            OR bots.username_cached ilike $1 
+            OR bot_owner.owner::text ilike $1)
+            ORDER BY bots.votes DESC, bots.guild_count DESC LIMIT 6
+            """, 
+            f'%{q}%'
+        )
+    elif target_type == enums.SearchType.server:
+        data = await db.fetch(
+            """SELECT DISTINCT servers.guild_id,
+            servers.description, servers.banner_card AS banner, servers.state,
+            servers.votes, servers.guild_count, servers.nsfw FROM servers
+            WHERE (servers.description ilike $1
+            OR servers.long_description ilike $1
+            OR servers.name_cached ilike $1)
+            ORDER BY servers.votes DESC, servers.guild_count DESC LIMIT 6
+            """,
+            f'%{q}%'
+        )
+    else:
+        return await render_profile_search(request, q=q, api=api)
     search_bots = await parse_index_query(
         worker_session,
-        bots, 
+        data,
+        type=enums.ReviewType.bot if target_type == enums.SearchType.bot else enums.ReviewType.server
     )
     if not api:
-        return await templates.TemplateResponse("search.html", {"request": request, "search_bots": search_bots, "tags_fixed": tags_fixed, "query": q, "profile_search": False})
+        return await templates.TemplateResponse("search.html", {"request": request, "search_bots": search_bots, "tags_fixed": tags_fixed, "query": q, "profile_search": target_type == enums.SearchType.profile, "type": "bot" if target_type == enums.SearchType.bot else "server"})
     else:
-        return {"search_res": search_bots, "tags_fixed": tags_fixed, "query": q, "profile_search": False}
+        return {"search_res": search_bots, "tags_fixed": tags_fixed, "query": q, "profile_search": target_type == enums.SearchType.profile}
 
 async def render_profile_search(request: Request, q: str, api: bool):
     worker_session = request.app.state.worker_session

@@ -41,8 +41,8 @@ async def index_fend(request: Request, cert: Optional[bool] = True):
 @router.head("/server")
 @router.get("/guilds")
 @router.head("/guilds")
-async def server_index(request: Request):
-    return "WIP"
+async def server_index(request: Request, cert: Optional[bool] = True):
+    return await render_index(request = request, api = False, cert = cert, type=enums.ReviewType.server)
 
 @router.get("/etest/{code}")
 async def test_error(code: int):

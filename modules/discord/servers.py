@@ -15,7 +15,7 @@ router = APIRouter(
 
 @router.get("/{guild_id}")
 async def guild_page(request: Request, guild_id: int, bt: BackgroundTasks, rev_page: int = 1):
-    data = await db.fetchrow("SELECT guild_id, invite_amount, avatar_cached, name_cached, votes, css, description, long_description, long_description_type FROM servers WHERE guild_id = $1", guild_id)
+    data = await db.fetchrow("SELECT banner_page AS banner, keep_banner_decor, guild_count, nsfw, state, invite_amount, avatar_cached, name_cached, votes, css, description, long_description, long_description_type FROM servers WHERE guild_id = $1", guild_id)
     if not data:
         return abort(404)
     data = dict(data)

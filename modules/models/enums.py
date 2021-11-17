@@ -112,6 +112,12 @@ class Vanity(IntEnum):
     bot = 1, "Bot"
     profile = 2, "Profile"
 
+class SearchType(Enum):
+    _init_ = "value __doc__"
+    bot = "bot", "Bot"
+    server = "server", "Server"
+    profile = "profile", "Profile"
+
 class CommandType(IntEnum):
     """
     0 - Regular (Prefix) Command

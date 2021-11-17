@@ -7,8 +7,8 @@ router = APIRouter(
 )
 
 @router.get("/t")
-async def search(request: Request, q: str):
-    return await render_search(request = request, q = q, api = False)
+async def search(request: Request, q: str, target_type: enums.SearchType):
+    return await render_search(request = request, q = q, api = False, target_type=target_type)
 
 @router.get("/tags")
 async def tags(request: Request, tag: str):

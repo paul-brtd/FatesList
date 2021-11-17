@@ -229,7 +229,12 @@ CREATE TABLE servers (
     invite_amount integer DEFAULT 0,
     invite_url text,
     invite_channel text,
-    state int default 0
+    state int default 0,
+    nsfw boolean default false,
+    banner_card text,
+    banner_page text,
+    keep_banner_decor boolean default true,
+    guild_count bigint default 0
 )
 
 CREATE TABLE server_tags (

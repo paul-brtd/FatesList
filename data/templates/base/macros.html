@@ -5,7 +5,7 @@
     {% endif %}
     <section class="bot-card">
 	    <div class="lozad bot-card-banner" data-background-image="{% if not rand %}{{data.banner}}{% endif %}">
-            {% if type == 'bot' and (data.state == enums.BotState.certified or rand) %}
+            {% if (type == 'bot' or type == 'server') and (data.state == enums.BotState.certified or rand) %}
 			    <span class="iconify bot-card-cert" data-icon="fa-solid:certificate" data-inline="false" data-height="3em"></span>
             {% endif %}
             <a href="/{{type}}/{{id}}" class="bot-card-view-link">
@@ -24,13 +24,11 @@
         </p>
         {% if type == 'bot' or type == 'server' %}
             <div class="d-flex bot-card-footer">
-                {% if type == 'bot' %}
-                    <div class="bot-card-footer-stats">
-                        <p class="text-center white-bold">
+            	<div class="bot-card-footer-stats">
+                    <p class="text-center white-bold">
 			<span class="iconify i-m3" data-icon="fa-solid:server" data-inline="false"></span><span style="margin-left: 3px;" class="bot-servers">{% if rand %}N/A{% else %}{{human_format(data.guild_count)}}{% endif %}</span>
-			            </p>
-                    </div>
-                {% endif %}
+		     </p>
+                </div>
                 <div class="bot-card-footer-stats">
                     <p class="text-center white-bold">
 			    <span class="iconify i-m3" data-icon="fa-solid:thumbs-up" data-inline="false"></span><span style="margin-left: 3px;" class="bot-votes">{% if rand %}N/A{% else %}{{human_format(data.votes)}}{% endif %}</span>
