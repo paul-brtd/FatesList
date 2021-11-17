@@ -229,6 +229,8 @@ func getArg(discord *discordgo.Session, i *discordgo.Interaction, name string, p
 				return v.BoolValue()
 			} else if v.Type == discordgo.ApplicationCommandOptionUser {
 				return v.UserValue(discord)
+			} else if v.Type == discordgo.ApplicationCommandOptionChannel {
+				return v.ChannelValue(discord)
 			}
 		}
 	}

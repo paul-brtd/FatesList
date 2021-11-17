@@ -228,6 +228,7 @@ CREATE TABLE servers (
     created_at timestamptz default now(),
     invite_amount integer DEFAULT 0,
     invite_url text,
+    invite_channel text,
     state int default 0
 )
 

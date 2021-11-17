@@ -18,9 +18,10 @@ type StaffRole struct {
 type StaffRoles map[string]StaffRole
 
 type IPCContext struct {
-	Discord  *discordgo.Session
-	Postgres *pgxpool.Pool
-	Redis    *redis.Client
+	Discord    *discordgo.Session
+	ServerList *discordgo.Session
+	Postgres   *pgxpool.Pool
+	Redis      *redis.Client
 }
 
 type IPCCommand struct {

@@ -106,7 +106,7 @@ func DragonServer() {
 		syscall.SIGQUIT)
 
 	// Start IPC code
-	go ipc.StartIPC(db, discord, rdb)
+	go ipc.StartIPC(db, discord, discordServerBot, rdb)
 	go ws.StartWS(db, rdb)
 
 	s := <-sigs

@@ -4,6 +4,7 @@ import (
 	"dragon/common"
 	"dragon/types"
 	"net/http"
+	"regexp"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
@@ -17,7 +18,16 @@ const bad = 0xe74c3c
 var (
 	commands         = make(map[string]types.ServerListCommand)
 	commandNameCache = make(map[string]string)
+	numericRegex     *regexp.Regexp
 )
+
+func init() {
+	var err error
+	numericRegex, err = regexp.Compile("[^0-9]+")
+	if err != nil {
+		panic(err.Error())
+	}
+}
 
 // Admin OP Getter
 func cmdInit() {
@@ -51,6 +61,10 @@ func cmdInit() {
 						Value: "invite_url",
 					},
 					{
+						Name:  "Invite Channel ID",
+						Value: "invite_channel",
+					},
+					{
 						Name:  "Website",
 						Value: "website",
 					},
@@ -79,15 +93,25 @@ func cmdInit() {
 			}
 			valueVal := getArg(context.Discord, context.Interaction, "value", true)
 			value, ok := valueVal.(string)
-			if field == "recache" {
-				value, ok = "", true
-			}
 			if !ok {
-				return "A value must be provided for this field"
+				if field == "recache" || field == "invite_url" || field == "invite_channel" {
+					value = ""
+				} else {
+					return "A value must be provided for this field"
+				}
 			}
 
 			value = strings.Replace(value, "http://", "https://", -1)
 			value = strings.Replace(value, "www.", "https://www.", -1)
+			// Hand,e invite channel
+			if field == "invite_channel" && value != "" {
+				value = numericRegex.ReplaceAllString(value, "")
+				_, err := context.Discord.State.Channel(value)
+				if err != nil {
+					return err.Error()
+				}
+			}
+
 			// Handle website
 			if field == "website" {
 				if !strings.HasPrefix(value, "https://") {
@@ -98,7 +122,7 @@ func cmdInit() {
 			}
 
 			// Handle invite url
-			if field == "invite_url" {
+			if field == "invite_url" && value != "" {
 				if !strings.HasPrefix(value, "https://") {
 					value = "https://discord.gg/" + value
 				}

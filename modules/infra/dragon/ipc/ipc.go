@@ -14,6 +14,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/go-redis/redis/v8"
+	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v4/pgxpool"
 	log "github.com/sirupsen/logrus"
 )
@@ -296,9 +297,55 @@ func setupCommands() {
 			return spew.Sdump("IPC Commands loaded: ", ipcActions)
 		},
 	}
+
+	// GUILDINVITE <COMMAND ID> <GUILD ID> <USER ID>
+	ipcActions["GUILDINVITE"] = types.IPCCommand{
+		Handler: func(cmd []string, context types.IPCContext) string {
+			guildId := cmd[2]
+			userId := cmd[3]
+			log.Info("Creating invite for user ", userId)
+			var inviteUrl pgtype.Text
+			var inviteChannel pgtype.Text
+			var finalInv string
+			context.Postgres.QueryRow(ctx, "SELECT invite_url, invite_channel FROM servers WHERE guild_id = $1", guildId).Scan(&inviteUrl, &inviteChannel)
+			if inviteUrl.Status != pgtype.Present || inviteUrl.String == "" {
+				// Create invite using serverlist bot
+				guild, err := context.ServerList.State.Guild(guildId)
+				if err != nil {
+					log.Error(err)
+					return "-1"
+				}
+
+				var channelId string
+				if inviteChannel.Status == pgtype.Present {
+					channelId = inviteChannel.String
+				} else {
+					channelId = guild.Channels[0].ID
+				}
+
+				invite, err := context.ServerList.ChannelInviteCreate(channelId, discordgo.Invite{
+					MaxAge:    60 * 15,
+					MaxUses:   1,
+					Temporary: false,
+					Unique:    true,
+				})
+				if err != nil {
+					log.Error(err)
+					return "-1"
+				}
+				finalInv = "https://discord.gg/" + invite.Code
+			} else {
+				finalInv = inviteUrl.String
+			}
+			context.Postgres.Exec(ctx, "UPDATE servers SET invite_amount = invite_amount + 1 WHERE guild_id = $1", guildId)
+			return finalInv
+		},
+		MinArgs: 4,
+		MaxArgs: 4,
+	}
 }
 
-func StartIPC(dbpool *pgxpool.Pool, discord *discordgo.Session, rdb *redis.Client) {
+func StartIPC(dbpool *pgxpool.Pool, discord *discordgo.Session, serverlist *discordgo.Session, rdb *redis.Client) {
 	setupCommands()
 	u_guilds, err := discord.UserGuilds(100, "", "")
 	if err != nil {
@@ -325,9 +372,10 @@ func StartIPC(dbpool *pgxpool.Pool, discord *discordgo.Session, rdb *redis.Clien
 	}
 
 	ipcContext := types.IPCContext{
-		Discord:  discord,
-		Redis:    rdb,
-		Postgres: dbpool,
+		Discord:    discord,
+		Redis:      rdb,
+		Postgres:   dbpool,
+		ServerList: serverlist,
 	}
 
 	handleMsg := func(msg redis.Message) {

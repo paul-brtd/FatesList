@@ -57,16 +57,18 @@ async def guild_review_page(request: Request, guild_id: int, page: int = 1):
     return await templates.TemplateResponse("ext/reviews.html", {"request": request, "data": {"user": user}} | data, context = context)
 
 
-#@router.get("/{guild_id}/invite")
-async def bot_invite_and_log(request: Request, bot_id: int):
+@router.get("/{guild_id}/invite")
+async def guild_invite(request: Request, guild_id: int):
     if "user_id" not in request.session.keys():
         user_id = 0
     else:
         user_id = int(request.session.get("user_id"))
-    invite = await invite_bot(bot_id, user_id = user_id)
+    invite = await redis_ipc_new(redis_db, "GUILDINVITE", args=[str(guild_id), str(user_id)])
     if invite is None:
         return abort(404)
-    return RedirectResponse(invite)
+    if invite == b"-1":
+        return await templates.e(request, "Something happened while fetching the invite...")
+    return RedirectResponse(invite.decode("utf-8"))
 
 #@router.get("/{bot_id}/banner")
 async def banner(request: Request, bot_id: int):
