@@ -383,6 +383,34 @@ func cmdInit() {
 		},
 	}
 
+	commands["HELP"] = types.ServerListCommand{
+		InternalName: "help",
+		Description:  "More information on how to use Fates List Server Listing",
+		SlashOptions: []*discordgo.ApplicationCommandOption{},
+		Handler: func(context types.ServerListContext) string {
+			intro := "**Welcome to Fates List**\n" +
+				"If you're reading this, you probably already know what server listing (and slash commands) are. This guide will not go over that"
+
+			syntax := "**Slash command syntax**\n" +
+				"This guide will use the following syntax for slash commands: `/command option:foo anotheroption:bar`"
+
+			faqBasics := "**How do I add my server?**+\n" +
+				"Good question. Just do `/set field:descriotion value:My lovely description`. You **can/should** set a long description using " +
+				"`/set field:long_description value:My really really long description`. **For really long descriptions, you can also create " +
+				"a paste on pastebin and provide the pastebin link as the value**"
+
+			faqState := "**What is the 'State' option?**\n" +
+				"Long story short, state allows you to configure the privacy of your server and in the future may do other things as well. " +
+				"*What is this privacy, you ask?* Well, if you are being raided and you wish to stop people from joining your server during a " +
+				"raid, then you can simply set the state of your server to `private_viewable` or `8`. This will stop it from being indexed " +
+				"and will *also* block users from joining your server until you're ready to set the state to `public` or `0`."
+
+			helpPage1 := strings.Join([]string{intro, syntax, faqBasics, faqState}, "\n\n")
+			sendIResponseEphemeral(context.Discord, context.Interaction, helpPage1, false)
+			return ""
+		},
+	}
+
 	// Load command name cache to map internal name to the command
 	for cmdName, v := range commands {
 		commandNameCache[v.InternalName] = cmdName

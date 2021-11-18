@@ -87,7 +87,7 @@
 				<h5 class="text-center" style="color: rgba(255,255,255,0.87);font-weight: bold;margin-top: -13px;margin-bottom: 3px;" id="{{type}}-promo-header">Promotions, Announcements and More!</h5>
 			{% endif %}
 			{% for promo in promos %}
-				<div class="alert alert-primary" id="{{type}}-promo-container-{{loop.index}}" class="{{type}}-promo-container" role="alert" style='width: 90%; font-weight: bold; margin: 0 auto; height: 86%; padding: 5px; {% if not promo.css %}background-color: #111112; {%endif%} {{promo.css}} margin-bottom: 3px;'>
+				<div class="alert alert-primary" id="{{type}}-promo-container-{{loop.index}}" class="{{type}}-promo-container" role="alert" style='width: 90%; font-weight: bold; margin: 0 auto; height: 86%; padding: 5px; background-color: #111112; {{promo.css}}; margin-bottom: 3px;'>
 					<p style="color: white; margin-bottom: 3px; margin-left: 2px; {{promo.css}}">{{promo.title.replace("<script", "")|safe}}</p>
 					<p style="color: white; {{promo.css}}">{{promo.info}}</p>
 				</div>
