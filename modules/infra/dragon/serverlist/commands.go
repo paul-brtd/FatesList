@@ -5,6 +5,7 @@ import (
 	"dragon/types"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -242,12 +243,12 @@ func cmdInit() {
 
 			if check.Status != pgtype.Present {
 				apiToken := common.RandString(198)
-				_, err = context.Postgres.Exec(context.Context, "INSERT INTO servers (guild_id, api_token, name_cached, avatar_cached, nsfw) VALUES ($1, $2, $3, $4, $5)", context.Interaction.GuildID, apiToken, guild.Name, guild.IconURL(), nsfw)
+				_, err = context.Postgres.Exec(context.Context, "INSERT INTO servers (guild_id, guild_count, api_token, name_cached, avatar_cached, nsfw) VALUES ($1, $2, $3, $4, $5)", context.Interaction.GuildID, guild.MemberCount, apiToken, guild.Name, guild.IconURL(), nsfw)
 				if err != nil {
 					return "An error occurred while we were updating our database: " + err.Error()
 				}
 			} else {
-				_, err = context.Postgres.Exec(context.Context, "UPDATE servers SET name_cached = $1, avatar_cached = $2, nsfw = $3 WHERE guild_id = $4", guild.Name, guild.IconURL(), nsfw, guild.ID)
+				_, err = context.Postgres.Exec(context.Context, "UPDATE servers SET name_cached = $1, avatar_cached = $2, nsfw = $3, guild_count = $4 WHERE guild_id = $5", guild.Name, guild.IconURL(), nsfw, guild.MemberCount, guild.ID)
 				if err != nil {
 					return "An error occurred while we were updating our database: " + err.Error()
 				}
@@ -256,7 +257,7 @@ func cmdInit() {
 				context.Postgres.Exec(context.Context, "UPDATE servers SET "+field+" = $1 WHERE guild_id = $2", value, context.Interaction.GuildID)
 				return "Successfully set " + field + "! Either see your servers page or use /get to verify that it got set to what you wanted!"
 			}
-			return "Recached server"
+			return "Recached server with " + strconv.Itoa(guild.MemberCount) + " members"
 		},
 	}
 	commands["GET"] = types.ServerListCommand{
