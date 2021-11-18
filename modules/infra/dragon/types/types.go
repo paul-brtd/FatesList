@@ -337,14 +337,9 @@ const (
 	EventResourceDelete  = 41
 	EventCommandAdd      = 50
 	EventCommandDelete   = 51
-	EventServerVote      = 70
-	EventServerAdd       = 71
-	EventServerEdit      = 72
-	EventServerDelete    = 73
-	EventServerBan       = 74
-	EventServerUnban     = 75
-	EventServerHide      = 76
-	EventServerArchive   = 77
+	EventServerView      = 70
+	EventServerVote      = 71
+	EventServerInvite    = 72
 	EventStaffLock       = 80
 	EventStaffUnlock     = 81
 )

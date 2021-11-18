@@ -166,13 +166,9 @@ class APIEvents(IntEnum):
     resource_delete = 41, "Bot Resource Delete Event"
     command_add = 50, "Bot Command Add Event"
     command_delete = 51, "Bot Command Delete Event"
-    server_vote = 70, "Server Vote Event"
-    server_add = 71, "Server Add Event"
-    server_edit = 72, "Server Edit Event"
-    server_delete = 73, "Server Delete Event"
-    server_ban = 74, "Server Ban Event"
-    server_hide = 75, "Server Hide Event" # Whenever someone hides their server
-    server_archive = 76, "Server Archive Event" # When someone archives their server
+    server_view = 70, "Server View Event"
+    server_vote = 71, "Server Vote Event"
+    server_invite = 72, "Server Invite Event"
     staff_lock = 80, "Staff Lock"
     staff_unlock = 81, "Staff Unlock"
 

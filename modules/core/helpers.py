@@ -151,7 +151,7 @@ async def vanity_bot(vanity: str) -> Optional[str]:
     if vanity in reserved_vanity: # Check if vanity is reserved and if so, return None
         return None
 
-    cache = await redis_db.get(vanity)
+    cache = await redis_db.get(vanity+"-v1")
     if cache:
         data = cache.decode("utf-8").split(" ")
         type = enums.Vanity(int(data[0])).name
@@ -230,18 +230,20 @@ async def vanity_check(id, vanity):
         return True
     return False
 
-async def vanity_redirector(request: Request, vanity: str, ext, extra_args = None):
+async def vanity_redirector(request: Request, vanity: str, ext, extra_args = None, ext_server = None):
     if vanity.isdigit():
         return RedirectResponse(f"/bot/{vanity}")
     vurl = await vanity_bot(vanity)
     if vurl is None:
         return await templates.e(request, "Invalid Vanity")
-    if vurl[1] == "profile":
-        return abort(404)
-    elif vurl[1] != "bot":
+    if vurl[1] != "bot" and vurl[1] != "server":
         return await templates.e(request, f"This is a {vurl[1]}. This is a work in progress :)", status_code = 400)
     if isinstance(ext, str):
         eurl = "/".join([site_url, vurl[1], str(vurl[0]), ext])
         return RedirectResponse(eurl)
     extra_args = extra_args if extra_args else {}
+    if vurl[1] == "server":
+        if not ext_server:
+            return abort(404)
+        return await ext_server(request = request, guild_id = vurl[0], **extra_args)
     return await ext(request = request, bot_id = vurl[0], **extra_args)

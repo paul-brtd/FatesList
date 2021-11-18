@@ -14,7 +14,7 @@ router = APIRouter(
 )
 
 @router.get("/{guild_id}")
-async def guild_page(request: Request, guild_id: int, bt: BackgroundTasks, rev_page: int = 1):
+async def guild_page(request: Request, guild_id: int, bt: BackgroundTasks, rev_page: int = 1, api: bool = False):
     data = await db.fetchrow("SELECT banner_page AS banner, keep_banner_decor, guild_count, nsfw, state, invite_amount, avatar_cached, name_cached, votes, css, description, long_description, long_description_type FROM servers WHERE guild_id = $1", guild_id)
     if not data:
         return abort(404)
@@ -26,6 +26,7 @@ async def guild_page(request: Request, guild_id: int, bt: BackgroundTasks, rev_p
     context = {"type": "server", "replace_list": constants.long_desc_replace_tuple, "id": str(guild_id)}
     data["type"] = "server"
     data["id"] = str(guild_id)
+    bt.add_task(add_ws_event, guild_id, {"m": {"e": enums.APIEvents.server_view}, "ctx": {"user": request.session.get('user_id'), "widget": False}}, type = "server")
     return await templates.TemplateResponse("bot_server.html", {"request": request, "replace_last": replace_last, "data": data} | data, context = context)
 
 @router.get("/{guild_id}/reviews_html")

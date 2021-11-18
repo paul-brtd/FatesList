@@ -245,7 +245,7 @@ async def render_profile_search(request: Request, q: str, api: bool):
     else:
         return {"search_res": profile_obj, "tags_fixed": tags_fixed, "query": q, "profile_search": True}
 
-async def render_server(request: Request, guild_id: int, bt: BackgroundTasks, **kwargs):
+async def _dep_render_server(request: Request, guild_id: int, bt: BackgroundTasks, **kwargs):
     guild = client_servers.get_guild(guild_id)
     if not guild:
         return abort(404)

@@ -69,6 +69,9 @@ type Client struct {
 	// API Token of the client
 	Token string
 
+	// Bot is true, guild is false
+	Bot bool
+
 	// Identity status of the client (true = identified, false = not yet identified)
 	IdentityStatus bool
 
@@ -133,26 +136,37 @@ func (c *Client) readPump() {
 				return
 			}
 
-			var botID pgtype.Int8
+			var tgtID pgtype.Int8
 
-			err = c.hub.postgres.QueryRow(ctx, "SELECT bot_id FROM bots WHERE bot_id = $1 AND api_token = $2", payload.ID, payload.Token).Scan(&botID)
+			var sql string
+			var mod string
+			if payload.Bot {
+				sql = "SELECT bot_id FROM bots WHERE bot_id = $1 AND api_token = $2"
+				mod = "bot"
+			} else {
+				sql = "SELECT guild_id FROM servers WHERE guild_id = $1 AND api_token = $2"
+				mod = "server"
+			}
+
+			err = c.hub.postgres.QueryRow(ctx, sql, payload.ID, payload.Token).Scan(&tgtID)
 			if err != nil {
 				log.Error("Websocket identify error: ", err)
 				sendWsData(c, "invalid_auth", err.Error())
 				closeWs(c, types.InvalidAuth)
 				return
 			}
-			if botID.Status != pgtype.Present {
-				sendWsData(c, "invalid_auth", "No bot found/Invalid auth")
+			if tgtID.Status != pgtype.Present {
+				sendWsData(c, "invalid_auth", "No bot/guild found/Invalid auth")
 				closeWs(c, types.InvalidAuth)
 				return
 			}
 			c.ID = pId
 			c.Token = payload.Token
+			c.Bot = payload.Bot
 			c.IdentityStatus = true
 			c.SendAll = payload.SendAll
 			c.SendNone = payload.SendNone
-			c.RLChannel = "wsrl-" + strconv.Itoa(c.ID)
+			c.RLChannel = "wsrl-" + strconv.Itoa(c.ID) + "-" + mod
 			// Identify successful. Ratelimits can be handled here later
 
 			// Request ratelimit check (IDENTITY = 2 requests)
@@ -206,7 +220,14 @@ func msgPump(c *Client) {
 		c.MessagePumpUp = true
 	}
 
-	channelName := "bot-" + strconv.Itoa(c.ID)
+	var mod string
+	if c.Bot {
+		mod = "bot-"
+	} else {
+		mod = "server-"
+	}
+
+	channelName := mod + strconv.Itoa(c.ID)
 
 	go func() {
 		if !c.SendAll {
@@ -374,7 +395,7 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 
 	go client.writePump()
 
-	err = sendWsData(client, "identity", "Send Bot ID and API Token as id and token keys in json format. Set send_all to true if you want all events to be sent during startup but this may cause disconnects, more memory usage, more ratelimits and instability. Set send_none to true to not send any events at all after sending prior ones if send_all is set to true")
+	err = sendWsData(client, "identity", "Send Bot ID and API Token as id and token keys in json format. Set send_all to true if you want all events to be sent during startup but this may cause disconnects, more memory usage, more ratelimits and instability. Set send_none to true to not send any events at all after sending prior ones if send_all is set to true. Set bot to true for bot and false for server")
 
 	if err != nil {
 		log.Warn(err)

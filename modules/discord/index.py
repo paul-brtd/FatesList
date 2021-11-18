@@ -1,4 +1,5 @@
 from modules.discord.bots import vote_bot_get
+from modules.discord.servers import guild_page
 
 from ..core import *
 from config import privacy_policy
@@ -57,7 +58,7 @@ async def nonerouter():
 
 @router.get("/{vanity}")
 async def vanity_bot_uri(request: Request, bt: BackgroundTasks, vanity: str, redirect: bool = False):
-    return await vanity_redirector(request, vanity, render_bot, {"bt": bt, "api": False})
+    return await vanity_redirector(request, vanity, render_bot, {"bt": bt, "api": False}, guild_page)
 
 @router.get("/{vanity}/edit")
 async def vanity_edit(request: Request, vanity: str, bt: BackgroundTasks):

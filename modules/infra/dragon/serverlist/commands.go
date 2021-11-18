@@ -94,13 +94,18 @@ func cmdInit() {
 						Name:  "Recache/Update Server Now",
 						Value: "recache",
 					},
+					{
+						Name:  "Vanity",
+						Value: "vanity",
+					},
 				},
 				Required: true,
 			},
 			{
 				Type:        discordgo.ApplicationCommandOptionString,
 				Name:        "value",
-				Description: "The value to set",
+				Description: "The value to set. Use 'none' to unset a field",
+				Required:    true,
 			},
 		},
 		Handler: func(context types.ServerListContext) string {
@@ -111,7 +116,7 @@ func cmdInit() {
 			}
 			valueVal := getArg(context.Discord, context.Interaction, "value", true)
 			value, ok := valueVal.(string)
-			if !ok {
+			if !ok || value == "" || value == "none" {
 				if field == "recache" || field == "invite_url" || field == "invite_channel" {
 					value = ""
 				} else {
@@ -243,7 +248,7 @@ func cmdInit() {
 
 			if check.Status != pgtype.Present {
 				apiToken := common.RandString(198)
-				_, err = context.Postgres.Exec(context.Context, "INSERT INTO servers (guild_id, guild_count, api_token, name_cached, avatar_cached, nsfw) VALUES ($1, $2, $3, $4, $5)", context.Interaction.GuildID, guild.MemberCount, apiToken, guild.Name, guild.IconURL(), nsfw)
+				_, err = context.Postgres.Exec(context.Context, "INSERT INTO servers (guild_id, guild_count, api_token, name_cached, avatar_cached, nsfw) VALUES ($1, $2, $3, $4, $5, $6)", context.Interaction.GuildID, guild.MemberCount, apiToken, guild.Name, guild.IconURL(), nsfw)
 				if err != nil {
 					return "An error occurred while we were updating our database: " + err.Error()
 				}
@@ -253,8 +258,27 @@ func cmdInit() {
 					return "An error occurred while we were updating our database: " + err.Error()
 				}
 			}
-			if field != "recache" {
+			if field != "recache" && field != "vanity" {
 				context.Postgres.Exec(context.Context, "UPDATE servers SET "+field+" = $1 WHERE guild_id = $2", value, context.Interaction.GuildID)
+			} else if field == "vanity" {
+				value = strings.ToLower(strings.Replace(value, " ", "", -1))
+				var check pgtype.Text
+				context.Postgres.QueryRow(context.Context, "SELECT DISTINCT vanity_url FROM vanity WHERE lower(vanity_url) = $1 AND redirect != $2", value, guild.ID).Scan(&check)
+				if check.Status == pgtype.Present {
+					return "This vanity is currently in use"
+				} else if strings.Contains(value, "/") {
+					return "This vanity is not allowed"
+				}
+				_, err := context.Postgres.Exec(context.Context, "DELETE FROM vanity WHERE redirect = $1", guild.ID)
+				if err != nil {
+					return "An error occurred while we were updating our database: " + err.Error()
+				}
+				_, err = context.Postgres.Exec(context.Context, "INSERT INTO vanity (type, vanity_url, redirect) VALUES ($1, $2, $3)", 0, value, guild.ID)
+				if err != nil {
+					return "An error occurred while we were updating our database: " + err.Error()
+				}
+			}
+			if field != "recache" {
 				return "Successfully set " + field + "! Either see your servers page or use /get to verify that it got set to what you wanted!"
 			}
 			return "Recached server with " + strconv.Itoa(guild.MemberCount) + " members"
@@ -320,6 +344,10 @@ func cmdInit() {
 						Name:  "Server API Token",
 						Value: "api_token",
 					},
+					{
+						Name:  "Vanity",
+						Value: "vanity",
+					},
 				},
 				Required: true,
 			},
@@ -335,10 +363,17 @@ func cmdInit() {
 			}
 
 			var v pgtype.Text
-			context.Postgres.QueryRow(context.Context, "SELECT "+field+"::text FROM servers WHERE guild_id = $1", context.Interaction.GuildID).Scan(&v)
+
+			if field == "vanity" {
+				context.Postgres.QueryRow(context.Context, "SELECT vanity_url FROM vanity WHERE type = $1 AND redirect = $2", 0, context.Interaction.GuildID).Scan(&v)
+			} else {
+				context.Postgres.QueryRow(context.Context, "SELECT "+field+"::text FROM servers WHERE guild_id = $1", context.Interaction.GuildID).Scan(&v)
+			}
+
 			if v.Status != pgtype.Present {
 				return field + " is not set!"
 			}
+
 			if len(v.String) > 1994 {
 				sendIResponseEphemeral(context.Discord, context.Interaction, "Value of `"+field+"`", false, v.String)
 			} else {
