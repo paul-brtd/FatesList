@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/Fates-List/discordgo"
 	"github.com/davecgh/go-spew/spew"
@@ -57,7 +58,7 @@ func cmdInit() {
 						Value: "long_description_type",
 					},
 					{
-						Name:  "Invite",
+						Name:  "Invite Code",
 						Value: "invite_url",
 					},
 					{
@@ -73,12 +74,24 @@ func cmdInit() {
 						Value: "css",
 					},
 					{
-						Name:  "Recache Server",
-						Value: "recache",
+						Name:  "Banner (Server Card)",
+						Value: "banner_card",
+					},
+					{
+						Name:  "Banner (Server Page)",
+						Value: "banner_page",
+					},
+					{
+						Name:  "Keep Banner Decorations",
+						Value: "keep_banner_decor",
 					},
 					{
 						Name:  "State",
 						Value: "state",
+					},
+					{
+						Name:  "Recache/Update Server Now",
+						Value: "recache",
 					},
 				},
 				Required: true,
@@ -140,12 +153,38 @@ func cmdInit() {
 				}
 			}
 
+			// Handle keep banner decor
+			if field == "keep_banner_decor" {
+				if value == "true" || value == "yes" {
+					value = "true"
+				} else if value == "false" || value == "no" {
+					value = "false"
+				} else {
+					return "Value for this field must be one of (yes, no)"
+				}
+			}
+
 			// Handle website
-			if field == "website" {
+			if field == "website" || field == "banner_card" || field == "banner_page" {
 				if !strings.HasPrefix(value, "https://") {
 					return "That is not a valid URL!"
 				} else if strings.Contains(value, " ") {
 					return "This field may not have spaces in the URL!"
+				}
+				if field == "banner_page" || field == "banner_card" {
+					client := http.Client{Timeout: 5 * time.Second}
+					var resp *http.Response
+					var err error
+					resp, err = client.Head(value)
+					if err != nil || resp.StatusCode > 400 {
+						resp, err = client.Get(value)
+						if err != nil || resp.StatusCode > 400 {
+							return "Could not resolve banner URL. Are you sure the URL works?"
+						}
+					}
+					if !strings.HasPrefix(resp.Header.Get("Content-Type"), "image/") {
+						return "This URL does not point to a valid image. Make sure the URL is valid and that there are no typos?"
+					}
 				}
 			}
 
@@ -154,7 +193,8 @@ func cmdInit() {
 				if !strings.HasPrefix(value, "https://") {
 					value = "https://discord.gg/" + value
 				}
-				resp, err := http.Get(value)
+				client := http.Client{Timeout: 5 * time.Second}
+				resp, err := client.Get(value)
 				if err != nil {
 					return "Could not resolve invite, possibly invalid?"
 				}
@@ -232,8 +272,52 @@ func cmdInit() {
 				Description: "Which field to get",
 				Choices: []*discordgo.ApplicationCommandOptionChoice{
 					{
+						Name:  "Description",
+						Value: "description",
+					},
+					{
+						Name:  "Long Description",
+						Value: "long_description",
+					},
+					{
+						Name:  "Long Description Type",
+						Value: "long_description_type",
+					},
+					{
+						Name:  "State",
+						Value: "state",
+					},
+					{
+						Name:  "NSFW Status",
+						Value: "nsfw",
+					},
+					{
 						Name:  "Website",
 						Value: "website",
+					},
+					{
+						Name:  "Invite Code",
+						Value: "invite_url",
+					},
+					{
+						Name:  "Invite Channel ID",
+						Value: "invite_channel",
+					},
+					{
+						Name:  "Banner (Server Card)",
+						Value: "banner_card",
+					},
+					{
+						Name:  "Banner (Server Page)",
+						Value: "banner_page",
+					},
+					{
+						Name:  "CSS",
+						Value: "css",
+					},
+					{
+						Name:  "Server API Token",
+						Value: "api_token",
 					},
 				},
 				Required: true,
@@ -245,8 +329,12 @@ func cmdInit() {
 			if !ok {
 				return "Field must be provided"
 			}
+			if field == "api_token" && !checkPerms(context.Discord, context.Interaction, 3) {
+				return ""
+			}
+
 			var v pgtype.Text
-			context.Postgres.QueryRow(context.Context, "SELECT "+field+" FROM servers WHERE guild_id = $1", context.Interaction.GuildID).Scan(&v)
+			context.Postgres.QueryRow(context.Context, "SELECT "+field+"::text FROM servers WHERE guild_id = $1", context.Interaction.GuildID).Scan(&v)
 			if v.Status != pgtype.Present {
 				return field + " is not set!"
 			}

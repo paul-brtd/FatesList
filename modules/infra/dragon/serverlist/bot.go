@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	debug        bool                   = true
+	debug        bool                   = false
 	iResponseMap map[string]*time.Timer = make(map[string]*time.Timer, 0) // Interaction response map to check if interaction has been responded to
 )
 
@@ -46,6 +46,10 @@ func SetupSlash(discord *discordgo.Session) {
 		_, err := discord.ApplicationCommandCreate(discord.State.User.ID, server, &cmd)
 		if err != nil {
 			log.Fatal("Server: ", server, " - Cannot create command ", cmdName, " with description: ", cmd.Description, " due to error: ", err)
+		}
+
+		if !debug {
+			go discord.ApplicationCommandCreate(discord.State.User.ID, common.StaffServer, &cmd)
 		}
 	}
 	log.Info("All slash commands loaded!")

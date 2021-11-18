@@ -40,6 +40,7 @@ class templates():
         arg_dict["ireplace"] = ireplace
         arg_dict["ireplacem"] = ireplacem
         arg_dict["human_format"] = human_format
+        arg_dict["server_bot_invite"] = server_bot_invite
 
         base_context = {
             "user_id": str(arg_dict["user_id"]) if "user_id" in arg_dict.keys() else None,
