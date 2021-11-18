@@ -108,11 +108,10 @@ func SlashHandler(
 
 	res := cmd.Handler(slashContext)
 
-	if res == "" {
-		return
+	if res != "" {
+		sendIResponse(discord, i.Interaction, res, true)
 	}
-
-	sendIResponse(discord, i.Interaction, res, true)
+	iResponseMap[i.Interaction.Token].Stop()
 	delete(iResponseMap, i.Interaction.Token)
 }
 
