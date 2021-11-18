@@ -15,13 +15,14 @@ from modules.models import enums
 URL = "wss://fateslist.xyz/api/ws/"
 
 class Bot():
-    def __init__(self, bot_id: int, token: str, send_all: bool = True, send_none: bool = False):
+    def __init__(self, bot_id: int, token: str, send_all: bool = True, send_none: bool = False, bot: bool = True):
         self.bot_id = bot_id
         self.token = token
         self.send_all = send_all
         self.send_none = send_none
         self.hooks = {"identity": self.identity, "default": self.default}
         self.websocket = None
+        self.bot = bot
 
     async def _render_event(self, event):
         for m in event.split("\x1f"):
@@ -51,7 +52,7 @@ class Bot():
     
     async def identity(self, event):
         #print(event)
-        payload = {"id": str(self.bot_id), "token": self.token, "bot": True, "send_all": self.send_all, "send_none": self.send_none}
+        payload = {"id": str(self.bot_id), "token": self.token, "bot": True, "send_all": self.send_all, "send_none": self.send_none, "bot": self.bot}
         await self.websocket.send(json.dumps(payload))
         print(f"Sending {json.dumps(payload)}")
     
@@ -62,3 +63,7 @@ class Bot():
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         loop.run_until_complete(self._ws_handler())
+
+    def close(self):
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self.websocket.close())

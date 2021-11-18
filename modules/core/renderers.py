@@ -185,10 +185,13 @@ async def render_search(request: Request, q: str, api: bool, target_type: enums.
             WHERE (bots.description ilike $1 
             OR bots.long_description ilike $1 
             OR bots.username_cached ilike $1 
-            OR bot_owner.owner::text ilike $1)
+            OR bot_owner.owner::text ilike $1) 
+            AND (bots.state = $2 OR bots.state = $3) 
             ORDER BY bots.votes DESC, bots.guild_count DESC LIMIT 6
             """, 
-            f'%{q}%'
+            f'%{q}%',
+            enums.BotState.approved,
+            enums.BotState.certified
         )
     elif target_type == enums.SearchType.server:
         data = await db.fetch(
@@ -245,13 +248,3 @@ async def render_profile_search(request: Request, q: str, api: bool):
     else:
         return {"search_res": profile_obj, "tags_fixed": tags_fixed, "query": q, "profile_search": True}
 
-async def _dep_render_server(request: Request, guild_id: int, bt: BackgroundTasks, **kwargs):
-    guild = client_servers.get_guild(guild_id)
-    if not guild:
-        return abort(404)
-    guild_data = await db.fetchrow("SELECT description, long_description from servers WHERE guild_id = $1", guild_id)
-    if not guild_data:
-        return await templates.e(request, "Ask a server manager or admin to add this server to finish adding this server to our list!")
-    bt.add_task(add_ws_event, guild_id, {"m": {"e": enums.APIEvents.server_view}, "ctx": {"user": request.session.get('user_id'), "widget": False}}, type = "server")
-    data = {"data": guild_data | {"name": guild.name}, "type": "server", "id": guild_id, "tags_fixed": []} # TODO: Add tags, reviews and voting
-    return await templates.TemplateResponse("bot_server.html", {"request": request, "replace_last": replace_last} | data)

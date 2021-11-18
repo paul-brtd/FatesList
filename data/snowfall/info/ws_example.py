@@ -7,6 +7,11 @@ sys.path.append(".")
 sys.path.append("../../../")
 
 
+# For server testing:
+# guild id is 816130947274899487
+# guild api token is dkKLvVMoFtFKFpUpCPiREqQsLyMRrEWldwrQeWuYayehfGVJYUKmsupGvRfNbGpoGHVNVjqIWDiBCRrQuDkEuUnPYVfRrNrATIrgzLPbREjRqFpUDqZbAhrPsbaYpPYwsDImGuhoSFgJSxFerBpKWdsKXEzoRkdGDSmQjatievbANVvSDvCETPxgRCKTwgSdbJuRkI
+
+
 import ws
 
 from modules.models import enums
@@ -21,5 +26,14 @@ if bot_id == 811073947382579200:
 else:
     api_token = input("Enter API Token: ")
 
-bot = ws.Bot(bot_id, api_token)
-bot.start()
+bot = input("Is this a bot (Y/N): ")
+if bot.lower() in ("y", "yes"):
+    bot = True
+else:
+    bot = False
+
+bot = ws.Bot(bot_id, api_token, bot = bot)
+try:
+    bot.start()
+except KeyboardInterrupt:
+    bot.close()
