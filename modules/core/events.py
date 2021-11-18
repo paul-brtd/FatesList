@@ -29,21 +29,8 @@ async def add_ws_event(target: int, ws_event: dict, *, id: Optional[uuid.UUID] =
 
 async def bot_get_events(bot_id: int, filter: list = None, exclude: list = None):
     # As a replacement/addition to webhooks, we have API events as well to allow you to quickly get old and new events with their epoch
-
-    extra = ""
-    extra_params = []
-    i = 2 # Keep track of parameters
-    if filter:
-        extra = f"AND event = ANY(${i}::text[]) "
-        extra_params.append(filter)
-        i+=1
-    elif exclude:
-        extra += f"AND event != ANY(${i}::text[])"
-        extra_params.append(exclude)
-        i+=1
-    api_data = await db.fetch(f"SELECT ts, event AS e, context AS ctx, id, type FROM bot_api_event WHERE bot_id = $1 {extra} ORDER BY ts", bot_id, *extra_params)
-    api_data = [{"ctx": orjson.loads(obj["ctx"]), "m": {"e": obj["e"], "eid": obj["id"], "ts": obj["ts"].timestamp(), "t": obj["type"]}} for obj in api_data]
-    return {"events": api_data}
+    # Has been replaced by ws events
+    return {}
 
 async def bot_add_event(bot_id: int, event: int, context: dict, t: Optional[int] = None, *, send_event = True):
     if type(context) == dict:

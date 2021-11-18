@@ -1,7 +1,13 @@
-function randomBotRoll() {
+function randomRoll() {
+	if(context.type == "server") {
+		t = "guilds"
+	}
+	else {
+		t = "bots"
+	}
 	request({
 		rlTitle: "You are rolling too fast!",
-		url: `/api/bots/0/random?lang=${context.site_lang}`,
+		url: `/api/${t}/0/random?lang=${context.site_lang}`,
 		method: "GET",
 		statusCode: {
 			200: function(data) {
@@ -30,15 +36,21 @@ function randomBotRoll() {
 				observer.observe() // Lozad Reobserve
 				view_links = random_bots.querySelectorAll(".bot-card-view-link")
 				for (let i = 0; i < view_links.length; i++) {
-					view_links[i].setAttribute("href", "/bot/" + data.bot_id.toString())
+					if(context.type == "bot") {
+						key = "bot_id"
+					}
+					else {
+						key = "guild_id"
+					}
+					view_links[i].setAttribute("href", "/bot/" + data[key].toString())
 				}
 				username_dom = random_bots.querySelectorAll(".bot-card-username-txt")[0].innerHTML = data.username
 				random_bots.querySelectorAll(".bot-card-description-txt")[0].innerHTML = data.description
 				random_bots.querySelectorAll(".bot-servers")[0].innerHTML = data.formatted.guild_count
 				random_bots.querySelectorAll(".bot-votes")[0].innerHTML = data.formatted.votes
-				random_bots.querySelectorAll(".bot-card-invite-link")[0].setAttribute("href", "/bot/" + data.bot_id.toString() + "/invite")
+				random_bots.querySelectorAll(".bot-card-invite-link")[0].setAttribute("href", `/${context.type}/` + data.bot_id.toString() + "/invite")
 			}
 		}
 	})
 }
-window.addEventListener("load", randomBotRoll)
+window.addEventListener("load", randomRoll)

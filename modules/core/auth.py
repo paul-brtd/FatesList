@@ -31,7 +31,7 @@ async def _server_auth(server_id: int, api_token: str):
         return None
     if api_token.startswith("Server "):
         api_token = api_token.replace("Server ", "", 1)
-    return await db.fetchval("SELECT guild_id FROM servers WHERE guild_id = $1 AND api_token = $2", guild_id, str(api_token))
+    return await db.fetchval("SELECT guild_id FROM servers WHERE guild_id = $1 AND api_token = $2", server_id, str(api_token))
 
 async def _user_auth(user_id: int, api_token: str):
     if isinstance(user_id, int):
@@ -43,6 +43,13 @@ async def _user_auth(user_id: int, api_token: str):
     if api_token.startswith("User "):
         api_token = api_token.replace("User ", "", 1)
     return await db.fetchval("SELECT user_id FROM users WHERE user_id = $1 AND api_token = $2", user_id, str(api_token))
+
+async def server_auth_check(guild_id: int, server_auth: str = Security(server_auth_header)):
+    if server_auth.startswith("Server "):
+        server_auth = server_auth.replace("Server ", "")
+    id = await _server_auth(guild_id, server_auth)
+    if id is None:
+        raise HTTPException(status_code=401, detail="Invalid Server Token")
 
 async def bot_auth_check(bot_id: int, bot_auth: str = Security(bot_auth_header)):
     if bot_auth.startswith("Bot "):

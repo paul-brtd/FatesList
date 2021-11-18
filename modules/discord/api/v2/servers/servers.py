@@ -9,15 +9,15 @@ from starlette.concurrency import run_in_threadpool
 from math import floor
 
 from ..base import API_VERSION
-from .models import APIResponse, Bot, BotRandom, BotStats, BotEvents
+from .models import APIResponse, Guild, GuildRandom, BotStats, BotEvents
 
 cleaner = Cleaner(remove_unknown_tags=False)
 
 router = APIRouter(
-    prefix = f"/api/v{API_VERSION}/bots",
+    prefix = f"/api/v{API_VERSION}/guilds",
     include_in_schema = True,
-    tags = [f"API v{API_VERSION} - Bots"],
-    dependencies=[Depends(id_check("bot"))]
+    tags = [f"API v{API_VERSION} - Servers"],
+    dependencies=[Depends(id_check("guild"))]
 )
 
 
@@ -34,16 +34,16 @@ def is_color_like(c):
         return False
 
 
-@router.get("/{bot_id}/vpm")
+#@router.get("/{bot_id}/vpm")
 async def get_votes_per_month(request: Request, bot_id: int):
     return await db.fetch("SELECT votes, epoch FROM bot_stats_votes_pm WHERE bot_id = $1", bot_id)
 
-@router.get("/{bot_id}/tv")
+#@router.get("/{bot_id}/tv")
 async def get_total_votes(request: Request, bot_id: int):
     return await db.fetchrow("SELECT total_votes AS votes FROM bot_stats_votes WHERE bot_id = $1", bot_id)
 
 @router.patch(
-    "/{bot_id}/token", 
+    "/{guild_id}/token", 
     response_model = APIResponse, 
     dependencies = [
         Depends(
@@ -51,13 +51,13 @@ async def get_total_votes(request: Request, bot_id: int):
                 global_limit = Limit(times=7, minutes=3)
             )
         ), 
-        Depends(bot_auth_check)
+        Depends(server_auth_check)
     ],
-    operation_id="regenerate_bot_token"
+    operation_id="regenerate_server_token"
 )
-async def regenerate_bot_token(request: Request, bot_id: int):
+async def regenerate_server_token(request: Request, guild_id: int):
     """
-    Regenerates a bot token. Use this if it is compromised
+    Regenerates a server token. Use this if it is compromised and you don't have time to use slash commands
     
 
     Example:
@@ -65,8 +65,8 @@ async def regenerate_bot_token(request: Request, bot_id: int):
     ```py
     import requests
 
-    def regen_token(bot_id, token):
-        res = requests.patch(f"https://fateslist.xyz/api/v2/bots/{bot_id}/token", headers={"Authorization": f"Bot {token}"})
+    def regen_token(guild_id, token):
+        res = requests.patch(f"https://fateslist.xyz/api/v2/bots/{guild_id}/token", headers={"Authorization": f"Server {token}"})
         json = res.json()
         if not json["done"]:
             # Handle failures
@@ -74,33 +74,33 @@ async def regenerate_bot_token(request: Request, bot_id: int):
         return res, json
     ```
     """
-    await db.execute("UPDATE bots SET api_token = $1 WHERE bot_id = $2", get_token(132), bot_id)
+    await db.execute("UPDATE servers SET api_token = $1 WHERE guild_id = $2", get_token(256), guild_id)
     return api_success()
 
 @router.get(
-    "/{bot_id}/random", 
-    response_model = BotRandom, 
+    "/{guild_id}/random", 
+    response_model = GuildRandom, 
     dependencies=[
         Depends(
             Ratelimiter(
                 global_limit = Limit(times=7, seconds=5),
-                operation_bucket="random_bot"
+                operation_bucket="random_guild"
             )
         )
     ],
-    operation_id="fetch_random_bot"
+    operation_id="fetch_random_server"
 )
-async def fetch_random_bot(request: Request, bot_id: int, lang: str = "default"):
+async def fetch_random_server(request: Request, guild_id: int, lang: str = "default"):
     """
-    Fetch a random bot. Bot ID should be the recursive/root bot 0
+    Fetch a random server. Server ID should be the recursive/root server 0.
 
 
     Example:
     ```py
     import requests
 
-    def random_bot():
-        res = requests.get("https://fateslist.xyz/api/bots/0/random")
+    def random_server():
+        res = requests.get("https://fateslist.xyz/api/guilds/0/random")
         json = res.json()
         if not json.get("done", True):
             # Handle an error in the api
@@ -108,19 +108,18 @@ async def fetch_random_bot(request: Request, bot_id: int, lang: str = "default")
         return res, json
     ```
     """
-    if bot_id != 0:
+    if guild_id != 0:
         return api_error(
-            "This bot cannot use the fetch random bot API"
+            "This guild cannot use the fetch random guild API"
         )
 
     random_unp = await db.fetchrow(
-        "SELECT description, banner_card, state, votes, guild_count, bot_id, invite FROM bots WHERE state = 0 OR state = 6 ORDER BY RANDOM() LIMIT 1"
+        "SELECT description, banner_card, state, votes, guild_count, guild_id FROM servers WHERE state = 0 OR state = 6 ORDER BY RANDOM() LIMIT 1"
     ) # Unprocessed, use the random function to get a random bot
-    bot_obj = await get_bot(random_unp["bot_id"], worker_session = request.app.state.worker_session)
-    if bot_obj is None or bot_obj["disc"] == "0000":
-        return await fetch_random_bot(request, lang) # Get a new bot
+    bot_obj = await db.fetchrow("SELECT name_cached AS username, avatar_cached AS avatar FROM servers WHERE guild_id = $1", random_unp["guild_id"])
+    bot_obj = dict(bot_obj) | {"disc": "0000", "status": 1, "bot": True}
     bot = bot_obj | dict(random_unp) # Get bot from cache and add that in
-    bot["bot_id"] = str(bot["bot_id"]) # Make sure bot id is a string to prevent corruption issues in javascript
+    bot["guild_id"] = str(bot["guild_id"]) # Make sure bot id is a string to prevent corruption issues in javascript
     bot["formatted"] = {
         "votes": human_format(bot["votes"]),
         "guild_count": human_format(bot["guild_count"])
@@ -131,113 +130,80 @@ async def fetch_random_bot(request: Request, bot_id: int, lang: str = "default")
     return bot
 
 @router.get(
-    "/{bot_id}", 
-    response_model = Bot, 
+    "/{guild_id}", 
+    response_model = Guild, 
     dependencies=[
         Depends(
             Ratelimiter(
                 global_limit = Limit(times=5, minutes=2),
-                operation_bucket="fetch_bot"
+                operation_bucket="fetch_guild"
             )
         )
     ],
-    operation_id="fetch_bot"
+    operation_id="fetch_server"
 )
-async def fetch_bot(
+async def fetch_server(
     request: Request, 
-    bot_id: int, 
+    guild_id: int, 
     compact: Optional[bool] = True, 
-    offline: Optional[bool] = False,
     no_cache: Optional[bool] = False
 ):
     """
-    Fetches bot information given a bot ID. If not found, 404 will be returned.
+    Fetches server information given a server/guild ID. If not found, 404 will be returned.
     
     Setting compact to true (default) -> description, long_description, long_description_type, keep_banner_decor and css will be null
 
-    Setting offline to true -> user will be null and no ownership info will be given. If the bot is no longer on discord, this endpoint will still return if offline is set to true
-
-    No cache means cached responses will not be served (may be temp disabled in the case of a DDOS or temp disabled for specific bots as required)
+    No cache means cached responses will not be served (may be temp disabled in the case of a DDOS or temp disabled for specific servers as required)
     """
-    if len(str(bot_id)) not in [17, 18, 19, 20]:
+    if len(str(guild_id)) not in [17, 18, 19, 20]:
         return abort(404)
 
     if not no_cache:
-        cache = await redis_db.get(f"botcache-{bot_id}")
+        cache = await redis_db.get(f"guildcache-{guild_id}")
         if cache:
             return orjson.loads(cache)
     
 
     api_ret = await db.fetchrow(
-        "SELECT last_stats_post, banner_card, banner_page, guild_count, shard_count, shards, prefix, invite, invite_amount, features, bot_library AS library, state, website, discord AS support, github, user_count, votes, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", 
-        bot_id
+        "SELECT banner_card, banner_page, guild_count, invite_amount, state, website, votes, invite_channel, nsfw FROM servers WHERE guild_id = $1", 
+        guild_id
     )
     if api_ret is None:
         return abort(404)
 
     api_ret = dict(api_ret)
 
+    api_ret["invite_channel"] = str(api_ret["invite_channel"])
+
     if not compact:
         extra = await db.fetchrow(
-            "SELECT description, long_description_type, long_description, css, keep_banner_decor FROM bots WHERE bot_id = $1",
-            bot_id
+            "SELECT description, long_description_type, long_description, css, keep_banner_decor FROM servers WHERE guild_id = $1",
+            guild_id
         )
         api_ret |= dict(extra)
 
-    tags = await db.fetch("SELECT tag FROM bot_tags WHERE bot_id = $1", bot_id)
-    api_ret["tags"] = [tag["tag"] for tag in tags]
+    api_ret["tags"] = [dict(d) for d in (await db.fetch("SELECT tag, emoji FROM server_tags WHERE guild_id = $1", guild_id))]
    
-    if not offline:
-        owners_db = await db.fetch("SELECT owner, main FROM bot_owner WHERE bot_id = $1", bot_id)
-        owners = []
-        _done = []
-
-        # Preperly sort owners
-        for owner in owners_db:
-            if owner in _done: continue
-        
-            _done.append(owner["owner"])
-            user = await get_user(owner["owner"])
-            main = owner["main"]
-
-            if not user: continue
-        
-            owner_obj = {
-                "user": user,
-                "main": main
-            }
-        
-            if main: owners.insert(0, owner_obj)
-            else: owners.append(owner_obj)
-
-        api_ret["owners"] = owners
-    
-    api_ret["features"] = api_ret["features"]
-    api_ret["invite_link"] = await invite_bot(bot_id, api = True)
-    
-    if not offline:
-        api_ret["user"] = await get_bot(bot_id)
-        if not api_ret["user"]:
-            return abort(404)
+    api_ret["user"] = dict((await db.fetchrow("SELECT guild_id AS id, name_cached AS username, '#0000' AS disc, avatar_cached AS avatar FROM servers WHERE guild_id = $1", guild_id)))
     
     api_ret["vanity"] = await db.fetchval(
-        "SELECT vanity_url FROM vanity WHERE redirect = $1", 
-        bot_id
+        "SELECT vanity_url FROM vanity WHERE redirect = $1 AND type = 0", 
+        guild_id
     )
 
-    await redis_db.set(f"botcache-{bot_id}", orjson.dumps(api_ret), ex=60*60*8)
+    await redis_db.set(f"guildcache-{guild_id}", orjson.dumps(api_ret), ex=60*60*8)
 
     return api_ret
 
 
-@router.head("/{bot_id}", operation_id="bot_exists")
-async def bot_exists(request: Request, bot_id: int):
-    count = await db.fetchval("SELECT bot_id FROM bots WHERE bot_id = $1", bot_id)
+@router.head("/{guild_id}", operation_id="server_exists")
+async def server_exists(request: Request, guild_id: int):
+    count = await db.fetchval("SELECT guild_id FROM servers WHERE guild_id = $1", guild_id)
     return PlainTextResponse("", status_code=200 if count else 404) 
 
 
-@router.get("/{bot_id}/widget", operation_id="get_bot_widget")
-async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format: enums.WidgetFormat, bgcolor: Union[int, str] ='black', textcolor: Union[int, str] ='white'):
+@router.get("/{guild_id}/widget", operation_id="get_server_widget")
+async def server_widget(request: Request, bt: BackgroundTasks, guild_id: int, format: enums.WidgetFormat, bgcolor: Union[int, str] ='black', textcolor: Union[int, str] ='white'):
     """
     Returns a widget
     """
@@ -253,12 +219,12 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
     worker_session = request.app.state.worker_session
     db = worker_session.postgres
     
-    bot = await db.fetchrow("SELECT guild_count, votes, description FROM bots WHERE bot_id = $1", bot_id)
+    bot = await db.fetchrow("SELECT guild_count, votes, description FROM servers WHERE guild_id = $1", guild_id)
     if not bot:
         return abort(404)
-    
-    bt.add_task(add_ws_event, bot_id, {"m": {"e": enums.APIEvents.bot_view}, "ctx": {"user": request.session.get('user_id'), "widget": True}})
-    data = {"bot": bot, "user": await get_bot(bot_id, worker_session = request.app.state.worker_session)}
+   
+    bt.add_task(add_ws_event, guild_id, {"m": {"e": enums.APIEvents.server_view}, "ctx": {"user": request.session.get('user_id'), "widget": True}}, type = "server")
+    data = {"bot": bot, "user": await db.fetchrow("SELECT name_cached AS username, avatar_cached AS avatar FROM servers WHERE guild_id = $1", guild_id)}
     bot_obj = data["user"]
     
     if not bot_obj:
@@ -272,7 +238,7 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
     
     elif format in (enums.WidgetFormat.png, enums.WidgetFormat.webp):
         # Check if in cache
-        cache = await redis_db.get(f"widget-{bot_id}-{format.name}-{textcolor}")
+        cache = await redis_db.get(f"widget-{guild_id}-{format.name}-{textcolor}")
         if cache:
             def _stream():
                 with io.BytesIO(cache) as output:
@@ -413,7 +379,7 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
         output = io.BytesIO()
         widget_img.save(output, format=format.name.upper())
         output.seek(0)
-        await redis_db.set(f"widget-{bot_id}-{format.name}-{textcolor}", output.read(), ex=60*3)
+        await redis_db.set(f"widget-{guild_id}-{format.name}-{textcolor}", output.read(), ex=60*3)
         output.seek(0)
 
         def _stream():    
@@ -423,75 +389,15 @@ async def bot_widget(request: Request, bt: BackgroundTasks, bot_id: int, format:
         return StreamingResponse(_stream(), media_type=f"image/{format.name}")
 
 @router.get(
-    "/{bot_id}/ws_events",
+    "/{guild_id}/ws_events",
     dependencies = [
-        Depends(bot_auth_check)
+        Depends(server_auth_check)
     ],
-    operation_id="get_bot_ws_events"
+    operation_id="get_server_ws_events"
 )
-async def get_bot_ws_events(request: Request, bot_id: int):
-    events = await redis_db.hget(f"bot-{bot_id}", key = "ws")
+async def get_server_ws_events(request: Request, guild_id: int):
+    events = await redis_db.hget(f"server-{guild_id}", key = "ws")
     if events is None:
         events = {} # Nothing
     return orjson.loads(events) 
     
-
-@router.post(
-    "/{bot_id}/stats", 
-    response_model = APIResponse, 
-    dependencies=[
-        Depends(
-            Ratelimiter(
-                global_limit = Limit(times=5, minutes=1),
-                operation_bucket="set_bot_stats"
-            ) 
-        ),
-        Depends(bot_auth_check)
-    ],
-    operation_id="set_bot_stats"
-)
-async def set_bot_stats(request: Request, bot_id: int, api: BotStats):
-    """
-    This endpoint allows you to set the guild + shard counts for your bot
-
-
-    Example:
-    ```py
-    # This will use aiohttp and not requests as this is likely to used by discord.py bots
-    import aiohttp
-
-
-    # On dpy, guild_count is usually the below
-    guild_count = len(client.guilds)
-
-    # If you are using sharding
-    shard_count = len(client.shards)
-    shards = client.shards.keys()
-
-    # Optional: User count (this is not accurate for larger bots)
-    user_count = len(client.users) 
-
-    async def set_stats(bot_id, token, guild_count, shard_count = None, shards = None, user_count = None):
-        json = {"guild_count": guild_count, "shard_count": shard_count, "shards": shards, "user_count": user_count}
-
-        async with aiohttp.ClientSession() as sess:
-            async with sess.post(f"https://fateslist.xyz/api/bots/{bot_id}/stats", headers={"Authorization": f"Bot {token}"}, json=json) as res:
-                json = await res.json()
-                if not json["done"]:
-                    # Handle or log this error
-                    ...
-    ```
-    """
-    stats_old = await db.fetchrow(
-        "SELECT guild_count, shard_count, shards, user_count FROM bots WHERE bot_id = $1",
-        bot_id
-    )
-    stats_new = api.dict()
-    stats = {}
-    for stat in stats_new.keys():
-        if stats_new[stat] is None:
-            stats[stat] = stats_old[stat]
-        else:
-            stats[stat] = stats_new[stat]
-    await set_stats(bot_id = bot_id, **stats)
-    return api_success()

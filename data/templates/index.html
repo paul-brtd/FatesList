@@ -20,7 +20,7 @@
 	<div id="random-section-bt" class="d-flex flex-wrap justify-content-sm-center align-items-sm-center justify-content-md-center justify-content-lg-center div-is">
 		<button class="btn btn-outline-light text-center"
 			style="display: block;  text-align: center; justify-content: center;"
-			onclick="randomBotRoll()">Roll</button>
+			onclick="randomRoll()">Roll</button>
 	</div>
 	<hr class="hr-is">
 	<div class="d-flex" style="margin-left: 5%;" onclick="hideSect('cert')">
@@ -61,7 +61,7 @@
 			window.location.href = window.location.href.replace("?cert=true", "").replace("?cert=false", "") + "/?" + searchParams.toString()
 		}
 	</script> 
-	<script src="/static/assets/prod/index.min.js?v=3">
+	<script src="/static/assets/prod/index.min.js?v=6">
 	</script>
 	{% endblock %}
 	{% block footer %}

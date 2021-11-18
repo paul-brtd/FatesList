@@ -36,8 +36,13 @@ def id_check(check_t: str):
     def user(user_id: int):
         return check(user_id, "user_id")
 
+    def server(guild_id: int):
+        return check(guild_id, "guild_id")
+
     if check_t == "bot":
         return bot
+    elif check_t == "guild" or check_t == "server":
+        return server
     return user
 
 def worker_session(request: Request):
