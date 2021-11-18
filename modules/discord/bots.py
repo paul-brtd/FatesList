@@ -26,7 +26,7 @@ async def bot_index(request: Request, bot_id: int, bt: BackgroundTasks, rev_page
         rev_page = rev_page, 
     )
 
-@router.get("/{bot_id}/reviews_html")
+@router.get("/{bot_id}/reviews_html", dependencies=[Depends(id_check("bot"))])
 async def bot_review_page(request: Request, bot_id: int, page: int = 1):
     page = page if page else 1
     reviews = await parse_reviews(request.app.state.worker_session, bot_id, page=page)

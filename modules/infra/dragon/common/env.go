@@ -2,6 +2,7 @@ package common
 
 import (
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"os"
 
@@ -30,18 +31,22 @@ var (
 	CliCmd           string
 	RootPath         string
 	PythonPath       string
+	Version          string
+	CommitHash       string
+	BuildTime        string
 )
 
 func init() {
 	flag.StringVar(&secretsJsonFile, "secret", "/home/meow/FatesList/config/data/secrets.json", "Secrets json file")
 	flag.StringVar(&discordJsonFile, "discord", "/home/meow/FatesList/config/data/discord.json", "Discord json file")
 	flag.StringVar(&staffRoleFilePath, "staff-roles", "/home/meow/FatesList/config/data/staff_roles.json", "Staff roles json")
-	flag.StringVar(&CliCmd, "cmd", "", "The command to run:\n\tdragon.server: the dragon ipc and ws server\n\tsite.XXX: run a site command (run=run site, compilestatic=compile static files).\n\tSet PYLOG_LEVEL to set loguru log level to debug")
+	flag.StringVar(&CliCmd, "cmd", "", "The command to run:\n\tdragon.server: the dragon ipc and ws server\n\tdragon.test: the dragon unit test system\n\tsite.XXX: run a site command (run=run site, compilestatic=compile static files).\n\tSet PYLOG_LEVEL to set loguru log level to debug")
 	flag.StringVar(&RootPath, "root", "/home/meow/FatesList", "Fates List source directory")
 	flag.StringVar(&PythonPath, "python-path", "/home/meow/flvenv-py11/bin/python", "Path to python interpreter")
 	flag.Parse()
 
 	if CliCmd == "" {
+		fmt.Println("Version:", Version, "\nCommit Hash:", CommitHash, "\nBuild Timestamp:", BuildTime)
 		flag.Usage()
 		os.Exit(3)
 	}
