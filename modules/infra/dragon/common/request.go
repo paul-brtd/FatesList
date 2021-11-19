@@ -17,7 +17,13 @@ func GetWebhook(ctx context.Context, table_name string, id string, db *pgxpool.P
 	var webhookURL pgtype.Text
 	var apiToken pgtype.Text
 	var webhookSecret pgtype.Text
-	err := db.QueryRow(ctx, "SELECT webhook_type, webhook, api_token, webhook_secret FROM "+table_name+" WHERE bot_id = $1", id).Scan(&webhookType, &webhookURL, &apiToken, &webhookSecret)
+
+	var field_name string = "bot_id"
+	if table_name == "servers" {
+		field_name = "guild_id"
+	}
+
+	err := db.QueryRow(ctx, "SELECT webhook_type, webhook, api_token, webhook_secret FROM "+table_name+" WHERE "+field_name+" = $1", id).Scan(&webhookType, &webhookURL, &apiToken, &webhookSecret)
 	if err != nil {
 		log.Error(err)
 		return false, types.FatesWebhook, "", ""
@@ -54,7 +60,7 @@ func WebhookReq(ctx context.Context, db *pgxpool.Pool, eventId string, webhookUR
 		return false
 	}
 	body := strings.NewReader(data)
-	client := &http.Client{Timeout: 30 * time.Second}
+	client := &http.Client{Timeout: 10 * time.Second}
 	req, err := http.NewRequest("POST", webhookURL, body)
 	if err != nil {
 		return WebhookReq(ctx, db, eventId, webhookURL, secret, data, tries+1)

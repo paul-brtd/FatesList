@@ -2,13 +2,11 @@ import asyncio
 import time
 import uuid
 import warnings
-
+from typing import Sequence
 import orjson
-from loguru import logger
 
-
-async def redis_ipc_new(redis, cmd, msg = None, timeout=30, args: list = None):
-    args = [] if not args else args
+async def redis_ipc_new(redis, cmd: str, msg: str = None, timeout: int = 30, args: Sequence[str] = None):
+    args = args if args else []
     cmd_id = str(uuid.uuid4())
     if msg:
         msg_id = str(uuid.uuid4())
@@ -25,17 +23,10 @@ async def redis_ipc_new(redis, cmd, msg = None, timeout=30, args: list = None):
         while time.time() - start_time < timeout:
             await asyncio.sleep(0)
             data = await redis.get(id)
-            if data is None:
-                continue
-            return data
+            if data:
+                return data
 
     if timeout:
-        data = await wait(cmd_id)
+        return await wait(cmd_id)
     else:
         return None
-    return data if data else None
-
-# Deprecated
-async def redis_ipc(redis, cmd, msg = None, timeout=30, both = False, args: list = []):
-    warnings.warn("This function is deprecated. Use redis_ipc_new instead!")
-    return await redis_ipc_new(redis, cmd, msg = msg, timeout=timeout, args = args)

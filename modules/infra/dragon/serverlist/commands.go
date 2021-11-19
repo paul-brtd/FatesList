@@ -4,6 +4,8 @@ import (
 	"context"
 	"dragon/common"
 	"dragon/types"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -14,6 +16,7 @@ import (
 	"github.com/davecgh/go-spew/spew"
 	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v4/pgxpool"
+	log "github.com/sirupsen/logrus"
 )
 
 const good = 0x00ff00
@@ -134,6 +137,14 @@ func cmdInit() {
 						Name:  "Vanity",
 						Value: "vanity",
 					},
+					{
+						Name:  "Webhook Secret",
+						Value: "webhook_secret",
+					},
+					{
+						Name:  "Webhook URL",
+						Value: "webhook",
+					},
 				},
 				Required: true,
 			},
@@ -162,6 +173,7 @@ func cmdInit() {
 
 			value = strings.Replace(value, "http://", "https://", -1)
 			value = strings.Replace(value, "www.", "https://www.", -1)
+
 			// Handle state
 			if field == "state" {
 				if value == "private_viewable" || value == "8" {
@@ -186,6 +198,11 @@ func cmdInit() {
 				}
 			}
 
+			// Handle webhook secret and url
+			if (field == "webhook_secret" || field == "webhook") && !checkPerms(context.Discord, context.Interaction, 3) {
+				return ""
+			}
+
 			// Hand,e invite channel
 			if field == "invite_channel" && value != "" {
 				value = numericRegex.ReplaceAllString(value, "")
@@ -207,7 +224,7 @@ func cmdInit() {
 			}
 
 			// Handle website
-			if field == "website" || field == "banner_card" || field == "banner_page" {
+			if field == "website" || field == "banner_card" || field == "banner_page" || field == "webhook" {
 				if !strings.HasPrefix(value, "https://") {
 					return "That is not a valid URL!"
 				} else if strings.Contains(value, " ") {
@@ -364,6 +381,10 @@ func cmdInit() {
 						Value: "api_token",
 					},
 					{
+						Name:  "Webhook Secret",
+						Value: "webhook_secret",
+					},
+					{
 						Name:  "Vanity",
 						Value: "vanity",
 					},
@@ -377,7 +398,7 @@ func cmdInit() {
 			if !ok {
 				return "Field must be provided"
 			}
-			if field == "api_token" && !checkPerms(context.Discord, context.Interaction, 3) {
+			if (field == "api_token" || field == "webhook_secret") && !checkPerms(context.Discord, context.Interaction, 3) {
 				return ""
 			}
 
@@ -399,6 +420,100 @@ func cmdInit() {
 				sendIResponseEphemeral(context.Discord, context.Interaction, "```"+v.String+"```", false)
 			}
 			return ""
+		},
+	}
+
+	commands["VOTE"] = types.ServerListCommand{
+		InternalName: "vote",
+		Description:  "Vote for this server!",
+		SlashOptions: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionBoolean,
+				Name:        "test",
+				Description: "Whether or not to create a 'test' vote. This vote is not counted. This is Manage Server/Admin only",
+			},
+		},
+		Handler: func(context types.ServerListContext) string {
+			testVal := getArg(context.Discord, context.Interaction, "test", false)
+			test, ok := testVal.(bool)
+			if !ok {
+				test = false
+			}
+
+			if test && !checkPerms(context.Discord, context.Interaction, 3) {
+				return ""
+			}
+
+			key := "vote_lock+server:" + context.Interaction.Member.User.ID
+			check := context.Redis.PTTL(context.Context, key).Val()
+			debug := "**DEBUG**\nRedis TTL: " + strconv.FormatInt(check.Milliseconds(), 10) + "\nKey: " + key + "\nTest: " + strconv.FormatBool(test)
+			var voteMsg string // The message that will be shown to the use on a successful vote
+
+			if check.Milliseconds() == 0 || test {
+				var userId string
+				if test {
+					userId = "519850436899897346"
+				} else {
+					userId = context.Interaction.Member.User.ID
+				}
+
+				var votesDb pgtype.Int8
+
+				err := context.Postgres.QueryRow(context.Context, "SELECT votes FROM servers WHERE guild_id = $1", context.Interaction.GuildID).Scan(&votesDb)
+
+				if err != nil {
+					return dbError(err)
+				}
+
+				votes := votesDb.Int + 1
+
+				eventId := common.CreateUUID()
+
+				voteEvent := map[string]interface{}{
+					"votes": votes,
+					"id":    userId,
+					"ctx": map[string]interface{}{
+						"user":  userId,
+						"votes": votes,
+						"test":  test,
+					},
+					"m": map[string]interface{}{
+						"event": types.EventServerVote,
+						"user":  userId,
+						"t":     -1,
+						"ts":    float64(time.Now().Unix()) + 0.001, // Make sure its a float by adding 0.001
+						"eid":   eventId,
+					},
+				}
+
+				vote_b, err := json.Marshal(voteEvent)
+				if err != nil {
+					return dbError(err)
+				}
+				voteStr := string(vote_b)
+
+				ok, webhookType, secret, webhookURL := common.GetWebhook(context.Context, "servers", context.Interaction.GuildID, context.Postgres)
+				if !ok {
+					voteMsg = "You have successfully voted for this server (note: this server does not support vote rewards)"
+				} else {
+					voteMsg = "You have successfully voted for this server"
+					go common.WebhookReq(context.Context, context.Postgres, eventId, webhookURL, secret, voteStr, 0)
+					log.Debug("Got webhook type of" + strconv.Itoa(int(webhookType)))
+				}
+
+				if !test {
+					context.Postgres.Exec(context.Context, "UPDATE servers SET votes = votes + 1 WHERE guild_id = $1", context.Interaction.GuildID)
+
+					context.Redis.Set(context.Context, key, 0, 8*time.Hour)
+				}
+			} else {
+				hours := check / time.Hour
+				mins := (check - (hours * time.Hour)) / time.Minute
+				secs := (check - (hours*time.Hour + mins*time.Minute)) / time.Second
+				voteMsg = fmt.Sprintf("Please wait %02d hours, %02d minutes %02d seconds", hours, mins, secs)
+			}
+
+			return voteMsg + "\n\n" + debug
 		},
 	}
 
@@ -426,7 +541,13 @@ func cmdInit() {
 				"raid, then you can simply set the state of your server to `private_viewable` or `8`. This will stop it from being indexed " +
 				"and will *also* block users from joining your server until you're ready to set the state to `public` or `0`."
 
-			helpPage1 := strings.Join([]string{intro, syntax, faqBasics, faqState}, "\n\n")
+			faqVoteRewards := "**Vote Rewards**\n" +
+				"You can reward users for voting for your server using vote rewards. This can be things like custom roles or extra perks! " +
+				"In order to use vote rewards, you will either need to get your API Token (or your Webhook Secret if you have one set and " +
+				"wish to use webhooks) or you will need to use our websocket API to listen for events. Once you have gotten a server vote " +
+				"event, you can then give rewards for voting. The event number for server votes is `71`"
+
+			helpPage1 := strings.Join([]string{intro, syntax, faqBasics, faqState, faqVoteRewards}, "\n\n")
 			sendIResponseEphemeral(context.Discord, context.Interaction, helpPage1, false)
 			return ""
 		},

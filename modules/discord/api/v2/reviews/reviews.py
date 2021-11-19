@@ -35,8 +35,8 @@ async def get_all_reviews(request: Request, target_id: int, target_type: enums.R
                 "per_page": reviews[4], 
                 "from": ((page - 1) * reviews[4]) + 1, 
                 "to": (page - 1) * reviews[4] + len(reviews[0])
-                }
             }
+    }
 
 
 @router.post(
@@ -95,19 +95,19 @@ async def new_review(request: Request, user_id: int, data: BotReviewPartialExt):
     if data.reply:
         await db.execute("UPDATE reviews SET replies = replies || $1 WHERE id = $2", [id], data.id)
         
-    if data.target_type == enums.ReviewType.bot:
-        await bot_add_event(
-            target_id, 
-            enums.APIEvents.review_add,
-            {
-                "user": str(user_id), 
-                "reply": data.reply,
-                "id": str(id),
-                "star_rating": data.star_rating,
-                "review": data.review,
-                "root": data.id
-            }
-        )
+    await bot_add_event(
+        target_id, 
+        enums.APIEvents.review_add,
+        {
+            "user": str(user_id), 
+            "reply": data.reply,
+            "id": str(id),
+            "star_rating": data.star_rating,
+            "review": data.review,
+            "root": data.id
+        },
+        guild=(data.target_type == enums.ReviewType.server)
+    )
 
     # Recache reviews
     await parse_reviews(
@@ -204,7 +204,7 @@ async def delete_review(request: Request, user_id: int, id: uuid.UUID):
 )
 async def vote_review_api(request: Request, user_id: int, rid: uuid.UUID, vote: BotReviewVote):
     """Creates a vote for a review"""
-    bot_rev = await db.fetchrow("SELECT review_upvotes, review_downvotes, star_rating, reply, review_text FROM reviews WHERE id = $1", rid)
+    bot_rev = await db.fetchrow("SELECT target_id, target_type, review_upvotes, review_downvotes, star_rating, reply, review_text FROM reviews WHERE id = $1", rid)
     if bot_rev is None:
         return api_error("You are not allowed to up/downvote this review (doesn't actually exist)")
     bot_rev = dict(bot_rev)
@@ -225,7 +225,7 @@ async def vote_review_api(request: Request, user_id: int, rid: uuid.UUID, vote: 
     bot_rev[main_key].append(user_id)
     await db.execute("UPDATE reviews SET review_upvotes = $1, review_downvotes = $2 WHERE id = $3", bot_rev["review_upvotes"], bot_rev["review_downvotes"], rid)
     # TODO: fix this if needed
-    #await bot_add_event(bot_id, enums.APIEvents.review_vote, {"user": str(user_id), "id": str(rid), "star_rating": bot_rev["star_rating"], "reply": bot_rev["reply"], "review": bot_rev["review_text"], "upvotes": len(bot_rev["review_upvotes"]), "downvotes": len(bot_rev["review_downvotes"]), "upvote": vote.upvote})
+    await bot_add_event(bot_rev["target_id"], enums.APIEvents.review_vote, {"user": str(user_id), "id": str(rid), "star_rating": bot_rev["star_rating"], "reply": bot_rev["reply"], "review": bot_rev["review_text"], "upvotes": len(bot_rev["review_upvotes"]), "downvotes": len(bot_rev["review_downvotes"]), "upvote": vote.upvote}, guild=(bor_rev["target_type"] == enums.ReviewType.server))
     
     # Recache reviews
     await parse_reviews(

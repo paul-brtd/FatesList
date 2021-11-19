@@ -4,7 +4,6 @@ from .badge import Badge
 from modules.core.cache import get_user
 from modules.core.helpers import redis_ipc_new
 from modules.models import enums   
-from config import main_server
 
 class User(DiscordUser):
     """A user on Fates List"""

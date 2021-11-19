@@ -5,7 +5,7 @@ import uuid
 from http import HTTPStatus
 
 from .imports import *
-from .ipc import redis_ipc, redis_ipc_new
+from .ipc import redis_ipc_new
 from .templating import *
 
 

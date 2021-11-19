@@ -14,7 +14,6 @@ from .auth import *
 from .cache import *
 from .events import *
 from .imports import *
-from .ipc import redis_ipc
 from .templating import *
 
 # Some replace tuples
