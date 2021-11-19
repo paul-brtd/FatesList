@@ -1,6 +1,7 @@
 package serverlist
 
 import (
+	"context"
 	"dragon/common"
 	"dragon/types"
 	"net/http"
@@ -12,6 +13,7 @@ import (
 	"github.com/Fates-List/discordgo"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/jackc/pgtype"
+	"github.com/jackc/pgx/v4/pgxpool"
 )
 
 const good = 0x00ff00
@@ -22,6 +24,40 @@ var (
 	commandNameCache = make(map[string]string)
 	numericRegex     *regexp.Regexp
 )
+
+func dbError(err error) string {
+	return "An error occurred while we were updating our database: " + err.Error()
+}
+
+func AddRecacheGuild(context context.Context, postgres *pgxpool.Pool, guild *discordgo.Guild) string {
+	// Adds or recaches a guild
+	if guild == nil {
+		return "Guild cannot be nil"
+	}
+
+	var check pgtype.Int8
+	postgres.QueryRow(context, "SELECT guild_id FROM servers WHERE guild_id = $1", guild.ID).Scan(&check)
+
+	var nsfw bool
+	if guild.NSFWLevel == discordgo.GuildNSFWLevelExplicit || guild.NSFWLevel == discordgo.GuildNSFWLevelAgeRestricted {
+		nsfw = true
+	}
+
+	var err error
+	if check.Status != pgtype.Present {
+		apiToken := common.RandString(198)
+		_, err = postgres.Exec(context, "INSERT INTO servers (guild_id, guild_count, api_token, name_cached, avatar_cached, nsfw) VALUES ($1, $2, $3, $4, $5, $6)", guild.ID, guild.MemberCount, apiToken, guild.Name, guild.IconURL(), nsfw)
+		if err != nil {
+			return dbError(err)
+		}
+	} else {
+		_, err = postgres.Exec(context, "UPDATE servers SET name_cached = $1, avatar_cached = $2, nsfw = $3, guild_count = $4 WHERE guild_id = $5", guild.Name, guild.IconURL(), nsfw, guild.MemberCount, guild.ID)
+		if err != nil {
+			return dbError(err)
+		}
+	}
+	return ""
+}
 
 func init() {
 	var err error
@@ -231,33 +267,16 @@ func cmdInit() {
 				}
 			}
 
-			var check pgtype.Int8
-
-			context.Postgres.QueryRow(context.Context, "SELECT guild_id FROM servers WHERE guild_id = $1", context.Interaction.GuildID).Scan(&check)
-
 			guild, err := context.Discord.State.Guild(context.Interaction.GuildID)
 			if err != nil {
-				return "Could not add guild because: " + err.Error()
+				return "Could not find guild because: " + err.Error()
 			}
 
-			var nsfw bool
-
-			if guild.NSFWLevel == discordgo.GuildNSFWLevelExplicit || guild.NSFWLevel == discordgo.GuildNSFWLevelAgeRestricted {
-				nsfw = true
+			dbErr := AddRecacheGuild(context.Context, context.Postgres, guild)
+			if dbErr != "" {
+				return dbErr
 			}
 
-			if check.Status != pgtype.Present {
-				apiToken := common.RandString(198)
-				_, err = context.Postgres.Exec(context.Context, "INSERT INTO servers (guild_id, guild_count, api_token, name_cached, avatar_cached, nsfw) VALUES ($1, $2, $3, $4, $5, $6)", context.Interaction.GuildID, guild.MemberCount, apiToken, guild.Name, guild.IconURL(), nsfw)
-				if err != nil {
-					return "An error occurred while we were updating our database: " + err.Error()
-				}
-			} else {
-				_, err = context.Postgres.Exec(context.Context, "UPDATE servers SET name_cached = $1, avatar_cached = $2, nsfw = $3, guild_count = $4 WHERE guild_id = $5", guild.Name, guild.IconURL(), nsfw, guild.MemberCount, guild.ID)
-				if err != nil {
-					return "An error occurred while we were updating our database: " + err.Error()
-				}
-			}
 			if field != "recache" && field != "vanity" {
 				context.Postgres.Exec(context.Context, "UPDATE servers SET "+field+" = $1 WHERE guild_id = $2", value, context.Interaction.GuildID)
 			} else if field == "vanity" {
@@ -395,7 +414,9 @@ func cmdInit() {
 				"This guide will use the following syntax for slash commands: `/command option:foo anotheroption:bar`"
 
 			faqBasics := "**How do I add my server?**+\n" +
-				"Good question. Just do `/set field:descriotion value:My lovely description`. You **can/should** set a long description using " +
+				"Good question. Your server should usually be automatically added for you once you add the bot to your server. " +
+				"Just set a description using `/set field:descriotion value:My lovely description`. If you do not do so, the description " +
+				"will be randomly set for you and it will likely not be what you want. You **should** set a long description using " +
 				"`/set field:long_description value:My really really long description`. **For really long descriptions, you can also create " +
 				"a paste on pastebin and provide the pastebin link as the value**"
 

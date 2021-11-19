@@ -77,6 +77,7 @@ func DragonServer() {
 
 	discord.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) { iHandle(s, i, 0) })
 	discordServerBot.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) { iHandle(s, i, 1) })
+	discordServerBot.AddHandler(func(s *discordgo.Session, gc *discordgo.GuildCreate) { serverlist.AddRecacheGuild(ctx, db, gc.Guild) })
 
 	err = discord.Open()
 	if err != nil {

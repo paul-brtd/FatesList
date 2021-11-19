@@ -111,7 +111,9 @@ func SlashHandler(
 	if res != "" {
 		sendIResponse(discord, i.Interaction, res, true)
 	}
-	iResponseMap[i.Interaction.Token].Stop()
+	if iResponseMap[i.Interaction.Token] != nil {
+		iResponseMap[i.Interaction.Token].Stop()
+	}
 	delete(iResponseMap, i.Interaction.Token)
 }
 

@@ -19,6 +19,8 @@ async def guild_page(request: Request, guild_id: int, bt: BackgroundTasks, rev_p
     if not data:
         return abort(404)
     data = dict(data)
+    if not data["description"]:
+        data["description"] = await default_server_desc(data["name_cached"], guild_id)
     data["user"] = {
         "username": data["name_cached"],
         "avatar": data["avatar_cached"]

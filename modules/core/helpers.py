@@ -45,6 +45,26 @@ def id_check(check_t: str):
         return server
     return user
 
+
+async def default_server_desc(name: str, guild_id: int):
+    name_split = name.split(" ")
+    descs = (
+        lambda: name + " is a great place to chill out and enjoy with friends!",
+        lambda: name_split[0] + "? It's " + name + "!" if len(name_split) > 1 else random.choice(descs)(),
+        lambda: "Interested in a good and friendly server, then " + name + " might be the best place for you!"
+    )
+   
+    # For teo word servers, option 2 gives better results
+    if len(name_split) in range(2, 4) and name_split[0].lower().replace(" ", "") not in ("the",):
+        desc = descs[1]()
+
+    else:
+        # Randomly choose one
+        desc = random.choice(descs)()
+    
+    await db.execute("UPDATE servers SET description = $1 WHERE guild_id = $2", desc, guild_id)
+    return desc
+
 def worker_session(request: Request):
     return request.app.state.worker_session
 
@@ -185,6 +205,9 @@ async def parse_index_query(worker_session, fetch: List[asyncpg.Record], type: e
                 "bot_id": str(bot["guild_id"]),
                 "banner": ireplacem(banner_replace_tup, bot["banner"]) if bot["banner"] else None,
             }
+            if not bot_obj["description"]:
+                bot_obj["description"] = await default_server_desc(bot_obj["user"]["username"], bot["guild_id"])
+
             lst.append(bot_obj)
         else:
             _user = await get_bot(bot["bot_id"], worker_session = worker_session)

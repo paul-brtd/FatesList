@@ -114,7 +114,7 @@ async def fetch_random_server(request: Request, guild_id: int, lang: str = "defa
         )
 
     random_unp = await db.fetchrow(
-        "SELECT description, banner_card, state, votes, guild_count, guild_id FROM servers WHERE state = 0 OR state = 6 ORDER BY RANDOM() LIMIT 1"
+        "SELECT description, banner_card, state, votes, guild_count, guild_id FROM servers WHERE (state = 0 OR state = 6) AND description IS NOT NULL ORDER BY RANDOM() LIMIT 1"
     ) # Unprocessed, use the random function to get a random bot
     bot_obj = await db.fetchrow("SELECT name_cached AS username, avatar_cached AS avatar FROM servers WHERE guild_id = $1", random_unp["guild_id"])
     bot_obj = dict(bot_obj) | {"disc": "0000", "status": 1, "bot": True}

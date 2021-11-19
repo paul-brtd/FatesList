@@ -218,7 +218,7 @@ CREATE TABLE servers (
     votes bigint default 0,    
     webhook_type text DEFAULT 'VOTE',
     webhook text,
-    description text default 'No description has been set for this server...',
+    description text,
     long_description text default 'No long description set! Set one with /settings longdesc Long description',
     long_description_type integer default 0,
     css text default '',
