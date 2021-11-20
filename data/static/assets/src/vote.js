@@ -1,4 +1,8 @@
 function voteBot() {
+	if(context.type == "server") {
+		modalShow("Voting for servers", "Do /vote in this server to cote for it and get exclusive perks if the server supports vote rewards")
+		return
+	}
 	if(!context.logged_in) {
 		window.location.href = `/fates/login?redirect=/${context.type}/${context.id}/vote&pretty=to vote for this bot`
 		return

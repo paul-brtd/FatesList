@@ -446,7 +446,7 @@ func cmdInit() {
 
 			key := "vote_lock+server:" + context.Interaction.Member.User.ID
 			check := context.Redis.PTTL(context.Context, key).Val()
-			debug := "**DEBUG**\nRedis TTL: " + strconv.FormatInt(check.Milliseconds(), 10) + "\nKey: " + key + "\nTest: " + strconv.FormatBool(test)
+			debug := "**DEBUG (for nerds)**\nRedis TTL: " + strconv.FormatInt(check.Milliseconds(), 10) + "\nKey: " + key + "\nTest: " + strconv.FormatBool(test)
 			var voteMsg string // The message that will be shown to the use on a successful vote
 
 			if check.Milliseconds() == 0 || test {
@@ -498,7 +498,7 @@ func cmdInit() {
 				} else {
 					voteMsg = "You have successfully voted for this server"
 					go common.WebhookReq(context.Context, context.Postgres, eventId, webhookURL, secret, voteStr, 0)
-					log.Debug("Got webhook type of" + strconv.Itoa(int(webhookType)))
+					log.Debug("Got webhook type of " + strconv.Itoa(int(webhookType)))
 				}
 
 				if !test {
@@ -515,6 +515,11 @@ func cmdInit() {
 
 			return voteMsg + "\n\n" + debug
 		},
+	}
+
+	commands["BUMP"] = types.ServerListCommand{
+		InternalName: "bump",
+		AliasTo:      "VOTE",
 	}
 
 	commands["HELP"] = types.ServerListCommand{

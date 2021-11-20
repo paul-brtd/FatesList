@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"runtime"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/valyala/fastjson"
@@ -46,7 +47,7 @@ func init() {
 	flag.Parse()
 
 	if CliCmd == "" {
-		fmt.Println("Version:", Version, "\nCommit Hash:", CommitHash, "\nBuild Timestamp:", BuildTime)
+		fmt.Println("Version:", Version, "\nCommit Hash:", CommitHash, "\nBuild Timestamp:", BuildTime, "\nBuilt with:", runtime.Version())
 		flag.Usage()
 		os.Exit(3)
 	}

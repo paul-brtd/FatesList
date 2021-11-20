@@ -24,7 +24,21 @@ func SetupSlash(discord *discordgo.Session) {
 	cmdInit()
 
 	// Add the slash commands
-	for cmdName, v := range commands {
+	for cmdName, cmdData := range commands {
+		var v types.ServerListCommand = cmdData
+
+		for v.AliasTo != "" {
+			log.Info("Resolving alias " + cmdName)
+			v = commands[cmdData.AliasTo]
+			oldName := v.InternalName
+			v.InternalName = cmdData.InternalName
+			if cmdData.Description != "" {
+				v.Description = cmdData.Description
+			} else {
+				v.Description += ". Alias to /" + oldName
+			}
+		}
+
 		if v.Disabled {
 			continue
 		}
@@ -76,6 +90,10 @@ func SlashHandler(
 	}
 
 	cmd := commands[op]
+
+	for cmd.AliasTo != "" {
+		cmd = commands[cmd.AliasTo]
+	}
 
 	// Handle cooldown
 	if cmd.Cooldown != types.CooldownNone {

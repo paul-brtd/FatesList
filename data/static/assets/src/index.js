@@ -42,13 +42,13 @@ function randomRoll() {
 					else {
 						key = "guild_id"
 					}
-					view_links[i].setAttribute("href", "/bot/" + data[key].toString())
+					view_links[i].setAttribute("href", "/" + context.type + "/" + data[key].toString())
 				}
 				username_dom = random_bots.querySelectorAll(".bot-card-username-txt")[0].innerHTML = data.username
 				random_bots.querySelectorAll(".bot-card-description-txt")[0].innerHTML = data.description
 				random_bots.querySelectorAll(".bot-servers")[0].innerHTML = data.formatted.guild_count
 				random_bots.querySelectorAll(".bot-votes")[0].innerHTML = data.formatted.votes
-				random_bots.querySelectorAll(".bot-card-invite-link")[0].setAttribute("href", `/${context.type}/` + data.bot_id.toString() + "/invite")
+				random_bots.querySelectorAll(".bot-card-invite-link")[0].setAttribute("href", `/${context.type}/` + data[key].toString() + "/invite")
 			}
 		}
 	})

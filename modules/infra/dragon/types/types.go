@@ -164,6 +164,7 @@ type AdminOp struct {
 
 type ServerListCommand struct {
 	InternalName string                                `json:"internal_name"` // Internal name for enums
+	AliasTo      string                                `json:"alias_to"`      // What should this command alias to
 	Description  string                                `json:"description"`
 	Cooldown     CooldownBucket                        `json:"cooldown"`
 	Perm         int                                   `json:"perm"`

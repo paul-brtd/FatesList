@@ -191,10 +191,12 @@
 				<th>Invites</th>
 				<td>{{data.invite_amount}}</td>
 			</tr>
+			{% if type == "bot" %}
 			<tr>
 				<th>Vote Page</th>
 				<td><a class='long-desc-link' href="/{{type}}/{{id}}/vote">Click/Copy Me!</a></td>
 			</tr>
+			{% endif %}
 			{% if data.features %}
 				<tr>
 					<th>Features</th>
@@ -210,7 +212,7 @@
 </script>
 <script src="/static/assets/prod/tabs.min.js?v=2" defer></script>
 <script src="/static/assets/prod/bot_server.min.js?v=35"></script>
-<script src="/static/assets/prod/vote.min.js?v=4"></script>
+<script src="/static/assets/prod/vote.min.js?v=6"></script>
 </div>
 </article>
 {% endblock %} 

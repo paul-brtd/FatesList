@@ -109,7 +109,7 @@
 	<li class="nav-item">
 		<a class="nav-link" href="/fates/support/invite" style="float: left; text-align: center; margin-top: 2px;">Discord</a>
 	  	<a class="nav-link" href="/bot/admin/add" style="float: left; text-align: center; margin-top: 2px;">Add Bot</a>
-		<a class="nav-link" href="#" onclick="betaTest()" style="float: left; text-align: center; margin-top: 2px;">Beta Test</a>
+		<a class="nav-link" href="#" onclick="betaTest()" style="float: left; text-align: center; margin-top: 2px;">Add Server</a>
    	</li>
    </div>
    <ul class="navbar-nav ml-auto">
@@ -157,15 +157,13 @@
 
 	function betaTest() {
 		btestmsg = `
-			We are looking for people to test out new server listing feature. This is a open beta. Anyone who wishes to sign up can do so!
+		        To add your server, first add <a href='{{server_bot_invite}}'>our bot</a> to your server.
        			<br/><br/>
-		        To sign up your server in this beta, first add <a href='{{server_bot_invite}}'>our bot</a> to your server.
-       			<br/><br/>
-       			Then you just have to set a description and a long description using the /set slash command!
+       			Then you just have to set a description and a long description using the /set slash command otherwise it will be randomly generated!
        			<br/><br/>
        			Server Index Page: <a href="/servers">https://fateslist.xyz/servers</a>
 		`
-		modalShow("Become a beta tester!", btestmsg)
+		modalShow("Add your server now!", btestmsg)
 	}
 </script>
 <!-- <script src='https://cdn.jsdelivr.net/npm/@widgetbot/crate@3' async defer>
