@@ -29,7 +29,7 @@ async def render_index(request: Request, api: bool, cert: bool, type: enums.Revi
     }
 
     if type == enums.ReviewType.server:
-        context = {"type": "server"}
+        context = {"type": "server", "index": "/servers"}
     else:
         context = {"type": "bot"}
 

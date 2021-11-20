@@ -30,25 +30,14 @@
 			</div>
 		</div>
 	</div>
-	<div style="margin-left: 50px">
-		<div style="padding: 3px; display: inline-block;">
-			<div class="form-group white" style="color: blue; display: inline-block; height: auto;">
-				<div style="display: block;" />
-					<input type="checkbox" tabindex="0" id="server_list" name="server_list"
-						aria-label="Join Servers" style="margin-right: 5px;" checked="true" />
-						<label for="server_list">Server List -> Would you like us to access your server list for server listing? Keep this ticked if unsure.</label>
-					</div>
-				</div>
-			</div>
-		</div>
-	</small>
+</small>
 </div>
 <script>
 	context = {{context|tojson}}
 	searchParams = new URLSearchParams(window.location.search)
 	if(searchParams.get("dev")) localStorage.setItem("login-dev", "true")
 </script>
-<script src="/static/assets/prod/login.min.js?v=6"></script>
+<script src="/static/assets/prod/login.min.js?v=7"></script>
 {% endblock %}
 {% block footer %}
 

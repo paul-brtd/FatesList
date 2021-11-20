@@ -108,8 +108,13 @@
    <div class="content-nomobile navbar-nav" style="margin-top: 1px;">
 	<li class="nav-item">
 		<a class="nav-link" href="/fates/support/invite" style="float: left; text-align: center; margin-top: 2px;">Discord</a>
-	  	<a class="nav-link" href="/bot/admin/add" style="float: left; text-align: center; margin-top: 2px;">Add Bot</a>
-		<a class="nav-link" href="#" onclick="betaTest()" style="float: left; text-align: center; margin-top: 2px;">Add Server</a>
+		{% if type == "bot" or not type %}
+			<a class="nav-link" href="/servers" style="float: left; text-align: center; margin-top: 2px;">Servers</a>
+		{% else %}
+			<a class="nav-link" href="/" style="float: left; text-align: center; margin-top: 2px;">Bots</a>
+		{% endif %}
+		<a class="nav-link" href="/bot/admin/add" style="float: left; text-align: center; margin-top: 2px;">Add Bot</a>
+		<a class="nav-link" href="javascript:addServer()" style="float: left; text-align: center; margin-top: 2px;">Add Server</a>
    	</li>
    </div>
    <ul class="navbar-nav ml-auto">
@@ -127,6 +132,7 @@
           {% else %}
           <a class="dropdown-item" href="/fates/login">Login</a>
           {%endif%}
+	  <a class="dropdown-item" href="javascript:addServer()">Add Server</a>
 	  <a class="dropdown-item" href="/fates/stats">Statistics</a>
           <a class="dropdown-item" href="https://apidocs.fateslist.xyz">API Docs</a>
           <a class="dropdown-item" href="/fates/support/invite" target=”_blank”>Support Server</a>
@@ -155,7 +161,7 @@
     enableAutoReload: true // it will reload the new image when validating attributes changes
   });
 
-	function betaTest() {
+	function addServer() {
 		btestmsg = `
 		        To add your server, first add <a href='{{server_bot_invite}}'>our bot</a> to your server.
        			<br/><br/>

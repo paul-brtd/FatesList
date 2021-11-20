@@ -2,7 +2,6 @@ function getLoginLink() {
 	modalShow("Logging you in...", "Please wait...")
 	scopes = ["identify"]
 	scopes_total = {
-		"server_list": "guilds",
 		"join_servers": "guilds.join"
 	}
 	$.each(scopes_total, function(k, v){
