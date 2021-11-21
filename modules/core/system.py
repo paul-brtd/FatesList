@@ -18,7 +18,7 @@ from fastapi.exceptions import (HTTPException, RequestValidationError,
                                 ValidationError)
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import PlainTextResponse, HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from lynxfall.core.classes import Singleton
 from lynxfall.oauth.models import OauthConfig
@@ -85,8 +85,8 @@ class FatesListRequestHandler(BaseHTTPMiddleware):  # pylint: disable=too-few-pu
 
         try:
             res = await self._dispatcher(path, request, call_next)
-        except BaseException as exc:  # pylint: disable=broad-except
-            logger.exception("Site Error Occurred") 
+        except:  # pylint: disable=broad-except
+            exc = sys.exc_info()[2]
             res = await self.exc_handler(request, exc, log=True)
         
         try:
@@ -118,9 +118,12 @@ class FatesListRequestHandler(BaseHTTPMiddleware):  # pylint: disable=too-few-pu
         # Process request with retry
         try:
             response = await call_next(request)
-        except BaseException as exc:  # pylint: disable=broad-except
-            logger.exception("Site Error Occurred")
-            response = await self.exc_handler(request, exc)
+        except:  # pylint: disable=broad-except
+            err = sys.exc_info()
+            try:
+                response = await self.exc_handler(request, err[2])
+            except:
+                response = PlainTextResponse(err[1])
 
         process_time = time.time() - start_time
         response.headers["X-Process-Time"] = str(process_time)
@@ -149,7 +152,7 @@ class FatesListRequestHandler(BaseHTTPMiddleware):  # pylint: disable=too-few-pu
                 response.status_code = 204
                 response.headers["Allow"] = self.cors_allowed
        
-        return response
+        return response if response else PlainTextResponse("Something went wrong!")
         
 class FatesWorkerOauth(Singleton):  # pylint: disable=too-few-public-methods
     """Stores all oauths (currently only discord)"""

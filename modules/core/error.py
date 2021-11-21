@@ -33,6 +33,13 @@ class WebError():
          
         await redis_ipc_new(redis_db, "SENDMSG", msg = {"content": msg, "file_name": f"{error_id}.txt", "file_content": fl_info, "channel_id": str(site_errors_channel)})
 
+        # Reraise exception
+        try:
+            raise exc
+        except:
+            logger.exception("Site Error Occurred")
+
+
     @staticmethod
     async def error_handler(request, exc, log: bool = True):
         error_id = str(uuid.uuid4())

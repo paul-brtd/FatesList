@@ -4,7 +4,7 @@ import datetime
 
 from pydantic import BaseModel
 
-import modules.models.enums as enums
+from modules.models import enums
 
 from ..base_models import APIResponse, BaseUser
 

@@ -25,7 +25,7 @@ async def _user_fetch(
 
     CACHE_VER = 17 # Current cache ver
 
-    if len(user_id) not in [17, 18, 19, 20]: # Snowflake can be 17 - 20
+    if len(user_id) not in (17, 18, 19, 20): # Snowflake can be 17 - 20
         logger.debug(f"Ignoring blatantly wrong User ID: {user_id}")
         return None # This is impossible to actually exist on the discord API or on our cache
 

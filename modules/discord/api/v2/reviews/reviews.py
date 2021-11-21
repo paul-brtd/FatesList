@@ -96,7 +96,7 @@ async def new_review(request: Request, user_id: int, data: BotReviewPartialExt):
         await db.execute("UPDATE reviews SET replies = replies || $1 WHERE id = $2", [id], data.id)
         
     await bot_add_event(
-        target_id, 
+        data.target_id, 
         enums.APIEvents.review_add,
         {
             "user": str(user_id), 

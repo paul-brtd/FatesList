@@ -110,9 +110,8 @@
        				<!-- Handle markdown -->
 				<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 				<pre style="display: none" id="marked-ld">{{data.long_description|safe}}</pre>
-				<script>
-					replace_list = {{context.replace_list|tojson}}
-					var md = marked(document.querySelector("#marked-ld").innerHTML).replacem(replace_list)
+				<script defer>
+					var md = marked.parse(document.querySelector("#marked-ld").innerHTML).replacem(context.replace_list)
 					document.querySelector("#long-description").innerHTML = md;
 				</script>
 			{% endif %}

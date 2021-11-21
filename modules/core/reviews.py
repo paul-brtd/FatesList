@@ -5,7 +5,7 @@ from .imports import *
 
 async def parse_reviews(worker_session, target_id: int, rev_id: uuid.uuid4 = None, page: int = None, recache: bool = False, in_recache: bool = False, target_type: enums.ReviewType = enums.ReviewType.bot, recache_from_rev_id: bool = False) -> List[dict]:
     if recache:
-        async def recache():
+        async def recache(target_id: int):
             if recache_from_rev_id:
                 tgt_data = await worker_session.postgres.fetchrow("SELECT target_id, target_type FROM reviews WHERE id = $1", target_id)
                 if tgt_data:
@@ -27,7 +27,7 @@ async def parse_reviews(worker_session, target_id: int, rev_id: uuid.uuid4 = Non
                 await parse_reviews(worker_session, target_id, page = page if page else None, in_recache = True, target_type=target_type)
             # Edge case: ensure page 1 is always up to date
             await parse_reviews(worker_session, target_id, page = 1, in_recache = True, target_type=target_type)
-        asyncio.create_task(recache())
+        asyncio.create_task(recache(target_id))
         return
 
     if not in_recache:
