@@ -7,10 +7,11 @@ class BotListStats(BaseModel):
     uptime: float
     pid: int
     up: bool
-    dup: bool
+    server_uptime: float
     bot_count: int
     bot_count_total: int
     workers: Optional[List[int]] = []
+
 
 class PartialBotQueue(BaseModel):
     user: Optional[BaseUser] = BaseUser()

@@ -11,6 +11,12 @@ router = APIRouter(
     tags = [f"API v{API_VERSION} - System"]
 )
 
+def get_uptime():
+    with open('/proc/uptime', 'r') as f:
+        uptime_seconds = float(f.readline().split()[0])
+    return uptime_seconds
+
+
 @router.get(
     "/blstats", 
     response_model = BotListStats,
@@ -22,12 +28,19 @@ async def get_botlist_stats(
 ):
     """
         Returns uptime and stats about the list.
+
         uptime - The current uptime for the given worker
+        
         pid - The pid of the worker you are connected to
+        
         up - Whether the databases are up on this worker
-        dup - Always true now, but used to be: Whether we have connected to discord on this worker
+        
+        server_uptime - How long the Fates List Server has been up for totally
+
         bot_count_total - The bot count of the list
+        
         bot_count - The approved and certified bots on the list
+        
         workers - The worker pids
     """
     up = worker_session.up
@@ -39,10 +52,10 @@ async def get_botlist_stats(
         bot_count = 0
         bot_count_total = 0
     return {
-        "uptime": time.time() - worker_session.start_time, 
+        "uptime": time.time() - worker_session.start_time,
+        "server_uptime": get_uptime(),
         "pid": os.getpid(), 
         "up": up, 
-        "dup": True,
         "bot_count": bot_count, 
         "bot_count_total": bot_count_total,
         "workers": worker_session.workers

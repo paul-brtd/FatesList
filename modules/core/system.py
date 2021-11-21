@@ -127,6 +127,7 @@ class FatesListRequestHandler(BaseHTTPMiddleware):  # pylint: disable=too-few-pu
 
         process_time = time.time() - start_time
         response.headers["X-Process-Time"] = str(process_time)
+        response.headers["X-Worker-PID"] = str(os.getpid())
 
         if is_api:
             response.headers["X-API-Version"] = api_ver
