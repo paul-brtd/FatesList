@@ -200,6 +200,7 @@ function autofillBot() {
 				if(data.description) qs("#description").value = data.description
 				if(data.summary) qs("#long_description").textContent = data.summary
 				if(data.privacy_policy_url) qs("#privacy_policy").value = data.privacy_policy_url
+				if(data.custom_install_url) qs("#invite").value = data.custom_install_url
 				if(data.slug) qs("#vanity").value = data.slug.toLowerCase()
 				else qs("#vanity").value = data.name.replaceAll(" ", "").toLowerCase()
 				modalShow("Autofill Done", "We've autofilled as much of what we could find on your bots application!")

@@ -40,6 +40,15 @@ var (
 
 var ipcActions = make(map[string]types.IPCCommand)
 
+func elementInSlice[T comparable](slice []T, elem T) bool {
+	for i := range slice {
+		if slice[i] == elem {
+			return true
+		}
+	}
+	return false
+}
+
 func setupCommands() {
 	// Define all IPC commands here
 
@@ -308,14 +317,33 @@ func setupCommands() {
 			var inviteUrl pgtype.Text
 			var inviteChannel pgtype.Text
 			var finalInv string
-			err := context.Postgres.QueryRow(ctx, "SELECT state, invite_url, invite_channel FROM servers WHERE guild_id = $1", guildId).Scan(&state, &inviteUrl, &inviteChannel)
+			var userWhitelist pgtype.TextArray
+			var userBlacklist pgtype.TextArray
+			err := context.Postgres.QueryRow(ctx, "SELECT state, invite_url, invite_channel, user_whitelist, user_blacklist FROM servers WHERE guild_id = $1", guildId).Scan(&state, &inviteUrl, &inviteChannel, &userWhitelist, &userBlacklist)
 			if err != nil {
 				log.Error(err)
 				return "Something went wrong: " + err.Error()
 			}
 			if types.GetBotState(int(state.Int)) == types.BotStatePrivateViewable {
 				return "This server is private and not accepting invites at this time!"
+			} else if types.GetBotState(int(state.Int)) == types.BotStateBanned {
+				return "This server has been banned from Fates List. If you are a staff member, contact Fates List Support for more information."
 			}
+
+			var whitelisted bool
+			if userWhitelist.Status == pgtype.Present && len(userWhitelist.Elements) > 0 {
+				if !elementInSlice(userWhitelist.Elements, pgtype.Text{String: userId, Status: pgtype.Present}) {
+					return "You need to be whitelisted to join this server!"
+				}
+				whitelisted = true
+			}
+
+			if !whitelisted && userBlacklist.Status == pgtype.Present && len(userBlacklist.Elements) > 0 {
+				if elementInSlice(userBlacklist.Elements, pgtype.Text{String: userId, Status: pgtype.Present}) {
+					return "You have been blacklisted from joining this server!"
+				}
+			}
+
 			if inviteUrl.Status != pgtype.Present || inviteUrl.String == "" {
 				// Create invite using serverlist bot
 				guild, err := context.ServerList.State.Guild(guildId)

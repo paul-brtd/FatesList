@@ -57,7 +57,7 @@
 				<span class="iconify" data-icon="fa-solid:thumbs-up" data-inline="false"></span>
 				<span style="margin-left: 3px;">{{human_format(data.votes)}}</span>
 			</button>
-			<a target=”_blank” href="/{{type}}/{{id}}/invite"><button class="btn btn-outline-light buttons-all" id="buttons-invite">Invite</button></a>
+			<a target=”_blank” href="/{{type}}/{{id}}/invite"><button class="btn btn-outline-light buttons-all" id="buttons-invite">{% if type == "bot" %}Invite{% else %}Join{% endif %}</button></a>
 			{% if data.support and data.support.replace(" ", "") %}
 				<a rel="noopener" target="_blank" href="{{data.support}}"><button class="btn btn-outline-light buttons-all" id="buttons-support">Support</button></a>
 			{% endif %}
@@ -178,24 +178,22 @@
 				<td>{{data.library.lower()}}</td>
 			</tr>
 			<tr>
-				<th>Servers</th>
-				<td>{{data.guild_count}}</td>
-			</tr>
-			<tr>
 				<th>Shards</th>
 				<td>{{data.shard_count}}</td>
 			</tr>
+			<tr>
+				<th>Vote Page</th>
+				<td><a class='long-desc-link' href="/bots/{{id}}/vote">https://fateslist.xyz/bots/{{id}}/vote</a></td>
+			</tr>
 			{% endif %}
+			<tr>
+				<th>{% if type == "bot" %}Servers{% else %}Member Count{% endif %}</th>
+				<td>{{data.guild_count}}</td>
+			</tr>
 			<tr>
 				<th>Invites</th>
 				<td>{{data.invite_amount}}</td>
 			</tr>
-			{% if type == "bot" %}
-			<tr>
-				<th>Vote Page</th>
-				<td><a class='long-desc-link' href="/{{type}}/{{id}}/vote">Click/Copy Me!</a></td>
-			</tr>
-			{% endif %}
 			{% if data.features %}
 				<tr>
 					<th>Features</th>

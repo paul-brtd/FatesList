@@ -15,6 +15,20 @@ from .cache import *
 from .events import *
 from .imports import *
 from .templating import *
+import json
+import typing
+
+class PrettyJSONResponse(Response):
+    media_type = "application/json"
+
+    def render(self, content: typing.Any) -> bytes:
+        return json.dumps(
+            content,
+            ensure_ascii=False,
+            allow_nan=False,
+            indent=4,
+            separators=(", ", ": "),
+        ).encode("utf-8")
 
 # Some replace tuples
 # TODO: Move this elsewhere
@@ -169,7 +183,7 @@ async def invite_bot(bot_id: int, user_id = None, api = False):
     return bot["invite"]
 
 # Check vanity of bot 
-async def vanity_bot(vanity: str) -> Optional[str]:
+async def vanity_bot(vanity: str) -> Optional[list]:
     """Checks and returns the vanity of the bot, otherwise returns None"""
 
     if vanity in reserved_vanity: # Check if vanity is reserved and if so, return None

@@ -46,10 +46,17 @@ func AddRecacheGuild(context context.Context, postgres *pgxpool.Pool, guild *dis
 		nsfw = true
 	}
 
+	var memberCount int
+	if guild.MemberCount > guild.ApproximateMemberCount {
+		memberCount = guild.MemberCount
+	} else {
+		memberCount = guild.ApproximateMemberCount
+	}
+
 	var err error
 	if check.Status != pgtype.Present {
 		apiToken := common.RandString(198)
-		_, err = postgres.Exec(context, "INSERT INTO servers (guild_id, guild_count, api_token, name_cached, avatar_cached, nsfw) VALUES ($1, $2, $3, $4, $5, $6)", guild.ID, guild.MemberCount, apiToken, guild.Name, guild.IconURL(), nsfw)
+		_, err = postgres.Exec(context, "INSERT INTO servers (guild_id, guild_count, api_token, name_cached, avatar_cached, nsfw) VALUES ($1, $2, $3, $4, $5, $6)", guild.ID, memberCount, apiToken, guild.Name, guild.IconURL(), nsfw)
 		if err != nil {
 			return dbError(err)
 		}
@@ -314,6 +321,37 @@ func cmdInit() {
 					return "An error occurred while we were updating our database: " + err.Error()
 				}
 			}
+
+			// Update server audit log here
+			var auditVal string
+			if len(value) > 10 {
+				auditVal = value[:10] + "..."
+			} else {
+				auditVal = value
+			}
+
+			auditLogAction := map[string]interface{}{
+				"user_id":    context.Interaction.Member.User.ID,
+				"username":   context.Interaction.Member.User.Username,
+				"user_perms": context.Interaction.Member.Permissions,
+				"action_id":  common.CreateUUID(),
+				"field":      field,
+				"value":      auditVal,
+				"ts":         float64(time.Now().Unix()) + 0.001, // Make sure its a float by adding 0.001
+			}
+
+			auditLogActionBytes, err := json.Marshal(auditLogAction)
+
+			if err != nil {
+				return dbError(err)
+			}
+
+			_, err = context.Postgres.Exec(context.Context, "UPDATE servers SET audit_logs = audit_logs || $1 WHERE guild_id = $2", []string{string(auditLogActionBytes)}, guild.ID)
+
+			if err != nil {
+				return dbError(err)
+			}
+
 			if field != "recache" {
 				return "Successfully set " + field + "! Either see your servers page or use /get to verify that it got set to what you wanted!"
 			}
@@ -388,6 +426,18 @@ func cmdInit() {
 						Name:  "Vanity",
 						Value: "vanity",
 					},
+					{
+						Name:  "User Whitelist",
+						Value: "user_whitelist",
+					},
+					{
+						Name:  "User Blacklist",
+						Value: "user_blacklist",
+					},
+					{
+						Name:  "Audit Logs",
+						Value: "audit_logs",
+					},
 				},
 				Required: true,
 			},
@@ -414,6 +464,23 @@ func cmdInit() {
 				return field + " is not set!"
 			}
 
+			if field == "audit_logs" {
+				var auditLogData []map[string]interface{}
+				if len(v.String) > 3 {
+					// Fix output for encoding/json
+					v.String = strings.Replace(strings.Replace(strings.Replace("["+v.String[2:len(v.String)-2]+"]", "\\", "", -1), "\"{", "{", -1), "}\"", "}", -1)
+					err := json.Unmarshal([]byte(v.String), &auditLogData)
+					if err != nil {
+						return err.Error()
+					}
+					auditLogPretty, err := json.MarshalIndent(auditLogData, "", "    ")
+					if err != nil {
+						return err.Error()
+					}
+					v.String = string(auditLogPretty)
+				}
+			}
+
 			if len(v.String) > 1994 {
 				sendIResponseEphemeral(context.Discord, context.Interaction, "Value of `"+field+"`", false, v.String)
 			} else {
@@ -426,6 +493,7 @@ func cmdInit() {
 	commands["VOTE"] = types.ServerListCommand{
 		InternalName: "vote",
 		Description:  "Vote for this server!",
+		Perm:         1,
 		SlashOptions: []*discordgo.ApplicationCommandOption{
 			{
 				Type:        discordgo.ApplicationCommandOptionBoolean,
@@ -524,6 +592,7 @@ func cmdInit() {
 
 	commands["HELP"] = types.ServerListCommand{
 		InternalName: "help",
+		Perm:         1,
 		Description:  "More information on how to use Fates List Server Listing",
 		SlashOptions: []*discordgo.ApplicationCommandOption{},
 		Handler: func(context types.ServerListContext) string {
@@ -552,9 +621,65 @@ func cmdInit() {
 				"wish to use webhooks) or you will need to use our websocket API to listen for events. Once you have gotten a server vote " +
 				"event, you can then give rewards for voting. The event number for server votes is `71`"
 
-			helpPage1 := strings.Join([]string{intro, syntax, faqBasics, faqState, faqVoteRewards}, "\n\n")
+			faqAllowlist := "**Server Allow List**\n" +
+				"For invite-only/private servers, you can/should use a **user whitelist** to prevent users outside the user whitelist from " +
+				"joining your server. If you do not have any users on your user whitelist, anyone may join your server. User blacklists allow " +
+				"you to blacklist bad users from getting an invite to your server via Fates List"
+
+			helpPage1 := strings.Join([]string{intro, syntax, faqBasics, faqState, faqVoteRewards, faqAllowlist}, "\n\n")
 			sendIResponseEphemeral(context.Discord, context.Interaction, helpPage1, false)
 			return ""
+		},
+	}
+	commands["ALLOWLIST"] = types.ServerListCommand{
+		InternalName: "allowlist",
+		Description:  "Modifies the servers allowlist",
+		Perm:         3,
+		SlashOptions: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionString,
+				Name:        "type",
+				Description: "The list to modify",
+				Choices: []*discordgo.ApplicationCommandOptionChoice{
+					{
+						Name:  "Whitelist",
+						Value: "user_whitelist",
+					},
+					{
+						Name:  "Blacklist",
+						Value: "user_blacklist",
+					},
+				},
+				Required: true,
+			},
+			{
+				Type:        discordgo.ApplicationCommandOptionString,
+				Name:        "action",
+				Description: "What to do on the allowlist",
+				Choices: []*discordgo.ApplicationCommandOptionChoice{
+					{
+						Name:  "Add User",
+						Value: "add_user",
+					},
+					{
+						Name:  "Remove User",
+						Value: "delete_user",
+					},
+					{
+						Name:  "Clear",
+						Value: "clear",
+					},
+				},
+				Required: true,
+			},
+			{
+				Type:        discordgo.ApplicationCommandOptionUser,
+				Name:        "user",
+				Description: "The user to add/remove. Can be a mention as well",
+			},
+		},
+		Handler: func(context types.ServerListContext) string {
+			return "Work in progress, coming soon :)"
 		},
 	}
 

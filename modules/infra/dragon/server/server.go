@@ -42,7 +42,25 @@ func DragonServer() {
 	if err != nil {
 		panic(err)
 	}
-	discordServerBot.Identify.Intents = discordgo.IntentsGuilds | discordgo.IntentsDirectMessages
+
+	// For now, if we don't get the guild members intent in the future, this will be replaced with approx guild count
+	discordServerBot.Identify.Intents = discordgo.IntentsGuilds | discordgo.IntentsDirectMessages | discordgo.IntentsGuildMembers
+
+	// Be prepared to remove this handler if we don't get priv intents
+	memberHandler := func(s *discordgo.Session, m *discordgo.Member) {
+		g, err := discordServerBot.State.Guild(m.GuildID)
+		if err != nil {
+			log.Error(err)
+		}
+		err2 := serverlist.AddRecacheGuild(ctx, db, g)
+		if err2 != "" {
+			log.Error(err2)
+		}
+	}
+
+	discordServerBot.AddHandler(func(s *discordgo.Session, m *discordgo.GuildMemberAdd) { memberHandler(s, m.Member) })
+	discordServerBot.AddHandler(func(s *discordgo.Session, m *discordgo.GuildMemberRemove) { memberHandler(s, m.Member) })
+	// End of potentially dangerous (priv code)
 
 	onReady := func(s *discordgo.Session, m *discordgo.Ready) {
 		log.Info("Logged in as ", m.User.Username)

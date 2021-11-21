@@ -15,14 +15,14 @@ async def exp1(request: Request):
         "logged_in": "user_id" in request.session.keys(),
         "vote_epoch": None,
         "user_agent": request.headers.get("User-Agent"),
-        "user": None
+        "user": None,
+        "pid": os.getpid()
     }
 
     if data["logged_in"]:
-        data["vote_epoch"] = await db.fetchval("SELECT vote_epoch FROM users WHERE user_id = $1", data["user_id"])
         data["user"] = await get_user(data["user_id"], worker_session=request.app.state.worker_session)
 
-    return data
+    return PrettyJSONResponse({"message": "Please send a screenshot of this page and send it", "data": data})
 
 
 @router.get("/discord")

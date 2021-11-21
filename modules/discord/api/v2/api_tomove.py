@@ -21,6 +21,13 @@ router = APIRouter(
     response_model = BotVanity
 )
 async def get_vanity(request: Request, vanity: str):
+    """
+    Gets information about a vanity given a vanity code
+
+    Type can be either 'bot', 'server' or 'profile'
+
+    Redirect is the id it redirects to
+    """
     vb = await vanity_bot(vanity)
     logger.trace(f"Vanity is {vanity} and vb is {vb}")
     if vb is None:
