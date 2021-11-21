@@ -4,6 +4,3 @@
 [submodule "modules/infra/admin-piccolo"]
 	path = modules/infra/admin-piccolo
 	url = https://github.com/Fates-List/admin
-[submodule "/home/meow/FatesList/modules/infra/serverlistbot"]
-	path = /home/meow/FatesList/modules/infra/serverlistbot
-	url = https://github.com/Fates-List/ServerListBot
