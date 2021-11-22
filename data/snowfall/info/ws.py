@@ -12,7 +12,7 @@ import websockets
 
 from modules.models import enums
 
-URL = "wss://fateslist.xyz/api/ws/"
+URL = "wss://fateslist.xyz/api/dragon/ws/"
 
 class Bot():
     def __init__(self, bot_id: int, token: str, send_all: bool = True, send_none: bool = False, bot: bool = True):

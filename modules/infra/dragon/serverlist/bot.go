@@ -185,7 +185,7 @@ func sendIResponseComplex(discord *discordgo.Session, i *discordgo.Interaction, 
 	for i, data := range largeContent {
 		files = append(files, &discordgo.File{
 			Name:        "output" + strconv.Itoa(i) + ".txt",
-			ContentType: "application/octet-stream",
+			ContentType: "application/text",
 			Reader:      strings.NewReader(data),
 		})
 	}

@@ -6,7 +6,7 @@ import (
 	"dragon/common"
 	"dragon/ipc"
 	"dragon/serverlist"
-	"dragon/ws"
+	"dragon/webserver"
 	"os"
 	"os/signal"
 	"syscall"
@@ -132,7 +132,7 @@ func DragonServer() {
 
 	// Start IPC code
 	go ipc.StartIPC(db, discord, discordServerBot, rdb)
-	go ws.StartWS(db, rdb)
+	go webserver.StartWebserver(db, rdb)
 
 	s := <-sigs
 	log.Info("Going to exit gracefully due to signal", s, "\n")
