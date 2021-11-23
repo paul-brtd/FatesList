@@ -81,7 +81,8 @@ class FatesListRequestHandler(BaseHTTPMiddleware):  # pylint: disable=too-few-pu
         
         if not request.app.state.ipc_up:
             # This middleware does not apply
-            return await call_next(request)
+            return RedirectResponse("/maint/page")
+
 
         try:
             res = await self._dispatcher(path, request, call_next)
@@ -242,12 +243,6 @@ async def init_fates_worker(app, session_id, workers):
     # Wait for redis ipc to come up
     app.state.ipc_up = False
     app.state.first_run = True
-
-    @app.middleware("http")
-    async def _maint(request, call_next):
-        if request.app.state.ipc_up:
-            return await call_next(request)
-        return RedirectResponse("/maint/page")
 
     async def wait_for_ipc(app, session_id, workers, dbs):
         while True:
