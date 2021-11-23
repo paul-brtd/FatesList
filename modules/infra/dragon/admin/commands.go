@@ -445,7 +445,7 @@ func cmdInit() {
 				return "Could not parse guild count: " + err.Error()
 			}
 
-			var errors string = "OK. "
+			var errors string = "OK. \n**Invite (should work, if not just use the bot pages invite): https://discord.com/api/oauth2?permissions=0&scope=bot%20applications.commands&client_id=" + context.Bot.ID + "**"
 
 			embed := discordgo.MessageEmbed{
 				URL:         "https://fateslist.xyz/bot/" + context.Bot.ID,

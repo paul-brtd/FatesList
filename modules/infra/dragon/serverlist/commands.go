@@ -625,8 +625,20 @@ func cmdInit() {
 				"joining your server. If you do not have any users on your user whitelist, anyone may join your server. User blacklists allow " +
 				"you to blacklist bad users from getting an invite to your server via Fates List"
 
-			helpPage1 := strings.Join([]string{intro, syntax, faqBasics, faqState, faqVoteRewards, faqAllowlist}, "\n\n")
-			sendIResponseEphemeral(context.Discord, context.Interaction, helpPage1, false)
+			helpPages := []string{
+				strings.Join([]string{intro, syntax, faqBasics, faqState, faqVoteRewards}, "\n\n"),
+				strings.Join([]string{faqAllowlist}, "\n\n"),
+			}
+
+			for i, v := range helpPages {
+				if i == 0 {
+					sendIResponse(context.Discord, context.Interaction, "defer", false)
+				}
+				sendIResponseEphemeral(context.Discord, context.Interaction, v, false)
+			}
+
+			context.Discord.InteractionResponseDelete(context.Discord.State.User.ID, context.Interaction)
+
 			return ""
 		},
 	}

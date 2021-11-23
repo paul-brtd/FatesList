@@ -5,6 +5,7 @@ import (
 	"dragon/common"
 	"dragon/types"
 	"errors"
+	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -172,15 +173,38 @@ func checkPerms(discord *discordgo.Session, i *discordgo.Interaction, permNum in
 }
 
 func sendIResponse(discord *discordgo.Session, i *discordgo.Interaction, content string, clean bool, largeContent ...string) {
-	sendIResponseComplex(discord, i, content, clean, 0, largeContent)
+	sendIResponseComplex(discord, i, content, clean, 0, largeContent, 0)
 }
 
 func sendIResponseEphemeral(discord *discordgo.Session, i *discordgo.Interaction, content string, clean bool, largeContent ...string) {
-	sendIResponseComplex(discord, i, content, clean, 1<<6, largeContent)
+	sendIResponseComplex(discord, i, content, clean, 1<<6, largeContent, 0)
 }
 
-func sendIResponseComplex(discord *discordgo.Session, i *discordgo.Interaction, content string, clean bool, flags uint64, largeContent []string) {
+func sendIResponseComplex(discord *discordgo.Session, i *discordgo.Interaction, content string, clean bool, flags uint64, largeContent []string, tries int) {
 	// Sends a response to a interaction using iResponseMap as followup if needed. If clean is set, iResponseMap is cleaned out
+	if len(content) > 2000 {
+		log.Info("Sending large content of length: " + strconv.Itoa(len(content)))
+		var offset int = 0
+		pos := [2]int{0, 2000}
+		countedChars := 0
+		sendIResponseComplex(discord, i, "defer", clean, flags, []string{}, 0)
+		for countedChars < len(content) {
+			sendIResponseComplex(discord, i, content[pos[0]:pos[1]], clean, flags, []string{}, 0)
+
+			// Switch {0, 2000} to {2000, XYZ}
+			offset = int(math.Min(2000, float64(len(content)-pos[0]))) // Find new offset to use
+			pos[0] += offset
+			countedChars += 2000
+			pos[1] += int(math.Min(2000, float64(len(content)-countedChars)))
+		}
+
+		if len(largeContent) == 0 {
+			content = "nop"
+		} else {
+			content = "Attachments:"
+		}
+	}
+
 	var files []*discordgo.File
 	for i, data := range largeContent {
 		files = append(files, &discordgo.File{
@@ -191,7 +215,7 @@ func sendIResponseComplex(discord *discordgo.Session, i *discordgo.Interaction, 
 	}
 
 	t, ok := iResponseMap[i.Token]
-	if ok {
+	if ok && content != "nop" {
 		_, err := discord.FollowupMessageCreate(discord.State.User.ID, i, true, &discordgo.WebhookParams{
 			Content: content,
 			Flags:   flags,
@@ -200,7 +224,7 @@ func sendIResponseComplex(discord *discordgo.Session, i *discordgo.Interaction, 
 		if err != nil {
 			log.Error(err.Error())
 		}
-	} else {
+	} else if content != "nop" {
 		var err error
 		if content != "defer" {
 			err = discord.InteractionRespond(i, &discordgo.InteractionResponse{
@@ -212,15 +236,22 @@ func sendIResponseComplex(discord *discordgo.Session, i *discordgo.Interaction, 
 				},
 			})
 		} else {
-			err = errors.New("deferring response due to timeout...")
+			err = errors.New("deferring response due to timeout or requested defer...")
 		}
 		if err != nil {
-			log.Error("An error has occurred in initial response: " + err.Error())
-			discord.InteractionRespond(i, &discordgo.InteractionResponse{
+			if content != "defer" {
+				log.Error("An error has occurred in initial response: " + err.Error())
+			}
+			err := discord.InteractionRespond(i, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Flags: flags,
+				},
 			})
-			sendIResponse(discord, i, "Something happened!\nError: "+err.Error(), false)
-			return
+			if err != nil {
+				log.Error(err)
+				sendIResponseComplex(discord, i, "Something happened!\nError: "+err.Error(), false, flags, []string{}, 0)
+			}
 		}
 	}
 
