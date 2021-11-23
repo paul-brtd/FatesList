@@ -30,16 +30,9 @@
        </div>
         <h3 style="margin 0 auto; color: white;font-weight: bold; font-size: 20px;"><span style="color: red;">Warning:</span> You can only vote for one bot every 8 hours, so vote wisely</h3>
 	<script>
-		var context = {
-			"user_id": "{{user_id}}",
-			"id": "{{bot.bot_id}}",
-			"logged_in": {% if user_id %}true{% else %}false{% endif %},
-			"user_token": "{{user_token}}",
-			"type": "bot",
-			"site_lang": "{{site_lang}}"
-		}
+		var context = {{context|tojson}}
 	</script>
-        <script src="https://fateslist.xyz/static/assets/prod/vote.min.js?v=4"></script>
+        <script src="https://fateslist.xyz/static/assets/prod/vote.min.js?v=8"></script>
 {% endblock %} 
 {% block footer %} 
 {% endblock %}

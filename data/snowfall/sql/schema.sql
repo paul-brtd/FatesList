@@ -7,7 +7,8 @@ CREATE TABLE bots (
     username_cached text DEFAULT '',
     bot_id bigint not null unique,
     lock integer default 0,
-    votes bigint,
+    votes bigint default 0,
+    total_votes bigint default 0,
     guild_count bigint DEFAULT 0,
     last_stats_post timestamptz DEFAULT NOW(),
     user_count bigint DEFAULT 0,
@@ -102,12 +103,6 @@ CREATE TABLE bot_commands (
    premium_only boolean default false, -- premium status
    notes text[], -- notes on said command
    doc_link text, -- link to documentation of command
-   CONSTRAINT bots_fk FOREIGN KEY (bot_id) REFERENCES bots(bot_id) ON DELETE CASCADE ON UPDATE CASCADE
-);
-
-CREATE TABLE bot_stats_votes (
-   bot_id bigint,
-   total_votes bigint,
    CONSTRAINT bots_fk FOREIGN KEY (bot_id) REFERENCES bots(bot_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 

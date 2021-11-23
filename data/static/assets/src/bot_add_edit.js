@@ -138,8 +138,8 @@ function showToken(but) {
 
 function testHook(url, type) {
 	request({
-		botAuth: true,
-		url: `/api/bots/${context.bot_id}/testhook`,
+		userAuth: true,
+		url: `/api/dragon/users/vote?user_id=${context.user_id}&bot_id=${context.bot_id}&test=true`,
 		method: "POST",
 		statusCode: {
 			200: function(data) {

@@ -35,6 +35,7 @@ var (
 	Version          string
 	CommitHash       string
 	BuildTime        string
+	Debug            bool
 )
 
 func init() {
@@ -44,6 +45,7 @@ func init() {
 	flag.StringVar(&CliCmd, "cmd", "", "The command to run:\n\tdragon.server: the dragon ipc and ws server\n\tdragon.test: the dragon unit test system\n\tsite.XXX: run a site command (run=run site, compilestatic=compile static files).\n\tSet PYLOG_LEVEL to set loguru log level to debug")
 	flag.StringVar(&RootPath, "root", "/home/meow/FatesList", "Fates List source directory")
 	flag.StringVar(&PythonPath, "python-path", "/home/meow/flvenv-py11/bin/python", "Path to python interpreter")
+	flag.BoolVar(&Debug, "debug", false, "Debug mode")
 	flag.Parse()
 
 	if CliCmd == "" {

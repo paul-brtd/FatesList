@@ -571,7 +571,6 @@ func cmdInit() {
 
 				if !test {
 					context.Postgres.Exec(context.Context, "UPDATE servers SET votes = votes + 1 WHERE guild_id = $1", context.Interaction.GuildID)
-
 					context.Redis.Set(context.Context, key, 0, 8*time.Hour)
 				}
 			} else {

@@ -25,7 +25,7 @@ async def guild_page(request: Request, guild_id: int, bt: BackgroundTasks, rev_p
         "username": data["name_cached"],
         "avatar": data["avatar_cached"]
     }
-    context = {"type": "server", "replace_list": constants.long_desc_replace_tuple, "id": str(guild_id)}
+    context = {"type": "server", "replace_list": constants.long_desc_replace_tuple, "id": str(guild_id), "index": "/servers"}
     data["type"] = "server"
     data["id"] = str(guild_id)
     bt.add_task(add_ws_event, guild_id, {"m": {"e": enums.APIEvents.server_view}, "ctx": {"user": request.session.get('user_id'), "widget": False}}, type = "server")
@@ -70,22 +70,6 @@ async def guild_invite(request: Request, guild_id: int):
     if invite.startswith("https://"):
         return RedirectResponse(invite)
     return await templates.e(request, invite)
-
-#@router.get("/{bot_id}/banner")
-async def banner(request: Request, bot_id: int):
-    bot = await db.fetchrow("SELECT banner FROM bots WHERE bot_id = $1", bot_id)
-    if bot is None:
-        return abort(404)
-    if bot["banner"] in ["none", ""]:
-        banner = "https://fateslist.xyz/static/assets/img/banner.webp"
-    else:
-        banner = bot["banner"]
-    banner = await requests.get(banner)
-    img = banner
-    if img.headers.get("Content-Type") is None or img.headers.get("Content-Type").split("/")[0] != "image":
-        return abort(400)
-    banner = await banner.read()
-    return StreamingResponse(io.BytesIO(banner), media_type = img.headers.get("Content-Type"))
 
 @router.get("/{guild_id}/vote")
 async def vote_bot_get(request: Request, bot_id: int):

@@ -382,3 +382,13 @@ var (
 	Ratelimited   = WebsocketCloseCode{Code: 4012, Description: "Ratelimited"}
 	InternalError = WebsocketCloseCode{Code: 4500, Description: "Internal Server Error, try reconnecting?"}
 )
+
+type InternalUserAuth struct {
+	AuthToken string `header:"Authorization" binding:"required"`
+}
+
+type UserVote struct {
+	UserID string `form:"user_id" binding:"required"`
+	BotID  string `form:"bot_id" binding:"required"`
+	Test   bool   `form:"test" binding:"-"`
+}

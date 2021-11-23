@@ -131,45 +131,6 @@ async def add_promotion(bot_id: int, title: str, info: str, css: str, type: int)
     info = info.replace("</style", "").replace("<script", "")
     return await db.execute("INSERT INTO bot_promotions (bot_id, title, info, css, type) VALUES ($1, $2, $3, $4, $5)", bot_id, title, info, css, type)
 
-async def vote_bot(redis, db, user_id: int, bot_id: int, test: bool = False) -> Optional[tuple]:
-    if bot_id != 733043768692965448:
-        check = await redis.ttl(f"vote_lock:{user_id}")
-        if not test and check != -2:
-            return check 
-
-    bot_check = await db.fetchval("SELECT COUNT(1) FROM bots WHERE bot_id = $1", bot_id)
-    if not bot_check:
-        return None
-
-    votes = await db.fetchval("SELECT votes FROM bots WHERE bot_id = $1", bot_id)
-
-    if bot_id != 733043768692965448:
-        await redis.set(f"vote_lock:{user_id}", bot_id, ex=60*60*8)
-        await db.execute("UPDATE bots SET votes = votes + 1 WHERE bot_id = $1", bot_id)
-
-    asyncio.create_task(bot_add_event(bot_id, enums.APIEvents.bot_vote, {"user": str(user_id), "votes": votes + 1, "test": test}))
-
-    if test:
-        return True
-
-    asyncio.create_task(_extra_vote_task(db, user_id, bot_id, votes))
-    return True
-
-async def _extra_vote_task(db, user_id, bot_id, votes):
-    ts = await db.fetchval("SELECT timestamps FROM bot_voters WHERE bot_id = $1 AND user_id = $2", bot_id, user_id)
-
-    if ts is None:
-        await db.execute("INSERT INTO bot_voters (user_id, bot_id) VALUES ($1, $2)", user_id, bot_id)
-    else:
-        await db.execute("UPDATE bot_voters SET timestamps = array_append(timestamps, NOW()) WHERE bot_id = $1 AND user_id = $2", bot_id, user_id)
-
-    # Update bot_stats
-    check = await db.fetchrow("SELECT bot_id FROM bot_stats_votes WHERE bot_id = $1", bot_id)
-    if check is None:
-        await db.execute("INSERT INTO bot_stats_votes (bot_id, total_votes) VALUES ($1, $2)", bot_id, votes + 1)
-    else:
-        await db.execute("UPDATE bot_stats_votes SET total_votes = total_votes + 1 WHERE bot_id = $1", bot_id)
-
 async def invite_bot(bot_id: int, user_id = None, api = False):
     bot = await db.fetchrow("SELECT invite, invite_amount FROM bots WHERE bot_id = $1", bot_id)
     if bot is None:
