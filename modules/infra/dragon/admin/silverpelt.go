@@ -1,5 +1,6 @@
-// Frontend code
 package admin
+
+// silverpelt.go takes the information from ir.go, does validation checks, passes it to the commands handler and returns the output
 
 import (
 	"context"
@@ -16,7 +17,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func AdminOp(
+func silverpelt(
 	ctx context.Context,
 	discord *discordgo.Session,
 	rdb *redis.Client,

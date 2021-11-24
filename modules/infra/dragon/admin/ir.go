@@ -1,5 +1,7 @@
 package admin
 
+// ir.go handles the slash command IR and passes over the admin operation to silverpelt.go
+
 import (
 	"context"
 	"dragon/common"
@@ -87,7 +89,7 @@ func adminSlashHandler(
 		}
 	}
 
-	return AdminOp(
+	return silverpelt(
 		ctx,
 		discord,
 		rdb,
