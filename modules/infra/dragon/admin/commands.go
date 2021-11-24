@@ -429,7 +429,7 @@ func CmdInit() map[string]types.SlashCommand {
 				return "Could not parse guild count: " + err.Error()
 			}
 
-			var errors string = "OK. \n**Invite (should work, if not just use the bot pages invite): https://discord.com/api/oauth2?permissions=0&scope=bot%20applications.commands&client_id=" + context.Bot.ID + "**"
+			var errors string = "OK. \n**Invite (should work, if not just use the bot pages invite): https://discord.com/api/oauth2/authorize?permissions=0&scope=bot%20applications.commands&client_id=" + context.Bot.ID + "**\n\n"
 
 			embed := discordgo.MessageEmbed{
 				URL:         "https://fateslist.xyz/bot/" + context.Bot.ID,
@@ -487,7 +487,7 @@ func CmdInit() map[string]types.SlashCommand {
 
 				err = context.Discord.GuildMemberRoleAdd(common.MainServer, strconv.FormatInt(owner.Int, 10), common.BotDevRole)
 				if err != nil {
-					errors += "Got error: " + err.Error() + " in iteration " + strconv.Itoa(i) + "and user id (" + strconv.FormatInt(owner.Int, 10) + ")\n"
+					errors += "Got error: " + err.Error() + " in iteration " + strconv.Itoa(i) + " and user id (" + strconv.FormatInt(owner.Int, 10) + ")\n"
 					continue
 				}
 			}

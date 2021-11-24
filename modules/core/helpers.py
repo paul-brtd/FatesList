@@ -179,9 +179,9 @@ async def parse_index_query(worker_session, fetch: List[asyncpg.Record], type: e
                 "bot_id": str(bot["guild_id"]),
                 "banner": ireplacem(banner_replace_tup, bot["banner"]) if bot["banner"] else None,
             }
+            bot_obj |= bot_obj["user"]
             if not bot_obj["description"]:
                 bot_obj["description"] = await default_server_desc(bot_obj["user"]["username"], bot["guild_id"])
-
             lst.append(bot_obj)
         else:
             _user = await get_bot(bot["bot_id"], worker_session = worker_session)
@@ -190,7 +190,7 @@ async def parse_index_query(worker_session, fetch: List[asyncpg.Record], type: e
                     "user": _user,
                     "bot_id": str(bot["bot_id"]),
                     "banner": ireplacem(banner_replace_tup, bot["banner"]) if bot["banner"] else None,
-                }
+                } | _user
                 lst.append(bot_obj)
     return lst
 

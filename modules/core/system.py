@@ -20,6 +20,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import PlainTextResponse, HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+from fastapi_cprofile.profiler import CProfileMiddleware
 from lynxfall.core.classes import Singleton
 from lynxfall.oauth.models import OauthConfig
 from lynxfall.oauth.providers.discord import DiscordOauth
@@ -234,6 +235,9 @@ async def init_fates_worker(app, session_id, workers):
         exc_handler=WebError.error_handler,
     )
 
+    if os.environ.get("PROFILE"):
+        app.add_middleware(CProfileMiddleware, enable=True, server_app=app, filename="flprofile.pstats", strip_dirs=False, sort_by='cumulative')
+        app.state.cprof = app.user_middleware[0]
     # This is still builtins for backward compatibility. 
     # ========================================================
     # Move all code to use worker session. All new code should 
@@ -521,6 +525,11 @@ def shutdown_fates_worker(app):
         await redis.publish("_worker", f"DOWN WORKER {os.getpid()}")
         await redis.close()
         await asyncio.sleep(0)
+        try:
+            await app.state.cprof.get_profiler_result()
+        except:
+            pass
+        await asyncio.sleep(0)
 
     def _signal_handler_entry():
         """Entrypoint for signal handler"""
@@ -533,7 +542,7 @@ def shutdown_fates_worker(app):
         worker_session.dying = True
 
         # Begin killing fates list
-        logger.info("Killing Fates List")
+        logger.info("Killing Fates List: ")
         task = asyncio.create_task(_close())
         task.add_done_callback(_gohome)
 

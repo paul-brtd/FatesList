@@ -19,16 +19,6 @@ import enums  # as enums (for libraries)
 
 from .base_models import *
 
-class PrevResponse(BaseModel):
-    """
-    Represents a response from the Preview API
-    """
-    html: str
-
-class PrevRequest(BaseModel):
-    html_long_description: bool
-    data: str
-
 class VoteReminderPatch(BaseModel):
     remind: bool
 
@@ -91,7 +81,6 @@ class BotIndex(BaseModel):
     top_voted: BotPartialList
     certified_bots: BotPartialList
     new_bots: BotPartialList
-    roll_api: str
 
 class BaseSearch(BaseModel):
     tags_fixed: FLTags

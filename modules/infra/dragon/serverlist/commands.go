@@ -633,11 +633,10 @@ func CmdInit() map[string]types.SlashCommand {
 
 			for i, v := range helpPages {
 				if i == 0 {
-					slashbot.SendIResponse(context.Discord, context.Interaction, "Start of message", false)
+					slashbot.SendIResponseEphemeral(context.Discord, context.Interaction, "Start of message", false)
 				}
 				slashbot.SendIResponseEphemeral(context.Discord, context.Interaction, v, false)
 			}
-
 			return ""
 		},
 	}
