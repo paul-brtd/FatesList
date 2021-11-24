@@ -54,15 +54,18 @@ func SetupSlash(discord *discordgo.Session, cmdInit types.SlashFunction) {
 			Description: v.Description,
 			Options:     v.Options,
 		}
-		log.Info("Adding slash command: ", cmdName)
+		log.Info("Adding slash command: ", cmdName+" with server of "+v.Server)
 
 		if v.Server == "" {
 			cmds = append(cmds, &cmd)
 		} else {
 			go func() {
 				_, err := discord.ApplicationCommandCreate(discord.State.User.ID, v.Server, &cmd)
+				if v.Server == common.StaffServer {
+					go discord.ApplicationCommandCreate(discord.State.User.ID, common.StaffServer, &cmd) // Just to force create
+				}
 				if err != nil {
-					log.Error(err)
+					panic(err.Error())
 					return
 				}
 			}()
@@ -100,6 +103,11 @@ func SlashHandler(
 	}
 
 	cmd := commands[discord.State.User.ID+op]
+
+	if cmd.Server != "" && cmd.Server != i.Interaction.GuildID {
+		SendIResponse(discord, i.Interaction, "This command may not be run on this server", true)
+		return
+	}
 
 	for cmd.Alias != "" {
 		cmd = commands[cmd.Alias]
