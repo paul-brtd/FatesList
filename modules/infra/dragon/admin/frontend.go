@@ -40,19 +40,6 @@ func AdminOp(
 			return "You must specify a reason for doing this!"
 		}
 
-		if admin_op.Cooldown != types.CooldownNone {
-			key := "cooldown-" + admin_op.Cooldown.InternalName + "-" + user_id
-			cooldown, err := rdb.TTL(ctx, key).Result() // Format: cooldown-BUCKET-MOD
-			if err == nil && cooldown.Seconds() > 0 {
-				return "Please wait " + cooldown.String() + " before retrying this operation!"
-			}
-			rdb.Set(ctx, key, "0", time.Duration(admin_op.Cooldown.Time)*time.Second)
-		}
-
-		if bot_id == "0" && !admin_op.Recursive {
-			return "This operation is not recursive. You must provide a nonzero Bot ID"
-		}
-
 		var state pgtype.Int4
 		var owner pgtype.Int8
 		db.QueryRow(ctx, "SELECT state FROM bots WHERE bot_id = $1", bot_id).Scan(&state)

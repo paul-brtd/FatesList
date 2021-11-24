@@ -6,6 +6,7 @@ import (
 	"dragon/common"
 	"dragon/ipc"
 	"dragon/serverlist"
+	"dragon/slashbot"
 	"dragon/webserver"
 	"os"
 	"os/signal"
@@ -72,25 +73,16 @@ func DragonServer() {
 	// Slash command handling
 	iHandle := func(s *discordgo.Session, i *discordgo.InteractionCreate, bot int) {
 		log.WithFields(log.Fields{
-			"i": spew.Sdump(i.Interaction),
+			"i":   spew.Sdump(i.Interaction),
+			"bot": bot,
 		}).Info("Going to handle interaction")
-		if bot == 0 {
-			admin.SlashHandler(
-				ctx,
-				s,
-				rdb,
-				db,
-				i,
-			)
-		} else if bot == 1 {
-			serverlist.SlashHandler(
-				ctx,
-				s,
-				rdb,
-				db,
-				i,
-			)
-		}
+		slashbot.SlashHandler(
+			ctx,
+			s,
+			rdb,
+			db,
+			i,
+		)
 	}
 
 	discord.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) { iHandle(s, i, 0) })
@@ -112,8 +104,8 @@ func DragonServer() {
 		panic(err)
 	}
 
-	go admin.SetupSlash(discord)
-	go serverlist.SetupSlash(discordServerBot)
+	go slashbot.SetupSlash(discord, admin.CmdInit)
+	go slashbot.SetupSlash(discordServerBot, serverlist.CmdInit)
 
 	rdb = redis.NewClient(&redis.Options{
 		Addr:     "localhost:1001",

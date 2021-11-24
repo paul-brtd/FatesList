@@ -21,18 +21,16 @@ var (
 )
 
 // Admin OP Getter
-func cmdInit() {
+func CmdInit() map[string]types.SlashCommand {
 	// Requeue
 
 	commands["REQUEUE"] = types.AdminOp{
-		InternalName:   "requeue",
-		Recursive:      false,
-		Cooldown:       types.CooldownRequeue,
-		Description:    "Requeue a bot",
-		MinimumPerm:    3,
-		ReasonNeeded:   true,
-		Event:          types.EventBotRequeue,
-		SlashSupported: true,
+		InternalName: "requeue",
+		Cooldown:     types.CooldownRequeue,
+		Description:  "Requeue a bot",
+		MinimumPerm:  3,
+		ReasonNeeded: true,
+		Event:        types.EventBotRequeue,
 		SlashOptions: []*discordgo.ApplicationCommandOption{
 			{
 				Type:        discordgo.ApplicationCommandOptionString,
@@ -72,16 +70,14 @@ func cmdInit() {
 	}
 	// Claim
 	commands["CLAIM"] = types.AdminOp{
-		InternalName:   "claim",
-		Recursive:      false,
-		Cooldown:       types.CooldownNone,
-		Description:    "Claim a bot",
-		MinimumPerm:    2,
-		ReasonNeeded:   false,
-		Event:          types.EventBotClaim,
-		SlashSupported: true,
-		SlashOptions:   []*discordgo.ApplicationCommandOption{},
-		Server:         common.TestServer,
+		InternalName: "claim",
+		Cooldown:     types.CooldownNone,
+		Description:  "Claim a bot",
+		MinimumPerm:  2,
+		ReasonNeeded: false,
+		Event:        types.EventBotClaim,
+		SlashOptions: []*discordgo.ApplicationCommandOption{},
+		Server:       common.TestServer,
 		Handler: func(context types.AdminContext) string {
 			if context.BotState != types.BotStatePending {
 				return "This bot cannot be claimed as it is not currently pending review or it is already under review"
@@ -113,16 +109,14 @@ func cmdInit() {
 
 	// Unclaim
 	commands["UNCLAIM"] = types.AdminOp{
-		InternalName:   "unclaim",
-		Recursive:      false,
-		Cooldown:       types.CooldownNone,
-		Description:    "Unclaim a bot",
-		MinimumPerm:    2,
-		ReasonNeeded:   false,
-		Event:          types.EventBotUnclaim,
-		SlashSupported: true,
-		SlashOptions:   []*discordgo.ApplicationCommandOption{},
-		Server:         common.TestServer,
+		InternalName: "unclaim",
+		Cooldown:     types.CooldownNone,
+		Description:  "Unclaim a bot",
+		MinimumPerm:  2,
+		ReasonNeeded: false,
+		Event:        types.EventBotUnclaim,
+		SlashOptions: []*discordgo.ApplicationCommandOption{},
+		Server:       common.TestServer,
 		Handler: func(context types.AdminContext) string {
 			if context.BotState != types.BotStateUnderReview {
 				return "This bot cannot be unclaimed as it is not currently under review"
@@ -153,14 +147,12 @@ func cmdInit() {
 
 	// Ban
 	commands["BAN"] = types.AdminOp{
-		InternalName:   "ban",
-		Recursive:      false,
-		Cooldown:       types.CooldownBan,
-		Description:    "Bans a bot",
-		MinimumPerm:    3,
-		ReasonNeeded:   true,
-		Event:          types.EventBotBan,
-		SlashSupported: true,
+		InternalName: "ban",
+		Cooldown:     types.CooldownBan,
+		Description:  "Bans a bot",
+		MinimumPerm:  3,
+		ReasonNeeded: true,
+		Event:        types.EventBotBan,
 		SlashOptions: []*discordgo.ApplicationCommandOption{
 			{
 				Type:        discordgo.ApplicationCommandOptionString,
@@ -209,14 +201,12 @@ func cmdInit() {
 
 	// Unban
 	commands["UNBAN"] = types.AdminOp{
-		InternalName:   "unban",
-		Recursive:      false,
-		Cooldown:       types.CooldownBan,
-		Description:    "Unbans a bot",
-		MinimumPerm:    3,
-		ReasonNeeded:   true,
-		Event:          types.EventBotUnban,
-		SlashSupported: true,
+		InternalName: "unban",
+		Cooldown:     types.CooldownBan,
+		Description:  "Unbans a bot",
+		MinimumPerm:  3,
+		ReasonNeeded: true,
+		Event:        types.EventBotUnban,
 		SlashOptions: []*discordgo.ApplicationCommandOption{
 			{
 				Type:        discordgo.ApplicationCommandOptionString,
@@ -262,16 +252,14 @@ func cmdInit() {
 
 	// Certify
 	commands["CERTIFY"] = types.AdminOp{
-		InternalName:   "certify",
-		Recursive:      false,
-		Cooldown:       types.CooldownNone,
-		Description:    "Certifies a bot",
-		MinimumPerm:    5,
-		ReasonNeeded:   false,
-		Event:          types.EventBotCertify,
-		SlashSupported: true,
-		SlashOptions:   []*discordgo.ApplicationCommandOption{},
-		Server:         common.StaffServer,
+		InternalName: "certify",
+		Cooldown:     types.CooldownNone,
+		Description:  "Certifies a bot",
+		MinimumPerm:  5,
+		ReasonNeeded: false,
+		Event:        types.EventBotCertify,
+		SlashOptions: []*discordgo.ApplicationCommandOption{},
+		Server:       common.StaffServer,
 		Handler: func(context types.AdminContext) string {
 			var errors string = "OK. "
 			if context.BotState != types.BotStateApproved {
@@ -347,14 +335,12 @@ func cmdInit() {
 
 	// Uncertify
 	commands["UNCERTIFY"] = types.AdminOp{
-		InternalName:   "uncertify",
-		Recursive:      false,
-		Cooldown:       types.CooldownNone,
-		Description:    "Uncertifies a bot",
-		MinimumPerm:    5,
-		ReasonNeeded:   true,
-		Event:          types.EventBotUncertify,
-		SlashSupported: true,
+		InternalName: "uncertify",
+		Cooldown:     types.CooldownNone,
+		Description:  "Uncertifies a bot",
+		MinimumPerm:  5,
+		ReasonNeeded: true,
+		Event:        types.EventBotUncertify,
 		SlashOptions: []*discordgo.ApplicationCommandOption{
 			{
 				Type:        discordgo.ApplicationCommandOptionString,
@@ -409,13 +395,11 @@ func cmdInit() {
 	// Approve
 	commands["APPROVE"] = types.AdminOp{
 		InternalName:      "approve",
-		Recursive:         false,
 		Cooldown:          types.CooldownNone,
 		Description:       "Approves a bot",
 		MinimumPerm:       2,
 		ReasonNeeded:      true,
 		Event:             types.EventBotApprove,
-		SlashSupported:    true,
 		SlashContextField: "guild_count",
 		SlashOptions: []*discordgo.ApplicationCommandOption{
 			{
@@ -518,14 +502,12 @@ func cmdInit() {
 
 	// Denies a bot
 	commands["DENY"] = types.AdminOp{
-		InternalName:   "deny",
-		Recursive:      false,
-		Cooldown:       types.CooldownNone,
-		Description:    "Denies a bot",
-		MinimumPerm:    2,
-		ReasonNeeded:   true,
-		Event:          types.EventBotDeny,
-		SlashSupported: true,
+		InternalName: "deny",
+		Cooldown:     types.CooldownNone,
+		Description:  "Denies a bot",
+		MinimumPerm:  2,
+		ReasonNeeded: true,
+		Event:        types.EventBotDeny,
 		SlashOptions: []*discordgo.ApplicationCommandOption{
 			{
 				Type:        discordgo.ApplicationCommandOptionString,
@@ -573,14 +555,12 @@ func cmdInit() {
 
 	// Unverifies a bot
 	commands["UNVERIFY"] = types.AdminOp{
-		InternalName:   "unverify",
-		Recursive:      false,
-		Cooldown:       types.CooldownNone,
-		Description:    "Unverifies a bot",
-		MinimumPerm:    2,
-		ReasonNeeded:   true,
-		Event:          types.EventBotUnverify,
-		SlashSupported: true,
+		InternalName: "unverify",
+		Cooldown:     types.CooldownNone,
+		Description:  "Unverifies a bot",
+		MinimumPerm:  2,
+		ReasonNeeded: true,
+		Event:        types.EventBotUnverify,
 		SlashOptions: []*discordgo.ApplicationCommandOption{
 			{
 				Type:        discordgo.ApplicationCommandOptionString,
@@ -627,16 +607,14 @@ func cmdInit() {
 	}
 
 	commands["STAFFLOCK"] = types.AdminOp{
-		InternalName:   "stafflock",
-		Recursive:      false,
-		Cooldown:       types.CooldownNone,
-		Description:    "Staff locks a bot",
-		MinimumPerm:    2,
-		ReasonNeeded:   false,
-		Event:          types.EventStaffLock,
-		SlashSupported: true,
-		SlashOptions:   []*discordgo.ApplicationCommandOption{},
-		Server:         common.StaffServer,
+		InternalName: "stafflock",
+		Cooldown:     types.CooldownNone,
+		Description:  "Staff locks a bot",
+		MinimumPerm:  2,
+		ReasonNeeded: false,
+		Event:        types.EventStaffLock,
+		SlashOptions: []*discordgo.ApplicationCommandOption{},
+		Server:       common.StaffServer,
 		Handler: func(context types.AdminContext) string {
 			countKey := "fl_staff_access-" + context.User.ID + ":count"
 			accessKey := "fl_staff_access-" + context.User.ID + ":" + context.Bot.ID
@@ -675,14 +653,12 @@ func cmdInit() {
 	}
 
 	commands["STAFFUNLOCK"] = types.AdminOp{
-		InternalName:   "staffunlock",
-		Recursive:      false,
-		Cooldown:       types.CooldownNone,
-		Description:    "Staff unlocks a bot",
-		MinimumPerm:    2,
-		ReasonNeeded:   true,
-		Event:          types.EventStaffUnlock,
-		SlashSupported: true,
+		InternalName: "staffunlock",
+		Cooldown:     types.CooldownNone,
+		Description:  "Staff unlocks a bot",
+		MinimumPerm:  2,
+		ReasonNeeded: true,
+		Event:        types.EventStaffUnlock,
 		SlashOptions: []*discordgo.ApplicationCommandOption{
 			{
 				Type:        discordgo.ApplicationCommandOptionString,
@@ -747,6 +723,7 @@ func cmdInit() {
 	for cmdName, v := range commands {
 		commandNameCache[v.InternalName] = cmdName
 	}
+	return slashIr()
 }
 
 func GetCommandSpew() string {

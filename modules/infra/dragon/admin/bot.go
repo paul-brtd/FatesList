@@ -9,7 +9,6 @@ import (
 	"github.com/Fates-List/discordgo"
 	"github.com/go-redis/redis/v8"
 	"github.com/jackc/pgx/v4/pgxpool"
-	log "github.com/sirupsen/logrus"
 )
 
 // Prepend is complement to builtin append.
@@ -17,66 +16,52 @@ func Prepend[T any](items []T, item T) []T {
 	return append([]T{item}, items...)
 }
 
-func SetupSlash(discord *discordgo.Session) {
-	cmdInit()
-
-	// Delete global commands
-	cmds, err := discord.ApplicationCommands(discord.State.User.ID, "")
-	if err != nil {
-		log.Warn(err)
-	}
-	for _, cmd := range cmds {
-		discord.ApplicationCommandDelete(discord.State.User.ID, "", cmd.ID)
-	}
-
-	// Add the slash commands
-
+func slashIr() map[string]types.SlashCommand {
+	// Add the slash commands IR for use in slashbot. Is used internally by CmdInit
 	botIdOption := discordgo.ApplicationCommandOption{
 		Type:        discordgo.ApplicationCommandOptionUser,
 		Name:        "bot",
 		Description: "Bot (either ID or mention)",
 		Required:    true,
 	}
+	var commandsToRet map[string]types.SlashCommand = make(map[string]types.SlashCommand)
 	for cmdName, v := range commands {
-		if !v.SlashSupported {
-			continue
-		}
 		if !v.SlashRaw {
 			v.SlashOptions = Prepend(v.SlashOptions, &botIdOption)
 		}
-		cmd := discordgo.ApplicationCommand{
+
+		commandsToRet[cmdName] = types.SlashCommand{
+			Index:       cmdName,
 			Name:        v.InternalName,
 			Description: v.Description,
+			Cooldown:    v.Cooldown,
 			Options:     v.SlashOptions,
-		}
-		log.Info("Loading slash command: ", cmdName)
-		_, err := discord.ApplicationCommandCreate(discord.State.User.ID, v.Server, &cmd)
-		if err != nil {
-			log.Fatal("Server: ", v.Server, " - Cannot create command ", cmdName, " with description: ", cmd.Description, " due to error: ", err)
+			Server:      v.Server,
+			Handler: func(discord *discordgo.Session, postgres *pgxpool.Pool, redis *redis.Client, interaction *discordgo.Interaction, appCmdData discordgo.ApplicationCommandInteractionData, index string) string {
+				return adminSlashHandler(context.Background(), discord, redis, postgres, interaction, commands[index], appCmdData)
+			},
 		}
 	}
-	log.Info("All slash commands loaded!")
+	return commandsToRet
 }
 
-func SlashHandler(
+func adminSlashHandler(
 	ctx context.Context,
 	discord *discordgo.Session,
 	rdb *redis.Client,
 	db *pgxpool.Pool,
-	i *discordgo.InteractionCreate,
-) {
-	var appCmdData = i.ApplicationCommandData()
-
+	i *discordgo.Interaction,
+	cmd types.AdminOp,
+	appCmdData discordgo.ApplicationCommandInteractionData,
+) string {
 	var botId string
 	var op string = commandNameCache[appCmdData.Name]
 	var reason string
 	var extraContext string
 
 	if op == "" {
-		return
+		return ""
 	}
-
-	cmd := commands[op]
 
 	// Get required name of context field/the name of the argument that should be treated as context
 	var slashContext string
@@ -102,12 +87,12 @@ func SlashHandler(
 		}
 	}
 
-	res := AdminOp(
+	return AdminOp(
 		ctx,
 		discord,
 		rdb,
 		db,
-		i.Interaction.Member.User.ID,
+		i.Member.User.ID,
 		botId,
 		op,
 		types.AdminRedisContext{
@@ -115,11 +100,4 @@ func SlashHandler(
 			ExtraContext: &extraContext,
 		},
 	)
-
-	discord.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Content: res,
-		},
-	})
 }

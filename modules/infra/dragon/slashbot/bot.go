@@ -1,4 +1,4 @@
-package serverlist
+package slashbot
 
 import (
 	"context"
@@ -17,22 +17,25 @@ import (
 )
 
 var (
-	debug        bool                   = false
-	iResponseMap map[string]*time.Timer = make(map[string]*time.Timer, 0) // Interaction response map to check if interaction has been responded to
+	iResponseMap     map[string]*time.Timer        = make(map[string]*time.Timer, 0) // Interaction response map to check if interaction has been responded to
+	commandNameCache map[string]string             = make(map[string]string)
+	commands         map[string]types.SlashCommand = make(map[string]types.SlashCommand)
 )
 
-func SetupSlash(discord *discordgo.Session) {
-	cmdInit()
+func SetupSlash(discord *discordgo.Session, cmdInit types.SlashFunction) {
+	commandsIr := cmdInit()
+
+	var cmds []*discordgo.ApplicationCommand
 
 	// Add the slash commands
-	for cmdName, cmdData := range commands {
-		var v types.ServerListCommand = cmdData
+	for cmdName, cmdData := range commandsIr {
+		var v types.SlashCommand = cmdData
 
-		for v.AliasTo != "" {
+		for v.Alias != "" {
 			log.Info("Resolving alias " + cmdName)
-			v = commands[cmdData.AliasTo]
-			oldName := v.InternalName
-			v.InternalName = cmdData.InternalName
+			v = commands[cmdData.Alias]
+			oldName := v.Name
+			v.Name = cmdData.Name
 			if cmdData.Description != "" {
 				v.Description = cmdData.Description
 			} else {
@@ -43,31 +46,37 @@ func SetupSlash(discord *discordgo.Session) {
 		if v.Disabled {
 			continue
 		}
+
+		commandNameCache[v.Name] = cmdName
+
 		cmd := discordgo.ApplicationCommand{
-			Name:        v.InternalName,
+			Name:        v.Name,
 			Description: v.Description,
-			Options:     v.SlashOptions,
+			Options:     v.Options,
 		}
-		log.Info("Loading slash command: ", cmdName)
+		log.Info("Adding slash command: ", cmdName)
 
-		var server string
-
-		if debug {
-			server = common.StaffServer
+		if v.Server == "" {
+			cmds = append(cmds, &cmd)
 		} else {
-			server = ""
+			go func() {
+				_, err := discord.ApplicationCommandCreate(discord.State.User.ID, v.Server, &cmd)
+				if err != nil {
+					log.Error(err)
+					return
+				}
+			}()
 		}
-
-		_, err := discord.ApplicationCommandCreate(discord.State.User.ID, server, &cmd)
-		if err != nil {
-			log.Fatal("Server: ", server, " - Cannot create command ", cmdName, " with description: ", cmd.Description, " due to error: ", err)
-		}
-
-		if !debug {
-			go discord.ApplicationCommandCreate(discord.State.User.ID, common.StaffServer, &cmd)
-		}
+		commands[discord.State.User.ID+cmdName] = cmdData
 	}
-	log.Info("All slash commands loaded!")
+
+	log.Info("Loading commands on Discord for ", discord.State.User.Username)
+	_, err := discord.ApplicationCommandBulkOverwrite(discord.State.User.ID, "", cmds)
+	if err != nil {
+		log.Fatal("Cannot create commands due to error: ", err)
+	}
+	go discord.ApplicationCommandBulkOverwrite(discord.State.User.ID, common.StaffServer, cmds)
+	log.Info("All slash commands for server list loaded!")
 }
 
 func SlashHandler(
@@ -86,14 +95,14 @@ func SlashHandler(
 	}
 
 	if i.Interaction.Member == nil {
-		sendIResponse(discord, i.Interaction, "This bot may only be used in a server!", true)
+		SendIResponse(discord, i.Interaction, "This bot may only be used in a server!", true)
 		return
 	}
 
-	cmd := commands[op]
+	cmd := commands[discord.State.User.ID+op]
 
-	for cmd.AliasTo != "" {
-		cmd = commands[cmd.AliasTo]
+	for cmd.Alias != "" {
+		cmd = commands[cmd.Alias]
 	}
 
 	// Handle cooldown
@@ -101,34 +110,21 @@ func SlashHandler(
 		key := "cooldown-" + cmd.Cooldown.InternalName + "-" + i.Interaction.Member.User.ID
 		cooldown, err := rdb.TTL(ctx, key).Result() // Format: cooldown-BUCKET-MOD
 		if err == nil && cooldown.Seconds() > 0 {
-			sendIResponse(discord, i.Interaction, "Please wait "+cooldown.String()+" before retrying this command!", true)
+			SendIResponse(discord, i.Interaction, "Please wait "+cooldown.String()+" before retrying this command!", true)
 			return
 		}
 		rdb.Set(ctx, key, "0", time.Duration(cmd.Cooldown.Time)*time.Second)
 	}
 
-	check := checkPerms(discord, i.Interaction, cmd.Perm)
-	if !check {
-		return
-	}
-
-	slashContext := types.ServerListContext{
-		Context:     ctx,
-		Postgres:    db,
-		Redis:       rdb,
-		Discord:     discord,
-		Interaction: i.Interaction,
-	}
-
 	timeout := time.AfterFunc(time.Second*2, func() {
-		sendIResponse(discord, i.Interaction, "defer", false)
+		SendIResponse(discord, i.Interaction, "defer", false)
 	})
 	defer timeout.Stop()
 
-	res := cmd.Handler(slashContext)
+	res := cmd.Handler(discord, db, rdb, i.Interaction, appCmdData, cmd.Index)
 
 	if res != "" {
-		sendIResponse(discord, i.Interaction, res, true)
+		SendIResponse(discord, i.Interaction, res, true)
 	}
 	if iResponseMap[i.Interaction.Token] != nil {
 		iResponseMap[i.Interaction.Token].Stop()
@@ -136,7 +132,7 @@ func SlashHandler(
 	delete(iResponseMap, i.Interaction.Token)
 }
 
-func checkPerms(discord *discordgo.Session, i *discordgo.Interaction, permNum int) bool {
+func CheckServerPerms(discord *discordgo.Session, i *discordgo.Interaction, permNum int) bool {
 	var perm int64
 	var permStr string
 	switch permNum {
@@ -154,29 +150,29 @@ func checkPerms(discord *discordgo.Session, i *discordgo.Interaction, permNum in
 		permStr = "Administrator"
 	}
 	if i.Member.Permissions&perm == 0 {
-		sendIResponse(discord, i, "You need "+permStr+" in order to use this command", true)
+		SendIResponse(discord, i, "You need "+permStr+" in order to use this command", true)
 		return false
 	}
 
 	if permNum >= 4 {
 		ok, is_staff, perm := common.GetPerms(discord, context.Background(), i.Member.User.ID, float32(permNum+1))
 		if ok != "" {
-			sendIResponse(discord, i, "Something went wrong while verifying your identity!", true)
+			SendIResponse(discord, i, "Something went wrong while verifying your identity!", true)
 			return false
 		}
 		if !is_staff {
-			sendIResponse(discord, i, "This operation requires perm: "+strconv.Itoa(int(permNum+1))+" but you only have perm number "+strconv.Itoa(int(perm))+".", true)
+			SendIResponse(discord, i, "This operation requires perm: "+strconv.Itoa(int(permNum+1))+" but you only have perm number "+strconv.Itoa(int(perm))+".", true)
 			return false
 		}
 	}
 	return true
 }
 
-func sendIResponse(discord *discordgo.Session, i *discordgo.Interaction, content string, clean bool, largeContent ...string) {
+func SendIResponse(discord *discordgo.Session, i *discordgo.Interaction, content string, clean bool, largeContent ...string) {
 	sendIResponseComplex(discord, i, content, clean, 0, largeContent, 0)
 }
 
-func sendIResponseEphemeral(discord *discordgo.Session, i *discordgo.Interaction, content string, clean bool, largeContent ...string) {
+func SendIResponseEphemeral(discord *discordgo.Session, i *discordgo.Interaction, content string, clean bool, largeContent ...string) {
 	sendIResponseComplex(discord, i, content, clean, 1<<6, largeContent, 0)
 }
 
@@ -276,7 +272,7 @@ func recovery() {
 	}
 }
 
-func getArg(discord *discordgo.Session, i *discordgo.Interaction, name string, possibleLink bool) interface{} {
+func GetArg(discord *discordgo.Session, i *discordgo.Interaction, name string, possibleLink bool) interface{} {
 	// Gets an argument, if possibleLink is set, this will convert the possible link using common/converters.go if possible
 	defer recovery()
 	appCmdData := i.ApplicationCommandData()

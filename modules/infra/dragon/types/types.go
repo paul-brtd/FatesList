@@ -145,21 +145,34 @@ type AdminCommand struct {
 
 type AdminFunction func(context AdminContext) string
 type ServerListFunction func(context ServerListContext) string
+type SlashFunction func() map[string]SlashCommand
+type SlashHandler func(discord *discordgo.Session, postgres *pgxpool.Pool, redis *redis.Client, interaction *discordgo.Interaction, appCmdData discordgo.ApplicationCommandInteractionData, index string) string
+
+// Intermediate slash command representation
+type SlashCommand struct {
+	Index       string
+	Name        string
+	Alias       string
+	Description string
+	Server      string
+	Cooldown    CooldownBucket
+	Handler     SlashHandler
+	Options     []*discordgo.ApplicationCommandOption
+	Disabled    bool
+}
 
 type AdminOp struct {
 	InternalName      string                                `json:"internal_name"` // Internal name for enums
-	Recursive         bool                                  `json:"recursive"`
 	Cooldown          CooldownBucket                        `json:"cooldown"`
 	Description       string                                `json:"description"`
 	MinimumPerm       int                                   `json:"min_perm"`
 	ReasonNeeded      bool                                  `json:"reason_needed"`
 	Event             APIEvent                              `json:"event"`
 	Handler           AdminFunction                         `json:"-"`
-	Server            string                                `json:"server"`          // Slash command server
-	SlashSupported    bool                                  `json:"slash_supported"` // Slash supported status
-	SlashOptions      []*discordgo.ApplicationCommandOption `json:"slash_options"`   // Slash command options
-	SlashRaw          bool                                  `json:"slash_raw"`       // Whether or not to add the bot option
-	SlashContextField string                                `json:"slash_ctx"`       // The string name for context
+	Server            string                                `json:"server"`        // Slash command server
+	SlashOptions      []*discordgo.ApplicationCommandOption `json:"slash_options"` // Slash command options
+	SlashRaw          bool                                  `json:"slash_raw"`     // Whether or not to add the bot option
+	SlashContextField string                                `json:"slash_ctx"`     // The string name for context
 }
 
 type ServerListCommand struct {

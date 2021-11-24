@@ -3,6 +3,7 @@ package serverlist
 import (
 	"context"
 	"dragon/common"
+	"dragon/slashbot"
 	"dragon/types"
 	"encoding/json"
 	"fmt"
@@ -14,6 +15,7 @@ import (
 
 	"github.com/Fates-List/discordgo"
 	"github.com/davecgh/go-spew/spew"
+	"github.com/go-redis/redis/v8"
 	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v4/pgxpool"
 	log "github.com/sirupsen/logrus"
@@ -23,9 +25,8 @@ const good = 0x00ff00
 const bad = 0xe74c3c
 
 var (
-	commands         = make(map[string]types.ServerListCommand)
-	commandNameCache = make(map[string]string)
-	numericRegex     *regexp.Regexp
+	commands     = make(map[string]types.ServerListCommand)
+	numericRegex *regexp.Regexp
 )
 
 func dbError(err error) string {
@@ -78,7 +79,7 @@ func init() {
 }
 
 // Admin OP Getter
-func cmdInit() {
+func CmdInit() map[string]types.SlashCommand {
 	// Set sets a field
 	commands["SET"] = types.ServerListCommand{
 		InternalName: "set",
@@ -163,12 +164,12 @@ func cmdInit() {
 			},
 		},
 		Handler: func(context types.ServerListContext) string {
-			fieldVal := getArg(context.Discord, context.Interaction, "field", false)
+			fieldVal := slashbot.GetArg(context.Discord, context.Interaction, "field", false)
 			field, ok := fieldVal.(string)
 			if !ok {
 				return "Field must be provided"
 			}
-			valueVal := getArg(context.Discord, context.Interaction, "value", true)
+			valueVal := slashbot.GetArg(context.Discord, context.Interaction, "value", true)
 			value, ok := valueVal.(string)
 			if !ok || value == "" || value == "none" {
 				if field == "recache" || field == "invite_url" || field == "invite_channel" {
@@ -206,7 +207,7 @@ func cmdInit() {
 			}
 
 			// Handle webhook secret and url
-			if (field == "webhook_secret" || field == "webhook") && !checkPerms(context.Discord, context.Interaction, 3) {
+			if (field == "webhook_secret" || field == "webhook") && !slashbot.CheckServerPerms(context.Discord, context.Interaction, 3) {
 				return ""
 			}
 
@@ -443,12 +444,12 @@ func cmdInit() {
 			},
 		},
 		Handler: func(context types.ServerListContext) string {
-			fieldVal := getArg(context.Discord, context.Interaction, "field", false)
+			fieldVal := slashbot.GetArg(context.Discord, context.Interaction, "field", false)
 			field, ok := fieldVal.(string)
 			if !ok {
 				return "Field must be provided"
 			}
-			if (field == "api_token" || field == "webhook_secret") && !checkPerms(context.Discord, context.Interaction, 3) {
+			if (field == "api_token" || field == "webhook_secret") && !slashbot.CheckServerPerms(context.Discord, context.Interaction, 3) {
 				return ""
 			}
 
@@ -482,9 +483,9 @@ func cmdInit() {
 			}
 
 			if len(v.String) > 1994 {
-				sendIResponseEphemeral(context.Discord, context.Interaction, "Value of `"+field+"`", false, v.String)
+				slashbot.SendIResponseEphemeral(context.Discord, context.Interaction, "Value of `"+field+"`", false, v.String)
 			} else {
-				sendIResponseEphemeral(context.Discord, context.Interaction, "```"+v.String+"```", false)
+				slashbot.SendIResponseEphemeral(context.Discord, context.Interaction, "```"+v.String+"```", false)
 			}
 			return ""
 		},
@@ -502,13 +503,13 @@ func cmdInit() {
 			},
 		},
 		Handler: func(context types.ServerListContext) string {
-			testVal := getArg(context.Discord, context.Interaction, "test", false)
+			testVal := slashbot.GetArg(context.Discord, context.Interaction, "test", false)
 			test, ok := testVal.(bool)
 			if !ok {
 				test = false
 			}
 
-			if test && !checkPerms(context.Discord, context.Interaction, 3) {
+			if test && !slashbot.CheckServerPerms(context.Discord, context.Interaction, 3) {
 				return ""
 			}
 
@@ -626,18 +627,16 @@ func cmdInit() {
 				"you to blacklist bad users from getting an invite to your server via Fates List"
 
 			helpPages := []string{
-				strings.Join([]string{intro, syntax, faqBasics, faqState, faqVoteRewards}, "\n\n"),
-				strings.Join([]string{faqAllowlist}, "\n\n"),
+				strings.Join([]string{intro, syntax, faqBasics, faqState}, "\n\n"),
+				strings.Join([]string{faqVoteRewards, faqAllowlist}, "\n\n"),
 			}
 
 			for i, v := range helpPages {
 				if i == 0 {
-					sendIResponse(context.Discord, context.Interaction, "defer", false)
+					slashbot.SendIResponse(context.Discord, context.Interaction, "Start of message", false)
 				}
-				sendIResponseEphemeral(context.Discord, context.Interaction, v, false)
+				slashbot.SendIResponseEphemeral(context.Discord, context.Interaction, v, false)
 			}
-
-			context.Discord.InteractionResponseDelete(context.Discord.State.User.ID, context.Interaction)
 
 			return ""
 		},
@@ -695,9 +694,32 @@ func cmdInit() {
 	}
 
 	// Load command name cache to map internal name to the command
+	var commandsToRet map[string]types.SlashCommand = make(map[string]types.SlashCommand)
 	for cmdName, v := range commands {
-		commandNameCache[v.InternalName] = cmdName
+		commandsToRet[cmdName] = types.SlashCommand{
+			Index:       cmdName,
+			Name:        v.InternalName,
+			Description: v.Description,
+			Options:     v.SlashOptions,
+			Alias:       v.AliasTo,
+			Cooldown:    v.Cooldown,
+			Handler: func(discord *discordgo.Session, postgres *pgxpool.Pool, redis *redis.Client, interaction *discordgo.Interaction, appCmdData discordgo.ApplicationCommandInteractionData, index string) string {
+				v := commands[index]
+				check := slashbot.CheckServerPerms(discord, interaction, v.Perm)
+				if !check {
+					return ""
+				}
+				return v.Handler(types.ServerListContext{
+					Context:     context.Background(),
+					Discord:     discord,
+					Postgres:    postgres,
+					Redis:       redis,
+					Interaction: interaction,
+				})
+			},
+		}
 	}
+	return commandsToRet
 }
 
 func GetCommandSpew() string {
