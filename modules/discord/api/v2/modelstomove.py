@@ -22,15 +22,14 @@ from .base_models import *
 class VoteReminderPatch(BaseModel):
     remind: bool
 
-class BotPartial(BaseUser):
+class BotPartial(BaseModel):
     description: str
-    guild_count: str
+    guild_count: int
     banner: Optional[str] = None
     state: enums.BotState
-    bot_id: str
-    invite: Optional[str] = None
     nsfw: bool
     votes: int
+    user: BaseUser
 
 class BotPartialList(BaseModel):
     __root__: List[BotPartial]

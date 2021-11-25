@@ -1,6 +1,7 @@
 package main
 
 import (
+	"app/types"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -8,6 +9,7 @@ import (
 	_ "net"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"gioui.org/app"
@@ -17,25 +19,37 @@ import (
 	"gioui.org/io/system"
 	"gioui.org/layout"
 	"gioui.org/op"
-	"gioui.org/widget"
 	"gioui.org/widget/material"
 )
 
 var reqCache map[string][]byte = make(map[string][]byte)
 
-func request(client http.Client, method string, path string, headers map[string]string, body map[string]interface{}) ([]byte, error) {
+func requestRecover() {
+	if r := recover(); r != nil {
+		fmt.Println(r)
+	}
+}
+
+func request(client http.Client, method string, path string, headers map[string]string, body map[string]interface{}) (respbody []byte, err error) {
+	defer requestRecover()
 	if method == "GET" {
 		if v, ok := reqCache[method+":"+path]; ok {
 			return v, nil
 		}
 	}
+
+	if strings.HasPrefix(path, "/") {
+		path = "https://fateslist.xyz" + path
+	}
+
+	url, err := url.Parse(path)
+	if err != nil {
+		return []byte{}, err
+	}
+
 	req := http.Request{
 		Method: method,
-		URL: &url.URL{
-			Scheme: "https",
-			Host:   "fateslist.xyz",
-			Path:   path,
-		},
+		URL:    url,
 	}
 
 	if method != "GET" && body != nil {
@@ -52,7 +66,7 @@ func request(client http.Client, method string, path string, headers map[string]
 		return []byte{}, err
 	}
 
-	respbody, err := ioutil.ReadAll(resp.Body)
+	respbody, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return []byte{}, err
 	}
@@ -79,13 +93,22 @@ func main() {
 			Types: pointer.Press | pointer.Drag | pointer.Release | pointer.Scroll,
 		}.Add(&ops)
 
-		var client = http.Client{Timeout: 5 * time.Second}
+		var client = http.Client{Timeout: 15 * time.Second}
 
 		var botData, err = request(client, "GET", "/api/index?type=0", map[string]string{}, map[string]interface{}{})
 
 		if err != nil {
 			fmt.Println(err.Error())
 		}
+
+		var botDataJson types.Index
+		err = json.Unmarshal(botData, &botDataJson)
+
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+
 		fmt.Println(string(botData))
 
 		// th defnes the material design style
@@ -103,29 +126,8 @@ func main() {
 				gtx := layout.NewContext(&ops, e)
 
 				list.Layout(gtx, 1, func(gtx layout.Context, i int) layout.Dimensions {
-					return layout.Flex{
-						// Vertical alignment, from top to bottom
-						Axis: layout.Vertical,
-						// Empty space is left at the start, i.e. at the top
-						Spacing: layout.SpaceEnd,
-					}.Layout(gtx,
-						layout.Rigid(
-							func(gtx layout.Context) layout.Dimensions {
-								h1 := material.H1(th, "Fates List")
-								return h1.Layout(gtx)
-							},
-						),
-						layout.Rigid(
-							func(gtx layout.Context) layout.Dimensions {
-								logs := material.Body1(th, string(botData))
-								return logs.Layout(gtx)
-							},
-						),
-					)
+					return renderIndexPage("bots", gtx, botDataJson, th)
 				})
-
-				scrollbar := material.Scrollbar(th, &widget.Scrollbar{})
-				scrollbar.Layout(gtx, layout.Vertical, 400, 600)
 				e.Frame(gtx.Ops)
 			}
 		}
