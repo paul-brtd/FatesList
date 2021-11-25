@@ -20,28 +20,6 @@ router = APIRouter(
     dependencies=[Depends(id_check("guild"))]
 )
 
-
-from colour import Color
-
-def is_color_like(c):
-    try:
-        # Converting 'deep sky blue' to 'deepskyblue'
-        color = c.replace(" ", "")
-        Color(color)
-        # if everything goes fine then return True
-        return True
-    except ValueError: # The color code was not found
-        return False
-
-
-#@router.get("/{bot_id}/vpm")
-async def get_votes_per_month(request: Request, bot_id: int):
-    return await db.fetch("SELECT votes, epoch FROM bot_stats_votes_pm WHERE bot_id = $1", bot_id)
-
-#@router.get("/{bot_id}/tv")
-async def get_total_votes(request: Request, bot_id: int):
-    return await db.fetchrow("SELECT total_votes AS votes FROM bot_stats_votes WHERE bot_id = $1", bot_id)
-
 @router.patch(
     "/{guild_id}/token", 
     response_model = APIResponse, 
@@ -66,7 +44,7 @@ async def regenerate_server_token(request: Request, guild_id: int):
     import requests
 
     def regen_token(guild_id, token):
-        res = requests.patch(f"https://fateslist.xyz/api/v2/bots/{guild_id}/token", headers={"Authorization": f"Server {token}"})
+        res = requests.patch(f"https://fateslist.xyz/api/v2/guilds/{guild_id}/token", headers={"Authorization": f"Server {token}"})
         json = res.json()
         if not json["done"]:
             # Handle failures
@@ -135,7 +113,7 @@ async def fetch_random_server(request: Request, guild_id: int, lang: str = "defa
     dependencies=[
         Depends(
             Ratelimiter(
-                global_limit = Limit(times=5, minutes=2),
+                global_limit = Limit(times=5, minutes=1),
                 operation_bucket="fetch_guild"
             )
         )
@@ -165,7 +143,7 @@ async def fetch_server(
     
 
     api_ret = await db.fetchrow(
-        "SELECT banner_card, banner_page, guild_count, invite_amount, state, website, votes, invite_channel, nsfw FROM servers WHERE guild_id = $1", 
+        "SELECT banner_card, banner_page, guild_count, invite_amount, state, website, total_votes, login_required, user_whitelist, votes, invite_channel, nsfw, tags AS _tags FROM servers WHERE guild_id = $1", 
         guild_id
     )
     if api_ret is None:
@@ -182,9 +160,9 @@ async def fetch_server(
         )
         api_ret |= dict(extra)
 
-    api_ret["tags"] = [dict(d) for d in (await db.fetch("SELECT tag, emoji FROM server_tags WHERE guild_id = $1", guild_id))]
+    api_ret["tags"] = [(await db.fetchrow("SELECT name, id, iconify_data FROM server_tags WHERE id = $1", id)) for id in api_ret["_tags"]]
    
-    api_ret["user"] = dict((await db.fetchrow("SELECT guild_id AS id, name_cached AS username, '#0000' AS disc, avatar_cached AS avatar FROM servers WHERE guild_id = $1", guild_id)))
+    api_ret["user"] = dict((await db.fetchrow("SELECT guild_id AS id, name_cached AS username, '0000' AS disc, avatar_cached AS avatar FROM servers WHERE guild_id = $1", guild_id)))
     
     api_ret["vanity"] = await db.fetchval(
         "SELECT vanity_url FROM vanity WHERE redirect = $1 AND type = 0", 

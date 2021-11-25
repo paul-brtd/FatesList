@@ -51,7 +51,7 @@ func renderIndexPage(t string, gtx layout.Context, index types.Index, th *materi
 					avatar := widget.Image{
 						Src: paint.NewImageOp(image.NewRGBA(image.Rectangle{image.Point{0, 0}, image.Point{50, 50}})),
 					}
-					return stack.Layout(gtx,
+					stackD := stack.Layout(gtx,
 						layout.Expanded(
 							func(gtx layout.Context) layout.Dimensions {
 								return avatar.Layout(gtx)
@@ -68,6 +68,7 @@ func renderIndexPage(t string, gtx layout.Context, index types.Index, th *materi
 							},
 						),
 					)
+					return stackD
 				},
 			),
 		}

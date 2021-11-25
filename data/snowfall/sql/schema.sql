@@ -210,7 +210,8 @@ CREATE TABLE servers (
     guild_id bigint not null unique,
     name_cached text default 'Unlisted',
     avatar_cached text default 'Unlisted',
-    votes bigint default 0,    
+    votes bigint default 0,   
+    total_votes bigint default 0,
     webhook_type integer DEFAULT 1,
     webhook text,
     webhook_secret text,
@@ -223,7 +224,7 @@ CREATE TABLE servers (
     css text default '',
     api_token text unique,
     website text,
-    certified boolean DEFAULT false,
+    login_required boolean default false,
     created_at timestamptz default now(),
     invite_amount integer DEFAULT 0,
     invite_url text,
@@ -233,16 +234,12 @@ CREATE TABLE servers (
     banner_card text,
     banner_page text,
     keep_banner_decor boolean default true,
-    guild_count bigint default 0
-)
+    guild_count bigint default 0,
+    tags text[] default '{}'
+);
 
-CREATE TABLE server_tags (
-    guild_id bigint not null,
-    tag text,
-    emoji text default 'bx:bxs-tag-alt',
-    CONSTRAINT guilds_fk FOREIGN KEY (guild_id) REFERENCES servers(guild_id) ON DELETE CASCADE ON UPDATE CASCADE
-)
-
+-- In server tags, owner_guild is the first guild a tag was given to
+create table server_tags (id TEXT NOT NULL UNIQUE, name TEXT NOT NULL UNIQUE, iconify_data TEXT NOT NULL, owner_guild BIGINT NOT NULL);
 
 -- ULA
 CREATE TABLE bot_list_feature (

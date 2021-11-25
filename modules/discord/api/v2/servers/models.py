@@ -39,6 +39,8 @@ class Guild(BaseModel):
     long_description: Optional[str] = None
     guild_count: int
     invite_amount: int
+    total_votes: int
+    user_whitelist: List[str]
     state: enums.BotState
     website: Optional[str] = None
     css: Optional[str] = None

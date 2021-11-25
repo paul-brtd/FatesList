@@ -34,25 +34,9 @@ class BotPartial(BaseModel):
 class BotPartialList(BaseModel):
     __root__: List[BotPartial]
 
-class BotVoteCheck(BaseModel):
-    votes: int
-    voted: bool
-    vote_right_now: bool
-    vote_epoch: int
-    time_to_vote: int
-
 class BotVanity(BaseModel):
     type: str
     redirect: str
-
-class User(BaseUser):
-    id: str
-    state: enums.UserState
-    description: Optional[str] = None
-    css: str
-
-class BotReviewAction(BaseModel):
-    user_id: str
 
 class Timestamp(BaseModel):
     __root__: int
@@ -71,6 +55,7 @@ class FLTag(BaseModel):
     name: str
     iconify_data: str
     id: str
+    owner_guild: Optional[str] = ""
 
 class FLTags(BaseModel):
     __root__: List[FLTag]

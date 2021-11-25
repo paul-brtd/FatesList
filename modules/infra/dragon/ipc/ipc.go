@@ -40,7 +40,7 @@ var (
 
 var ipcActions = make(map[string]types.IPCCommand)
 
-func elementInSlice[T comparable](slice []T, elem T) bool {
+func ElementInSlice[T comparable](slice []T, elem T) bool {
 	for i := range slice {
 		if slice[i] == elem {
 			return true
@@ -319,7 +319,8 @@ func setupCommands() {
 			var finalInv string
 			var userWhitelist pgtype.TextArray
 			var userBlacklist pgtype.TextArray
-			err := context.Postgres.QueryRow(ctx, "SELECT state, invite_url, invite_channel, user_whitelist, user_blacklist FROM servers WHERE guild_id = $1", guildId).Scan(&state, &inviteUrl, &inviteChannel, &userWhitelist, &userBlacklist)
+			var loginRequired pgtype.Bool
+			err := context.Postgres.QueryRow(ctx, "SELECT state, invite_url, invite_channel, user_whitelist, user_blacklist, login_required FROM servers WHERE guild_id = $1", guildId).Scan(&state, &inviteUrl, &inviteChannel, &userWhitelist, &userBlacklist, &loginRequired)
 			if err != nil {
 				log.Error(err)
 				return "Something went wrong: " + err.Error()
@@ -328,18 +329,20 @@ func setupCommands() {
 				return "This server is private and not accepting invites at this time!"
 			} else if types.GetBotState(int(state.Int)) == types.BotStateBanned {
 				return "This server has been banned from Fates List. If you are a staff member, contact Fates List Support for more information."
+			} else if loginRequired.Bool && userId == "0" {
+				return "This server requires you to be logged in to join it!"
 			}
 
 			var whitelisted bool
 			if userWhitelist.Status == pgtype.Present && len(userWhitelist.Elements) > 0 {
-				if !elementInSlice(userWhitelist.Elements, pgtype.Text{String: userId, Status: pgtype.Present}) {
+				if !ElementInSlice(userWhitelist.Elements, pgtype.Text{String: userId, Status: pgtype.Present}) {
 					return "You need to be whitelisted to join this server!"
 				}
 				whitelisted = true
 			}
 
 			if !whitelisted && userBlacklist.Status == pgtype.Present && len(userBlacklist.Elements) > 0 {
-				if elementInSlice(userBlacklist.Elements, pgtype.Text{String: userId, Status: pgtype.Present}) {
+				if ElementInSlice(userBlacklist.Elements, pgtype.Text{String: userId, Status: pgtype.Present}) {
 					return "You have been blacklisted from joining this server!"
 				}
 			}

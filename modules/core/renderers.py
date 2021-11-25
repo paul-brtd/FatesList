@@ -21,8 +21,13 @@ async def render_index(request: Request, api: bool, cert: bool, type: enums.Revi
     new_bots = await do_index_query(worker_session, add_query = "ORDER BY created_at DESC", state = [0], type=type)
     certified_bots = await do_index_query(worker_session, add_query = "ORDER BY votes DESC", state = [6], type=type) if cert else []
 
+    if type == enums.ReviewType.bot:
+        tags = tags_fixed
+    else:
+        tags = await db.fetch("SELECT id, name, iconify_data, owner_guild FROM server_tags")
+
     base_json = {
-        "tags_fixed": tags_fixed, 
+        "tags_fixed": tags, 
         "top_voted": top_voted, 
         "new_bots": new_bots, 
         "certified_bots": certified_bots, 

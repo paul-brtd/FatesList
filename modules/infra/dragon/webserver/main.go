@@ -85,10 +85,6 @@ func StartWebserver(db *pgxpool.Pool, redis *redis.Client) {
 	r.Use(ginlogrus.Logger(logger), gin.Recovery())
 	router := r.Group("/api/dragon")
 
-	router.GET("/", func(c *gin.Context) {
-		c.JSON(200, apiReturn(true, "Welcome to dragon!", nil))
-	})
-
 	router.POST("/users/vote", func(c *gin.Context) {
 		var vote types.UserVote
 		if err := c.ShouldBindQuery(&vote); err != nil {

@@ -3,6 +3,7 @@ package serverlist
 import (
 	"context"
 	"dragon/common"
+	"dragon/ipc"
 	"dragon/slashbot"
 	"dragon/types"
 	"encoding/json"
@@ -28,6 +29,39 @@ var (
 	commands     = make(map[string]types.ServerListCommand)
 	numericRegex *regexp.Regexp
 )
+
+func auditLogUpdate(context types.ServerListContext, field string, value string, guild *discordgo.Guild) string {
+	// Update server audit log here
+	var auditVal string
+	if len(value) > 30 {
+		auditVal = value[:30] + "..."
+	} else {
+		auditVal = value
+	}
+
+	auditLogAction := map[string]interface{}{
+		"user_id":    context.Interaction.Member.User.ID,
+		"username":   context.Interaction.Member.User.Username,
+		"user_perms": context.Interaction.Member.Permissions,
+		"action_id":  common.CreateUUID(),
+		"field":      field,
+		"value":      auditVal,
+		"ts":         float64(time.Now().Unix()) + 0.001, // Make sure its a float by adding 0.001
+	}
+
+	auditLogActionBytes, err := json.Marshal(auditLogAction)
+
+	if err != nil {
+		return dbError(err)
+	}
+
+	_, err = context.Postgres.Exec(context.Context, "UPDATE servers SET audit_logs = audit_logs || $1 WHERE guild_id = $2", []string{string(auditLogActionBytes)}, guild.ID)
+
+	if err != nil {
+		return dbError(err)
+	}
+	return ""
+}
 
 func dbError(err error) string {
 	return "An error occurred while we were updating our database: " + err.Error()
@@ -153,6 +187,10 @@ func CmdInit() map[string]types.SlashCommand {
 						Name:  "Webhook URL",
 						Value: "webhook",
 					},
+					{
+						Name:  "Requires Login",
+						Value: "login_required",
+					},
 				},
 				Required: true,
 			},
@@ -221,7 +259,7 @@ func CmdInit() map[string]types.SlashCommand {
 			}
 
 			// Handle keep banner decor
-			if field == "keep_banner_decor" {
+			if field == "keep_banner_decor" || field == "requires_login" {
 				if value == "true" || value == "yes" {
 					value = "true"
 				} else if value == "false" || value == "no" {
@@ -324,33 +362,8 @@ func CmdInit() map[string]types.SlashCommand {
 			}
 
 			// Update server audit log here
-			var auditVal string
-			if len(value) > 10 {
-				auditVal = value[:10] + "..."
-			} else {
-				auditVal = value
-			}
-
-			auditLogAction := map[string]interface{}{
-				"user_id":    context.Interaction.Member.User.ID,
-				"username":   context.Interaction.Member.User.Username,
-				"user_perms": context.Interaction.Member.Permissions,
-				"action_id":  common.CreateUUID(),
-				"field":      field,
-				"value":      auditVal,
-				"ts":         float64(time.Now().Unix()) + 0.001, // Make sure its a float by adding 0.001
-			}
-
-			auditLogActionBytes, err := json.Marshal(auditLogAction)
-
-			if err != nil {
-				return dbError(err)
-			}
-
-			_, err = context.Postgres.Exec(context.Context, "UPDATE servers SET audit_logs = audit_logs || $1 WHERE guild_id = $2", []string{string(auditLogActionBytes)}, guild.ID)
-
-			if err != nil {
-				return dbError(err)
+			if err := auditLogUpdate(context, field, value, guild); err != "" {
+				return err
 			}
 
 			if field != "recache" {
@@ -439,6 +452,10 @@ func CmdInit() map[string]types.SlashCommand {
 						Name:  "Audit Logs",
 						Value: "audit_logs",
 					},
+					{
+						Name:  "Requirss Login",
+						Value: "login_required",
+					},
 				},
 				Required: true,
 			},
@@ -468,7 +485,7 @@ func CmdInit() map[string]types.SlashCommand {
 			if field == "audit_logs" {
 				var auditLogData []map[string]interface{}
 				if len(v.String) > 3 {
-					// Fix output for encoding/json
+					// Fix output for encoding/json since postgres gives a string'd json and not proper json output
 					v.String = strings.Replace(strings.Replace(strings.Replace("["+v.String[2:len(v.String)-2]+"]", "\\", "", -1), "\"{", "{", -1), "}\"", "}", -1)
 					err := json.Unmarshal([]byte(v.String), &auditLogData)
 					if err != nil {
@@ -571,7 +588,7 @@ func CmdInit() map[string]types.SlashCommand {
 				}
 
 				if !test {
-					context.Postgres.Exec(context.Context, "UPDATE servers SET votes = votes + 1 WHERE guild_id = $1", context.Interaction.GuildID)
+					context.Postgres.Exec(context.Context, "UPDATE servers SET votes = votes + 1, total_votes = total_votes + 1 WHERE guild_id = $1", context.Interaction.GuildID)
 					context.Redis.Set(context.Context, key, 0, 8*time.Hour)
 				}
 			} else {
@@ -647,7 +664,7 @@ func CmdInit() map[string]types.SlashCommand {
 		SlashOptions: []*discordgo.ApplicationCommandOption{
 			{
 				Type:        discordgo.ApplicationCommandOptionString,
-				Name:        "type",
+				Name:        "field",
 				Description: "The list to modify",
 				Choices: []*discordgo.ApplicationCommandOptionChoice{
 					{
@@ -672,7 +689,7 @@ func CmdInit() map[string]types.SlashCommand {
 					},
 					{
 						Name:  "Remove User",
-						Value: "delete_user",
+						Value: "remove_user",
 					},
 					{
 						Name:  "Clear",
@@ -688,7 +705,85 @@ func CmdInit() map[string]types.SlashCommand {
 			},
 		},
 		Handler: func(context types.ServerListContext) string {
-			return "Work in progress, coming soon :)"
+			fieldVal := slashbot.GetArg(context.Discord, context.Interaction, "field", false)
+			field, ok := fieldVal.(string)
+			if !ok {
+				return "Field must be provided"
+			}
+			actionVal := slashbot.GetArg(context.Discord, context.Interaction, "action", false)
+			action, ok := actionVal.(string)
+			if !ok {
+				return "Action must be provided"
+			}
+			userVal := slashbot.GetArg(context.Discord, context.Interaction, "user", false)
+			user, ok := userVal.(*discordgo.User)
+			if !ok {
+				user = &discordgo.User{ID: "0"}
+			}
+
+			guild, err := context.Discord.State.Guild(context.Interaction.GuildID)
+
+			if err != nil {
+				return dbError(err)
+			}
+
+			if err := auditLogUpdate(context, "allowlist:"+field+":"+action, "user="+user.ID, guild); err != "" {
+				return err
+			}
+
+			if action == "clear" {
+				_, err := context.Postgres.Exec(context.Context, "UPDATE servers SET "+field+" = $1 WHERE guild_id = $2", []string{}, context.Interaction.GuildID)
+				if err != nil {
+					return dbError(err)
+				}
+				return "Cleared " + field + " successfully!"
+			} else if action == "add_user" {
+				if user.ID == "0" {
+					return "A `user` must be specified to perform this action"
+				}
+
+				var check pgtype.TextArray
+				context.Postgres.QueryRow(context.Context, "SELECT "+field+" FROM servers WHERE guild_id = $1", context.Interaction.GuildID).Scan(&check)
+				if check.Status == pgtype.Present && len(check.Elements) > 0 {
+					if ipc.ElementInSlice(check.Elements, pgtype.Text{Status: pgtype.Present, String: user.ID}) {
+						return "This user is already on " + field
+					}
+				}
+
+				_, err := context.Postgres.Exec(context.Context, "UPDATE servers SET "+field+" = "+field+" || $1 WHERE guild_id = $2", []string{user.ID}, context.Interaction.GuildID)
+				if err != nil {
+					return dbError(err)
+				}
+				return "Added " + user.Mention() + " to " + field + " successfully!"
+			} else if action == "remove_user" {
+				var check pgtype.TextArray
+				context.Postgres.QueryRow(context.Context, "SELECT "+field+" FROM servers WHERE guild_id = $1", context.Interaction.GuildID).Scan(&check)
+				if check.Status != pgtype.Present || len(check.Elements) <= 0 {
+					return "No such user exists on " + field
+				}
+
+				var userFound bool
+				var users []string
+				for _, userElem := range check.Elements {
+					if userElem.String != user.ID {
+						users = append(users, userElem.String)
+					} else {
+						userFound = true
+					}
+				}
+
+				if !userFound {
+					return "No such user exists on " + field
+				}
+
+				_, err := context.Postgres.Exec(context.Context, "UPDATE servers SET "+field+" = $1 WHERE guild_id = $2", users, context.Interaction.GuildID)
+				if err != nil {
+					return dbError(err)
+				}
+				return "Removed " + user.Mention() + " from " + field
+			}
+
+			return "Work in progress, coming really soon!"
 		},
 	}
 
