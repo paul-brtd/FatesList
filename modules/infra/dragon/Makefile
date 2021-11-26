@@ -9,6 +9,6 @@ LDFLAGS=-X ${PACKAGE}.Version=${VERSION} \
 
 all:
 	#go build -v -ldflags="${LDFLAGS}" -o dragon-dyn
-	CGO_ENABLED=0 go build -v -a -ldflags="${LDFLAGS}"
+	CGO_ENABLED=0 go build -v -ldflags="${LDFLAGS}"
 install:
 	cp dragon /usr/local/bin

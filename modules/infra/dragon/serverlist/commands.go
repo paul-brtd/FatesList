@@ -829,15 +829,30 @@ func CmdInit() map[string]types.SlashCommand {
 	// Load command name cache to map internal name to the command
 	var commandsToRet map[string]types.SlashCommand = make(map[string]types.SlashCommand)
 	for cmdName, v := range commands {
+		if v.AliasTo != "" {
+			cmd := commands[v.AliasTo]
+			v.Description = cmd.Description + ". Alias to /" + cmd.InternalName
+			v.SlashOptions = cmd.SlashOptions
+		}
+
 		commandsToRet[cmdName] = types.SlashCommand{
 			Index:       cmdName,
 			Name:        v.InternalName,
 			Description: v.Description,
 			Options:     v.SlashOptions,
-			Alias:       v.AliasTo,
 			Cooldown:    v.Cooldown,
 			Handler: func(discord *discordgo.Session, postgres *pgxpool.Pool, redis *redis.Client, interaction *discordgo.Interaction, appCmdData discordgo.ApplicationCommandInteractionData, index string) string {
-				v := commands[index]
+				var ok bool
+				v, ok := commands[index]
+
+				if v.AliasTo != "" {
+					v, ok = commands[v.AliasTo]
+				}
+
+				if !ok {
+					return "Command not found..."
+				}
+
 				check := slashbot.CheckServerPerms(discord, interaction, v.Perm)
 				if !check {
 					return ""

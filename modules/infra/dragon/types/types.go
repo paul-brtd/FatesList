@@ -152,7 +152,6 @@ type SlashHandler func(discord *discordgo.Session, postgres *pgxpool.Pool, redis
 type SlashCommand struct {
 	Index       string
 	Name        string
-	Alias       string
 	Description string
 	Server      string
 	Cooldown    CooldownBucket

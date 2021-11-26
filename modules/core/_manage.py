@@ -16,10 +16,11 @@ from getpass import getpass
 from pathlib import Path
 from subprocess import DEVNULL, Popen
 from typing import Any, Callable, Dict
+import warnings
 
 sys.pycache_prefix = "data/pycache"
 if sys.version_info < (3, 11):
-    raise RuntimeError(f"Fates List has only been tested to run on python 3.11. You are running {sys.version_info}")
+    warnings.warn(f"Fates List has only been tested to run on python 3.11. You are running {sys.version_info}", RuntimeWarning)
 
 
 def error(msg: str, code: int = 1):
