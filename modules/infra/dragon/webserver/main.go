@@ -83,6 +83,10 @@ func StartWebserver(db *pgxpool.Pool, redis *redis.Client) {
 
 	r := gin.New()
 	r.Use(ginlogrus.Logger(logger), gin.Recovery())
+
+	r.NoRoute(func(c *gin.Context) {
+		c.JSON(404, apiReturn(false, "Not Found", nil))
+	})
 	router := r.Group("/api/dragon")
 
 	router.POST("/users/vote", func(c *gin.Context) {

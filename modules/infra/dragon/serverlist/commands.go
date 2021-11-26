@@ -456,6 +456,10 @@ func CmdInit() map[string]types.SlashCommand {
 						Name:  "Requirss Login",
 						Value: "login_required",
 					},
+					{
+						Name:  "Server Tags (ID form)",
+						Value: "tags",
+					},
 				},
 				Required: true,
 			},
@@ -502,7 +506,7 @@ func CmdInit() map[string]types.SlashCommand {
 			if len(v.String) > 1994 {
 				slashbot.SendIResponseEphemeral(context.Discord, context.Interaction, "Value of `"+field+"`", false, v.String)
 			} else {
-				slashbot.SendIResponseEphemeral(context.Discord, context.Interaction, "```"+v.String+"```", false)
+				slashbot.SendIResponseEphemeral(context.Discord, context.Interaction, "Value of "+field+"\n```"+v.String+"```", false)
 			}
 			return ""
 		},
@@ -639,13 +643,16 @@ func CmdInit() map[string]types.SlashCommand {
 				"event, you can then give rewards for voting. The event number for server votes is `71`"
 
 			faqAllowlist := "**Server Allow List**\n" +
-				"For invite-only/private servers, you can/should use a **user whitelist** to prevent users outside the user whitelist from " +
+				"For invite-only servers, you can/should use a **user whitelist** to prevent users outside the user whitelist from " +
 				"joining your server. If you do not have any users on your user whitelist, anyone may join your server. User blacklists allow " +
-				"you to blacklist bad users from getting an invite to your server via Fates List"
+				"you to blacklist bad users from getting an invite to your server via Fates List. Use `/allowlist` to configure the allow list"
+
+			faqTags := "**Server Tags**\n" +
+				"Coming soon!"
 
 			helpPages := []string{
 				strings.Join([]string{intro, syntax, faqBasics, faqState}, "\n\n"),
-				strings.Join([]string{faqVoteRewards, faqAllowlist}, "\n\n"),
+				strings.Join([]string{faqVoteRewards, faqAllowlist, faqTags}, "\n\n"),
 			}
 
 			for i, v := range helpPages {
@@ -657,6 +664,38 @@ func CmdInit() map[string]types.SlashCommand {
 			return ""
 		},
 	}
+
+	commands["TAGS"] = types.ServerListCommand{
+		InternalName: "tags",
+		Description:  "Modifies server tags. Use get for getting the server tags",
+		Perm:         2,
+		SlashOptions: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionString,
+				Name:        "action",
+				Description: "What do you want to do with the tags",
+				Choices: []*discordgo.ApplicationCommandOptionChoice{
+					{
+						Name:  "Create New Tag",
+						Value: "add",
+					},
+					{
+						Name:  "Remove Tag",
+						Value: "remove",
+					},
+				},
+			},
+			{
+				Type:        discordgo.ApplicationCommandOptionString,
+				Name:        "tag",
+				Description: "The tags name",
+			},
+		},
+		Handler: func(context types.ServerListContext) string {
+			return "Work in progress. Coming really soon though!"
+		},
+	}
+
 	commands["ALLOWLIST"] = types.ServerListCommand{
 		InternalName: "allowlist",
 		Description:  "Modifies the servers allowlist",
