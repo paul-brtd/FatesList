@@ -63,6 +63,9 @@ with open("config/data/secrets.json") as fp:
     TOKEN_SERVER: str = _secret_data["token_server"]
     TOKEN_MANAGER: str = _secret_data["token_manager"]
 
+with open("config/data/partners.json") as fp:
+    partners = json.load(fp)
+
 
 # Value below should not be changed
 site_url = "https://" + site

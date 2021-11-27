@@ -5,9 +5,8 @@
 {% endblock %}
 
 {% block content %}
-    <hr style="font-size: 20px;border-top-width: 1px;border-top-color: #eee;width: 90%;">
     <div class="d-flex" style="margin-left: 5%;"><span class="iconify white" data-icon="fa-solid:search" data-inline="false" data-height="3em"></span>
-        <h4 class="white" style="margin-left: 15px;">Search Results</h4>
+	    <h4 class="white" style="margin-left: 15px;">{{type.title()}}s</h4>
     </div>
     {% if search_bots == [] %}
     <div class="index-fl">

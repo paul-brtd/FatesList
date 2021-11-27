@@ -14,17 +14,16 @@
 		<input type="text" class="form-control fform search" placeholder="Search for {{type}}s (ENTER to search)" name="q" value="{{query}}" aria-label="Search for something.." style="width: 90%">
         </form>
 	{% if not profile_search %}
-        	<span style="margin-bottom: 10px; font-size: 14.5px; display: block; font-weight: bold; text-align: center; color: white;">Want to search by profile? Try <a href="/search/profile" style="opacity: 0.8; color: white;">Profile Search</a></span>
+        	<span style="padding: 3px; margin-bottom: 10px; font-size: 14.5px; display: block; font-weight: bold; text-align: center; color: white;">Want to search for profiles? Try <a href="/search/profile" style="opacity: 0.8; color: white;">Profile Search</a></span>
         {% else %}
-	<span style="margin-bottom: 10px; font-size: 14.5px; display: block; font-weight: bold; text-align: center; color: white;">Want to search by {{type}}? Try <a href="/{{type}}" style="opacity: 0.8; color: white;">{{type.title()}} Search</a></span>
+	<span style="padding: 3px; margin-bottom: 10px; font-size: 14.5px; display: block; font-weight: bold; text-align: center; color: white;">Want to search for bots? Try <a href="/" style="opacity: 0.8; color: white;">Bot Search</a></span>
         {% endif %}
     </div>
    </div>
-   {% if type == "bot" %}
-        <div class="d-flex flex-wrap justify-content-center align-items-center" style="width: 97%;margin: 0 auto;">
+   <div class="d-flex flex-wrap justify-content-center align-items-center" style="width: 97%;margin: 0 auto;">
 	{{ tags(tags_fixed) }}
-	</div>
-   {% endif %}
+   </div>
+   <p></p>
 {% endblock %}
 {% block footer %}
 {% endblock %}

@@ -6,7 +6,7 @@
     <section class="bot-card">
 	    <div class="lozad bot-card-banner" data-background-image="{% if not rand %}{{data.banner}}{% endif %}">
             {% if (type == 'bot' or type == 'server') and (data.state == enums.BotState.certified or rand) %}
-			    <span class="iconify bot-card-cert" data-icon="fa-solid:certificate" data-inline="false" data-height="3em"></span>
+	            <span class="iconify bot-card-cert" data-icon="fa-solid:certificate" data-inline="false" data-height="3em"></span>
             {% endif %}
             <a href="/{{type}}/{{id}}" class="bot-card-view-link">
 		    <img alt="Bot Avatar" class="lozad bot-card-avatar" data-placeholder-background="black" data-src="{% if not rand %}{{data.user.avatar}}{% endif %}" width="30%"/>
@@ -46,7 +46,7 @@
 {% endmacro %}
 {% macro tags(tags_fixed) %}
 	{% for tag in tags_fixed %}
-	<button id="tags-{{tag.id}}" class="btn d-flex btn-sm justify-content-center align-items-center btn-outline-light buttons-all" style="margin-bottom: 4px !important; margin-left: 6px;" onclick="location.href='/search/tags?tag={{tag.id}}&target_type=bot'" title="{{tag.name}}"><span class="iconify" data-icon="{{tag.iconify_data}}" data-inline="false" aria-hidden="true"></span><span style="margin-left: 3px; font-size: 13px;"><strong>{{tag.name}}</strong></span></button>
+		<button id="tags-{{tag.id}}" class="btn d-flex btn-sm justify-content-center align-items-center btn-outline-light buttons-all" style="margin-bottom: 4px !important; margin-left: 6px;" onclick="location.href='/search/tags?tag={{tag.id}}&target_type={{type}}'" title="{{tag.name}}"><span class="iconify" data-icon="{{tag.iconify_data}}" data-inline="false" aria-hidden="true"></span><span style="margin-left: 3px; font-size: 13px;"><strong>{{tag.name}}</strong></span></button>
 	{% endfor %}
 {% endmacro %}
 

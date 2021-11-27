@@ -73,8 +73,11 @@ class WebError():
                     traceback=etrace(exc),
                     headers={"FL-Error-ID": error_id}
                 )
-            
-            tb_full = "".join(traceback.format_exception(exc))
+           
+            try:
+                tb_full = "".join(traceback.format_exception(exc))
+            except Exception:
+                tb_full = "".join(traceback.format_tb(exc))
 
             errmsg = inspect.cleandoc(f"""
                 Fates List had a slight issue and our developers and looking into what happened<br/><br/>

@@ -1,0 +1,29 @@
+{
+	"partners": [
+		{
+			"id": "anti-raid",
+			"name": "Anti~Raid",
+			"owner": "775855009421066262",
+			"image": "https://i.imgur.com/Mgwfwpj.png",
+			"description": "Want a server moderation & protection from raids bot? AntiRaid is YOUR CHOICE!",
+			"links": {
+				"discord": "https://discord.gg/SM8x7tQ35D",
+				"website": "https://antiraid.xyz"
+			}
+		},
+		{
+			"id": "google",
+			"name": "Google Test Partnership",
+			"image": "https://cdn.vox-cdn.com/thumbor/Ei4ydi9WDwJW-dpSW_QWMiVULNs=/0x0:2012x1341/1820x1213/filters:focal(0x0:2012x1341):format(webp)/cdn.vox-cdn.com/uploads/chorus_image/image/47070706/google2.0.0.jpg",
+			"description": "Hi, I'm Google <i>or am i?</i>",
+			"links": {
+				"discord": "https://google.com",
+				"website": "https://google.com"
+			}
+		}
+	],
+	"icons": {
+		"discord": "bx:bxl-discord",
+		"website": "bx:bx-globe"
+	}
+}

@@ -2,7 +2,7 @@ from modules.discord.bots import vote_bot_get
 from modules.discord.servers import guild_page
 
 from ..core import *
-from config import privacy_policy
+from config import privacy_policy, partners
 router = APIRouter(
     tags = ["Index"],
     include_in_schema = False
@@ -140,3 +140,7 @@ async def tos_page(request: Request):
 @router.get("/fates/rules")
 async def rules_page(request: Request):
     return await templates.TemplateResponse("rules.html", {"request": request, "policy": rules})
+
+@router.get("/fates/partners")
+async def fates_partners(request: Request):
+    return await templates.TemplateResponse("partners.html", {"request": request, "partners": partners})

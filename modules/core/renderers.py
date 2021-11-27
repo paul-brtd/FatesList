@@ -198,6 +198,7 @@ async def render_search(request: Request, q: str, api: bool, target_type: enums.
             enums.BotState.approved,
             enums.BotState.certified
         )
+        tags = tags_fixed
     elif target_type == enums.SearchType.server:
         data = await db.fetch(
             """SELECT DISTINCT servers.guild_id,
@@ -210,6 +211,7 @@ async def render_search(request: Request, q: str, api: bool, target_type: enums.
             """,
             f'%{q}%'
         )
+        tags = await db.fetch("SELECT id, name, iconify_data, owner_guild FROM server_tags")
     else:
         return await render_profile_search(request, q=q, api=api)
     search_bots = await parse_index_query(
@@ -218,9 +220,9 @@ async def render_search(request: Request, q: str, api: bool, target_type: enums.
         type=enums.ReviewType.bot if target_type == enums.SearchType.bot else enums.ReviewType.server
     )
     if not api:
-        return await templates.TemplateResponse("search.html", {"request": request, "search_bots": search_bots, "tags_fixed": tags_fixed, "query": q, "profile_search": target_type == enums.SearchType.profile, "type": "bot" if target_type == enums.SearchType.bot else "server"})
+        return await templates.TemplateResponse("search.html", {"request": request, "search_bots": search_bots, "tags_fixed": tags, "query": q, "profile_search": target_type == enums.SearchType.profile, "type": "bot" if target_type == enums.SearchType.bot else "server"})
     else:
-        return {"search_res": search_bots, "tags_fixed": tags_fixed, "query": q, "profile_search": target_type == enums.SearchType.profile}
+        return {"search_res": search_bots, "tags_fixed": tags, "query": q, "profile_search": target_type == enums.SearchType.profile}
 
 async def render_profile_search(request: Request, q: str, api: bool):
     worker_session = request.app.state.worker_session
