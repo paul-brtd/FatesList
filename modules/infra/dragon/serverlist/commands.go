@@ -30,6 +30,13 @@ var (
 	numericRegex *regexp.Regexp
 )
 
+func tagCheck(tag string) bool {
+	allowed := `abcdefghijklmnopqrstuvwxyz `
+	nonCharacter := func(c rune) bool { return !strings.ContainsAny(allowed, strings.ToLower(string(c))) }
+	words := strings.FieldsFunc(tag, nonCharacter)
+	return tag == strings.Join(words, "")
+}
+
 func auditLogUpdate(context types.ServerListContext, field string, value string, guild *discordgo.Guild) string {
 	// Update server audit log here
 	var auditVal string
@@ -648,7 +655,12 @@ func CmdInit() map[string]types.SlashCommand {
 				"you to blacklist bad users from getting an invite to your server via Fates List. Use `/allowlist` to configure the allow list"
 
 			faqTags := "**Server Tags**\n" +
-				"Coming soon!"
+				"Server Tags on Fates List are a great way to allow similar users to find your server! The first server to make a tag is given " +
+				"ownership over that tag. **Tag owners can control the iconify emoji of the tag however they *cannot* remove the tag from their " +
+				"server without transferring it to another server.** The Fates List Staff Server is the default server a tag will transfer to. " +
+				"Tags should be compelling and quickly describe the server. **Creating a new similar tag just to gain ownership of it may result " +
+				"in a ban**. Tags shoild also be short and **a maximum of 20 characters in length**. Some keywords are not allowed/reserved as " +
+				"well"
 
 			helpPages := []string{
 				strings.Join([]string{intro, syntax, faqBasics, faqState}, "\n\n"),
@@ -676,22 +688,79 @@ func CmdInit() map[string]types.SlashCommand {
 				Description: "What do you want to do with the tags",
 				Choices: []*discordgo.ApplicationCommandOptionChoice{
 					{
-						Name:  "Create New Tag",
+						Name:  "Add Tag",
 						Value: "add",
 					},
 					{
 						Name:  "Remove Tag",
 						Value: "remove",
 					},
+					{
+						Name:  "Transfer Tag Ownership",
+						Value: "transfer",
+					},
 				},
+				Required: true,
 			},
 			{
 				Type:        discordgo.ApplicationCommandOptionString,
 				Name:        "tag",
 				Description: "The tags name",
+				Required:    true,
+			},
+			{
+				Type:        discordgo.ApplicationCommandOptionString,
+				Name:        "transfer-server",
+				Description: "The server ID to transfer a tag to. Only applies to transfers. Defaults to our staff server.",
 			},
 		},
 		Handler: func(context types.ServerListContext) string {
+			actionVal := slashbot.GetArg(context.Discord, context.Interaction, "action", false)
+			action, ok := actionVal.(string)
+			if !ok {
+				return "Action must be provided"
+			}
+			tagVal := slashbot.GetArg(context.Discord, context.Interaction, "tag", false)
+			tag, ok := tagVal.(string)
+			if !ok {
+				return "Tag name must be provided"
+			}
+
+			if !tagCheck(tag) {
+				return "This tag name is not allowed. Make sure you are only using letters and spaces"
+			}
+
+			tagNameInternal := strings.ToLower(strings.Replace(tag, " ", "-", -1))
+
+			if len(tagNameInternal) > 20 {
+				return "Tag names can only be a maximum of 20 characters long!"
+			}
+
+			bannedKws := []string{"best-", "good-", "fuck", "nigger", "fates-list", "fateslist"}
+
+			for _, kw := range bannedKws {
+				if strings.Contains(tagNameInternal, kw) {
+					return "'" + kw + "' is not allowed in a tag"
+				}
+			}
+
+			if action == "remove" {
+				// Note that just removing a tag that you own is not allowed and such tags must be transferred
+				var check pgtype.Text
+				err := context.Postgres.QueryRow(context.Context, "SELECT owner_guild::text FROM server_tags WHERE id = $1", tagNameInternal).Scan(&check)
+				if check.Status != pgtype.Present {
+					return "This server tag does not even exist!"
+				} else if check.String == context.Interaction.GuildID {
+					return "You cannot remove tags you own without first transferring them to a new server. See `/help` for more information on tag permissions."
+				}
+
+				_, err = context.Postgres.Exec(context.Context, "UPDATE servers SET tags = array_remove(tags, $1) WHERE guild_id = $2", tagNameInternal, context.Interaction.GuildID)
+				if err != nil {
+					return dbError(err)
+				}
+				return "Removed " + tagNameInternal + " from server tags"
+			}
+
 			return "Work in progress. Coming really soon though!"
 		},
 	}
