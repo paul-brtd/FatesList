@@ -8,7 +8,6 @@ bot_auth_header = APIKeyHeader(name="Authorization", description="These endpoint
 
 user_auth_header = APIKeyHeader(name="Authorization", description="These endpoints require a user token. You can get this from your profile under the User Token section. If you are using this for voting, make sure to allow users to opt out!\n\nA prefix of `User` before the user token such as `User abcdef` is supported and can be used to avoid ambiguity but is not required outside of endpoints that have both a user and a bot authentication option such as Get Votes. In such endpoints, the default will always be a bot auth unless you prefix the token with `User`", scheme_name="User")
 
-
 server_auth_header = APIKeyHeader(name="Authorization", description="These endpoints require a server token which you can get using /get API Token in your server. Same warnings and information from the other authentication types apply here. A prefix of ``Server`` before the server token is supported and can be used to avoid ambiguity but is not required.", scheme_name="Server")
 
 async def _bot_auth(bot_id: int, api_token: str):
@@ -63,7 +62,7 @@ async def user_auth_check(request: Request, user_id: int, user_auth: str = Secur
         user_auth = user_auth.replace("User ", "", 1)
     id = await _user_auth(user_id, user_auth)
     if id is None:
-        raise HTTPException(status_code=401, detail=f"Invalid User Token for route {request.url.path} and IP {request.client.host}")
+        raise HTTPException(status_code=401, detail=f"Invalid User Token")
 
 async def bot_user_auth_check(bot_id: int, user_id: Optional[int] = None, bot_auth: str = Security(bot_auth_header), user_auth: str = Security(user_auth_header)):
     if user_auth.startswith("User "):
