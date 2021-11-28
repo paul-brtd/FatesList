@@ -62,6 +62,7 @@ class Bot(BaseModel):
     github: Optional[str] = None
     css: Optional[str] = None
     votes: int
+    total_votes: int
     vanity: str
     donate: Optional[str] = None
     privacy_policy: Optional[str] = None

@@ -37,7 +37,7 @@ func silverpelt(
 			return "This operation requires perm: " + strconv.Itoa(int(admin_op.MinimumPerm)) + " but you only have perm number " + strconv.Itoa(int(perm)) + ".\nUser ID: " + user_id
 		}
 
-		if admin_op.ReasonNeeded && (admin_redis_context.Reason == nil || len(*admin_redis_context.Reason) < 3) {
+		if admin_op.ReasonNeeded && len(admin_redis_context.Reason) < 3 {
 			return "You must specify a reason for doing this!"
 		}
 
@@ -45,13 +45,17 @@ func silverpelt(
 		var owner pgtype.Int8
 		db.QueryRow(ctx, "SELECT state FROM bots WHERE bot_id = $1", bot_id).Scan(&state)
 
+		if bot_id == "" {
+			state = pgtype.Int4{Status: pgtype.Present}
+		}
+
 		if state.Status != pgtype.Present {
 			return "This bot does not exist!"
 		}
 
 		db.QueryRow(ctx, "SELECT owner FROM bot_owner WHERE bot_id = $1 AND main = true", bot_id).Scan(&owner)
 
-		if owner.Status != pgtype.Present {
+		if owner.Status != pgtype.Present && bot_id != "" {
 			db.Exec(ctx, "DELETE FROM bot_owner WHERE bot_id = $1", bot_id)
 			db.Exec(ctx, "INSERT INTO bot_owner (bot_id, owner, main) VALUES ($1, $2, true)", bot_id, user_id)
 			err := db.QueryRow(ctx, "SELECT owner FROM bot_owner WHERE bot_id = $1 AND main = true", bot_id).Scan(&owner)
@@ -74,10 +78,17 @@ func silverpelt(
 			return "You were not found in the main server somehow. Try again later"
 		}
 
-		bot_m, err := discord.State.Member(common.MainServer, bot_id)
+		var bot_m *discordgo.Member
+		var errm error
+
+		if bot_id != "" {
+			bot_m, errm = discord.State.Member(common.MainServer, bot_id)
+		} else {
+			bot_m, errm = member, nil
+		}
 
 		var bot *discordgo.User
-		if err != nil {
+		if errm != nil {
 			bot, err = discord.User(bot_id)
 			if err != nil {
 				return "This bot could not be found anywhere..."
@@ -99,9 +110,9 @@ func silverpelt(
 			Owner:        strconv.FormatInt(owner.Int, 10),
 		}
 
-		if context.Reason == nil {
+		if context.Reason == "" && !admin_op.SlashRaw {
 			reason := "No reason specified"
-			context.Reason = &reason
+			context.Reason = reason
 		}
 
 		op_err := admin_op.Handler(context)
@@ -111,7 +122,7 @@ func silverpelt(
 			event := types.Event{
 				Context: types.SimpleContext{
 					User:   context.User.ID,
-					Reason: context.Reason,
+					Reason: &context.Reason,
 				},
 				Metadata: types.EventMetadata{
 					Event:     admin_op.Event,

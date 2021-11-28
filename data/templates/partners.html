@@ -16,7 +16,7 @@
 					</a>	
 					<h5 class="white">{{ i.description|safe }}</h5>
 					{% for k, v in i.links.items() %}
-						<a class="white" title="{{ i.name.title() }} {k.title()}" href="{{ v }}" target="_blank">
+						<a class="white" title="{{ i.name.title().replace("~", "") }} {{k.title()}}" href="{{ v }}" target="_blank">
 							<span class="iconify" data-icon="{{partners.icons[k]}}" style="font-size: 40px"></span>
 						</a>
 					{% endfor %}		

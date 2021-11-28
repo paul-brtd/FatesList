@@ -23,10 +23,6 @@ router = APIRouter(
 async def get_votes_per_month(request: Request, bot_id: int):
     return await db.fetch("SELECT votes, epoch FROM bot_stats_votes_pm WHERE bot_id = $1", bot_id)
 
-@router.get("/{bot_id}/tv")
-async def get_total_votes(request: Request, bot_id: int):
-    return await db.fetchrow("SELECT total_votes AS votes FROM bot_stats_votes WHERE bot_id = $1", bot_id)
-
 @router.patch(
     "/{bot_id}/token", 
     response_model = APIResponse, 
@@ -154,7 +150,7 @@ async def fetch_bot(
     
 
     api_ret = await db.fetchrow(
-        "SELECT last_stats_post, banner_card, banner_page, guild_count, shard_count, shards, prefix, invite, invite_amount, features, bot_library AS library, state, website, discord AS support, github, user_count, votes, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", 
+        "SELECT last_stats_post, banner_card, banner_page, guild_count, shard_count, shards, prefix, invite, invite_amount, features, bot_library AS library, state, website, discord AS support, github, user_count, votes, total_votes, donate, privacy_policy, nsfw FROM bots WHERE bot_id = $1", 
         bot_id
     )
     if api_ret is None:

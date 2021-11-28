@@ -22,8 +22,119 @@ var (
 
 // Admin OP Getter
 func CmdInit() map[string]types.SlashCommand {
-	// Requeue
+	commands["RESETVOTESALL"] = types.AdminOp{
+		InternalName: "resetallvotes",
+		Cooldown:     types.CooldownNone,
+		Description:  "Reset votes for all bots on the list",
+		MinimumPerm:  6,
+		ReasonNeeded: false,
+		Event:        types.EventNone,
+		SlashRaw:     true,
+		SlashOptions: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionString,
+				Name:        "reason",
+				Description: "Reason for resetting all votes. Defaults to Monthly Vote Reset",
+				Required:    false,
+			},
+		},
+		Server: common.StaffServer,
+		Handler: func(context types.AdminContext) string {
+			if context.Reason == "" {
+				context.Reason = "Monthly Votes Reset"
+			}
+			bots, err := context.Postgres.Query(context.Context, "SELECT bot_id, votes FROM bots")
+			if err != nil {
+				log.Error(err)
+				return err.Error()
+			}
 
+			defer bots.Close()
+
+			tx, err := context.Postgres.Begin(context.Context)
+			if err != nil {
+				return err.Error()
+			}
+
+			defer tx.Rollback(context.Context)
+
+			for bots.Next() {
+				var botId pgtype.Int8
+				var votes pgtype.Int8
+				bots.Scan(&botId, &votes)
+				if botId.Status != pgtype.Present {
+					return "Unable to get botID and votes"
+				}
+				tx.Exec(context.Context, "INSERT INTO bot_stats_votes_pm (bot_id, epoch, votes) VALUES ($1, $2, $3)", botId.Int, float64(time.Now().Unix())+0.001, votes.Int)
+				tx.Exec(context.Context, "UPDATE bots SET votes = 0 WHERE bot_id = $1", botId.Int)
+			}
+			err = tx.Commit(context.Context)
+			if err != nil {
+				return err.Error()
+			}
+			embed := discordgo.MessageEmbed{
+				URL:         "https://fateslist.xyz",
+				Title:       "All Bot Votes Reset",
+				Description: "All bots have had its votes reset!",
+				Color:       good,
+				Fields: []*discordgo.MessageEmbedField{
+					{
+						Name:  "Reason",
+						Value: context.Reason,
+					},
+				},
+			}
+			context.Discord.ChannelMessageSendComplex(common.SiteLogs, &discordgo.MessageSend{
+				Embed: &embed,
+			})
+			return "OK. But make sure to clear the database to get rid of existing vote locks"
+		},
+	}
+
+	commands["RESETVOTES"] = types.AdminOp{
+		InternalName: "resetvotes",
+		Cooldown:     types.CooldownBan,
+		Description:  "Resets votes for a single bot",
+		MinimumPerm:  4,
+		ReasonNeeded: true,
+		Event:        types.EventVoteReset,
+		SlashOptions: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionString,
+				Name:        "reason",
+				Description: "Reason for resetting the votes for this bot",
+				Required:    true,
+			},
+		},
+		Server: common.StaffServer,
+		Handler: func(context types.AdminContext) string {
+			embed := discordgo.MessageEmbed{
+				URL:         "https://fateslist.xyz/bot/" + context.Bot.ID,
+				Title:       "Bot Vote Reset",
+				Description: context.Bot.Mention() + " has had its votes reset!",
+				Color:       bad,
+				Fields: []*discordgo.MessageEmbedField{
+					{
+						Name:  "Reason",
+						Value: context.Reason,
+					},
+				},
+			}
+			context.Discord.ChannelMessageSendComplex(common.SiteLogs, &discordgo.MessageSend{
+				Embed: &embed,
+			})
+
+			_, err := context.Postgres.Exec(context.Context, "UPDATE bots SET votes = 0 WHERE bot_id = $1", context.Bot.ID)
+			if err != nil {
+				log.Error(err)
+				return err.Error()
+			}
+
+			return ""
+		},
+	}
+
+	// Requeue
 	commands["REQUEUE"] = types.AdminOp{
 		InternalName: "requeue",
 		Cooldown:     types.CooldownRequeue,
@@ -53,7 +164,7 @@ func CmdInit() map[string]types.SlashCommand {
 				Fields: []*discordgo.MessageEmbedField{
 					{
 						Name:  "Reason",
-						Value: *context.Reason,
+						Value: context.Reason,
 					},
 				},
 			}
@@ -63,6 +174,7 @@ func CmdInit() map[string]types.SlashCommand {
 			_, err := context.Postgres.Exec(context.Context, "UPDATE bots SET state = $1 WHERE bot_id = $2", types.BotStatePending.Int(), context.Bot.ID)
 			if err != nil {
 				log.Error(err)
+				return err.Error()
 			}
 
 			return ""
@@ -171,7 +283,7 @@ func CmdInit() map[string]types.SlashCommand {
 				Fields: []*discordgo.MessageEmbedField{
 					{
 						Name:  "Reason",
-						Value: *context.Reason,
+						Value: context.Reason,
 					},
 				},
 			}
@@ -190,7 +302,7 @@ func CmdInit() map[string]types.SlashCommand {
 				return "PostgreSQL error: " + err.Error()
 			}
 
-			err = context.Discord.GuildBanCreateWithReason(common.MainServer, context.Bot.ID, *context.Reason, 0)
+			err = context.Discord.GuildBanCreateWithReason(common.MainServer, context.Bot.ID, context.Reason, 0)
 
 			if err != nil {
 				return "OK. Bot was banned successfully but it could not be kicked due to reason: " + err.Error()
@@ -225,7 +337,7 @@ func CmdInit() map[string]types.SlashCommand {
 				Fields: []*discordgo.MessageEmbedField{
 					{
 						Name:  "Extra Info/Reason",
-						Value: *context.Reason,
+						Value: context.Reason,
 					},
 				},
 			}
@@ -364,7 +476,7 @@ func CmdInit() map[string]types.SlashCommand {
 				Fields: []*discordgo.MessageEmbedField{
 					{
 						Name:  "Reason",
-						Value: *context.Reason,
+						Value: context.Reason,
 					},
 				},
 			}
@@ -439,7 +551,7 @@ func CmdInit() map[string]types.SlashCommand {
 				Fields: []*discordgo.MessageEmbedField{
 					{
 						Name:  "Feedback",
-						Value: *context.Reason,
+						Value: context.Reason,
 					},
 				},
 			}
@@ -530,7 +642,7 @@ func CmdInit() map[string]types.SlashCommand {
 				Fields: []*discordgo.MessageEmbedField{
 					{
 						Name:  "Reason",
-						Value: *context.Reason,
+						Value: context.Reason,
 					},
 				},
 			}
@@ -583,7 +695,7 @@ func CmdInit() map[string]types.SlashCommand {
 				Fields: []*discordgo.MessageEmbedField{
 					{
 						Name:  "Reason",
-						Value: *context.Reason,
+						Value: context.Reason,
 					},
 				},
 			}
@@ -701,7 +813,7 @@ func CmdInit() map[string]types.SlashCommand {
 				Fields: []*discordgo.MessageEmbedField{
 					{
 						Name:  "Reason",
-						Value: *context.Reason,
+						Value: context.Reason,
 					},
 				},
 			}

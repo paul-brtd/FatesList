@@ -80,7 +80,8 @@ class WebError():
                 tb_full = "".join(traceback.format_tb(exc))
 
             errmsg = inspect.cleandoc(f"""
-                Fates List had a slight issue and our developers and looking into what happened<br/><br/>
+            <body style="background: #D3D3D3">
+                <strong>Fates List had a slight issue and our developers and looking into what happened</strong><br/><br/>
                 
                 Error ID: {error_id}<br/><br/>
 
@@ -88,9 +89,11 @@ class WebError():
 
                 Please send the below traceback if asked:<br/><br/>
 
-                <pre>{tb_full}</pre>
+                <pre>{tb_full.replace("<", "&lt;").replace(">", "&gt;")}</pre>
 
-                Time When Error Happened: {curr_time}<br/>""")
+                Time When Error Happened: {curr_time}<br/>
+            </body>
+            """)
 
             return HTMLResponse(errmsg, status_code=status_code, headers={"FL-Error-ID": error_id})
 

@@ -98,7 +98,7 @@ func adminSlashHandler(
 		botId,
 		op,
 		types.AdminRedisContext{
-			Reason:       &reason,
+			Reason:       reason,
 			ExtraContext: &extraContext,
 		},
 	)

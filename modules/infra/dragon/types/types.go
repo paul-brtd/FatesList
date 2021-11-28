@@ -113,7 +113,7 @@ type StaffPerms struct {
 }
 
 type AdminRedisContext struct {
-	Reason       *string `json:"reason"`
+	Reason       string  `json:"reason"`
 	ExtraContext *string `json:"ctx"`
 }
 
@@ -125,7 +125,7 @@ type AdminContext struct {
 	User         *discordgo.User
 	Bot          *discordgo.User
 	BotState     BotState
-	Reason       *string
+	Reason       string
 	ExtraContext *string // This is per operation dependant
 	Owner        string
 }
