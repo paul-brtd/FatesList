@@ -126,16 +126,17 @@
 	  {% if username %}
 	  <a class="dropdown-item" href="/profile/{{user_id}}">My Profile</a>
           <a class="dropdown-item" href="/bot/admin/add">Add Bot</a>
-	  <!--<a class="dropdown-item" href="/template/admin/add">Add Server Template</a>-->
-	  <div class="dropdown-divider"></div>
           <a class="dropdown-item" href="/fates/logout">Logout</a>
-          {% else %}
+	  <div class="dropdown-divider"></div>
+	  {% else %}
           <a class="dropdown-item" href="/fates/login">Login</a>
+	  <div class="dropdown-divider"></div>
           {%endif%}
 	  <a class="dropdown-item" href="javascript:addServer()">Add Server</a>
 	  <a class="dropdown-item" href="/fates/stats">Statistics</a>
           <a class="dropdown-item" href="https://apidocs.fateslist.xyz">API Docs</a>
           <a class="dropdown-item" href="/fates/support/invite" target=”_blank”>Support Server</a>
+	  <div class="dropdown-divider"></div>
 	  <a class="dropdown-item" href="/fates/partners">Our Partners</a>
           <a class="dropdown-item" href="/fates/tos">Terms Of Service</a>
 	  <a class="dropdown-item" href="/fates/rules">Bot List Rules</a>
@@ -153,7 +154,7 @@
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js" crossorigin></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js" crossorigin></script>
     <script src="https://cdn.jsdelivr.net/gh/djibe/material@4.6.0-rc.2/js/material.min.js" crossorigin></script>
-    <script src="/static/assets/prod/base.min.js?v=6"></script>
+    <script src="/static/assets/prod/base.min.js?v=7"></script>
 </div>
 </body>
 <script>

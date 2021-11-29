@@ -4,7 +4,7 @@ from modules.core import *
 from modules.core.classes import User as _User
 
 from ..base import API_VERSION
-from .models import APIResponse, BotMeta, enums, BaseUser, UserDescEdit, UserJSPatch, OwnershipTransfer, BotAppeal
+from .models import APIResponse, BotMeta, enums, BaseUser, UpdateUserPreferences, OwnershipTransfer, BotAppeal
 
 cleaner = Cleaner(remove_unknown_tags=False)
 
@@ -25,40 +25,23 @@ async def fetch_user(request: Request, user_id: int, worker_session = Depends(wo
     return user
 
 @router.patch(
-    "/{user_id}/description", 
-    response_model = APIResponse,
+    "/{user_id}/preferences",
     dependencies = [
         Depends(user_auth_check)
     ],
-    operation_id="set_user_description"
+    operation_id="update_user_preferences"
 )
-async def set_user_description(request: Request, user_id: int, desc: UserDescEdit):
-    await db.execute("UPDATE users SET description = $1 WHERE user_id = $2", desc.description, user_id)
-    return api_success()
-
-@router.patch(
-    "/{user_id}/token", 
-    response_model = APIResponse,
-    dependencies = [
-        Depends(user_auth_check)
-    ]
-)
-async def regenerate_user_token(request: Request, user_id: int):
-    """Regenerate the User API token
-    ** User API Token**: You can get this by clicking your profile and scrolling to the bottom and you will see your API Token
-    """
-    await db.execute("UPDATE users SET api_token = $1 WHERE user_id = $2", get_token(132), user_id)
-    return api_success()
-
-@router.patch(
-    "/{user_id}/js_allowed",
-    dependencies = [
-        Depends(user_auth_check)
-    ]
-)
-async def set_js_mode(request: Request, user_id: int, data: UserJSPatch):
-    await db.execute("UPDATE users SET js_allowed = $1", data.js_allowed)
-    request.session["js_allowed"] = data.js_allowed
+async def update_user_preferences(request: Request, user_id: int, data: UpdateUserPreferences):
+    if data.js_allowed is not None:
+        await db.execute("UPDATE users SET js_allowed = $1 WHERE user_id = $2", data.js_allowed, user_id)
+        request.session["js_allowed"] = data.js_allowed
+    if data.reset_token:
+        await db.execute("UPDATE users SET api_token = $1 WHERE user_id = $2", get_token(132), user_id)
+    if data.description is not None:
+        await db.execute("UPDATE users SET description = $1 WHERE user_id = $2", data.description, user_id)
+    if data.css is not None:
+        await db.execute("UPDATE users SET css = $1 WHERE user_id = $2", data.css, user_id)
+        request.session["css"] = data.css
     return api_success()
 
 
@@ -162,7 +145,7 @@ async def delete_bot(request: Request, user_id: int, bot_id: int):
     pack_bot_delete = [] # Packs to delete the bot from
     for pack in packs:
         if bot_id in pack["bots"]:
-            pack_bot_delete.append((pack["id"], [id for id in pack["bots"] if id in pack["bots"]])) # Get all bots not in pack, then delete them all uaing executemany
+            pack_bot_delete.append((pack["id"], [id for id in pack["bots"] if id in pack["bots"]])) # Get all bots in pack, then delete them all uaing executemany
     await db.executemany("UPDATE bot_packs SET bots = $2 WHERE id = $1", pack_bot_delete)
 
     delete_embed = discord.Embed(title="Bot Deleted :(", description=f"<@{user_id}> has deleted the bot <@{bot_id}>!", color=discord.Color.red())
@@ -175,15 +158,14 @@ async def delete_bot(request: Request, user_id: int, bot_id: int):
 @router.patch(
     "/{user_id}/bots/{bot_id}/ownership",
     dependencies=[
-        #Depends(
-        #    Ratelimiter(
-        #        global_limit = Limit(times=1, minutes=5)
-        #    )
-        #),
+        Depends(
+            Ratelimiter(
+                global_limit = Limit(times=1, minutes=5)
+            )
+        ),
         Depends(user_auth_check)
     ]
 )
-
 async def transfer_bot_ownership(request: Request, user_id: int, bot_id: int, transfer: OwnershipTransfer):
     transfer.new_owner = int(transfer.new_owner)
     head_admin, _, _ = await is_staff(staff_roles, user_id, 6)

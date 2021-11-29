@@ -81,7 +81,7 @@ function request(data) {
 		dataType: "json",
 		processData: false,
 		contentType: 'application/json',
-		data: JSON.stringify(data.json),
+		data: JSON.stringify(data.json || data.data),
 		headers: data.headers,
     statusCode: data.statusCode
   })

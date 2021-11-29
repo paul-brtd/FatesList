@@ -7,11 +7,12 @@ import modules.models.enums as enums
 
 from ..base_models import APIResponse, BaseUser
 
-class UserJSPatch(BaseModel):
-    js_allowed: bool
-
-class UserDescEdit(BaseModel):
-    description: str
+class UpdateUserPreferences(BaseModel):
+    """Setting field to null and/or omitting it means no change to said field"""
+    js_allowed: Optional[bool] = None
+    reset_token: Optional[bool] = None
+    description: Optional[str] = None
+    css: Optional[str] = None
         
 class BotMeta(BaseModel):
     """

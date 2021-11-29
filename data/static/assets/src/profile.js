@@ -27,7 +27,7 @@ function pbioEditPane(el, id) {
 
 function toggleJS() {
     request({
-        url: `/api/users/${context.user_id}/js_allowed`,
+        url: `/api/users/${context.user_id}/preferences`,
         userAuth: true,
         method: "PATCH",
         data: {"js_allowed": !context.js_allowed},
@@ -41,9 +41,10 @@ function toggleJS() {
 
 function regenUserToken() {
     request({
-        url: `/api/users/${context.user_id}/token`,
+        url: `/api/users/${context.user_id}/preferences`,
         userAuth: true,
         method: "PATCH",
+	data: {"reset_token": true},
         statusCode: {
             200: function() {
                 modalShow("Success!", "Regenerated User Token Successfully!")
@@ -55,7 +56,7 @@ function regenUserToken() {
 
 function updateBio() {
     request({
-        url: `/api/users/${context.user_id}/description`,
+        url: `/api/users/${context.user_id}/preferences`,
         userAuth: true,
         method: "PATCH",
         data: {"description": document.querySelector("#bio-form-0").value},
