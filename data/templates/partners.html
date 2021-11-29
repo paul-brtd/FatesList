@@ -11,12 +11,12 @@
   			<tr>
 				<td><img src="{{ i.image }}" loading="lazy" width="150px" style="padding: 5px" /></td>
 				<td style="padding: 5px">
-      					<a title="{{ i.name.title() }}" href="{{ i.links.website }}" target="_blank">
-						<h3 class="white"><strong>{{ i.name.title().replace("~", "") }}</strong></h3>
+      					<a title="{{ i.name }}" href="{{ i.links.website }}" target="_blank">
+						<h3 class="white"><strong>{{ i.name }}</strong></h3>
 					</a>	
 					<h5 class="white">{{ i.description|safe }}</h5>
 					{% for k, v in i.links.items() %}
-						<a class="white" title="{{ i.name.title().replace("~", "") }} {{k.title()}}" href="{{ v }}" target="_blank">
+						<a class="white" title="{{ i.name }} {{k.title()}}" href="{{ v }}" target="_blank">
 							<span class="iconify" data-icon="{{partners.icons[k]}}" style="font-size: 40px"></span>
 						</a>
 					{% endfor %}		

@@ -2,7 +2,7 @@
 	"partners": [
 		{
 			"id": "anti-raid",
-			"name": "Anti~Raid",
+			"name": "AntiRaid",
 			"owner": "775855009421066262",
 			"image": "https://i.imgur.com/Mgwfwpj.png",
 			"description": "Want a server moderation & protection from raids bot? AntiRaid is YOUR CHOICE!",
@@ -12,13 +12,14 @@
 			}
 		},
 		{
-			"id": "google",
-			"name": "Google Test Partnership",
-			"image": "https://cdn.vox-cdn.com/thumbor/Ei4ydi9WDwJW-dpSW_QWMiVULNs=/0x0:2012x1341/1820x1213/filters:focal(0x0:2012x1341):format(webp)/cdn.vox-cdn.com/uploads/chorus_image/image/47070706/google2.0.0.jpg",
-			"description": "Hi, I'm Google <i>or am i?</i>",
+			"id": "consteagle",
+			"name": "ConstEagle.com",
+			"owner": "910709495518920704",
+			"image": "https://cdn.discordapp.com/icons/742001124457971765/d500316fde0c631e58522fb9a26a4d41.png",
+			"description": "We have as goal to help you and make your bot way better.",
 			"links": {
-				"discord": "https://google.com",
-				"website": "https://google.com"
+				"discord": "https://discord.gg/D7pq3m3",
+				"website": "https://consteagle.com"
 			}
 		}
 	],
