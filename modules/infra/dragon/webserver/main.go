@@ -176,33 +176,7 @@ func StartWebserver(db *pgxpool.Pool, redis *redis.Client) {
 
 			voteStr := string(vote_b)
 
-			go func() {
-				wsEvent, err := json.Marshal(map[string]interface{}{
-					eventId: voteEvent,
-				})
-				if err != nil {
-					log.Error(err)
-					return
-				}
-				redis.Publish(ctx, "bot-"+vote.BotID, wsEvent)
-				botEvents := redis.HGet(ctx, "bot-"+vote.BotID, "ws").Val()
-				if botEvents == "" {
-					botEvents = "{}"
-				}
-				var botEventsNew map[string]interface{}
-				err = json.Unmarshal([]byte(botEvents), &botEventsNew)
-				if err != nil {
-					log.Error(err)
-					return
-				}
-				botEventsNew[eventId] = voteEvent
-				botEventsB, err := json.Marshal(botEventsNew)
-				if err != nil {
-					log.Error(err)
-					return
-				}
-				redis.HSet(ctx, "bot-"+vote.BotID, "ws", string(botEventsB))
-			}()
+			go common.AddWsEvent(ctx, redis, "bot-"+vote.BotID, eventId, voteEvent)
 
 			ok, webhookType, secret, webhookURL := common.GetWebhook(ctx, "bots", vote.BotID, db)
 

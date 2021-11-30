@@ -588,7 +588,7 @@ func CmdInit() map[string]types.SlashCommand {
 					return dbError(err)
 				}
 
-				context.Redis.Publish(context.Context, "server-"+context.Interaction.GuildID, string(vote_b))
+				go common.AddWsEvent(context.Context, context.Redis, "server-"+context.Interaction.GuildID, eventId, voteEvent)
 
 				voteStr := string(vote_b)
 
