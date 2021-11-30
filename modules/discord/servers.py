@@ -15,7 +15,7 @@ router = APIRouter(
 
 @router.get("/{guild_id}")
 async def guild_page(request: Request, guild_id: int, bt: BackgroundTasks, rev_page: int = 1, api: bool = False):
-    data = await db.fetchrow("SELECT banner_page AS banner, keep_banner_decor, guild_count, nsfw, state, invite_amount, avatar_cached, name_cached, votes, css, description, long_description, long_description_type, website FROM servers WHERE guild_id = $1", guild_id)
+    data = await db.fetchrow("SELECT banner_page AS banner, keep_banner_decor, guild_count, nsfw, state, invite_amount, avatar_cached, name_cached, votes, css, description, long_description, long_description_type, website, tags AS _tags FROM servers WHERE guild_id = $1", guild_id)
     if not data:
         return abort(404)
     data = dict(data)
@@ -25,6 +25,7 @@ async def guild_page(request: Request, guild_id: int, bt: BackgroundTasks, rev_p
         "username": data["name_cached"],
         "avatar": data["avatar_cached"]
     }
+    data["tags_fixed"] = [(await db.fetchrow("SELECT id, name, iconify_data FROM server_tags WHERE id = $1", id)) for id in data["_tags"]]
     context = {"type": "server", "replace_list": constants.long_desc_replace_tuple, "id": str(guild_id), "index": "/servers"}
     data["type"] = "server"
     data["id"] = str(guild_id)

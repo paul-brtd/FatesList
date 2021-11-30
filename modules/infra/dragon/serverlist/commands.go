@@ -594,7 +594,7 @@ func CmdInit() map[string]types.SlashCommand {
 
 				ok, webhookType, secret, webhookURL := common.GetWebhook(context.Context, "servers", context.Interaction.GuildID, context.Postgres)
 				if !ok {
-					voteMsg = "You have successfully voted for this server (note: this server does not support vote rewards)"
+					voteMsg = "You have successfully voted for this server (note: this server does not support vote rewards if you were expecting a reward)"
 				} else {
 					voteMsg = "You have successfully voted for this server"
 					go common.WebhookReq(context.Context, context.Postgres, eventId, webhookURL, secret, voteStr, 0)
@@ -750,18 +750,53 @@ func CmdInit() map[string]types.SlashCommand {
 			if action == "remove" {
 				// Note that just removing a tag that you own is not allowed and such tags must be transferred
 				var check pgtype.Text
-				err := context.Postgres.QueryRow(context.Context, "SELECT owner_guild::text FROM server_tags WHERE id = $1", tagNameInternal).Scan(&check)
+				context.Postgres.QueryRow(context.Context, "SELECT owner_guild::text FROM server_tags WHERE id = $1", tagNameInternal).Scan(&check)
 				if check.Status != pgtype.Present {
 					return "This server tag does not even exist!"
 				} else if check.String == context.Interaction.GuildID {
-					return "You cannot remove tags you own without first transferring them to a new server. See `/help` for more information on tag permissions."
+					if context.Interaction.GuildID != common.StaffServer {
+						return "You cannot remove tags you own without first transferring them to a new server. See `/help` for more information on tag permissions."
+					} else {
+						tx, err := context.Postgres.Begin(context.Context)
+						if err != nil {
+							return dbError(err)
+						}
+						defer tx.Rollback(context.Context)
+						_, err = tx.Exec(context.Context, "UPDATE servers SET tags = array_remove(tags, $1) WHERE tags && $2", tagNameInternal, []string{tagNameInternal})
+						if err != nil {
+							return dbError(err)
+						}
+						_, err = tx.Exec(context.Context, "DELETE FROM server_tags WHERE id = $1", tagNameInternal)
+						if err != nil {
+							return dbError(err)
+						}
+						err = tx.Commit(context.Context)
+						if err != nil {
+							return dbError(err)
+						}
+
+					}
 				}
 
-				_, err = context.Postgres.Exec(context.Context, "UPDATE servers SET tags = array_remove(tags, $1) WHERE guild_id = $2", tagNameInternal, context.Interaction.GuildID)
+				_, err := context.Postgres.Exec(context.Context, "UPDATE servers SET tags = array_remove(tags, $1) WHERE guild_id = $2", tagNameInternal, context.Interaction.GuildID)
 				if err != nil {
 					return dbError(err)
 				}
 				return "Removed " + tagNameInternal + " from server tags"
+			} else if action == "add" {
+				var check pgtype.Text
+				context.Postgres.QueryRow(context.Context, "SELECT owner_guild::text FROM server_tags WHERE id = $1", tagNameInternal).Scan(&check)
+				if check.Status != pgtype.Present {
+					_, err := context.Postgres.Exec(context.Context, "INSERT INTO server_tags (id, name, iconify_data, owner_guild) VALUES ($1, $2, $3, $4)", tagNameInternal, tag, "fluent:animal-cat-28-regular", context.Interaction.GuildID)
+					if err != nil {
+						return dbError(err)
+					}
+				}
+				_, err := context.Postgres.Exec(context.Context, "UPDATE servers SET tags = tags || $1 WHERE guild_id = $2", []string{tagNameInternal}, context.Interaction.GuildID)
+				if err != nil {
+					return dbError(err)
+				}
+				return "Tag" + tag + "successfully added"
 			}
 
 			return "Work in progress. Coming really soon though!"
