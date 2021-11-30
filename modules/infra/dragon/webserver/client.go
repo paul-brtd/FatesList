@@ -37,7 +37,7 @@ const (
 	maxRequests = 20
 
 	// Ratelimit duration
-	ratelimitDuration = 5 * time.Minute
+	ratelimitDuration = 7 * time.Minute
 )
 
 var (
@@ -228,6 +228,7 @@ func msgPump(c *Client) {
 	}
 
 	channelName := mod + strconv.Itoa(c.ID)
+	globalChan := "global"
 
 	go func() {
 		if !c.SendAll {
@@ -235,14 +236,18 @@ func msgPump(c *Client) {
 		}
 		msgs := c.hub.redis.HGet(ctx, channelName, "ws").Val()
 		if msgs != "" {
-			sendMessages(c, []byte(msgs))
+			sendMessages(c, []byte(msgs), channelName)
+		}
+		msgs = c.hub.redis.Get(ctx, globalChan).Val()
+		if msgs != "" {
+			sendMessages(c, []byte(msgs), globalChan)
 		}
 		time.Sleep(1 * time.Second)
 		go sendWsData(c, "done_prior", "Done sending all prior messages")
 	}()
 
 	if !c.SendNone {
-		pubsub := c.hub.redis.Subscribe(ctx, channelName)
+		pubsub := c.hub.redis.Subscribe(ctx, channelName, globalChan)
 		defer pubsub.Close()
 		ch := pubsub.Channel()
 		for msg := range ch {
@@ -250,18 +255,24 @@ func msgPump(c *Client) {
 				return
 			}
 
-			go sendMessages(c, []byte(msg.Payload))
+			go sendMessages(c, []byte(msg.Payload), msg.Channel)
 		}
 	}
 }
 
 // Goroutine to send messages
-func sendMessages(c *Client, payload []byte) {
+func sendMessages(c *Client, payload []byte, channel string) {
 	defer recovery()
 	var event map[string]interface{}
 	json.Unmarshal(payload, &event)
 	for _, v := range event {
-		event, err := json.Marshal(v)
+		event, err := json.Marshal(map[string]interface{}{
+			"code":    "event",
+			"control": false,
+			"detail":  nil,
+			"dat":     v,       // Data
+			"chan":    channel, // Channel
+		})
 		if err != nil {
 			log.Warn("Error in msg pump: ", err)
 			continue

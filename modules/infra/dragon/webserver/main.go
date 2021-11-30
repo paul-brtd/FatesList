@@ -159,11 +159,11 @@ func StartWebserver(db *pgxpool.Pool, redis *redis.Client) {
 					"test":  vote.Test,
 				},
 				"m": map[string]interface{}{
-					"event": types.EventBotVote,
-					"user":  vote.UserID,
-					"t":     -1,
-					"ts":    float64(time.Now().Unix()) + 0.001, // Make sure its a float by adding 0.001
-					"eid":   eventId,
+					"e":    types.EventBotVote,
+					"user": vote.UserID,
+					"t":    -1,
+					"ts":   float64(time.Now().Unix()) + 0.001, // Make sure its a float by adding 0.001
+					"eid":  eventId,
 				},
 			}
 
@@ -173,7 +173,36 @@ func StartWebserver(db *pgxpool.Pool, redis *redis.Client) {
 				c.JSON(400, apiReturn(false, "Could not create vote webhook... Please contact us on our support server for more information: "+err.Error(), nil))
 				return
 			}
+
 			voteStr := string(vote_b)
+
+			go func() {
+				wsEvent, err := json.Marshal(map[string]interface{}{
+					eventId: voteEvent,
+				})
+				if err != nil {
+					log.Error(err)
+					return
+				}
+				redis.Publish(ctx, "bot-"+vote.BotID, wsEvent)
+				botEvents := redis.HGet(ctx, "bot-"+vote.BotID, "ws").Val()
+				if botEvents == "" {
+					botEvents = "{}"
+				}
+				var botEventsNew map[string]interface{}
+				err = json.Unmarshal([]byte(botEvents), &botEventsNew)
+				if err != nil {
+					log.Error(err)
+					return
+				}
+				botEventsNew[eventId] = voteEvent
+				botEventsB, err := json.Marshal(botEventsNew)
+				if err != nil {
+					log.Error(err)
+					return
+				}
+				redis.HSet(ctx, "bot-"+vote.BotID, "ws", string(botEventsB))
+			}()
 
 			ok, webhookType, secret, webhookURL := common.GetWebhook(ctx, "bots", vote.BotID, db)
 

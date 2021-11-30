@@ -575,11 +575,11 @@ func CmdInit() map[string]types.SlashCommand {
 						"test":  test,
 					},
 					"m": map[string]interface{}{
-						"event": types.EventServerVote,
-						"user":  userId,
-						"t":     -1,
-						"ts":    float64(time.Now().Unix()) + 0.001, // Make sure its a float by adding 0.001
-						"eid":   eventId,
+						"e":    types.EventServerVote,
+						"user": userId,
+						"t":    -1,
+						"ts":   float64(time.Now().Unix()) + 0.001, // Make sure its a float by adding 0.001
+						"eid":  eventId,
 					},
 				}
 
@@ -587,6 +587,9 @@ func CmdInit() map[string]types.SlashCommand {
 				if err != nil {
 					return dbError(err)
 				}
+
+				context.Redis.Publish(context.Context, "server-"+context.Interaction.GuildID, string(vote_b))
+
 				voteStr := string(vote_b)
 
 				ok, webhookType, secret, webhookURL := common.GetWebhook(context.Context, "servers", context.Interaction.GuildID, context.Postgres)

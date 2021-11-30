@@ -20,7 +20,7 @@ class Bot():
         self.token = token
         self.send_all = send_all
         self.send_none = send_none
-        self.hooks = {"identity": self.identity, "default": self.default}
+        self.hooks = {"ready": self.none, "identity": self.identity, "default": self.default, "event": self._on_event_payload}
         self.websocket = None
         self.bot = bot
 
@@ -30,19 +30,11 @@ class Bot():
                 if e == "":
                     continue
                 e_json = json.loads(e)
-                if e_json.get("m"):
-                    e_type = e_json["m"].get("e")
-                    func = self.hooks.get(e_type)
-                    if func:
-                        await func(e_json)
-                        return
-                elif e_json.get("control"):
-                    try:
-                        await self.hooks[e_json["code"]](e_json)
-                    except Exception:
-                        pass
-
                 await self.hooks["default"](e_json)
+                try:
+                    await self.hooks[e_json["code"]](e_json)
+                except KeyError:
+                    ...
 
     async def _ws_handler(self):
         async with websockets.connect(URL) as self.websocket:
@@ -52,12 +44,21 @@ class Bot():
     
     async def identity(self, event):
         #print(event)
-        payload = {"id": str(self.bot_id), "token": self.token, "bot": True, "send_all": self.send_all, "send_none": self.send_none, "bot": self.bot}
+        payload = {"id": str(self.bot_id), "token": self.token, "send_all": self.send_all, "send_none": self.send_none, "bot": self.bot}
         await self.websocket.send(json.dumps(payload))
         print(f"Sending {json.dumps(payload)}")
     
     async def default(self, event):
-        print(event)
+        print(event, type(event))
+
+    async def none(self, event):
+        ...
+
+    async def _on_event_payload(self, event):
+        await self.on_event(EventContext(event["dat"], event["dat"]["m"]["e"], self.bot))
+
+    async def on_event(self, ctx):
+        print(ctx.parse_vote())
 
     def start(self):
         loop = asyncio.new_event_loop()
@@ -67,3 +68,22 @@ class Bot():
     def close(self):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self.websocket.close())
+
+class Vote():
+    def __init__(self, user_id: str, test: bool):
+        self.user_id = int(user_id)
+        self.test = test
+
+class EventContext():
+    def __init__(self, data, event, bot):
+        self.data: dict = data
+        self.event: int = event
+        self.bot: bool = bot
+
+    def parse_vote(self) -> Vote:
+        """Returns the User ID who voted"""
+        if self.data["m"]["e"] == 0 and self.bot:
+            return Vote(self.data["ctx"]["user"], self.data["ctx"]["test"])
+        elif self.data["m"]["e"] == 71 and not self.bot:
+            return Vote(self.data["ctx"]["user"], self.data["ctx"]["test"])
+        return None
