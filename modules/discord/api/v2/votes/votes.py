@@ -42,8 +42,5 @@ async def get_user_votes(request: Request, bot_id: int, user_id: int):
         "vts": voter_ts, 
         "time_to_vote": 60*60*8 - vote_epoch if vote_epoch else 0, 
         "vote_right_now": vote_epoch == -2, 
-        "type": "Vote", 
-        "reason": None, 
-        "partial": False
     }
 

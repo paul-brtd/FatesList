@@ -18,14 +18,7 @@ async def add_ws_event(target: int, ws_event: dict, *, id: Optional[uuid.UUID] =
         ws_event["m"] = {}
     ws_event["m"]["eid"] = id
     ws_event["m"]["ts"] = time.time()
-    curr_ws_events = await redis_db.hget(f"{type}-{target}", key = "ws") # Get all the websocket events from the ws key
-    if curr_ws_events is None:
-        curr_ws_events = {} # No ws events means empty dict
-    else:
-        curr_ws_events = orjson.loads(curr_ws_events) # Otherwise, orjson load the current events
-    curr_ws_events[id] = ws_event # Add event to current ws events
-    await redis_db.hset(f"{type}-{target}", key = "ws", value = orjson.dumps(curr_ws_events)) # Add it to redis
-    await redis_db.publish(f"{type}-{target}", orjson.dumps({id: ws_event})) # Publish it to consumers
+    await redis_ipc_new(redis_db, "ADDWSEVENT", msg=ws_event, args=[str(target), str(id), "1" if type == "bot" else "0"])
 
 async def bot_get_events(bot_id: int, filter: list = None, exclude: list = None):
     # As a replacement/addition to webhooks, we have API events as well to allow you to quickly get old and new events with their epoch

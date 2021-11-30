@@ -181,7 +181,40 @@ func setupCommands() {
 		MaxArgs: 3,
 	}
 
+	// ADDWSEVENT <COMMAND ID> <BOT ID> <EVENT ID> <BOT/GUILD 1/0> <MESSAGE ID (EVENT REDIS ID)>
+	// Returns 0 on success
+	ipcActions["ADDWSEVENT"] = types.IPCCommand{
+		Handler: func(cmd []string, context types.IPCContext) string {
+			eventRedis := context.Redis.Get(ctx, cmd[5]).Val()
+			if eventRedis == "" {
+				return "-1"
+			}
+
+			var channel string
+			if cmd[4] == "1" {
+				channel = "bot-" + cmd[2]
+			} else {
+				channel = "server-" + cmd[2]
+			}
+
+			var event map[string]interface{}
+
+			err := json.Unmarshal([]byte(eventRedis), &event)
+
+			if err != nil {
+				log.Error(err)
+				return err.Error()
+			}
+
+			go common.AddWsEvent(ctx, context.Redis, channel, cmd[3], event)
+			return "0"
+		},
+		MinArgs: 6,
+		MaxArgs: 6,
+	}
+
 	// ROLES <COMMAND ID> <USER ID>
+	// Returns roles as space seperated string on success
 	ipcActions["ROLES"] = types.IPCCommand{
 		Handler: func(cmd []string, context types.IPCContext) string {
 			// Try to get from cache

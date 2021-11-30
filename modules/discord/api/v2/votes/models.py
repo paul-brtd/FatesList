@@ -16,6 +16,3 @@ class BotVoteCheck(BaseModel):
     vote_epoch: Optional[int] = None
     time_to_vote: Optional[int] = None
     vts: Optional[list] = None
-    type: str
-    reason: Optional[str] = None
-    partial: bool
