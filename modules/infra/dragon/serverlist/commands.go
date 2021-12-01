@@ -792,11 +792,61 @@ func CmdInit() map[string]types.SlashCommand {
 						return dbError(err)
 					}
 				}
+				var tags pgtype.TextArray
+				context.Postgres.QueryRow(context.Context, "SELECT tags FROM servers WHERE guild_id = $1", context.Interaction.GuildID).Scan(&tags)
+				if tags.Status != pgtype.Present {
+					return "Invalid tag configuration! Please ask for help on our support server!"
+				} else if len(tags.Elements) > 5 {
+					return "Servers may only have a maximum of 5 tags"
+				}
+				for _, tag := range tags.Elements {
+					if tag.String == tagNameInternal {
+						return "Your server already has this tag set/added!"
+					}
+				}
 				_, err := context.Postgres.Exec(context.Context, "UPDATE servers SET tags = tags || $1 WHERE guild_id = $2", []string{tagNameInternal}, context.Interaction.GuildID)
 				if err != nil {
 					return dbError(err)
 				}
-				return "Tag" + tag + "successfully added"
+				return "Tag " + tag + " successfully added"
+			} else if action == "transfer" {
+				var check pgtype.Text
+				context.Postgres.QueryRow(context.Context, "SELECT owner_guild::text FROM server_tags WHERE id = $1", tagNameInternal).Scan(&check)
+				if check.Status != pgtype.Present {
+					return "This tag does not exist!"
+				} else if check.String != context.Interaction.GuildID && context.Interaction.GuildID != common.StaffServer {
+					return "You may not transfer the ownership of tags you do not own!"
+				}
+
+				transferServerVal := slashbot.GetArg(context.Discord, context.Interaction, "transfer-server", false)
+				transferServer, ok := transferServerVal.(string)
+				if !ok {
+					transferServer = common.StaffServer
+				}
+
+				if transferServer != common.StaffServer {
+					// Ensure the other server also has this tag set
+					var check pgtype.TextArray
+					err := context.Postgres.QueryRow(context.Context, "SELECT tags FROM servers WHERE guild_id = $1", transferServer).Scan(&check)
+					if err != nil {
+						return "Could not find the recipient server!"
+					}
+					var ok bool
+					for _, tag := range check.Elements {
+						if tag.String == tagNameInternal {
+							ok = true
+						}
+					}
+					if !ok {
+						return "The recipient server does not also have this tag set and so cannot be transferred to"
+					}
+				}
+
+				_, err := context.Postgres.Exec(context.Context, "UPDATE server_tags SET owner_guild = $1 WHERE id = $2", transferServer, tagNameInternal)
+				if err != nil {
+					return dbError(err)
+				}
+				return "Transferred ownership of " + tagNameInternal + " to " + transferServer + ". Please contact support if this was a mistake or if you wish to revert the transfer!"
 			}
 
 			return "Work in progress. Coming really soon though!"
