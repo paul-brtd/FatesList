@@ -10,6 +10,7 @@ class BaseUser(BaseModel):
     """
     Represents a base user class on Fates List.
     """
+
     id: Optional[str] = "0"
     username: Optional[str] = "Unknown User"
     avatar: Optional[str] = "https://fateslist.xyz/static/botlisticon.webp"
@@ -24,17 +25,21 @@ class BaseUser(BaseModel):
         """
         return self.username
 
+
 class APIResponse(BaseModel):
     """
     Represents a "regular" API response on Fates List CRUD endpoints
 
-    You can check for success using the done boolean and reason using the reason attribute 
+    You can check for success using the done boolean and reason using the reason attribute
     """
+
     done: bool
     reason: Optional[str] = None
 
+
 class IDResponse(APIResponse):
     id: uuid.UUID
+
 
 class AccessToken(BaseModel):
     access_token: str
@@ -42,9 +47,10 @@ class AccessToken(BaseModel):
     expires_in: int
     current_time: Union[float, int]
 
-        
+
 class BasePager(BaseModel):
     """Information given by the API for pagination"""
+
     total_count: int
     total_pages: int
     per_page: int
@@ -52,4 +58,4 @@ class BasePager(BaseModel):
     to: int
 
     class Config:
-        fields = {'from_': 'from'}
+        fields = {"from_": "from"}
