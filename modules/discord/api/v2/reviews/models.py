@@ -1,14 +1,16 @@
 import uuid
-from typing import List, Optional, ForwardRef
+from typing import ForwardRef, List, Optional
 
 from pydantic import BaseModel, validator
 
 import modules.models.enums as enums
 
-from ..base_models import APIResponse, BaseUser, BasePager
+from ..base_models import APIResponse, BasePager, BaseUser
+
 
 class BotReviewPartial(BaseModel):
     """Note that the reply and id fields are not honored in edit bot"""
+
     id: Optional[uuid.UUID] = None
     review: str
     star_rating: float
@@ -21,12 +23,16 @@ class BotReviewPartial(BaseModel):
             raise ValueError("ID must be provided if reply is set")
         return v
 
+
 class BotReviewPartialExt(BotReviewPartial):
     """Partial bot review with extended fields specific for adding reviews such as target_type and target_id"""
+
     target_type: enums.ReviewType
     target_id: int
 
-BotReviewList = ForwardRef('BotReviewList')
+
+BotReviewList = ForwardRef("BotReviewList")
+
 
 class BotReview(BaseModel):
     id: uuid.UUID
@@ -42,20 +48,26 @@ class BotReview(BaseModel):
     user: BaseUser
     replies: Optional[BotReviewList] = []
 
+
 class BotReviewList(BaseModel):
     """
     Represents a list of bot reviews on Fates List
     """
+
     __root__: List[BotReview]
+
 
 class BotReviews(BaseModel):
     """Represents bot reviews and average stars of a bot on Fates List"""
+
     reviews: BotReviewList
     average_stars: float
     pager: BasePager
 
+
 BotReview.update_forward_refs()
-BotReviews.update_forward_refs()   
+BotReviews.update_forward_refs()
+
 
 class BotReviewVote(BaseModel):
     upvote: bool
