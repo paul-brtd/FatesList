@@ -1,7 +1,7 @@
 from typing import List, Optional
 from ..base_models import BaseUser
 from pydantic import BaseModel
-
+from modules.models import enums
 
 class BotListStats(BaseModel):
     uptime: float
@@ -41,8 +41,25 @@ class BotPartial(BaseModel):
 class BotPartialList(BaseModel):
     __root__: List[BotPartial]
 
+class FLTag(BaseModel):
+    name: str
+    iconify_data: str
+    id: str
+    owner_guild: Optional[str] = ""
+
+class FLTags(BaseModel):
+    __root__: List[FLTag]
+
 class BotIndex(BaseModel):
     tags_fixed: FLTags
     top_voted: BotPartialList
     certified_bots: BotPartialList
     new_bots: BotPartialList
+
+class BaseSearch(BaseModel):
+    tags_fixed: FLTags
+    query: str
+
+class BotSearch(BaseSearch):
+    search_res: list
+    profile_search: bool

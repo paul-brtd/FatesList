@@ -3,7 +3,7 @@ from typing import Optional, Union
 
 from pydantic import BaseModel
 
-import modules.models.enums as enums
+from modules.models import enums
 
 
 class BaseUser(BaseModel):

@@ -3,7 +3,7 @@ from typing import Optional
 from modules.core import *
 
 from ..base import API_VERSION
-from .models import BotListStats, BotQueueGet, BotVanity, BotIndex #TODO: BotSearch
+from .models import BotListStats, BotQueueGet, BotVanity, BotIndex, BotSearch
 
 router = APIRouter(
     prefix = f"/api/v{API_VERSION}",
@@ -134,7 +134,7 @@ async def get_index(request: Request, cert: Optional[bool] = True, type: enums.R
 
 @router.get(
     "/search", 
-    #response_model = BotSearch,
+    response_model = BotSearch,
     dependencies = [
         Depends(
             Ratelimiter(
