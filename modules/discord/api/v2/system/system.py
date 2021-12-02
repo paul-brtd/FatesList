@@ -3,7 +3,7 @@ from typing import Optional
 from modules.core import *
 
 from ..base import API_VERSION
-from .models import BotListStats, BotQueueGet
+from .models import BotListStats, BotQueueGet, BotVanity, BotIndex #TODO: BotSearch
 
 router = APIRouter(
     prefix = f"/api/v{API_VERSION}",
@@ -105,3 +105,45 @@ async def get_bot_queue(
 def get_staff_roles(request: Request):
     """Return all the staff roles so they can be used by our manager bot"""
     return staff_roles
+
+@router.get(
+    "/code/{vanity}",
+    response_model = BotVanity
+)
+async def get_vanity(request: Request, vanity: str):
+    """
+    Gets information about a vanity given a vanity code
+
+    Type can be either 'bot', 'server' or 'profile'
+
+    Redirect is the id it redirects to
+    """
+    vb = await vanity_bot(vanity)
+    logger.trace(f"Vanity is {vanity} and vb is {vb}")
+    if vb is None:
+        return abort(404)
+    return {"type": vb[1], "redirect": str(vb[0])}
+
+@router.get(
+    "/index",
+    response_model=BotIndex
+)
+async def get_index(request: Request, cert: Optional[bool] = True, type: enums.ReviewType = enums.ReviewType.bot):
+    """For any potential Android/iOS app, crawlers etc."""
+    return await render_index(request = request, api = True, cert = cert, type=type)
+
+@router.get(
+    "/search", 
+    #response_model = BotSearch,
+    dependencies = [
+        Depends(
+            Ratelimiter(
+                global_limit = Limit(times=20, minutes=1),
+                sub_limits = [Limit(times=5, seconds=15)]
+            )
+        )
+    ]
+)
+async def search_list(request: Request, q: str, target_type: enums.SearchType):
+    """For any potential Android/iOS app, crawlers etc. Q is the query to search for. Target type is the type to search for"""
+    return await render_search(request = request, q = q, api = True, target_type=target_type)

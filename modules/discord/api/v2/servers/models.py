@@ -31,8 +31,8 @@ class Guild(BaseModel):
     """
     Represents a server/guild on Fates List
     """
-    invite_channel: str
-    user: Optional[BaseUser] = None
+    invite_channel: Optional[str] = None
+    user: BaseUser
     description: Optional[str] = None
     tags: List[Dict[str, str]]
     long_description_type: Optional[enums.LongDescType] = None
@@ -40,7 +40,8 @@ class Guild(BaseModel):
     guild_count: int
     invite_amount: int
     total_votes: int
-    user_whitelist: List[str]
+    user_whitelist: Optional[List[str]] = None
+    user_blacklist: Optional[List[str]] = None
     state: enums.BotState
     website: Optional[str] = None
     css: Optional[str] = None
@@ -50,20 +51,3 @@ class Guild(BaseModel):
     banner_card: Optional[str] = None
     banner_page: Optional[str] = None
     keep_banner_decor: Optional[bool] = None
-
-
-class BotStats(BaseModel):
-    guild_count: int
-    shard_count: Optional[int] = None
-    shards: Optional[List[int]] = None
-    user_count: Optional[int] = None
-        
-class BotEvent(BaseModel):
-    m: dict
-    ctx: dict
-
-class BotEventList(BaseModel):
-    __root__: List[BotEvent]
-
-class BotEvents(BaseModel):
-    events: BotEventList

@@ -9,7 +9,7 @@ from starlette.concurrency import run_in_threadpool
 from math import floor
 
 from ..base import API_VERSION
-from .models import APIResponse, Guild, GuildRandom, BotStats, BotEvents
+from .models import APIResponse, Guild, GuildRandom
 
 cleaner = Cleaner(remove_unknown_tags=False)
 
@@ -124,7 +124,8 @@ async def fetch_server(
     request: Request, 
     guild_id: int, 
     compact: Optional[bool] = True, 
-    no_cache: Optional[bool] = False
+    no_cache: Optional[bool] = False,
+    sensitive: bool = True
 ):
     """
     Fetches server information given a server/guild ID. If not found, 404 will be returned.
@@ -132,6 +133,8 @@ async def fetch_server(
     Setting compact to true (default) -> description, long_description, long_description_type, keep_banner_decor and css will be null
 
     No cache means cached responses will not be served (may be temp disabled in the case of a DDOS or temp disabled for specific servers as required)
+
+    Setting sensitive to true will expose sensitive info like invite channel, user whitelist/blacklist etc
     """
     if len(str(guild_id)) not in [17, 18, 19, 20]:
         return abort(404)
@@ -143,7 +146,7 @@ async def fetch_server(
     
 
     api_ret = await db.fetchrow(
-        "SELECT banner_card, banner_page, guild_count, invite_amount, state, website, total_votes, login_required, user_whitelist, votes, invite_channel, nsfw, tags AS _tags FROM servers WHERE guild_id = $1", 
+        "SELECT banner_card, banner_page, guild_count, invite_amount, state, website, total_votes, login_required, votes, nsfw, tags AS _tags FROM servers WHERE guild_id = $1", 
         guild_id
     )
     if api_ret is None:
@@ -151,7 +154,11 @@ async def fetch_server(
 
     api_ret = dict(api_ret)
 
-    api_ret["invite_channel"] = str(api_ret["invite_channel"])
+    if sensitive:
+        await server_auth_check(guild_id, request.headers.get("Authorization", ""))
+        sensitive_dat = await db.fetchrow("SELECT invite_channel, user_whitelist, user_blacklist FROM servers WHERE guild_id = $1", guild_id)
+        api_ret |= dict(sensitive_dat)
+        api_ret["invite_channel"] = str(api_ret["invite_channel"]) if api_ret["invite_channel"] else None
 
     if not compact:
         extra = await db.fetchrow(
@@ -168,8 +175,9 @@ async def fetch_server(
         "SELECT vanity_url FROM vanity WHERE redirect = $1 AND type = 0", 
         guild_id
     )
-
-    await redis_db.set(f"guildcache-{guild_id}", orjson.dumps(api_ret), ex=60*60*8)
+    
+    if not sensitive:
+        await redis_db.set(f"guildcache-{guild_id}", orjson.dumps(api_ret), ex=60*60*8)
 
     return api_ret
 
@@ -185,7 +193,7 @@ async def server_widget(request: Request, bt: BackgroundTasks, guild_id: int, fo
     """
     Returns a widget. Superceded by Get Widget API
     """
-    return RedirectResponse(f"/api/widgets/{bot_id}?target_type={enums.ReviewType.bot}&format={format.name}&textcolor={textcolor}&bgcolor={bgcolor}")
+    return RedirectResponse(f"/api/widgets/{guild_id}?target_type={enums.ReviewType.server}&format={format.name}&textcolor={textcolor}&bgcolor={bgcolor}")
 
 @router.get(
     "/{guild_id}/ws_events",

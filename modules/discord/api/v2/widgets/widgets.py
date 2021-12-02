@@ -29,9 +29,16 @@ def is_color_like(c):
 
 
 @router.get("/{target_id}", operation_id="get_widget")
-async def get_widget(request: Request, bt: BackgroundTasks, target_id: int, target_type: enums.ReviewType, format: enums.WidgetFormat, bgcolor: Union[int, str] ='black', textcolor: Union[int, str] ='white'):
+async def get_widget(request: Request, bt: BackgroundTasks, target_id: int, target_type: enums.ReviewType, format: enums.WidgetFormat, bgcolor: Union[int, str] ='black', textcolor: Union[int, str] ='white', no_cache: Optional[bool] = False, cd: Optional[str] = None, full_desc: Optional[bool] = False):
     """
     Returns a widget
+
+    cd - A custom description you wish to set for the widget
+
+    full_desc - If this is set to true, the full description will be used, otherwise, only the first 25 characters will be used
+
+    no_cache - If this is set to true, cache will not be used but will still be updated. If using cd, set this option to true and cache the image yourself
+    Note that no_cache is slow and may lead to ratelimits and/or your got being banned if used excessively
     """
     if not is_color_like(str(bgcolor)) or not is_color_like(str(textcolor)):
         return abort(404)
@@ -79,7 +86,7 @@ async def get_widget(request: Request, bt: BackgroundTasks, target_id: int, targ
     elif format in (enums.WidgetFormat.png, enums.WidgetFormat.webp):
         # Check if in cache
         cache = await redis_db.get(f"widget-{target_id}-{target_type}-{format.name}-{textcolor}")
-        if cache:
+        if cache and not no_cache:
             def _stream():
                 with io.BytesIO(cache) as output:
                     yield from output
@@ -191,13 +198,14 @@ async def get_widget(request: Request, bt: BackgroundTasks, target_id: int, targ
             )
         
         #description
-        wrapper = textwrap.TextWrapper(width=30)
-        word_list = wrapper.wrap(text=bot['description'])
+        wrapper = textwrap.TextWrapper(width=15)
+        text = cd or (bot["description"][:25] if not full_desc else bot["description"])
+        word_list = wrapper.wrap(text=str(text))
         d.text(
             (120,30), 
-            str('\n'.join(word_list)), 
+            str("\n".join(word_list)), 
             fill=textcolor,
-            font=get_font(str(bot['description']),d)
+            font=get_font(str("\n".join(word_list)),d)
         )
         
         #server count

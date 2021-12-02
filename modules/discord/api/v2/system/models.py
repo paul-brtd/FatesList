@@ -24,3 +24,25 @@ class BotQueueList(BaseModel):
 
 class BotQueueGet(BaseModel):
     bots: Optional[BotQueueList] = None
+
+class BotVanity(BaseModel):
+    type: enums.SearchType
+    redirect: str
+
+class BotPartial(BaseModel):
+    description: str
+    guild_count: int
+    banner: Optional[str] = None
+    state: enums.BotState
+    nsfw: bool
+    votes: int
+    user: BaseUser
+
+class BotPartialList(BaseModel):
+    __root__: List[BotPartial]
+
+class BotIndex(BaseModel):
+    tags_fixed: FLTags
+    top_voted: BotPartialList
+    certified_bots: BotPartialList
+    new_bots: BotPartialList
