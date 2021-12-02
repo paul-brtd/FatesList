@@ -54,7 +54,7 @@ def id_check(check_t: str):
 
     if check_t == "bot":
         return bot
-    elif check_t == "guild" or check_t == "server":
+    elif check_t in ("guild", "server"):
         return server
     return user
 
@@ -238,7 +238,7 @@ async def vanity_redirector(request: Request, vanity: str, ext, extra_args = Non
     vurl = await vanity_bot(vanity)
     if vurl is None:
         return await templates.e(request, "Invalid Vanity")
-    if vurl[1] != "bot" and vurl[1] != "server":
+    if vurl[1] not in ("bot", "server"):
         return await templates.e(request, f"This is a {vurl[1]}. This is a work in progress :)", status_code = 400)
     if isinstance(ext, str):
         eurl = "/".join([site_url, vurl[1], str(vurl[0]), ext])
