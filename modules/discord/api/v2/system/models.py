@@ -1,6 +1,8 @@
 from typing import List, Optional
-from ..base_models import BaseUser
+
 from pydantic import BaseModel
+
+from ..base_models import BaseUser
 
 
 class BotListStats(BaseModel):
@@ -19,15 +21,19 @@ class PartialBotQueue(BaseModel):
     invite: str
     description: str
 
+
 class BotQueueList(BaseModel):
     __root__: List[PartialBotQueue]
+
 
 class BotQueueGet(BaseModel):
     bots: Optional[BotQueueList] = None
 
+
 class BotVanity(BaseModel):
     type: enums.SearchType
     redirect: str
+
 
 class BotPartial(BaseModel):
     description: str
@@ -38,8 +44,10 @@ class BotPartial(BaseModel):
     votes: int
     user: BaseUser
 
+
 class BotPartialList(BaseModel):
     __root__: List[BotPartial]
+
 
 class BotIndex(BaseModel):
     tags_fixed: FLTags

@@ -1,6 +1,6 @@
-import uuid
-from typing import List, Optional, Dict
 import datetime
+import uuid
+from typing import Dict, List, Optional
 
 from pydantic import BaseModel
 
@@ -8,15 +8,19 @@ import modules.models.enums as enums
 
 from ..base_models import APIResponse, BaseUser
 
+
 class GCVFormat(BaseModel):
     """Represents a formatted for client data"""
+
     guild_count: str
     votes: str
+
 
 class GuildRandom(BaseModel):
     """
     Represents a random server/guild on Fates List
     """
+
     guild_id: str
     description: str
     banner_card: Optional[str] = None
@@ -27,10 +31,12 @@ class GuildRandom(BaseModel):
     votes: int
     formatted: GCVFormat
 
+
 class Guild(BaseModel):
     """
     Represents a server/guild on Fates List
     """
+
     invite_channel: Optional[str] = None
     user: BaseUser
     description: Optional[str] = None
