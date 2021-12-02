@@ -7,13 +7,16 @@ import modules.models.enums as enums
 
 from ..base_models import APIResponse, BaseUser
 
+
 class UpdateUserPreferences(BaseModel):
     """Setting field to null and/or omitting it means no change to said field"""
+
     js_allowed: Optional[bool] = None
     reset_token: Optional[bool] = None
     description: Optional[str] = None
     css: Optional[str] = None
-        
+
+
 class BotMeta(BaseModel):
     """
     Notes:
@@ -21,6 +24,7 @@ class BotMeta(BaseModel):
     - extra_owners must be a list of strings where the strings
     can be made a integer
     """
+
     prefix: str
     library: str
     invite: str
@@ -29,7 +33,8 @@ class BotMeta(BaseModel):
     banner_card: Optional[str] = None
     banner_page: Optional[str] = None
     keep_banner_decor: bool
-    extra_owners: List[str] # List of strings that can be turned into a integer
+    extra_owners: List[
+        str]  # List of strings that can be turned into a integer
     support: Optional[str] = None
     long_description: str
     css: Optional[str] = None
@@ -52,6 +57,7 @@ class BotMeta(BaseModel):
         [eos.append(int(eo)) for eo in v if eo.isdigit() and eo not in eos]
         return eos
 
+
 class OwnershipTransfer(BaseModel):
     new_owner: str
 
@@ -64,6 +70,6 @@ class OwnershipTransfer(BaseModel):
             raise ValueError("Invalid new owner")
         return new_owner
 
+
 class BotAppeal(BaseModel):
     appeal: str
-

@@ -1,5 +1,5 @@
 import uuid
-from typing import List, Optional, Dict
+from typing import Dict, List, Optional
 
 from pydantic import BaseModel, validator
 
@@ -7,8 +7,9 @@ import modules.models.enums as enums
 
 from ..base_models import APIResponse, BaseUser, IDResponse
 
+
 class BotCommand(BaseModel):
-    cmd_type: enums.CommandType # 0 = no, 1 = guild, 2 = global
+    cmd_type: enums.CommandType  # 0 = no, 1 = guild, 2 = global
     cmd_groups: Optional[List[str]] = ["Default"]
     cmd_name: str
     vote_locked: bool
@@ -19,14 +20,18 @@ class BotCommand(BaseModel):
     notes: Optional[list] = []
     doc_link: Optional[str] = ""
 
+
 class BotCommandWithId(BotCommand):
     id: uuid.UUID
+
 
 class BotCommandsGet(BaseModel):
     __root__: Dict[str, List[BotCommandWithId]]
 
+
 class BotCommands(BaseModel):
     commands: List[BotCommand]
+
 
 class BotCommandDelete(BaseModel):
     ids: Optional[List[uuid.UUID]] = None
@@ -38,8 +43,10 @@ class BotCommandDelete(BaseModel):
     def nuke_check(cls, v, values, **kwargs):
         if "ids" in values:
             if values["ids"] and v:
-                raise ValueError("ids and nuke cannot be used at the same time!")
+                raise ValueError(
+                    "ids and nuke cannot be used at the same time!")
         if "name" in values:
             if values["names"] and v:
-                raise ValueError("names and nuke cannot be used at the same time!")
+                raise ValueError(
+                    "names and nuke cannot be used at the same time!")
         return v

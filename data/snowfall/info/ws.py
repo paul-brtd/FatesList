@@ -2,25 +2,39 @@
 
 import asyncio
 import json
+import sys
 import time
 import uuid
-import sys
-sys.path.append(".")
-sys.path.append("../../../")
 
 import websockets
 
 from modules.models import enums
 
+sys.path.append(".")
+sys.path.append("../../../")
+
 URL = "wss://fateslist.xyz/api/dragon/ws/"
 
-class Bot():
-    def __init__(self, bot_id: int, token: str, send_all: bool = True, send_none: bool = False, bot: bool = True):
+
+class Bot:
+    def __init__(
+        self,
+        bot_id: int,
+        token: str,
+        send_all: bool = True,
+        send_none: bool = False,
+        bot: bool = True,
+    ):
         self.bot_id = bot_id
         self.token = token
         self.send_all = send_all
         self.send_none = send_none
-        self.hooks = {"ready": self.none, "identity": self.identity, "default": self.default, "event": self._on_event_payload}
+        self.hooks = {
+            "ready": self.none,
+            "identity": self.identity,
+            "default": self.default,
+            "event": self._on_event_payload,
+        }
         self.websocket = None
         self.bot = bot
 
@@ -41,13 +55,19 @@ class Bot():
             while True:
                 event = await self.websocket.recv()
                 await self._render_event(event)
-    
+
     async def identity(self, event):
-        #print(event)
-        payload = {"id": str(self.bot_id), "token": self.token, "send_all": self.send_all, "send_none": self.send_none, "bot": self.bot}
+        # print(event)
+        payload = {
+            "id": str(self.bot_id),
+            "token": self.token,
+            "send_all": self.send_all,
+            "send_none": self.send_none,
+            "bot": self.bot,
+        }
         await self.websocket.send(json.dumps(payload))
         print(f"Sending {json.dumps(payload)}")
-    
+
     @staticmethod
     async def default(event):
         print(event, type(event))
@@ -56,7 +76,8 @@ class Bot():
         ...
 
     async def _on_event_payload(self, event):
-        await self.on_event(EventContext(event["dat"], event["dat"]["m"]["e"], self.bot))
+        await self.on_event(
+            EventContext(event["dat"], event["dat"]["m"]["e"], self.bot))
 
     @staticmethod
     async def on_event(ctx):
@@ -71,12 +92,14 @@ class Bot():
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self.websocket.close())
 
-class Vote():
+
+class Vote:
     def __init__(self, user_id: str, test: bool):
         self.user_id = int(user_id)
         self.test = test
 
-class EventContext():
+
+class EventContext:
     def __init__(self, data, event, bot):
         self.data: dict = data
         self.event: int = event
