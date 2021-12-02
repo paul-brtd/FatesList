@@ -200,7 +200,7 @@ def site_enum2html():
             nl = "\n| :--- | :--- | :--- |"
             keys = []
             for ext in fields:
-                if ext == "value" or ext == "__doc__":
+                if ext in ("value", "__doc__"):
                     continue
                 md[key]["table"] += f" {ext.strip('_').replace('_', ' ').title()} |"
                 nl += " :--- |"
