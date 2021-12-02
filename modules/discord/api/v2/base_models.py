@@ -24,19 +24,11 @@ class BaseUser(BaseModel):
         """
         return self.username
 
-    def get_status(self):
-        """
-        :return: Returns a status object for the bot
-        :rtype: Status
-        """
-        return Status(status = self.status)
-
 class APIResponse(BaseModel):
     """
     Represents a "regular" API response on Fates List CRUD endpoints
 
     You can check for success using the done boolean and reason using the reason attribute 
-    
     """
     done: bool
     reason: Optional[str] = None
