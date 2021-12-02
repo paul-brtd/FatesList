@@ -184,6 +184,7 @@ type ServerListCommand struct {
 	Handler      ServerListFunction                    `json:"-"`
 	SlashOptions []*discordgo.ApplicationCommandOption `json:"slash_options"` // Slash command options
 	Disabled     bool                                  `json:"disabled"`
+	Server       string                                `json:"server"`
 }
 
 type CooldownBucket struct {
@@ -266,6 +267,11 @@ var BotStatePrivateViewable = BotState{
 	Description: "Private but viewable with link (server only)",
 }
 
+var BotStatePrivateStaffOnly = BotState{
+	Value:       9,
+	Description: "This server may only be joined by Fates List Staff (server only)",
+}
+
 var BotStateUnknown = BotState{
 	Value:       -1,
 	Description: "Unknown State",
@@ -292,6 +298,8 @@ func GetBotState(state int) BotState {
 		return BotStateArchived
 	case 8:
 		return BotStatePrivateViewable
+	case 9:
+		return BotStatePrivateStaffOnly
 	default:
 		return BotStateUnknown
 	}

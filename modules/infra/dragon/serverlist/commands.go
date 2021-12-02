@@ -232,9 +232,16 @@ func CmdInit() map[string]types.SlashCommand {
 				if value == "private_viewable" || value == "8" {
 					value = "8"
 				} else if value == "public" || value == "0" {
-
+					value = "0"
 				} else {
-					return "State must be one of (private_viewable, public)"
+					_, isStaff, _ := common.GetPerms(common.DiscordMain, context.Context, context.Interaction.Member.User.ID, 4)
+					if !isStaff {
+						return "State must be one of (private_viewable, public)"
+					} else {
+						if _, err := strconv.Atoi(value); err != nil {
+							return "State must be a number!"
+						}
+					}
 				}
 
 				var currState pgtype.Int4
@@ -246,8 +253,12 @@ func CmdInit() map[string]types.SlashCommand {
 					return "An error has occurred fetching your current status"
 				}
 				state := types.GetBotState(int(currState.Int))
+
 				if state != types.BotStateApproved && state != types.BotStatePrivateViewable {
-					return "You may not change the state of this server. Please contact Fates List Staff for more information"
+					_, isStaff, _ := common.GetPerms(common.DiscordMain, context.Context, context.Interaction.Member.User.ID, 4)
+					if !isStaff {
+						return "You may not change the state of this server. Please contact Fates List Staff for more information"
+					}
 				}
 			}
 
@@ -998,6 +1009,7 @@ func CmdInit() map[string]types.SlashCommand {
 			Description: v.Description,
 			Options:     v.SlashOptions,
 			Cooldown:    v.Cooldown,
+			Server:      v.Server,
 			Handler: func(discord *discordgo.Session, postgres *pgxpool.Pool, redis *redis.Client, interaction *discordgo.Interaction, appCmdData discordgo.ApplicationCommandInteractionData, index string) string {
 				var ok bool
 				v, ok := commands[index]

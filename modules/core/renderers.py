@@ -206,10 +206,11 @@ async def render_search(request: Request, q: str, api: bool, target_type: enums.
             servers.votes, servers.guild_count, servers.nsfw FROM servers
             WHERE (servers.description ilike $1
             OR servers.long_description ilike $1
-            OR servers.name_cached ilike $1)
+            OR servers.name_cached ilike $1) AND servers.state = $2
             ORDER BY servers.votes DESC, servers.guild_count DESC LIMIT 6
             """,
-            f'%{q}%'
+            f'%{q}%',
+            enums.BotState.approved
         )
         tags = await db.fetch("SELECT id, name, iconify_data, owner_guild FROM server_tags")
     else:

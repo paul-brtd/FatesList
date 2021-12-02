@@ -124,22 +124,21 @@ class Staff(commands.Cog):
         guild_ids=[staff]
     )  
     async def addstaff(self, inter, user: disnake.User):
-        staff = await is_staff(inter, inter.author.id, 5)
-        if not staff[0]:
+        staff_check = await is_staff(inter, inter.author.id, 5)
+        if not staff_check[0]:
             return await inter.send("Only staff can use this command")
         
         main_guild = self.bot.get_guild(main)
-        staff_invite = await inter.channel.create_invite(reason="New staff member", max_uses=1, unique=True)
         msg = f"""
 **You have been accepted onto our staff team!**
 
 In order to begin testing bots and be a part of the Fates List Staff Team, you must join the below servers:
  
  
-**Staff server:** {staff_invite.url}
+**Staff server:** <https://fateslist.xyz/server/{staff}/invite>
 
-**Testing server:** https://discord.gg/PcJpm5cvKV
-        
+**Testing server:** <https://fateslist.xyz/server/{testing}/invite>
+
 
 After joining the staff server, you must run /getaccess to get your roles.
  

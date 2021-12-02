@@ -362,6 +362,23 @@ func setupCommands() {
 				return "This server is private and not accepting invites at this time!"
 			} else if types.GetBotState(int(state.Int)) == types.BotStateBanned {
 				return "This server has been banned from Fates List. If you are a staff member, contact Fates List Support for more information."
+			} else if types.GetBotState(int(state.Int)) == types.BotStatePrivateStaffOnly {
+				if userId == "0" {
+					if guildId == common.StaffServer {
+						return "You need to login as a Fates List Staff Member (for new staff, this is just your discord login) to join this server"
+					}
+					return "Login to Fates List before trying to join this server"
+				}
+				// The needed perm
+				var perm float32 = 2
+				if guildId == common.StaffServer {
+					// Staff server exception, only need permlevel of 2 for staff server
+					perm = 2
+				}
+				_, isStaff, _ := common.GetPerms(context.Discord, ctx, userId, perm)
+				if !isStaff {
+					return "This server is only open to Fates List Staff Members at this time."
+				}
 			} else if loginRequired.Bool && userId == "0" {
 				return "This server requires you to be logged in to join it!"
 			}

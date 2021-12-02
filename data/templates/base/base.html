@@ -165,11 +165,12 @@
 
 	function addServer() {
 		btestmsg = `
-		        To add your server, first add <a href='{{server_bot_invite}}'>our bot</a> to your server.
+		        To add your server, add <a href='{{server_bot_invite}}'>our bot</a> to your server.
        			<br/><br/>
-       			Then you just have to set a description and a long description using the /set slash command otherwise it will be randomly generated!
-       			<br/><br/>
-       			Server Index Page: <a href="/servers">https://fateslist.xyz/servers</a>
+       			<strong style="font-size: 18px">Next steps</strong><br/>
+       			<ul>
+       				<li>Set a description (and a long description) otherwise it will be randomly generated!</li>
+			</ul>
 		`
 		modalShow("Add your server now!", btestmsg)
 	}

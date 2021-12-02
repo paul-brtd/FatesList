@@ -7,10 +7,12 @@ import (
 	"dragon/ipc"
 	"dragon/serverlist"
 	"dragon/slashbot"
+	"dragon/types"
 	"dragon/webserver"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/Fates-List/discordgo"
 	"github.com/davecgh/go-spew/spew"
@@ -38,6 +40,8 @@ func DragonServer() {
 		panic(err)
 	}
 
+	common.DiscordMain = discord
+
 	discord.Identify.Intents = discordgo.IntentsGuilds | discordgo.IntentsGuildPresences | discordgo.IntentsGuildMembers | discordgo.IntentsDirectMessages | discordgo.IntentsGuildMessages | discordgo.IntentsGuildMembers
 	discordServerBot, err = discordgo.New("Bot " + common.ServerBotToken)
 	if err != nil {
@@ -45,7 +49,7 @@ func DragonServer() {
 	}
 
 	// For now, if we don't get the guild members intent in the future, this will be replaced with approx guild count
-	discordServerBot.Identify.Intents = discordgo.IntentsGuilds | discordgo.IntentsDirectMessages | discordgo.IntentsGuildMembers
+	discordServerBot.Identify.Intents = discordgo.IntentsGuilds | discordgo.IntentsGuildMembers
 
 	// Be prepared to remove this handler if we don't get priv intents
 	memberHandler := func(s *discordgo.Session, m *discordgo.Member) {
@@ -93,6 +97,18 @@ func DragonServer() {
 		if err != "" {
 			log.Error(err)
 		}
+		rdb.Del(ctx, "pendingdel-"+gc.Guild.ID)
+		db.Exec(ctx, "UPDATE servers SET state = $1, deleted = false WHERE guild_id = $2 AND deleted = true AND state = $3", types.BotStateApproved.Int(), gc.Guild.ID, types.BotStatePrivateViewable.Int())
+	})
+	discordServerBot.AddHandler(func(s *discordgo.Session, gc *discordgo.GuildDelete) {
+		log.Info("Left guild " + gc.Guild.ID + "(" + gc.Guild.Name + ")")
+		rdb.Set(ctx, "pendingdel-"+gc.Guild.ID, 0, 0)
+
+		time.AfterFunc(1*time.Minute, func() {
+			if rdb.Exists(ctx, "pendingdel-"+gc.Guild.ID).Val() != 0 {
+				db.Exec(ctx, "UPDATE servers SET state = $1, deleted = true WHERE guild_id = $1", types.BotStatePrivateViewable.Int(), gc.Guild.ID)
+			}
+		})
 	})
 
 	err = discord.Open()
