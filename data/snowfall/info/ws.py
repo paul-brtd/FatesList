@@ -48,7 +48,8 @@ class Bot():
         await self.websocket.send(json.dumps(payload))
         print(f"Sending {json.dumps(payload)}")
     
-    async def default(self, event):
+    @staticmethod
+    async def default(event):
         print(event, type(event))
 
     async def none(self, event):
@@ -57,7 +58,8 @@ class Bot():
     async def _on_event_payload(self, event):
         await self.on_event(EventContext(event["dat"], event["dat"]["m"]["e"], self.bot))
 
-    async def on_event(self, ctx):
+    @staticmethod
+    async def on_event(ctx):
         print(ctx.parse_vote())
 
     def start(self):

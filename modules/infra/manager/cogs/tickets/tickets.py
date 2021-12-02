@@ -57,7 +57,8 @@ class _TicketCallback(discord.ui.Select):
         await self.view.msg.edit(view=self.view) # Force reset select menu for user
         return await f(interaction) 
     
-    async def support(self, interaction):
+    @staticmethod
+    async def support(interaction):
         await interaction.response.defer()
         return await interaction.followup.send(
             f"Please go to <#{general_support_channel}> and make a thread there!",

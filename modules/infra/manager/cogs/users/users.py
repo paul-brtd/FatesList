@@ -64,12 +64,14 @@ class Users(commands.Cog):
     def cog_unload(self):
         self.statloop.cancel()
    
-    async def _catid(self, inter):
+    @staticmethod
+    async def _catid(inter):
         if inter.channel.category: 
             return await inter.send(str(inter.channel.category.id)) 
         return await inter.send("No category attached to this channel")  
 
-    async def _profile(self, inter, user = None):
+    @staticmethod
+    async def _profile(inter, user = None):
         """Gets a users profile (Not yet done)"""
         target = user if user else inter.author
         _profile = await profile(inter, target)

@@ -15,6 +15,7 @@ class BotPromotion(BaseModel):
     css: Optional[str] = None
     type: enums.PromotionType
     
+    @staticmethod
     @validator("title")
     def title_length(cls, v, values, **kwargs):
         if len(v) <= 5:

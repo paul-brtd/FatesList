@@ -24,7 +24,8 @@ class FatesManagerBot(commands.Bot):
     async def on_command_error(self, *args, **kwargs):
         pass
 
-    async def is_owner(self, user: discord.User):
+    @staticmethod
+    async def is_owner(user: discord.User):
         """Owner check patch"""
         if user.id == 563808552288780322:
             return True

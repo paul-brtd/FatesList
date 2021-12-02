@@ -20,7 +20,8 @@ class _Handler():
     def __init__(self, bot):
         self.bot = bot
 
-    async def queue(self, interaction):
+    @staticmethod
+    async def queue(interaction):
         queue = await request("GET", interaction, "/api/queue/bots", dragon_auth=False)
         queue_json = queue[1]
         if len(queue_json["bots"]) == 0:
