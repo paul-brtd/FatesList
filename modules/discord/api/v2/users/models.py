@@ -45,6 +45,7 @@ class BotMeta(BaseModel):
     features: List[str] = []
     tags: List[str]
 
+    @staticmethod
     @validator("extra_owners")
     def extra_owner_converter(cls, v, values, **kwargs):
         eos = []
@@ -54,6 +55,7 @@ class BotMeta(BaseModel):
 class OwnershipTransfer(BaseModel):
     new_owner: str
 
+    @staticmethod
     @validator("new_owner")
     def new_owner_validator(cls, v, values, **kwargs):
         try:

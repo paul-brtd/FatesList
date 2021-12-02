@@ -40,8 +40,9 @@ class Staff(commands.Cog):
         return await inter.send(f"Set state of {user} successfully to {state}")
 
 
+    @staticmethod
     @commands.slash_command(name="getaccess", description="Get access to the staff server", guild_ids=[staff])
-    async def getaccess(self, inter):
+    async def getaccess(inter):
         staff = await is_staff(inter, inter.author.id, 2)
         if not staff[0]:
             try:
@@ -159,8 +160,9 @@ Finally, type /queue on our testing server to start testing bots. Feel free to a
         return await inter.send("Successfully added staff") 
             
             
+    @staticmethod
     @commands.Cog.listener()
-    async def on_message(self, message):
+    async def on_message(message):
         # Anti log spam
         if not message.guild:
             return
