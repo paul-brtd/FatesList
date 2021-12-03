@@ -16,7 +16,6 @@ class BotReviewPartial(BaseModel):
     star_rating: float
     reply: bool | None = False
 
-    @staticmethod
     @validator("reply")
     def id_or_no_reply(cls, v, values, **kwargs):
         if v and not id:

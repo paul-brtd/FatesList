@@ -38,7 +38,6 @@ class BotCommandDelete(BaseModel):
     names: list[str] | None = None
     nuke: bool | None = False
 
-    @staticmethod
     @validator("nuke")
     def nuke_check(cls, v, values, **kwargs):
         if "ids" in values:
