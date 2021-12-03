@@ -11,20 +11,20 @@ class Lists(BaseModel):
 
 class Stats(Lists):
     server_count: int
-    shard_count: Optional[int] = None
-    user_count: Optional[int] = None
-    shards: Optional[List[int]] = None
-    shard_id: Optional[int] = None
+    shard_count: int | None = None
+    user_count: int | None = None
+    shards: list[int] | None = None
+    shard_id: int | None = None
 
 class BList(BaseModel):
     url: str
-    icon: Optional[str] = None
+    icon: str | None = None
     api_url: str
     api_docs: str
-    discord: Optional[str] = None
-    description: Optional[str] = "No Description Yet :("
-    supported_features: List[int]
-    owners: List[str]
+    discord: str | None = None
+    description: str | None = "No Description Yet :("
+    supported_features: list[int]
+    owners: list[str]
 
 class Endpoint(BaseModel):
     method: enums.ULAMethod

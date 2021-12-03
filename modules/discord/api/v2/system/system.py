@@ -12,7 +12,7 @@ router = APIRouter(
 )
 
 def get_uptime():
-    with open('/proc/uptime', 'r') as f:
+    with open('/proc/uptime') as f:
         uptime_seconds = float(f.readline().split()[0])
     return uptime_seconds
 
@@ -128,9 +128,9 @@ async def get_vanity(request: Request, vanity: str):
     "/index",
     response_model=BotIndex
 )
-async def get_index(request: Request, cert: Optional[bool] = True, type: enums.ReviewType = enums.ReviewType.bot):
+async def get_index(request: Request, type: enums.ReviewType = enums.ReviewType.bot):
     """For any potential Android/iOS app, crawlers etc."""
-    return await render_index(request = request, api = True, cert = cert, type=type)
+    return await render_index(request = request, api = True, type=type)
 
 @router.get(
     "/search", 

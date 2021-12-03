@@ -33,8 +33,8 @@ def reroute_support():
 # cert = certified bots
 @router.get("/")
 @router.head("/")
-async def index_fend(request: Request, cert: Optional[bool] = True):
-    return await render_index(request = request, api = False, cert = cert)
+async def index_fend(request: Request):
+    return await render_index(request = request, api = False)
 
 @router.get("/servers")
 @router.head("/servers")
@@ -42,8 +42,8 @@ async def index_fend(request: Request, cert: Optional[bool] = True):
 @router.head("/server")
 @router.get("/guilds")
 @router.head("/guilds")
-async def server_index(request: Request, cert: Optional[bool] = True):
-    return await render_index(request = request, api = False, cert = cert, type=enums.ReviewType.server)
+async def server_index(request: Request):
+    return await render_index(request = request, api = False, type=enums.ReviewType.server)
 
 @router.get("/etest/{code}")
 async def test_error(code: int):

@@ -170,7 +170,7 @@ async def get_widget(request: Request, bt: BackgroundTasks, target_id: int, targ
         d = ImageDraw.Draw(widget_img)
         d.text(
             (25,150), 
-            str('Fates List'), 
+            'Fates List', 
             fill=textcolor,
             font=ImageFont.truetype(
                 font,

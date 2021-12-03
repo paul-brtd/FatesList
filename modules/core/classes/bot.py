@@ -17,7 +17,7 @@ class Bot(DiscordUser):
         
         return invite
     
-    async def invite(self, user_id: Optional[int] = None):
+    async def invite(self, user_id: int | None = None):
         """Invites a user to a bot updating invite amount"""
         await self.db.execute("UPDATE bots SET invite_amount = invite_amount + 1 WHERE bot_id = $2", self.id)
         await add_ws_event(self.id, {"m": {"e": enums.APIEvents.bot_invite}, "ctx": {"user": str(user_id)}})

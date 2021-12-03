@@ -19,7 +19,7 @@ class GuildRandom(BaseModel):
     """
     guild_id: str
     description: str
-    banner_card: Optional[str] = None
+    banner_card: str | None = None
     state: int
     username: str
     avatar: str
@@ -31,23 +31,23 @@ class Guild(BaseModel):
     """
     Represents a server/guild on Fates List
     """
-    invite_channel: Optional[str] = None
+    invite_channel: str | None = None
     user: BaseUser
-    description: Optional[str] = None
-    tags: List[Dict[str, str]]
-    long_description_type: Optional[enums.LongDescType] = None
-    long_description: Optional[str] = None
+    description: str | None = None
+    tags: list[dict[str, str]]
+    long_description_type: enums.LongDescType | None = None
+    long_description: str | None = None
     guild_count: int
     invite_amount: int
     total_votes: int
-    user_whitelist: Optional[List[str]] = None
-    user_blacklist: Optional[List[str]] = None
+    user_whitelist: list[str] | None = None
+    user_blacklist: list[str] | None = None
     state: enums.BotState
-    website: Optional[str] = None
-    css: Optional[str] = None
+    website: str | None = None
+    css: str | None = None
     votes: int
     vanity: str
     nsfw: bool
-    banner_card: Optional[str] = None
-    banner_page: Optional[str] = None
-    keep_banner_decor: Optional[bool] = None
+    banner_card: str | None = None
+    banner_page: str | None = None
+    keep_banner_decor: bool | None = None

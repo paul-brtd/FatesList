@@ -167,9 +167,9 @@ async def fetch_server(
         )
         api_ret |= dict(extra)
 
-    api_ret["tags"] = [dict((await db.fetchrow("SELECT name, id, iconify_data FROM server_tags WHERE id = $1", id))) for id in api_ret["_tags"]]
+    api_ret["tags"] = [dict(await db.fetchrow("SELECT name, id, iconify_data FROM server_tags WHERE id = $1", id)) for id in api_ret["_tags"]]
    
-    api_ret["user"] = dict((await db.fetchrow("SELECT guild_id AS id, name_cached AS username, '0000' AS disc, avatar_cached AS avatar FROM servers WHERE guild_id = $1", guild_id)))
+    api_ret["user"] = dict(await db.fetchrow("SELECT guild_id AS id, name_cached AS username, '0000' AS disc, avatar_cached AS avatar FROM servers WHERE guild_id = $1", guild_id))
     
     api_ret["vanity"] = await db.fetchval(
         "SELECT vanity_url FROM vanity WHERE redirect = $1 AND type = 0", 

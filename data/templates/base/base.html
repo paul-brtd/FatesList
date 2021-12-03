@@ -126,13 +126,13 @@
 	  {% if username %}
 	  <a class="dropdown-item" href="/profile/{{user_id}}">My Profile</a>
           <a class="dropdown-item" href="/bot/admin/add">Add Bot</a>
+	  <a class="dropdown-item" href="javascript:addServer()">Add Server</a>
           <a class="dropdown-item" href="/fates/logout">Logout</a>
 	  <div class="dropdown-divider"></div>
 	  {% else %}
           <a class="dropdown-item" href="/fates/login">Login</a>
 	  <div class="dropdown-divider"></div>
-          {%endif%}
-	  <a class="dropdown-item" href="javascript:addServer()">Add Server</a>
+          {% endif %}
 	  <a class="dropdown-item" href="/fates/stats">Statistics</a>
           <a class="dropdown-item" href="https://apidocs.fateslist.xyz">API Docs</a>
           <a class="dropdown-item" href="/fates/support/invite" target=”_blank”>Support Server</a>

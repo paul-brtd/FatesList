@@ -19,17 +19,17 @@ class BotResourceWithId(BotResource):
 
 
 class BotResourcesGet(BaseModel):
-    __root__: Dict[str, List[BotResourceWithId]]
+    __root__: dict[str, list[BotResourceWithId]]
 
 
 class BotResources(BaseModel):
-    resources: List[BotResource]
+    resources: list[BotResource]
 
 
 class BotResourceDelete(BaseModel):
-    ids: Optional[List[uuid.UUID]] = None
-    titles: Optional[List[str]] = None
-    nuke: Optional[bool] = False
+    ids: list[uuid.UUID] | None = None
+    titles: list[str] | None = None
+    nuke: bool | None = False
 
     @staticmethod
     @validator("nuke")

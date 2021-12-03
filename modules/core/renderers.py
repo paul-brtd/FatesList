@@ -15,11 +15,11 @@ from modules.models import constants
 
 cleaner = Cleaner()
 
-async def render_index(request: Request, api: bool, cert: bool, type: enums.ReviewType = enums.ReviewType.bot):
+async def render_index(request: Request, api: bool, type: enums.ReviewType = enums.ReviewType.bot):
     worker_session = request.app.state.worker_session
     top_voted = await do_index_query(worker_session, add_query = "ORDER BY votes DESC", state = [0], type=type)
     new_bots = await do_index_query(worker_session, add_query = "ORDER BY created_at DESC", state = [0], type=type)
-    certified_bots = await do_index_query(worker_session, add_query = "ORDER BY votes DESC", state = [6], type=type) if cert else []
+    certified_bots = await do_index_query(worker_session, add_query = "ORDER BY votes DESC", state = [6], type=type)
 
     if type == enums.ReviewType.bot:
         tags = tags_fixed

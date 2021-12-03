@@ -13,14 +13,14 @@ class Badge(BaseModel):
     name: str
     description: str
     image: str
-    staff: Optional[bool] = False
-    cert_dev: Optional[bool] = False
-    bot_dev: Optional[bool] = False
-    support_server_member: Optional[bool] = False
-    everyone: Optional[bool] = False
+    staff: bool | None = False
+    cert_dev: bool | None = False
+    bot_dev: bool | None = False
+    support_server_member: bool | None = False
+    everyone: bool | None = False
     
     @staticmethod
-    async def from_user(id, roles, badges: Optional[List[str]] = [], bot_dev: Optional[bool] = False, cert_dev: Optional[bool] = False):
+    async def from_user(id, roles, badges: list[str] | None = [], bot_dev: bool | None = False, cert_dev: bool | None = False):
         """Make badges from a user given the member, badges and bots"""
         user_flags = {}
         

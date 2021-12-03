@@ -18,18 +18,18 @@ class ProfileBot(BaseModel):
   
 class ProfileData(BaseModel):
     """Misc data about a user"""
-    badges: List[Badge]
-    description: Optional[str] = "This user prefers to be a enigma"
-    css: Optional[str] = None
+    badges: list[Badge]
+    description: str | None = "This user prefers to be a enigma"
+    css: str | None = None
     js_allowed: bool
     bot_developer: bool
     certified_developer: bool
     state: enums.UserState
 
 class Profile(BaseModel):
-    bots: List[ProfileBot]
-    approved_bots: List[ProfileBot]
-    certified_bots: List[ProfileBot]
+    bots: list[ProfileBot]
+    approved_bots: list[ProfileBot]
+    certified_bots: list[ProfileBot]
     profile: ProfileData
     user: enums.BaseUser
     dup: bool

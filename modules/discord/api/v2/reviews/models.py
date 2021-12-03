@@ -11,10 +11,10 @@ from ..base_models import APIResponse, BasePager, BaseUser
 class BotReviewPartial(BaseModel):
     """Note that the reply and id fields are not honored in edit bot"""
 
-    id: Optional[uuid.UUID] = None
+    id: uuid.UUID | None = None
     review: str
     star_rating: float
-    reply: Optional[bool] = False
+    reply: bool | None = False
 
     @staticmethod
     @validator("reply")
@@ -46,7 +46,7 @@ class BotReview(BaseModel):
     epoch: list
     time_past: str
     user: BaseUser
-    replies: Optional[BotReviewList] = []
+    replies: BotReviewList | None = []
 
 
 class BotReviewList(BaseModel):
@@ -54,7 +54,7 @@ class BotReviewList(BaseModel):
     Represents a list of bot reviews on Fates List
     """
 
-    __root__: List[BotReview]
+    __root__: list[BotReview]
 
 
 class BotReviews(BaseModel):

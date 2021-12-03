@@ -19,12 +19,12 @@ class BotRandom(BaseModel):
     """
     bot_id: str
     description: str
-    banner_card: Optional[str] = None
+    banner_card: str | None = None
     state: int
     username: str
     avatar: str
     guild_count: int
-    invite: Optional[str] = None
+    invite: str | None = None
     votes: int
     formatted: GCVFormat
 
@@ -33,56 +33,56 @@ class BotOwner(BaseModel):
     main: bool
 
 class BotOwners(BaseModel):
-    __root__: List[BotOwner]
+    __root__: list[BotOwner]
         
 class Bot(BaseModel):
     """
     Represents a bot on Fates List
     """
-    user: Optional[BaseUser] = None
-    description: Optional[str] = None
-    tags: List[str]
-    last_stats_post: Optional[datetime.datetime] = None
-    long_description_type: Optional[enums.LongDescType] = None
-    long_description: Optional[str] = None
+    user: BaseUser | None = None
+    description: str | None = None
+    tags: list[str]
+    last_stats_post: datetime.datetime | None = None
+    long_description_type: enums.LongDescType | None = None
+    long_description: str | None = None
     guild_count: int
-    shard_count: Optional[int] = 0
+    shard_count: int | None = 0
     user_count: int
-    shards: Optional[List[int]] = []
+    shards: list[int] | None = []
     prefix: str
     library: str
-    invite: Optional[str] = None
+    invite: str | None = None
     invite_link: str
     invite_amount: int
-    owners: Optional[BotOwners] = None
-    features: List[str]
+    owners: BotOwners | None = None
+    features: list[str]
     state: enums.BotState
-    website: Optional[str] = None
-    support: Optional[str] = None
-    github: Optional[str] = None
-    css: Optional[str] = None
+    website: str | None = None
+    support: str | None = None
+    github: str | None = None
+    css: str | None = None
     votes: int
     total_votes: int
     vanity: str
-    donate: Optional[str] = None
-    privacy_policy: Optional[str] = None
+    donate: str | None = None
+    privacy_policy: str | None = None
     nsfw: bool
-    banner_card: Optional[str] = None
-    banner_page: Optional[str] = None
-    keep_banner_decor: Optional[bool] = None
+    banner_card: str | None = None
+    banner_page: str | None = None
+    keep_banner_decor: bool | None = None
 
 class BotStats(BaseModel):
     guild_count: int
-    shard_count: Optional[int] = None
-    shards: Optional[List[int]] = None
-    user_count: Optional[int] = None
+    shard_count: int | None = None
+    shards: list[int] | None = None
+    user_count: int | None = None
         
 class BotEvent(BaseModel):
     m: dict
     ctx: dict
 
 class BotEventList(BaseModel):
-    __root__: List[BotEvent]
+    __root__: list[BotEvent]
 
 class BotEvents(BaseModel):
     events: BotEventList

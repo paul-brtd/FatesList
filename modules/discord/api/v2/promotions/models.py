@@ -13,7 +13,7 @@ class BotPromotion(BaseModel):
 
     title: str
     info: str
-    css: Optional[str] = None
+    css: str | None = None
     type: enums.PromotionType
 
     @staticmethod
@@ -28,7 +28,7 @@ class BotPromotion(BaseModel):
 class BotPromotionList(BaseModel):
     """This is a list of bot promotions. This should be handled by your library"""
 
-    __root__: List[BotPromotion]
+    __root__: list[BotPromotion]
 
 
 # LIBRARY-INTERNAL

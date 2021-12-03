@@ -21,7 +21,7 @@
 		<button class="btn btn-outline-light text-center" style="text-align: center; justify-content: center;" onclick="randomRoll()">Roll</button>
 	</div>
 	<hr class="hr-is">
-	<div class="d-flex" style="margin-left: 5%;" onclick="hideSect('cert')">
+	<div class="d-flex" style="margin-left: 5%;">
 		<span class="iconify white" data-icon="fa-solid:certificate" data-inline="false" data-height="3em"></span>
 		<p class="title-is">Certified {{type.title()}}s</p>
 	</div>
@@ -52,12 +52,6 @@
 	</div>
 	<script>
 		var context = {{context|tojson}}
-		function hideSect(q) {
-			searchParams = new URLSearchParams(window.location.search)
-			if(searchParams.get(q) == "false") searchParams.set(q, "true")
-			else searchParams.set(q, "false")
-			window.location.href = window.location.href.replace("?cert=true", "").replace("?cert=false", "") + "/?" + searchParams.toString()
-		}
 	</script> 
 	<script src="/static/assets/prod/index.min.js?v=8">
 	</script>

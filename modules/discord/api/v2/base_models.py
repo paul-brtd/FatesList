@@ -10,12 +10,12 @@ class BaseUser(BaseModel):
     """
     Represents a base user class on Fates List.
     """
-    id: Optional[str] = "0"
-    username: Optional[str] = "Unknown User"
-    avatar: Optional[str] = "https://fateslist.xyz/static/botlisticon.webp"
-    disc: Optional[str] = "0000"
-    status: Optional[enums.Status] = enums.Status.unknown
-    bot: Optional[bool] = True
+    id: str | None = "0"
+    username: str | None = "Unknown User"
+    avatar: str | None = "https://fateslist.xyz/static/botlisticon.webp"
+    disc: str | None = "0000"
+    status: enums.Status | None = enums.Status.unknown
+    bot: bool | None = True
 
     def __str__(self):
         """
@@ -31,7 +31,7 @@ class APIResponse(BaseModel):
     You can check for success using the done boolean and reason using the reason attribute 
     """
     done: bool
-    reason: Optional[str] = None
+    reason: str | None = None
 
 class IDResponse(APIResponse):
     id: uuid.UUID
@@ -40,7 +40,7 @@ class AccessToken(BaseModel):
     access_token: str
     refresh_token: str
     expires_in: int
-    current_time: Union[float, int]
+    current_time: float | int
 
         
 class BasePager(BaseModel):

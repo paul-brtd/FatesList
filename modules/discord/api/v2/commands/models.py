@@ -10,15 +10,15 @@ from ..base_models import APIResponse, BaseUser, IDResponse
 
 class BotCommand(BaseModel):
     cmd_type: enums.CommandType  # 0 = no, 1 = guild, 2 = global
-    cmd_groups: Optional[List[str]] = ["Default"]
+    cmd_groups: list[str] | None = ["Default"]
     cmd_name: str
     vote_locked: bool
     description: str
-    args: Optional[list] = ["<user>"]
-    examples: Optional[list] = []
-    premium_only: Optional[bool] = False
-    notes: Optional[list] = []
-    doc_link: Optional[str] = ""
+    args: list | None = ["<user>"]
+    examples: list | None = []
+    premium_only: bool | None = False
+    notes: list | None = []
+    doc_link: str | None = ""
 
 
 class BotCommandWithId(BotCommand):
@@ -26,17 +26,17 @@ class BotCommandWithId(BotCommand):
 
 
 class BotCommandsGet(BaseModel):
-    __root__: Dict[str, List[BotCommandWithId]]
+    __root__: dict[str, list[BotCommandWithId]]
 
 
 class BotCommands(BaseModel):
-    commands: List[BotCommand]
+    commands: list[BotCommand]
 
 
 class BotCommandDelete(BaseModel):
-    ids: Optional[List[uuid.UUID]] = None
-    names: Optional[List[str]] = None
-    nuke: Optional[bool] = False
+    ids: list[uuid.UUID] | None = None
+    names: list[str] | None = None
+    nuke: bool | None = False
 
     @staticmethod
     @validator("nuke")

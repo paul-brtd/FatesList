@@ -123,7 +123,7 @@ def site_run():
         signal.signal(sig, lambda *args, **kwargs: ...)
 
     class FatesRunner(BaseApplication):
-        def __init__(self, application: Callable, options: Dict[str, Any]):
+        def __init__(self, application: Callable, options: dict[str, Any]):
             self.options = options
             self.application = application
             super().__init__()

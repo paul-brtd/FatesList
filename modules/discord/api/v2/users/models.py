@@ -11,10 +11,10 @@ from ..base_models import APIResponse, BaseUser
 class UpdateUserPreferences(BaseModel):
     """Setting field to null and/or omitting it means no change to said field"""
 
-    js_allowed: Optional[bool] = None
-    reset_token: Optional[bool] = None
-    description: Optional[str] = None
-    css: Optional[str] = None
+    js_allowed: bool | None = None
+    reset_token: bool | None = None
+    description: str | None = None
+    css: str | None = None
 
 
 class BotMeta(BaseModel):
@@ -28,27 +28,27 @@ class BotMeta(BaseModel):
     prefix: str
     library: str
     invite: str
-    website: Optional[str] = None
+    website: str | None = None
     description: str
-    banner_card: Optional[str] = None
-    banner_page: Optional[str] = None
+    banner_card: str | None = None
+    banner_page: str | None = None
     keep_banner_decor: bool
-    extra_owners: List[
+    extra_owners: list[
         str]  # List of strings that can be turned into a integer
-    support: Optional[str] = None
+    support: str | None = None
     long_description: str
-    css: Optional[str] = None
+    css: str | None = None
     long_description_type: enums.LongDescType
     nsfw: bool
-    donate: Optional[str] = None
-    privacy_policy: Optional[str] = None
-    github: Optional[str] = None
-    webhook_type: Optional[int] = 0
-    webhook: Optional[str] = None
-    webhook_secret: Optional[str] = None
+    donate: str | None = None
+    privacy_policy: str | None = None
+    github: str | None = None
+    webhook_type: int | None = 0
+    webhook: str | None = None
+    webhook_secret: str | None = None
     vanity: str
-    features: List[str] = []
-    tags: List[str]
+    features: list[str] = []
+    tags: list[str]
 
     @staticmethod
     @validator("extra_owners")

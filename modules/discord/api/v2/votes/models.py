@@ -12,7 +12,7 @@ class BotVoteCheck(BaseModel):
     """vts = Vote Timestamps"""
     votes: int
     voted: bool
-    vote_right_now: Optional[bool] = None
-    vote_epoch: Optional[int] = None
-    time_to_vote: Optional[int] = None
-    vts: Optional[list] = None
+    vote_right_now: bool | None = None
+    vote_epoch: int | None = None
+    time_to_vote: int | None = None
+    vts: list | None = None

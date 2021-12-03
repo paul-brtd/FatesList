@@ -10,14 +10,14 @@ from config import auth_namespaces
 
 class Login(BaseModel):
     code: str
-    scopes: List[str]
+    scopes: list[str]
         
 class LoginInfo(BaseModel):
-    scopes: List[str]
-    redirect: Optional[str] = "/"
+    scopes: list[str]
+    redirect: str | None = "/"
  
 class OAuthInfo(APIResponse):
-    url: Optional[str] = "/"
+    url: str | None = "/"
     state: str
 
 class LoginBan(BaseModel):
@@ -36,10 +36,10 @@ class LoginResponse(APIResponse):
     ban: LoginBan = LoginBan(type = "Unknown", desc = "Unknown Ban Type")
     banned: bool = False
     token: str = None
-    css: Union[str, None] = None
+    css: str | None = None
     state: enums.UserState = None
     js_allowed: bool = False
     access_token: AccessToken = AccessToken(access_token = "", refresh_token = "", expires_in = 0, current_time = 0)
     redirect: str = "/"
-    scopes: List[str]
+    scopes: list[str]
     site_lang: str = "default"

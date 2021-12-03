@@ -10,20 +10,20 @@ class BotListStats(BaseModel):
     server_uptime: float
     bot_count: int
     bot_count_total: int
-    workers: Optional[List[int]] = []
+    workers: list[int] | None = []
 
 
 class PartialBotQueue(BaseModel):
-    user: Optional[BaseUser] = BaseUser()
+    user: BaseUser | None = BaseUser()
     prefix: str
     invite: str
     description: str
 
 class BotQueueList(BaseModel):
-    __root__: List[PartialBotQueue]
+    __root__: list[PartialBotQueue]
 
 class BotQueueGet(BaseModel):
-    bots: Optional[BotQueueList] = None
+    bots: BotQueueList | None = None
 
 class BotVanity(BaseModel):
     type: enums.SearchType
@@ -32,23 +32,23 @@ class BotVanity(BaseModel):
 class BotPartial(BaseModel):
     description: str
     guild_count: int
-    banner: Optional[str] = None
+    banner: str | None = None
     state: enums.BotState
     nsfw: bool
     votes: int
     user: BaseUser
 
 class BotPartialList(BaseModel):
-    __root__: List[BotPartial]
+    __root__: list[BotPartial]
 
 class FLTag(BaseModel):
     name: str
     iconify_data: str
     id: str
-    owner_guild: Optional[str] = ""
+    owner_guild: str | None = ""
 
 class FLTags(BaseModel):
-    __root__: List[FLTag]
+    __root__: list[FLTag]
 
 class BotIndex(BaseModel):
     tags_fixed: FLTags
