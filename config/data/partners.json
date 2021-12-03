@@ -21,6 +21,17 @@
 				"discord": "https://discord.gg/D7pq3m3",
 				"website": "https://consteagle.com"
 			}
+		},
+		{
+			"id": "lunar-dev",
+			"name": "Lunar Development",
+			"owner": "683530527239962627",
+			"image": "https://cdn.discordapp.com/icons/755722576445046806/df902121fae9f09d2cd4868e6879f0b3.png",
+			"description": "Lunar Development • Strengthening social experiences",
+			"links": {
+				"discord": "https://fateslist.xyz/server/755722576445046806/invite",
+				"website": "https://agb-dev.xyz"
+			}
 		}
 	],
 	"icons": {

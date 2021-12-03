@@ -22,6 +22,23 @@ var (
 
 // Admin OP Getter
 func CmdInit() map[string]types.SlashCommand {
+	// Mock is only here for registration, actual code is on slashbot
+	commands["MOCK"] = types.AdminOp{
+		InternalName: "mock",
+		Cooldown:     types.CooldownNone,
+		Description:  "Mocks a guild in server listing",
+		SlashRaw:     true,
+		SlashOptions: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionString,
+				Name:        "guild",
+				Description: "Guild to mock",
+			},
+		},
+		Server: common.StaffServer,
+	}
+
+	// Reset all bot votes
 	commands["RESETVOTESALL"] = types.AdminOp{
 		InternalName: "resetallvotes",
 		Cooldown:     types.CooldownNone,

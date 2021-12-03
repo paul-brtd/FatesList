@@ -225,7 +225,7 @@ async def vote_review_api(request: Request, user_id: int, rid: uuid.UUID, vote: 
     bot_rev[main_key].append(user_id)
     await db.execute("UPDATE reviews SET review_upvotes = $1, review_downvotes = $2 WHERE id = $3", bot_rev["review_upvotes"], bot_rev["review_downvotes"], rid)
     # TODO: fix this if needed
-    await bot_add_event(bot_rev["target_id"], enums.APIEvents.review_vote, {"user": str(user_id), "id": str(rid), "star_rating": bot_rev["star_rating"], "reply": bot_rev["reply"], "review": bot_rev["review_text"], "upvotes": len(bot_rev["review_upvotes"]), "downvotes": len(bot_rev["review_downvotes"]), "upvote": vote.upvote}, guild=(bor_rev["target_type"] == enums.ReviewType.server))
+    await bot_add_event(bot_rev["target_id"], enums.APIEvents.review_vote, {"user": str(user_id), "id": str(rid), "star_rating": bot_rev["star_rating"], "reply": bot_rev["reply"], "review": bot_rev["review_text"], "upvotes": len(bot_rev["review_upvotes"]), "downvotes": len(bot_rev["review_downvotes"]), "upvote": vote.upvote}, guild=(bot_rev["target_type"] == enums.ReviewType.server))
     
     # Recache reviews
     await parse_reviews(
