@@ -10,6 +10,7 @@ from ..base_models import APIResponse
 
 class BotVoteCheck(BaseModel):
     """vts = Vote Timestamps"""
+
     votes: int
     voted: bool
     vote_right_now: bool | None = None

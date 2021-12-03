@@ -68,10 +68,9 @@ def _fappgen(session_id, workers, static_assets):
         redoc_url=f"/api/v{API_VERSION}/docs/redoc",
         docs_url=f"/api/v{API_VERSION}/docs/swagger",
         openapi_url=f"/api/v{API_VERSION}/docs/openapi",
-        servers=[{
-            "url": "https://fateslist.xyz",
-            "description": "Fates List Main Server"
-        }],
+        servers=[
+            {"url": "https://fateslist.xyz", "description": "Fates List Main Server"}
+        ],
     )
 
     _app.state.static = static_assets
@@ -109,12 +108,13 @@ def site_run():
     with open("data/static/server.png", mode="rb") as res:
         static_assets["server_img"] = io.BytesIO(res.read())
 
-    static_assets["fates_pil"] = Image.open(static_assets["fates_img"]).resize(
-        (10, 10))
-    static_assets["votes_pil"] = Image.open(static_assets["votes_img"]).resize(
-        (15, 15))
-    static_assets["server_pil"] = Image.open(
-        static_assets["server_img"]).resize((15, 15))
+    static_assets["fates_pil"] = Image.open(
+        static_assets["fates_img"]).resize((10, 10))
+    static_assets["votes_pil"] = Image.open(
+        static_assets["votes_img"]).resize((15, 15))
+    static_assets["server_pil"] = Image.open(static_assets["server_img"]).resize(
+        (15, 15)
+    )
 
     # Create the pids folder if it hasnt been created
     Path("data/pids").mkdir(exist_ok=True)
@@ -218,8 +218,7 @@ def site_enum2html():
             for ext in fields:
                 if ext in ("value", "__doc__"):
                     continue
-                md[key][
-                    "table"] += f" {ext.strip('_').replace('_', ' ').title()} |"
+                md[key]["table"] += f" {ext.strip('_').replace('_', ' ').title()} |"
                 nl += " :--- |"
                 keys.append(ext)
             md[key]["table"] += f"{nl}\n"
@@ -228,8 +227,7 @@ def site_enum2html():
                 md[key]["doc"] = "\n" + v.__doc__ + "\n\n"
 
             for prop in props:
-                md[key][
-                    "table"] += f"| {prop.name} | {prop.value} | {prop.__doc__} |"
+                md[key]["table"] += f"| {prop.name} | {prop.value} | {prop.__doc__} |"
                 for prop_key in keys:
                     tmp = getattr(prop, prop_key)
                     try:
@@ -255,8 +253,7 @@ def site_reload():
             pid = guni_pid.read().replace(" ", "").replace("\n", "")
 
             if not pid.isdigit():
-                return error(
-                    "Invalid/corrupt PID file found (site/gunicorn.pid)")
+                return error("Invalid/corrupt PID file found (site/gunicorn.pid)")
 
             pid = int(pid)
             os.kill(pid, signal.SIGHUP)
@@ -313,8 +310,12 @@ def site_gensecret():
 def site_compilestatic():
     """Compiles all labelled static files"""
     for src_file in Path("data/static/assets/src").rglob("*.js"):
-        out_file = (str(src_file).replace(".js", ".min.js").replace(
-            "src/", "prod/").replace("js/", ""))
+        out_file = (
+            str(src_file)
+            .replace(".js", ".min.js")
+            .replace("src/", "prod/")
+            .replace("js/", "")
+        )
         print(f"{src_file} -> {out_file}")
         cmd = [
             "google-closure-compiler",
@@ -328,8 +329,12 @@ def site_compilestatic():
             proc.wait()
 
     for src_file in Path("data/static/assets/src").rglob("*.scss"):
-        out_file = (str(src_file).replace(".scss", ".min.css").replace(
-            "src/", "prod/").replace("css/", ""))
+        out_file = (
+            str(src_file)
+            .replace(".scss", ".min.css")
+            .replace("src/", "prod/")
+            .replace("css/", "")
+        )
         print(f"{src_file} -> {out_file}")
         cmd = ["sass", "--style=compressed", str(src_file), out_file]
 
@@ -411,7 +416,8 @@ def db_apply():
 
     if not module:
         raise RuntimeError(
-            "No migration found. Set MIGRATION envvar to migration file path")
+            "No migration found. Set MIGRATION envvar to migration file path"
+        )
 
     try:
         migration = importlib.import_module(module)
@@ -423,9 +429,7 @@ def db_apply():
         postgres = await asyncpg.create_pool()
         redis = aioredis.from_url("redis://localhost:1001", db=1)
         logger.info("Starting migration")
-        ret = await migration.apply(postgres=postgres,
-                                    redis=redis,
-                                    logger=logger)
+        ret = await migration.apply(postgres=postgres, redis=redis, logger=logger)
         logger.success(f"Migration applied with return code of {ret}")
 
     loop = asyncio.new_event_loop()
@@ -457,8 +461,8 @@ def db_wipeuser():
         db = await asyncpg.create_pool()
         await db.execute("DELETE FROM users WHERE user_id = $1", user_id)
         await db.execute(
-            "INSERT INTO users (user_id, vote_epoch) VALUES ($1, NOW())",
-            user_id)  # INSERT minimal data to prevent abuse
+            "INSERT INTO users (user_id, vote_epoch) VALUES ($1, NOW())", user_id
+        )  # INSERT minimal data to prevent abuse
 
         bots = await db.fetch(
             """SELECT DISTINCT bots.bot_id FROM bots 
@@ -467,15 +471,15 @@ def db_wipeuser():
             user_id,
         )
         for bot in bots:
-            await db.execute("DELETE FROM bots WHERE bot_id = $1",
-                             bot["bot_id"])
+            await db.execute("DELETE FROM bots WHERE bot_id = $1", bot["bot_id"])
 
         votes = await db.fetch(
-            "SELECT bot_id from bot_voters WHERE user_id = $1", user_id)
+            "SELECT bot_id from bot_voters WHERE user_id = $1", user_id
+        )
         for vote in votes:
             await db.execute(
-                "UPDATE bots SET votes = votes - 1 WHERE bot_id = $1",
-                vote["bot_id"])
+                "UPDATE bots SET votes = votes - 1 WHERE bot_id = $1", vote["bot_id"]
+            )
 
         await db.execute("DELETE FROM bot_voters WHERE user_id = $1", user_id)
 
@@ -528,8 +532,7 @@ def db_setup():
             logger.error(f"Backup failed. Error is {exc}")
             confirm("Continue? ", abort=True)
 
-        with Popen(["systemctl", "stop", "snowfall-dbs"],
-                   env=os.environ) as proc:
+        with Popen(["systemctl", "stop", "snowfall-dbs"], env=os.environ) as proc:
             proc.wait()
 
     logger.info("Removing/Renaming old files")
@@ -561,17 +564,15 @@ def db_setup():
         ]
         env_pg.write("\n".join(lines))
 
-    shutil.copytree("data/snowfall/docker/scripts",
-                    "/snowfall/docker/scripts",
-                    dirs_exist_ok=True)
+    shutil.copytree(
+        "data/snowfall/docker/scripts", "/snowfall/docker/scripts", dirs_exist_ok=True
+    )
     shutil.copy2("data/snowfall/docker/config/docker-compose.yml",
                  "/snowfall/docker")
 
     logger.info("Starting up docker compose...")
-    cmd = [
-        "docker-compose", "-f", "/snowfall/docker/docker-compose.yml", "up",
-        "-d"
-    ]
+    cmd = ["docker-compose", "-f",
+           "/snowfall/docker/docker-compose.yml", "up", "-d"]
 
     with Popen(cmd, env=os.environ) as proc:
         proc.wait()
@@ -620,8 +621,7 @@ def db_setup():
             "RemainAfterExit=yes",
             "WorkingDirectory=/snowfall/docker",
             "ExecStart=/usr/bin/snowfall-dbs-start",
-            "ExecStop=/usr/bin/snowfall-dbs-stop"
-            "TimeoutStartSec=0",
+            "ExecStop=/usr/bin/snowfall-dbs-stop" "TimeoutStartSec=0",
             "",
             "[Install]",
             "WantedBy=multi-user.target",
@@ -677,8 +677,7 @@ def db_setup():
                 'psql -c "CREATE ROLE postgres"',
                 'psql -c "CREATE ROLE root"',
                 'psql -c "CREATE SCHEMA IF NOT EXISTS public"',
-                "psql -c 'CREATE EXTENSION IF NOT EXISTS " + '"uuid-ossp"' +
-                "'",
+                "psql -c 'CREATE EXTENSION IF NOT EXISTS " + '"uuid-ossp"' + "'",
                 "pg_restore -cvd fateslist /backups/latest.bak",
             ]
             sf_s2_f.write("\n".join(lines))

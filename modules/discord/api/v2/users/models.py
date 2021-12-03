@@ -33,8 +33,8 @@ class BotMeta(BaseModel):
     banner_card: str | None = None
     banner_page: str | None = None
     keep_banner_decor: bool
-    extra_owners: list[
-        str]  # List of strings that can be turned into a integer
+    # List of strings that can be turned into a integer
+    extra_owners: list[str]
     support: str | None = None
     long_description: str
     css: str | None = None

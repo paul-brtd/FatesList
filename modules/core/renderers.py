@@ -6,31 +6,43 @@ import bleach
 import markdown
 from lxml.html.clean import Cleaner
 
+from modules.models import constants
+
 from .events import *
 from .helpers import *
 from .imports import *
 from .permissions import *
 from .templating import *
-from modules.models import constants
 
 cleaner = Cleaner()
 
-async def render_index(request: Request, api: bool, type: enums.ReviewType = enums.ReviewType.bot):
+
+async def render_index(
+    request: Request, api: bool, type: enums.ReviewType = enums.ReviewType.bot
+):
     worker_session = request.app.state.worker_session
-    top_voted = await do_index_query(worker_session, add_query = "ORDER BY votes DESC", state = [0], type=type)
-    new_bots = await do_index_query(worker_session, add_query = "ORDER BY created_at DESC", state = [0], type=type)
-    certified_bots = await do_index_query(worker_session, add_query = "ORDER BY votes DESC", state = [6], type=type)
+    top_voted = await do_index_query(
+        worker_session, add_query="ORDER BY votes DESC", state=[0], type=type
+    )
+    new_bots = await do_index_query(
+        worker_session, add_query="ORDER BY created_at DESC", state=[0], type=type
+    )
+    certified_bots = await do_index_query(
+        worker_session, add_query="ORDER BY votes DESC", state=[6], type=type
+    )
 
     if type == enums.ReviewType.bot:
         tags = tags_fixed
     else:
-        tags = await db.fetch("SELECT id, name, iconify_data, owner_guild FROM server_tags")
+        tags = await db.fetch(
+            "SELECT id, name, iconify_data, owner_guild FROM server_tags"
+        )
 
     base_json = {
-        "tags_fixed": tags, 
-        "top_voted": top_voted, 
-        "new_bots": new_bots, 
-        "certified_bots": certified_bots, 
+        "tags_fixed": tags,
+        "top_voted": top_voted,
+        "new_bots": new_bots,
+        "certified_bots": certified_bots,
     }
 
     if type == enums.ReviewType.server:
@@ -39,25 +51,41 @@ async def render_index(request: Request, api: bool, type: enums.ReviewType = enu
         context = {"type": "bot"}
 
     if not api:
-        return await templates.TemplateResponse("index.html", {"request": request, "random": random} | context | base_json, context = context)
+        return await templates.TemplateResponse(
+            "index.html",
+            {"request": request, "random": random} | context | base_json,
+            context=context,
+        )
     else:
         return base_json
 
-#@jit(nopython = True)
+
+# @jit(nopython = True)
 def gen_owner_html(owners_lst: tuple):
     """Generate the owner html"""
     # First owner will always be main and hence should have the crown, set initial state to crown for that
-    owners_html = '<span class="iconify" data-icon="mdi-crown" data-inline="false"></span>'
-    owners_html += "<br/>".join([f"<a class='long-desc-link' href='/profile/{owner[0]}'>{owner[1]}</a>" for owner in owners_lst if owner])
+    owners_html = (
+        '<span class="iconify" data-icon="mdi-crown" data-inline="false"></span>'
+    )
+    owners_html += "<br/>".join(
+        [
+            f"<a class='long-desc-link' href='/profile/{owner[0]}'>{owner[1]}</a>"
+            for owner in owners_lst
+            if owner
+        ]
+    )
     return owners_html
 
-async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bool, rev_page: int = 1):
+
+async def render_bot(
+    request: Request, bt: BackgroundTasks, bot_id: int, api: bool, rev_page: int = 1
+):
     worker_session = request.app.state.worker_session
     db = worker_session.postgres
     if len(str(bot_id)) not in [17, 18, 19, 20]:
         return abort(404)
 
-    if bot_id >= 9223372036854775807: # Max size of bigint
+    if bot_id >= 9223372036854775807:  # Max size of bigint
         return abort(404)
 
     check = await db.fetchval("SELECT bot_id FROM bots WHERE bot_id = $1", bot_id)
@@ -68,16 +96,15 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
         """SELECT js_allowed, prefix, shard_count, state, description, bot_library AS library, 
         website, votes, guild_count, discord AS support, banner_page AS banner, github, features, 
         invite_amount, css, long_description_type, long_description, donate, privacy_policy, 
-        nsfw, keep_banner_decor, last_stats_post, created_at FROM bots WHERE bot_id = $1""", 
-        bot_id
+        nsfw, keep_banner_decor, last_stats_post, created_at FROM bots WHERE bot_id = $1""",
+        bot_id,
     )
     tags = await db.fetch("SELECT tag FROM bot_tags WHERE bot_id = $1", bot_id)
     if not tags:
         return abort(404)
 
-
     bot = dict(bot) | {"tags": [tag["tag"] for tag in tags]}
-    
+
     # Ensure bot banner_page is disable if not approved or certified
     if bot["state"] not in (enums.BotState.approved, enums.BotState.certified):
         bot["banner"] = None
@@ -85,20 +112,31 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
 
     # Get all bot owners
     owners = await db.fetch(
-        "SELECT DISTINCT ON (owner) owner, main FROM bot_owner WHERE bot_id = $1 ORDER BY owner, main DESC", 
-        bot_id
+        "SELECT DISTINCT ON (owner) owner, main FROM bot_owner WHERE bot_id = $1 ORDER BY owner, main DESC",
+        bot_id,
     )
     _owners = []
     for owner in owners:
-        if owner["main"]: _owners.insert(0, owner)
-        else: _owners.append(owner)
+        if owner["main"]:
+            _owners.insert(0, owner)
+        else:
+            _owners.append(owner)
     owners = _owners
-    bot["description"] = intl_text(bot['description'], request.session.get("site_lang", "default"))   
-    bot['long_description'] = intl_text(bot['long_description'], request.session.get("site_lang", "default"))
-    if bot["long_description_type"] == enums.LongDescType.markdown_pymarkdown: # If we are using markdown
-        ldesc = emd(markdown.markdown(bot['long_description'], extensions = md_extensions))
-    else: 
-        ldesc = bot['long_description']
+    bot["description"] = intl_text(
+        bot["description"], request.session.get("site_lang", "default")
+    )
+    bot["long_description"] = intl_text(
+        bot["long_description"], request.session.get("site_lang", "default")
+    )
+    if (
+        bot["long_description_type"] == enums.LongDescType.markdown_pymarkdown
+    ):  # If we are using markdown
+        ldesc = emd(
+            markdown.markdown(bot["long_description"],
+                              extensions=md_extensions)
+        )
+    else:
+        ldesc = bot["long_description"]
 
     user_js_allowed = request.session.get("js_allowed", True)
     if not user_js_allowed or not bot["js_allowed"]:
@@ -107,7 +145,7 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
         except Exception:
             ldesc = bleach.clean(ldesc)
 
-    # Take the h1...h5 anad drop it one lower and bypass peoples stupidity 
+    # Take the h1...h5 anad drop it one lower and bypass peoples stupidity
     # and some nice patches to the site to improve accessibility
     ldesc = ireplacem(constants.long_desc_replace_tuple, ldesc)
 
@@ -116,65 +154,87 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
     else:
         banner = ""
 
-    bot_info = await get_bot(bot_id, worker_session = worker_session)
-    
+    bot_info = await get_bot(bot_id, worker_session=worker_session)
+
     owners_lst = [
-        (await get_user(obj["owner"], user_only = True, worker_session = worker_session)) 
-        for obj in owners if obj["owner"] is not None
+        (await get_user(obj["owner"], user_only=True, worker_session=worker_session))
+        for obj in owners
+        if obj["owner"] is not None
     ]
     owners_html = gen_owner_html(owners_lst)
     if bot["features"] is None:
         bot_features = ""
     else:
-        bot_features = "<br/>".join([f"<a class='long-desc-link' href='/feature/{feature}'>{features[feature]['name']}</a>" for feature in bot["features"]])
-    
+        bot_features = "<br/>".join(
+            [
+                f"<a class='long-desc-link' href='/feature/{feature}'>{features[feature]['name']}</a>"
+                for feature in bot["features"]
+            ]
+        )
+
     if bot_info:
         bot = dict(bot)
         user = dict(bot_info)
         user["name"] = user["username"]
         bot_extra = {
             "banner": ireplacem(banner_replace_tuple, banner),
-            "owners_html": owners_html, 
+            "owners_html": owners_html,
             "features": bot_features,
             "long_description": ireplacem(ldesc_replace_tuple, ldesc),
-            "user": user, 
+            "user": user,
         }
         bot |= bot_extra
-    
+
     else:
         return await templates.e(request, "Bot Not Found")
-    
+
     _tags_fixed_bot = [tag for tag in tags_fixed if tag["id"] in bot["tags"]]
-    bt.add_task(add_ws_event, bot_id, {"m": {"e": enums.APIEvents.bot_view}, "ctx": {"user": request.session.get('user_id'), "widget": False}})
-    
+    bt.add_task(
+        add_ws_event,
+        bot_id,
+        {
+            "m": {"e": enums.APIEvents.bot_view},
+            "ctx": {"user": request.session.get("user_id"), "widget": False},
+        },
+    )
+
     context = {
         "id": str(bot_id),
         "bot_token": "",
         "type": "bot",
-        "replace_list": constants.long_desc_replace_tuple
+        "replace_list": constants.long_desc_replace_tuple,
     }
-    
+
     data = {
-        "data": bot, 
-        "type": "bot", 
-        "id": bot_id, 
-        "tags_fixed": _tags_fixed_bot, 
+        "data": bot,
+        "type": "bot",
+        "id": bot_id,
+        "tags_fixed": _tags_fixed_bot,
         "promos": await get_promotions(bot_id),
-        "guild": main_server, 
+        "guild": main_server,
         "botp": True,
     }
 
     if not api:
-        return await templates.TemplateResponse("bot_server.html", {"request": request, "replace_last": replace_last} | data, context = context)
+        return await templates.TemplateResponse(
+            "bot_server.html",
+            {"request": request, "replace_last": replace_last} | data,
+            context=context,
+        )
     else:
         data["bot_id"] = str(bot_id)
         return data
 
 
-async def render_search(request: Request, q: str, api: bool, target_type: enums.SearchType = enums.SearchType.bot):
+async def render_search(
+    request: Request,
+    q: str,
+    api: bool,
+    target_type: enums.SearchType = enums.SearchType.bot,
+):
     worker_session = request.app.state.worker_session
     db = worker_session.postgres
-    
+
     if q == "":
         if api:
             return abort(404)
@@ -193,10 +253,10 @@ async def render_search(request: Request, q: str, api: bool, target_type: enums.
             OR bot_owner.owner::text ilike $1) 
             AND (bots.state = $2 OR bots.state = $3) 
             ORDER BY bots.votes DESC, bots.guild_count DESC LIMIT 6
-            """, 
-            f'%{q}%',
+            """,
+            f"%{q}%",
             enums.BotState.approved,
-            enums.BotState.certified
+            enums.BotState.certified,
         )
         tags = tags_fixed
     elif target_type == enums.SearchType.server:
@@ -209,26 +269,46 @@ async def render_search(request: Request, q: str, api: bool, target_type: enums.
             OR servers.name_cached ilike $1) AND servers.state = $2
             ORDER BY servers.votes DESC, servers.guild_count DESC LIMIT 6
             """,
-            f'%{q}%',
-            enums.BotState.approved
+            f"%{q}%",
+            enums.BotState.approved,
         )
-        tags = await db.fetch("SELECT id, name, iconify_data, owner_guild FROM server_tags")
+        tags = await db.fetch(
+            "SELECT id, name, iconify_data, owner_guild FROM server_tags"
+        )
     else:
         return await render_profile_search(request, q=q, api=api)
     search_bots = await parse_index_query(
         worker_session,
         data,
-        type=enums.ReviewType.bot if target_type == enums.SearchType.bot else enums.ReviewType.server
+        type=enums.ReviewType.bot
+        if target_type == enums.SearchType.bot
+        else enums.ReviewType.server,
     )
     if not api:
-        return await templates.TemplateResponse("search.html", {"request": request, "search_bots": search_bots, "tags_fixed": tags, "query": q, "profile_search": target_type == enums.SearchType.profile, "type": "bot" if target_type == enums.SearchType.bot else "server"})
+        return await templates.TemplateResponse(
+            "search.html",
+            {
+                "request": request,
+                "search_bots": search_bots,
+                "tags_fixed": tags,
+                "query": q,
+                "profile_search": target_type == enums.SearchType.profile,
+                "type": "bot" if target_type == enums.SearchType.bot else "server",
+            },
+        )
     else:
-        return {"search_res": search_bots, "tags_fixed": tags, "query": q, "profile_search": target_type == enums.SearchType.profile}
+        return {
+            "search_res": search_bots,
+            "tags_fixed": tags,
+            "query": q,
+            "profile_search": target_type == enums.SearchType.profile,
+        }
+
 
 async def render_profile_search(request: Request, q: str, api: bool):
     worker_session = request.app.state.worker_session
     db = worker_session.postgres
-    
+
     if q == "" or q is None:
         if api:
             return abort(404)
@@ -241,18 +321,38 @@ async def render_profile_search(request: Request, q: str, api: bool):
             INNER JOIN bots ON bot_owner.bot_id = bots.bot_id 
             WHERE ((bots.state = 0 OR bots.state = 6) 
             AND (bots.username_cached ilike $1 OR bots.description ilike $1 OR bots.bot_id::text ilike $1)) 
-            OR (users.username ilike $1) LIMIT 12""", 
-            f'%{q}%'
+            OR (users.username ilike $1) LIMIT 12""",
+            f"%{q}%",
         )
     else:
         profiles = []
     profile_obj = []
     for profile in profiles:
-        profile_info = await get_user(profile["user_id"], worker_session = worker_session)
+        profile_info = await get_user(profile["user_id"], worker_session=worker_session)
         if profile_info:
-            profile_obj.append({"banner": None, "description": profile["description"], "user": profile_info})
+            profile_obj.append(
+                {
+                    "banner": None,
+                    "description": profile["description"],
+                    "user": profile_info,
+                }
+            )
     if not api:
-        return await templates.TemplateResponse("search.html", {"request": request, "tags_fixed": tags_fixed, "profile_search": True, "query": q, "type": "profile", "profiles": profile_obj})
+        return await templates.TemplateResponse(
+            "search.html",
+            {
+                "request": request,
+                "tags_fixed": tags_fixed,
+                "profile_search": True,
+                "query": q,
+                "type": "profile",
+                "profiles": profile_obj,
+            },
+        )
     else:
-        return {"search_res": profile_obj, "tags_fixed": tags_fixed, "query": q, "profile_search": True}
-
+        return {
+            "search_res": profile_obj,
+            "tags_fixed": tags_fixed,
+            "query": q,
+            "profile_search": True,
+        }

@@ -1,10 +1,15 @@
+from typing import List, Optional
+
 from pydantic import BaseModel
-from typing import Optional, List
+
 from modules.models import enums
+
 from .badge import Badge
+
 
 class ProfileBot(BaseModel):
     """A bot attached to a users profile"""
+
     bot_id: int
     avatar: str
     description: str
@@ -14,10 +19,12 @@ class ProfileBot(BaseModel):
     state: enums.BotState
     votes: int
     guild_count: int
-    nsfw: bool       
-  
+    nsfw: bool
+
+
 class ProfileData(BaseModel):
     """Misc data about a user"""
+
     badges: list[Badge]
     description: str | None = "This user prefers to be a enigma"
     css: str | None = None
@@ -26,6 +33,7 @@ class ProfileData(BaseModel):
     certified_developer: bool
     state: enums.UserState
 
+
 class Profile(BaseModel):
     bots: list[ProfileBot]
     approved_bots: list[ProfileBot]
@@ -33,4 +41,3 @@ class Profile(BaseModel):
     profile: ProfileData
     user: enums.BaseUser
     dup: bool
-    
