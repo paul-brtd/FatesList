@@ -4,7 +4,7 @@ Licensed under the [MIT](LICENSE). We support self hosting and you may ask for h
 
 This is the source code for [Fates List](https://fateslist.xyz).
 
-BTW please add your bots there if you want to support us
+BTW please add your bots there if you want to support us :)
 
 ## Deploying/Setup instructions
 
