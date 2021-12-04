@@ -21,6 +21,7 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import PlainTextResponse, HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi_cprofile.profiler import CProfileMiddleware
+from fastapi.routing import APIRoute
 from lynxfall.core.classes import Singleton
 from lynxfall.oauth.models import OauthConfig
 from lynxfall.oauth.providers.discord import DiscordOauth
@@ -218,9 +219,15 @@ class FatesWorkerSession(Singleton):  # pylint: disable=too-many-instance-attrib
         """
         return self.workers.index(os.getpid())
 
-# Include all the modules by looping through 
-# and using importlib to import them and then including them in fastapi
-
+def fix_operation_ids(app) -> None:
+    """
+    Simplify operation IDs so that generated API docs are easier to link to.
+    Should be called only after all routes have been added.
+    """
+    for route in app.routes:
+        if isinstance(route, APIRoute):
+            if not route.operation_id or "__" in route.operation_id:
+                route.operation_id = route.name  # in this case, 'read_items'
 
 async def init_fates_worker(app, session_id, workers):
     """
@@ -390,6 +397,9 @@ async def finish_init(app, session_id, workers, dbs):
         
     # Include all routers
     include_routers(app, "Discord", "modules/discord")
+
+    # Fix operation ids
+    fix_operation_ids(app)
 
     # Begin worker sync
     asyncio.create_task(catclient(workers, session))
