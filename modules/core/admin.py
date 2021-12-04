@@ -17,7 +17,7 @@ class BotActions():
 
     async def base_check(self) -> Optional[str]:
         """Perform basic checks for adding/editting bots. A check returning None means success, otherwise error should be returned to client"""
-        if len(self.prefix) > 9:
+        if self.prefix and len(self.prefix) > 9:
             return "Prefix must be less than 9 characters long"
 
         if not self.vanity:

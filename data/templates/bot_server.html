@@ -21,7 +21,7 @@
 		<div class="d-flex d-xl-flex flex-column align-items-center align-items-xl-center">
 
 			<img style="border-radius: 50%; width: 120px;" class="lozad" data-src="{{data.user.avatar}}"$ id="{{type}}-avatar" alt="{{data.user.username}}'s avatar">
-			<a href="/{{type}}/{{id}}/invite" class="white banner-decor"><h3 class="text-center white" style="font-weight: bold;" id="{{type}}-name">{{data.user.username}} {% if type == "bot" %}<span style="opacity: 0.65;">({{data.prefix}})</span>{% endif %}</h3></a>
+			<a href="/{{type}}/{{id}}/invite" class="white banner-decor"><h3 class="text-center white" style="font-weight: bold;" id="{{type}}-name">{{data.user.username}} {% if type == "bot" %}<span style="opacity: 0.65;">({{data.prefix or "/"}})</span>{% endif %}</h3></a>
 			{% if type == "bot" %}
 				{% if data.state in (enums.BotState.denied, enums.BotState.banned) %}
 					<div class="alert alert-danger" style="text-align: center; justify-content: center; color: white !important;" role="alert">
@@ -171,7 +171,7 @@
 			</tr>
 			<tr>
 				<th>Prefix</th>
-				<td>{{data.prefix}}</td>
+				<td>{{data.prefix or "Slash commands only"}}</td>
 			</tr>
 			<tr>
 				<th>Library</th>

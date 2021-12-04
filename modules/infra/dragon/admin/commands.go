@@ -466,7 +466,7 @@ func CmdInit() map[string]types.SlashCommand {
 	commands["UNCERTIFY"] = types.AdminOp{
 		InternalName: "uncertify",
 		Cooldown:     types.CooldownNone,
-		Description:  "Uncertifies a bot",
+		Description:  "Uncertifies a bot.",
 		MinimumPerm:  5,
 		ReasonNeeded: true,
 		Event:        types.EventBotUncertify,
@@ -506,7 +506,7 @@ func CmdInit() map[string]types.SlashCommand {
 				log.Warn(err)
 			}
 
-			_, err = context.Postgres.Exec(context.Context, "UPDATE bots SET state = $1 WHERE bot_id = $3", types.BotStateApproved.Int(), context.Bot.ID)
+			_, err = context.Postgres.Exec(context.Context, "UPDATE bots SET state = $1 WHERE bot_id = $2", types.BotStateApproved.Int(), context.Bot.ID)
 
 			if err != nil {
 				log.Error(err)
