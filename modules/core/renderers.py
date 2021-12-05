@@ -96,25 +96,21 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
     bot["description"] = intl_text(bot['description'], request.session.get("site_lang", "default"))   
     bot['long_description'] = intl_text(bot['long_description'], request.session.get("site_lang", "default"))
     if bot["long_description_type"] == enums.LongDescType.markdown_pymarkdown: # If we are using markdown
-        ldesc = emd(markdown.markdown(bot['long_description'], extensions = md_extensions))
-    else: 
-        ldesc = bot['long_description']
+        bot["long_description"] = emd(markdown.markdown(bot['long_description'], extensions = md_extensions))
 
     user_js_allowed = request.session.get("js_allowed", True)
     if not user_js_allowed or not bot["js_allowed"]:
         try:
-            ldesc = cleaner.clean_html(ldesc)
+            bot["long_description"] = cleaner.clean_html(bot["long_description"])
         except Exception:
-            ldesc = bleach.clean(ldesc)
+            bot["long_description"] = bleach.clean(bot["long_description"])
 
     # Take the h1...h5 anad drop it one lower and bypass peoples stupidity 
     # and some nice patches to the site to improve accessibility
-    ldesc = ireplacem(constants.long_desc_replace_tuple, ldesc)
+    bot["long_description"] = ireplacem(constants.long_desc_replace_tuple, bot["long_description"])
 
     if bot["banner"]:
-        banner = bot["banner"].replace(" ", "%20").replace("\n", "")
-    else:
-        banner = ""
+        bot["banner"] = bot["banner"].replace(" ", "%20").replace("\n", "")
 
     bot_info = await get_bot(bot_id, worker_session = worker_session)
     
@@ -123,25 +119,18 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
         for obj in owners if obj["owner"] is not None
     ]
     owners_html = gen_owner_html(owners_lst)
-    if bot["features"] is None:
-        bot_features = ""
+    if bot["features"] is not None:
+        bot["features"] = "<br/>".join([f"<a class='long-desc-link' href='/feature/{feature}'>{features[feature]['name']}</a>" for feature in bot["features"]])
     else:
-        bot_features = "<br/>".join([f"<a class='long-desc-link' href='/feature/{feature}'>{features[feature]['name']}</a>" for feature in bot["features"]])
+        bot["features"] = ""
+
+    bot_extra = {
+        "owners_html": owners_html, 
+        "user": bot_info, 
+    }
+    bot |= bot_extra
     
-    if bot_info:
-        bot = dict(bot)
-        user = dict(bot_info)
-        user["name"] = user["username"]
-        bot_extra = {
-            "banner": ireplacem(banner_replace_tuple, banner),
-            "owners_html": owners_html, 
-            "features": bot_features,
-            "long_description": ireplacem(ldesc_replace_tuple, ldesc),
-            "user": user, 
-        }
-        bot |= bot_extra
-    
-    else:
+    if not bot_info:
         return await templates.e(request, "Bot Not Found")
     
     _tags_fixed_bot = [tag for tag in tags_fixed if tag["id"] in bot["tags"]]
@@ -160,16 +149,10 @@ async def render_bot(request: Request, bt: BackgroundTasks, bot_id: int, api: bo
         "id": bot_id, 
         "tags_fixed": _tags_fixed_bot, 
         "promos": await get_promotions(bot_id),
-        "guild": main_server, 
         "botp": True,
     }
 
-    if not api:
-        return await templates.TemplateResponse("bot_server.html", {"request": request, "replace_last": replace_last} | data, context = context)
-    else:
-        data["bot_id"] = str(bot_id)
-        return data
-
+    return await templates.TemplateResponse("bot_server.html", {"request": request, "replace_last": replace_last} | data, context = context)
 
 async def render_search(request: Request, q: str, api: bool, target_type: enums.SearchType = enums.SearchType.bot):
     worker_session = request.app.state.worker_session

@@ -236,7 +236,8 @@ CREATE TABLE servers (
     keep_banner_decor boolean default true,
     guild_count bigint default 0,
     tags text[] default '{}',
-    deleted boolean default false
+    deleted boolean default false,
+    js_allowed boolean default true
 );
 
 -- In server tags, owner_guild is the first guild a tag was given to
