@@ -101,5 +101,6 @@ func adminSlashHandler(
 			Reason:       reason,
 			ExtraContext: &extraContext,
 		},
+		i.GuildID,
 	)
 }

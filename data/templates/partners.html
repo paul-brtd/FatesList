@@ -5,12 +5,13 @@
 
 {% block content %} 
 	<h2 class="white">Our Partners</h2>
-	{% for i in partners.partners if i.owner %}
 	<center>
-		<table style="box-shadow: 5px 5px 5px 5px {{i.shadow or "#002963"}}; text-align: left; padding: 3px; margin-bottom: 25px; min-width: 90%; max-width: 90%;">
+	{% for i in partners.partners if i.owner %}
+	<div style="width: 90%">
+		<table style="box-shadow: 5px 5px 5px 5px {{i.shadow or "#002963"}}; margin-left: 0px; margin-bottom: 25px; width: 100%">
   			<tr>
-				<td><img src="{{ i.image }}" loading="lazy" width="150px" style="padding: 5px" /></td>
-				<td style="padding: 5px">
+				<td><img src="{{ i.image }}" loading="lazy" width="150px" style="margin-left: 0px" /></td>
+				<td style="padding: 5px; margin-left: 0px;">
       					<a title="{{ i.name }}" href="{{ i.links.website }}" target="_blank" rel="noopener">
 						<h3 class="white"><strong>{{ i.name }}</strong></h3>
 					</a>	
@@ -23,8 +24,9 @@
 				</td>
 			</tr>
 		</table>
+	</div>
+	{% endfor %}
 	</center>
-	{% endfor %} 
 {% endblock %} 
 
 {% block footer %} 

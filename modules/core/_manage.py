@@ -161,8 +161,11 @@ def site_run():
 
 def site_manager():
     """Start the manager bot"""
-    os.execv(sys.executable, ["python"] + ["modules/infra/manager/main.py"])
-
+    os.environ["MANAGER_BOT"] = "1"
+    if 'config' in sys.modules:
+        del sys.modules["config"]
+    from modules.infra.manager.main import run
+    run()
 
 def site_buildenums():
     """Build enums from go"""

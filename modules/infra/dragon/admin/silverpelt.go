@@ -26,11 +26,16 @@ func silverpelt(
 	bot_id string,
 	op string,
 	admin_redis_context types.AdminRedisContext,
+	originServer string,
 ) string {
 	if admin_op, yes := commands[op]; yes {
 		ok, is_staff, perm := common.GetPerms(discord, ctx, user_id, float32(admin_op.MinimumPerm))
 		if ok != "" {
 			return "Something went wrong!"
+		}
+
+		if admin_op.Server != "" && admin_op.Server != originServer && admin_op.InternalName != "mock" {
+			return "Please exit mock mode and try again!"
 		}
 
 		if !is_staff {

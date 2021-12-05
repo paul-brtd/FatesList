@@ -192,9 +192,9 @@
 					"extra_owners", 
 					"790722073248661525, 563808552288780322"
 				) }}
-				{{ textInput("Prefix", "prefix", "$, ! etc.", max=9, required=True) }}
+				{{ textInput("Prefix (leave blank for slash command only bot)", "prefix", "$, ! etc.", max=9, required=False) }}
 				{{ textInput("Library", "library", "discord.py etc.", required=True) }}
-				{{ textInput("Vanity", "vanity", "mybot, fateslist etc. Prefix with _ to disable", required=true) }}
+				{{ textInput("Vanity", "vanity", "mybot, fateslist etc. Prefix with _ to disable", required=True) }}
 				{{ tip("You can use P:PERM_NUMBER (or just leave this blank) if the Bot ID and Client ID are the same (almost always true except for old bots)") }}
 				{{ textInput(
 					"Invite URL (Leave blank for automatic)", 

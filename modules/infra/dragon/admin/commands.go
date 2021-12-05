@@ -22,6 +22,23 @@ var (
 
 // Admin OP Getter
 func CmdInit() map[string]types.SlashCommand {
+	// Mock is only here for registration, actual code is on slashbot
+	commands["MOCK"] = types.AdminOp{
+		InternalName: "mock",
+		Cooldown:     types.CooldownNone,
+		Description:  "Mocks a guild in server listing",
+		SlashRaw:     true,
+		SlashOptions: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionString,
+				Name:        "guild",
+				Description: "Guild to mock",
+			},
+		},
+		Server: common.StaffServer,
+	}
+
+	// Reset all bot votes
 	commands["RESETVOTESALL"] = types.AdminOp{
 		InternalName: "resetallvotes",
 		Cooldown:     types.CooldownNone,
@@ -449,7 +466,7 @@ func CmdInit() map[string]types.SlashCommand {
 	commands["UNCERTIFY"] = types.AdminOp{
 		InternalName: "uncertify",
 		Cooldown:     types.CooldownNone,
-		Description:  "Uncertifies a bot",
+		Description:  "Uncertifies a bot.",
 		MinimumPerm:  5,
 		ReasonNeeded: true,
 		Event:        types.EventBotUncertify,
@@ -489,7 +506,7 @@ func CmdInit() map[string]types.SlashCommand {
 				log.Warn(err)
 			}
 
-			_, err = context.Postgres.Exec(context.Context, "UPDATE bots SET state = $1 WHERE bot_id = $3", types.BotStateApproved.Int(), context.Bot.ID)
+			_, err = context.Postgres.Exec(context.Context, "UPDATE bots SET state = $1 WHERE bot_id = $2", types.BotStateApproved.Int(), context.Bot.ID)
 
 			if err != nil {
 				log.Error(err)

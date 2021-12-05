@@ -14,5 +14,7 @@ long_desc_replace_tuple = (
     ("bootstrap.css", ""),
     ("jquery.min.js", ""),
     ("jquery.js", ""),
-    ("fetch(", "")
+    ("fetch(", ""),
+    ('window.location', ''), 
+    ('document.ge', '')
 )

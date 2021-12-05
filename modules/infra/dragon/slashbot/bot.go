@@ -20,6 +20,8 @@ var (
 	iResponseMap     map[string]*time.Timer        = make(map[string]*time.Timer, 0) // Interaction response map to check if interaction has been responded to
 	commandNameCache map[string]string             = make(map[string]string)
 	commands         map[string]types.SlashCommand = make(map[string]types.SlashCommand)
+	mockGuild        string                        // The guild to mock if set
+	mockUser         string                        // The user to mock if set
 )
 
 func SetupSlash(discord *discordgo.Session, cmdInit types.SlashFunction) {
@@ -79,14 +81,39 @@ func SlashHandler(
 ) {
 	var appCmdData = i.ApplicationCommandData()
 
-	var op string = commandNameCache[appCmdData.Name]
-
-	if op == "" {
+	if i.Interaction.Member == nil {
+		SendIResponse(discord, i.Interaction, "This bot may only be used in a server!", true)
 		return
 	}
 
-	if i.Interaction.Member == nil {
-		SendIResponse(discord, i.Interaction, "This bot may only be used in a server!", true)
+	if appCmdData.Name == "mock" {
+		// Special command to mock all other commands
+		_, isStaff, _ := common.GetPerms(common.DiscordMain, ctx, i.Interaction.Member.User.ID, 4)
+		if !isStaff {
+			SendIResponse(discord, i.Interaction, "You are not a Fates List Admin. If you think this is a mistake, please report this on FL Kremlin!", true)
+			return
+		}
+		guildVal := GetArg(discord, i.Interaction, "guild", true)
+		guildIdVal, ok := guildVal.(string)
+		var msg string
+		if !ok || guildIdVal == "" {
+			mockGuild = ""
+			mockUser = ""
+			msg = "Mock mode disabled"
+		} else {
+			mockGuild = guildIdVal
+			mockUser = i.Interaction.Member.User.ID
+			msg = "Mock mode enabled and set to " + guildIdVal
+		}
+		SendIResponse(discord, i.Interaction, msg, true)
+		return
+	} else if mockGuild != "" && mockUser == i.Interaction.Member.User.ID {
+		i.Interaction.GuildID = mockGuild
+	}
+
+	var op string = commandNameCache[appCmdData.Name]
+
+	if op == "" {
 		return
 	}
 
@@ -130,6 +157,9 @@ func SlashHandler(
 }
 
 func CheckServerPerms(discord *discordgo.Session, i *discordgo.Interaction, permNum int) bool {
+	if mockGuild == i.GuildID && mockUser == i.Member.User.ID {
+		return true
+	}
 	var perm int64
 	var permStr string
 	switch permNum {

@@ -99,6 +99,7 @@ class BotState(IntEnum):
     certified = 6, "Certified"
     archived = 7, "Archived"
     private_viewable = 8, "Private, but viewable with link (server only)"
+    private_staff_only = 9, "Private, only staff may join (server only)"
 
 class LongDescType(IntEnum):
     _init_ = 'value __doc__'

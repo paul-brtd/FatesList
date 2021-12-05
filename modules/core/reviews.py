@@ -30,15 +30,18 @@ async def parse_reviews(worker_session, target_id: int, rev_id: uuid.uuid4 = Non
         asyncio.create_task(recache(target_id))
         return
 
+    if not isinstance(target_type, int):
+        target_type = target_type.value
+
     if not in_recache:
-        reviews = await worker_session.redis.get(f"review-{target_id}-{page}-{target_type.value}")
+        reviews = await worker_session.redis.get(f"review-{target_id}-{page}-{target_type}")
     else:
         reviews = None
 
     if reviews:
         return orjson.loads(reviews)
     reviews = await _parse_reviews(worker_session, target_id, rev_id = rev_id, page = page, target_type=target_type)
-    await worker_session.redis.set(f"review-{target_id}-{page}-{target_type.value}", orjson.dumps(reviews), ex=60*60*4)
+    await worker_session.redis.set(f"review-{target_id}-{page}-{target_type}", orjson.dumps(reviews), ex=60*60*4)
     return reviews
 
 
@@ -59,7 +62,7 @@ async def _parse_reviews(worker_session, target_id: int, rev_id: uuid.uuid4 = No
         end = ""
     else:
         end = f"OFFSET {per_page*(page-1)} LIMIT {per_page}"
-    reviews = await db.fetch(f"SELECT id, reply, user_id, star_rating, review_text AS review, review_upvotes, review_downvotes, flagged, epoch, replies AS _replies FROM reviews WHERE target_id = $1 AND target_type = $2 AND reply = $3 {rev_check} ORDER BY epoch, star_rating ASC {end}", target_id, target_type.value, reply, *rev_args)
+    reviews = await db.fetch(f"SELECT id, reply, user_id, star_rating, review_text AS review, review_upvotes, review_downvotes, flagged, epoch, replies AS _replies FROM reviews WHERE target_id = $1 AND target_type = $2 AND reply = $3 {rev_check} ORDER BY epoch, star_rating ASC {end}", target_id, target_type, reply, *rev_args)
     i = 0
     stars = 0
     while i < len(reviews):

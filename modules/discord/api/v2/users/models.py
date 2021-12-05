@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from pydantic import BaseModel, validator
 
-import modules.models.enums as enums
+from modules.models import enums
 
 from ..base_models import APIResponse, BaseUser
 
@@ -21,11 +21,10 @@ class BotMeta(BaseModel):
     """
     Notes:
 
-    - extra_owners must be a list of strings where the strings
-    can be made a integer
+    - extra_owners must be a list of strings where the strings can be made a integer
     """
 
-    prefix: str
+    prefix: str | None = None
     library: str
     invite: str
     website: str | None = None
@@ -33,8 +32,7 @@ class BotMeta(BaseModel):
     banner_card: str | None = None
     banner_page: str | None = None
     keep_banner_decor: bool
-    extra_owners: list[
-        str]  # List of strings that can be turned into a integer
+    extra_owners: list[str]  # List of strings that can be turned into a integer
     support: str | None = None
     long_description: str
     css: str | None = None
@@ -47,7 +45,7 @@ class BotMeta(BaseModel):
     webhook: str | None = None
     webhook_secret: str | None = None
     vanity: str
-    features: list[str] = []
+    features: list[str] | None = []
     tags: list[str]
 
     @validator("extra_owners")
